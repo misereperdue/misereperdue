@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=32">
+  <link rel="stylesheet" href="css/site.css?v=33">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -53,7 +53,7 @@
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=2"></script>
   <script src="js/comments.js?v=4"></script>
-  <script src="js/shop.js?v=1"></script>
+  <script src="js/shop.js?v=2"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -70,7 +70,8 @@
     }
     function refreshSeg() {
       requestAnimationFrame(function () {
-        var btn = nav.querySelector('button[data-view="' + current.type + '"]') ||
+        var t = current.type === "product" ? "shop" : current.type;
+        var btn = nav.querySelector('button[data-view="' + t + '"]') ||
                   nav.querySelector('button[data-view="journal"]');
         if (btn) nav.querySelector(".seg").style.transform = "translateX(" + (btn.offsetLeft - 4) + "px)";
       });
@@ -86,8 +87,11 @@
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
       nav.querySelectorAll("button").forEach(function (b) {
-        b.classList.toggle("on", b.dataset.view === view || (reading && b.dataset.view === "post"));
+        var active = b.dataset.view === view ||
+          (view === "product" && b.dataset.view === "shop");
+        b.classList.toggle("on", active);
       });
+      if (reading) window.scrollTo(0, 0);
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
       refreshSeg();

@@ -21,6 +21,19 @@ var MPShop = (function () {
     });
   }
 
+  function initials(name) {
+    var words = String(name || "").trim().split(/\s+/).filter(Boolean);
+    var s = words.slice(0, 2).map(function (w) { return w[0]; }).join("");
+    return (s || "M").toUpperCase();
+  }
+
+  function imgHTML(p, eager) {
+    if (p.image) {
+      return '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"' + (eager ? "" : ' loading="lazy"') + ">";
+    }
+    return '<div class="img-ph" aria-hidden="true"><span>' + esc(initials(p.name)) + "</span></div>";
+  }
+
   function products() {
     if (window.MPShopify && MPShopify.configured()) {
       return MPShopify.fetchProducts().then(function (list) {
@@ -33,7 +46,7 @@ var MPShop = (function () {
 
   function cardHTML(p) {
     return '<button type="button" class="product-card" data-product="' + esc(p.id) + '">' +
-      '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy">' +
+      imgHTML(p) +
       '<div class="product-meta"><strong>' + esc(p.name) + "</strong>" +
       '<span class="meta">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon")) + "</span></div>" +
       (p.available === false ? '<span class="tag">Coming soon</span>' : "") +
@@ -53,15 +66,20 @@ var MPShop = (function () {
   }
 
   function carouselHTML(images, name) {
-    var imgs = (images && images.length ? images : []).map(function (src, i) {
+    var list = (images && images.length ? images : []).filter(Boolean);
+    if (!list.length) {
+      return '<div class="carousel"><div class="carousel-track"><div class="img-ph" aria-hidden="true" style="flex:none;width:100%"><span>' +
+        esc(initials(name)) + "</span></div></div></div>";
+    }
+    var imgs = list.map(function (src, i) {
       return '<img src="' + esc(src) + '" alt="' + esc(name) + (i ? " " + (i + 1) : "") + '"' + (i ? ' loading="lazy"' : "") + ">";
     }).join("");
-    var dots = images.length > 1
-      ? '<div class="car-dots">' + images.map(function (_, i) {
+    var dots = list.length > 1
+      ? '<div class="car-dots">' + list.map(function (_, i) {
           return '<span data-dot="' + i + '"' + (i === 0 ? ' class="on"' : "") + "></span>";
         }).join("") + "</div>"
       : "";
-    var arrows = images.length > 1
+    var arrows = list.length > 1
       ? '<button type="button" class="car-btn prev" aria-label="Previous image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>' +
         '<button type="button" class="car-btn next" aria-label="Next image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>'
       : "";
@@ -94,6 +112,51 @@ var MPShop = (function () {
     }, { passive: true });
   }
 
+  function bagQty(id, size) {
+    var key = id + ":" + (size || "one");
+    var hit = MP.readCart().find(function (i) { return i.key === key; });
+    return hit ? hit.qty : 0;
+  }
+
+  function actionHTML(p, size) {
+    if (p.available === false) return '<span class="pill-soon">Coming soon</span>';
+    var q = bagQty(p.id, size);
+    if (!q) {
+      return '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span>' + MPComments.checkSVG() + "</button>";
+    }
+    return '<div class="in-bag"><span class="in-bag-label">In your bag</span>' +
+      '<div class="bag-stepper"><button type="button" data-step="-1" aria-label="Remove one">−</button>' +
+      "<span>" + q + "</span>" +
+      '<button type="button" data-step="1" aria-label="Add one">+</button></div></div>';
+  }
+
+  function bindAction(p, getSize) {
+    var box = document.getElementById("bag-action");
+    if (!box) return;
+    function render() { box.innerHTML = actionHTML(p, getSize()); bind(); }
+    function bind() {
+      var add = document.getElementById("add-bag");
+      if (add) {
+        add.onclick = function () {
+          MP.addItem(p.id, getSize());
+          updateCartBadge();
+          add.classList.add("done");
+          setTimeout(render, 900);
+        };
+      }
+      box.querySelectorAll("[data-step]").forEach(function (b) {
+        b.onclick = function () {
+          var key = p.id + ":" + (getSize() || "one");
+          var hit = MP.readCart().find(function (i) { return i.key === key; });
+          MP.setQty(key, (hit ? hit.qty : 0) + (+b.dataset.step));
+          updateCartBadge();
+          render();
+        };
+      });
+    }
+    render();
+  }
+
   function openProduct(id) {
     var p = MP.PRODUCTS[id] || PLACEHOLDER;
     var view = document.getElementById("postview");
@@ -102,9 +165,6 @@ var MPShop = (function () {
           return '<button type="button" data-size="' + esc(s) + '"' + (i === 0 ? ' class="on"' : "") + ">" + esc(s) + "</button>";
         }).join("") + "</div>"
       : '<div style="height:12px"></div>';
-    var action = p.available === false
-      ? '<span class="pill-soon">Coming soon</span>'
-      : '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span>' + MPComments.checkSVG() + "</button>";
     view.innerHTML =
       '<article class="article-card">' +
         carouselHTML(p.images && p.images.length ? p.images : [p.image], p.name) +
@@ -112,27 +172,21 @@ var MPShop = (function () {
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
-        sizes + action +
+        sizes + '<div id="bag-action"></div>' +
         '<p class="meta" style="margin-top:14px">Orders go out as notes — payment isn\'t switched on yet.</p>' +
       "</article>";
     initCarousel(view);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
+    function refreshAction() { bindAction(p, function () { return size; }); }
     view.querySelectorAll("[data-size]").forEach(function (b) {
       b.onclick = function () {
         size = b.dataset.size;
         view.querySelectorAll("[data-size]").forEach(function (x) { x.classList.remove("on"); });
         b.classList.add("on");
+        refreshAction();
       };
     });
-    var add = document.getElementById("add-bag");
-    if (add) {
-      add.onclick = function () {
-        MP.addItem(p.id, size);
-        updateCartBadge();
-        add.classList.add("done");
-        setTimeout(function () { add.classList.remove("done"); }, 1600);
-      };
-    }
+    refreshAction();
     if (window.MPNav) MPNav.showProduct(id);
   }
 
@@ -149,9 +203,10 @@ var MPShop = (function () {
     var total = 0;
     box.innerHTML = cart.map(function (i) {
       total += i.price * i.qty;
+      var sizeMeta = (i.size && i.size !== "one") ? '<div class="meta">' + esc(i.size) + "</div>" : "";
       return '<div class="line">' +
-        '<img src="' + esc(i.image) + '" alt="">' +
-        "<div><strong>" + esc(i.name) + '</strong><div class="meta">' + esc(i.size) + "</div>" +
+        imgHTML(i, true) +
+        "<div><strong>" + esc(i.name) + "</strong>" + sizeMeta +
         '<div class="qty"><button type="button" data-dec="' + esc(i.key) + '" aria-label="Decrease">−</button>' +
         "<span>" + i.qty + '</span>' +
         '<button type="button" data-inc="' + esc(i.key) + '" aria-label="Increase">+</button></div></div>' +
