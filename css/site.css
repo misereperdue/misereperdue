@@ -155,16 +155,32 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .nav.reading .split { display: grid; }
 .nav.shop .seg { transform: translateX(64px); }
 .nav.reading .seg { transform: translateX(141px); }
+.post-body { margin-top: 14px; }
+.post-body p { margin: 0 0 14px; }
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
 .share {
   display: inline-flex;
-  margin-top: 8px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
   border-radius: 999px;
   padding: 10px 16px;
-  border: 0.5px solid var(--hairline);
   background: var(--fill);
+  color: var(--ink);
   font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
 }
-.comments { margin-top: 28px; }
+.share svg { width: 16px; height: 16px; display: block; }
+.actions .split { height: 18px; margin: 0 2px; }
+.comments { margin-top: 8px; }
 .comments h3 { font-size: 20px; margin-bottom: 12px; }
 .comment { padding: 12px 0; border-top: 1px solid var(--hairline); }
 .comment p { margin: 4px 0 0; }

@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=25">
+  <link rel="stylesheet" href="css/site.css?v=26">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -72,7 +72,8 @@
       var date = (post.publishedAt || "").slice(0, 10);
       var title = post.title || "Untitled";
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
-      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + '<a class="share" href="' + share + '" target="_blank" rel="noopener">Share on X</a><section class="comments"><h3>Comments</h3><div class="comment-list"><p class="empty">Loading comments…</p></div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
+      var xmark = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.7 3h3.1l-6.8 7.8L19 21h-3.2l-5-6.6L6.2 21H3.1l7.3-8.3L3 3h3.3l4.5 6L14.7 3zm-1.1 16.2h1.7L8.5 4.7H6.7l6.9 14.5z"/></svg>';
+      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div class="post-body">' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + '</div><div class="actions"><a class="share" href="' + share + '" target="_blank" rel="noopener">' + xmark + 'Share on X</a><span class="split"></span><button type="button" class="share" id="copy-url">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button></div><section class="comments"><h3>Comments</h3><div class="comment-list"><p class="empty">Loading comments…</p></div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
       fetch("https://api.github.com/repos/misereperdue/misereperdue/issues?state=all&labels=comment&per_page=100")
         .then(function (r) { return r.json(); })
         .then(function (list) {
@@ -89,6 +90,11 @@
           var box = document.querySelector("#postview .comment-list");
           if (box) box.innerHTML = '<p class="empty">Couldn’t load comments.</p>';
         });
+      document.getElementById("copy-url").onclick = function () {
+        var link = "https://misereperdue.com/";
+        if (navigator.clipboard) navigator.clipboard.writeText(link);
+        this.lastChild.textContent = "Copied";
+      };
       document.getElementById("comment-form").onsubmit = function (e) {
         e.preventDefault();
         var data = new FormData(e.target);
