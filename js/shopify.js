@@ -41,9 +41,11 @@ var MPShopify = (function () {
       ((v.selectedOptions || [])).forEach(function (o) {
         if (/size/i.test(o.name || "") && o.value && !/default/i.test(o.value)) { sizeSet[o.value] = true; sizeVal = o.value; }
       });
-      if (v.id) variantList.push({ id: v.id, size: sizeVal, available: v.availableForSale !== false });
+      if (v.id) variantList.push({ id: v.id, size: sizeVal, available: v.availableForSale !== false, qty: v.quantityAvailable });
     });
     var sizes = Object.keys(sizeSet);
+    var stockQty = 0, stockTracked = false;
+    variantList.forEach(function (vv) { if (vv.qty != null) { stockTracked = true; stockQty += vv.qty; } });
     return {
       id: n.id || n.handle,
       shopify: true,
@@ -56,6 +58,7 @@ var MPShopify = (function () {
       details: (n.description || "").slice(0, 400),
       sizes: sizes.length ? sizes : null,
       variantList: variantList,
+      stock: stockTracked ? stockQty : null,
       available: n.availableForSale !== false
     };
   }
@@ -64,7 +67,7 @@ var MPShopify = (function () {
     var query = "{ products(first: 24) { edges { node { id title handle description " +
       "availableForSale priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title availableForSale selectedOptions { name value } } } } } } } }";
+      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable selectedOptions { name value } } } } } } } } }";
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
@@ -75,7 +78,7 @@ var MPShopify = (function () {
     })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d.errors) throw new Error("shopify");
+        if (d.errors && !d.data) throw new Error("shopify");
         var edges = (((d.data || {}).products) || {}).edges || [];
         return edges.map(normalize);
       });

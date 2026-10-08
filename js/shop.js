@@ -58,8 +58,19 @@ var MPShop = (function () {
     return Promise.resolve([PLACEHOLDER]);
   }
 
+  function stockPill(p) {
+    if (p.available === false) return "";
+    var s = p.stock, label, cls = "stock-pill";
+    if (s == null) label = "In stock";
+    else if (s <= 0) { label = "Sold out"; cls += " out"; }
+    else if (s <= 5) { label = "Only " + s + " left"; cls += " low"; }
+    else label = s + " in stock";
+    return '<span class="' + cls + '">' + label + "</span>";
+  }
+
   function cardHTML(p) {
     return '<button type="button" class="product-card" data-product="' + esc(p.id) + '">' +
+      stockPill(p) +
       imgHTML(p) +
       '<div class="product-meta"><strong>' + esc(p.name) + "</strong>" +
       '<span class="meta">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon")) + "</span></div>" +
@@ -245,7 +256,7 @@ var MPShop = (function () {
       var sizeMeta = (i.size && i.size !== "one") ? '<div class="meta">' + esc(i.size) + "</div>" : "";
       return '<div class="line">' +
         imgHTML(i, true) +
-        "<div><strong>" + esc(i.name) + "</strong>" + sizeMeta +
+        "<div class=\"line-mid\"><strong>" + esc(i.name) + "</strong>" + sizeMeta +
         '<div class="qty"><button type="button" data-dec="' + esc(i.key) + '" aria-label="Decrease">−</button>' +
         "<span>" + i.qty + '</span>' +
         '<button type="button" data-inc="' + esc(i.key) + '" aria-label="Increase">+</button></div></div>' +

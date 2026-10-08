@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=37">
+  <link rel="stylesheet" href="css/site.css?v=38">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -53,9 +53,9 @@
   </main>
   <script src="js/blog.js?v=6"></script>
   <script src="js/store.js?v=6"></script>
-  <script src="js/shopify.js?v=3"></script>
+  <script src="js/shopify.js?v=4"></script>
   <script src="js/comments.js?v=4"></script>
-  <script src="js/shop.js?v=6"></script>
+  <script src="js/shop.js?v=7"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -85,10 +85,13 @@
       var split = nav.querySelector(".split");
       if (!btn || !window.MP) return;
       var onProduct = current.type === "product";
+      var onPost = current.type === "post";
       var n = MP.cartCount();
-      var bagMode = onProduct && n > 0;
+      var bagMode = onProduct && n > 0; // product page: sectioned slot becomes the bag
+      var postBag = onPost && n > 0;    // post page: cart joins the pencil in the sectioned area
       // 4th slot: pencil on blog posts, sectioned bag on product pages with items, nothing otherwise
-      var showSlot = bagMode || current.type === "post";
+      var showSlot = bagMode || onPost;
+      nav.classList.toggle("post-bag", postBag);
       btn.classList.toggle("bag-mode", bagMode);
       btn.style.display = showSlot ? "" : "none";
       if (split) split.style.display = showSlot ? "" : "none";

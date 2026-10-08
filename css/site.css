@@ -148,6 +148,10 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .page-btn .ic-bag { display: none; }
 .page-btn.bag-mode .ic-post { display: none; }
 .page-btn.bag-mode .ic-bag { display: block; }
+/* post view with items: cart joins the pencil in the sectioned area */
+.nav.post-bag .split { order: 3; }
+.nav.post-bag #post-btn { order: 4; }
+.nav.post-bag #cart-btn { order: 5; }
 .nav.shop .seg { transform: translateX(64px); }
 .nav.cart .seg { transform: translateX(128px); }
 .nav.reading .seg { transform: translateX(141px); }
@@ -364,6 +368,8 @@ textarea { min-height: 90px; }
   border-top: 1px solid var(--hairline);
 }
 .line img { width: 64px; height: 80px; object-fit: cover; border-radius: 10px; }
+.line-mid { display: grid; gap: 6px; align-content: center; min-width: 0; }
+.line-mid .qty { margin-top: 0; }
 .ok { color: var(--accent); margin-top: 10px; }
 
 /* ---------- Cart badge ---------- */
@@ -598,7 +604,29 @@ textarea { min-height: 90px; }
 .bag-stepper button:active { transform: scale(0.9); }
 .product-meta { padding: 12px 14px 14px; display: grid; gap: 3px; }
 .product-meta strong { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; }
-.product-meta .meta { font-size: 13px; }
+.product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+/* keep the tile's own top corners round so they never clip against the card */
+.product-card .img-ph, .product-card img { border-radius: 21px 21px 0 0; }
+/* ---------- Stock pill ---------- */
+.stock-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(18, 22, 38, 0.55);
+  border: 0.5px solid rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+.stock-pill.low { color: #ffd9a0; border-color: rgba(255, 200, 120, 0.5); }
+.stock-pill.out { color: #ffa3a3; border-color: rgba(255, 150, 150, 0.5); }
 .tag {
   position: absolute;
   top: 10px;
