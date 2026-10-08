@@ -30,10 +30,12 @@
   label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
   label:first-child { margin-top: 0; }
   input, textarea {
-    width: 100%; background: rgba(255,255,255,.07); border: 1px solid var(--hair);
+    width: 100%; max-width: 100%; min-width: 0;
+    background: rgba(255,255,255,.07); border: 1px solid var(--hair);
     border-radius: 12px; color: var(--ink); font-size: 16px; padding: 12px 14px;
-    font-family: inherit; outline: none;
+    font-family: inherit; outline: none; text-align: left;
   }
+  input[type="datetime-local"] { text-align: left; -webkit-text-fill-color: var(--ink); }
   input:focus, textarea:focus { border-color: rgba(255,255,255,.4); }
   textarea.body { min-height: 38vh; line-height: 1.6; font-size: 15px; resize: vertical; }
   .row { display: flex; gap: 10px; margin-top: 18px; }
