@@ -560,6 +560,8 @@ textarea { min-height: 90px; }
 }
 .line .img-ph { width: 64px; height: 80px; aspect-ratio: auto; border-radius: 10px; }
 .line .img-ph span { font-size: 22px; }
+.img-ph.emoji-tile { background: #131f4d; }
+.img-ph.emoji-tile span { font-size: 34px; font-weight: 400; letter-spacing: 0; color: #fff; opacity: 0.9; }
 .in-bag-label {
   display: block;
   font-size: 13px;

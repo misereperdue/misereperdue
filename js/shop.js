@@ -27,11 +27,19 @@ var MPShop = (function () {
     return (s || "M").toUpperCase();
   }
 
+  function isJersey(name) { return /jersey/i.test(name || ""); }
+
+  function phTile(name, extraStyle) {
+    var cls = "img-ph" + (isJersey(name) ? " emoji-tile" : "");
+    var inner = isJersey(name) ? "👕" : esc(initials(name));
+    return '<div class="' + cls + '" aria-hidden="true"' + (extraStyle ? ' style="' + extraStyle + '"' : "") + "><span>" + inner + "</span></div>";
+  }
+
   function imgHTML(p, eager) {
     if (p.image) {
       return '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"' + (eager ? "" : ' loading="lazy"') + ">";
     }
-    return '<div class="img-ph" aria-hidden="true"><span>' + esc(initials(p.name)) + "</span></div>";
+    return phTile(p.name);
   }
 
   function products() {
@@ -68,8 +76,7 @@ var MPShop = (function () {
   function carouselHTML(images, name) {
     var list = (images && images.length ? images : []).filter(Boolean);
     if (!list.length) {
-      return '<div class="carousel"><div class="carousel-track"><div class="img-ph" aria-hidden="true" style="flex:none;width:100%"><span>' +
-        esc(initials(name)) + "</span></div></div></div>";
+      return '<div class="carousel"><div class="carousel-track">' + phTile(name, "flex:none;width:100%") + "</div></div>";
     }
     var imgs = list.map(function (src, i) {
       return '<img src="' + esc(src) + '" alt="' + esc(name) + (i ? " " + (i + 1) : "") + '"' + (i ? ' loading="lazy"' : "") + ">";
