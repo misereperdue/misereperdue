@@ -48,13 +48,17 @@ var MPShop = (function () {
     return phTile(p.name);
   }
 
+  function shopifyList(tried) {
+    return MPShopify.fetchProducts().then(function (list) {
+      list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
+      return list.length ? list : [PLACEHOLDER];
+    }).catch(function () {
+      return tried ? [PLACEHOLDER] : shopifyList(true);
+    });
+  }
+
   function products() {
-    if (window.MPShopify && MPShopify.configured()) {
-      return MPShopify.fetchProducts().then(function (list) {
-        list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
-        return list.length ? list : [PLACEHOLDER];
-      }).catch(function () { return [PLACEHOLDER]; });
-    }
+    if (window.MPShopify && MPShopify.configured()) return shopifyList(false);
     return Promise.resolve([PLACEHOLDER]);
   }
 

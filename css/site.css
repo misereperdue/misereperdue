@@ -148,10 +148,10 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .page-btn .ic-bag { display: none; }
 .page-btn.bag-mode .ic-post { display: none; }
 .page-btn.bag-mode .ic-bag { display: block; }
-/* post view with items: cart joins the pencil in the sectioned area */
-.nav.post-bag .split { order: 3; }
-.nav.post-bag #post-btn { order: 4; }
-.nav.post-bag #cart-btn { order: 5; }
+/* the bag always lives in the sectioned area, after the divider */
+.nav .split { order: 3; }
+.nav #post-btn { order: 4; }
+.nav #cart-btn { order: 5; }
 .nav.shop .seg { transform: translateX(64px); }
 .nav.cart .seg { transform: translateX(128px); }
 .nav.reading .seg { transform: translateX(141px); }
