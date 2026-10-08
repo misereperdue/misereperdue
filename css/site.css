@@ -746,30 +746,20 @@ textarea { min-height: 90px; }
   font-size: 15px;
 }
 
-/* ---------- Blog post hero (full page header) ---------- */
-.post-hero-full {
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  height: 42vh;
-  min-height: 280px;
-  max-height: 480px;
+/* ---------- Blog post hero (header media) ---------- */
+.post-hero {
+  margin: -18px -18px 18px;
+  border-radius: 18px 18px 0 0;
   overflow: hidden;
-  position: relative;
+  aspect-ratio: 16 / 9;
   background: rgba(255,255,255,.04);
-  margin-top: -20px;
-  margin-bottom: 20px;
 }
-.post-hero-full img, .post-hero-full video {
+.post-hero img, .post-hero video {
   width: 100%; height: 100%; object-fit: cover; display: block;
-  opacity: 0; transition: opacity .9s ease;
+  opacity: 0; transition: opacity .8s ease;
 }
-.post-hero-full img.ld { opacity: 1; }
-.post-hero-full video { opacity: 1; animation: heroIn .9s ease; }
-.post-hero-full::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, transparent 55%, var(--bg) 100%);
-  pointer-events: none;
-}
+.post-hero img.ld { opacity: 1; }
+.post-hero video { opacity: 1; animation: heroIn .8s ease; }
 @keyframes heroIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ---------- Tag dropdown (Liquid Glass) ---------- */
@@ -793,37 +783,12 @@ textarea { min-height: 90px; }
 @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tagmenu.hidden { display: none; }
 .tagitem {
-  display: block; width: 100%; text-align: left; border: none; background: transparent;
+  display: block; width: 100%; text-align: left;
   color: var(--ink); font-size: 14px; font-weight: 500; padding: 10px 12px;
-  border-radius: 10px; cursor: pointer; font-family: inherit;
+  border-radius: 10px; font-family: inherit;
 }
-.tagitem:active { background: rgba(255,255,255,.1); }
 
 /* ---------- Blog tags ---------- */
-.tag-filter {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 10px;
-  margin-bottom: 4px;
-  scrollbar-width: none;
-}
-.tag-filter::-webkit-scrollbar { display: none; }
-.ftag {
-  flex: none;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: var(--glass-hairline);
-  background: var(--glass-clear-tint);
-  color: var(--muted);
-  -webkit-backdrop-filter: var(--glass-clear);
-  backdrop-filter: var(--glass-clear);
-  box-shadow: var(--glass-spec);
-  cursor: pointer;
-}
-.ftag.on { color: var(--ink); border-color: var(--accent); }
 .ptags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .ptag {
   font-size: 12px;

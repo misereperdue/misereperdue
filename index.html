@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=60">
+  <link rel="stylesheet" href="css/site.css?v=61">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -39,7 +39,7 @@
     </nav>
   </div>
   <main class="page">
-    <section class="panel on" id="journal"><div class="tag-filter" id="tag-filter" hidden></div><div class="feed" id="feed"></div></section>
+    <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
     <section class="panel" id="shop"><div class="grid" id="shop-grid"></div></section>
     <section class="panel" id="cart">
       <div id="cart-lines"></div>
@@ -149,12 +149,12 @@
       var hero = "";
       if (post.header_media) {
         var isV = /\.(mp4|webm|mov)(\?|$)/i.test(post.header_media);
-        hero = '<div class="post-hero-full">' + (isV
+        hero = '<div class="post-hero">' + (isV
           ? '<video src="' + esc(post.header_media) + '" autoplay muted loop playsinline></video>'
           : '<img src="' + esc(post.header_media) + '" alt="" onload="this.classList.add(\'ld\')">') + '</div>';
       }
-      document.getElementById("postview").innerHTML = hero +
-        '<article class="article-card">' + byline(author, date) +
+      document.getElementById("postview").innerHTML =
+        '<article class="article-card">' + hero + byline(author, date) +
         "<h1>" + esc(title) + "</h1>" + tagDropdown(post.tags) + '<div class="post-body">' +
         (post.body || "") +
         '</div><div class="actions">' +
@@ -208,7 +208,7 @@
         esc(tags.length + " Tags") + ' <span class="chev">▾</span></button>' +
         '<div class="tagmenu hidden" id="tagmenu">' +
         tags.map(function (t) {
-          return '<button type="button" class="tagitem" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+          return '<span class="tagitem">' + esc(t) + "</span>";
         }).join("") + "</div></div>";
     }
     function wireTagDropdown() {
@@ -220,21 +220,17 @@
         menu.classList.toggle("hidden");
         drop.querySelector(".chev").textContent = menu.classList.contains("hidden") ? "▾" : "▴";
       };
-      document.addEventListener("click", function h(e) {
-        if (!menu.classList.contains("hidden") && !e.target.closest(".tagwrap")) {
+      document.addEventListener("click", function () {
+        if (!menu.classList.contains("hidden")) {
           menu.classList.add("hidden");
           drop.querySelector(".chev").textContent = "▾";
         }
       });
-      menu.querySelectorAll(".tagitem").forEach(function (b) {
-        b.onclick = function () {
-          activeTag = b.dataset.tag;
-          show("journal");
-          renderTagFilter(posts);
-          renderFeed(posts);
-        };
-      });
     }
+    function renderFeed(list) {
+      var feed = document.getElementById("feed");
+      feed.innerHTML = "";
+      list.forEach(function (post) {
     function renderFeed(list) {
       var feed = document.getElementById("feed");
       feed.innerHTML = "";
@@ -258,28 +254,8 @@
         feed.appendChild(a);
       });
     }
-    function renderTagFilter(list) {
-      var wrap = document.getElementById("tag-filter");
-      var seen = {};
-      list.forEach(function (p) { (p.tags || []).forEach(function (t) { seen[t] = 1; }); });
-      var tags = Object.keys(seen).sort();
-      if (!tags.length) { wrap.hidden = true; return; }
-      wrap.hidden = false;
-      wrap.innerHTML = '<button type="button" class="ftag' + (activeTag ? "" : " on") + '" data-tag="">All</button>' +
-        tags.map(function (t) {
-          return '<button type="button" class="ftag' + (activeTag === t ? " on" : "") + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
-        }).join("");
-      wrap.querySelectorAll(".ftag").forEach(function (b) {
-        b.onclick = function () {
-          activeTag = b.dataset.tag || null;
-          renderTagFilter(posts);
-          renderFeed(posts);
-        };
-      });
-    }
     SanityBlog.loadPosts().then(function (list) {
       posts = list;
-      renderTagFilter(posts);
       renderFeed(posts);
     });
 
