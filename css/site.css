@@ -752,8 +752,15 @@ textarea { min-height: 90px; }
 }
 .hero-post img, .hero-post video {
   width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
 [data-theme="light"] .hero-post img { filter: none; }
+
+/* byline + tags side by side */
+.byline-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.byline-row .tagwrap { margin: 0; flex: none; }
+.byline-row .ptags { margin: 0; }
 
 /* ---------- Tag dropdown (Liquid Glass) ---------- */
 .tagwrap { position: relative; display: inline-block; margin: 12px 0 4px; }

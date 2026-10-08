@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=62">
+  <link rel="stylesheet" href="css/site.css?v=63">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -177,8 +177,8 @@
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
       setPostHero(post.header_media || "");
       document.getElementById("postview").innerHTML =
-        '<article class="article-card">' + byline(author, date) +
-        "<h1>" + esc(title) + "</h1>" + tagDropdown(post.tags) + '<div class="post-body">' +
+        '<article class="article-card"><div class="byline-row">' + byline(author, date) + tagDropdown(post.tags) + "</div>" +
+        "<h1>" + esc(title) + "</h1>" + '<div class="post-body">' +
         (post.body || "") +
         '</div><div class="actions">' +
         '<a class="share" href="' + share + '" target="_blank" rel="noopener">' + X_SVG + "Share on X</a>" +
