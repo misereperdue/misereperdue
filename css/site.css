@@ -155,7 +155,19 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .nav.reading .split { display: grid; }
 .nav.shop .seg { transform: translateX(64px); }
 .nav.reading .seg { transform: translateX(141px); }
-#postview .article-card p { margin: 0 0 14px; font-size: 17px; }
+.share {
+  display: inline-flex;
+  margin-top: 8px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  border: 0.5px solid var(--hairline);
+  background: var(--fill);
+  font-weight: 600;
+}
+.comments { margin-top: 28px; }
+.comments h3 { font-size: 20px; margin-bottom: 12px; }
+.comment { padding: 12px 0; border-top: 1px solid var(--hairline); }
+.comment p { margin: 4px 0 0; }
 .split {
   width: 1px;
   height: 22px;

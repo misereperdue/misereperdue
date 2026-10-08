@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=23">
+  <link rel="stylesheet" href="css/site.css?v=24">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -65,7 +65,18 @@
       if (!post) return;
       openSlug = post.slug || post._id;
       var date = (post.publishedAt || "").slice(0, 10);
-      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + (post.title || "Untitled") + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + p + "</p>"; }).join("") + '</article>';
+      var title = post.title || "Untitled";
+      var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
+      var saved = [];
+      try { saved = JSON.parse(localStorage.getItem("comments:" + openSlug) || "[]"); } catch (e) {}
+      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + p + "</p>"; }).join("") + '<a class="share" href="' + share + '" target="_blank" rel="noopener">Share on X</a><section class="comments"><h3>Comments</h3><div class="comment-list">' + (saved.map(function (c) { return '<div class="comment"><strong>' + c.name + '</strong><p>' + c.text + '</p></div>'; }).join("") || '<p class="empty">No comments yet.</p>') + '</div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
+      document.getElementById("comment-form").onsubmit = function (e) {
+        e.preventDefault();
+        var data = new FormData(e.target);
+        saved.push({ name: data.get("name"), text: data.get("text") });
+        localStorage.setItem("comments:" + openSlug, JSON.stringify(saved));
+        openPost(openSlug);
+      };
       show("post");
     }
     nav.querySelectorAll("button").forEach(function (b) {
