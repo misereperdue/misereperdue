@@ -1,17 +1,311 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Content Manager — Misere Perdue</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #070f29; color: #f5f5f7; display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    p { opacity: 0.6; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Editor — Misere Perdue</title>
+<style>
+  :root {
+    --ink: #f5f5f7; --muted: rgba(245,245,247,.55); --bg: #070f29;
+    --card: rgba(255,255,255,.06); --hair: rgba(255,255,255,.14);
+    --accent: #fff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+    min-height: 100vh; padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 32px);
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 22px; letter-spacing: -.02em; margin: 0 0 4px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+  .hidden { display: none !important; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--hair); border-radius: 18px;
+    padding: 18px; margin-bottom: 12px;
+    -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+  }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+  label:first-child { margin-top: 0; }
+  input, textarea {
+    width: 100%; background: rgba(255,255,255,.07); border: 1px solid var(--hair);
+    border-radius: 12px; color: var(--ink); font-size: 16px; padding: 12px 14px;
+    font-family: inherit; outline: none;
+  }
+  input:focus, textarea:focus { border-color: rgba(255,255,255,.4); }
+  textarea.body { min-height: 38vh; line-height: 1.6; font-size: 15px; resize: vertical; }
+  .row { display: flex; gap: 10px; margin-top: 18px; }
+  .btn {
+    flex: 1; border: 1px solid var(--hair); border-radius: 999px; padding: 14px;
+    font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit;
+    background: rgba(255,255,255,.08); color: var(--ink);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  }
+  .btn.primary { background: #f5f5f7; color: #070f29; border: none; }
+  .btn.danger { background: transparent; color: #ff6b6b; border-color: rgba(255,107,107,.35); }
+  .btn:active { transform: scale(.98); }
+  .err { color: #ff6b6b; font-size: 14px; margin-top: 10px; min-height: 20px; }
+
+  .post-row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 4px;
+    border-bottom: 1px solid rgba(255,255,255,.07); cursor: pointer;
+  }
+  .post-row:last-child { border-bottom: none; }
+  .post-row .t { flex: 1; min-width: 0; }
+  .post-row .t b { display: block; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-row .t span { font-size: 12px; color: var(--muted); }
+  .post-row .chev { color: var(--muted); font-size: 18px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .iconbtn {
+    width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--hair);
+    background: rgba(255,255,255,.07); color: var(--ink); font-size: 20px; cursor: pointer;
+    display: grid; place-items: center;
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  }
+  .taghint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .preview { line-height: 1.65; font-size: 15px; }
+  .preview h1,.preview h2,.preview h3 { letter-spacing: -.02em; }
+  .preview blockquote { border-left: 2px solid #fff; padding-left: 12px; color: var(--muted); margin: 12px 0; }
+  .preview pre { background: rgba(0,0,0,.4); border-radius: 12px; padding: 12px; overflow-x: auto; }
+  .preview code { font-family: ui-monospace, monospace; font-size: .9em; }
+  .preview img { max-width: 100%; border-radius: 12px; }
+  .seg { display: flex; background: rgba(255,255,255,.07); border-radius: 999px; padding: 3px; margin-bottom: 14px; }
+  .seg button { flex: 1; border: none; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; padding: 8px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+  .seg button.on { background: rgba(255,255,255,.14); color: var(--ink); }
+</style>
 </head>
 <body>
-  <p>Loading editor…</p>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div id="v-login">
+    <h1>Editor</h1>
+    <p class="sub">Private. Only this device.</p>
+    <div class="card">
+      <label>Password</label>
+      <input type="password" id="pw" autocomplete="current-password" placeholder="••••••••">
+      <div class="err" id="pw-err"></div>
+      <div class="row"><button class="btn primary" id="pw-go">Unlock</button></div>
+    </div>
+  </div>
+
+  <!-- POST LIST -->
+  <div id="v-list" class="hidden">
+    <div class="topbar">
+      <div><h1>Posts</h1><p class="sub" id="list-count" style="margin:0"></p></div>
+      <button class="iconbtn" id="btn-new" aria-label="New post">＋</button>
+    </div>
+    <div class="card" id="post-list"><p class="sub">Loading…</p></div>
+    <div class="row"><button class="btn" id="btn-lock">Lock</button></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="v-edit" class="hidden">
+    <div class="topbar">
+      <button class="iconbtn" id="btn-back" aria-label="Back">‹</button>
+      <div class="seg" style="margin:0; width: 180px;">
+        <button id="tab-write" class="on">Write</button>
+        <button id="tab-preview">Preview</button>
+      </div>
+      <button class="iconbtn" id="btn-del" aria-label="Delete" style="color:#ff6b6b">×</button>
+    </div>
+    <div id="pane-write">
+      <div class="card">
+        <label>Title</label>
+        <input id="f-title" placeholder="Post title" maxlength="200">
+        <label>Date</label>
+        <input id="f-date" type="datetime-local">
+        <label>Excerpt</label>
+        <input id="f-excerpt" placeholder="Short summary" maxlength="500">
+        <label>Tags</label>
+        <input id="f-tags" placeholder="music, toronto, notes">
+        <div class="taghint">Comma-separated.</div>
+        <label>Body (Markdown)</label>
+        <textarea class="body" id="f-body" placeholder="Write…"></textarea>
+      </div>
+      <div class="row"><button class="btn primary" id="btn-save">Publish</button></div>
+      <div class="err" id="save-err" style="text-align:center"></div>
+    </div>
+    <div id="pane-preview" class="hidden">
+      <div class="card"><div class="preview" id="preview-body"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var API = "https://misery-comments.freeglory416.workers.dev";
+var secret = localStorage.getItem("mp_editor_secret") || "";
+var editingSlug = null;
+
+function show(id) {
+  ["v-login","v-list","v-edit"].forEach(function(v){ document.getElementById(v).classList.add("hidden"); });
+  document.getElementById(id).classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({"Content-Type":"application/json"}, opts.headers||{});
+  var r = await fetch(API + path, opts);
+  var j = await r.json().catch(function(){ return {}; });
+  if (!r.ok) throw new Error(j.error || ("HTTP "+r.status));
+  return j;
+}
+
+/* --- login --- */
+async function tryLogin(pw) {
+  var j = await api("/api/auth", { method:"POST", body: JSON.stringify({secret: pw}) });
+  if (j.ok) {
+    secret = pw;
+    localStorage.setItem("mp_editor_secret", pw);
+    loadList();
+    return true;
+  }
+  return false;
+}
+document.getElementById("pw-go").onclick = async function(){
+  var pw = document.getElementById("pw").value;
+  var err = document.getElementById("pw-err");
+  err.textContent = "";
+  try {
+    if (await tryLogin(pw)) return;
+    err.textContent = "Wrong password.";
+  } catch(e){ err.textContent = "Could not reach server."; }
+};
+document.getElementById("pw").addEventListener("keydown", function(e){ if(e.key==="Enter") document.getElementById("pw-go").click(); });
+document.getElementById("btn-lock").onclick = function(){
+  secret = ""; localStorage.removeItem("mp_editor_secret");
+  document.getElementById("pw").value = "";
+  show("v-login");
+};
+
+/* --- list --- */
+async function loadList() {
+  show("v-list");
+  var box = document.getElementById("post-list");
+  box.innerHTML = '<p class="sub">Loading…</p>';
+  try {
+    var j = await api("/api/posts");
+    var posts = j.posts || [];
+    document.getElementById("list-count").textContent = posts.length + (posts.length===1?" post":" posts");
+    if (!posts.length) { box.innerHTML = '<p class="sub">No posts yet.</p>'; return; }
+    box.innerHTML = "";
+    posts.forEach(function(p){
+      var d = document.createElement("div");
+      d.className = "post-row";
+      d.innerHTML = '<div class="t"><b>'+esc(p.title||"(untitled)")+'</b><span>'+esc((p.date||"").slice(0,10))+
+        (p.tags&&p.tags.length?" · "+esc(p.tags.join(", ")):"")+'</span></div><div class="chev">›</div>';
+      d.onclick = function(){ openEditor(p.slug); };
+      box.appendChild(d);
+    });
+  } catch(e){ box.innerHTML = '<p class="sub">Failed to load.</p>'; }
+}
+document.getElementById("btn-new").onclick = function(){ openEditor(null); };
+
+/* --- editor --- */
+function openEditor(slug) {
+  editingSlug = slug;
+  ["f-title","f-date","f-excerpt","f-tags","f-body"].forEach(function(id){ document.getElementById(id).value=""; });
+  document.getElementById("save-err").textContent = "";
+  setTab("write");
+  document.getElementById("btn-del").style.visibility = slug ? "visible" : "hidden";
+  document.getElementById("btn-save").textContent = "Publish";
+  show("v-edit");
+  if (slug) {
+    api("/api/posts/"+encodeURIComponent(slug)).then(function(p){
+      document.getElementById("f-title").value = p.title||"";
+      document.getElementById("f-date").value = (p.date||"").slice(0,16);
+      document.getElementById("f-excerpt").value = p.excerpt||"";
+      document.getElementById("f-tags").value = (p.tags||[]).join(", ");
+      document.getElementById("f-body").value = p.body||"";
+    }).catch(function(){ document.getElementById("save-err").textContent="Could not load post."; });
+  } else {
+    var now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+    document.getElementById("f-date").value = now.toISOString().slice(0,16);
+  }
+}
+document.getElementById("btn-back").onclick = loadList;
+
+function setTab(which) {
+  document.getElementById("tab-write").classList.toggle("on", which==="write");
+  document.getElementById("tab-preview").classList.toggle("on", which==="preview");
+  document.getElementById("pane-write").classList.toggle("hidden", which!=="write");
+  document.getElementById("pane-preview").classList.toggle("hidden", which!=="preview");
+  if (which==="preview") renderPreview();
+}
+document.getElementById("tab-write").onclick = function(){ setTab("write"); };
+document.getElementById("tab-preview").onclick = function(){ setTab("preview"); };
+
+/* tiny markdown preview (matches site renderer) */
+function mdInline(s){
+  return esc(s)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,'<img src="$2" alt="$1" loading="lazy">')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g,"<em>$1</em>");
+}
+function renderPreview(){
+  var src = document.getElementById("f-body").value;
+  var html="", para=[];
+  function flush(){ if(para.length){ html+="<p>"+mdInline(para.join(" "))+"</p>"; para=[]; } }
+  src.split(/\r?\n/).forEach(function(line){
+    var h=line.match(/^(#{1,6})\s+(.+)$/);
+    if(h){ flush(); html+="<h"+h[1].length+">"+mdInline(h[2])+"</h"+h[1].length+">"; return; }
+    if(/^\s*$/.test(line)){ flush(); return; }
+    para.push(line.trim());
+  });
+  flush();
+  var title = document.getElementById("f-title").value;
+  document.getElementById("preview-body").innerHTML =
+    (title?"<h1>"+esc(title)+"</h1>":"")+html;
+}
+
+document.getElementById("btn-save").onclick = async function(){
+  var err = document.getElementById("save-err");
+  err.textContent = "";
+  var btn = document.getElementById("btn-save");
+  btn.textContent = "Publishing…";
+  try {
+    var j = await api("/api/posts", { method:"POST", body: JSON.stringify({
+      secret: secret,
+      slug: editingSlug,
+      title: document.getElementById("f-title").value,
+      date: document.getElementById("f-date").value,
+      excerpt: document.getElementById("f-excerpt").value,
+      tags: document.getElementById("f-tags").value.split(",").map(function(s){return s.trim();}).filter(Boolean),
+      body: document.getElementById("f-body").value
+    })});
+    editingSlug = j.slug;
+    btn.textContent = "Published ✓";
+    setTimeout(loadList, 900);
+  } catch(e){
+    err.textContent = e.message==="forbidden" ? "Wrong password — lock and try again." : "Save failed: "+e.message;
+    btn.textContent = "Publish";
+  }
+};
+
+document.getElementById("btn-del").onclick = async function(){
+  if (!editingSlug) return;
+  if (!confirm("Delete this post?")) return;
+  try {
+    await api("/api/posts/"+encodeURIComponent(editingSlug), { method:"DELETE", body: JSON.stringify({secret: secret}) });
+    loadList();
+  } catch(e){ document.getElementById("save-err").textContent = "Delete failed."; }
+};
+
+/* --- boot --- */
+if (secret) {
+  api("/api/auth", { method:"POST", body: JSON.stringify({secret: secret}) }).then(function(j){
+    if (j.ok) loadList(); else show("v-login");
+  }).catch(function(){ show("v-login"); });
+} else {
+  show("v-login");
+}
+</script>
 </body>
 </html>
