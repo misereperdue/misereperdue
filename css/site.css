@@ -144,6 +144,10 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .nav .split { display: none; }
 .nav.reading .page-btn,
 .nav.reading .split { display: grid; }
+.page-btn { position: relative; }
+.page-btn .ic-bag { display: none; }
+.page-btn.bag-mode .ic-post { display: none; }
+.page-btn.bag-mode .ic-bag { display: block; }
 .nav.shop .seg { transform: translateX(64px); }
 .nav.cart .seg { transform: translateX(128px); }
 .nav.reading .seg { transform: translateX(141px); }

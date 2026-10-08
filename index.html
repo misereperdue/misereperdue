@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=33">
+  <link rel="stylesheet" href="css/site.css?v=34">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -31,8 +31,10 @@
         <span class="badge hidden" id="cart-badge" aria-hidden="true">0</span>
       </button>
       <span class="split" aria-hidden="true"></span>
-      <button type="button" class="page-btn" data-view="post" aria-label="Post">
-        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.2 4.8l5 5L9.4 19.6 4.5 20l.4-4.9z"/><path d="M12.6 6.4l5 5"/></svg>
+      <button type="button" class="page-btn" data-view="post" aria-label="Post" id="post-btn">
+        <svg class="mark ic-post" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.2 4.8l5 5L9.4 19.6 4.5 20l.4-4.9z"/><path d="M12.6 6.4l5 5"/></svg>
+        <svg class="mark ic-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg>
+        <span class="badge hidden" id="post-badge" aria-hidden="true">0</span>
       </button>
     </nav>
   </div>
@@ -53,7 +55,7 @@
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=2"></script>
   <script src="js/comments.js?v=4"></script>
-  <script src="js/shop.js?v=2"></script>
+  <script src="js/shop.js?v=3"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -76,6 +78,19 @@
         if (btn) nav.querySelector(".seg").style.transform = "translateX(" + (btn.offsetLeft - 4) + "px)";
       });
     }
+    function refreshPostBtn() {
+      var btn = document.getElementById("post-btn");
+      var badge = document.getElementById("post-badge");
+      if (!btn || !window.MP) return;
+      var bagMode = current.type === "product" && MP.cartCount() > 0;
+      btn.classList.toggle("bag-mode", bagMode);
+      btn.setAttribute("aria-label", bagMode ? "Bag" : "Post");
+      if (badge) {
+        var n = MP.cartCount();
+        badge.classList.toggle("hidden", !bagMode || n === 0);
+        badge.textContent = n > 99 ? "99+" : String(n);
+      }
+    }
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
@@ -95,11 +110,13 @@
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
       refreshSeg();
+      refreshPostBtn();
       history.replaceState(null, "", view === "shop" ? "#shop" : view === "cart" ? "#cart" : reading ? "#post" : "#");
     }
     window.MPNav = {
       show: show,
       refreshSeg: refreshSeg,
+      refreshPostBtn: refreshPostBtn,
       showProduct: function (id) { show("product", id); },
       reopen: function () {
         if (current.type === "product" && current.id) MPShop.openProduct(current.id);
@@ -145,7 +162,10 @@
 
     nav.querySelectorAll("button").forEach(function (b) {
       b.onclick = function () {
-        if (b.dataset.view === "post") { MPNav.reopen(); return; }
+        if (b.dataset.view === "post") {
+          if (b.classList.contains("bag-mode")) { show("cart"); return; }
+          MPNav.reopen(); return;
+        }
         show(b.dataset.view);
       };
     });

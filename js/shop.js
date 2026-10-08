@@ -241,7 +241,7 @@ var MPShop = (function () {
     btn.classList.toggle("hidden", n === 0);
     badge.classList.toggle("hidden", n === 0);
     badge.textContent = n > 99 ? "99+" : String(n);
-    if (window.MPNav) MPNav.refreshSeg();
+    if (window.MPNav) { MPNav.refreshSeg(); MPNav.refreshPostBtn(); }
   }
 
   return {
