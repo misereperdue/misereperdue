@@ -173,7 +173,6 @@ var MPShop = (function () {
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
         sizes + '<div id="bag-action"></div>' +
-        '<p class="meta" style="margin-top:14px">Orders go out as notes — payment isn\'t switched on yet.</p>' +
       "</article>";
     initCarousel(view);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
@@ -188,6 +187,33 @@ var MPShop = (function () {
     });
     refreshAction();
     if (window.MPNav) MPNav.showProduct(id);
+  }
+
+  function checkout() {
+    var btn = document.getElementById("checkout-btn");
+    var err = document.getElementById("checkout-err");
+    if (err) err.textContent = "";
+    if (!window.MPShopify || !MPShopify.configured()) {
+      if (err) err.textContent = "Checkout isn't available right now.";
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = "Working…"; }
+    products().then(function () {
+      var lines = [];
+      MP.readCart().forEach(function (i) {
+        var p = MP.PRODUCTS[i.id];
+        if (!p || !p.shopify) return;
+        var vid = MPShopify.variantIdFor(p, i.size);
+        if (vid && i.qty > 0) lines.push({ variantId: vid, qty: i.qty });
+      });
+      if (!lines.length) throw new Error("empty");
+      return MPShopify.createCheckout(lines);
+    }).then(function (url) {
+      window.location.href = url;
+    }).catch(function () {
+      if (btn) { btn.disabled = false; btn.textContent = "Checkout"; }
+      if (err) err.textContent = "Couldn't start checkout. Check your connection and try again.";
+    });
   }
 
   function renderCartPanel() {
@@ -231,6 +257,11 @@ var MPShop = (function () {
     box.querySelectorAll("[data-del]").forEach(function (b) {
       b.onclick = function () { MP.removeItem(b.dataset.del); updateCartBadge(); renderCartPanel(); };
     });
+    var co = document.getElementById("checkout-btn");
+    if (co) {
+      co.style.display = cart.length ? "" : "none";
+      co.onclick = checkout;
+    }
   }
 
   function updateCartBadge() {

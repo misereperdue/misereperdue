@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=34">
+  <link rel="stylesheet" href="css/site.css?v=35">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -45,17 +45,17 @@
       <div id="cart-lines"></div>
       <p class="meta" id="cart-total" style="margin-top:12px"></p>
       <div class="row">
-        <a class="btn accent" href="cart.html">Review order</a>
+        <button class="btn accent" id="checkout-btn" type="button">Checkout</button>
       </div>
-      <p class="meta" style="margin-top:12px">Payment isn't switched on yet — orders go out as notes.</p>
+      <p class="meta" id="checkout-err" style="margin-top:12px"></p>
     </section>
     <section class="panel" id="postview"></section>
   </main>
   <script src="js/blog.js?v=6"></script>
   <script src="js/store.js?v=6"></script>
-  <script src="js/shopify.js?v=2"></script>
+  <script src="js/shopify.js?v=3"></script>
   <script src="js/comments.js?v=4"></script>
-  <script src="js/shop.js?v=3"></script>
+  <script src="js/shop.js?v=4"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];

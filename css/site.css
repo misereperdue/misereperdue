@@ -329,6 +329,7 @@ h1 { font-size: 34px; font-weight: 680; letter-spacing: -0.03em; }
   cursor: pointer;
 }
 .btn.accent { background: var(--accent); border-color: transparent; color: #fff; }
+.btn:disabled { opacity: 0.6; cursor: default; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .grid { display: grid; gap: 12px; margin-top: 14px; }
 @media (min-width: 700px) { .grid { grid-template-columns: 1fr 1fr; } }

@@ -34,10 +34,14 @@ var MPShopify = (function () {
     var price = (((n.priceRange || {}).minVariantPrice) || {});
     var images = ((n.images || {}).edges || []).map(function (e) { return e.node && e.node.url; }).filter(Boolean);
     var sizeSet = {};
+    var variantList = [];
     ((n.variants || {}).edges || []).forEach(function (e) {
-      ((e.node || {}).selectedOptions || []).forEach(function (o) {
-        if (/size/i.test(o.name || "") && o.value && !/default/i.test(o.value)) sizeSet[o.value] = true;
+      var v = e.node || {};
+      var sizeVal = null;
+      ((v.selectedOptions || [])).forEach(function (o) {
+        if (/size/i.test(o.name || "") && o.value && !/default/i.test(o.value)) { sizeSet[o.value] = true; sizeVal = o.value; }
       });
+      if (v.id) variantList.push({ id: v.id, size: sizeVal, available: v.availableForSale !== false });
     });
     var sizes = Object.keys(sizeSet);
     return {
@@ -51,6 +55,7 @@ var MPShopify = (function () {
       image: images[0] || "",
       details: (n.description || "").slice(0, 400),
       sizes: sizes.length ? sizes : null,
+      variantList: variantList,
       available: n.availableForSale !== false
     };
   }
@@ -76,5 +81,36 @@ var MPShopify = (function () {
       });
   }
 
-  return { CONFIG: CONFIG, configured: configured, fetchProducts: fetchProducts, money: money };
+  function variantIdFor(p, size) {
+    var vs = p.variantList || [];
+    var want = size || "one";
+    for (var i = 0; i < vs.length; i++) {
+      if ((vs[i].size || "one") === want) return vs[i].id;
+    }
+    return vs.length ? vs[0].id : null;
+  }
+
+  function createCheckout(lines) {
+    var query = "mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }";
+    return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": CONFIG.token
+      },
+      body: JSON.stringify({
+        query: query,
+        variables: { input: { lines: lines.map(function (l) { return { merchandiseId: l.variantId, quantity: l.qty }; }) } }
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var cc = ((d.data || {}).cartCreate) || {};
+        var errs = cc.userErrors || [];
+        if (d.errors || errs.length || !cc.cart || !cc.cart.checkoutUrl) throw new Error("checkout");
+        return cc.cart.checkoutUrl;
+      });
+  }
+
+  return { CONFIG: CONFIG, configured: configured, fetchProducts: fetchProducts, money: money, variantIdFor: variantIdFor, createCheckout: createCheckout };
 })();
