@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=61">
+  <link rel="stylesheet" href="css/site.css?v=62">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -105,6 +105,8 @@
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
+      // Restore default site hero when not viewing a post with custom header
+      if (view !== "post") restoreHero();
       document.getElementById("journal").classList.toggle("on", view === "journal");
       document.getElementById("shop").classList.toggle("on", view === "shop");
       document.getElementById("cart").classList.toggle("on", view === "cart");
@@ -137,6 +139,33 @@
 
     var X_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
 
+    var defaultHeroHTML = null;
+    function saveDefaultHero() {
+      if (defaultHeroHTML === null) {
+        var h = document.querySelector("header.hero");
+        if (h) defaultHeroHTML = h.innerHTML;
+      }
+    }
+    function restoreHero() {
+      saveDefaultHero();
+      var h = document.querySelector("header.hero");
+      if (h && defaultHeroHTML !== null && h.getAttribute("data-custom") === "1") {
+        h.innerHTML = defaultHeroHTML;
+        h.removeAttribute("data-custom");
+      }
+    }
+    function setPostHero(url) {
+      saveDefaultHero();
+      var h = document.querySelector("header.hero");
+      if (!h || !url) { restoreHero(); return; }
+      var isV = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+      h.setAttribute("data-custom", "1");
+      h.innerHTML = '<div class="hero-post">' + (isV
+        ? '<video src="' + esc(url) + '" autoplay muted loop playsinline></video>'
+        : '<img src="' + esc(url) + '" alt="">') +
+        '<div class="hero-fade"></div></div>';
+    }
+
     function openPost(slug) {
       var post = posts.find(function (p) { return (p.slug || p._id) === slug; }) || posts[0];
       if (!post) return;
@@ -146,15 +175,9 @@
       var title = post.title || "Untitled";
       var author = post.author || "dc";
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
-      var hero = "";
-      if (post.header_media) {
-        var isV = /\.(mp4|webm|mov)(\?|$)/i.test(post.header_media);
-        hero = '<div class="post-hero">' + (isV
-          ? '<video src="' + esc(post.header_media) + '" autoplay muted loop playsinline></video>'
-          : '<img src="' + esc(post.header_media) + '" alt="" onload="this.classList.add(\'ld\')">') + '</div>';
-      }
+      setPostHero(post.header_media || "");
       document.getElementById("postview").innerHTML =
-        '<article class="article-card">' + hero + byline(author, date) +
+        '<article class="article-card">' + byline(author, date) +
         "<h1>" + esc(title) + "</h1>" + tagDropdown(post.tags) + '<div class="post-body">' +
         (post.body || "") +
         '</div><div class="actions">' +
