@@ -166,12 +166,15 @@ export default {
         const b = await request.json().catch(() => ({}));
         const id = String(b.id || "").slice(0, 40);
         const dir = b.dir === -1 ? -1 : 1;
+        const prev = b.prev === 1 ? 1 : b.prev === -1 ? -1 : 0;
         if (!id) return json({ error: "bad input" }, 400);
         let result = null;
         await mutate(env.GITHUB_TOKEN, (rows) => {
           rows = rows.map(normalize);
           const c = rows.find((r) => r.id === id);
           if (!c) throw new Error("no-comment");
+          if (prev === 1) c.up = Math.max(0, c.up - 1);
+          if (prev === -1) c.down = Math.max(0, c.down - 1);
           if (dir === 1) c.up++; else c.down++;
           result = { up: c.up, down: c.down };
           return rows;

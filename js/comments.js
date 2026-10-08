@@ -147,9 +147,10 @@ var MPComments = (function () {
             '<div class="comment-actions">' +
               '<button type="button" class="vote' + (mine === 1 ? " on" : "") + '" data-vote="1" data-id="' + esc(c.id) + '" aria-label="Upvote">' +
                 '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5l7 10H5z"/></svg>' +
-                "<span>" + score(c) + "</span></button>" +
+                "<span>" + c.up + "</span></button>" +
               '<button type="button" class="vote' + (mine === -1 ? " on" : "") + '" data-vote="-1" data-id="' + esc(c.id) + '" aria-label="Downvote">' +
-                '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 19l-7-10h14z"/></svg></button>' +
+                '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 19l-7-10h14z"/></svg>' +
+                "<span>" + c.down + "</span></button>" +
               '<button type="button" class="reply-link" data-reply="' + esc(c.id) + '" data-reply-name="' + esc(c.name) + '">Reply</button>' +
               (isOwner() ? '<button type="button" class="del" data-del="' + esc(c.id) + '">Delete</button>' : "") +
             "</div>" +
@@ -273,8 +274,8 @@ var MPComments = (function () {
     var votes = getVotes();
     var prev = votes[id] || 0;
     if (useWorker()) {
-      if (prev === dir) return; // one vote per device in worker mode
-      apiPost("/api/comments/vote", { id: id, dir: dir }).then(function () {
+      if (prev === dir) return;
+      apiPost("/api/comments/vote", { id: id, dir: dir, prev: prev }).then(function () {
         votes[id] = dir;
         setVotes(votes);
         refresh();
