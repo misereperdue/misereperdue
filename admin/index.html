@@ -49,6 +49,20 @@
   .btn.danger { background: transparent; color: #ff6b6b; border-color: rgba(255,107,107,.35); }
   .btn:active { transform: scale(.98); }
   .err { color: #ff6b6b; font-size: 14px; margin-top: 10px; min-height: 20px; }
+  .lg-spin-wrap { display: flex; justify-content: center; padding: 26px 0; }
+  .lg-spin {
+    width: 46px; height: 46px; border-radius: 999px; flex: none;
+    display: inline-grid; place-items: center;
+    background: rgba(22,22,26,.38); border: .5px solid rgba(255,255,255,.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 24px rgba(0,0,0,.22);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+  }
+  .lg-spin::after {
+    content: ""; width: 20px; height: 20px; border-radius: 999px;
+    border: 2.5px solid rgba(255,255,255,.14); border-top-color: #f5f5f7;
+    animation: lg-spin .8s linear infinite;
+  }
+  @keyframes lg-spin { to { transform: rotate(360deg); } }
 
   .post-row {
     display: flex; align-items: center; gap: 12px; padding: 14px 4px;
@@ -99,7 +113,7 @@
       <div><h1>Posts</h1><p class="sub" id="list-count" style="margin:0"></p></div>
       <button class="iconbtn" id="btn-new" aria-label="New post">＋</button>
     </div>
-    <div class="card" id="post-list"><p class="sub">Loading…</p></div>
+    <div class="card" id="post-list"><div class="lg-spin-wrap"><span class="lg-spin"></span></div></div>
     <div class="row"><button class="btn" id="btn-lock">Lock</button></div>
   </div>
 
@@ -171,7 +185,7 @@ document.getElementById("f-file").addEventListener("change", async function(){
   var f = this.files[0];
   if (!f) return;
   var status = document.getElementById("upload-status");
-  status.textContent = "Uploading…";
+  status.innerHTML = '<div class="lg-spin-wrap" style="padding:10px 0"><span class="lg-spin" style="width:38px;height:38px"></span></div>';
   try {
     var dataUrl = await new Promise(function(res, rej){
       var r = new FileReader();
@@ -237,7 +251,7 @@ document.getElementById("btn-lock").onclick = function(){
 async function loadList() {
   show("v-list");
   var box = document.getElementById("post-list");
-  box.innerHTML = '<p class="sub">Loading…</p>';
+  box.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin"></span></div>';
   try {
     var j = await api("/api/posts");
     var posts = j.posts || [];

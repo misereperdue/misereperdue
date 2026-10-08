@@ -777,6 +777,31 @@ textarea { min-height: 90px; }
   mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
 
+/* ---------- Loading spinner (Liquid Glass) ---------- */
+.lg-spin-wrap { display: flex; justify-content: center; padding: 26px 0; }
+#shop-grid .lg-spin-wrap { grid-column: 1 / -1; }
+.lg-spin {
+  width: 46px; height: 46px; border-radius: 999px;
+  display: inline-grid; place-items: center; flex: none;
+  background: var(--glass-regular-tint);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
+}
+.lg-spin::after {
+  content: ""; width: 20px; height: 20px; border-radius: 999px;
+  border: 2.5px solid var(--hairline);
+  border-top-color: var(--ink);
+  animation: lg-spin .8s linear infinite;
+}
+@keyframes lg-spin { to { transform: rotate(360deg); } }
+.btn-spin {
+  display: inline-block; width: 18px; height: 18px; border-radius: 999px;
+  border: 2.5px solid rgba(255,255,255,.35); border-top-color: #fff;
+  animation: lg-spin .8s linear infinite; vertical-align: -3px;
+}
+
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .byline-row .byline { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; }

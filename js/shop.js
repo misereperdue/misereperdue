@@ -92,7 +92,7 @@ var MPShop = (function () {
   function renderShop() {
     var grid = document.getElementById("shop-grid");
     if (!grid) return;
-    grid.innerHTML = '<p class="empty">Loading…</p>';
+    grid.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin" role="status" aria-label="Loading products"></span></div>';
     products().then(function (list) {
       grid.innerHTML = list.map(cardHTML).join("") +
         (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + " — showing preview.</p>" : "");
@@ -235,7 +235,7 @@ var MPShop = (function () {
       if (err) err.textContent = "Checkout isn't available right now.";
       return;
     }
-    if (btn) { btn.disabled = true; btn.textContent = "Working…"; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spin"></span>'; }
     products().then(function () {
       var lines = [];
       MP.readCart().forEach(function (i) {
