@@ -614,8 +614,8 @@ textarea { min-height: 90px; }
   place-items: center;
 }
 .bag-stepper button:active { transform: scale(0.9); }
-.product-meta { display: block; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(7, 15, 41, 0.32); -webkit-backdrop-filter: blur(8px) saturate(130%); backdrop-filter: blur(8px) saturate(130%); border-top: 0.5px solid rgba(255, 255, 255, 0.12); }
-[data-theme="light"] .product-meta { background: rgba(255, 255, 255, 0.35); border-top-color: rgba(0, 0, 0, 0.08); }
+.product-meta { display: block; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(7, 15, 41, 0.18); -webkit-backdrop-filter: blur(6px) saturate(120%); backdrop-filter: blur(6px) saturate(120%); border-top: 0.5px solid rgba(255, 255, 255, 0.12); }
+[data-theme="light"] .product-meta { background: rgba(255, 255, 255, 0.2); border-top-color: rgba(0, 0, 0, 0.08); }
 .product-meta strong { display: block; font-size: 15px; font-weight: 620; letter-spacing: -0.01em; padding: 12px 14px 10px; color: #fff; }
 [data-theme="light"] .product-meta strong { color: #0a0f29; }
 .product-meta .meta { display: block; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; border-top: 1px solid rgba(255, 255, 255, 0.12); background: rgba(0, 0, 0, 0.35); padding: 9px 14px 14px; color: #fff; }
