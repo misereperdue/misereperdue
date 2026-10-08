@@ -255,6 +255,72 @@ var MPShop = (function () {
     });
   }
 
+  /* ---------- Checkout estimates ----------
+     Subtotal is exact. Shipping + tax are estimates based on the visitor's
+     country (detected from IP). Shopify's checkout always computes the
+     final amounts. dc: update EST_SHIP with your real shipping rates. */
+  var EST_SHIP = { CA: 12, US: 18, INTL: 28 }; // CAD flat estimates
+  var EST_TAX_CA = 0.13; // HST estimate for Canadian orders
+  var geoCountry = null; // {code, name}
+  var geoStarted = false;
+  var geoDone = false;
+  var lastSubtotal = 0;
+
+  function detectCountry() {
+    if (geoStarted) return;
+    geoStarted = true;
+    function done() { geoDone = true; renderTotals(lastSubtotal); }
+    try {
+      var ctl = new AbortController();
+      var to = setTimeout(function () { ctl.abort(); }, 6000);
+      fetch("https://ipapi.co/json/", { signal: ctl.signal })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          clearTimeout(to);
+          if (j && j.country_code) geoCountry = { code: j.country_code, name: j.country_name || j.country_code };
+          done();
+        })
+        .catch(function () { clearTimeout(to); done(); });
+    } catch (e) { done(); }
+  }
+
+  function trow(label, value, grand) {
+    return '<div class="trow' + (grand ? " grand" : "") + '"><span>' + label + "</span><span>" + value + "</span></div>";
+  }
+
+  function renderTotals(subtotal) {
+    var totalEl = document.getElementById("cart-total");
+    if (!totalEl) return;
+    lastSubtotal = subtotal;
+    if (!subtotal) { totalEl.innerHTML = ""; return; }
+    var html = trow("Subtotal", MP.money(subtotal));
+    if (!geoDone) {
+      html += trow("Shipping", "…") + trow("Taxes", "…");
+      html += trow("Total", MP.money(subtotal), true);
+      html += '<div class="tnote">Estimating shipping &amp; taxes…</div>';
+    } else if (!geoCountry) {
+      html += trow("Shipping", "At checkout") + trow("Taxes", "At checkout");
+      html += trow("Total", MP.money(subtotal), true);
+      html += '<div class="tnote">Shipping &amp; taxes calculated at checkout.</div>';
+    } else {
+      var code = geoCountry.code;
+      var cname = esc(geoCountry.name);
+      var ship = code === "CA" ? EST_SHIP.CA : code === "US" ? EST_SHIP.US : EST_SHIP.INTL;
+      var tax = 0;
+      html += trow("Shipping to " + cname + " (est.)", MP.money(ship));
+      if (code === "CA") {
+        tax = Math.round(subtotal * EST_TAX_CA);
+        html += trow("HST (est.)", MP.money(tax));
+      } else {
+        html += trow("Taxes", "At checkout");
+      }
+      html += trow("Estimated total", MP.money(subtotal + ship + tax), true);
+      html += '<div class="tnote">Estimates for ' + cname + ". Final shipping &amp; taxes calculated at checkout.</div>";
+    }
+    totalEl.innerHTML = html;
+    detectCountry();
+  }
+
   function renderCartPanel() {
     var box = document.getElementById("cart-lines");
     var totalEl = document.getElementById("cart-total");
@@ -262,7 +328,7 @@ var MPShop = (function () {
     var cart = MP.readCart();
     if (!cart.length) {
       box.innerHTML = '<p class="empty">Bag is empty.</p>';
-      if (totalEl) totalEl.textContent = "";
+      renderTotals(0);
       return;
     }
     var total = 0;
@@ -278,7 +344,7 @@ var MPShop = (function () {
         "<div><div>" + MP.money(i.price * i.qty) + '</div><button type="button" class="del" data-del="' + esc(i.key) + '">Remove</button></div>' +
         "</div>";
     }).join("");
-    if (totalEl) totalEl.textContent = "Total " + MP.money(total);
+    if (totalEl) renderTotals(total);
     box.querySelectorAll("[data-inc]").forEach(function (b) {
       b.onclick = function () {
         var it = MP.readCart().find(function (x) { return x.key === b.dataset.inc; });
