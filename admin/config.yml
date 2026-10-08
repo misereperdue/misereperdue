@@ -2,6 +2,7 @@ backend:
   name: github
   repo: misereperdue/misereperdue
   branch: main
+  base_url: https://misery-comments.freeglory416.workers.dev
   client_id: Ov23liV1P4XAHahefSQJ
 
 media_folder: "images/uploads"
