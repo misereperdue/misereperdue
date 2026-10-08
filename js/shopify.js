@@ -17,7 +17,7 @@ var MPShopify = (function () {
 
   var CONFIG = {
     domain: "shop.misereperdue.com", // your shop domain works for the Storefront API
-    token: "" // <-- paste the Storefront API access token here
+    token: "1ea6d8e04d03687ed4547d291ef46026" // Storefront API public token (public by design)
   };
 
   function configured() {
