@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=28">
+  <link rel="stylesheet" href="css/site.css?v=29">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -74,22 +74,37 @@
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
       var xmark = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.7 3h3.1l-6.8 7.8L19 21h-3.2l-5-6.6L6.2 21H3.1l7.3-8.3L3 3h3.3l4.5 6L14.7 3zm-1.1 16.2h1.7L8.5 4.7H6.7l6.9 14.5z"/></svg>';
       document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div class="post-body">' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + '</div><div class="actions"><a class="share" href="' + share + '" target="_blank" rel="noopener">' + xmark + 'Share on X</a><span class="split"></span><button type="button" class="share" id="copy-url">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button></div><section class="comments"><h3>Comments</h3><div class="comment-list"><p class="empty">Loading comments…</p></div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
-      fetch("https://api.github.com/repos/misereperdue/misereperdue/issues?state=all&labels=comment&per_page=100")
-        .then(function (r) { return r.json(); })
-        .then(function (list) {
-          var rows = (list || []).filter(function (i) { return i.title === "comment:" + openSlug; });
-          var box = document.querySelector("#postview .comment-list");
-          if (!box) return;
-          box.innerHTML = rows.length ? rows.map(function (i) {
-            var parts = String(i.body || "").split("\n\n");
-            var name = (parts[0] || i.user.login).replace(/^\*\*|\*\*$/g, "");
-            return '<div class="comment"><strong>' + esc(name) + '</strong><p>' + esc(parts.slice(1).join("\n\n") || i.body) + '</p></div>';
-          }).join("") : '<p class="empty">No comments yet.</p>';
-        })
-        .catch(function () {
-          var box = document.querySelector("#postview .comment-list");
-          if (box) box.innerHTML = '<p class="empty">Couldn’t load comments.</p>';
+      if (location.hash === "#own") localStorage.setItem("mp-owner", "1");
+      var owner = localStorage.getItem("mp-owner") === "1";
+      function drawComments(rows) {
+        var box = document.querySelector("#postview .comment-list");
+        if (!box) return;
+        var mine = rows.filter(function (c) { return c.slug === openSlug; });
+        box.innerHTML = mine.length ? mine.map(function (c) {
+          return '<div class="comment"><strong>' + esc(c.name) + '</strong><p>' + esc(c.text) + '</p>' + (owner ? '<button type="button" class="del" data-id="' + esc(c.id) + '">Delete</button>' : '') + '</div>';
+        }).join("") : '<p class="empty">No comments yet.</p>';
+        box.querySelectorAll(".del").forEach(function (b) {
+          b.onclick = function () { saveComments(rows.filter(function (c) { return c.id !== b.dataset.id; })); };
         });
+      }
+      function loadComments() {
+        return fetch("comments.json?t=" + Date.now()).then(function (r) { return r.json(); }).catch(function () { return []; });
+      }
+      function saveComments(rows) {
+        var body = JSON.stringify(rows, null, 2);
+        function put(sha) {
+          return fetch("https://api.github.com/repos/misereperdue/misereperdue/contents/comments.json", {
+            method: "PUT",
+            headers: { "Authorization": "Bearer " + localStorage.getItem("mp-token"), "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "Update comments", content: btoa(unescape(encodeURIComponent(body))), sha: sha })
+          });
+        }
+        fetch("https://api.github.com/repos/misereperdue/misereperdue/contents/comments.json", { headers: { "Authorization": "Bearer " + localStorage.getItem("mp-token") } })
+          .then(function (r) { return r.json(); })
+          .then(function (file) { return put(file.sha); })
+          .then(function () { drawComments(rows); });
+      }
+      loadComments().then(drawComments);
       document.getElementById("copy-url").onclick = function () {
         var link = "https://misereperdue.com/";
         if (navigator.clipboard) navigator.clipboard.writeText(link);
@@ -98,8 +113,11 @@
       document.getElementById("comment-form").onsubmit = function (e) {
         e.preventDefault();
         var data = new FormData(e.target);
-        var url = "https://github.com/misereperdue/misereperdue/issues/new?labels=comment&title=" + encodeURIComponent("comment:" + openSlug) + "&body=" + encodeURIComponent("**" + data.get("name") + "**\n\n" + data.get("text"));
-        window.open(url, "_blank");
+        loadComments().then(function (rows) {
+          rows.push({ id: String(Date.now()), slug: openSlug, name: data.get("name"), text: data.get("text") });
+          saveComments(rows);
+          e.target.reset();
+        });
       };
       show("post");
     }
