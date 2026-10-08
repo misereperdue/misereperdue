@@ -150,13 +150,8 @@ var MPComments = (function () {
                 "<span>" + score(c) + "</span></button>" +
               '<button type="button" class="vote' + (mine === -1 ? " on" : "") + '" data-vote="-1" data-id="' + esc(c.id) + '" aria-label="Downvote">' +
                 '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 19l-7-10h14z"/></svg></button>' +
-              '<button type="button" class="reply-link" data-reply="' + esc(c.id) + '">Reply</button>' +
+              '<button type="button" class="reply-link" data-reply="' + esc(c.id) + '" data-reply-name="' + esc(c.name) + '">Reply</button>' +
               (isOwner() ? '<button type="button" class="del" data-del="' + esc(c.id) + '">Delete</button>' : "") +
-            "</div>" +
-            '<div class="reply-form hidden" id="reply-' + esc(c.id) + '">' +
-              '<input name="name" placeholder="Name" maxlength="40">' +
-              '<textarea name="text" placeholder="Type your reply here…" required maxlength="2000"></textarea>' +
-              '<button class="btn morph-btn" type="submit"><span class="lbl">Reply</span>' + checkSVG() + "</button>" +
             "</div>" +
             (kidsHTML ? '<div class="replies">' + kidsHTML + "</div>" : "") +
           "</div>" +
@@ -181,13 +176,7 @@ var MPComments = (function () {
       b.onclick = function () { castVote(b.dataset.id, +b.dataset.vote); };
     });
     root.querySelectorAll("[data-reply]").forEach(function (b) {
-      b.onclick = function () {
-        var f = document.getElementById("reply-" + b.dataset.reply);
-        if (f) { f.classList.toggle("hidden"); var t = f.querySelector("textarea"); if (t && !f.classList.contains("hidden")) t.focus(); }
-      };
-    });
-    root.querySelectorAll(".reply-form").forEach(function (f) {
-      f.onsubmit = function (e) { submitReply(e, f); };
+      b.onclick = function () { startReply(b.dataset.reply, b.dataset.replyName); };
     });
     root.querySelectorAll("[data-del]").forEach(function (b) {
       b.onclick = function () { removeThread(b.dataset.del); };
@@ -238,19 +227,32 @@ var MPComments = (function () {
     });
   }
 
-  function submitReply(e, form) {
-    e.preventDefault();
-    var id = form.id.replace("reply-", "");
-    var name = form.querySelector('[name="name"]').value.trim() || "anon";
-    var text = form.querySelector('[name="text"]').value.trim();
-    if (!text) return;
-    var btn = form.querySelector('button[type="submit"]');
-    postComment({ slug: state.slug, parentId: id, name: name, text: text }).then(function () {
-      morphDone(btn);
-      form.reset();
-      form.classList.add("hidden");
-      refresh();
-    }).catch(function () { needTokenAlert(); });
+  function startReply(id, name) {
+    state.replyTo = id;
+    updateReplyUI(name);
+    var form = document.getElementById("comment-form");
+    if (form) {
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      var t = form.querySelector("textarea");
+      if (t) t.focus({ preventScroll: true });
+    }
+  }
+
+  function cancelReply() {
+    state.replyTo = null;
+    updateReplyUI();
+  }
+
+  function updateReplyUI(name) {
+    var replying = !!state.replyTo;
+    var bar = document.getElementById("replying-to");
+    var nm = document.getElementById("replying-to-name");
+    var ta = document.querySelector("#comment-form textarea");
+    var lbl = document.querySelector("#comment-form .lbl");
+    if (bar) bar.classList.toggle("hidden", !replying);
+    if (nm && replying) nm.textContent = name || "";
+    if (ta) ta.placeholder = replying ? "Type your reply here…" : "Type your comment here…";
+    if (lbl) lbl.textContent = replying ? "Reply" : "Comment";
   }
 
   function submitTop(e, form) {
@@ -259,9 +261,10 @@ var MPComments = (function () {
     var text = form.querySelector('[name="text"]').value.trim();
     if (!text) return;
     var btn = form.querySelector('button[type="submit"]');
-    postComment({ slug: state.slug, parentId: null, name: name, text: text }).then(function () {
+    postComment({ slug: state.slug, parentId: state.replyTo, name: name, text: text }).then(function () {
       morphDone(btn);
       form.reset();
+      cancelReply();
       refresh();
     }).catch(function () { needTokenAlert(); });
   }
@@ -300,6 +303,7 @@ var MPComments = (function () {
 
   function removeThread(id) {
     if (!isOwner()) return;
+    if (!confirm("Delete this comment and its replies?")) return;
     if (useWorker()) {
       var secret = ownerSecret();
       if (!secret) { alert("Owner secret isn't set on this device."); return; }
@@ -347,9 +351,15 @@ var MPComments = (function () {
     claimOwner: claimOwner,
     init: function (slug) {
       state.slug = slug;
+      state.replyTo = null;
       state.listEl = document.getElementById("comment-list");
       var form = document.getElementById("comment-form");
-      if (form) form.onsubmit = function (e) { submitTop(e, form); };
+      if (form) {
+        form.onsubmit = function (e) { submitTop(e, form); };
+        updateReplyUI();
+      }
+      var cancel = document.getElementById("cancel-reply");
+      if (cancel) cancel.onclick = function () { cancelReply(); };
       ownFlow();
       refresh();
     }

@@ -52,7 +52,7 @@
   <script src="js/blog.js?v=6"></script>
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=1"></script>
-  <script src="js/comments.js?v=2"></script>
+  <script src="js/comments.js?v=3"></script>
   <script src="js/shop.js?v=1"></script>
   <script>
     var nav = document.getElementById("nav");
@@ -125,6 +125,7 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button>' +
         '</div><section class="comments"><div class="comment-list" id="comment-list"><p class="empty">Loading comments…</p></div>' +
         '<form class="stack comment-form" id="comment-form">' +
+        '<div class="replying-to hidden" id="replying-to"><span>Replying to <strong id="replying-to-name"></strong></span><button type="button" id="cancel-reply" aria-label="Cancel reply">×</button></div>' +
         '<input name="name" placeholder="Name" maxlength="40">' +
         '<textarea name="text" placeholder="Type your comment here…" required maxlength="2000"></textarea>' +
         '<button class="btn accent morph-btn" type="submit"><span class="lbl">Comment</span>' + MPComments.checkSVG() + "</button>" +
