@@ -802,6 +802,30 @@ textarea { min-height: 90px; }
   animation: lg-spin .8s linear infinite; vertical-align: -3px;
 }
 
+/* ---------- 360 spin viewer ---------- */
+.spinviewer {
+  position: relative; border-radius: 18px; overflow: hidden;
+  aspect-ratio: 3 / 2; background: #e9e9ee;
+  touch-action: pan-y; cursor: ew-resize;
+}
+[data-theme="dark"] .spinviewer { background: #151528; }
+.spinviewer img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  opacity: 0; transition: opacity .3s ease;
+  user-select: none; -webkit-user-select: none; pointer-events: none;
+}
+.spinviewer .lg-spin-wrap { position: absolute; inset: 0; align-items: center; padding: 0; }
+.spin-hint {
+  position: absolute; right: 12px; bottom: 12px;
+  font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+  color: var(--muted); background: var(--glass-clear-tint);
+  border: var(--glass-hairline);
+  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
+  box-shadow: var(--glass-spec);
+  pointer-events: none; transition: opacity .5s ease; white-space: nowrap;
+}
+.spin-hint.off { opacity: 0; }
+
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .byline-row .byline { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; }

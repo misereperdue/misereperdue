@@ -196,8 +196,81 @@ var MPShop = (function () {
     render();
   }
 
+  /* ---------- 360 spin viewer ----------
+     Frames live as base64 text (images/spin/<product>/NN.jpg.b64) so they
+     can be pushed as plain text; decoded to data URLs at runtime. */
+  var SPIN = {
+    mask: { dir: "images/spin/mask", n: 4 },
+    jersey: { dir: "images/spin/jersey", n: 0 }
+  };
+  function spinFor(p) {
+    var nm = String(p.name || "").toLowerCase();
+    if (nm.indexOf("mask") !== -1 && SPIN.mask.n > 0) return SPIN.mask;
+    if (nm.indexOf("jersey") !== -1 && SPIN.jersey.n > 0) return SPIN.jersey;
+    return null;
+  }
+  var spinURLCache = {};
+  function spinFrameURL(dir, i, cb) {
+    var key = dir + "/" + i;
+    if (spinURLCache[key]) { cb(spinURLCache[key]); return; }
+    fetch(dir + "/0" + i + ".jpg.b64")
+      .then(function (r) { if (!r.ok) throw new Error("missing"); return r.text(); })
+      .then(function (t) {
+        var u = "data:image/jpeg;base64," + t.trim();
+        spinURLCache[key] = u; cb(u);
+      })
+      .catch(function () { cb(null); });
+  }
+  function spinHTML(sp, name) {
+    return '<div class="spinviewer" id="spinviewer">' +
+      '<div class="lg-spin-wrap" id="spinload"><span class="lg-spin"></span></div>' +
+      '<img id="spinimg" alt="' + esc(name) + '" draggable="false">' +
+      '<div class="spin-hint" id="spinhint">Drag to spin</div></div>';
+  }
+  function initSpin(sp) {
+    var box = document.getElementById("spinviewer");
+    if (!box) return;
+    var img = document.getElementById("spinimg");
+    var hint = document.getElementById("spinhint");
+    var load = document.getElementById("spinload");
+    var n = sp.n, dir = sp.dir, idx = 0, auto = true, timer = null;
+    function show(k) {
+      idx = ((k % n) + n) % n;
+      var want = idx;
+      spinFrameURL(dir, want + 1, function (u) {
+        if (!u || want !== idx) return;
+        if (load) { load.style.display = "none"; load = null; }
+        img.style.opacity = "1";
+        img.src = u;
+      });
+    }
+    for (var i = 0; i < n; i++) spinFrameURL(dir, i + 1, function () {});
+    show(0);
+    timer = setInterval(function () { if (auto) show(idx + 1); }, 800);
+    function stopAuto() {
+      auto = false;
+      if (timer) { clearInterval(timer); timer = null; }
+      if (hint) hint.classList.add("off");
+    }
+    var dragging = false, acc = 0, lastX = 0;
+    box.addEventListener("pointerdown", function (e) {
+      stopAuto(); dragging = true; acc = 0; lastX = e.clientX;
+      try { box.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    box.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      acc += e.clientX - lastX; lastX = e.clientX;
+      while (acc >= 28) { acc -= 28; show(idx + 1); }
+      while (acc <= -28) { acc += 28; show(idx - 1); }
+    });
+    function end() { dragging = false; }
+    box.addEventListener("pointerup", end);
+    box.addEventListener("pointercancel", end);
+  }
+
   function openProduct(id) {
     var p = MP.PRODUCTS[id] || PLACEHOLDER;
+    var sp = spinFor(p);
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
       ? '<div class="sizes">' + p.sizes.map(function (s, i) {
@@ -206,13 +279,14 @@ var MPShop = (function () {
       : '<div style="height:12px"></div>';
     view.innerHTML =
       '<article class="article-card">' +
-        carouselHTML(p.images && p.images.length ? p.images : [p.image], p.name) +
+        (sp ? spinHTML(sp, p.name) : carouselHTML(p.images && p.images.length ? p.images : [p.image], p.name)) +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         sizes + '<div id="bag-action"></div>' +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
+    if (sp) initSpin(sp);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
     function refreshAction() { bindAction(p, function () { return size; }); }
     view.querySelectorAll("[data-size]").forEach(function (b) {
