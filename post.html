@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="view-transition" content="same-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f4f8">
+  <title>Note — MISERY</title>
+  <link rel="stylesheet" href="css/site.css?v=19">
+  <script src="js/theme.js?v=5"></script>
+</head>
+<body>
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Main">
+      <a href="index.html" aria-label="Home"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19V6.5L12 13l6-6.5V19"/></svg></a>
+      <a href="index.html#shop" aria-label="Store"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg></a>
+    </nav>
+  </div>
+  <article class="page article pad-nav" id="post"></article>
+  <script src="js/blog.js?v=5"></script>
+  <script>
+    var slug = new URLSearchParams(location.search).get("slug");
+    SanityBlog.loadPosts().then(function (posts) {
+      var post = posts.find(function (p) { return (p.slug || p._id) === slug; }) || posts[0];
+      document.title = (post.title || "Note") + " — MISERY";
+      document.getElementById("post").innerHTML = '<div class="byline"><span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 18.5c.8-3 3.2-4.5 6.5-4.5s5.7 1.5 6.5 4.5"/></svg></span><span>dc</span><span class="bar">|</span><span>' + (post.publishedAt || "").slice(0, 10) + '</span></div><h1>' + (post.title || "Untitled") + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + p + "</p>"; }).join("");
+    });
+  </script>
+</body>
+</html>

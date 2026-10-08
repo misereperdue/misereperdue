@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="view-transition" content="same-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The book — MISERY</title>
+  <link href="https://fonts.cdnfonts.com/css/space-age" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="mark" href="index.html">MISERY</a>
+    <nav class="nav-links">
+      <a href="journal.html">Journal</a>
+      <a href="store.html">Store</a>
+      <a class="active" href="book.html">Book</a>
+      <a class="bag" href="cart.html">Bag <span data-bag>0</span></a>
+    </nav>
+  </header>
+  <main class="wrap book" style="padding:28px 0 72px">
+    <img src="images/book.jpg" alt="Black clothbound book">
+    <div>
+      <div class="kicker">Forthcoming · Spring 2027</div>
+      <h1>The book</h1>
+      <p>Title not set. This page is the section. Cloth, black, short. Preorder is $32 CAD and sits in the same bag as the clothes.</p>
+      <blockquote class="excerpt">Working line, not the book: lost misery, written down, then cut into a season.</blockquote>
+      <p class="quiet" style="text-transform:none;letter-spacing:0;font-size:15px">Send the title, a real cover, and an excerpt. They replace this block.</p>
+      <div class="row">
+        <button class="btn blue" id="preorder" type="button">Preorder · $32 CAD</button>
+        <a class="btn ghost" href="posts/before-the-book.html">Note</a>
+      </div>
+      <p class="ok hidden" id="added">In the bag.</p>
+    </div>
+  </main>
+  <footer><span>MISÈRE PERDUE</span><span>BOOK</span></footer>
+  <script src="js/store.js"></script>
+  <script>
+    document.getElementById("preorder").onclick = () => {
+      MP.addItem("book", "one");
+      document.getElementById("added").classList.remove("hidden");
+    };
+  </script>
+</body>
+</html>

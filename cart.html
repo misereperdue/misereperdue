@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="view-transition" content="same-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f4f8">
+  <title>Bag — MISERY</title>
+  <link rel="stylesheet" href="css/site.css?v=9">
+  <script src="js/theme.js?v=5"></script>
+</head>
+<body>
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Main">
+      <a href="index.html" aria-label="Home"><span class="mark">M</span></a>
+      <a class="active" href="store.html" aria-label="Store"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M2.5 10h19"/><circle cx="16.5" cy="14.5" r="1"/></svg></a>
+    </nav>
+  </div>
+  <main class="page">
+    <h1>Order</h1>
+    <div id="lines"></div>
+    <p class="meta" id="total" style="margin-top:12px"></p>
+    <form class="stack" name="order" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
+      <input type="hidden" name="form-name" value="order">
+      <p class="hidden"><label>Don’t fill <input name="bot-field"></label></p>
+      <input name="name" required placeholder="Name">
+      <input type="email" name="email" required placeholder="Email">
+      <textarea name="order" id="order-field" required></textarea>
+      <button class="btn accent" type="submit">Send order</button>
+    </form>
+  </main>
+  <script src="js/store.js?v=5"></script>
+  <script>
+    var cart = MP.readCart();
+    var lines = document.getElementById("lines");
+    var total = 0;
+    cart.forEach(function (i) {
+      total += i.price * i.qty;
+      var row = document.createElement("div");
+      row.className = "line";
+      row.innerHTML = '<img src="' + i.image + '" alt=""><div><strong>' + i.name + '</strong><div class="meta">' + i.size + ' · ' + i.qty + '</div></div><div>' + MP.money(i.price * i.qty) + '</div>';
+      lines.appendChild(row);
+    });
+    document.getElementById("total").textContent = cart.length ? "Total " + MP.money(total) : "Bag is empty.";
+    document.getElementById("order-field").value = cart.map(function (i) { return i.qty + " × " + i.name + " (" + i.size + ")"; }).join("\n") + (cart.length ? "\nTotal " + MP.money(total) : "");
+  </script>
+</body>
+</html>
