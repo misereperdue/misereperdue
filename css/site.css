@@ -384,7 +384,7 @@ textarea { min-height: 90px; }
   border-radius: 16px;
 }
 [data-theme="light"] .line { background: #ececf0; }
-#cart-lines { display: grid; gap: 10px; margin-top: -8px; }
+#cart-lines { display: grid; gap: 10px; margin-top: 4px; }
 .line img { width: 64px; height: 80px; object-fit: cover; border-radius: 10px; }
 .line-mid { display: grid; gap: 6px; align-content: center; min-width: 0; }
 .line-mid .qty { margin-top: 0; }
