@@ -211,7 +211,7 @@ button, input, textarea { font-family: inherit; color: inherit; }
   min-height: 230px;
   max-height: 360px;
   overflow: hidden;
-  background: #000;
+  background: var(--bg);
   margin-top: calc(env(safe-area-inset-top, 0px) * -1);
 }
 .hero video.soft {
@@ -220,9 +220,11 @@ button, input, textarea { font-family: inherit; color: inherit; }
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 42%, #000 68%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, transparent 42%, #000 68%, transparent 100%);
 }
-.hero video.sharp {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 86%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 86%);
+.hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(7, 15, 41, 0.15) 0%, rgba(7, 15, 41, 0) 18%, rgba(7, 15, 41, 0) 55%, var(--bg) 100%);
 }
 [data-theme="light"] .hero { background: #fff; }
 [data-theme="light"] .hero video.sharp {

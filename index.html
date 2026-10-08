@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=26">
+  <link rel="stylesheet" href="css/site.css?v=27">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -61,8 +61,8 @@
       history.replaceState(null, "", view === "shop" ? "#shop" : view === "post" ? "#post" : "#");
     }
     function esc(s) {
-      return String(s || "").replace(/[&<>"]/g, function (c) {
-        return { "&": "&", "<": "<", ">": ">", '"': """ }[c];
+      return String(s || "").replace(/[&<>\"]/g, function (c) {
+        return {"&":"\u0026amp;","<":"\u0026lt;",">":"\u0026gt;","\"":"\u0026quot;"}[c];
       });
     }
     function openPost(slug) {
