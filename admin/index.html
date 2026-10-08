@@ -23,9 +23,8 @@
   .hidden { display: none !important; }
 
   .card {
-    background: var(--card); border: 1px solid var(--hair); border-radius: 18px;
+    background: rgba(255,255,255,.08); border: 1px solid var(--hair); border-radius: 18px;
     padding: 18px; margin-bottom: 12px;
-    -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
   }
   label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .06em; }
   label:first-child { margin-top: 0; }
@@ -289,7 +288,10 @@ function openEditor(slug) {
       document.getElementById("f-time").value = (parts[1]||"").slice(0,5);
       document.getElementById("f-excerpt").value = p.excerpt||"";
       document.getElementById("f-tags").value = (p.tags||[]).join(", ");
-      document.getElementById("f-body").value = p.body||"";
+      var tb = document.getElementById("f-body");
+      tb.value = p.body||"";
+      /* iOS Safari can mispaint a textarea after a programmatic fill; force a repaint */
+      tb.style.display = "none"; void tb.offsetHeight; tb.style.display = "";
       setHeaderMedia(p.header_media||"");
     }).catch(function(){ document.getElementById("save-err").textContent="Could not load post."; });
   } else {
