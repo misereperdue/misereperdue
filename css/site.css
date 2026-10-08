@@ -746,6 +746,23 @@ textarea { min-height: 90px; }
   font-size: 15px;
 }
 
+/* ---------- Blog post hero (header media) ---------- */
+.post-hero {
+  margin: -18px -18px 16px;
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: rgba(255,255,255,.04);
+  position: relative;
+}
+.post-hero img, .post-hero video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  opacity: 0; transition: opacity .8s ease;
+}
+.post-hero img.ld { opacity: 1; }
+.post-hero video { opacity: 1; animation: heroIn .8s ease; }
+@keyframes heroIn { from { opacity: 0; } to { opacity: 1; } }
+
 /* ---------- Blog tags ---------- */
 .tag-filter {
   display: flex;

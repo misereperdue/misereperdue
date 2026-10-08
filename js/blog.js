@@ -148,7 +148,8 @@ async function loadPosts() {
         publishedAt: d.date || "",
         excerpt: d.excerpt || "",
         body: mdToHtml(parsed.body),
-        tags: Array.isArray(d.tags) ? d.tags : (d.tags ? [d.tags] : [])
+        tags: Array.isArray(d.tags) ? d.tags : (d.tags ? [d.tags] : []),
+        header_media: d.header_media || ""
       };
     }));
     posts.sort(function (a, b) { return (b.publishedAt || "").localeCompare(a.publishedAt || ""); });

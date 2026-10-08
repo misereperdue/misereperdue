@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=58">
+  <link rel="stylesheet" href="css/site.css?v=59">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -51,7 +51,7 @@
     </section>
     <section class="panel" id="postview"></section>
   </main>
-  <script src="js/blog.js?v=7"></script>
+  <script src="js/blog.js?v=8"></script>
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=4"></script>
@@ -146,8 +146,15 @@
       var title = post.title || "Untitled";
       var author = post.author || "dc";
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
+      var hero = "";
+      if (post.header_media) {
+        var isV = /\.(mp4|webm|mov)(\?|$)/i.test(post.header_media);
+        hero = '<div class="post-hero">' + (isV
+          ? '<video src="' + esc(post.header_media) + '" autoplay muted loop playsinline></video>'
+          : '<img src="' + esc(post.header_media) + '" alt="" onload="this.classList.add(\'ld\')">') + '</div>';
+      }
       document.getElementById("postview").innerHTML =
-        '<article class="article-card">' + byline(author, date) +
+        '<article class="article-card">' + hero + byline(author, date) +
         "<h1>" + esc(title) + "</h1>" + tagPills(post.tags) + '<div class="post-body">' +
         (post.body || "") +
         '</div><div class="actions">' +

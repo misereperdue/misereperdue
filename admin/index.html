@@ -127,6 +127,14 @@
         <label>Tags</label>
         <input id="f-tags" placeholder="music, toronto, notes">
         <div class="taghint">Comma-separated.</div>
+        <label>Header photo / video</label>
+        <div id="media-preview" style="margin-bottom:10px"></div>
+        <input type="file" id="f-file" accept="image/*,video/*" class="hidden">
+        <div class="row" style="margin-top:0">
+          <button class="btn" id="btn-upload" type="button">Choose file</button>
+          <button class="btn hidden" id="btn-rmmedia" type="button" style="flex:0 0 auto;color:#ff6b6b">Remove</button>
+        </div>
+        <div class="taghint" id="upload-status">Replaces the header on this post. Fades in seamlessly.</div>
         <label>Body (Markdown)</label>
         <textarea class="body" id="f-body" placeholder="Write…"></textarea>
       </div>
@@ -144,6 +152,43 @@
 var API = "https://misery-comments.freeglory416.workers.dev";
 var secret = localStorage.getItem("mp_editor_secret") || "";
 var editingSlug = null;
+var headerMedia = "";
+
+function setHeaderMedia(url) {
+  headerMedia = url || "";
+  var prev = document.getElementById("media-preview");
+  var rm = document.getElementById("btn-rmmedia");
+  if (!url) { prev.innerHTML = ""; rm.classList.add("hidden"); return; }
+  var isV = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+  prev.innerHTML = isV
+    ? '<video src="'+esc(url)+'" muted playsinline style="width:100%;border-radius:12px;max-height:220px;object-fit:cover"></video>'
+    : '<img src="'+esc(url)+'" style="width:100%;border-radius:12px;max-height:220px;object-fit:cover">';
+  rm.classList.remove("hidden");
+}
+document.getElementById("btn-rmmedia").onclick = function(){ setHeaderMedia(""); };
+document.getElementById("btn-upload").onclick = function(){ document.getElementById("f-file").click(); };
+document.getElementById("f-file").addEventListener("change", async function(){
+  var f = this.files[0];
+  if (!f) return;
+  var status = document.getElementById("upload-status");
+  status.textContent = "Uploading…";
+  try {
+    var dataUrl = await new Promise(function(res, rej){
+      var r = new FileReader();
+      r.onload = function(){ res(r.result); };
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+    var j = await api("/api/upload", { method:"POST", body: JSON.stringify({
+      secret: secret, filename: f.name, contentType: f.type, data: dataUrl
+    })});
+    setHeaderMedia(j.url);
+    status.textContent = "Uploaded ✓";
+  } catch(e){
+    status.textContent = "Upload failed: " + e.message;
+  }
+  this.value = "";
+});
 
 function show(id) {
   ["v-login","v-list","v-edit"].forEach(function(v){ document.getElementById(v).classList.add("hidden"); });
@@ -215,6 +260,7 @@ document.getElementById("btn-new").onclick = function(){ openEditor(null); };
 function openEditor(slug) {
   editingSlug = slug;
   ["f-title","f-date","f-time","f-excerpt","f-tags","f-body"].forEach(function(id){ document.getElementById(id).value=""; });
+  setHeaderMedia("");
   document.getElementById("save-err").textContent = "";
   setTab("write");
   document.getElementById("btn-del").style.visibility = slug ? "visible" : "hidden";
@@ -230,6 +276,7 @@ function openEditor(slug) {
       document.getElementById("f-excerpt").value = p.excerpt||"";
       document.getElementById("f-tags").value = (p.tags||[]).join(", ");
       document.getElementById("f-body").value = p.body||"";
+      setHeaderMedia(p.header_media||"");
     }).catch(function(){ document.getElementById("save-err").textContent="Could not load post."; });
   } else {
     var now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
@@ -288,6 +335,7 @@ document.getElementById("btn-save").onclick = async function(){
       date: (document.getElementById("f-date").value||"") + "T" + (document.getElementById("f-time").value||"00:00"),
       excerpt: document.getElementById("f-excerpt").value,
       tags: document.getElementById("f-tags").value.split(",").map(function(s){return s.trim();}).filter(Boolean),
+      header_media: headerMedia,
       body: document.getElementById("f-body").value
     })});
     editingSlug = j.slug;
