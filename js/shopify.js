@@ -67,7 +67,7 @@ var MPShopify = (function () {
     var query = "{ products(first: 24) { edges { node { id title handle description " +
       "availableForSale priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable selectedOptions { name value } } } } } } } } }";
+      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable selectedOptions { name value } } } } } } } }";
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
