@@ -60,6 +60,11 @@
       });
       history.replaceState(null, "", view === "shop" ? "#shop" : view === "post" ? "#post" : "#");
     }
+    function esc(s) {
+      return String(s || "").replace(/[&<>"]/g, function (c) {
+        return { "&": "&", "<": "<", ">": ">", '"': """ }[c];
+      });
+    }
     function openPost(slug) {
       var post = posts.find(function (p) { return (p.slug || p._id) === slug; }) || posts[0];
       if (!post) return;
@@ -67,15 +72,28 @@
       var date = (post.publishedAt || "").slice(0, 10);
       var title = post.title || "Untitled";
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
-      var saved = [];
-      try { saved = JSON.parse(localStorage.getItem("comments:" + openSlug) || "[]"); } catch (e) {}
-      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + p + "</p>"; }).join("") + '<a class="share" href="' + share + '" target="_blank" rel="noopener">Share on X</a><section class="comments"><h3>Comments</h3><div class="comment-list">' + (saved.map(function (c) { return '<div class="comment"><strong>' + c.name + '</strong><p>' + c.text + '</p></div>'; }).join("") || '<p class="empty">No comments yet.</p>') + '</div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
+      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div style="height:14px"></div>' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + '<a class="share" href="' + share + '" target="_blank" rel="noopener">Share on X</a><section class="comments"><h3>Comments</h3><div class="comment-list"><p class="empty">Loading comments…</p></div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
+      fetch("https://api.github.com/repos/misereperdue/misereperdue/issues?state=all&labels=comment&per_page=100")
+        .then(function (r) { return r.json(); })
+        .then(function (list) {
+          var rows = (list || []).filter(function (i) { return i.title === "comment:" + openSlug; });
+          var box = document.querySelector("#postview .comment-list");
+          if (!box) return;
+          box.innerHTML = rows.length ? rows.map(function (i) {
+            var parts = String(i.body || "").split("\n\n");
+            var name = (parts[0] || i.user.login).replace(/^\*\*|\*\*$/g, "");
+            return '<div class="comment"><strong>' + esc(name) + '</strong><p>' + esc(parts.slice(1).join("\n\n") || i.body) + '</p></div>';
+          }).join("") : '<p class="empty">No comments yet.</p>';
+        })
+        .catch(function () {
+          var box = document.querySelector("#postview .comment-list");
+          if (box) box.innerHTML = '<p class="empty">Couldn’t load comments.</p>';
+        });
       document.getElementById("comment-form").onsubmit = function (e) {
         e.preventDefault();
         var data = new FormData(e.target);
-        saved.push({ name: data.get("name"), text: data.get("text") });
-        localStorage.setItem("comments:" + openSlug, JSON.stringify(saved));
-        openPost(openSlug);
+        var url = "https://github.com/misereperdue/misereperdue/issues/new?labels=comment&title=" + encodeURIComponent("comment:" + openSlug) + "&body=" + encodeURIComponent("**" + data.get("name") + "**\n\n" + data.get("text"));
+        window.open(url, "_blank");
       };
       show("post");
     }
