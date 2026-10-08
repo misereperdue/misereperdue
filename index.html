@@ -81,15 +81,24 @@
     function refreshPostBtn() {
       var btn = document.getElementById("post-btn");
       var badge = document.getElementById("post-badge");
+      var cartBtn = document.getElementById("cart-btn");
+      var split = nav.querySelector(".split");
       if (!btn || !window.MP) return;
-      var bagMode = current.type === "product" && MP.cartCount() > 0;
+      var onProduct = current.type === "product";
+      var n = MP.cartCount();
+      var bagMode = onProduct && n > 0;
+      // 4th slot: pencil on blog posts, sectioned bag on product pages with items, nothing otherwise
+      var showSlot = bagMode || current.type === "post";
       btn.classList.toggle("bag-mode", bagMode);
+      btn.style.display = showSlot ? "" : "none";
+      if (split) split.style.display = showSlot ? "" : "none";
       btn.setAttribute("aria-label", bagMode ? "Bag" : "Post");
       if (badge) {
-        var n = MP.cartCount();
         badge.classList.toggle("hidden", !bagMode || n === 0);
         badge.textContent = n > 99 ? "99+" : String(n);
       }
+      // the sectioned bag replaces the regular cart tab on product pages
+      if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
     }
     function show(view, id) {
       current = { type: view, id: id || "" };
