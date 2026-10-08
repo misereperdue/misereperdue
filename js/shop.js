@@ -67,12 +67,17 @@ var MPShop = (function () {
 
   function stockPill(p) {
     if (p.available === false) return "";
-    var s = p.stock, label, cls = "stock-pill";
-    if (s == null) label = "In stock";
-    else if (s <= 0) { label = "Sold out"; cls += " out"; }
-    else if (s <= 5) { label = "Only " + s + " left"; cls += " low"; }
-    else label = s + " in stock";
-    return '<span class="' + cls + '">' + label + "</span>";
+    var s = p.stock, label, cls = "stock-pill", dot = "";
+    if (s == null) {
+      label = "In stock";
+    } else if (s <= 0) {
+      label = "Sold out"; cls += " out";
+    } else {
+      cls += s < 50 ? " ok" : s <= 200 ? " warn" : " ok";
+      dot = '<span class="sdot" aria-hidden="true"></span>';
+      label = s + " in stock";
+    }
+    return '<span class="' + cls + '">' + dot + label + "</span>";
   }
 
   function cardHTML(p) {

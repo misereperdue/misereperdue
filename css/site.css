@@ -381,7 +381,7 @@ textarea { min-height: 90px; }
   min-width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: var(--accent);
+  background: #111114;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -391,6 +391,7 @@ textarea { min-height: 90px; }
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   z-index: 2;
 }
+[data-theme="dark"] .badge { background: #fff; color: #1c1c1e; }
 
 /* ---------- Morphing buttons (comment / add-to-bag) ---------- */
 .morph-btn {
@@ -604,7 +605,7 @@ textarea { min-height: 90px; }
 .bag-stepper button:active { transform: scale(0.9); }
 .product-meta { padding: 12px 14px 14px; display: grid; gap: 3px; }
 .product-meta strong { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; }
-.product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; border-top: 1px solid var(--hairline); padding-top: 9px; margin-top: 6px; }
 /* keep the tile's own top corners round so they never clip against the card */
 .product-card .img-ph, .product-card img { border-radius: 21px 21px 0 0; }
 /* ---------- Stock pill ---------- */
@@ -613,6 +614,8 @@ textarea { min-height: 90px; }
   top: 10px;
   right: 10px;
   z-index: 2;
+  display: inline-flex;
+  align-items: center;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -625,6 +628,15 @@ textarea { min-height: 90px; }
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
+.stock-pill .sdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 7px;
+}
+.stock-pill.ok { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
+.stock-pill.warn { color: #ffd60a; border-color: rgba(255, 214, 10, 0.4); }
 .stock-pill.low { color: #ffd9a0; border-color: rgba(255, 200, 120, 0.5); }
 .stock-pill.out { color: #ffa3a3; border-color: rgba(255, 150, 150, 0.5); }
 .tag {
