@@ -27,11 +27,17 @@ var MPShop = (function () {
     return (s || "M").toUpperCase();
   }
 
-  function isJersey(name) { return /jersey/i.test(name || ""); }
+  function tileEmoji(name) {
+    var n = String(name || "").toLowerCase();
+    if (n.indexOf("jersey") !== -1) return "👕";
+    if (n.indexOf("mask") !== -1 || n.indexOf("sleeping") !== -1) return "🥽";
+    return null;
+  }
 
   function phTile(name, extraStyle) {
-    var cls = "img-ph" + (isJersey(name) ? " emoji-tile" : "");
-    var inner = isJersey(name) ? "👕" : esc(initials(name));
+    var emoji = tileEmoji(name);
+    var cls = "img-ph" + (emoji ? " emoji-tile" : "");
+    var inner = emoji ? emoji : esc(initials(name));
     return '<div class="' + cls + '" aria-hidden="true"' + (extraStyle ? ' style="' + extraStyle + '"' : "") + "><span>" + inner + "</span></div>";
   }
 
