@@ -757,6 +757,28 @@ textarea { min-height: 90px; }
 }
 [data-theme="light"] .hero-post img { filter: none; }
 
+/* ---------- Floating back button ---------- */
+.back-fab {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 76px);
+  left: 16px;
+  z-index: 60;
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--glass-regular-tint);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform .15s ease, opacity .2s ease;
+}
+.back-fab:active { transform: scale(.94); }
+.back-fab.hidden { display: none; }
+.back-fab svg { width: 22px; height: 22px; }
+
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 10px; }
 .byline-row .byline { flex: none; }

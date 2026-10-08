@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=64">
+  <link rel="stylesheet" href="css/site.css?v=65">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -38,6 +38,9 @@
       </button>
     </nav>
   </div>
+  <button type="button" class="back-fab hidden" id="back-fab" aria-label="Go back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
   <main class="page">
     <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
     <section class="panel" id="shop"><div class="grid" id="shop-grid"></div></section>
@@ -105,6 +108,9 @@
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
+      // Show floating back button on post, product, and cart views
+      var backBtn = document.getElementById("back-fab");
+      if (backBtn) backBtn.classList.toggle("hidden", !(view === "post" || view === "product" || view === "cart"));
       // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
       document.getElementById("journal").classList.toggle("on", view === "journal");
@@ -257,6 +263,17 @@
     }
     routeFromHash();
     window.addEventListener("hashchange", routeFromHash);
+    document.getElementById("back-fab").onclick = function () {
+      // Use browser history when available, else fall back to parent view
+      if (history.length > 1) {
+        history.back();
+      } else {
+        var v = current.type;
+        if (v === "post") show("journal");
+        else if (v === "product" || v === "cart") show("shop");
+        else show("journal");
+      }
+    };
 
     function tagDropdown(tags) {
       if (!tags || !tags.length) return "";
