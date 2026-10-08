@@ -771,7 +771,8 @@ textarea { min-height: 90px; }
 .back-fab {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 76px);
-  left: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 60;
   width: 44px; height: 44px;
   border-radius: 999px;
@@ -785,34 +786,29 @@ textarea { min-height: 90px; }
   cursor: pointer;
   transition: transform .15s ease, opacity .2s ease;
 }
-.back-fab:active { transform: scale(.94); }
+.back-fab:active { transform: translateX(-50%) scale(.94); }
 .back-fab.hidden { display: none; }
 .back-fab svg { width: 22px; height: 22px; }
 
 /* byline + tags side by side */
-.byline-row { display: flex; align-items: center; gap: 10px; }
-.byline-row .byline { flex: none; }
-.byline-row .tagwrap { margin: 0; flex: none; }
-.byline-row .ptags { margin: 0; }
+.byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.byline-row .byline { flex: none; display: inline-flex; align-items: center; gap: 8px; }
 
 /* ---------- Tag dropdown (Liquid Glass) ---------- */
 .tagwrap { position: relative; display: inline-block; margin: 12px 0 4px; }
 .tagdrop {
-  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
-  border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--muted);
-  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
-  box-shadow: var(--glass-spec); cursor: pointer; font-family: inherit;
-  display: inline-flex; align-items: center; gap: 4px; line-height: 1.2;
+  font-size: 12px; font-weight: 500; padding: 0; border: none; background: transparent;
+  color: var(--muted); cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 3px; line-height: 1;
   white-space: nowrap;
 }
-.tagdrop .chev { font-size: 9px; color: var(--muted); }
+.tagdrop .chev { font-size: 9px; }
+.tagwrap { position: relative; display: inline-flex; align-items: center; margin: 0; }
 .ptag {
-  font-size: 11px; font-weight: 600; padding: 4px 10px; line-height: 1.2;
-  border-radius: 999px; border: var(--glass-hairline);
-  background: var(--glass-clear-tint); color: var(--muted);
-  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
+  font-size: 12px; font-weight: 500; color: var(--muted);
   white-space: nowrap;
 }
+.ptags { display: inline-flex; flex-wrap: wrap; gap: 8px; margin: 0; align-items: center; }
 .tagmenu {
   position: absolute; top: calc(100% + 8px); left: 0; z-index: 50;
   min-width: 160px; padding: 6px; border-radius: 16px;
