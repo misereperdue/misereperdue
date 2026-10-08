@@ -540,7 +540,6 @@ textarea { min-height: 90px; }
   border-radius: 22px;
   overflow: hidden;
   background: var(--fill);
-  box-shadow: inset 0 1px 0 var(--spec);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   backdrop-filter: blur(16px) saturate(150%);
   cursor: pointer;
@@ -606,13 +605,11 @@ textarea { min-height: 90px; }
 .product-meta { padding: 12px 14px 14px; display: grid; gap: 3px; }
 .product-meta strong { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; }
 .product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; border-top: 1px solid var(--hairline); padding-top: 9px; margin-top: 6px; }
-/* keep the tile's own top corners round so they never clip against the card */
-.product-card .img-ph, .product-card img { border-radius: 21px 21px 0 0; }
 /* ---------- Stock pill ---------- */
 .stock-pill {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -639,6 +636,17 @@ textarea { min-height: 90px; }
 .stock-pill.warn { color: #ffd60a; border-color: rgba(255, 214, 10, 0.4); }
 .stock-pill.low { color: #ffd9a0; border-color: rgba(255, 200, 120, 0.5); }
 .stock-pill.out { color: #ffa3a3; border-color: rgba(255, 150, 150, 0.5); }
+
+/* ---------- Cart total section ---------- */
+#cart-total {
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  margin: 8px 0 0;
+  padding: 14px 2px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
 .tag {
   position: absolute;
   top: 10px;
