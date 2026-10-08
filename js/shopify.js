@@ -76,9 +76,12 @@ var MPShopify = (function () {
       },
       body: JSON.stringify({ query: query })
     })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      })
       .then(function (d) {
-        if (d.errors && !d.data) throw new Error("shopify");
+        if (d.errors && !d.data) throw new Error("api: " + ((d.errors[0] || {}).message || "unknown"));
         var edges = (((d.data || {}).products) || {}).edges || [];
         return edges.map(normalize);
       });

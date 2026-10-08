@@ -48,17 +48,20 @@ var MPShop = (function () {
     return phTile(p.name);
   }
 
+  var SHOP_DIAG = "";
   function shopifyList(tried) {
     return MPShopify.fetchProducts().then(function (list) {
       list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
       return list.length ? list : [PLACEHOLDER];
-    }).catch(function () {
+    }).catch(function (e) {
+      SHOP_DIAG = "store unreachable (" + (e && e.message ? e.message : "network") + ")";
       return tried ? [PLACEHOLDER] : shopifyList(true);
     });
   }
 
   function products() {
-    if (window.MPShopify && MPShopify.configured()) return shopifyList(false);
+    if (window.MPShopify && MPShopify.configured()) { SHOP_DIAG = ""; return shopifyList(false); }
+    SHOP_DIAG = window.MPShopify ? "store not configured" : "store module failed to load";
     return Promise.resolve([PLACEHOLDER]);
   }
 
@@ -87,7 +90,8 @@ var MPShop = (function () {
     if (!grid) return;
     grid.innerHTML = '<p class="empty">Loading…</p>';
     products().then(function (list) {
-      grid.innerHTML = list.map(cardHTML).join("");
+      grid.innerHTML = list.map(cardHTML).join("") +
+        (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + " — showing preview.</p>" : "");
       grid.querySelectorAll("[data-product]").forEach(function (el) {
         el.onclick = function () { openProduct(el.dataset.product); };
       });
