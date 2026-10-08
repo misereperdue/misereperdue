@@ -559,6 +559,9 @@ textarea { min-height: 90px; }
 /* tile corners match the card's radius exactly so the rounded clip has no fringe */
 .product-card .img-ph,
 .product-card img { border-radius: 22px 22px 0 0; }
+/* pill overlays the tile via grid stacking — no absolute positioning */
+.tile-wrap { display: grid; }
+.tile-wrap > .img-ph, .tile-wrap > img { grid-area: 1 / 1; }
 .img-ph {
   width: 100%;
   aspect-ratio: 4/5;
@@ -618,9 +621,10 @@ textarea { min-height: 90px; }
 .product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; border-top: 1px solid var(--hairline); padding-top: 9px; margin-top: 6px; }
 /* ---------- Stock pill ---------- */
 .stock-pill {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  grid-area: 1 / 1;
+  justify-self: end;
+  align-self: start;
+  margin: 14px 14px 0 0;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -660,16 +664,6 @@ textarea { min-height: 90px; }
 }
 [data-theme="light"] #cart-total { background: #e8e8ed; }
 
-/* ---------- Product page price band ---------- */
-#postview .price {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-top: 10px;
-  font-size: 17px;
-  font-weight: 700;
-}
-[data-theme="light"] #postview .price { background: #e8e8ed; }
 .tag {
   position: absolute;
   top: 10px;

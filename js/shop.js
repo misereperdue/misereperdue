@@ -82,8 +82,7 @@ var MPShop = (function () {
 
   function cardHTML(p) {
     return '<div role="button" tabindex="0" class="product-card" data-product="' + esc(p.id) + '">' +
-      stockPill(p) +
-      imgHTML(p) +
+      '<div class="tile-wrap">' + imgHTML(p) + stockPill(p) + "</div>" +
       '<div class="product-meta"><strong>' + esc(p.name) + "</strong>" +
       '<span class="meta">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon")) + "</span></div>" +
       (p.available === false ? '<span class="tag">Coming soon</span>' : "") +
