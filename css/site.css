@@ -599,24 +599,3 @@ textarea { min-height: 90px; }
 }
 .qty button:active { transform: scale(0.88); }
 .qty span { min-width: 20px; text-align: center; font-weight: 600; }
-
-/* ---------- Signature footer ---------- */
-.site-footer { text-align: center; padding: 64px 20px 48px; }
-.signature {
-  font-family: "Pinyon Script", cursive;
-  font-size: 72px;
-  line-height: 1.1;
-  color: var(--ink);
-  letter-spacing: 0.01em;
-}
-.foot-meta {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
