@@ -52,7 +52,7 @@
   <script src="js/blog.js?v=6"></script>
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=1"></script>
-  <script src="js/comments.js?v=1"></script>
+  <script src="js/comments.js?v=2"></script>
   <script src="js/shop.js?v=1"></script>
   <script>
     var nav = document.getElementById("nav");
@@ -145,6 +145,10 @@
       };
     });
 
+    if (location.hash === "#own") {
+      MPComments.claimOwner();
+      history.replaceState(null, "", "#");
+    }
     if (location.hash === "#shop") show("shop");
     else if (location.hash === "#cart") show("cart");
 

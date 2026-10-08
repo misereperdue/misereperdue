@@ -326,7 +326,12 @@ var MPComments = (function () {
   }
 
   function ownFlow() {
-    if (location.hash !== "#own") return;
+    if (location.hash !== "#own") return false;
+    claimOwner();
+    return true;
+  }
+
+  function claimOwner() {
     lsSet("mp-owner", "1");
     if (useWorker() && !ownerSecret()) {
       var s = prompt("Owner secret:");
@@ -339,6 +344,7 @@ var MPComments = (function () {
     initials: initials,
     avatarHTML: avatarHTML,
     checkSVG: checkSVG,
+    claimOwner: claimOwner,
     init: function (slug) {
       state.slug = slug;
       state.listEl = document.getElementById("comment-list");
