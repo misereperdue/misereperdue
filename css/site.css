@@ -614,12 +614,10 @@ textarea { min-height: 90px; }
   place-items: center;
 }
 .bag-stepper button:active { transform: scale(0.9); }
-.product-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 14px; background: rgba(7, 15, 41, 0.18); -webkit-backdrop-filter: blur(6px) saturate(120%); backdrop-filter: blur(6px) saturate(120%); border-top: 0.5px solid rgba(255, 255, 255, 0.12); }
-[data-theme="light"] .product-meta { background: rgba(255, 255, 255, 0.2); border-top-color: rgba(0, 0, 0, 0.08); }
-.product-meta strong { display: block; font-size: 15px; font-weight: 620; letter-spacing: -0.01em; color: #fff; }
-[data-theme="light"] .product-meta strong { color: #0a0f29; }
-.product-meta .meta { display: inline-block; flex-shrink: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; padding: 7px 13px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, 0.5); border: 0.5px solid rgba(255, 255, 255, 0.22); white-space: nowrap; }
-[data-theme="light"] .product-meta .meta { color: #0a0f29; background: rgba(255, 255, 255, 0.55); border-color: rgba(0, 0, 0, 0.1); }
+.product-meta { display: block; position: absolute; bottom: 12px; right: 12px; left: auto; padding: 0; background: transparent; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.product-meta strong { display: none; }
+.product-meta .meta { display: inline-block; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; padding: 8px 14px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, 0.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 0.5px solid rgba(255, 255, 255, 0.22); white-space: nowrap; }
+[data-theme="light"] .product-meta .meta { color: #0a0f29; background: rgba(255, 255, 255, 0.6); border-color: rgba(0, 0, 0, 0.1); }
 /* ---------- Stock pill ---------- */
 .stock-pill {
   grid-area: 1 / 1;
