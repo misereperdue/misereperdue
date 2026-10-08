@@ -1,28 +1,27 @@
-/* MISERY comments — global via the repo's comments.json, owner-only delete.
+/* MISERY comments — threads, votes, replies. Global for everyone.
  *
- * How it works:
- * - Everyone READS comments from comments.json (public, no auth needed).
- * - Posting / replying / voting WRITES through the GitHub Contents API using
- *   PUBLIC_TOKEN below: a fine-grained personal access token scoped to ONLY
- *   this repo with Contents read+write. It lives in this file so every
- *   visitor can post. Anyone can read it from page source, so treat it as
- *   disposable: if abused, revoke it and make a new one. Never reuse a token
- *   that can touch other repos.
- * - DELETING always uses the private token in this device's localStorage
- *   ("mp-token") and only renders the Delete button when "mp-owner" is set
- *   (visit https://misereperdue.com/#own once on your device).
+ * Writes go through the Cloudflare Worker backend (no tokens in page source).
+ * The worker URL is set below once deployed. Until then, the client falls
+ * back to the legacy direct-GitHub mode, which only works on the device that
+ * holds a token in localStorage ("mp-token").
+ *
+ * Deletes are owner-only: the worker checks OWNER_SECRET, which lives only
+ * in the worker's secrets and on the owner's device (localStorage
+ * "mp-owner-secret", set via the #own flow).
  */
 var MPComments = (function () {
   "use strict";
+
+  /* dc: paste your worker URL here after deploying, e.g.
+     "https://misery-comments.you.workers.dev" (no trailing slash). */
+  var WORKER_URL = "";
 
   var REPO = "misereperdue/misereperdue";
   var FILE = "comments.json";
   var API = "https://api.github.com/repos/" + REPO + "/contents/" + FILE;
 
-  /* dc: paste the fine-grained token here via github.com (Settings > Developer
-     settings > Personal access tokens > Fine-grained). Repo: misereperdue/
-     misereperdue, permission: Contents read and write. Nothing else. */
-  var PUBLIC_TOKEN = "";
+  function useWorker() { return !!WORKER_URL; }
+  function w(path) { return WORKER_URL + path; }
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -30,16 +29,11 @@ var MPComments = (function () {
     });
   }
 
-  function publicToken() {
-    try { return PUBLIC_TOKEN || localStorage.getItem("mp-token") || ""; }
-    catch (e) { return PUBLIC_TOKEN || ""; }
-  }
-  function ownerToken() {
-    try { return localStorage.getItem("mp-token") || ""; } catch (e) { return ""; }
-  }
-  function isOwner() {
-    try { return localStorage.getItem("mp-owner") === "1"; } catch (e) { return false; }
-  }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function isOwner() { return lsGet("mp-owner") === "1"; }
+  function ownerSecret() { return lsGet("mp-owner-secret") || ""; }
+  function legacyToken() { return lsGet("mp-token") || ""; }
   function getVotes() {
     try { return JSON.parse(localStorage.getItem("mp-votes") || "{}"); }
     catch (e) { return {}; }
@@ -66,13 +60,21 @@ var MPComments = (function () {
     return new Date(ts).toISOString().slice(0, 10);
   }
 
+  /* ---------- storage layer: worker or legacy ---------- */
+
   function load() {
+    if (useWorker()) {
+      return fetch(w("/api/comments")).then(function (r) { return r.json(); })
+        .then(function (d) { return d.comments || []; })
+        .catch(function () { return []; });
+    }
     return fetch(FILE + "?t=" + Date.now())
       .then(function (r) { return r.json(); })
       .catch(function () { return []; });
   }
-  function save(rows, token) {
-    token = token || publicToken();
+
+  function legacySave(rows, token) {
+    token = token || legacyToken();
     if (!token) return Promise.reject(new Error("no-token"));
     var body = JSON.stringify(rows.filter(Boolean), null, 2);
     var headers = { Authorization: "Bearer " + token };
@@ -93,6 +95,18 @@ var MPComments = (function () {
         });
       });
   }
+
+  function apiPost(path, body) {
+    return fetch(w(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) throw new Error("api " + r.status);
+      return r.json();
+    });
+  }
+
   function normalize(rows) {
     return (Array.isArray(rows) ? rows : []).map(function (c) {
       return {
@@ -111,6 +125,10 @@ var MPComments = (function () {
   var state = { rows: [], slug: "", listEl: null };
 
   function score(c) { return c.up - c.down; }
+
+  function checkSVG() {
+    return '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+  }
 
   function commentHTML(c, depth) {
     var votes = getVotes();
@@ -136,7 +154,7 @@ var MPComments = (function () {
               (isOwner() ? '<button type="button" class="del" data-del="' + esc(c.id) + '">Delete</button>' : "") +
             "</div>" +
             '<div class="reply-form hidden" id="reply-' + esc(c.id) + '">' +
-              '<input name="name" placeholder="Name" required maxlength="40">' +
+              '<input name="name" placeholder="Name" maxlength="40">' +
               '<textarea name="text" placeholder="Type your reply here…" required maxlength="2000"></textarea>' +
               '<button class="btn morph-btn" type="submit"><span class="lbl">Reply</span>' + checkSVG() + "</button>" +
             "</div>" +
@@ -145,10 +163,6 @@ var MPComments = (function () {
         "</div>" +
       "</div>"
     );
-  }
-
-  function checkSVG() {
-    return '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
   }
 
   function drawList() {
@@ -180,12 +194,48 @@ var MPComments = (function () {
     });
   }
 
-  function morphDone(btn, doneLabel) {
+  function morphDone(btn) {
     btn.classList.add("done");
+    btn.disabled = true;
     setTimeout(function () {
       btn.classList.remove("done");
-      if (doneLabel) { var l = btn.querySelector(".lbl"); if (l) l.textContent = doneLabel; }
+      btn.disabled = false;
     }, 1600);
+  }
+
+  function needTokenAlert() {
+    alert("Comments aren't switched on yet — the backend is still being set up.");
+  }
+
+  function postComment(data) {
+    if (useWorker()) return apiPost("/api/comments", data);
+    var token = legacyToken();
+    if (!token) return Promise.reject(new Error("no-token"));
+    return load().then(function (rows) {
+      rows = normalize(rows);
+      var c = {
+        id: String(Date.now()) + Math.floor(Math.random() * 1e4),
+        slug: state.slug,
+        parentId: data.parentId || null,
+        name: data.name,
+        text: data.text,
+        createdAt: Date.now(),
+        up: 0,
+        down: 0
+      };
+      if (c.parentId && !rows.some(function (r) { return r.id === c.parentId; })) {
+        return Promise.reject(new Error("no-parent"));
+      }
+      rows.push(c);
+      return legacySave(rows, token).then(function () { return { ok: true }; });
+    });
+  }
+
+  function refresh() {
+    return load().then(function (rows) {
+      state.rows = normalize(rows);
+      drawList();
+    });
   }
 
   function submitReply(e, form) {
@@ -195,35 +245,41 @@ var MPComments = (function () {
     var text = form.querySelector('[name="text"]').value.trim();
     if (!text) return;
     var btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    load().then(function (rows) {
-      rows = normalize(rows);
-      rows.push({
-        id: String(Date.now()) + Math.floor(Math.random() * 1e4),
-        slug: state.slug,
-        parentId: id,
-        name: name,
-        text: text,
-        createdAt: Date.now(),
-        up: 0,
-        down: 0
-      });
-      return save(rows).then(function () {
-        state.rows = rows;
-        morphDone(btn);
-        form.reset();
-        form.classList.add("hidden");
-        drawList();
-      });
-    }).catch(function () {
-      btn.disabled = false;
-      alert("Couldn't post that — the comment token isn't set yet.");
-    });
+    postComment({ slug: state.slug, parentId: id, name: name, text: text }).then(function () {
+      morphDone(btn);
+      form.reset();
+      form.classList.add("hidden");
+      refresh();
+    }).catch(function () { needTokenAlert(); });
+  }
+
+  function submitTop(e, form) {
+    e.preventDefault();
+    var name = form.querySelector('[name="name"]').value.trim() || "anon";
+    var text = form.querySelector('[name="text"]').value.trim();
+    if (!text) return;
+    var btn = form.querySelector('button[type="submit"]');
+    postComment({ slug: state.slug, parentId: null, name: name, text: text }).then(function () {
+      morphDone(btn);
+      form.reset();
+      refresh();
+    }).catch(function () { needTokenAlert(); });
   }
 
   function castVote(id, dir) {
     var votes = getVotes();
     var prev = votes[id] || 0;
+    if (useWorker()) {
+      if (prev === dir) return; // one vote per device in worker mode
+      apiPost("/api/comments/vote", { id: id, dir: dir }).then(function () {
+        votes[id] = dir;
+        setVotes(votes);
+        refresh();
+      }).catch(function () {});
+      return;
+    }
+    var token = legacyToken();
+    if (!token) return;
     load().then(function (rows) {
       rows = normalize(rows);
       var c = rows.find(function (r) { return r.id === id; });
@@ -238,13 +294,22 @@ var MPComments = (function () {
         votes[id] = dir;
       }
       setVotes(votes);
-      return save(rows).then(function () { state.rows = rows; drawList(); });
+      return legacySave(rows, token).then(refresh);
     }).catch(function () {});
   }
 
   function removeThread(id) {
-    var token = ownerToken();
-    if (!isOwner() || !token) { alert("Deleting is only available on the owner's device."); return; }
+    if (!isOwner()) return;
+    if (useWorker()) {
+      var secret = ownerSecret();
+      if (!secret) { alert("Owner secret isn't set on this device."); return; }
+      apiPost("/api/comments/delete", { id: id, secret: secret }).then(refresh).catch(function () {
+        alert("Delete failed.");
+      });
+      return;
+    }
+    var token = legacyToken();
+    if (!token) return;
     var kill = {};
     kill[id] = true;
     var changed = true;
@@ -256,42 +321,17 @@ var MPComments = (function () {
           if (r.parentId && kill[r.parentId] && !kill[r.id]) { kill[r.id] = true; changed = true; }
         });
       }
-      var kept = rows.filter(function (r) { return !kill[r.id]; });
-      return save(kept, token).then(function () { state.rows = kept; drawList(); });
+      return legacySave(rows.filter(function (r) { return !kill[r.id]; }), token).then(refresh);
     }).catch(function () {});
   }
 
-  function submitTop(e, form) {
-    e.preventDefault();
-    var name = form.querySelector('[name="name"]').value.trim() || "anon";
-    var text = form.querySelector('[name="text"]').value.trim();
-    if (!text) return;
-    var btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    load().then(function (rows) {
-      rows = normalize(rows);
-      rows.push({
-        id: String(Date.now()) + Math.floor(Math.random() * 1e4),
-        slug: state.slug,
-        parentId: null,
-        name: name,
-        text: text,
-        createdAt: Date.now(),
-        up: 0,
-        down: 0
-      });
-      return save(rows).then(function () {
-        state.rows = rows;
-        morphDone(btn);
-        form.reset();
-        drawList();
-      });
-    }).catch(function () {
-      btn.disabled = false;
-      alert("Couldn't post that — the comment token isn't set yet.");
-    }).finally(function () {
-      setTimeout(function () { btn.disabled = false; }, 1700);
-    });
+  function ownFlow() {
+    if (location.hash !== "#own") return;
+    lsSet("mp-owner", "1");
+    if (useWorker() && !ownerSecret()) {
+      var s = prompt("Owner secret:");
+      if (s) lsSet("mp-owner-secret", s.trim());
+    }
   }
 
   return {
@@ -304,13 +344,8 @@ var MPComments = (function () {
       state.listEl = document.getElementById("comment-list");
       var form = document.getElementById("comment-form");
       if (form) form.onsubmit = function (e) { submitTop(e, form); };
-      if (location.hash === "#own") {
-        try { localStorage.setItem("mp-owner", "1"); } catch (e) {}
-      }
-      load().then(function (rows) {
-        state.rows = normalize(rows);
-        drawList();
-      });
+      ownFlow();
+      refresh();
     }
   };
 })();
