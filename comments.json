@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "17914439316752609",
+    "slug": "lorem-ipsum",
+    "parentId": null,
+    "name": "Ryuk",
+    "text": "Second test comment — checking the new vote buttons. dc, delete me too.",
+    "createdAt": 1791443931675,
+    "up": 0,
+    "down": 0
+  }
+]
