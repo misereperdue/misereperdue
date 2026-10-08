@@ -746,22 +746,58 @@ textarea { min-height: 90px; }
   font-size: 15px;
 }
 
-/* ---------- Blog post hero (header media) ---------- */
-.post-hero {
-  margin: -18px -18px 16px;
-  border-radius: 18px 18px 0 0;
+/* ---------- Blog post hero (full page header) ---------- */
+.post-hero-full {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  height: 42vh;
+  min-height: 280px;
+  max-height: 480px;
   overflow: hidden;
-  aspect-ratio: 16 / 9;
-  background: rgba(255,255,255,.04);
   position: relative;
+  background: rgba(255,255,255,.04);
+  margin-top: -20px;
+  margin-bottom: 20px;
 }
-.post-hero img, .post-hero video {
+.post-hero-full img, .post-hero-full video {
   width: 100%; height: 100%; object-fit: cover; display: block;
-  opacity: 0; transition: opacity .8s ease;
+  opacity: 0; transition: opacity .9s ease;
 }
-.post-hero img.ld { opacity: 1; }
-.post-hero video { opacity: 1; animation: heroIn .8s ease; }
+.post-hero-full img.ld { opacity: 1; }
+.post-hero-full video { opacity: 1; animation: heroIn .9s ease; }
+.post-hero-full::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 55%, var(--bg) 100%);
+  pointer-events: none;
+}
 @keyframes heroIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- Tag dropdown (Liquid Glass) ---------- */
+.tagwrap { position: relative; display: inline-block; margin: 12px 0 4px; }
+.tagdrop {
+  font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+  border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink);
+  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
+  box-shadow: var(--glass-spec); cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.tagdrop .chev { font-size: 11px; color: var(--muted); }
+.tagmenu {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 50;
+  min-width: 160px; padding: 6px; border-radius: 16px;
+  border: var(--glass-hairline); background: var(--glass-clear-tint);
+  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
+  box-shadow: var(--glass-spec), 0 12px 32px rgba(0,0,0,.25);
+  animation: menuIn .18s ease;
+}
+@keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.tagmenu.hidden { display: none; }
+.tagitem {
+  display: block; width: 100%; text-align: left; border: none; background: transparent;
+  color: var(--ink); font-size: 14px; font-weight: 500; padding: 10px 12px;
+  border-radius: 10px; cursor: pointer; font-family: inherit;
+}
+.tagitem:active { background: rgba(255,255,255,.1); }
 
 /* ---------- Blog tags ---------- */
 .tag-filter {

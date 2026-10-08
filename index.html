@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=59">
+  <link rel="stylesheet" href="css/site.css?v=60">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -51,7 +51,7 @@
     </section>
     <section class="panel" id="postview"></section>
   </main>
-  <script src="js/blog.js?v=8"></script>
+  <script src="js/blog.js?v=9"></script>
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=4"></script>
@@ -149,13 +149,13 @@
       var hero = "";
       if (post.header_media) {
         var isV = /\.(mp4|webm|mov)(\?|$)/i.test(post.header_media);
-        hero = '<div class="post-hero">' + (isV
+        hero = '<div class="post-hero-full">' + (isV
           ? '<video src="' + esc(post.header_media) + '" autoplay muted loop playsinline></video>'
           : '<img src="' + esc(post.header_media) + '" alt="" onload="this.classList.add(\'ld\')">') + '</div>';
       }
-      document.getElementById("postview").innerHTML =
-        '<article class="article-card">' + hero + byline(author, date) +
-        "<h1>" + esc(title) + "</h1>" + tagPills(post.tags) + '<div class="post-body">' +
+      document.getElementById("postview").innerHTML = hero +
+        '<article class="article-card">' + byline(author, date) +
+        "<h1>" + esc(title) + "</h1>" + tagDropdown(post.tags) + '<div class="post-body">' +
         (post.body || "") +
         '</div><div class="actions">' +
         '<a class="share" href="' + share + '" target="_blank" rel="noopener">' + X_SVG + "Share on X</a>" +
@@ -170,6 +170,7 @@
         '<button class="btn accent morph-btn" type="submit"><span class="lbl">Comment</span>' + MPComments.checkSVG() + "</button>" +
         "</form></section></article>";
       MPComments.init(id);
+      wireTagDropdown();
       document.getElementById("copy-url").onclick = function () {
         var link = "https://misereperdue.com/";
         if (navigator.clipboard) navigator.clipboard.writeText(link);
@@ -196,11 +197,43 @@
     else if (location.hash === "#cart") show("cart");
 
     var activeTag = null;
-    function tagPills(tags) {
+    function tagDropdown(tags) {
       if (!tags || !tags.length) return "";
-      return '<div class="ptags">' + tags.map(function (t) {
-        return '<span class="ptag">' + esc(t) + "</span>";
-      }).join("") + "</div>";
+      if (tags.length <= 3) {
+        return '<div class="ptags">' + tags.map(function (t) {
+          return '<span class="ptag">' + esc(t) + "</span>";
+        }).join("") + "</div>";
+      }
+      return '<div class="tagwrap"><button type="button" class="tagdrop" id="tagdrop">' +
+        esc(tags.length + " Tags") + ' <span class="chev">▾</span></button>' +
+        '<div class="tagmenu hidden" id="tagmenu">' +
+        tags.map(function (t) {
+          return '<button type="button" class="tagitem" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+        }).join("") + "</div></div>";
+    }
+    function wireTagDropdown() {
+      var drop = document.getElementById("tagdrop");
+      var menu = document.getElementById("tagmenu");
+      if (!drop || !menu) return;
+      drop.onclick = function (e) {
+        e.stopPropagation();
+        menu.classList.toggle("hidden");
+        drop.querySelector(".chev").textContent = menu.classList.contains("hidden") ? "▾" : "▴";
+      };
+      document.addEventListener("click", function h(e) {
+        if (!menu.classList.contains("hidden") && !e.target.closest(".tagwrap")) {
+          menu.classList.add("hidden");
+          drop.querySelector(".chev").textContent = "▾";
+        }
+      });
+      menu.querySelectorAll(".tagitem").forEach(function (b) {
+        b.onclick = function () {
+          activeTag = b.dataset.tag;
+          show("journal");
+          renderTagFilter(posts);
+          renderFeed(posts);
+        };
+      });
     }
     function renderFeed(list) {
       var feed = document.getElementById("feed");
@@ -220,7 +253,7 @@
         a.className = "card";
         a.href = "#post";
         a.innerHTML = byline(author, date) + "<h2>" + esc(post.title || "Untitled") + "</h2><p>" +
-          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>" + tagPills(post.tags);
+          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>";
         a.onclick = function (e) { e.preventDefault(); openPost(slug); };
         feed.appendChild(a);
       });
