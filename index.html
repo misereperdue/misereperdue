@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=73">
+  <link rel="stylesheet" href="css/site.css?v=74">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -60,7 +60,7 @@
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=4"></script>
-  <script src="js/shop.js?v=14"></script>
+  <script src="js/shop.js?v=15"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -110,9 +110,9 @@
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
-      // Show floating back button on post, product, and cart views
+      // Show floating back button on post and cart views (not product)
       var backBtn = document.getElementById("back-wrap");
-      if (backBtn) backBtn.classList.toggle("hidden", !(view === "post" || view === "product" || view === "cart"));
+      if (backBtn) backBtn.classList.toggle("hidden", !(view === "post" || view === "cart"));
       // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
       document.getElementById("journal").classList.toggle("on", view === "journal");

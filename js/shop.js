@@ -207,11 +207,10 @@ var MPShop = (function () {
     view.innerHTML =
       '<article class="article-card">' +
         carouselHTML(p.images && p.images.length ? p.images : [p.image], p.name) +
-        '<div class="kicker">' + (p.shopify ? "Shop" : "Sample") + "</div>" +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
-        (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
         sizes + '<div id="bag-action"></div>' +
+        (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
