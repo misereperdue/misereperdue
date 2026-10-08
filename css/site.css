@@ -758,7 +758,8 @@ textarea { min-height: 90px; }
 [data-theme="light"] .hero-post img { filter: none; }
 
 /* byline + tags side by side */
-.byline-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.byline-row { display: flex; align-items: center; gap: 10px; }
+.byline-row .byline { flex: none; }
 .byline-row .tagwrap { margin: 0; flex: none; }
 .byline-row .ptags { margin: 0; }
 
