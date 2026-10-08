@@ -561,8 +561,8 @@ textarea { min-height: 90px; }
 .product-card .img-ph,
 .product-card img { border-radius: 22px 22px 0 0; }
 /* pill overlays the tile via grid stacking — no absolute positioning */
-.tile-wrap { display: grid; flex: 1; }
-.tile-wrap > .img-ph, .tile-wrap > img { grid-area: 1 / 1; aspect-ratio: auto; height: 100%; }
+.tile-wrap { display: grid; }
+.tile-wrap > .img-ph, .tile-wrap > img { grid-area: 1 / 1; }
 .img-ph {
   width: 100%;
   aspect-ratio: 4/5;
@@ -616,7 +616,7 @@ textarea { min-height: 90px; }
   place-items: center;
 }
 .bag-stepper button:active { transform: scale(0.9); }
-.product-meta { display: block; background: rgba(0, 0, 0, 0.25); }
+.product-meta { display: block; background: rgba(0, 0, 0, 0.25); margin-top: auto; }
 [data-theme="light"] .product-meta { background: #e8e8ed; }
 .product-meta strong { display: block; font-size: 15px; font-weight: 620; letter-spacing: -0.01em; padding: 12px 14px 10px; }
 .product-meta .meta { display: block; font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; border-top: 1px solid var(--hairline); background: rgba(0, 0, 0, 0.35); padding: 9px 14px 14px; }
