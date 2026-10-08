@@ -14,7 +14,7 @@ var MPComments = (function () {
 
   /* dc: paste your worker URL here after deploying, e.g.
      "https://misery-comments.you.workers.dev" (no trailing slash). */
-  var WORKER_URL = "";
+  var WORKER_URL = "https://misery-comments.freeglory416.workers.dev";
 
   var REPO = "misereperdue/misereperdue";
   var FILE = "comments.json";
