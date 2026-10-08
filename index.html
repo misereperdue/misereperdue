@@ -196,7 +196,6 @@
     if (location.hash === "#shop") show("shop");
     else if (location.hash === "#cart") show("cart");
 
-    var activeTag = null;
     function tagDropdown(tags) {
       if (!tags || !tags.length) return "";
       if (tags.length <= 3) {
@@ -231,17 +230,6 @@
       var feed = document.getElementById("feed");
       feed.innerHTML = "";
       list.forEach(function (post) {
-    function renderFeed(list) {
-      var feed = document.getElementById("feed");
-      feed.innerHTML = "";
-      var shown = activeTag ? list.filter(function (p) {
-        return (p.tags || []).indexOf(activeTag) !== -1;
-      }) : list;
-      if (!shown.length) {
-        feed.innerHTML = '<p class="empty">No posts tagged "' + esc(activeTag) + '".</p>';
-        return;
-      }
-      shown.forEach(function (post) {
         var slug = post.slug || post._id;
         var date = (post.publishedAt || "").slice(0, 10);
         var author = post.author || "dc";
