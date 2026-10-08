@@ -537,7 +537,8 @@ textarea { min-height: 90px; }
 /* ---------- Product cards / carousel ---------- */
 .product-card {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   border: 0.5px solid var(--hairline);
   border-radius: 22px;
@@ -560,8 +561,8 @@ textarea { min-height: 90px; }
 .product-card .img-ph,
 .product-card img { border-radius: 22px 22px 0 0; }
 /* pill overlays the tile via grid stacking — no absolute positioning */
-.tile-wrap { display: grid; }
-.tile-wrap > .img-ph, .tile-wrap > img { grid-area: 1 / 1; }
+.tile-wrap { display: grid; flex: 1; }
+.tile-wrap > .img-ph, .tile-wrap > img { grid-area: 1 / 1; aspect-ratio: auto; height: 100%; }
 .img-ph {
   width: 100%;
   aspect-ratio: 4/5;
