@@ -81,13 +81,13 @@ var MPShop = (function () {
   }
 
   function cardHTML(p) {
-    return '<button type="button" class="product-card" data-product="' + esc(p.id) + '">' +
+    return '<div role="button" tabindex="0" class="product-card" data-product="' + esc(p.id) + '">' +
       stockPill(p) +
       imgHTML(p) +
       '<div class="product-meta"><strong>' + esc(p.name) + "</strong>" +
       '<span class="meta">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon")) + "</span></div>" +
       (p.available === false ? '<span class="tag">Coming soon</span>' : "") +
-      "</button>";
+      "</div>";
   }
 
   function renderShop() {
@@ -99,6 +99,9 @@ var MPShop = (function () {
         (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + " — showing preview.</p>" : "");
       grid.querySelectorAll("[data-product]").forEach(function (el) {
         el.onclick = function () { openProduct(el.dataset.product); };
+        el.onkeydown = function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProduct(el.dataset.product); }
+        };
       });
     });
   }
