@@ -124,7 +124,13 @@
       if (view === "cart") MPShop.renderCartPanel();
       refreshSeg();
       refreshPostBtn();
-      history.replaceState(null, "", view === "shop" ? "#shop" : view === "cart" ? "#cart" : reading ? "#post" : "#");
+      var hash = "#";
+      if (view === "shop") hash = "#shop";
+      else if (view === "cart") hash = "#cart";
+      else if (view === "post" && id) hash = "#post/" + id;
+      else if (view === "product" && id) hash = "#product/" + id;
+      else if (reading) hash = "#post";
+      history.replaceState(null, "", hash);
     }
     window.MPNav = {
       show: show,
@@ -174,7 +180,7 @@
       var date = (post.publishedAt || "").slice(0, 10);
       var title = post.title || "Untitled";
       var author = post.author || "dc";
-      var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
+      var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/#post/" + id);
       setPostHero(post.header_media || "");
       document.getElementById("postview").innerHTML =
         '<article class="article-card"><div class="byline-row">' + byline(author, date) + tagDropdown(post.tags) + "</div>" +
@@ -195,7 +201,7 @@
       MPComments.init(id);
       wireTagDropdown();
       document.getElementById("copy-url").onclick = function () {
-        var link = "https://misereperdue.com/";
+        var link = "https://misereperdue.com/#post/" + id;
         if (navigator.clipboard) navigator.clipboard.writeText(link);
         this.lastChild.textContent = "Copied";
       };
@@ -216,8 +222,41 @@
       MPComments.claimOwner();
       history.replaceState(null, "", "#");
     }
-    if (location.hash === "#shop") show("shop");
-    else if (location.hash === "#cart") show("cart");
+    function routeFromHash() {
+      var h = location.hash || "#";
+      var m;
+      if ((m = h.match(/^#post\/(.+)$/))) {
+        var slug = decodeURIComponent(m[1]);
+        // Posts load async; openPost handles missing gracefully, retry after load
+        if (posts && posts.length) openPost(slug);
+        else {
+          var iv = setInterval(function () {
+            if (posts && posts.length) { clearInterval(iv); openPost(slug); }
+          }, 200);
+          setTimeout(function () { clearInterval(iv); }, 8000);
+        }
+        return true;
+      }
+      if ((m = h.match(/^#product\/(.+)$/))) {
+        var pid = decodeURIComponent(m[1]);
+        var tryOpen = function () {
+          if (window.MPShop && MPShop.openProduct) MPShop.openProduct(pid);
+        };
+        tryOpen();
+        // Retry once products load (Shopify fetch is async)
+        var iv = setInterval(function () {
+          if (window.MP && MP.PRODUCTS && MP.PRODUCTS[pid]) { clearInterval(iv); tryOpen(); }
+        }, 500);
+        setTimeout(function () { clearInterval(iv); }, 8000);
+        return true;
+      }
+      if (h === "#shop") { show("shop"); return true; }
+      if (h === "#cart") { show("cart"); return true; }
+      if (h === "#journal" || h === "#") { show("journal"); return true; }
+      return false;
+    }
+    routeFromHash();
+    window.addEventListener("hashchange", routeFromHash);
 
     function tagDropdown(tags) {
       if (!tags || !tags.length) return "";
@@ -258,7 +297,7 @@
         var author = post.author || "dc";
         var a = document.createElement("a");
         a.className = "card";
-        a.href = "#post";
+        a.href = "#post/" + slug;
         a.innerHTML = byline(author, date) + "<h2>" + esc(post.title || "Untitled") + "</h2><p>" +
           esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>";
         a.onclick = function (e) { e.preventDefault(); openPost(slug); };
