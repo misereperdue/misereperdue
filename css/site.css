@@ -766,13 +766,21 @@ textarea { min-height: 90px; }
 /* ---------- Tag dropdown (Liquid Glass) ---------- */
 .tagwrap { position: relative; display: inline-block; margin: 12px 0 4px; }
 .tagdrop {
-  font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
   border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink);
   -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
   box-shadow: var(--glass-spec); cursor: pointer; font-family: inherit;
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: 5px; line-height: 1.2;
+  white-space: nowrap;
 }
-.tagdrop .chev { font-size: 11px; color: var(--muted); }
+.tagdrop .chev { font-size: 10px; color: var(--muted); }
+.ptag {
+  font-size: 12px; font-weight: 600; padding: 5px 11px; line-height: 1.2;
+  border-radius: 999px; border: var(--glass-hairline);
+  background: var(--glass-clear-tint); color: var(--muted);
+  -webkit-backdrop-filter: var(--glass-clear); backdrop-filter: var(--glass-clear);
+  white-space: nowrap;
+}
 .tagmenu {
   position: absolute; top: calc(100% + 8px); left: 0; z-index: 50;
   min-width: 160px; padding: 6px; border-radius: 16px;

@@ -130,7 +130,7 @@
       else if (view === "post" && id) hash = "#post/" + id;
       else if (view === "product" && id) hash = "#product/" + id;
       else if (reading) hash = "#post";
-      history.replaceState(null, "", hash);
+      if (location.hash !== hash) history.pushState(null, "", hash);
     }
     window.MPNav = {
       show: show,
