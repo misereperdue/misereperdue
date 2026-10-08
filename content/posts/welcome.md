@@ -10,6 +10,7 @@ tags:
   - misere
   - perdue
   - gloryanni
+header_media: "https://raw.githubusercontent.com/misereperdue/misereperdue/main/images/uploads/mv03w7n2-663.jpeg"
 ---
 This is the first post on the new journal. Posts are written in the admin editor and published straight to the site.
 
