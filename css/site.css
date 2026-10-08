@@ -746,6 +746,51 @@ textarea { min-height: 90px; }
   font-size: 15px;
 }
 
+/* ---------- Blog tags ---------- */
+.tag-filter {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+.tag-filter::-webkit-scrollbar { display: none; }
+.ftag {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: var(--glass-hairline);
+  background: var(--glass-clear-tint);
+  color: var(--muted);
+  -webkit-backdrop-filter: var(--glass-clear);
+  backdrop-filter: var(--glass-clear);
+  box-shadow: var(--glass-spec);
+  cursor: pointer;
+}
+.ftag.on { color: var(--ink); border-color: var(--accent); }
+.ptags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ptag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: var(--glass-hairline);
+  background: var(--glass-clear-tint);
+  color: var(--muted);
+  -webkit-backdrop-filter: var(--glass-clear);
+  backdrop-filter: var(--glass-clear);
+}
+.article-card .ptags { margin: 12px 0 4px; }
+.post-body h1, .post-body h2, .post-body h3 { margin: 18px 0 8px; letter-spacing: -0.02em; }
+.post-body blockquote { border-left: 2px solid var(--accent); padding-left: 12px; margin: 12px 0; color: var(--muted); }
+.post-body ul, .post-body ol { margin: 8px 0 8px 20px; }
+.post-body pre { background: rgba(0,0,0,0.35); border-radius: 12px; padding: 12px; overflow-x: auto; margin: 12px 0; }
+.post-body code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+.post-body img { max-width: 100%; border-radius: 12px; margin: 12px 0; }
+
 /* ---------- Cart qty controls ---------- */
 .qty { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; }
 .qty button {

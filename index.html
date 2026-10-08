@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=57">
+  <link rel="stylesheet" href="css/site.css?v=58">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -39,7 +39,7 @@
     </nav>
   </div>
   <main class="page">
-    <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
+    <section class="panel on" id="journal"><div class="tag-filter" id="tag-filter" hidden></div><div class="feed" id="feed"></div></section>
     <section class="panel" id="shop"><div class="grid" id="shop-grid"></div></section>
     <section class="panel" id="cart">
       <div id="cart-lines"></div>
@@ -51,7 +51,7 @@
     </section>
     <section class="panel" id="postview"></section>
   </main>
-  <script src="js/blog.js?v=6"></script>
+  <script src="js/blog.js?v=7"></script>
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=4"></script>
@@ -148,8 +148,8 @@
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
       document.getElementById("postview").innerHTML =
         '<article class="article-card">' + byline(author, date) +
-        "<h1>" + esc(title) + '</h1><div class="post-body">' +
-        SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
+        "<h1>" + esc(title) + "</h1>" + tagPills(post.tags) + '<div class="post-body">' +
+        (post.body || "") +
         '</div><div class="actions">' +
         '<a class="share" href="' + share + '" target="_blank" rel="noopener">' + X_SVG + "Share on X</a>" +
         '<span class="split"></span>' +
@@ -188,10 +188,24 @@
     if (location.hash === "#shop") show("shop");
     else if (location.hash === "#cart") show("cart");
 
-    SanityBlog.loadPosts().then(function (list) {
-      posts = list;
+    var activeTag = null;
+    function tagPills(tags) {
+      if (!tags || !tags.length) return "";
+      return '<div class="ptags">' + tags.map(function (t) {
+        return '<span class="ptag">' + esc(t) + "</span>";
+      }).join("") + "</div>";
+    }
+    function renderFeed(list) {
       var feed = document.getElementById("feed");
-      posts.forEach(function (post) {
+      feed.innerHTML = "";
+      var shown = activeTag ? list.filter(function (p) {
+        return (p.tags || []).indexOf(activeTag) !== -1;
+      }) : list;
+      if (!shown.length) {
+        feed.innerHTML = '<p class="empty">No posts tagged "' + esc(activeTag) + '".</p>';
+        return;
+      }
+      shown.forEach(function (post) {
         var slug = post.slug || post._id;
         var date = (post.publishedAt || "").slice(0, 10);
         var author = post.author || "dc";
@@ -199,10 +213,34 @@
         a.className = "card";
         a.href = "#post";
         a.innerHTML = byline(author, date) + "<h2>" + esc(post.title || "Untitled") + "</h2><p>" +
-          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>";
+          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>" + tagPills(post.tags);
         a.onclick = function (e) { e.preventDefault(); openPost(slug); };
         feed.appendChild(a);
       });
+    }
+    function renderTagFilter(list) {
+      var wrap = document.getElementById("tag-filter");
+      var seen = {};
+      list.forEach(function (p) { (p.tags || []).forEach(function (t) { seen[t] = 1; }); });
+      var tags = Object.keys(seen).sort();
+      if (!tags.length) { wrap.hidden = true; return; }
+      wrap.hidden = false;
+      wrap.innerHTML = '<button type="button" class="ftag' + (activeTag ? "" : " on") + '" data-tag="">All</button>' +
+        tags.map(function (t) {
+          return '<button type="button" class="ftag' + (activeTag === t ? " on" : "") + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+        }).join("");
+      wrap.querySelectorAll(".ftag").forEach(function (b) {
+        b.onclick = function () {
+          activeTag = b.dataset.tag || null;
+          renderTagFilter(posts);
+          renderFeed(posts);
+        };
+      });
+    }
+    SanityBlog.loadPosts().then(function (list) {
+      posts = list;
+      renderTagFilter(posts);
+      renderFeed(posts);
     });
 
     MPShop.updateCartBadge();

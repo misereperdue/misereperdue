@@ -1,0 +1,25 @@
+backend:
+  name: github
+  repo: misereperdue/misereperdue
+  branch: main
+  # TODO: paste the GitHub OAuth App client ID here (see README)
+  # client_id: YOUR_CLIENT_ID
+  # redirect_uri: https://misereperdue.com/admin/
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "posts"
+    label: "Posts"
+    folder: "content/posts"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Publish Date", name: "date", widget: "datetime", default: "" }
+      - { label: "Excerpt", name: "excerpt", widget: "text", required: false, hint: "Short summary shown on the journal list." }
+      - { label: "Tags", name: "tags", widget: "list", required: false, hint: "Press enter after each tag." }
+      - { label: "Body", name: "body", widget: "markdown", hint: "Write your post here." }
