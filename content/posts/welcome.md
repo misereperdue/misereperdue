@@ -1,5 +1,5 @@
 ---
-title: "Welcome to the journal"
+title: "Misere"
 date: 2026-10-08T12:00
 excerpt: "No Messages[English.]"
 tags:
