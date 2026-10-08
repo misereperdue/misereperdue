@@ -118,7 +118,10 @@
         <label>Title</label>
         <input id="f-title" placeholder="Post title" maxlength="200">
         <label>Date</label>
-        <input id="f-date" type="datetime-local">
+        <div style="display:flex;gap:8px">
+          <input id="f-date" type="date" style="flex:1;min-width:0">
+          <input id="f-time" type="time" style="flex:1;min-width:0">
+        </div>
         <label>Excerpt</label>
         <input id="f-excerpt" placeholder="Short summary" maxlength="500">
         <label>Tags</label>
@@ -211,7 +214,7 @@ document.getElementById("btn-new").onclick = function(){ openEditor(null); };
 /* --- editor --- */
 function openEditor(slug) {
   editingSlug = slug;
-  ["f-title","f-date","f-excerpt","f-tags","f-body"].forEach(function(id){ document.getElementById(id).value=""; });
+  ["f-title","f-date","f-time","f-excerpt","f-tags","f-body"].forEach(function(id){ document.getElementById(id).value=""; });
   document.getElementById("save-err").textContent = "";
   setTab("write");
   document.getElementById("btn-del").style.visibility = slug ? "visible" : "hidden";
@@ -220,14 +223,19 @@ function openEditor(slug) {
   if (slug) {
     api("/api/posts/"+encodeURIComponent(slug)).then(function(p){
       document.getElementById("f-title").value = p.title||"";
-      document.getElementById("f-date").value = (p.date||"").slice(0,16);
+      var dt = String(p.date||"");
+      var parts = dt.split("T");
+      document.getElementById("f-date").value = parts[0]||"";
+      document.getElementById("f-time").value = (parts[1]||"").slice(0,5);
       document.getElementById("f-excerpt").value = p.excerpt||"";
       document.getElementById("f-tags").value = (p.tags||[]).join(", ");
       document.getElementById("f-body").value = p.body||"";
     }).catch(function(){ document.getElementById("save-err").textContent="Could not load post."; });
   } else {
     var now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-    document.getElementById("f-date").value = now.toISOString().slice(0,16);
+    var iso = now.toISOString();
+    document.getElementById("f-date").value = iso.slice(0,10);
+    document.getElementById("f-time").value = iso.slice(11,16);
   }
 }
 document.getElementById("btn-back").onclick = loadList;
@@ -277,7 +285,7 @@ document.getElementById("btn-save").onclick = async function(){
       secret: secret,
       slug: editingSlug,
       title: document.getElementById("f-title").value,
-      date: document.getElementById("f-date").value,
+      date: (document.getElementById("f-date").value||"") + "T" + (document.getElementById("f-time").value||"00:00"),
       excerpt: document.getElementById("f-excerpt").value,
       tags: document.getElementById("f-tags").value.split(",").map(function(s){return s.trim();}).filter(Boolean),
       body: document.getElementById("f-body").value
