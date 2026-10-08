@@ -6,7 +6,10 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=29">
+  <link rel="stylesheet" href="css/site.css?v=30">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -26,6 +29,10 @@
       <button type="button" data-view="shop" aria-label="Store">
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
       </button>
+      <button type="button" data-view="cart" aria-label="Bag" id="cart-btn" class="cart-btn hidden">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg>
+        <span class="badge hidden" id="cart-badge" aria-hidden="true">0</span>
+      </button>
       <span class="split" aria-hidden="true"></span>
       <button type="button" class="page-btn" data-view="post" aria-label="Post">
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.2 4.8l5 5L9.4 19.6 4.5 20l.4-4.9z"/><path d="M12.6 6.4l5 5"/></svg>
@@ -34,114 +41,138 @@
   </div>
   <main class="page">
     <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
-    <section class="panel" id="shop"><p class="empty">Nothing in the shop yet.</p></section>
+    <section class="panel" id="shop"><div class="grid" id="shop-grid"></div></section>
+    <section class="panel" id="cart">
+      <div id="cart-lines"></div>
+      <p class="meta" id="cart-total" style="margin-top:12px"></p>
+      <div class="row">
+        <a class="btn accent" href="cart.html">Review order</a>
+      </div>
+      <p class="meta" style="margin-top:12px">Payment isn't switched on yet — orders go out as notes.</p>
+    </section>
     <section class="panel" id="postview"></section>
   </main>
+  <footer class="site-footer">
+    <div class="signature" aria-label="Misery">Misery</div>
+    <div class="foot-meta"><span>Misère Perdue</span><span class="bar">|</span><span>MMXXVI</span></div>
+  </footer>
   <script src="js/blog.js?v=6"></script>
+  <script src="js/store.js?v=6"></script>
+  <script src="js/shopify.js?v=1"></script>
+  <script src="js/comments.js?v=1"></script>
+  <script src="js/shop.js?v=1"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
-    var openSlug = "";
-    function byline(date) {
-      return '<div class="byline"><span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 18.5c.8-3 3.2-4.5 6.5-4.5s5.7 1.5 6.5 4.5"/></svg></span><span>dc</span><span class="bar">|</span><span>' + date + '</span></div>';
-    }
-    function show(view) {
-      document.getElementById("journal").classList.toggle("on", view === "journal");
-      document.getElementById("shop").classList.toggle("on", view === "shop");
-      document.getElementById("postview").classList.toggle("on", view === "post");
-      nav.classList.toggle("shop", view === "shop");
-      nav.classList.toggle("reading", view === "post");
-      nav.querySelectorAll("button").forEach(function (b) {
-        b.classList.toggle("on", b.dataset.view === view);
+    var current = { type: "journal", id: "" };
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
       });
+    }
+    function byline(name, date) {
+      return '<div class="byline">' + MPComments.avatarHTML(name) +
+        "<span>" + esc(name) + '</span><span class="bar">|</span><span>' + esc(date) + "</span></div>";
+    }
+    function refreshSeg() {
       requestAnimationFrame(function () {
-        var btn = nav.querySelector('button[data-view="' + view + '"]');
+        var btn = nav.querySelector('button[data-view="' + current.type + '"]') ||
+                  nav.querySelector('button[data-view="journal"]');
         if (btn) nav.querySelector(".seg").style.transform = "translateX(" + (btn.offsetLeft - 4) + "px)";
       });
-      history.replaceState(null, "", view === "shop" ? "#shop" : view === "post" ? "#post" : "#");
     }
-    function esc(s) {
-      return String(s || "").replace(/[&<>\"]/g, function (c) {
-        return {"&":"\u0026amp;","<":"\u0026lt;",">":"\u0026gt;","\"":"\u0026quot;"}[c];
+    function show(view, id) {
+      current = { type: view, id: id || "" };
+      var reading = view === "post" || view === "product";
+      document.getElementById("journal").classList.toggle("on", view === "journal");
+      document.getElementById("shop").classList.toggle("on", view === "shop");
+      document.getElementById("cart").classList.toggle("on", view === "cart");
+      document.getElementById("postview").classList.toggle("on", reading);
+      nav.classList.toggle("shop", view === "shop");
+      nav.classList.toggle("cart", view === "cart");
+      nav.classList.toggle("reading", reading);
+      nav.querySelectorAll("button").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.view === view || (reading && b.dataset.view === "post"));
       });
+      if (view === "shop") MPShop.renderShop();
+      if (view === "cart") MPShop.renderCartPanel();
+      refreshSeg();
+      history.replaceState(null, "", view === "shop" ? "#shop" : view === "cart" ? "#cart" : reading ? "#post" : "#");
     }
+    window.MPNav = {
+      show: show,
+      refreshSeg: refreshSeg,
+      showProduct: function (id) { show("product", id); },
+      reopen: function () {
+        if (current.type === "product" && current.id) MPShop.openProduct(current.id);
+        else if (current.type === "post" && current.id) openPost(current.id);
+      }
+    };
+
+    var X_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+
     function openPost(slug) {
       var post = posts.find(function (p) { return (p.slug || p._id) === slug; }) || posts[0];
       if (!post) return;
-      openSlug = post.slug || post._id;
+      var id = post.slug || post._id;
+      current = { type: "post", id: id };
       var date = (post.publishedAt || "").slice(0, 10);
       var title = post.title || "Untitled";
+      var author = post.author || "dc";
       var share = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent("https://misereperdue.com/");
-      var xmark = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.7 3h3.1l-6.8 7.8L19 21h-3.2l-5-6.6L6.2 21H3.1l7.3-8.3L3 3h3.3l4.5 6L14.7 3zm-1.1 16.2h1.7L8.5 4.7H6.7l6.9 14.5z"/></svg>';
-      document.getElementById("postview").innerHTML = '<article class="article-card">' + byline(date) + '<h1>' + title + '</h1><div class="post-body">' + SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + '</div><div class="actions"><a class="share" href="' + share + '" target="_blank" rel="noopener">' + xmark + 'Share on X</a><span class="split"></span><button type="button" class="share" id="copy-url">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button></div><section class="comments"><h3>Comments</h3><div class="comment-list"><p class="empty">Loading comments…</p></div><form class="stack" id="comment-form"><input name="name" placeholder="Name" required><textarea name="text" placeholder="Comment" required></textarea><button class="btn" type="submit">Post</button></form></section></article>';
-      if (location.hash === "#own") localStorage.setItem("mp-owner", "1");
-      var owner = localStorage.getItem("mp-owner") === "1";
-      function drawComments(rows) {
-        var box = document.querySelector("#postview .comment-list");
-        if (!box) return;
-        var mine = rows.filter(function (c) { return c.slug === openSlug; });
-        box.innerHTML = mine.length ? mine.map(function (c) {
-          return '<div class="comment"><strong>' + esc(c.name) + '</strong><p>' + esc(c.text) + '</p>' + (owner ? '<button type="button" class="del" data-id="' + esc(c.id) + '">Delete</button>' : '') + '</div>';
-        }).join("") : '<p class="empty">No comments yet.</p>';
-        box.querySelectorAll(".del").forEach(function (b) {
-          b.onclick = function () { saveComments(rows.filter(function (c) { return c.id !== b.dataset.id; })); };
-        });
-      }
-      function loadComments() {
-        return fetch("comments.json?t=" + Date.now()).then(function (r) { return r.json(); }).catch(function () { return []; });
-      }
-      function saveComments(rows) {
-        var body = JSON.stringify(rows, null, 2);
-        function put(sha) {
-          return fetch("https://api.github.com/repos/misereperdue/misereperdue/contents/comments.json", {
-            method: "PUT",
-            headers: { "Authorization": "Bearer " + localStorage.getItem("mp-token"), "Content-Type": "application/json" },
-            body: JSON.stringify({ message: "Update comments", content: btoa(unescape(encodeURIComponent(body))), sha: sha })
-          });
-        }
-        fetch("https://api.github.com/repos/misereperdue/misereperdue/contents/comments.json", { headers: { "Authorization": "Bearer " + localStorage.getItem("mp-token") } })
-          .then(function (r) { return r.json(); })
-          .then(function (file) { return put(file.sha); })
-          .then(function () { drawComments(rows); });
-      }
-      loadComments().then(drawComments);
+      document.getElementById("postview").innerHTML =
+        '<article class="article-card">' + byline(author, date) +
+        "<h1>" + esc(title) + '</h1><div class="post-body">' +
+        SanityBlog.textFrom(post.body).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
+        '</div><div class="actions">' +
+        '<a class="share" href="' + share + '" target="_blank" rel="noopener">' + X_SVG + "Share on X</a>" +
+        '<span class="split"></span>' +
+        '<button type="button" class="share" id="copy-url">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button>' +
+        '</div><section class="comments"><div class="comment-list" id="comment-list"><p class="empty">Loading comments…</p></div>' +
+        '<form class="stack comment-form" id="comment-form">' +
+        '<input name="name" placeholder="Name" maxlength="40">' +
+        '<textarea name="text" placeholder="Type your comment here…" required maxlength="2000"></textarea>' +
+        '<button class="btn accent morph-btn" type="submit"><span class="lbl">Comment</span>' + MPComments.checkSVG() + "</button>" +
+        "</form></section></article>";
+      MPComments.init(id);
       document.getElementById("copy-url").onclick = function () {
         var link = "https://misereperdue.com/";
         if (navigator.clipboard) navigator.clipboard.writeText(link);
         this.lastChild.textContent = "Copied";
       };
-      document.getElementById("comment-form").onsubmit = function (e) {
-        e.preventDefault();
-        var data = new FormData(e.target);
-        loadComments().then(function (rows) {
-          rows.push({ id: String(Date.now()), slug: openSlug, name: data.get("name"), text: data.get("text") });
-          saveComments(rows);
-          e.target.reset();
-        });
-      };
-      show("post");
+      show("post", id);
     }
+
     nav.querySelectorAll("button").forEach(function (b) {
       b.onclick = function () {
-        if (b.dataset.view === "post") { if (openSlug) openPost(openSlug); return; }
+        if (b.dataset.view === "post") { MPNav.reopen(); return; }
         show(b.dataset.view);
       };
     });
+
     if (location.hash === "#shop") show("shop");
+    else if (location.hash === "#cart") show("cart");
+
     SanityBlog.loadPosts().then(function (list) {
       posts = list;
       var feed = document.getElementById("feed");
       posts.forEach(function (post) {
         var slug = post.slug || post._id;
         var date = (post.publishedAt || "").slice(0, 10);
+        var author = post.author || "dc";
         var a = document.createElement("a");
         a.className = "card";
         a.href = "#post";
-        a.innerHTML = byline(date) + '<h2>' + (post.title || "Untitled") + '</h2><p>' + (post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + '</p>';
+        a.innerHTML = byline(author, date) + "<h2>" + esc(post.title || "Untitled") + "</h2><p>" +
+          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>";
         a.onclick = function (e) { e.preventDefault(); openPost(slug); };
         feed.appendChild(a);
       });
     });
+
+    MPShop.updateCartBadge();
   </script>
 </body>
 </html>
