@@ -122,10 +122,10 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .panel { display: none; }
 .panel.on {
   display: block;
-  animation: panel-in 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: panel-in 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 @keyframes panel-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
   to { opacity: 1; transform: none; }
 }
 .nav button {
@@ -748,7 +748,6 @@ textarea { min-height: 90px; }
 
 .hero-post {
   position: absolute; inset: 0; overflow: hidden;
-  animation: heroIn .9s ease;
 }
 .hero-post img, .hero-post video {
   width: 100%; height: 100%; object-fit: cover; display: block;
@@ -756,6 +755,17 @@ textarea { min-height: 90px; }
   mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
 [data-theme="light"] .hero-post img { filter: none; }
+/* crossfade layer for header swaps */
+.hero-cross {
+  position: absolute; inset: 0; overflow: hidden; z-index: 2;
+  opacity: 0; transition: opacity .9s ease;
+}
+.hero-cross.in { opacity: 1; }
+.hero-cross img, .hero-cross video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
+}
 
 /* ---------- Floating back button ---------- */
 .back-fab {

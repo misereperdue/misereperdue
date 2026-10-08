@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=66">
+  <link rel="stylesheet" href="css/site.css?v=67">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -161,21 +161,44 @@
     function restoreHero() {
       saveDefaultHero();
       var h = document.querySelector("header.hero");
-      if (h && defaultHeroHTML !== null && h.getAttribute("data-custom") === "1") {
+      if (!h || h.getAttribute("data-custom") !== "1") return;
+      // Crossfade back to default
+      var layer = document.createElement("div");
+      layer.className = "hero-cross";
+      layer.innerHTML = defaultHeroHTML;
+      h.appendChild(layer);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { layer.classList.add("in"); });
+      });
+      setTimeout(function () {
         h.innerHTML = defaultHeroHTML;
         h.removeAttribute("data-custom");
-      }
+      }, 950);
     }
     function setPostHero(url) {
       saveDefaultHero();
       var h = document.querySelector("header.hero");
-      if (!h || !url) { restoreHero(); return; }
+      if (!h) return;
+      if (!url) { restoreHero(); return; }
+      // Crossfade: layer new header over old, fade in, then clean up
       var isV = /\.(mp4|webm|mov)(\?|$)/i.test(url);
-      h.setAttribute("data-custom", "1");
-      h.innerHTML = '<div class="hero-post">' + (isV
+      var layer = document.createElement("div");
+      layer.className = "hero-cross";
+      layer.innerHTML = (isV
         ? '<video src="' + esc(url) + '" autoplay muted loop playsinline></video>'
         : '<img src="' + esc(url) + '" alt="">') +
-        '<div class="hero-fade"></div></div>';
+        '<div class="hero-fade"></div>';
+      h.setAttribute("data-custom", "1");
+      h.appendChild(layer);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { layer.classList.add("in"); });
+      });
+      setTimeout(function () {
+        var kids = Array.prototype.slice.call(h.children);
+        kids.forEach(function (k) { if (k !== layer) h.removeChild(k); });
+        layer.classList.remove("hero-cross");
+        layer.classList.add("hero-post");
+      }, 950);
     }
 
     function openPost(slug) {
