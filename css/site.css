@@ -539,7 +539,9 @@ textarea { min-height: 90px; }
   border: 0.5px solid var(--hairline);
   border-radius: 22px;
   overflow: hidden;
-  background: var(--fill);
+  /* match the tile color: the tile + meta fully cover the card, and this makes
+     any anti-aliased fringe at the rounded clip invisible */
+  background: #131f4d;
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   backdrop-filter: blur(16px) saturate(150%);
   cursor: pointer;
@@ -549,9 +551,9 @@ textarea { min-height: 90px; }
 }
 .product-card:active { transform: scale(0.98); }
 .product-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
-/* bleed the tile past the card edges so subpixel rounding can never expose a sliver of card background */
+/* tile corners match the card's radius exactly so the rounded clip has no fringe */
 .product-card .img-ph,
-.product-card img { margin: -2px -2px 0; }
+.product-card img { border-radius: 22px 22px 0 0; }
 .img-ph {
   width: 100%;
   aspect-ratio: 4/5;
@@ -606,6 +608,7 @@ textarea { min-height: 90px; }
 }
 .bag-stepper button:active { transform: scale(0.9); }
 .product-meta { padding: 12px 14px 14px; display: grid; gap: 3px; background: rgba(0, 0, 0, 0.25); }
+[data-theme="light"] .product-meta { background: #e8e8ed; }
 .product-meta strong { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; }
 .product-meta .meta { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; border-top: 1px solid var(--hairline); padding-top: 9px; margin-top: 6px; }
 /* ---------- Stock pill ---------- */
