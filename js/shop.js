@@ -200,8 +200,8 @@ var MPShop = (function () {
      Frames live as base64 text (images/spin/<product>/NN.jpg.b64) so they
      can be pushed as plain text; decoded to data URLs at runtime. */
   var SPIN = {
-    mask: { dir: "images/spin/mask", n: 4 },
-    jersey: { dir: "images/spin/jersey", n: 0 }
+    mask: { dir: "images/spin/mask", n: 4, ar: "3 / 2" },
+    jersey: { dir: "images/spin/jersey", n: 4, ar: "3 / 4" }
   };
   function spinFor(p) {
     var nm = String(p.name || "").toLowerCase();
@@ -222,7 +222,7 @@ var MPShop = (function () {
       .catch(function () { cb(null); });
   }
   function spinHTML(sp, name) {
-    return '<div class="spinviewer" id="spinviewer">' +
+    return '<div class="spinviewer" id="spinviewer" style="aspect-ratio:' + sp.ar + '">' +
       '<div class="lg-spin-wrap" id="spinload"><span class="lg-spin"></span></div>' +
       '<img id="spinimg" alt="' + esc(name) + '" draggable="false">' +
       '<div class="spin-hint" id="spinhint">Drag to spin</div></div>';
