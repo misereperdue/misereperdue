@@ -777,40 +777,6 @@ textarea { min-height: 90px; }
   mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
 
-/* ---------- Floating back button ---------- */
-/* fixed wrapper mirrors .nav-wrap so the glass element composites like the navbar */
-.back-wrap {
-  position: fixed;
-  z-index: 60;
-  top: calc(env(safe-area-inset-top, 0px) + 76px);
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-.back-wrap.hidden { display: none; }
-.back-fab {
-  pointer-events: auto;
-  position: relative;
-  transform: translateZ(0);
-  width: 44px; height: 44px;
-  border-radius: 999px;
-  display: grid; place-items: center;
-  isolation: isolate;
-  background: var(--glass-regular-tint);
-  border: var(--glass-hairline);
-  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
-  -webkit-backdrop-filter: var(--glass-regular);
-  backdrop-filter: var(--glass-regular);
-  color: var(--ink);
-  cursor: pointer;
-  transition: transform .15s ease, opacity .2s ease;
-  -webkit-appearance: none; appearance: none;
-}
-.back-fab:active { transform: translateZ(0) scale(.94); }
-.back-fab svg { width: 22px; height: 22px; }
-
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .byline-row .byline { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; }

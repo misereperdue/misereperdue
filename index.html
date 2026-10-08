@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=76">
+  <link rel="stylesheet" href="css/site.css?v=77">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -37,11 +37,6 @@
         <span class="badge hidden" id="post-badge" aria-hidden="true">0</span>
       </button>
     </nav>
-  </div>
-  <div class="back-wrap hidden" id="back-wrap">
-    <button type="button" class="back-fab" id="back-fab" aria-label="Go back">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
   </div>
   <main class="page">
     <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
@@ -110,9 +105,6 @@
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
-      // Show floating back button on post and cart views (not product)
-      var backBtn = document.getElementById("back-wrap");
-      if (backBtn) backBtn.classList.toggle("hidden", !(view === "post" || view === "cart"));
       // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
       document.getElementById("journal").classList.toggle("on", view === "journal");
@@ -288,17 +280,6 @@
     }
     routeFromHash();
     window.addEventListener("hashchange", routeFromHash);
-    document.getElementById("back-fab").onclick = function () {
-      // Use browser history when available, else fall back to parent view
-      if (history.length > 1) {
-        history.back();
-      } else {
-        var v = current.type;
-        if (v === "post") show("journal");
-        else if (v === "product" || v === "cart") show("shop");
-        else show("journal");
-      }
-    };
 
     function tagDropdown(tags) {
       if (!tags || !tags.length) return "";
