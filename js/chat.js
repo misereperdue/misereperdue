@@ -1323,6 +1323,62 @@
     });
     sheet.appendChild(pwBtn);
 
+    // X Connection section
+    var xTitle = document.createElement("div");
+    xTitle.className = "chat-pw-title";
+    xTitle.textContent = "X Connection";
+    xTitle.style.marginTop = "18px";
+    sheet.appendChild(xTitle);
+
+    var xBox = document.createElement("div");
+    xBox.className = "chat-xbox";
+    if (me.xUsername) {
+      xBox.innerHTML = '<span class="chat-xlogo">' + X_LOGO + '</span><span class="chat-xhandle">@' + esc(me.xUsername) + '</span><span class="chat-xstatus">Connected</span>';
+      var unBtn = document.createElement("button");
+      unBtn.type = "button";
+      unBtn.className = "btn chat-xunlink";
+      unBtn.textContent = "Unlink";
+      unBtn.addEventListener("click", function () {
+        if (!confirm("Unlink your X account?")) return;
+        unBtn.disabled = true;
+        api("/api/x/unlink", { method: "POST", body: {} }).then(function (r) {
+          if (r && r.ok) { me.xUsername = null; location.reload(); }
+          else { unBtn.disabled = false; alert("Couldn't unlink."); }
+        }).catch(function () { unBtn.disabled = false; });
+      });
+      xBox.appendChild(unBtn);
+    } else {
+      xBox.innerHTML = '<span class="chat-xlogo">' + X_LOGO + '</span><span class="chat-xstatus dim">Not connected</span>';
+      var linkBtn = document.createElement("button");
+      linkBtn.type = "button";
+      linkBtn.className = "btn chat-xlink";
+      linkBtn.textContent = "Connect X account";
+      linkBtn.addEventListener("click", function () {
+        linkBtn.disabled = true;
+        linkBtn.textContent = "Connecting...";
+        api("/api/x/link-start", { method: "POST", body: {} }).then(function (r) {
+          if (r && r.ok && r.linkToken) {
+            var url = "https://x.com/i/oauth2/authorize" +
+              "?response_type=code" +
+              "&client_id=" + encodeURIComponent(X_CLIENT_ID) +
+              "&redirect_uri=" + encodeURIComponent(X_REDIRECT_URI) +
+              "&scope=" + encodeURIComponent("users.read tweet.read") +
+              "&state=" + encodeURIComponent("link-" + r.linkToken);
+            location.href = url;
+          } else {
+            linkBtn.disabled = false;
+            linkBtn.textContent = "Connect X account";
+            alert((r && r.error) || "Couldn't start X link.");
+          }
+        }).catch(function () {
+          linkBtn.disabled = false;
+          linkBtn.textContent = "Connect X account";
+        });
+      });
+      xBox.appendChild(linkBtn);
+    }
+    sheet.appendChild(xBox);
+
     var out = document.createElement("button");
     out.type = "button";
     out.className = "chat-logout";
@@ -1361,6 +1417,11 @@
     var saved = null;
     try { saved = sessionStorage.getItem("x_state"); } catch (e) {}
     var st = sm ? decodeURIComponent(sm[1]) : "";
+    // Link flow returns x_state=linked (no sessionStorage check needed)
+    if (st === "linked") {
+      try { sessionStorage.removeItem("x_state"); } catch (e) {}
+      return { token: decodeURIComponent(tm[1]), linked: true };
+    }
     if (!saved || st.split(".")[0] !== saved) return { error: "Sign-in didn't verify. Try again." };
     try { sessionStorage.removeItem("x_state"); } catch (e) {}
     return { token: decodeURIComponent(tm[1]) };
