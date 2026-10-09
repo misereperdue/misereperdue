@@ -5,6 +5,17 @@
 
   var CHAT_API = "https://misery-chat.freeglory416.workers.dev";
   var TOKEN_KEY = "chat_token";
+  var DEVICE_KEY = "chat_device";
+  function deviceId() {
+    try {
+      var d = localStorage.getItem(DEVICE_KEY);
+      if (!d) { d = "d-" + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem(DEVICE_KEY, d); }
+      return d;
+    } catch (e) { return ""; }
+  }
+  function avatarImgURL(username, v) {
+    return CHAT_API + "/api/avatarimg/" + encodeURIComponent(username) + "?v=" + (v || 0);
+  }
   var AVATAR_EMOJIS = ["\uD83D\uDE00", "\uD83D\uDE0E", "\uD83D\uDD25", "\uD83D\uDC80",
     "\uD83C\uDF19", "\u2B50", "\uD83C\uDFAD", "\uD83D\uDC7B",
     "\uD83D\uDC3A", "\uD83E\uDD81", "\uD83C\uDF0A", "\u26A1", "\uD83C\uDF52", "\uD83D\uDC8E"];
@@ -62,15 +73,24 @@
     return '<span class="chat-verified" title="Verified" aria-label="Verified">' + SEAL_SVG + "</span>";
   }
 
-  function avatarNode(username, avatar, size) {
+  function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
-    var a = document.createElement("span");
-    a.className = "chat-avatar" + (size ? " " + size : "");
-    a.textContent = avatar || (username || "?").charAt(0).toUpperCase();
-    wrap.appendChild(a);
+    if (imgV !== undefined && imgV !== null) {
+      var im = document.createElement("img");
+      im.className = "chat-avatar-img" + (size ? " " + size : "");
+      im.alt = "";
+      im.src = avatarImgURL(username, imgV);
+      wrap.appendChild(im);
+    } else {
+      var a = document.createElement("span");
+      a.className = "chat-avatar" + (size ? " " + size : "");
+      a.textContent = avatar || (username || "?").charAt(0).toUpperCase();
+      wrap.appendChild(a);
+    }
     return wrap;
   }
+  function myImgV() { return (me && me.hasAvatarImg) ? me.avatarV : undefined; }
 
   function setPoints(n) {
     var b = root.querySelector(".chat-points-num");
@@ -148,8 +168,9 @@
         return;
       }
       var body = { username: username, password: password };
-      if (mode === "register" && username.toLowerCase() === "dc") {
-        body.secret = secretInput.value;
+      if (mode === "register") {
+        body.deviceId = deviceId();
+        if (username.toLowerCase() === "dc") body.secret = secretInput.value;
       }
       submit.disabled = true;
       api(mode === "login" ? "/api/login" : "/api/register", { method: "POST", body: body })
@@ -199,7 +220,7 @@
       "</button></form>";
 
     var meBtn = root.querySelector(".chat-me");
-    meBtn.appendChild(avatarNode(me.username, me.avatar, "sm"));
+    meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
     if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
     setPoints(me.points || 0);
 
@@ -253,8 +274,11 @@
       bubble.className = "chat-bubble";
       bubble.textContent = m.text || "";
       row.appendChild(bubble);
+      var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
+      if (m.verified) myWrap.insertAdjacentHTML("beforeend", sealHTML());
+      row.appendChild(myWrap);
     } else {
-      var wrap = avatarNode(m.user, m.avatar);
+      var wrap = avatarNode(m.user, m.avatar, null, (m.av !== undefined ? m.av : undefined));
       if (m.verified) wrap.insertAdjacentHTML("beforeend", sealHTML());
       row.appendChild(wrap);
       var main = document.createElement("div");
@@ -276,15 +300,6 @@
       row.appendChild(main);
     }
 
-    if (me && me.owner) {
-      var del = document.createElement("button");
-      del.type = "button";
-      del.className = "chat-del";
-      del.setAttribute("aria-label", "Delete message");
-      del.textContent = "\u00D7";
-      del.addEventListener("click", function () { deleteMessage(m.id); });
-      row.appendChild(del);
-    }
 
     b.appendChild(row);
     if (stick) b.scrollTop = b.scrollHeight;
@@ -294,12 +309,6 @@
     delete seen[id];
     var n = root.querySelector('.chat-msg[data-id="' + id + '"]');
     if (n && n.parentNode) n.parentNode.removeChild(n);
-  }
-
-  function deleteMessage(id) {
-    api("/api/delete", { method: "POST", body: { id: id } })
-      .then(function (r) { if (r && r.ok) removeMessage(id); })
-      .catch(function () {});
   }
 
   function send(text) {
@@ -421,7 +430,7 @@
     x.addEventListener("click", closeProfile);
     sheet.appendChild(x);
 
-    var bigWrap = avatarNode(me.username, me.avatar, "lg");
+    var bigWrap = avatarNode(me.username, me.avatar, "lg", myImgV());
     if (me.verified) bigWrap.insertAdjacentHTML("beforeend", sealHTML());
     var bigHold = document.createElement("div");
     bigHold.className = "chat-sheet-big";
@@ -447,6 +456,66 @@
       grid.appendChild(b);
     });
     sheet.appendChild(grid);
+
+    var upBtn = document.createElement("button");
+    upBtn.type = "button";
+    upBtn.className = "btn chat-upload";
+    upBtn.textContent = "Upload photo";
+    var fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    upBtn.addEventListener("click", function () { fileInput.click(); });
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      var url = URL.createObjectURL(f);
+      var im = new Image();
+      im.onload = function () {
+        var s = 256;
+        var c = document.createElement("canvas");
+        c.width = s; c.height = s;
+        var ctx = c.getContext("2d");
+        var side = Math.min(im.width, im.height);
+        ctx.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, s, s);
+        URL.revokeObjectURL(url);
+        var dataUrl = c.toDataURL("image/jpeg", 0.85);
+        errBox.textContent = "";
+        upBtn.disabled = true;
+        api("/api/avatar", { method: "POST", body: { image: dataUrl } })
+          .then(function (r) {
+            upBtn.disabled = false;
+            if (r && r.ok) {
+              me.hasAvatarImg = true;
+              me.avatarV = r.avatarV;
+              var holder = bigHold.querySelector(".chat-avatar-wrap");
+              if (holder) {
+                var fresh = avatarNode(me.username, me.avatar, "lg", myImgV());
+                if (me.verified) fresh.insertAdjacentHTML("beforeend", sealHTML());
+                holder.parentNode.replaceChild(fresh, holder);
+              }
+              var meBtn = root.querySelector(".chat-me");
+              if (meBtn) {
+                meBtn.innerHTML = "";
+                meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
+                if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
+              }
+              errBox.textContent = "Photo updated.";
+            } else {
+              errBox.textContent = (r && r.error) || "Couldn't upload.";
+            }
+          })
+          .catch(function () {
+            upBtn.disabled = false;
+            errBox.textContent = "Couldn't reach the chat server.";
+          });
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); errBox.textContent = "Couldn't read that image."; };
+      im.src = url;
+      fileInput.value = "";
+    });
+    sheet.appendChild(upBtn);
+    sheet.appendChild(fileInput);
 
     var lab = document.createElement("label");
     lab.className = "chat-field";
@@ -498,7 +567,7 @@
             var meBtn = root.querySelector(".chat-me");
             if (meBtn) {
               meBtn.innerHTML = "";
-              meBtn.appendChild(avatarNode(me.username, me.avatar, "sm"));
+              meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
               if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
             }
             if (oldName !== me.username) {
@@ -524,6 +593,62 @@
         });
     });
     sheet.appendChild(save);
+
+    var pwTitle = document.createElement("div");
+    pwTitle.className = "chat-pw-title";
+    pwTitle.textContent = "Change password";
+    sheet.appendChild(pwTitle);
+
+    var curLab = document.createElement("label");
+    curLab.className = "chat-field";
+    var curT = document.createElement("span");
+    curT.textContent = "Current password";
+    curLab.appendChild(curT);
+    var curInput = document.createElement("input");
+    curInput.type = "password";
+    curInput.autocomplete = "current-password";
+    curLab.appendChild(curInput);
+    sheet.appendChild(curLab);
+
+    var newLab = document.createElement("label");
+    newLab.className = "chat-field";
+    var newT = document.createElement("span");
+    newT.textContent = "New password";
+    newLab.appendChild(newT);
+    var newInput = document.createElement("input");
+    newInput.type = "password";
+    newInput.autocomplete = "new-password";
+    newLab.appendChild(newInput);
+    sheet.appendChild(newLab);
+
+    var pwBtn = document.createElement("button");
+    pwBtn.type = "button";
+    pwBtn.className = "btn chat-pw";
+    pwBtn.textContent = "Change password";
+    pwBtn.addEventListener("click", function () {
+      errBox.textContent = "";
+      if (!curInput.value || newInput.value.length < 4) {
+        errBox.textContent = "Enter your current password and a new one (min 4).";
+        return;
+      }
+      pwBtn.disabled = true;
+      api("/api/password", { method: "POST", body: { current: curInput.value, "new": newInput.value } })
+        .then(function (r) {
+          pwBtn.disabled = false;
+          if (r && r.ok) {
+            curInput.value = "";
+            newInput.value = "";
+            errBox.textContent = "Password changed.";
+          } else {
+            errBox.textContent = (r && r.error) || "Couldn't change it.";
+          }
+        })
+        .catch(function () {
+          pwBtn.disabled = false;
+          errBox.textContent = "Couldn't reach the chat server.";
+        });
+    });
+    sheet.appendChild(pwBtn);
 
     var out = document.createElement("button");
     out.type = "button";
