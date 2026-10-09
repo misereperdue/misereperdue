@@ -533,21 +533,54 @@
       if (r && r.badges) userBadges = r.badges;
       if (r && r.messages) r.messages.forEach(addMessage);
       scrollBottom(true);
+      scheduleFade();
     }).catch(function () {});
     connect();
+    if (!window.__chatFadeHook) {
+      window.__chatFadeHook = true;
+      window.addEventListener("scroll", scheduleFade, { passive: true });
+      window.addEventListener("resize", scheduleFade);
+    }
   }
 
   function msgsBox() { return root.querySelector(".chat-msgs"); }
 
   function nearBottom() {
-    var b = msgsBox();
-    if (!b) return true;
-    return b.scrollHeight - b.scrollTop - b.clientHeight < 120;
+    var h = document.documentElement;
+    return h.scrollHeight - window.scrollY - window.innerHeight < 160;
   }
 
   function scrollBottom(force) {
-    var b = msgsBox();
-    if (b && (force || nearBottom())) b.scrollTop = b.scrollHeight;
+    if (force || nearBottom()) {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    }
+  }
+
+  var fadeRaf = 0;
+  function updateMsgFade() {
+    fadeRaf = 0;
+    if (!root) return;
+    var msgs = root.querySelectorAll(".chat-msg");
+    var fadeTop = 64, fadeBottom = 170;
+    for (var i = 0; i < msgs.length; i++) {
+      var r = msgs[i].getBoundingClientRect();
+      var o;
+      if (r.bottom < fadeTop) o = 0;
+      else if (r.top > fadeBottom) o = 1;
+      else {
+        var c = (r.top + r.bottom) / 2;
+        o = (c - fadeTop) / (fadeBottom - fadeTop);
+        o = Math.max(0, Math.min(1, o));
+      }
+      var so = o.toFixed(2);
+      if (msgs[i].getAttribute("data-fade") !== so) {
+        msgs[i].setAttribute("data-fade", so);
+        msgs[i].style.opacity = so;
+      }
+    }
+  }
+  function scheduleFade() {
+    if (!fadeRaf) fadeRaf = requestAnimationFrame(updateMsgFade);
   }
 
   function stripUrls(text) {
@@ -611,6 +644,22 @@
     return a;
   }
 
+  function faviconBadge(embed) {
+    if (!embed || !embed.url) return null;
+    var host = "";
+    try { host = new URL(embed.url).hostname; } catch (e) { return null; }
+    if (!host) return null;
+    var s = document.createElement("span");
+    s.className = "chat-embed-badge";
+    var im = document.createElement("img");
+    im.src = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64";
+    im.alt = "";
+    im.loading = "lazy";
+    im.referrerPolicy = "no-referrer";
+    s.appendChild(im);
+    return s;
+  }
+
   function addMessage(m) {
     if (!m || !m.id || seen[m.id]) return;
     seen[m.id] = true;
@@ -638,6 +687,8 @@
       }
       var eb0 = embedNode(m.embed);
       if (eb0) bubble.appendChild(eb0);
+      var fb0 = faviconBadge(m.embed);
+      if (fb0) bubble.appendChild(fb0);
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
       var mb1 = msgBadge(m); if (mb1) myWrap.insertAdjacentHTML("beforeend", mb1);
@@ -673,13 +724,16 @@
       }
       var eb2 = embedNode(m.embed);
       if (eb2) b2.appendChild(eb2);
+      var fb2 = faviconBadge(m.embed);
+      if (fb2) b2.appendChild(fb2);
       main.appendChild(b2);
       row.appendChild(main);
     }
 
 
     b.appendChild(row);
-    if (stick) b.scrollTop = b.scrollHeight;
+    if (stick) window.scrollTo(0, document.documentElement.scrollHeight);
+    scheduleFade();
   }
 
   function removeMessage(id) {
@@ -763,7 +817,10 @@
               if (stripped) { etx.innerHTML = linkify(stripped); }
               else { etx.parentNode.removeChild(etx); }
             }
-            erow.appendChild(en); scrollBottom(false);
+            erow.appendChild(en);
+            var fbw = faviconBadge(o.embed);
+            if (fbw && !erow.querySelector(".chat-embed-badge")) erow.appendChild(fbw);
+            scrollBottom(false);
           }
         }
       } else if (o.t === "msg") {
