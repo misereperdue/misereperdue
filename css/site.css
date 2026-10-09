@@ -20,8 +20,8 @@
   --glass-regular-tint: rgba(255, 255, 255, 0.55);
   --glass-hairline: 0.5px solid rgba(0, 0, 0, 0.1);
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  --bg-glass-top: rgba(255,255,255,0.72);
-  --bg-glass-mid: rgba(255,255,255,0.38);
+  --bg-glass-top: rgba(255,255,255,0.30);
+  --bg-glass-mid: rgba(255,255,255,0.12);
 }
 [data-theme="dark"] {
   color-scheme: dark;
@@ -43,8 +43,8 @@
   --glass-clear-tint: rgba(10, 12, 24, 0.42);
   --glass-regular-tint: rgba(22, 22, 26, 0.38);
   --glass-hairline: 0.5px solid rgba(255, 255, 255, 0.22);
-  --bg-glass-top: rgba(7,15,41,0.72);
-  --bg-glass-mid: rgba(7,15,41,0.38);
+  --bg-glass-top: rgba(7,15,41,0.28);
+  --bg-glass-mid: rgba(7,15,41,0.12);
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
