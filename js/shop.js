@@ -197,56 +197,35 @@ var MPShop = (function () {
   }
 
   /* ---------- 360 spin viewer ----------
-     Frames live as base64 text (images/spin/<product>/NN.jpg.b64) so they
-     can be pushed as plain text; decoded to data URLs at runtime. */
-  var SPIN = {
-    mask: { dir: "images/spin/mask", n: 16, ar: "1 / 1" },
-    jersey: { dir: "images/spin/jersey", n: 4, ar: "3 / 4" }
-  };
-  function spinFor(p) {
-    var nm = String(p.name || "").toLowerCase();
-    if (nm.indexOf("mask") !== -1 && SPIN.mask.n > 0) return SPIN.mask;
-    if (nm.indexOf("jersey") !== -1 && SPIN.jersey.n > 0) return SPIN.jersey;
-    return null;
-  }
-  var spinURLCache = {};
-  function spinPad(i) { return ("0" + i).slice(-2); }
-  function spinFrameURL(dir, i, cb) {
-    var key = dir + "/" + i;
-    if (spinURLCache[key]) { cb(spinURLCache[key]); return; }
-    fetch(dir + "/" + spinPad(i) + ".jpg.b64")
-      .then(function (r) { if (!r.ok) throw new Error("missing"); return r.text(); })
-      .then(function (t) {
-        var u = "data:image/jpeg;base64," + t.trim();
-        spinURLCache[key] = u; cb(u);
-      })
-      .catch(function () { cb(null); });
-  }
-  function spinHTML(sp, name) {
-    return '<div class="spinviewer" id="spinviewer" style="aspect-ratio:' + sp.ar + '">' +
+     Driven solely by the product's Shopify images: 4+ images are treated
+     as spin frames (upload the frame set as the product's images in
+     Shopify admin). Fewer images use the carousel; no images at all shows
+     the emoji placeholder tile, like before. */
+  var SPIN_MIN_FRAMES = 4;
+  function spinHTML(images, name) {
+    return '<div class="spinviewer" id="spinviewer">' +
       '<div class="lg-spin-wrap" id="spinload"><span class="lg-spin"></span></div>' +
-      '<img id="spinimg" alt="' + esc(name) + '" draggable="false">' +
+      '<img id="spinimg" src="' + esc(images[0]) + '" alt="' + esc(name) + '" draggable="false">' +
       '<div class="spin-hint" id="spinhint">Drag to spin</div></div>';
   }
-  function initSpin(sp) {
+  function initSpin(images) {
     var box = document.getElementById("spinviewer");
     if (!box) return;
     var img = document.getElementById("spinimg");
     var hint = document.getElementById("spinhint");
     var load = document.getElementById("spinload");
-    var n = sp.n, dir = sp.dir, idx = 0, auto = true, timer = null;
+    var n = images.length, idx = 0, auto = true, timer = null;
     function show(k) {
       idx = ((k % n) + n) % n;
-      var want = idx;
-      spinFrameURL(dir, want + 1, function (u) {
-        if (!u || want !== idx) return;
-        if (load) { load.style.display = "none"; load = null; }
-        img.style.opacity = "1";
-        img.src = u;
-      });
+      img.src = images[idx];
     }
-    for (var i = 0; i < n; i++) spinFrameURL(dir, i + 1, function () {});
-    show(0);
+    for (var i = 1; i < n; i++) { var im = new Image(); im.src = images[i]; }
+    function ready() {
+      if (load) { load.style.display = "none"; load = null; }
+      img.style.opacity = "1";
+    }
+    if (img.complete && img.naturalWidth) ready();
+    else { img.onload = ready; img.onerror = ready; }
     timer = setInterval(function () { if (auto) show(idx + 1); }, Math.max(120, Math.round(3200 / n)));
     function stopAuto() {
       auto = false;
@@ -271,7 +250,8 @@ var MPShop = (function () {
 
   function openProduct(id) {
     var p = MP.PRODUCTS[id] || PLACEHOLDER;
-    var sp = spinFor(p);
+    var imgs = (p.images || []).filter(Boolean);
+    var isSpin = imgs.length >= SPIN_MIN_FRAMES;
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
       ? '<div class="sizes">' + p.sizes.map(function (s, i) {
@@ -280,14 +260,14 @@ var MPShop = (function () {
       : '<div style="height:12px"></div>';
     view.innerHTML =
       '<article class="article-card">' +
-        (sp ? spinHTML(sp, p.name) : carouselHTML(p.images && p.images.length ? p.images : [p.image], p.name)) +
+        (isSpin ? spinHTML(imgs, p.name) : carouselHTML(imgs, p.name)) +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         sizes + '<div id="bag-action"></div>' +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
-    if (sp) initSpin(sp);
+    if (isSpin) initSpin(imgs);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
     function refreshAction() { bindAction(p, function () { return size; }); }
     view.querySelectorAll("[data-size]").forEach(function (b) {
