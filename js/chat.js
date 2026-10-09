@@ -165,7 +165,7 @@
       if (me && me.owner && u.username !== me.username) {
         var gTitle = document.createElement("div");
         gTitle.className = "chat-pw-title";
-        gTitle.textContent = "Badges";
+        gTitle.textContent = "Manage Badges";
         sheet.appendChild(gTitle);
         var gRow = document.createElement("div");
         gRow.className = "chat-badge-row";
@@ -617,19 +617,45 @@
 
     var grid = document.createElement("div");
     grid.className = "chat-emoji-grid";
-    var picked = me.avatar || "";
+    var refreshMeAvatar = function () {
+      var meBtn = root.querySelector(".chat-me");
+      if (meBtn) {
+        meBtn.innerHTML = "";
+        meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
+        refreshMeBadge(meBtn);
+      }
+    };
     AVATAR_EMOJIS.forEach(function (em) {
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "chat-emoji" + (em === picked ? " on" : "");
+      b.className = "chat-emoji" + (em === (me.avatar || "") ? " on" : "");
       b.textContent = em;
       b.setAttribute("aria-label", "Avatar " + em);
       b.addEventListener("click", function () {
-        picked = em;
+        if (em === me.avatar) return;
         grid.querySelectorAll(".chat-emoji").forEach(function (n) {
           n.classList.toggle("on", n === b);
         });
+        var prevAv = me.avatar;
         bigHold.querySelector(".chat-avatar").textContent = em;
+        errBox.textContent = "";
+        api("/api/profile", { method: "POST", body: { avatar: em } })
+          .then(function (r) {
+            if (r && r.ok && r.user) {
+              me = r.user;
+              refreshMeAvatar();
+            } else {
+              errBox.textContent = (r && r.error) || "Couldn't save.";
+              bigHold.querySelector(".chat-avatar").textContent = prevAv || "";
+              grid.querySelectorAll(".chat-emoji").forEach(function (n) {
+                n.classList.toggle("on", n.textContent === (me.avatar || ""));
+              });
+            }
+          })
+          .catch(function () {
+            errBox.textContent = "Couldn't reach the chat server.";
+            bigHold.querySelector(".chat-avatar").textContent = prevAv || "";
+          });
       });
       grid.appendChild(b);
     });
@@ -708,6 +734,47 @@
     nameInput.value = me.username;
     lab.appendChild(nameInput);
     sheet.appendChild(lab);
+    var saveUsername = function () {
+      var newName = nameInput.value.trim();
+      if (newName === me.username) return;
+      errBox.textContent = "";
+      if (!/^[a-zA-Z0-9_]{2,16}$/.test(newName)) {
+        errBox.textContent = "Username must be 2\u201316 characters: letters, numbers, _";
+        nameInput.value = me.username;
+        return;
+      }
+      api("/api/profile", { method: "POST", body: { username: newName } })
+        .then(function (r) {
+          if (r && r.ok && r.user) {
+            var oldName = me.username;
+            me = r.user;
+            refreshMeAvatar();
+            if (oldName !== me.username) {
+              root.querySelectorAll('.chat-msg[data-user]').forEach(function (n) {
+                if (n.getAttribute("data-user") === oldName) {
+                  n.setAttribute("data-user", me.username);
+                  n.classList.add("mine");
+                  var nm = n.querySelector(".chat-msg-head strong");
+                  if (nm) nm.textContent = me.username;
+                  var av = n.querySelector(".chat-avatar");
+                  if (av) av.textContent = me.avatar || me.username.charAt(0).toUpperCase();
+                }
+              });
+            }
+          } else {
+            errBox.textContent = (r && r.error) || "Couldn't save.";
+            nameInput.value = me.username;
+          }
+        })
+        .catch(function () {
+          errBox.textContent = "Couldn't reach the chat server.";
+          nameInput.value = me.username;
+        });
+    };
+    nameInput.addEventListener("change", saveUsername);
+    nameInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); nameInput.blur(); }
+    });
 
     var pts = document.createElement("div");
     pts.className = "chat-sheet-points";
@@ -718,7 +785,7 @@
     if (myBadges.length) {
       var bTitle = document.createElement("div");
       bTitle.className = "chat-pw-title";
-      bTitle.textContent = "Badge";
+      bTitle.textContent = "Badges";
       sheet.appendChild(bTitle);
       var bRow = document.createElement("div");
       bRow.className = "chat-badge-row";
@@ -765,58 +832,7 @@
     errBox.setAttribute("role", "alert");
     sheet.appendChild(errBox);
 
-    var save = document.createElement("button");
-    save.type = "button";
-    save.className = "btn accent chat-save";
-    save.textContent = "Save";
-    save.addEventListener("click", function () {
-      var newName = nameInput.value.trim();
-      errBox.textContent = "";
-      if (!/^[a-zA-Z0-9_]{2,16}$/.test(newName)) {
-        errBox.textContent = "Username must be 2\u201316 characters: letters, numbers, _";
-        return;
-      }
-      var body = {};
-      if (newName !== me.username) body.username = newName;
-      if (picked !== (me.avatar || "")) body.avatar = picked;
-      if (!body.username && !("avatar" in body)) { closeProfile(); return; }
-      save.disabled = true;
-      api("/api/profile", { method: "POST", body: body })
-        .then(function (r) {
-          save.disabled = false;
-          if (r && r.ok && r.user) {
-            var oldName = me.username;
-            me = r.user;
-            setPoints(me.points || 0);
-            var meBtn = root.querySelector(".chat-me");
-            if (meBtn) {
-              meBtn.innerHTML = "";
-              meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
-              refreshMeBadge(meBtn);
-            }
-            if (oldName !== me.username) {
-              root.querySelectorAll('.chat-msg[data-user]').forEach(function (n) {
-                if (n.getAttribute("data-user") === oldName) {
-                  n.setAttribute("data-user", me.username);
-                  n.classList.add("mine");
-                  var nm = n.querySelector(".chat-msg-head strong");
-                  if (nm) nm.textContent = me.username;
-                  var av = n.querySelector(".chat-avatar");
-                  if (av) av.textContent = me.avatar || me.username.charAt(0).toUpperCase();
-                }
-              });
-            }
-            closeProfile();
-          } else {
-            errBox.textContent = (r && r.error) || "Couldn't save.";
-          }
-        })
-        .catch(function () {
-          save.disabled = false;
-          errBox.textContent = "Couldn't reach the chat server.";
-        });
-    });
-    sheet.appendChild(save);
+
 
     var pwTitle = document.createElement("div");
     pwTitle.className = "chat-pw-title";
