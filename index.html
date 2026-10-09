@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#000000">
   <title>MISERY</title>
-  <link rel="stylesheet" href="css/site.css?v=97">
+  <link rel="stylesheet" href="css/site.css?v=98">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -22,7 +22,7 @@
   <div class="nav-wrap">
     <nav class="nav" id="nav" aria-label="Main">
       <span class="seg" aria-hidden="true"></span>
-      <button type="button" class="on" data-view="journal" aria-label="Home"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 19V6.5L12 13l6-6.5V19"/></svg></button>
+      <button type="button" class="on" data-view="journal" aria-label="Chat"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg></button>
       <button type="button" data-view="shop" aria-label="Store">
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
       </button>
@@ -39,7 +39,7 @@
     </nav>
   </div>
   <main class="page">
-    <section class="panel on" id="journal"><div class="feed" id="feed"></div></section>
+    <section class="panel on" id="journal"><div class="chat" id="chat"></div></section>
     <section class="panel" id="shop"><div class="grid" id="shop-grid"></div></section>
     <section class="panel" id="cart">
       <div id="cart-lines"></div>
@@ -70,6 +70,7 @@
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=11"></script>
   <script src="js/shop.js?v=24"></script>
+  <script src="js/chat.js?v=1"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -327,6 +328,7 @@
     }
     function renderFeed(list) {
       var feed = document.getElementById("feed");
+      if (!feed) return;
       feed.innerHTML = "";
       list.forEach(function (post) {
         var slug = post.slug || post._id;
