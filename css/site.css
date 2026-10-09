@@ -20,6 +20,8 @@
   --glass-regular-tint: rgba(255, 255, 255, 0.55);
   --glass-hairline: 0.5px solid rgba(0, 0, 0, 0.1);
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --bg-glass-top: rgba(255,255,255,0.72);
+  --bg-glass-mid: rgba(255,255,255,0.38);
 }
 [data-theme="dark"] {
   color-scheme: dark;
@@ -41,6 +43,8 @@
   --glass-clear-tint: rgba(10, 12, 24, 0.42);
   --glass-regular-tint: rgba(22, 22, 26, 0.38);
   --glass-hairline: 0.5px solid rgba(255, 255, 255, 0.22);
+  --bg-glass-top: rgba(7,15,41,0.72);
+  --bg-glass-mid: rgba(7,15,41,0.38);
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
@@ -979,7 +983,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 2px 18px;
   margin-bottom: -6px;
-  background: linear-gradient(to bottom, var(--bg) 65%, transparent);
+  background: linear-gradient(to bottom,
+    var(--bg-glass-top) 0%,
+    var(--bg-glass-mid) 65%,
+    transparent 100%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-head-right { display: flex; align-items: center; gap: 10px; }
