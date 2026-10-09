@@ -202,11 +202,17 @@ var MPShop = (function () {
      you drag, with momentum and a gentle auto-spin until first touch.
      No frames, nothing to align. 1 image = single photo; 0 = emoji. */
   function spin3DHTML(images, name) {
+    var f = esc(images[0]), b = esc(images[1]);
+    var edgeBg = ' style="background-image:url(\'' + f + '\')"';
     return '<div class="spin3d" id="spin3d">' +
       '<div class="lg-spin-wrap" id="spin3dload"><span class="lg-spin"></span></div>' +
       '<div class="spin3d-scene"><div class="spin3d-card" id="spin3dcard">' +
-      '<div class="spin3d-face spin3d-front"><img id="spin3dimg" src="' + esc(images[0]) + '" alt="' + esc(name) + '" draggable="false"></div>' +
-      '<div class="spin3d-face spin3d-back"><img src="' + esc(images[1]) + '" alt="' + esc(name) + ' back" draggable="false"></div>' +
+      '<div class="spin3d-face spin3d-front"><img id="spin3dimg" src="' + f + '" alt="' + esc(name) + '" draggable="false"><div class="spin3d-sheen"></div></div>' +
+      '<div class="spin3d-face spin3d-back"><img src="' + b + '" alt="' + esc(name) + ' back" draggable="false"><div class="spin3d-sheen"></div></div>' +
+      '<div class="spin3d-edge spin3d-edge-t"' + edgeBg + '></div>' +
+      '<div class="spin3d-edge spin3d-edge-b"' + edgeBg + '></div>' +
+      '<div class="spin3d-edge spin3d-edge-l"' + edgeBg + '></div>' +
+      '<div class="spin3d-edge spin3d-edge-r"' + edgeBg + '></div>' +
       "</div></div>" +
       '<div class="spin-hint" id="spin3dhint">Drag to spin</div></div>';
   }
@@ -217,8 +223,17 @@ var MPShop = (function () {
     var hint = document.getElementById("spin3dhint");
     var load = document.getElementById("spin3dload");
     var img = document.getElementById("spin3dimg");
+    var sheens = box.querySelectorAll(".spin3d-sheen");
     var rot = 0, vel = 0, dragging = false, lastX = 0, lastT = 0, auto = true;
-    function render() { card.style.transform = "rotateY(" + rot + "deg)"; }
+    function render() {
+      card.style.transform = "rotateX(6deg) rotateY(" + rot + "deg)";
+      var s = Math.sin(rot * Math.PI / 180);
+      var p = 50 + 60 * s, o = 0.45 + 0.55 * Math.abs(s);
+      for (var i = 0; i < sheens.length; i++) {
+        sheens[i].style.backgroundPosition = p.toFixed(1) + "% 0";
+        sheens[i].style.opacity = o.toFixed(3);
+      }
+    }
     function ready() {
       if (load) { load.style.display = "none"; load = null; }
       card.style.opacity = "1";
