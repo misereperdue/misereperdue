@@ -369,16 +369,21 @@
     submit.addEventListener("click", submitAuth);
     var xBtn = root.querySelector(".chat-xbtn");
     if (xBtn) xBtn.addEventListener("click", function () {
-      var rnd = Math.random().toString(36).slice(2) + Date.now().toString(36);
-      try { sessionStorage.setItem("x_state", rnd); } catch (e) {}
-      var state = rnd + "." + deviceId();
-      var url = "https://x.com/i/oauth2/authorize" +
-        "?response_type=code" +
-        "&client_id=" + encodeURIComponent(X_CLIENT_ID) +
-        "&redirect_uri=" + encodeURIComponent(X_REDIRECT_URI) +
-        "&scope=" + encodeURIComponent("users.read tweet.read") +
-        "&state=" + encodeURIComponent(state);
-      location.href = url;
+      xBtn.disabled = true;
+      api("/api/x/pkce-start", { method: "POST", body: {} }).then(function (r) {
+        if (!r || !r.ok) { xBtn.disabled = false; return; }
+        try { sessionStorage.setItem("x_state", r.state); } catch (e) {}
+        var state = r.state + "." + deviceId();
+        var url = "https://x.com/i/oauth2/authorize" +
+          "?response_type=code" +
+          "&client_id=" + encodeURIComponent(X_CLIENT_ID) +
+          "&redirect_uri=" + encodeURIComponent(X_REDIRECT_URI) +
+          "&scope=" + encodeURIComponent("users.read tweet.read") +
+          "&state=" + encodeURIComponent(state) +
+          "&code_challenge=" + encodeURIComponent(r.codeChallenge) +
+          "&code_challenge_method=S256";
+        location.href = url;
+      }).catch(function () { xBtn.disabled = false; });
     });
     passInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") submitAuth();
@@ -1371,7 +1376,8 @@
               "&client_id=" + encodeURIComponent(X_CLIENT_ID) +
               "&redirect_uri=" + encodeURIComponent(X_REDIRECT_URI) +
               "&scope=" + encodeURIComponent("users.read tweet.read") +
-              "&state=" + encodeURIComponent("link-" + r.linkToken);
+              "&state=" + encodeURIComponent("link-" + r.linkToken) +
+              (r.codeChallenge ? "&code_challenge=" + encodeURIComponent(r.codeChallenge) + "&code_challenge_method=S256" : "");
             location.href = url;
           } else {
             linkBtn.disabled = false;
@@ -1430,6 +1436,7 @@
       try { sessionStorage.removeItem("x_state"); } catch (e) {}
       return { token: decodeURIComponent(tm[1]), linked: true };
     }
+    // New format: state is {pkceState}.{deviceId}, saved is {pkceState}
     if (!saved || st.split(".")[0] !== saved) return { error: "Sign-in didn't verify. Try again." };
     try { sessionStorage.removeItem("x_state"); } catch (e) {}
     return { token: decodeURIComponent(tm[1]) };
