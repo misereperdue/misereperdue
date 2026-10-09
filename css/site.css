@@ -473,6 +473,8 @@ textarea { min-height: 90px; }
 .comment-main { display: flex; gap: 10px; align-items: flex-start; }
 .comment-body { flex: 1; min-width: 0; }
 .comment-head { display: flex; align-items: baseline; gap: 6px; font-size: 14px; }
+.comment-head .verified { display: inline-flex; width: 15px; height: 15px; align-self: center; flex: none; }
+.comment-head .verified svg { width: 100%; height: 100%; display: block; }
 .comment-body > p { margin: 4px 0 0; font-size: 15px; }
 .comment-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .vote {

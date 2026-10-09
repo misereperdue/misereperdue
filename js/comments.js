@@ -117,7 +117,8 @@ var MPComments = (function () {
         text: String(c.text || "").slice(0, 2000),
         createdAt: +c.createdAt || Date.now(),
         up: Math.max(0, +c.up || 0),
-        down: Math.max(0, +c.down || 0)
+        down: Math.max(0, +c.down || 0),
+        verified: !!c.verified
       };
     }).filter(function (c) { return c.id && c.text; });
   }
@@ -128,6 +129,12 @@ var MPComments = (function () {
 
   function checkSVG() {
     return '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+  }
+
+  function verifiedBadge() {
+    return '<span class="verified" title="Verified author" aria-label="Verified author">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#0095F6"/>' +
+      '<path d="M8 12.6l2.6 2.6L16.4 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   }
 
   function commentHTML(c, depth) {
@@ -142,6 +149,7 @@ var MPComments = (function () {
         '<div class="comment-main">' + avatarHTML(c.name) +
           '<div class="comment-body">' +
             '<div class="comment-head"><strong>' + esc(c.name) + '</strong>' +
+            (c.verified ? verifiedBadge() : "") +
             '<span class="meta"> · ' + esc(timeAgo(c.createdAt)) + "</span></div>" +
             "<p>" + esc(c.text) + "</p>" +
             '<div class="comment-actions">' +
@@ -262,7 +270,7 @@ var MPComments = (function () {
     var text = form.querySelector('[name="text"]').value.trim();
     if (!text) return;
     var btn = form.querySelector('button[type="submit"]');
-    postComment({ slug: state.slug, parentId: state.replyTo, name: name, text: text }).then(function () {
+    postComment({ slug: state.slug, parentId: state.replyTo, name: name, text: text, secret: ownerSecret() }).then(function () {
       morphDone(btn);
       form.reset();
       cancelReply();
