@@ -391,11 +391,17 @@
       '<button type="button" class="chat-me" aria-label="Profile"></button>' +
       "</div></div>" +
       '<div class="chat-msgs" aria-live="polite"></div>' +
+      '<div class="chat-attach" hidden></div>' +
+      '<div class="chat-inputrow">' +
+      '<button type="button" class="chat-plus" aria-label="Add photo or video">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
+      "</button>" +
       '<form class="chat-inputbar">' +
       '<input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message">' +
       '<button type="submit" class="chat-send" aria-label="Send">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' +
-      "</button></form>";
+      "</button></form></div>" +
+      '<input type="file" class="chat-file" accept="image/*,video/*" hidden>';
 
     var meBtn = root.querySelector(".chat-me");
     meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
@@ -409,16 +415,113 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var text = input.value.trim();
-      if (!text) return;
+      if (!text && !attachMedia) return;
       input.value = "";
+      var media = attachMedia;
+      attachMedia = null;
+      renderAttach();
       var sendBtn = form.querySelector(".chat-send");
       if (sendBtn) {
         sendBtn.classList.remove("pop");
         void sendBtn.offsetWidth;
         sendBtn.classList.add("pop");
       }
-      send(text);
+      send(text, media);
     });
+
+    var attachMedia = null;
+    var attachBox = root.querySelector(".chat-attach");
+    var fileInput = root.querySelector(".chat-file");
+    var plusBtn = root.querySelector(".chat-plus");
+    function renderAttach() {
+      attachBox.innerHTML = "";
+      if (!attachMedia) { attachBox.hidden = true; return; }
+      attachBox.hidden = false;
+      if (attachMedia.uploading) {
+        var sp = document.createElement("span");
+        sp.className = "chat-attach-load";
+        sp.textContent = "Uploading\u2026";
+        attachBox.appendChild(sp);
+        return;
+      }
+      var th;
+      if (attachMedia.kind === "video") {
+        th = document.createElement("span");
+        th.className = "chat-attach-vid";
+        th.textContent = "\u25B6";
+      } else {
+        th = document.createElement("img");
+        th.src = CHAT_API + "/api/media/" + attachMedia.id;
+        th.alt = "";
+      }
+      attachBox.appendChild(th);
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "chat-attach-x";
+      x.setAttribute("aria-label", "Remove attachment");
+      x.textContent = "\u00D7";
+      x.addEventListener("click", function () { attachMedia = null; renderAttach(); });
+      attachBox.appendChild(x);
+    }
+    function attachError(msg) {
+      attachMedia = null;
+      attachBox.hidden = false;
+      attachBox.innerHTML = '<span class="chat-attach-err">' + esc(msg) + "</span>";
+      setTimeout(function () { if (!attachMedia) attachBox.hidden = true; }, 2500);
+    }
+    function uploadAttach(dataUrl, kind) {
+      attachMedia = { uploading: true, kind: kind };
+      renderAttach();
+      api("/api/media", { method: "POST", body: { dataUrl: dataUrl, kind: kind } })
+        .then(function (r) {
+          if (r && r.ok) {
+            attachMedia = { id: r.id, kind: r.kind };
+            renderAttach();
+          } else {
+            attachError((r && r.error) || "Couldn't upload.");
+          }
+        })
+        .catch(function () { attachError("Couldn't reach the chat server."); });
+    }
+    function compressAndUpload(f) {
+      var url = URL.createObjectURL(f);
+      var im = new Image();
+      im.onload = function () {
+        var max = 1600, w = im.width, h = im.height;
+        if (Math.max(w, h) > max) {
+          var s = max / Math.max(w, h);
+          w = Math.round(w * s); h = Math.round(h * s);
+        }
+        var c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(im, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        uploadAttach(c.toDataURL("image/jpeg", 0.82), "image");
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); attachError("Couldn't read that photo."); };
+      im.src = url;
+    }
+    if (plusBtn && fileInput) {
+      plusBtn.addEventListener("click", function () { fileInput.click(); });
+      fileInput.addEventListener("change", function () {
+        var f = fileInput.files && fileInput.files[0];
+        fileInput.value = "";
+        if (!f) return;
+        var isVideo = f.type.indexOf("video/") === 0;
+        var isGif = f.type === "image/gif";
+        if (f.size > 12 * 1024 * 1024) { attachError("That file is too big (12 MB max)."); return; }
+        if (isVideo || isGif) {
+          var rd = new FileReader();
+          rd.onload = function () { uploadAttach(rd.result, isVideo ? "video" : "image"); };
+          rd.onerror = function () { attachError("Couldn't read that file."); };
+          rd.readAsDataURL(f);
+        } else if (f.type.indexOf("image/") === 0) {
+          compressAndUpload(f);
+        } else {
+          attachError("Only photos and videos.");
+        }
+      });
+    }
 
     api("/api/messages?limit=50").then(function (r) {
       if (r && r.badges) userBadges = r.badges;
@@ -441,6 +544,63 @@
     if (b && (force || nearBottom())) b.scrollTop = b.scrollHeight;
   }
 
+  function linkify(text) {
+    var safe = esc(String(text || ""));
+    return safe.replace(/https?:\/\/[^\s<>"')]+/gi, function (url) {
+      var clean = url.replace(/[.,;:!?]+$/, "");
+      var trail = url.slice(clean.length);
+      return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer">' + clean + "</a>" + trail;
+    });
+  }
+
+  function mediaNode(media) {
+    if (!media || !media.id || !/^[A-Za-z0-9]+$/.test(media.id)) return null;
+    var el;
+    if (media.kind === "video") {
+      el = document.createElement("video");
+      el.src = CHAT_API + "/api/media/" + media.id;
+      el.controls = true;
+      el.playsInline = true;
+      el.preload = "metadata";
+    } else {
+      el = document.createElement("img");
+      el.src = CHAT_API + "/api/media/" + media.id;
+      el.loading = "lazy";
+      el.alt = "";
+    }
+    el.className = "chat-media";
+    return el;
+  }
+
+  function embedNode(embed) {
+    if (!embed || !embed.title || !embed.url) return null;
+    var a = document.createElement("a");
+    a.className = "chat-embed";
+    a.href = embed.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    if (embed.thumb) {
+      var im = document.createElement("img");
+      im.src = embed.thumb;
+      im.loading = "lazy";
+      im.alt = "";
+      im.referrerPolicy = "no-referrer";
+      a.appendChild(im);
+    }
+    var tx = document.createElement("span");
+    tx.className = "chat-embed-tx";
+    var t = document.createElement("span");
+    t.className = "chat-embed-t";
+    t.textContent = embed.title;
+    tx.appendChild(t);
+    var p = document.createElement("span");
+    p.className = "chat-embed-p";
+    p.textContent = embed.provider || "";
+    tx.appendChild(p);
+    a.appendChild(tx);
+    return a;
+  }
+
   function addMessage(m) {
     if (!m || !m.id || seen[m.id]) return;
     seen[m.id] = true;
@@ -456,8 +616,17 @@
 
     if (row.classList.contains("mine")) {
       var bubble = document.createElement("div");
-      bubble.className = "chat-bubble";
-      bubble.textContent = m.text || "";
+      bubble.className = "chat-bubble" + (m.media ? " chat-bubble-media" : "");
+      var mn = mediaNode(m.media);
+      if (mn) bubble.appendChild(mn);
+      if (m.text) {
+        var tx0 = document.createElement("div");
+        tx0.className = "chat-text";
+        tx0.innerHTML = linkify(m.text);
+        bubble.appendChild(tx0);
+      }
+      var eb0 = embedNode(m.embed);
+      if (eb0) bubble.appendChild(eb0);
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
       var mb1 = msgBadge(m); if (mb1) myWrap.insertAdjacentHTML("beforeend", mb1);
@@ -481,8 +650,17 @@
       head.appendChild(t);
       main.appendChild(head);
       var b2 = document.createElement("div");
-      b2.className = "chat-bubble";
-      b2.textContent = m.text || "";
+      b2.className = "chat-bubble" + (m.media ? " chat-bubble-media" : "");
+      var mn2 = mediaNode(m.media);
+      if (mn2) b2.appendChild(mn2);
+      if (m.text) {
+        var tx2 = document.createElement("div");
+        tx2.className = "chat-text";
+        tx2.innerHTML = linkify(m.text);
+        b2.appendChild(tx2);
+      }
+      var eb2 = embedNode(m.embed);
+      if (eb2) b2.appendChild(eb2);
       main.appendChild(b2);
       row.appendChild(main);
     }
@@ -498,11 +676,13 @@
     if (n && n.parentNode) n.parentNode.removeChild(n);
   }
 
-  function send(text) {
+  function send(text, media) {
+    var payload = { t: "send", text: text };
+    if (media) payload.media = media;
     if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({ t: "send", text: text }));
+      ws.send(JSON.stringify(payload));
     } else {
-      api("/api/send", { method: "POST", body: { text: text } })
+      api("/api/send", { method: "POST", body: { text: text, media: media || null } })
         .then(function (r) {
           if (r && r.ok) {
             if (r.message) addMessage(r.message);
@@ -559,6 +739,12 @@
           token = null;
           closeProfile();
           renderAuth();
+        }
+      } else if (o.t === "embed" && o.id && o.embed) {
+        var erow = root.querySelector('.chat-msg[data-id="' + o.id + '"] .chat-bubble');
+        if (erow && !erow.querySelector(".chat-embed")) {
+          var en = embedNode(o.embed);
+          if (en) { erow.appendChild(en); scrollBottom(false); }
         }
       } else if (o.t === "msg") {
         var wasMine = me && o.m && o.m.user === me.username;
