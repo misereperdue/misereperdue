@@ -1052,6 +1052,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-badge-opt .chat-badge { position: static; width: auto; height: auto; font-size: 22px; line-height: 1; filter: none; }
 .chat-badge-opt .chat-verified { position: static; width: 24px; height: 24px; }
 .chat-badge-none { font-size: 20px; opacity: .55; }
+/* admin ban button in user sheet */
+.chat-banbtn { width: 100%; margin-top: 12px; color: #ff6b6b; }
+.chat-banbtn.on { color: var(--ink); }
 
 /* messages */
 .chat-msgs {
