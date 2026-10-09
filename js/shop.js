@@ -367,8 +367,11 @@ var MPShop = (function () {
       b.onclick = function () { MP.removeItem(b.dataset.del); updateCartBadge(); renderCartPanel(); };
     });
     var co = document.getElementById("checkout-btn");
+    var coRow = document.getElementById("checkout-row");
     if (co) {
-      co.style.display = cart.length ? "" : "none";
+      var showCo = !!cart.length;
+      co.style.display = showCo ? "" : "none";
+      if (coRow) coRow.style.display = showCo ? "" : "none";
       co.onclick = checkout;
     }
   }
