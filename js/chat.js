@@ -838,7 +838,7 @@
       }
       html += '<div class="chat-typing-row">' +
         '<div class="chat-typing-avatar">' + av + '</div>' +
-        '<div class="chat-typing-bubble">\u{1F4AC}<span class="chat-typing-dots"><i></i><i></i><i></i></span></div>' +
+        '<div class="chat-typing-bubble"><span class="chat-typing-dots"><i></i><i></i><i></i></span></div>' +
         '</div>';
     });
     el.innerHTML = html;
