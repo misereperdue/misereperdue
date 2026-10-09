@@ -330,8 +330,12 @@
       var username = userInput.value.trim();
       var password = passInput.value;
       setErr("");
-      if (!/^[a-zA-Z0-9_]{3,16}$/.test(username) && username.toLowerCase() !== "l") {
+      if (mode === "register" && !/^[a-zA-Z0-9_]{3,16}$/.test(username) && username.toLowerCase() !== "l") {
         setErr("Username must be 3\u201316 characters: letters, numbers, _");
+        return;
+      }
+      if (!username) {
+        setErr("Enter your username.");
         return;
       }
       if (!password || password.length < 4) {
