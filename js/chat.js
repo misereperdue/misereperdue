@@ -76,9 +76,10 @@
     return '<span class="chat-verified" title="Verified" aria-label="Verified">' + SEAL_SVG + "</span>";
   }
 
-  /* Badges: "verified" = seal, "100" = \u{1F4AF}, "heart" = theme-adaptive heart. */
+  /* Badges: "verified" = seal, "100" = \u{1F4AF}, "heart" = theme-adaptive heart, "robot" = bot. */
   function badgeHTML(badge) {
     if (badge === "100") return '<span class="chat-badge" title="100" aria-label="100 badge">\u{1F4AF}</span>';
+    if (badge === "robot") return '<span class="chat-badge" title="Bot" aria-label="Bot badge">\u{1F916}</span>';
     if (badge === "heart") return '<span class="chat-badge" title="" aria-label="Heart badge"><span class="b-dark">\u{1F90D}</span><span class="b-light">\u{1F5A4}</span></span>';
     return sealHTML();
   }
@@ -191,7 +192,7 @@
         sheet.appendChild(gTitle);
         var gRow = document.createElement("div");
         gRow.className = "chat-badge-row";
-        ["100", "heart"].forEach(function (bid) {
+        ["100", "heart", "robot"].forEach(function (bid) {
           var gb = document.createElement("button");
           gb.type = "button";
           gb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "");
