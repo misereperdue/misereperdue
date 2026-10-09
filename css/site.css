@@ -1040,10 +1040,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-badge .b-light { display: none; }
 [data-theme="light"] .chat-badge .b-dark { display: none; }
 [data-theme="light"] .chat-badge .b-light { display: inline; }
+.chat-sheet-big .chat-verified { width: 26px; height: 26px; left: -7px; bottom: -7px; }
+.chat-sheet-big .chat-badge { width: 28px; height: 28px; font-size: 24px; line-height: 28px; left: -7px; bottom: -7px; }
 /* badge pickers */
 .chat-badge-row { display: flex; gap: 10px; margin: 2px 0 6px; }
 .chat-pw-title + .chat-badge-row { margin-top: 8px; }
-.chat-badge-row + .chat-pw-title, .chat-badge-row + .chat-err + .chat-pw-title { margin-top: 8px; }
+.chat-badge-row + .chat-pw-title, .chat-badge-row + .chat-err + .chat-pw-title { margin-top: 6px; }
 .chat-badge-opt {
   width: 46px; height: 46px; border-radius: 50%;
   border: var(--glass-hairline); background: var(--glass-clear-tint);
