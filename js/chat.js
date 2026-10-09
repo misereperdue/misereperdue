@@ -892,9 +892,9 @@
   }
   setInterval(function () {
     if (!token || !me) return;
-    // 1s when tab is visible, 10s when hidden (saves Cloudflare quota)
+    // 3s when tab is visible, 10s when hidden (saves Cloudflare quota)
     if (!document.hidden) safetyTick();
-  }, 1000);
+  }, 3000);
   setInterval(function () {
     if (token && me && document.hidden) safetyTick();
   }, 10000);
