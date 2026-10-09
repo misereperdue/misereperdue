@@ -850,7 +850,7 @@
     AVATAR_EMOJIS.forEach(function (em) {
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "chat-emoji" + (em === (me.avatar || "") ? " on" : "");
+      b.className = "chat-emoji" + (!me.hasAvatarImg && em === (me.avatar || "") ? " on" : "");
       b.textContent = em;
       b.setAttribute("aria-label", "Avatar " + em);
       b.addEventListener("click", function () {
@@ -907,6 +907,7 @@
         URL.revokeObjectURL(url);
         var dataUrl = c.toDataURL("image/jpeg", 0.85);
         errBox.textContent = "";
+        upMsg.textContent = "";
         upBtn.disabled = true;
         api("/api/avatar", { method: "POST", body: { image: dataUrl } })
           .then(function (r) {
@@ -926,7 +927,8 @@
                 meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
                 refreshMeBadge(meBtn);
               }
-              errBox.textContent = "Photo updated.";
+              upMsg.textContent = "Photo updated.";
+              grid.querySelectorAll(".chat-emoji").forEach(function (n) { n.classList.remove("on"); });
             } else {
               errBox.textContent = (r && r.error) || "Couldn't upload.";
             }
@@ -941,6 +943,9 @@
       fileInput.value = "";
     });
     sheet.appendChild(upBtn);
+    var upMsg = document.createElement("div");
+    upMsg.className = "chat-upload-msg";
+    sheet.appendChild(upMsg);
     sheet.appendChild(fileInput);
 
     var lab = document.createElement("label");
