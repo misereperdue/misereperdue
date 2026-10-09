@@ -196,54 +196,64 @@ var MPShop = (function () {
     render();
   }
 
-  /* ---------- 360 spin viewer ----------
-     Driven solely by the product's Shopify images: 4+ images are treated
-     as spin frames (upload the frame set as the product's images in
-     Shopify admin). Fewer images use the carousel; no images at all shows
-     the emoji placeholder tile, like before. */
-  var SPIN_MIN_FRAMES = 4;
-  function spinHTML(images, name) {
-    return '<div class="spinviewer" id="spinviewer">' +
-      '<div class="lg-spin-wrap" id="spinload"><span class="lg-spin"></span></div>' +
-      '<img id="spinimg" src="' + esc(images[0]) + '" alt="' + esc(name) + '" draggable="false">' +
-      '<div class="spin-hint" id="spinhint">Drag to spin</div></div>';
+  /* ---------- True-3D spin viewer ----------
+     Driven solely by the product's Shopify images: 2+ images build a live
+     3D card (image 1 = front, image 2 = back) that rotates in real 3D as
+     you drag, with momentum and a gentle auto-spin until first touch.
+     No frames, nothing to align. 1 image = single photo; 0 = emoji. */
+  function spin3DHTML(images, name) {
+    return '<div class="spin3d" id="spin3d">' +
+      '<div class="lg-spin-wrap" id="spin3dload"><span class="lg-spin"></span></div>' +
+      '<div class="spin3d-scene"><div class="spin3d-card" id="spin3dcard">' +
+      '<div class="spin3d-face spin3d-front"><img id="spin3dimg" src="' + esc(images[0]) + '" alt="' + esc(name) + '" draggable="false"></div>' +
+      '<div class="spin3d-face spin3d-back"><img src="' + esc(images[1]) + '" alt="' + esc(name) + ' back" draggable="false"></div>' +
+      "</div></div>" +
+      '<div class="spin-hint" id="spin3dhint">Drag to spin</div></div>';
   }
-  function initSpin(images) {
-    var box = document.getElementById("spinviewer");
+  function initSpin3D() {
+    var box = document.getElementById("spin3d");
     if (!box) return;
-    var img = document.getElementById("spinimg");
-    var hint = document.getElementById("spinhint");
-    var load = document.getElementById("spinload");
-    var n = images.length, idx = 0, auto = true, timer = null;
-    function show(k) {
-      idx = ((k % n) + n) % n;
-      img.src = images[idx];
-    }
-    for (var i = 1; i < n; i++) { var im = new Image(); im.src = images[i]; }
+    var card = document.getElementById("spin3dcard");
+    var hint = document.getElementById("spin3dhint");
+    var load = document.getElementById("spin3dload");
+    var img = document.getElementById("spin3dimg");
+    var rot = 0, vel = 0, dragging = false, lastX = 0, lastT = 0, auto = true;
+    function render() { card.style.transform = "rotateY(" + rot + "deg)"; }
     function ready() {
       if (load) { load.style.display = "none"; load = null; }
-      img.style.opacity = "1";
+      card.style.opacity = "1";
     }
     if (img.complete && img.naturalWidth) ready();
     else { img.onload = ready; img.onerror = ready; }
-    timer = setInterval(function () { if (auto) show(idx + 1); }, Math.max(120, Math.round(3200 / n)));
-    function stopAuto() {
-      auto = false;
-      if (timer) { clearInterval(timer); timer = null; }
-      if (hint) hint.classList.add("off");
+    function loop(t) {
+      if (lastT) {
+        var dt = Math.min(64, t - lastT);
+        if (!dragging) {
+          if (auto) rot += dt * 0.045;
+          else if (vel) { rot += vel * dt / 16.7; vel *= 0.94; if (Math.abs(vel) < 0.02) vel = 0; }
+          rot = ((rot % 360) + 360) % 360;
+          render();
+        }
+      }
+      lastT = t;
+      window.__spin3dRaf = requestAnimationFrame(loop);
     }
-    var dragging = false, acc = 0, lastX = 0;
+    window.__spin3dRaf = requestAnimationFrame(loop);
+    function stopAuto() {
+      if (auto) { auto = false; if (hint) hint.classList.add("off"); }
+    }
     box.addEventListener("pointerdown", function (e) {
-      stopAuto(); dragging = true; acc = 0; lastX = e.clientX;
+      stopAuto(); dragging = true; vel = 0; lastX = e.clientX; lastT = 0;
       try { box.setPointerCapture(e.pointerId); } catch (err) {}
     });
     box.addEventListener("pointermove", function (e) {
       if (!dragging) return;
-      acc += e.clientX - lastX; lastX = e.clientX;
-      while (acc >= 28) { acc -= 28; show(idx + 1); }
-      while (acc <= -28) { acc += 28; show(idx - 1); }
+      var dx = e.clientX - lastX; lastX = e.clientX;
+      rot = (((rot + dx * 0.45) % 360) + 360) % 360;
+      vel = vel * 0.7 + dx * 0.45 * 0.3;
+      render();
     });
-    function end() { dragging = false; }
+    function end() { dragging = false; lastT = 0; }
     box.addEventListener("pointerup", end);
     box.addEventListener("pointercancel", end);
   }
@@ -251,7 +261,8 @@ var MPShop = (function () {
   function openProduct(id) {
     var p = MP.PRODUCTS[id] || PLACEHOLDER;
     var imgs = (p.images || []).filter(Boolean);
-    var isSpin = imgs.length >= SPIN_MIN_FRAMES;
+    var is3D = imgs.length >= 2;
+    if (window.__spin3dRaf) { cancelAnimationFrame(window.__spin3dRaf); window.__spin3dRaf = 0; }
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
       ? '<div class="sizes">' + p.sizes.map(function (s, i) {
@@ -260,14 +271,14 @@ var MPShop = (function () {
       : '<div style="height:12px"></div>';
     view.innerHTML =
       '<article class="article-card">' +
-        (isSpin ? spinHTML(imgs, p.name) : carouselHTML(imgs, p.name)) +
+        (is3D ? spin3DHTML(imgs, p.name) : carouselHTML(imgs, p.name)) +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         sizes + '<div id="bag-action"></div>' +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
-    if (isSpin) initSpin(imgs);
+    if (is3D) initSpin3D();
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
     function refreshAction() { bindAction(p, function () { return size; }); }
     view.querySelectorAll("[data-size]").forEach(function (b) {

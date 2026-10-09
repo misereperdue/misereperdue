@@ -802,19 +802,31 @@ textarea { min-height: 90px; }
   animation: lg-spin .8s linear infinite; vertical-align: -3px;
 }
 
-/* ---------- 360 spin viewer ---------- */
-.spinviewer {
+/* ---------- True-3D spin viewer ---------- */
+.spin3d {
   position: relative; border-radius: 18px; overflow: hidden;
   background: #e9e9ee;
   touch-action: pan-y; cursor: ew-resize; min-height: 280px;
 }
-[data-theme="dark"] .spinviewer { background: #151528; }
-.spinviewer img {
-  width: 100%; height: auto; display: block;
-  opacity: 0; transition: opacity .3s ease;
-  user-select: none; -webkit-user-select: none; pointer-events: none;
+[data-theme="dark"] .spin3d { background: #151528; }
+.spin3d .lg-spin-wrap { position: absolute; inset: 0; align-items: center; padding: 0; }
+.spin3d-scene { perspective: 1400px; display: flex; justify-content: center; padding: 28px 20px; }
+.spin3d-card {
+  position: relative; width: min(80%, 430px); aspect-ratio: 1 / 1;
+  transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
+  opacity: 0; transition: opacity .35s ease;
 }
-.spinviewer .lg-spin-wrap { position: absolute; inset: 0; align-items: center; padding: 0; }
+.spin3d-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.spin3d-face img {
+  max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+  user-select: none; -webkit-user-select: none; pointer-events: none;
+  filter: drop-shadow(0 22px 26px rgba(0,0,0,.20));
+}
+.spin3d-back { transform: rotateY(180deg); }
 .spin-hint {
   position: absolute; right: 12px; bottom: 12px;
   font-size: 11px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
