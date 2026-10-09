@@ -975,8 +975,11 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* header */
 .chat-head {
+  position: sticky; top: 96px; z-index: 6;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 2px 12px;
+  padding: 10px 2px 18px;
+  margin-bottom: -6px;
+  background: linear-gradient(to bottom, var(--bg) 65%, transparent);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-head-right { display: flex; align-items: center; gap: 10px; }
