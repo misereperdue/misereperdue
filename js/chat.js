@@ -534,7 +534,7 @@
       });
     }
 
-    api("/api/messages?limit=50").then(function (r) {
+    api("/api/messages?limit=200").then(function (r) {
       if (r && r.badges) userBadges = r.badges;
       if (r && r.messages) r.messages.forEach(addMessage);
       scrollBottom(true);
@@ -891,7 +891,12 @@
       .catch(function () {});
   }
   setInterval(function () {
-    if (token && me) safetyTick();
+    if (!token || !me) return;
+    // 1s when tab is visible, 10s when hidden (saves Cloudflare quota)
+    if (!document.hidden) safetyTick();
+  }, 1000);
+  setInterval(function () {
+    if (token && me && document.hidden) safetyTick();
   }, 10000);
 
   /* When returning to the tab (iOS suspends WS in background), catch up immediately. */
