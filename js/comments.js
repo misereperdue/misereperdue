@@ -133,8 +133,8 @@ var MPComments = (function () {
 
   function verifiedBadge() {
     return '<span class="verified" title="Verified author" aria-label="Verified author">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#0095F6"/>' +
-      '<path d="M8 12.6l2.6 2.6L16.4 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + seal + '" fill="#3d121c"/>' +
+      '<path d="M7.2 12.4l2.8 2.8 6.8-7.2" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   }
 
   function commentHTML(c, depth) {
