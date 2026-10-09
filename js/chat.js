@@ -1336,14 +1336,9 @@
     });
     sheet.appendChild(pwBtn);
 
-    // X Connection section
-    var xTitle = document.createElement("div");
-    xTitle.className = "chat-pw-title";
-    xTitle.textContent = "X Connection";
-    xTitle.style.marginTop = "18px";
-    sheet.appendChild(xTitle);
-
+    // X Connection bubble (no title)
     var xBox = document.createElement("div");
+    xBox.style.marginTop = "18px";
     xBox.className = "chat-xbox";
     if (me.xUsername) {
       xBox.innerHTML = '<span class="chat-xlogo">' + X_LOGO + '</span><span class="chat-xhandle">@' + esc(me.xUsername) + '</span><span class="chat-xstatus">Connected</span>';
