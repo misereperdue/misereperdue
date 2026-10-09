@@ -7,7 +7,8 @@
     "text": "Comment",
     "createdAt": 1791452449263,
     "up": 1,
-    "down": 0
+    "down": 0,
+    "verified": false
   },
   {
     "id": "17914524582639431",
@@ -17,7 +18,8 @@
     "text": "Reply",
     "createdAt": 1791452458263,
     "up": 1,
-    "down": 0
+    "down": 0,
+    "verified": false
   },
   {
     "id": "17914965059647893",
@@ -27,7 +29,8 @@
     "text": "Example",
     "createdAt": 1791496505964,
     "up": 2,
-    "down": 0
+    "down": 0,
+    "verified": false
   },
   {
     "id": "17914965134548814",
@@ -36,6 +39,18 @@
     "name": "anon",
     "text": "123",
     "createdAt": 1791496513454,
+    "up": 0,
+    "down": 0,
+    "verified": false
+  },
+  {
+    "id": "17915105196009410",
+    "slug": "welcome",
+    "parentId": null,
+    "name": "dc",
+    "text": "Verified?",
+    "verified": false,
+    "createdAt": 1791510519600,
     "up": 0,
     "down": 0
   }
