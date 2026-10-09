@@ -165,7 +165,7 @@
       if (me && me.owner && u.username !== me.username) {
         var gTitle = document.createElement("div");
         gTitle.className = "chat-pw-title";
-        gTitle.textContent = "Give badge";
+        gTitle.textContent = "Badges";
         sheet.appendChild(gTitle);
         var gRow = document.createElement("div");
         gRow.className = "chat-badge-row";
@@ -198,6 +198,23 @@
           gRow.appendChild(gb);
         });
         sheet.appendChild(gRow);
+        var banBtn = document.createElement("button");
+        banBtn.type = "button";
+        banBtn.className = "btn chat-banbtn" + (u.banned ? " on" : "");
+        banBtn.textContent = u.banned ? "Unban" : "Ban";
+        banBtn.addEventListener("click", function () {
+          banBtn.disabled = true;
+          api("/api/ban", { method: "POST", body: { username: u.username, banned: !u.banned } })
+            .then(function (r) {
+              banBtn.disabled = false;
+              if (r && r.ok) {
+                u.banned = r.banned;
+                banBtn.textContent = u.banned ? "Unban" : "Ban";
+                banBtn.classList.toggle("on", u.banned);
+              }
+            }).catch(function () { banBtn.disabled = false; });
+        });
+        sheet.appendChild(banBtn);
       }
       back.appendChild(sheet);
       back.addEventListener("click", function (e) { if (e.target === back) closeProfile(); });
@@ -514,6 +531,13 @@
         if (o.badge) userBadges[o.user] = o.badge; else delete userBadges[o.user];
         var sel = '.chat-msg[data-user="' + o.user + '"]';
         root.querySelectorAll(sel).forEach(function (row) { refreshRowBadge(row, o.user); });
+      } else if (o.t === "ban" && o.user) {
+        if (me && o.user === me.username && o.banned) {
+          try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+          token = null;
+          closeProfile();
+          renderAuth();
+        }
       } else if (o.t === "msg") {
         var wasMine = me && o.m && o.m.user === me.username;
         addMessage(o.m);
@@ -698,19 +722,22 @@
       sheet.appendChild(bTitle);
       var bRow = document.createElement("div");
       bRow.className = "chat-badge-row";
-      [{ id: null }].concat(myBadges.map(function (b) { return { id: b }; })).forEach(function (o) {
+      myBadges.map(function (b) { return { id: b }; }).forEach(function (o) {
         var bb = document.createElement("button");
         bb.type = "button";
-        bb.className = "chat-badge-opt" + ((effectiveActive(me) || null) === o.id ? " on" : "");
-        bb.innerHTML = o.id ? badgeHTML(o.id) : '<span class="chat-badge-none">\u00D8</span>';
-        bb.setAttribute("aria-label", o.id ? ("Show " + o.id + " badge") : "No badge");
+        bb.setAttribute("data-badge", o.id);
+        bb.className = "chat-badge-opt" + (effectiveActive(me) === o.id ? " on" : "");
+        bb.innerHTML = badgeHTML(o.id);
+        bb.setAttribute("aria-label", "Show " + o.id + " badge");
         bb.addEventListener("click", function () {
-          api("/api/badge", { method: "POST", body: { badge: o.id } })
+          var next = (effectiveActive(me) === o.id) ? null : o.id;
+          api("/api/badge", { method: "POST", body: { badge: next } })
             .then(function (r) {
               if (r && r.ok && r.user) {
                 me = r.user;
+                var now = effectiveActive(me);
                 bRow.querySelectorAll(".chat-badge-opt").forEach(function (n) {
-                  n.classList.toggle("on", n === bb);
+                  n.classList.toggle("on", n.getAttribute("data-badge") === now);
                 });
                 var holder = bigHold.querySelector(".chat-avatar-wrap");
                 if (holder) {
