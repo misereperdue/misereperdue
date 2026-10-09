@@ -819,16 +819,29 @@
   function renderTyping() {
     var el = root.querySelector(".chat-typing");
     if (!el) return;
-    var users = Object.keys(typingUsers);
+    var users = Object.keys(typingUsers).slice(0, 3);
     if (!users.length) {
       el.hidden = true;
-      el.textContent = "";
+      el.innerHTML = "";
       return;
     }
     el.hidden = false;
-    if (users.length === 1) el.textContent = users[0] + " is typing...";
-    else if (users.length === 2) el.textContent = users[0] + " and " + users[1] + " are typing...";
-    else el.textContent = users.length + " people are typing...";
+    var html = "";
+    users.forEach(function (username) {
+      // Find avatar for this user (from recent messages or default)
+      var av = "\u{1F60E}";
+      var rows = root.querySelectorAll('.chat-msg[data-user="' + username + '"] .chat-avatar');
+      if (rows.length) {
+        var img = rows[0].querySelector("img");
+        if (img) av = '<img src="' + img.src + '" alt="">';
+        else av = esc(rows[0].textContent.trim() || av);
+      }
+      html += '<div class="chat-typing-row">' +
+        '<div class="chat-typing-avatar">' + av + '</div>' +
+        '<div class="chat-typing-bubble">\u{1F4AC}<span class="chat-typing-dots"><i></i><i></i><i></i></span></div>' +
+        '</div>';
+    });
+    el.innerHTML = html;
   }
 
   // Send typing signal when user types (throttled)
