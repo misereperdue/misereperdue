@@ -1027,6 +1027,32 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 [data-theme="dark"] .chat-verified .seal { fill: #fff; }
 [data-theme="dark"] .chat-verified .vcheck { stroke: #000; }
 
+/* badges — sit where the verified seal sits */
+.chat-badge {
+  position: absolute; left: -4px; bottom: -4px;
+  width: 16px; height: 16px;
+  font-size: 14px; line-height: 16px; text-align: center;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,.35));
+  pointer-events: none;
+}
+.chat-msg:not(.mine) .chat-badge { left: auto; right: -4px; }
+.chat-badge .b-light { display: none; }
+[data-theme="light"] .chat-badge .b-dark { display: none; }
+[data-theme="light"] .chat-badge .b-light { display: inline; }
+/* badge pickers */
+.chat-badge-row { display: flex; gap: 10px; margin: 2px 0 14px; }
+.chat-badge-opt {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: var(--glass-hairline); background: var(--glass-clear-tint);
+  display: grid; place-items: center; cursor: pointer;
+  font-size: 22px; position: relative;
+  backdrop-filter: var(--glass-clear); -webkit-backdrop-filter: var(--glass-clear);
+}
+.chat-badge-opt.on { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.chat-badge-opt .chat-badge { position: static; width: auto; height: auto; font-size: 22px; line-height: 1; filter: none; }
+.chat-badge-opt .chat-verified { position: static; width: 24px; height: 24px; }
+.chat-badge-none { font-size: 20px; opacity: .55; }
+
 /* messages */
 .chat-msgs {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -1090,9 +1116,10 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   flex: none; width: 38px; height: 38px; border-radius: 50%;
   border: 0; cursor: pointer;
   display: grid; place-items: center;
-  background: var(--accent); color: #fff;
+  background: #fff; color: #000;
   box-shadow: 0 4px 12px rgba(0,0,0,.25);
 }
+[data-theme="light"] .chat-send { background: #000; color: #fff; }
 .chat-send svg { width: 19px; height: 19px; }
 .chat-send:active { transform: scale(0.92); }
 
