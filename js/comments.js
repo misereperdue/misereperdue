@@ -146,10 +146,10 @@ var MPComments = (function () {
     var kidsHTML = kids.map(function (k) { return commentHTML(k, depth + 1); }).join("");
     return (
       '<div class="comment" data-id="' + esc(c.id) + '">' +
-        '<div class="comment-main">' + avatarHTML(c.name) +
+        '<div class="comment-main"><span class="avatar-wrap">' + avatarHTML(c.name) +
+            (c.verified ? verifiedBadge() : "") + "</span>" +
           '<div class="comment-body">' +
             '<div class="comment-head"><strong>' + esc(c.name) + '</strong>' +
-            (c.verified ? verifiedBadge() : "") +
             '<span class="meta"> · ' + esc(timeAgo(c.createdAt)) + "</span></div>" +
             "<p>" + esc(c.text) + "</p>" +
             '<div class="comment-actions">' +
