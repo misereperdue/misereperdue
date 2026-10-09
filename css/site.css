@@ -989,8 +989,17 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-online-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; display: inline-block; animation: chat-pulse 2s ease-in-out infinite; }
 @keyframes chat-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.25); } }
 .chat-online-num { font-size: 14px; font-weight: 600; opacity: 0.7; }
-.chat-typing { font-size: 13px; opacity: 0.6; padding: 4px 16px; font-style: italic; min-height: 0; }
+.chat-typing { padding: 6px 16px; }
 .chat-typing[hidden] { display: none; }
+.chat-typing-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.chat-typing-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: rgba(128,128,128,0.15); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.chat-typing-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.chat-typing-bubble { background: rgba(128,128,128,0.15); border-radius: 16px; padding: 8px 12px; font-size: 15px; display: flex; align-items: center; gap: 4px; }
+.chat-typing-dots { display: inline-flex; gap: 2px; margin-left: 2px; }
+.chat-typing-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.4; animation: chat-dot-pulse 1.2s infinite; }
+.chat-typing-dots i:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes chat-dot-pulse { 0%, 60%, 100% { opacity: 0.3; transform: scale(0.9); } 30% { opacity: 1; transform: scale(1.15); } }
 .chat-xbox { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(128,128,128,0.08); border-radius: 14px; margin-top: 8px; }
 .chat-xlogo { width: 22px; height: 22px; flex-shrink: 0; }
 .chat-xlogo svg { width: 100%; height: 100%; }
