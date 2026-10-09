@@ -76,6 +76,22 @@
     return '<span class="chat-verified" title="Verified" aria-label="Verified">' + SEAL_SVG + "</span>";
   }
 
+  /* Badges: "verified" = seal, "100" = \u{1F4AF}, "heart" = theme-adaptive heart. */
+  function badgeHTML(badge) {
+    if (badge === "100") return '<span class="chat-badge" title="100" aria-label="100 badge">\u{1F4AF}</span>';
+    if (badge === "heart") return '<span class="chat-badge" title="" aria-label="Heart badge"><span class="b-dark">\u{1F90D}</span><span class="b-light">\u{1F5A4}</span></span>';
+    return sealHTML();
+  }
+  function badgeFor(u) {
+    if (!u) return "";
+    var b = u.activeBadge || (u.verified ? "verified" : null);
+    return b ? badgeHTML(b) : "";
+  }
+  function msgBadge(m) {
+    var b = m.badge || (m.verified ? "verified" : null);
+    return b ? badgeHTML(b) : "";
+  }
+
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
@@ -117,7 +133,7 @@
       var bigHold = document.createElement("div");
       bigHold.className = "chat-sheet-big";
       var bigWrap = avatarNode(u.username, u.avatar, "lg", u.hasAvatarImg ? u.avatarV : undefined);
-      if (u.verified) bigWrap.insertAdjacentHTML("beforeend", sealHTML());
+      var ub = badgeFor(u); if (ub) bigWrap.insertAdjacentHTML("beforeend", ub);
       bigHold.appendChild(bigWrap);
       sheet.appendChild(bigHold);
       var nm = document.createElement("div");
@@ -133,6 +149,43 @@
         jd.className = "chat-user-joined";
         jd.textContent = "Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         sheet.appendChild(jd);
+      }
+      if (me && me.owner && u.username !== me.username) {
+        var gTitle = document.createElement("div");
+        gTitle.className = "chat-pw-title";
+        gTitle.textContent = "Give badge";
+        sheet.appendChild(gTitle);
+        var gRow = document.createElement("div");
+        gRow.className = "chat-badge-row";
+        ["100", "heart"].forEach(function (bid) {
+          var gb = document.createElement("button");
+          gb.type = "button";
+          gb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "");
+          gb.innerHTML = badgeHTML(bid);
+          gb.setAttribute("aria-label", "Give " + bid + " badge to " + u.username);
+          gb.addEventListener("click", function () {
+            gb.disabled = true;
+            api("/api/badge", { method: "POST", body: { username: u.username, badge: bid } })
+              .then(function (r) {
+                gb.disabled = false;
+                if (r && r.ok && r.user) {
+                  u = r.user;
+                  gRow.querySelectorAll(".chat-badge-opt").forEach(function (n) {
+                    n.classList.toggle("on", n === gb);
+                  });
+                  var hw = bigHold.querySelector(".chat-avatar-wrap");
+                  if (hw) {
+                    var fr2 = avatarNode(u.username, u.avatar, "lg", u.hasAvatarImg ? u.avatarV : undefined);
+                    var nb2 = badgeFor(u);
+                    if (nb2) fr2.insertAdjacentHTML("beforeend", nb2);
+                    hw.parentNode.replaceChild(fr2, hw);
+                  }
+                }
+              }).catch(function () { gb.disabled = false; });
+          });
+          gRow.appendChild(gb);
+        });
+        sheet.appendChild(gRow);
       }
       back.appendChild(sheet);
       back.addEventListener("click", function (e) { if (e.target === back) closeProfile(); });
@@ -162,6 +215,14 @@
         setPoints(me.points || 0);
       }
     }).catch(function () {});
+  }
+
+  function refreshMeBadge(meBtn) {
+    if (!meBtn) return;
+    var w = meBtn.querySelector(".chat-avatar-wrap");
+    if (!w) return;
+    var b = badgeFor(me);
+    if (b) w.insertAdjacentHTML("beforeend", b);
   }
 
   /* ---------- auth view ---------- */
@@ -293,7 +354,7 @@
 
     var meBtn = root.querySelector(".chat-me");
     meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
-    if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
+    refreshMeBadge(meBtn);
     setPoints(me.points || 0);
 
     meBtn.addEventListener("click", openProfile);
@@ -347,12 +408,12 @@
       bubble.textContent = m.text || "";
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
-      if (m.verified) myWrap.insertAdjacentHTML("beforeend", sealHTML());
+      var mb1 = msgBadge(m); if (mb1) myWrap.insertAdjacentHTML("beforeend", mb1);
       makeAvatarClickable(myWrap, m.user);
       row.appendChild(myWrap);
     } else {
       var wrap = avatarNode(m.user, m.avatar, null, (m.av !== undefined ? m.av : undefined));
-      if (m.verified) wrap.insertAdjacentHTML("beforeend", sealHTML());
+      var mb2 = msgBadge(m); if (mb2) wrap.insertAdjacentHTML("beforeend", mb2);
       makeAvatarClickable(wrap, m.user);
       row.appendChild(wrap);
       var main = document.createElement("div");
@@ -505,7 +566,7 @@
     sheet.appendChild(x);
 
     var bigWrap = avatarNode(me.username, me.avatar, "lg", myImgV());
-    if (me.verified) bigWrap.insertAdjacentHTML("beforeend", sealHTML());
+    var mb0 = badgeFor(me); if (mb0) bigWrap.insertAdjacentHTML("beforeend", mb0);
     var bigHold = document.createElement("div");
     bigHold.className = "chat-sheet-big";
     bigHold.appendChild(bigWrap);
@@ -565,14 +626,14 @@
               var holder = bigHold.querySelector(".chat-avatar-wrap");
               if (holder) {
                 var fresh = avatarNode(me.username, me.avatar, "lg", myImgV());
-                if (me.verified) fresh.insertAdjacentHTML("beforeend", sealHTML());
+                var mb3 = badgeFor(me); if (mb3) fresh.insertAdjacentHTML("beforeend", mb3);
                 holder.parentNode.replaceChild(fresh, holder);
               }
               var meBtn = root.querySelector(".chat-me");
               if (meBtn) {
                 meBtn.innerHTML = "";
                 meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
-                if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
+                refreshMeBadge(meBtn);
               }
               errBox.textContent = "Photo updated.";
             } else {
@@ -610,6 +671,49 @@
     pts.innerHTML = '<span aria-hidden="true">\u2605</span> <span>' + esc(me.points || 0) + "</span> points";
     sheet.appendChild(pts);
 
+    var myBadges = (me.badges || []).filter(function (b) { return b !== "verified"; });
+    if (myBadges.length) {
+      var bTitle = document.createElement("div");
+      bTitle.className = "chat-pw-title";
+      bTitle.textContent = "Badge";
+      sheet.appendChild(bTitle);
+      var bRow = document.createElement("div");
+      bRow.className = "chat-badge-row";
+      [{ id: null }].concat(myBadges.map(function (b) { return { id: b }; })).forEach(function (o) {
+        var bb = document.createElement("button");
+        bb.type = "button";
+        bb.className = "chat-badge-opt" + ((me.activeBadge || null) === o.id ? " on" : "");
+        bb.innerHTML = o.id ? badgeHTML(o.id) : '<span class="chat-badge-none">\u00D8</span>';
+        bb.setAttribute("aria-label", o.id ? ("Show " + o.id + " badge") : "No badge");
+        bb.addEventListener("click", function () {
+          api("/api/badge", { method: "POST", body: { badge: o.id } })
+            .then(function (r) {
+              if (r && r.ok && r.user) {
+                me = r.user;
+                bRow.querySelectorAll(".chat-badge-opt").forEach(function (n) {
+                  n.classList.toggle("on", n === bb);
+                });
+                var holder = bigHold.querySelector(".chat-avatar-wrap");
+                if (holder) {
+                  var fresh = avatarNode(me.username, me.avatar, "lg", myImgV());
+                  var nb = badgeFor(me);
+                  if (nb) fresh.insertAdjacentHTML("beforeend", nb);
+                  holder.parentNode.replaceChild(fresh, holder);
+                }
+                var meBtn2 = root.querySelector(".chat-me");
+                if (meBtn2) {
+                  meBtn2.innerHTML = "";
+                  meBtn2.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
+                  refreshMeBadge(meBtn2);
+                }
+              }
+            }).catch(function () {});
+        });
+        bRow.appendChild(bb);
+      });
+      sheet.appendChild(bRow);
+    }
+
     var errBox = document.createElement("div");
     errBox.className = "chat-err";
     errBox.setAttribute("role", "alert");
@@ -642,7 +746,7 @@
             if (meBtn) {
               meBtn.innerHTML = "";
               meBtn.appendChild(avatarNode(me.username, me.avatar, "sm", myImgV()));
-              if (me.verified) meBtn.querySelector(".chat-avatar-wrap").insertAdjacentHTML("beforeend", sealHTML());
+              refreshMeBadge(meBtn);
             }
             if (oldName !== me.username) {
               root.querySelectorAll('.chat-msg[data-user]').forEach(function (n) {
