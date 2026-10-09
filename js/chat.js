@@ -92,6 +92,61 @@
   }
   function myImgV() { return (me && me.hasAvatarImg) ? me.avatarV : undefined; }
 
+  function openUserSheet(username) {
+    if (!username) return;
+    api("/api/user/" + encodeURIComponent(username)).then(function (r) {
+      if (!r || !r.ok || !r.user) return;
+      var u = r.user;
+      closeProfile();
+      var back = document.createElement("div");
+      back.className = "chat-sheet-backdrop";
+      var sheet = document.createElement("div");
+      sheet.className = "chat-sheet chat-user-sheet";
+      sheet.setAttribute("role", "dialog");
+      sheet.setAttribute("aria-label", "User profile");
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "chat-sheet-x";
+      x.setAttribute("aria-label", "Close");
+      x.textContent = "\u00D7";
+      x.addEventListener("click", closeProfile);
+      sheet.appendChild(x);
+      var bigHold = document.createElement("div");
+      bigHold.className = "chat-sheet-big";
+      var bigWrap = avatarNode(u.username, u.avatar, "lg", u.hasAvatarImg ? u.avatarV : undefined);
+      if (u.verified) bigWrap.insertAdjacentHTML("beforeend", sealHTML());
+      bigHold.appendChild(bigWrap);
+      sheet.appendChild(bigHold);
+      var nm = document.createElement("div");
+      nm.className = "chat-user-name";
+      nm.textContent = u.username;
+      sheet.appendChild(nm);
+      var pts = document.createElement("div");
+      pts.className = "chat-sheet-points";
+      pts.innerHTML = '<span aria-hidden="true">\u2605</span> <span>' + esc(u.points || 0) + "</span> points";
+      sheet.appendChild(pts);
+      if (u.createdAt) {
+        var jd = document.createElement("div");
+        jd.className = "chat-user-joined";
+        jd.textContent = "Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        sheet.appendChild(jd);
+      }
+      back.appendChild(sheet);
+      back.addEventListener("click", function (e) { if (e.target === back) closeProfile(); });
+      document.body.appendChild(back);
+    }).catch(function () {});
+  }
+
+  function makeAvatarClickable(wrap, username) {
+    wrap.classList.add("chat-avatar-click");
+    wrap.setAttribute("role", "button");
+    wrap.setAttribute("tabindex", "0");
+    wrap.setAttribute("aria-label", "View " + username + "'s profile");
+    var go = function (e) { if (e) e.stopPropagation(); openUserSheet(username); };
+    wrap.addEventListener("click", go);
+    wrap.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } });
+  }
+
   function setPoints(n) {
     var b = root.querySelector(".chat-points-num");
     if (b) b.textContent = n;
@@ -276,10 +331,12 @@
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
       if (m.verified) myWrap.insertAdjacentHTML("beforeend", sealHTML());
+      makeAvatarClickable(myWrap, m.user);
       row.appendChild(myWrap);
     } else {
       var wrap = avatarNode(m.user, m.avatar, null, (m.av !== undefined ? m.av : undefined));
       if (m.verified) wrap.insertAdjacentHTML("beforeend", sealHTML());
+      makeAvatarClickable(wrap, m.user);
       row.appendChild(wrap);
       var main = document.createElement("div");
       main.className = "chat-msg-main";
