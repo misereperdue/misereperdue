@@ -830,9 +830,10 @@ textarea { min-height: 90px; }
 
 /* ---------- Footer ---------- */
 .site-footer { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 0 44px; }
-.footer-logo { height: 36px; width: auto; display: block; }
-[data-theme="light"] .footer-logo { filter: invert(1); }
-.footer-copy { margin: 0; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.footer-logo { height: 48px; width: auto; display: block; filter: invert(1); }
+[data-theme="dark"] .footer-logo { filter: none; }
+.footer-copy { margin: 0; font-size: 12px; color: #000; letter-spacing: 0.04em; }
+[data-theme="dark"] .footer-copy { color: #fff; }
 
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
