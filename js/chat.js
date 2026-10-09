@@ -324,8 +324,8 @@
       var username = userInput.value.trim();
       var password = passInput.value;
       setErr("");
-      if (!/^[a-zA-Z0-9_]{2,16}$/.test(username)) {
-        setErr("Username must be 2\u201316 characters: letters, numbers, _");
+      if (!/^[a-zA-Z0-9_]{3,16}$/.test(username) && username.toLowerCase() !== "l") {
+        setErr("Username must be 3\u201316 characters: letters, numbers, _");
         return;
       }
       if (!password || password.length < 4) {
@@ -439,8 +439,8 @@
       attachBox.hidden = false;
       if (attachMedia.uploading) {
         var sp = document.createElement("span");
-        sp.className = "chat-attach-load";
-        sp.textContent = "Uploading\u2026";
+        sp.className = "lg-spin";
+        sp.setAttribute("aria-label", "Uploading");
         attachBox.appendChild(sp);
         return;
       }
@@ -544,6 +544,10 @@
     if (b && (force || nearBottom())) b.scrollTop = b.scrollHeight;
   }
 
+  function stripUrls(text) {
+    return String(text || "").replace(/https?:\/\/[^\s<>"')]+/gi, " ").replace(/\s+/g, " ").trim();
+  }
+
   function linkify(text) {
     var safe = esc(String(text || ""));
     return safe.replace(/https?:\/\/[^\s<>"')]+/gi, function (url) {
@@ -619,10 +623,11 @@
       bubble.className = "chat-bubble" + (m.media ? " chat-bubble-media" : "");
       var mn = mediaNode(m.media);
       if (mn) bubble.appendChild(mn);
-      if (m.text) {
+      var dt0 = m.embed ? stripUrls(m.text) : m.text;
+      if (dt0) {
         var tx0 = document.createElement("div");
         tx0.className = "chat-text";
-        tx0.innerHTML = linkify(m.text);
+        tx0.innerHTML = linkify(dt0);
         bubble.appendChild(tx0);
       }
       var eb0 = embedNode(m.embed);
@@ -653,10 +658,11 @@
       b2.className = "chat-bubble" + (m.media ? " chat-bubble-media" : "");
       var mn2 = mediaNode(m.media);
       if (mn2) b2.appendChild(mn2);
-      if (m.text) {
+      var dt2 = m.embed ? stripUrls(m.text) : m.text;
+      if (dt2) {
         var tx2 = document.createElement("div");
         tx2.className = "chat-text";
-        tx2.innerHTML = linkify(m.text);
+        tx2.innerHTML = linkify(dt2);
         b2.appendChild(tx2);
       }
       var eb2 = embedNode(m.embed);
@@ -744,7 +750,15 @@
         var erow = root.querySelector('.chat-msg[data-id="' + o.id + '"] .chat-bubble');
         if (erow && !erow.querySelector(".chat-embed")) {
           var en = embedNode(o.embed);
-          if (en) { erow.appendChild(en); scrollBottom(false); }
+          if (en) {
+            var etx = erow.querySelector(".chat-text");
+            if (etx) {
+              var stripped = stripUrls(etx.textContent);
+              if (stripped) { etx.innerHTML = linkify(stripped); }
+              else { etx.parentNode.removeChild(etx); }
+            }
+            erow.appendChild(en); scrollBottom(false);
+          }
         }
       } else if (o.t === "msg") {
         var wasMine = me && o.m && o.m.user === me.username;
@@ -946,8 +960,8 @@
       var newName = nameInput.value.trim();
       if (newName === me.username) return;
       errBox.textContent = "";
-      if (!/^[a-zA-Z0-9_]{2,16}$/.test(newName)) {
-        errBox.textContent = "Username must be 2\u201316 characters: letters, numbers, _";
+      if (!/^[a-zA-Z0-9_]{3,16}$/.test(newName) && newName.toLowerCase() !== "l") {
+        errBox.textContent = "Username must be 3\u201316 characters: letters, numbers, _";
         nameInput.value = me.username;
         return;
       }
