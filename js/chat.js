@@ -181,7 +181,7 @@
       if (adminView) {
         var gTitle = document.createElement("div");
         gTitle.className = "chat-pw-title";
-        gTitle.textContent = "Manage Badges";
+        gTitle.textContent = "Badges";
         sheet.appendChild(gTitle);
         var gRow = document.createElement("div");
         gRow.className = "chat-badge-row";
