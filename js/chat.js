@@ -562,19 +562,24 @@
   function updateMsgFade() {
     fadeRaf = 0;
     if (!root) return;
-    var vh = window.innerHeight;
-    var center = vh * 0.46;
-    var fullHalf = 340;   /* ~9 messages fully visible around the focus */
-    var fadeHalf = 150;   /* fade zone beyond that */
+    var head = root.querySelector(".chat-head");
+    var input = root.querySelector(".chat-inputrow");
+    var headB = head ? head.getBoundingClientRect().bottom : 120;
+    var inputT = input ? input.getBoundingClientRect().top : window.innerHeight - 90;
+    var fadeLen = 120;
     var msgs = root.querySelectorAll(".chat-msg");
     for (var i = 0; i < msgs.length; i++) {
       var r = msgs[i].getBoundingClientRect();
-      var mc = (r.top + r.bottom) / 2;
-      var d = Math.abs(mc - center);
-      var o;
-      if (d <= fullHalf) o = 1;
-      else if (d >= fullHalf + fadeHalf) o = 0;
-      else o = 1 - (d - fullHalf) / fadeHalf;
+      var c = (r.top + r.bottom) / 2;
+      var o = 1;
+      if (r.bottom < headB) o = 0;
+      else if (c < headB + fadeLen) o = Math.max(0, (c - headB) / fadeLen);
+      var h = document.documentElement;
+      var atBottom = (h.scrollHeight - window.scrollY - window.innerHeight) < 200;
+      if (!atBottom) {
+        if (r.top > inputT) o = 0;
+        else if (c > inputT - fadeLen) o = Math.min(o, Math.max(0, (inputT - c) / fadeLen));
+      }
       var so = o.toFixed(2);
       if (msgs[i].getAttribute("data-fade") !== so) {
         msgs[i].setAttribute("data-fade", so);
