@@ -162,7 +162,23 @@
         jd.textContent = "Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         sheet.appendChild(jd);
       }
-      if (me && me.owner && u.username !== me.username) {
+      var adminView = !!(me && me.owner && u.username !== me.username);
+      if (!adminView && u.badges && u.badges.length) {
+        var vTitle = document.createElement("div");
+        vTitle.className = "chat-pw-title";
+        vTitle.textContent = "Badges";
+        sheet.appendChild(vTitle);
+        var vRow = document.createElement("div");
+        vRow.className = "chat-badge-row";
+        u.badges.forEach(function (bid) {
+          var vb = document.createElement("span");
+          vb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "");
+          vb.innerHTML = badgeHTML(bid);
+          vRow.appendChild(vb);
+        });
+        sheet.appendChild(vRow);
+      }
+      if (adminView) {
         var gTitle = document.createElement("div");
         gTitle.className = "chat-pw-title";
         gTitle.textContent = "Manage Badges";
@@ -395,6 +411,12 @@
       var text = input.value.trim();
       if (!text) return;
       input.value = "";
+      var sendBtn = form.querySelector(".chat-send");
+      if (sendBtn) {
+        sendBtn.classList.remove("pop");
+        void sendBtn.offsetWidth;
+        sendBtn.classList.add("pop");
+      }
       send(text);
     });
 
