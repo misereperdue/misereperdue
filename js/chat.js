@@ -105,7 +105,6 @@
       '<input type="password" name="secret" autocomplete="off"></label>' +
       '<div class="chat-err" role="alert"></div>' +
       '<button type="button" class="btn accent chat-submit">Log in</button>' +
-      '<p class="chat-hint">+1 point for every message you send.</p>' +
       "</div></div>";
 
     var mode = "login";
