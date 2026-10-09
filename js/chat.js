@@ -1252,36 +1252,6 @@
     });
     sheet.appendChild(pwBtn);
 
-    if (me && me.owner) {
-      var cleanBtn = document.createElement("button");
-      cleanBtn.type = "button";
-      cleanBtn.className = "btn chat-pw";
-      cleanBtn.textContent = "Clean test data";
-      cleanBtn.style.marginTop = "8px";
-      cleanBtn.addEventListener("click", function () {
-        if (!confirm("Remove test accounts and their messages? The Death Note seeds and real chat stay.")) return;
-        cleanBtn.disabled = true;
-        cleanBtn.textContent = "Cleaning...";
-        api("/api/clean-test", { method: "POST", body: {} })
-          .then(function (r) {
-            cleanBtn.disabled = false;
-            cleanBtn.textContent = "Clean test data";
-            if (r && r.ok) {
-              alert("Removed " + (r.removed || 0) + " test messages.");
-              location.reload();
-            } else {
-              alert("Couldn't clean: " + ((r && r.error) || "unknown"));
-            }
-          })
-          .catch(function () {
-            cleanBtn.disabled = false;
-            cleanBtn.textContent = "Clean test data";
-            alert("Couldn't reach the chat server.");
-          });
-      });
-      sheet.appendChild(cleanBtn);
-    }
-
     var out = document.createElement("button");
     out.type = "button";
     out.className = "chat-logout";
