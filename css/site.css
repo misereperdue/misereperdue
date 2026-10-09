@@ -1237,7 +1237,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-sheet-points span:first-child { color: var(--accent); }
 .chat-save { width: 100%; margin-top: 4px; }
-.chat-upload { width: 100%; margin: 4px 0 2px; }
+.chat-upload { width: 100%; margin: 4px 0 12px; }
+.chat-upload-msg { text-align: center; font-size: 13px; color: #30d158; margin: -6px 0 10px; }
+.chat-upload-msg:empty { display: none; }
 .chat-pw-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 16px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
 .chat-pw { width: 100%; margin-top: 2px; }
 .chat-logout {
