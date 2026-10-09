@@ -1198,6 +1198,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 [data-theme="light"] .chat-embed { background: rgba(0,0,0,0.06); }
 .chat-bubble-media .chat-embed { margin: 2px 4px 4px; }
+.chat-bubble > .chat-embed:first-child { margin-top: 0; }
 .chat-embed > img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex: none; }
 .chat-embed-tx { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
 .chat-embed-t {
