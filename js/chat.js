@@ -396,13 +396,14 @@
     lastTs = 0;
     root.innerHTML =
       '<div class="chat-head">' +
-      '<div class="chat-title">Chat</div>' +
+      '<div class="chat-title">Chat <span class="chat-online" hidden></span></div>' +
       '<div class="chat-head-right">' +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num">0</span></span>' +
       '<button type="button" class="chat-me" aria-label="Profile"></button>' +
       "</div></div>" +
       '<div class="chat-msgs" aria-live="polite"></div>' +
       '<div class="chat-attach" hidden></div>' +
+      '<div class="chat-typing" hidden></div>' +
       '<div class="chat-inputrow">' +
       '<button type="button" class="chat-plus" aria-label="Add photo or video">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
@@ -423,6 +424,7 @@
 
     var form = root.querySelector(".chat-inputbar");
     var input = form.querySelector("input");
+    input.addEventListener("input", sendTyping);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var text = input.value.trim();
@@ -776,6 +778,69 @@
 
   /* ---------- websocket + polling ---------- */
 
+  var typingUsers = {};
+  var typingTimer = null;
+
+  function setOnline(n) {
+    var el = root.querySelector(".chat-online");
+    if (!el) return;
+    if (n > 0) {
+      el.hidden = false;
+      el.textContent = "(" + n + " online)";
+    } else {
+      el.hidden = true;
+    }
+  }
+
+  function showTyping(username) {
+    if (!me || username === me.username) return;
+    typingUsers[username] = Date.now();
+    renderTyping();
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(clearStaleTyping, 3000);
+  }
+
+  function clearStaleTyping() {
+    var now = Date.now();
+    var changed = false;
+    for (var u in typingUsers) {
+      if (now - typingUsers[u] > 3000) { delete typingUsers[u]; changed = true; }
+    }
+    if (changed) renderTyping();
+    // Re-check in case more expire
+    var remaining = Object.keys(typingUsers).length;
+    if (remaining > 0) {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(clearStaleTyping, 3000);
+    }
+  }
+
+  function renderTyping() {
+    var el = root.querySelector(".chat-typing");
+    if (!el) return;
+    var users = Object.keys(typingUsers);
+    if (!users.length) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    if (users.length === 1) el.textContent = users[0] + " is typing...";
+    else if (users.length === 2) el.textContent = users[0] + " and " + users[1] + " are typing...";
+    else el.textContent = users.length + " people are typing...";
+  }
+
+  // Send typing signal when user types (throttled)
+  var lastTypingSent = 0;
+  function sendTyping() {
+    var now = Date.now();
+    if (now - lastTypingSent < 2000) return;
+    lastTypingSent = now;
+    if (ws && ws.readyState === 1) {
+      try { ws.send(JSON.stringify({ t: "typing" })); } catch (e) {}
+    }
+  }
+
   function wsURL() {
     return CHAT_API.replace(/^http/, "ws") + "/api/ws" +
       (token ? "?token=" + encodeURIComponent(token) : "");
@@ -802,6 +867,7 @@
       try { o = JSON.parse(ev.data); } catch (e) { return; }
       if (!o || !o.t) return;
       if (o.t === "hello") {
+        if (typeof o.online === "number") setOnline(o.online);
         if (o.badges) userBadges = o.badges;
         if (o.you) {
           me = o.you;
@@ -837,6 +903,10 @@
             scrollBottom(false);
           }
         }
+      } else if (o.t === "online" && typeof o.count === "number") {
+        setOnline(o.count);
+      } else if (o.t === "typing" && o.user) {
+        showTyping(o.user);
       } else if (o.t === "msg") {
         var wasMine = me && o.m && o.m.user === me.username;
         addMessage(o.m);
