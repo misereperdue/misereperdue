@@ -162,6 +162,12 @@
         jd.textContent = "Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         sheet.appendChild(jd);
       }
+      if (u.bio) {
+        var bv = document.createElement("div");
+        bv.className = "chat-bio-view";
+        bv.textContent = u.bio;
+        sheet.appendChild(bv);
+      }
       var adminView = !!(me && me.owner && u.username !== me.username);
       if (!adminView && u.badges && u.badges.length) {
         var vTitle = document.createElement("div");
@@ -1053,6 +1059,37 @@
       });
       sheet.appendChild(bRow);
     }
+
+    var bioTitle = document.createElement("div");
+    bioTitle.className = "chat-pw-title";
+    bioTitle.textContent = "Bio";
+    sheet.appendChild(bioTitle);
+    var bioInput = document.createElement("textarea");
+    bioInput.className = "chat-bio";
+    bioInput.maxLength = 250;
+    bioInput.rows = 3;
+    bioInput.placeholder = "Tell the chat a little about yourself\u2026";
+    bioInput.value = me.bio || "";
+    sheet.appendChild(bioInput);
+    var bioCount = document.createElement("div");
+    bioCount.className = "chat-bio-count";
+    sheet.appendChild(bioCount);
+    var updateBioCount = function () {
+      bioCount.textContent = bioInput.value.length + "/250";
+    };
+    bioInput.addEventListener("input", updateBioCount);
+    updateBioCount();
+    var saveBio = function () {
+      var newBio = bioInput.value.trim().slice(0, 250);
+      if (newBio === (me.bio || "")) return;
+      api("/api/profile", { method: "POST", body: { bio: newBio } })
+        .then(function (r) {
+          if (r && r.ok && r.user) { me = r.user; }
+          else { errBox.textContent = (r && r.error) || "Couldn't save bio."; }
+        })
+        .catch(function () { errBox.textContent = "Couldn't reach the chat server."; });
+    };
+    bioInput.addEventListener("blur", saveBio);
 
     var errBox = document.createElement("div");
     errBox.className = "chat-err";
