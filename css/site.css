@@ -998,6 +998,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-avatar.sm { width: 32px; height: 32px; font-size: 16px; }
 .chat-avatar.lg { width: 64px; height: 64px; font-size: 32px; }
+.chat-avatar-img {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none;
+  border: 0.5px solid rgba(255,255,255,.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+  background: linear-gradient(135deg, rgba(120,120,140,.5), rgba(60,60,70,.5));
+}
+.chat-avatar-img.sm { width: 32px; height: 32px; }
+.chat-avatar-img.lg { width: 64px; height: 64px; }
 .chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; }
 .chat-verified svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 2px rgba(0,0,0,.3)); }
 .chat-verified .seal { fill: #111; }
@@ -1013,7 +1021,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   padding: 4px 2px 12px;
 }
 .chat-msg { display: flex; gap: 9px; align-items: flex-start; max-width: 88%; }
-.chat-msg.mine { align-self: flex-end; max-width: 82%; }
+.chat-msg.mine { align-self: flex-end; max-width: 82%; align-items: flex-end; }
 .chat-msg-main { min-width: 0; }
 .chat-msg-head { display: flex; align-items: baseline; gap: 7px; margin-bottom: 3px; padding-left: 2px; }
 .chat-msg-head strong { font-size: 13px; font-weight: 700; }
@@ -1034,11 +1042,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   border-radius: 18px 4px 18px 18px;
   background: var(--wash);
 }
-.chat-del {
-  flex: none; border: 0; background: transparent; color: var(--muted);
-  font-size: 18px; line-height: 1; padding: 6px; cursor: pointer; opacity: 0.6;
-}
-.chat-del:active { opacity: 1; }
 
 /* input bar */
 .chat-inputbar {
@@ -1108,6 +1111,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-sheet-points span:first-child { color: var(--accent); }
 .chat-save { width: 100%; margin-top: 4px; }
+.chat-upload { width: 100%; margin: 4px 0 2px; }
+.chat-pw-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 16px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+.chat-pw { width: 100%; margin-top: 2px; }
 .chat-logout {
   display: block; width: 100%; margin-top: 10px;
   border: 0; background: transparent; color: #ff453a;
