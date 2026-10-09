@@ -82,14 +82,26 @@
     if (badge === "heart") return '<span class="chat-badge" title="" aria-label="Heart badge"><span class="b-dark">\u{1F90D}</span><span class="b-light">\u{1F5A4}</span></span>';
     return sealHTML();
   }
+  var userBadges = {};
+  function effectiveActive(u) {
+    if (!u) return null;
+    return u.activeBadge || (u.verified ? "verified" : null);
+  }
   function badgeFor(u) {
-    if (!u) return "";
-    var b = u.activeBadge || (u.verified ? "verified" : null);
+    var b = effectiveActive(u);
     return b ? badgeHTML(b) : "";
   }
   function msgBadge(m) {
-    var b = m.badge || (m.verified ? "verified" : null);
+    var b = (m.user && userBadges[m.user]) || m.badge || (m.verified ? "verified" : null);
     return b ? badgeHTML(b) : "";
+  }
+  function refreshRowBadge(row, username) {
+    var wrap = row.querySelector(".chat-avatar-wrap");
+    if (!wrap) return;
+    var old = wrap.querySelector(".chat-badge, .chat-verified");
+    if (old) old.remove();
+    var mb = msgBadge({ user: username });
+    if (mb) wrap.insertAdjacentHTML("beforeend", mb);
   }
 
   function avatarNode(username, avatar, size, imgV) {
@@ -370,6 +382,7 @@
     });
 
     api("/api/messages?limit=50").then(function (r) {
+      if (r && r.badges) userBadges = r.badges;
       if (r && r.messages) r.messages.forEach(addMessage);
       scrollBottom(true);
     }).catch(function () {});
@@ -490,12 +503,17 @@
       try { o = JSON.parse(ev.data); } catch (e) { return; }
       if (!o || !o.t) return;
       if (o.t === "hello") {
+        if (o.badges) userBadges = o.badges;
         if (o.you) {
           me = o.you;
           setPoints(me.points || 0);
         }
         if (o.messages) o.messages.forEach(addMessage);
         scrollBottom(true);
+      } else if (o.t === "badge" && o.user) {
+        if (o.badge) userBadges[o.user] = o.badge; else delete userBadges[o.user];
+        var sel = '.chat-msg[data-user="' + o.user + '"]';
+        root.querySelectorAll(sel).forEach(function (row) { refreshRowBadge(row, o.user); });
       } else if (o.t === "msg") {
         var wasMine = me && o.m && o.m.user === me.username;
         addMessage(o.m);
@@ -523,6 +541,7 @@
     var tick = function () {
       api("/api/messages?since=" + lastTs + "&limit=50")
         .then(function (r) {
+          if (r && r.badges) { for (var k in r.badges) userBadges[k] = r.badges[k]; }
           if (r && r.messages && r.messages.length) {
             r.messages.forEach(addMessage);
           }
@@ -671,7 +690,7 @@
     pts.innerHTML = '<span aria-hidden="true">\u2605</span> <span>' + esc(me.points || 0) + "</span> points";
     sheet.appendChild(pts);
 
-    var myBadges = (me.badges || []).filter(function (b) { return b !== "verified"; });
+    var myBadges = me.badges || [];
     if (myBadges.length) {
       var bTitle = document.createElement("div");
       bTitle.className = "chat-pw-title";
@@ -682,7 +701,7 @@
       [{ id: null }].concat(myBadges.map(function (b) { return { id: b }; })).forEach(function (o) {
         var bb = document.createElement("button");
         bb.type = "button";
-        bb.className = "chat-badge-opt" + ((me.activeBadge || null) === o.id ? " on" : "");
+        bb.className = "chat-badge-opt" + ((effectiveActive(me) || null) === o.id ? " on" : "");
         bb.innerHTML = o.id ? badgeHTML(o.id) : '<span class="chat-badge-none">\u00D8</span>';
         bb.setAttribute("aria-label", o.id ? ("Show " + o.id + " badge") : "No badge");
         bb.addEventListener("click", function () {
