@@ -200,7 +200,7 @@ var MPShop = (function () {
      Frames live as base64 text (images/spin/<product>/NN.jpg.b64) so they
      can be pushed as plain text; decoded to data URLs at runtime. */
   var SPIN = {
-    mask: { dir: "images/spin/mask", n: 4, ar: "3 / 2" },
+    mask: { dir: "images/spin/mask", n: 16, ar: "1 / 1" },
     jersey: { dir: "images/spin/jersey", n: 4, ar: "3 / 4" }
   };
   function spinFor(p) {
@@ -210,10 +210,11 @@ var MPShop = (function () {
     return null;
   }
   var spinURLCache = {};
+  function spinPad(i) { return ("0" + i).slice(-2); }
   function spinFrameURL(dir, i, cb) {
     var key = dir + "/" + i;
     if (spinURLCache[key]) { cb(spinURLCache[key]); return; }
-    fetch(dir + "/0" + i + ".jpg.b64")
+    fetch(dir + "/" + spinPad(i) + ".jpg.b64")
       .then(function (r) { if (!r.ok) throw new Error("missing"); return r.text(); })
       .then(function (t) {
         var u = "data:image/jpeg;base64," + t.trim();
@@ -246,7 +247,7 @@ var MPShop = (function () {
     }
     for (var i = 0; i < n; i++) spinFrameURL(dir, i + 1, function () {});
     show(0);
-    timer = setInterval(function () { if (auto) show(idx + 1); }, 800);
+    timer = setInterval(function () { if (auto) show(idx + 1); }, Math.max(120, Math.round(3200 / n)));
     function stopAuto() {
       auto = false;
       if (timer) { clearInterval(timer); timer = null; }
