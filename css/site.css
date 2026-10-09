@@ -975,8 +975,11 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* header */
 .chat-head {
+  position: sticky; top: 0; z-index: 6;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 2px 12px;
+  padding: 6px 2px 20px;
+  background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+  margin-bottom: -8px;
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-head-right { display: flex; align-items: center; gap: 10px; }
@@ -1176,6 +1179,16 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-attach-err { color: #ff453a; }
 /* media inside bubbles */
 .chat-bubble-media { padding: 4px; }
+.chat-bubble { position: relative; }
+.chat-embed-badge {
+  position: absolute; bottom: -7px; width: 24px; height: 24px;
+  border-radius: 50%; overflow: hidden; background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.chat-msg.mine .chat-embed-badge { right: -7px; }
+.chat-msg:not(.mine) .chat-embed-badge { left: -7px; }
+.chat-embed-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .chat-media { max-width: 220px; max-height: 260px; border-radius: 12px; display: block; }
 .chat-bubble-media .chat-text { padding: 5px 8px 3px; }
 .chat-bubble a { color: inherit; }
