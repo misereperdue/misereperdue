@@ -8,7 +8,7 @@
     "createdAt": 1791452449263,
     "up": 1,
     "down": 0,
-    "verified": false
+    "verified": true
   },
   {
     "id": "17914524582639431",
@@ -30,7 +30,7 @@
     "createdAt": 1791496505964,
     "up": 2,
     "down": 0,
-    "verified": false
+    "verified": true
   },
   {
     "id": "17914965134548814",
@@ -49,7 +49,7 @@
     "parentId": null,
     "name": "dc",
     "text": "Verified?",
-    "verified": false,
+    "verified": true,
     "createdAt": 1791510519600,
     "up": 0,
     "down": 0
