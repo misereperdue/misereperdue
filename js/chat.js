@@ -536,9 +536,13 @@
       scheduleFade();
     }).catch(function () {});
     connect();
+    var mb = msgsBox();
+    if (mb && !mb.__fadeHook) {
+      mb.__fadeHook = true;
+      mb.addEventListener("scroll", scheduleFade, { passive: true });
+    }
     if (!window.__chatFadeHook) {
       window.__chatFadeHook = true;
-      window.addEventListener("scroll", scheduleFade, { passive: true });
       window.addEventListener("resize", scheduleFade);
     }
   }
@@ -546,22 +550,24 @@
   function msgsBox() { return root.querySelector(".chat-msgs"); }
 
   function nearBottom() {
-    var h = document.documentElement;
-    return h.scrollHeight - window.scrollY - window.innerHeight < 160;
+    var b = msgsBox();
+    if (!b) return true;
+    return b.scrollHeight - b.scrollTop - b.clientHeight < 160;
   }
 
   function scrollBottom(force) {
-    if (force || nearBottom()) {
-      window.scrollTo(0, document.documentElement.scrollHeight);
-    }
+    var b = msgsBox();
+    if (b && (force || nearBottom())) b.scrollTop = b.scrollHeight;
   }
 
   var fadeRaf = 0;
   function updateMsgFade() {
     fadeRaf = 0;
-    if (!root) return;
-    var msgs = root.querySelectorAll(".chat-msg");
-    var fadeTop = 64, fadeBottom = 170;
+    var box = msgsBox();
+    if (!box) return;
+    var bt = box.getBoundingClientRect().top;
+    var msgs = box.querySelectorAll(".chat-msg");
+    var fadeTop = bt + 8, fadeBottom = bt + 110;
     for (var i = 0; i < msgs.length; i++) {
       var r = msgs[i].getBoundingClientRect();
       var o;
@@ -732,7 +738,7 @@
 
 
     b.appendChild(row);
-    if (stick) window.scrollTo(0, document.documentElement.scrollHeight);
+    if (stick) b.scrollTop = b.scrollHeight;
     scheduleFade();
   }
 
