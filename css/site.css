@@ -984,6 +984,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   background: linear-gradient(to bottom, var(--bg) 65%, transparent);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.chat-online { font-size: 13px; font-weight: 500; opacity: 0.55; letter-spacing: 0; }
+.chat-typing { font-size: 13px; opacity: 0.6; padding: 4px 16px; font-style: italic; min-height: 0; }
+.chat-typing[hidden] { display: none; }
 .chat-head-right { display: flex; align-items: center; gap: 10px; }
 .chat-points {
   display: inline-flex; align-items: center; gap: 5px;
