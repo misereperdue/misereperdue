@@ -880,6 +880,28 @@
     clearInterval(pollTimer);
   }
 
+  /* Safety net: poll every 10s even when WS looks alive (catches zombie connections).
+     addMessage deduplicates, so this is safe. */
+  function safetyTick() {
+    api("/api/messages?since=" + lastTs + "&limit=50")
+      .then(function (r) {
+        if (r && r.badges) { for (var k in r.badges) userBadges[k] = r.badges[k]; }
+        if (r && r.messages && r.messages.length) r.messages.forEach(addMessage);
+      })
+      .catch(function () {});
+  }
+  setInterval(function () {
+    if (token && me) safetyTick();
+  }, 10000);
+
+  /* When returning to the tab (iOS suspends WS in background), catch up immediately. */
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && token && me) {
+      safetyTick();
+      if (!ws || ws.readyState !== 1) connect();
+    }
+  });
+
   function stopAll() {
     clearTimeout(reconnectTimer);
     clearInterval(pingTimer);
