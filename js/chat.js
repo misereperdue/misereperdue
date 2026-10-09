@@ -4,6 +4,9 @@
   "use strict";
 
   var CHAT_API = "https://misery-chat.freeglory416.workers.dev";
+  var X_CLIENT_ID = "Rkc1RmlJQWwtdFJTOVhudlczanc6MTpjaQ";
+  var X_REDIRECT_URI = "https://misery-chat.freeglory416.workers.dev/api/x/callback";
+  var X_LOGO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
   var TOKEN_KEY = "chat_token";
   var DEVICE_KEY = "chat_device";
   function deviceId() {
@@ -180,6 +183,7 @@
       '<input type="password" name="secret" autocomplete="off"></label>' +
       '<div class="chat-err" role="alert"></div>' +
       '<button type="button" class="btn accent chat-submit">Log in</button>' +
+      '<button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' + X_LOGO + "</span>Continue with X</button>" +
       "</div></div>";
 
     var mode = "login";
@@ -246,6 +250,19 @@
         });
     }
     submit.addEventListener("click", submitAuth);
+    var xBtn = root.querySelector(".chat-xbtn");
+    if (xBtn) xBtn.addEventListener("click", function () {
+      var rnd = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      try { sessionStorage.setItem("x_state", rnd); } catch (e) {}
+      var state = rnd + "." + deviceId();
+      var url = "https://x.com/i/oauth2/authorize" +
+        "?response_type=code" +
+        "&client_id=" + encodeURIComponent(X_CLIENT_ID) +
+        "&redirect_uri=" + encodeURIComponent(X_REDIRECT_URI) +
+        "&scope=" + encodeURIComponent("users.read tweet.read") +
+        "&state=" + encodeURIComponent(state);
+      location.href = url;
+    });
     passInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") submitAuth();
     });
@@ -733,10 +750,35 @@
 
   /* ---------- init ---------- */
 
+  function checkXHash() {
+    var h = location.hash || "";
+    if (h.indexOf("x_token=") < 0 && h.indexOf("x_error=") < 0) return null;
+    var tm = h.match(/x_token=([^&]+)/);
+    var em = h.match(/x_error=([^&]+)/);
+    var sm = h.match(/x_state=([^&]+)/);
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    if (em) return { error: decodeURIComponent(em[1]) };
+    if (!tm) return null;
+    var saved = null;
+    try { saved = sessionStorage.getItem("x_state"); } catch (e) {}
+    var st = sm ? decodeURIComponent(sm[1]) : "";
+    if (!saved || st.split(".")[0] !== saved) return { error: "Sign-in didn't verify. Try again." };
+    try { sessionStorage.removeItem("x_state"); } catch (e) {}
+    return { token: decodeURIComponent(tm[1]) };
+  }
+
+  var xHashErr = null;
   function init() {
     root = document.getElementById("chat");
     if (!root) return;
-    try { token = localStorage.getItem(TOKEN_KEY); } catch (e) { token = null; }
+    var xr = checkXHash();
+    if (xr && xr.token) {
+      try { localStorage.setItem(TOKEN_KEY, xr.token); } catch (e) {}
+      token = xr.token;
+    } else if (xr && xr.error) {
+      xHashErr = xr.error;
+    }
+    try { if (!token) token = localStorage.getItem(TOKEN_KEY); } catch (e) { token = null; }
     if (token) {
       api("/api/me")
         .then(function (r) {
@@ -752,6 +794,11 @@
         .catch(function () { renderAuth(); });
     } else {
       renderAuth();
+      if (xHashErr) {
+        var eb = root.querySelector(".chat-err");
+        if (eb) eb.textContent = xHashErr;
+        xHashErr = null;
+      }
     }
   }
 
