@@ -828,6 +828,12 @@ textarea { min-height: 90px; }
 }
 .pay-check svg { width: 17px; height: 17px; display: block; }
 
+/* ---------- Footer ---------- */
+.site-footer { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 0 44px; }
+.footer-logo { height: 30px; width: auto; display: block; }
+[data-theme="light"] .footer-logo { filter: invert(1); }
+.footer-copy { margin: 0; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+
 /* byline + tags side by side */
 .byline-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .byline-row .byline { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0; }
