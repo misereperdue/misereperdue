@@ -196,88 +196,13 @@ var MPShop = (function () {
     render();
   }
 
-  /* ---------- True-3D spin viewer ----------
-     Driven solely by the product's Shopify images: 2+ images build a live
-     3D card (image 1 = front, image 2 = back) that rotates in real 3D as
-     you drag, with momentum and a gentle auto-spin until first touch.
-     No frames, nothing to align. 1 image = single photo; 0 = emoji. */
-  function spin3DHTML(images, name) {
-    var f = esc(images[0]), b = esc(images[1]);
-    var edgeBg = ' style="background-image:url(\'' + f + '\')"';
-    return '<div class="spin3d" id="spin3d">' +
-      '<div class="lg-spin-wrap" id="spin3dload"><span class="lg-spin"></span></div>' +
-      '<div class="spin3d-scene"><div class="spin3d-card" id="spin3dcard">' +
-      '<div class="spin3d-face spin3d-front"><img id="spin3dimg" src="' + f + '" alt="' + esc(name) + '" draggable="false"><div class="spin3d-sheen"></div></div>' +
-      '<div class="spin3d-face spin3d-back"><img src="' + b + '" alt="' + esc(name) + ' back" draggable="false"><div class="spin3d-sheen"></div></div>' +
-      '<div class="spin3d-edge spin3d-edge-t"' + edgeBg + '></div>' +
-      '<div class="spin3d-edge spin3d-edge-b"' + edgeBg + '></div>' +
-      '<div class="spin3d-edge spin3d-edge-l"' + edgeBg + '></div>' +
-      '<div class="spin3d-edge spin3d-edge-r"' + edgeBg + '></div>' +
-      "</div></div>" +
-      '<div class="spin-hint" id="spin3dhint">Drag to spin</div></div>';
-  }
-  function initSpin3D() {
-    var box = document.getElementById("spin3d");
-    if (!box) return;
-    var card = document.getElementById("spin3dcard");
-    var hint = document.getElementById("spin3dhint");
-    var load = document.getElementById("spin3dload");
-    var img = document.getElementById("spin3dimg");
-    var sheens = box.querySelectorAll(".spin3d-sheen");
-    var rot = 0, vel = 0, dragging = false, lastX = 0, lastT = 0, auto = true;
-    function render() {
-      card.style.transform = "rotateX(6deg) rotateY(" + rot + "deg)";
-      var s = Math.sin(rot * Math.PI / 180);
-      var p = 50 + 60 * s, o = 0.45 + 0.55 * Math.abs(s);
-      for (var i = 0; i < sheens.length; i++) {
-        sheens[i].style.backgroundPosition = p.toFixed(1) + "% 0";
-        sheens[i].style.opacity = o.toFixed(3);
-      }
-    }
-    function ready() {
-      if (load) { load.style.display = "none"; load = null; }
-      card.style.opacity = "1";
-    }
-    if (img.complete && img.naturalWidth) ready();
-    else { img.onload = ready; img.onerror = ready; }
-    function loop(t) {
-      if (lastT) {
-        var dt = Math.min(64, t - lastT);
-        if (!dragging) {
-          if (auto) rot += dt * 0.045;
-          else if (vel) { rot += vel * dt / 16.7; vel *= 0.94; if (Math.abs(vel) < 0.02) vel = 0; }
-          rot = ((rot % 360) + 360) % 360;
-          render();
-        }
-      }
-      lastT = t;
-      window.__spin3dRaf = requestAnimationFrame(loop);
-    }
-    window.__spin3dRaf = requestAnimationFrame(loop);
-    function stopAuto() {
-      if (auto) { auto = false; if (hint) hint.classList.add("off"); }
-    }
-    box.addEventListener("pointerdown", function (e) {
-      stopAuto(); dragging = true; vel = 0; lastX = e.clientX; lastT = 0;
-      try { box.setPointerCapture(e.pointerId); } catch (err) {}
-    });
-    box.addEventListener("pointermove", function (e) {
-      if (!dragging) return;
-      var dx = e.clientX - lastX; lastX = e.clientX;
-      rot = (((rot + dx * 0.45) % 360) + 360) % 360;
-      vel = vel * 0.7 + dx * 0.45 * 0.3;
-      render();
-    });
-    function end() { dragging = false; lastT = 0; }
-    box.addEventListener("pointerup", end);
-    box.addEventListener("pointercancel", end);
-  }
+  /* ---------- Product gallery ----------
+     Driven solely by the product's Shopify images: photos in a swipeable
+     carousel; no images at all shows the emoji placeholder tile. */
 
   function openProduct(id) {
     var p = MP.PRODUCTS[id] || PLACEHOLDER;
     var imgs = (p.images || []).filter(Boolean);
-    var is3D = imgs.length >= 2;
-    if (window.__spin3dRaf) { cancelAnimationFrame(window.__spin3dRaf); window.__spin3dRaf = 0; }
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
       ? '<div class="sizes">' + p.sizes.map(function (s, i) {
@@ -286,14 +211,13 @@ var MPShop = (function () {
       : '<div style="height:12px"></div>';
     view.innerHTML =
       '<article class="article-card">' +
-        (is3D ? spin3DHTML(imgs, p.name) : carouselHTML(imgs, p.name)) +
+        carouselHTML(imgs, p.name) +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         sizes + '<div id="bag-action"></div>' +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
-    if (is3D) initSpin3D();
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
     function refreshAction() { bindAction(p, function () { return size; }); }
     view.querySelectorAll("[data-size]").forEach(function (b) {
