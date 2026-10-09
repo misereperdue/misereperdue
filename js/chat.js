@@ -396,7 +396,7 @@
     lastTs = 0;
     root.innerHTML =
       '<div class="chat-head">' +
-      '<div class="chat-title">Chat <span class="chat-online" hidden></span></div>' +
+      '<div class="chat-title">Chat <span class="chat-online" hidden><span class="chat-online-dot"></span><span class="chat-online-num"></span></span></div>' +
       '<div class="chat-head-right">' +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num">0</span></span>' +
       '<button type="button" class="chat-me" aria-label="Profile"></button>' +
@@ -786,7 +786,8 @@
     if (!el) return;
     if (n > 0) {
       el.hidden = false;
-      el.textContent = "(" + n + " online)";
+      var num = el.querySelector(".chat-online-num");
+      if (num) num.textContent = n;
     } else {
       el.hidden = true;
     }
