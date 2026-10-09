@@ -122,6 +122,27 @@ button, input, textarea { font-family: inherit; color: inherit; }
   background: transparent;
 }
 .page.pad-nav { padding-top: calc(env(safe-area-inset-top, 0px) + 78px); }
+
+/* Top of page: navbar goes clear so the header video takes over */
+.nav { transition: background-color .35s ease; }
+body:not(.is-scrolled) .nav {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--glass-spec), 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+/* Scrolled: navbar + chat bar share the blue glass */
+body.is-scrolled .nav {
+  background: rgba(34, 68, 195, 0.38);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+}
+body.is-scrolled .chat-head {
+  background: linear-gradient(to bottom,
+    rgba(34, 68, 195, 0.38) 0%,
+    rgba(34, 68, 195, 0.16) 65%,
+    transparent 100%);
+  -webkit-backdrop-filter: blur(22px) saturate(190%);
+  backdrop-filter: blur(22px) saturate(190%);
+}
 .panel { display: none; }
 .panel.on {
   display: block;
