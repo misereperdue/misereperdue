@@ -42,16 +42,5 @@
     "up": 0,
     "down": 0,
     "verified": false
-  },
-  {
-    "id": "17915105196009410",
-    "slug": "welcome",
-    "parentId": null,
-    "name": "dc",
-    "text": "Verified?",
-    "verified": true,
-    "createdAt": 1791510519600,
-    "up": 0,
-    "down": 0
   }
 ]
