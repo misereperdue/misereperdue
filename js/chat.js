@@ -577,6 +577,8 @@
       var r = msgs[i].getBoundingClientRect();
       var c = (r.top + r.bottom) / 2;
       var o = 1;
+      if (r.bottom < headB) o = 0;
+      else if (c < headB + fadeLen) o = Math.max(0, (c - headB) / fadeLen);
       var h = document.documentElement;
       var atBottom = (h.scrollHeight - window.scrollY - window.innerHeight) < 200;
       if (!atBottom) {
