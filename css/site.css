@@ -1026,28 +1026,60 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   display: flex; flex-direction: column; gap: 14px;
   padding: 4px 2px 12px;
 }
-.chat-msg { display: flex; gap: 9px; align-items: flex-start; max-width: 88%; }
-.chat-msg.mine { align-self: flex-end; max-width: 82%; align-items: flex-end; }
+.chat-msg { display: flex; gap: 9px; align-items: flex-end; max-width: 88%; }
+.chat-msg.mine { align-self: flex-end; max-width: 82%; }
 .chat-msg-main { min-width: 0; }
 .chat-msg-head { display: flex; align-items: baseline; gap: 7px; margin-bottom: 3px; padding-left: 2px; }
 .chat-msg-head strong { font-size: 13px; font-weight: 700; }
 .chat-time { font-size: 11px; color: var(--muted); }
+
+/* iMessage-style bubbles */
 .chat-bubble {
+  position: relative;
   display: inline-block;
-  border: var(--glass-hairline);
-  border-radius: 4px 18px 18px 18px;
-  padding: 9px 13px;
-  font-size: 15px; line-height: 1.45;
-  background: var(--glass-clear-tint);
-  box-shadow: var(--glass-spec);
-  -webkit-backdrop-filter: var(--glass-clear);
-  backdrop-filter: var(--glass-clear);
+  border: 0;
+  padding: 9px 14px;
+  font-size: 16px; line-height: 1.4;
   overflow-wrap: break-word; word-break: break-word;
 }
-.chat-msg.mine .chat-bubble {
-  border-radius: 18px 4px 18px 18px;
-  background: var(--wash);
+/* incoming (left): gray with tail bottom-left */
+.chat-msg:not(.mine) .chat-bubble {
+  background: #26262b;
+  color: #fff;
+  border-radius: 18px;
+  border-bottom-left-radius: 5px;
 }
+.chat-msg:not(.mine) .chat-bubble::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  bottom: 0;
+  width: 12px;
+  height: 18px;
+  background: #26262b;
+  clip-path: path("M 9 0 C 4 2 1 8 1 18 L 9 18 C 9 12 9 6 9 0 Z");
+}
+[data-theme="light"] .chat-msg:not(.mine) .chat-bubble { background: #e9e9eb; color: #111; }
+[data-theme="light"] .chat-msg:not(.mine) .chat-bubble::before { background: #e9e9eb; }
+/* outgoing (right): blue with tail bottom-right */
+.chat-msg.mine .chat-bubble {
+  background: #0a84ff;
+  color: #fff;
+  border-radius: 18px;
+  border-bottom-right-radius: 5px;
+}
+.chat-msg.mine .chat-bubble::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  bottom: 0;
+  width: 12px;
+  height: 18px;
+  background: #0a84ff;
+  clip-path: path("M 3 0 C 8 2 11 8 11 18 L 3 18 C 3 12 3 6 3 0 Z");
+}
+[data-theme="light"] .chat-msg.mine .chat-bubble { background: #007aff; }
+[data-theme="light"] .chat-msg.mine .chat-bubble::after { background: #007aff; }
 
 /* input bar */
 .chat-inputbar {
