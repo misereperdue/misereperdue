@@ -536,52 +536,50 @@
       scheduleFade();
     }).catch(function () {});
     connect();
-    var mb = msgsBox();
-    if (mb && !mb.__fadeHook) {
-      mb.__fadeHook = true;
-      mb.addEventListener("scroll", scheduleFade, { passive: true });
-    }
     if (!window.__chatFadeHook) {
       window.__chatFadeHook = true;
+      window.addEventListener("scroll", scheduleFade, { passive: true });
       window.addEventListener("resize", scheduleFade);
     }
+    scheduleFade();
   }
 
   function msgsBox() { return root.querySelector(".chat-msgs"); }
 
   function nearBottom() {
-    var b = msgsBox();
-    if (!b) return true;
-    return b.scrollHeight - b.scrollTop - b.clientHeight < 160;
+    var h = document.documentElement;
+    return h.scrollHeight - window.scrollY - window.innerHeight < 200;
   }
 
   function scrollBottom(force) {
-    var b = msgsBox();
-    if (b && (force || nearBottom())) b.scrollTop = b.scrollHeight;
+    if (force || nearBottom()) {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      scheduleFade();
+    }
   }
 
   var fadeRaf = 0;
   function updateMsgFade() {
     fadeRaf = 0;
-    var box = msgsBox();
-    if (!box) return;
-    var bt = box.getBoundingClientRect().top;
-    var msgs = box.querySelectorAll(".chat-msg");
-    var fadeTop = bt + 8, fadeBottom = bt + 110;
+    if (!root) return;
+    var vh = window.innerHeight;
+    var center = vh * 0.46;
+    var fullHalf = 340;   /* ~9 messages fully visible around the focus */
+    var fadeHalf = 150;   /* fade zone beyond that */
+    var msgs = root.querySelectorAll(".chat-msg");
     for (var i = 0; i < msgs.length; i++) {
       var r = msgs[i].getBoundingClientRect();
+      var mc = (r.top + r.bottom) / 2;
+      var d = Math.abs(mc - center);
       var o;
-      if (r.bottom < fadeTop) o = 0;
-      else if (r.top > fadeBottom) o = 1;
-      else {
-        var c = (r.top + r.bottom) / 2;
-        o = (c - fadeTop) / (fadeBottom - fadeTop);
-        o = Math.max(0, Math.min(1, o));
-      }
+      if (d <= fullHalf) o = 1;
+      else if (d >= fullHalf + fadeHalf) o = 0;
+      else o = 1 - (d - fullHalf) / fadeHalf;
       var so = o.toFixed(2);
       if (msgs[i].getAttribute("data-fade") !== so) {
         msgs[i].setAttribute("data-fade", so);
         msgs[i].style.opacity = so;
+        msgs[i].style.pointerEvents = o < 0.2 ? "none" : "";
       }
     }
   }
@@ -738,7 +736,7 @@
 
 
     b.appendChild(row);
-    if (stick) b.scrollTop = b.scrollHeight;
+    if (stick) window.scrollTo(0, document.documentElement.scrollHeight);
     scheduleFade();
   }
 
