@@ -684,6 +684,17 @@
     im.alt = "";
     im.loading = "lazy";
     im.referrerPolicy = "no-referrer";
+    im.crossOrigin = "anonymous";
+    im.onload = function() {
+      try {
+        var c = document.createElement("canvas");
+        c.width = 1; c.height = 1;
+        var ctx = c.getContext("2d");
+        ctx.drawImage(im, 0, 0, 1, 1);
+        var d = ctx.getImageData(0, 0, 1, 1).data;
+        s.style.setProperty("--badge-glow", "rgba(" + d[0] + "," + d[1] + "," + d[2] + ",0.6)");
+      } catch (e) { /* CORS taint - keep default glow */ }
+    };
     s.appendChild(im);
     return s;
   }
