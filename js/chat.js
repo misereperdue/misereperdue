@@ -789,20 +789,58 @@
 
   /* ---------- Analytics Dashboard (owner only) ---------- */
   function openAnalytics() {
-    var token = prompt("Owner secret:");
-    if (!token) return;
-    fetch(CHAT_API + "/api/analytics/stats?token=" + encodeURIComponent(token))
-      .then(function(r) {
-        if (!r.ok && r.status === 401) throw new Error("unauthorized");
-        return r.json();
-      })
-      .then(function(j) {
-        if (!j.ok) throw new Error(j.error || "unauthorized");
-        showAnalyticsDashboard(j.stats);
-      })
-      .catch(function(e) {
-        alert(e.message === "unauthorized" ? "Wrong secret. Try again." : "Failed to load stats: " + e.message);
-      });
+    closeMsgPopup();
+    var ov = document.createElement("div");
+    ov.className = "msg-popup";
+    ov.id = "msg-popup";
+    var inner = document.createElement("div");
+    inner.className = "msg-popup-inner";
+    inner.innerHTML = '<h3 style="margin:0 0 12px;font-size:17px;">Analytics</h3>' +
+      '<p style="font-size:14px;opacity:.7;margin:0 0 12px;">Enter owner secret:</p>';
+    var inp = document.createElement("input");
+    inp.type = "password";
+    inp.placeholder = "Owner secret";
+    inp.style.cssText = "width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:16px;margin-bottom:12px;box-sizing:border-box;";
+    inner.appendChild(inp);
+    var errDiv = document.createElement("div");
+    errDiv.style.cssText = "color:#ff6b6b;font-size:13px;min-height:18px;margin-bottom:8px;";
+    inner.appendChild(errDiv);
+    var goBtn = document.createElement("button");
+    goBtn.className = "msg-popup-close";
+    goBtn.textContent = "View Stats";
+    goBtn.style.marginTop = "4px";
+    inner.appendChild(goBtn);
+    var cancelBtn = document.createElement("button");
+    cancelBtn.className = "msg-popup-close";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.background = "transparent";
+    cancelBtn.style.marginTop = "8px";
+    cancelBtn.onclick = function() { closeMsgPopup(); };
+    inner.appendChild(cancelBtn);
+    ov.appendChild(inner);
+    ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
+    document.body.appendChild(ov);
+    setTimeout(function() { inp.focus(); }, 100);
+    function doFetch() {
+      var token = inp.value.trim();
+      if (!token) { errDiv.textContent = "Enter the secret."; return; }
+      goBtn.textContent = "Loading...";
+      goBtn.disabled = true;
+      fetch(CHAT_API + "/api/analytics/stats?token=" + encodeURIComponent(token))
+        .then(function(r) { return r.json().then(function(j) { return { status: r.status, body: j }; }); })
+        .then(function(res) {
+          if (!res.body.ok) throw new Error("unauthorized");
+          closeMsgPopup();
+          showAnalyticsDashboard(res.body.stats);
+        })
+        .catch(function(e) {
+          goBtn.textContent = "View Stats";
+          goBtn.disabled = false;
+          errDiv.textContent = e.message === "unauthorized" ? "Wrong secret. Try again." : "Couldn't reach server. Check connection.";
+        });
+    }
+    goBtn.onclick = doFetch;
+    inp.addEventListener("keydown", function(e) { if (e.key === "Enter") doFetch(); });
   }
   function showAnalyticsDashboard(stats) {
     closeMsgPopup();
@@ -1215,12 +1253,13 @@
     meMenu.appendChild(out);
 
     document.body.appendChild(meMenu);
-    // Position below the avatar button
-    var meBtn = root.querySelector(".chat-me");
-    if (meBtn) {
-      var rect = meBtn.getBoundingClientRect();
+    // Position under the chat top bar, aligned to its right edge
+    var head = root.querySelector(".chat-head");
+    if (head) {
+      var rect = head.getBoundingClientRect();
       meMenu.style.top = (rect.bottom + 8) + "px";
       meMenu.style.right = Math.max(8, window.innerWidth - rect.right) + "px";
+      meMenu.style.minWidth = "200px";
     }
     // Close when tapping outside
     setTimeout(function() {
