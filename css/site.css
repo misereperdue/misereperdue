@@ -1,6 +1,7 @@
 /* Tokens live on data-theme so a system switch always repaints. */
 :root, [data-theme="light"] {
   color-scheme: light;
+  --hero-h: min(max(52vw, 230px), 360px);
   --bg: #fff;
   --bg-2: #fff;
   --ink: #1c1c1e;
@@ -229,14 +230,16 @@ button, input, textarea { font-family: inherit; color: inherit; }
 }
 
 .hero {
-  position: relative;
-  height: 52vw;
-  min-height: 230px;
-  max-height: 360px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: var(--hero-h);
   overflow: hidden;
   background: var(--bg);
-  margin-top: calc(env(safe-area-inset-top, 0px) * -1);
 }
+body { padding-top: var(--hero-h); }
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
