@@ -980,8 +980,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* header */
 .chat-head {
-  position: sticky; top: var(--hero-h); z-index: 6;
-  margin-top: -64px;
+  position: sticky; top: calc(var(--hero-h) - 80px); z-index: 6;
+  margin-top: -80px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 2px 18px;
   margin-bottom: -6px;
