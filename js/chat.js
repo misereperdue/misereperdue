@@ -25,6 +25,7 @@
 
   var root = null;
   var me = null;
+  var chatPaused = false;
   var token = null;
   var seen = {};
   var lastTs = 0;
@@ -793,7 +794,7 @@
     api("/api/analytics/stats")
       .then(function(j) {
         if (!j || !j.ok) throw new Error("unauthorized: " + JSON.stringify(j));
-        showAnalyticsDashboard(j.stats);
+        showDashboard(j.stats);
       })
       .catch(function(e) {
         // Fallback: show error in a simple popup (with debug info)
@@ -814,32 +815,173 @@
         document.body.appendChild(ov);
       });
   }
-  function showAnalyticsDashboard(stats) {
+  function showDashboard(stats) {
     closeMsgPopup();
     var ov = document.createElement("div");
     ov.className = "msg-popup";
     ov.id = "msg-popup";
     var inner = document.createElement("div");
-    inner.className = "msg-popup-inner";
-    inner.style.maxWidth = "min(480px, 94vw)";
-    var html = '<h3 style="margin:0 0 12px;font-size:18px;">Analytics — Last 7 Days</h3>';
-    html += '<div style="display:flex;gap:12px;margin-bottom:16px;">';
-    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalViews + '</div><div style="font-size:12px;opacity:.6;">Views</div></div>';
-    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalVisitors + '</div><div style="font-size:12px;opacity:.6;">Visitors</div></div>';
-    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalMessages + '</div><div style="font-size:12px;opacity:.6;">Messages</div></div>';
-    html += '</div>';
-    html += '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
-    html += '<tr style="opacity:.6;"><th style="text-align:left;padding:4px;">Date</th><th style="text-align:right;padding:4px;">Views</th><th style="text-align:right;padding:4px;">Visitors</th><th style="text-align:right;padding:4px;">Msgs</th></tr>';
-    stats.days.forEach(function(d) {
-      html += '<tr style="border-top:1px solid rgba(255,255,255,.08);"><td style="padding:6px 4px;">' + d.date + '</td><td style="text-align:right;padding:6px 4px;">' + d.views + '</td><td style="text-align:right;padding:6px 4px;">' + d.visitors + '</td><td style="text-align:right;padding:6px 4px;">' + d.messages + '</td></tr>';
+    inner.className = "msg-popup-inner dashboard-sheet";
+    inner.style.maxWidth = "min(520px, 94vw)";
+
+    // Title
+    var title = document.createElement("h3");
+    title.style.cssText = "margin:0 0 16px;font-size:20px;font-weight:700;";
+    title.textContent = "Dashboard";
+    inner.appendChild(title);
+
+    // Stats row
+    var statsRow = document.createElement("div");
+    statsRow.style.cssText = "display:flex;gap:12px;margin-bottom:20px;";
+    var metrics = [
+      { label: "Views", value: stats.totalViews },
+      { label: "Visitors", value: stats.totalVisitors },
+      { label: "Messages", value: stats.totalMessages }
+    ];
+    metrics.forEach(function(m) {
+      var cell = document.createElement("div");
+      cell.style.cssText = "flex:1;text-align:center;";
+      cell.innerHTML = '<div style="font-size:28px;font-weight:700;">' + m.value + '</div>' +
+        '<div style="font-size:12px;opacity:.6;margin-top:2px;">' + m.label + '</div>';
+      statsRow.appendChild(cell);
     });
-    html += '</table>';
-    inner.innerHTML = html;
-    var btn = document.createElement("button");
-    btn.className = "msg-popup-close";
-    btn.textContent = "Close";
-    btn.onclick = function(e) { e.stopPropagation(); closeMsgPopup(); };
-    inner.appendChild(btn);
+    inner.appendChild(statsRow);
+
+    // Graph section
+    var graphTitle = document.createElement("div");
+    graphTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
+    graphTitle.textContent = "Activity — Last 30 Days";
+    inner.appendChild(graphTitle);
+
+    // Metric toggle
+    var toggleRow = document.createElement("div");
+    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+    var currentMetric = "messages";
+    var metricBtns = {};
+    ["messages", "views", "visitors"].forEach(function(metric) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = metric.charAt(0).toUpperCase() + metric.slice(1);
+      btn.style.cssText = "flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:" +
+        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:#fff;font-size:13px;font-weight:600;cursor:pointer;";
+      btn.addEventListener("click", function() {
+        currentMetric = metric;
+        Object.keys(metricBtns).forEach(function(k) {
+          metricBtns[k].style.background = k === metric ? "rgba(0,122,255,.25)" : "transparent";
+        });
+        drawGraph();
+      });
+      metricBtns[metric] = btn;
+      toggleRow.appendChild(btn);
+    });
+    inner.appendChild(toggleRow);
+
+    // SVG graph container
+    var graphWrap = document.createElement("div");
+    graphWrap.style.cssText = "position:relative;height:160px;margin-bottom:20px;background:rgba(255,255,255,.03);border-radius:14px;padding:12px;overflow:hidden;";
+    inner.appendChild(graphWrap);
+
+    function drawGraph() {
+      graphWrap.innerHTML = "";
+      var W = graphWrap.clientWidth - 24 || 300;
+      var H = 136;
+      var data = stats.days.slice().reverse(); // oldest to newest
+      var values = data.map(function(d) { return d[currentMetric] || 0; });
+      var max = Math.max.apply(null, values.concat([1]));
+      var barW = W / data.length;
+
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", W);
+      svg.setAttribute("height", H);
+      svg.style.display = "block";
+
+      // Bars
+      data.forEach(function(d, i) {
+        var v = values[i];
+        var h = Math.max(2, (v / max) * (H - 20));
+        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", i * barW + 1);
+        rect.setAttribute("y", H - h);
+        rect.setAttribute("width", Math.max(1, barW - 2));
+        rect.setAttribute("height", h);
+        rect.setAttribute("rx", "2");
+        rect.setAttribute("fill", "rgba(0,122,255,.7)");
+        rect.style.transformOrigin = "bottom";
+        rect.style.animation = "barGrow .5s cubic-bezier(.2,.9,.3,1.2) both";
+        rect.style.animationDelay = (i * 15) + "ms";
+        // Tooltip
+        var titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        titleEl.textContent = d.date + ": " + v + " " + currentMetric;
+        rect.appendChild(titleEl);
+        svg.appendChild(rect);
+      });
+
+      graphWrap.appendChild(svg);
+    }
+    // Draw after layout
+    setTimeout(drawGraph, 50);
+
+    // Action buttons
+    var btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:10px;margin-bottom:12px;";
+
+    // Pause/Resume button
+    var pauseBtn = document.createElement("button");
+    pauseBtn.type = "button";
+    pauseBtn.className = "msg-popup-close";
+    pauseBtn.style.cssText = "flex:1;margin:0;background:" + (chatPaused ? "rgba(52,199,89,.25)" : "rgba(255,159,10,.25)") + ";";
+    pauseBtn.textContent = chatPaused ? "Resume Chat" : "Pause Chat";
+    pauseBtn.addEventListener("click", function() {
+      var endpoint = chatPaused ? "/api/chat/unpause" : "/api/chat/pause";
+      pauseBtn.disabled = true;
+      pauseBtn.textContent = "Working...";
+      api(endpoint, { method: "POST" }).then(function(r) {
+        if (r && r.ok) {
+          setPaused(r.paused);
+          pauseBtn.textContent = r.paused ? "Resume Chat" : "Pause Chat";
+          pauseBtn.style.background = r.paused ? "rgba(52,199,89,.25)" : "rgba(255,159,10,.25)";
+        }
+        pauseBtn.disabled = false;
+      }).catch(function() {
+        pauseBtn.disabled = false;
+        pauseBtn.textContent = chatPaused ? "Resume Chat" : "Pause Chat";
+      });
+    });
+    btnRow.appendChild(pauseBtn);
+
+    // Clear chat button
+    var clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "msg-popup-close";
+    clearBtn.style.cssText = "flex:1;margin:0;background:rgba(255,69,58,.2);color:#ff6b6b;";
+    clearBtn.textContent = "Clear Chat";
+    clearBtn.addEventListener("click", function() {
+      if (!confirm("Clear all chat messages? This cannot be undone.")) return;
+      clearBtn.disabled = true;
+      clearBtn.textContent = "Clearing...";
+      api("/api/clear", { method: "POST", body: {} }).then(function(r) {
+        if (r && r.ok) {
+          closeMsgPopup();
+        } else {
+          clearBtn.disabled = false;
+          clearBtn.textContent = "Clear Chat";
+        }
+      }).catch(function() {
+        clearBtn.disabled = false;
+        clearBtn.textContent = "Clear Chat";
+      });
+    });
+    btnRow.appendChild(clearBtn);
+    inner.appendChild(btnRow);
+
+    // Close button
+    var closeBtn = document.createElement("button");
+    closeBtn.className = "msg-popup-close";
+    closeBtn.textContent = "Close";
+    closeBtn.style.marginTop = "4px";
+    closeBtn.onclick = function(e) { e.stopPropagation(); closeMsgPopup(); };
+    inner.appendChild(closeBtn);
+
     ov.appendChild(inner);
     ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
     document.body.appendChild(ov);
@@ -1050,6 +1192,7 @@
       if (!o || !o.t) return;
       if (o.t === "hello") {
         if (typeof o.online === "number") setOnline(o.online);
+        if (typeof o.paused === "boolean") setPaused(o.paused);
         if (o.badges) userBadges = o.badges;
         if (o.you) {
           me = o.you;
@@ -1061,6 +1204,8 @@
         if (o.badge) userBadges[o.user] = o.badge; else delete userBadges[o.user];
         var sel = '.chat-msg[data-user="' + o.user + '"]';
         root.querySelectorAll(sel).forEach(function (row) { refreshRowBadge(row, o.user); });
+      } else if (o.t === "paused" && typeof o.paused === "boolean") {
+        setPaused(o.paused);
       } else if (o.t === "ban" && o.user) {
         if (me && o.user === me.username && o.banned) {
           try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
@@ -1110,6 +1255,32 @@
     reconnectTimer = setTimeout(connect, Math.min(1000 * Math.pow(2, wsFails), RECONNECT_MAX));
   }
 
+
+  /* Chat pause state */
+  function setPaused(paused) {
+    chatPaused = !!paused;
+    var input = root.querySelector(".chat-inputbar input");
+    var sendBtn = root.querySelector(".chat-send");
+    var plusBtn = root.querySelector(".chat-plus");
+    var isOwner = me && me.owner;
+    if (chatPaused && !isOwner) {
+      if (input) { input.disabled = true; input.placeholder = "Chat is paused"; }
+      if (sendBtn) sendBtn.style.opacity = ".4";
+      if (plusBtn) plusBtn.style.opacity = ".4";
+      root.classList.add("chat-is-paused");
+    } else {
+      if (input) { input.disabled = false; input.placeholder = "Message"; }
+      if (sendBtn) sendBtn.style.opacity = "";
+      if (plusBtn) plusBtn.style.opacity = "";
+      root.classList.remove("chat-is-paused");
+    }
+  }
+  function checkPauseStatus() {
+    api("/api/chat/status").then(function(r) {
+      if (r && typeof r.paused === "boolean") setPaused(r.paused);
+    }).catch(function() {});
+  }
+
   function startPolling() {
     if (polling) return;
     polling = true;
@@ -1124,7 +1295,9 @@
         .catch(function () {});
     };
     tick();
+    checkPauseStatus();
     pollTimer = setInterval(tick, 3000);
+    setInterval(checkPauseStatus, 30000);
   }
 
   function stopPolling() {
@@ -1204,7 +1377,7 @@
       var ana = document.createElement("button");
       ana.type = "button";
       ana.className = "chat-me-item";
-      ana.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span>Analytics</span>';
+      ana.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span>Dashboard</span>';
       ana.addEventListener("click", function(e) {
         e.stopPropagation();
         closeMeMenu();
