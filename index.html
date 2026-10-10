@@ -24,7 +24,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=154">
+  <link rel="stylesheet" href="css/site.css?v=155">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -395,6 +395,48 @@
       var el = document.querySelector('img[data-paybadge="' + k + '"]');
       if (el && b.trim()) el.src = "data:image/png;base64," + b.trim();
     }).catch(function(){});
+  });
+})();
+</script>
+<div class="site-footer-wrap">
+  <button class="site-footer-collapse" id="footerCollapseBtn">collapse</button>
+  <footer class="site-footer" id="siteFooter">
+    <div class="kicker">NEXT DROP</div>
+    <div class="flip-clock">
+      <div class="flip-unit"><div class="flip-card"><span id="fc-d">000</span></div><label>days</label></div>
+      <div class="flip-unit"><div class="flip-card"><span id="fc-h">00</span></div><label>hrs</label></div>
+      <div class="flip-unit"><div class="flip-card"><span id="fc-m">00</span></div><label>min</label></div>
+      <div class="flip-unit"><div class="flip-card"><span id="fc-s">00</span></div><label>sec</label></div>
+    </div>
+    <form onsubmit="return false"><input type="email" placeholder="Email for early access"><button class="join">Join</button></form>
+    <div class="copy">&copy; MISERY 2027</div>
+  </footer>
+</div>
+<script>
+(function(){
+  var target = new Date(2027, 8, 11, 0, 0, 0); // Sept 11, 2027
+  var els = { d: document.getElementById('fc-d'), h: document.getElementById('fc-h'),
+              m: document.getElementById('fc-m'), s: document.getElementById('fc-s') };
+  function pad(n, l){ n = String(n); while (n.length < l) n = '0' + n; return n; }
+  function set(el, v){
+    if (el && el.textContent !== v) {
+      el.textContent = v;
+      el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+    }
+  }
+  function tick(){
+    var diff = target - new Date();
+    if (diff < 0) diff = 0;
+    set(els.d, pad(Math.floor(diff / 864e5), 3));
+    set(els.h, pad(Math.floor(diff / 36e5) % 24, 2));
+    set(els.m, pad(Math.floor(diff / 6e4) % 60, 2));
+    set(els.s, pad(Math.floor(diff / 1e3) % 60, 2));
+  }
+  tick(); setInterval(tick, 1000);
+  var btn = document.getElementById('footerCollapseBtn'), f = document.getElementById('siteFooter');
+  if (btn && f) btn.addEventListener('click', function(){
+    f.classList.add('collapsed');
+    btn.style.display = 'none'; // one-way: returns on refresh
   });
 })();
 </script>
