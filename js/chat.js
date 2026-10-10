@@ -112,7 +112,7 @@
     if (mb) wrap.insertAdjacentHTML("beforeend", mb);
   }
 
-  var FLAME_USERNAME = "dctest"; // flames show above this user's avatar only
+  var FLAME_USERNAME = "dc"; // flames show above this user's avatar only
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
