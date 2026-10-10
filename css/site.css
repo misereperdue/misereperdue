@@ -1062,10 +1062,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-avatar-img.sm { width: 32px; height: 32px; }
 .chat-avatar-img.lg { width: 64px; height: 64px; }
-.chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite; }
+.chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite, sealSpin 5s ease-in-out infinite; }
 @keyframes sealShine {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.8); }
+}
+@keyframes sealSpin {
+  0%, 72% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 .chat-msg:not(.mine) .chat-verified { left: auto; right: -4px; }
 .chat-verified svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 2px rgba(0,0,0,.3)); }
@@ -1151,7 +1155,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 [data-theme="light"] .chat-msg.mine .chat-bubble { background: rgba(0, 122, 255, 0.6); }
 
 /* input bar — fixed to viewport so it never moves while scrolling */
-.chat-inputrow { display: flex; gap: 8px; align-items: center; position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); z-index: 50; margin-top: 0; }
+.chat-inputrow { display: flex; gap: 8px; align-items: center; position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); z-index: 50; margin-top: 0; }
 .chat-inputbar {
   display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0;
   border: var(--glass-hairline);
@@ -1320,5 +1324,5 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-size: 15px; font-weight: 600; padding: 10px; cursor: pointer;
 }
 
-/* Minimal copyright */
-.site-copy { text-align: center; font-size: 10px; letter-spacing: .06em; color: rgba(255,255,255,.28); padding: 6px 16px calc(env(safe-area-inset-bottom, 0px) + 76px); }
+/* Minimal copyright — fixed just under the message box */
+.site-copy { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: rgba(255,255,255,.28); padding: 0 16px; pointer-events: none; }
