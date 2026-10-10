@@ -1,1 +1,186 @@
-$(cat /tmp/site.css)
+/* Tokens live on data-theme so a system switch always repaints. */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #fff;
+  --bg-2: #fff;
+  --ink: #1c1c1e;
+  --muted: #636366;
+  --glass: rgba(255, 255, 255, 0.55);
+  --stroke: rgba(0, 0, 0, 0.08);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --shadow: 0 8px 24px rgba(40, 40, 70, 0.08);
+  --fill: #f4f4f6;
+  --spec: rgba(255, 255, 255, 0.8);
+  --accent: #007aff;
+  --wash: rgba(0, 122, 255, 0.08);
+  --glass-clear: blur(12px) saturate(150%);
+  --glass-regular: blur(24px) saturate(160%);
+  --glass-clear-tint: rgba(255, 255, 255, 0.42);
+  --glass-regular-tint: rgba(255, 255, 255, 0.55);
+  --glass-hairline: 0.5px solid rgba(0, 0, 0, 0.1);
+  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #070f29;
+  --bg-2: #070f29;
+  --ink: #f5f5f7;
+  --muted: #b7bdd0;
+  --glass: rgba(255, 255, 255, 0.06);
+  --stroke: rgba(255, 255, 255, 0.28);
+  --hairline: rgba(255, 255, 255, 0.1);
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  --fill: rgba(255, 255, 255, 0.06);
+  --spec: rgba(255, 255, 255, 0.28);
+  --accent: #0a84ff;
+  --wash: rgba(80, 120, 255, 0.16);
+  --glass-clear: blur(12px) saturate(150%);
+  --glass-regular: blur(24px) saturate(160%);
+  --glass-clear-tint: rgba(10, 12, 24, 0.42);
+  --glass-regular-tint: rgba(22, 22, 26, 0.38);
+  --glass-hairline: 0.5px solid rgba(255, 255, 255, 0.22);
+  --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(520px 280px at 12% 0%, var(--wash), transparent 70%),
+    radial-gradient(420px 240px at 100% 8%, var(--wash), transparent 68%),
+    linear-gradient(180deg, var(--bg-2), var(--bg));
+  line-height: 1.4;
+}
+body.home {
+  background: var(--bg);
+  color: var(--ink);
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button, input, textarea { font-family: inherit; color: inherit; }
+
+.nav-wrap {
+  position: fixed;
+  z-index: 30;
+  top: calc(env(safe-area-inset-top, 0px) + 22px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.nav {
+  pointer-events: auto;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(18, 18, 26, 0.6);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+}
+.nav button {
+  position: relative;
+  z-index: 1;
+  width: 62px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.82);
+  background: transparent;
+  cursor: pointer;
+}
+.nav button.on { color: #fff; }
+.seg {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 62px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(0, 0, 0, 0.18);
+  transform: translateX(0);
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.hero {
+  position: relative;
+  height: 52vw;
+  min-height: 230px;
+  max-height: 360px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.page {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 0 0 72px;
+}
+.panel { display: none; }
+.panel.on { display: block; }
+
+.chat { display: block; }
+.chat-head {
+  position: sticky; top: 96px; z-index: 6;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 2px 18px;
+  margin-bottom: -6px;
+  background: linear-gradient(to bottom, var(--bg) 65%, transparent);
+}
+.chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.chat-head-right { display: flex; align-items: center; gap: 10px; }
+.chat-points {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: var(--glass-hairline);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 14px; font-weight: 700;
+  background: var(--glass-clear-tint);
+}
+.chat-me { border: 0; background: transparent; padding: 0; cursor: pointer; }
+.chat-msgs {
+  overflow: visible;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 4px 2px 12px;
+}
+.chat-inputrow { display: flex; gap: 8px; align-items: center; margin-top: 8px; position: sticky; bottom: 12px; z-index: 5; }
+.chat-inputbar {
+  display: flex; gap: 8px; align-items: center; flex: 1;
+  border: var(--glass-hairline);
+  border-radius: 999px;
+  padding: 6px 6px 6px 18px;
+  background: var(--glass-regular-tint);
+}
+
+/* ---------- Merged always-on chat header (nav + chat-head) ---------- */
+body:has(#journal.on) .nav-wrap {
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  z-index: 45;
+}
+body:has(#journal.on) .chat-head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: calc(env(safe-area-inset-top, 0px) + 56px) 16px 10px;
+  margin: 0;
+  background: var(--bg);
+  background: linear-gradient(to bottom, var(--bg) 75%, transparent);
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+body:has(#journal.on) .chat {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 108px);
+}
