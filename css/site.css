@@ -1332,19 +1332,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 
-/* SF Symbols icon set */
-.sf-icon {
-  width: 1.25em;
-  height: 1.25em;
-  display: inline-block;
-  vertical-align: -0.25em;
-  flex: none;
-}
-.sf-icon.mark {
-  width: 22px;
-  height: 22px;
-}
-
 /* Long message: 3-line clamp + tap for full */
 .chat-text.clamped {
   display: -webkit-box;
