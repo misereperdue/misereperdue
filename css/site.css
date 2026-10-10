@@ -20,6 +20,12 @@
   --glass-regular-tint: rgba(255, 255, 255, 0.55);
   --glass-hairline: 0.5px solid rgba(0, 0, 0, 0.1);
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  /* Liquid Glass refraction layer — tint/blur/border/shadow cascade from these.
+     Override per-element with --lg-tint, --lg-blur, --lg-border, --lg-shadow. */
+  --lg-tint: var(--glass-clear-tint);
+  --lg-blur: var(--glass-clear);
+  --lg-border: var(--glass-hairline);
+  --lg-shadow: var(--glass-spec);
 }
 [data-theme="dark"] {
   color-scheme: dark;
@@ -43,9 +49,99 @@
   --glass-hairline: 0.5px solid rgba(255, 255, 255, 0.22);
 
   --glass-spec: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  /* Liquid Glass refraction layer — tint/blur/border/shadow cascade from these.
+     Override per-element with --lg-tint, --lg-blur, --lg-border, --lg-shadow. */
+  --lg-tint: var(--glass-clear-tint);
+  --lg-blur: var(--glass-clear);
+  --lg-border: var(--glass-hairline);
+  --lg-shadow: var(--glass-spec);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* === Liquid Glass refraction system ===
+   .lg-glass: element gets a ::before backdrop layer (frost + tint + edge light).
+   JS (liquid-glass.js) injects per-element SVG refraction via filter:url() on ::before.
+   Children stay crisp — only the backdrop bends.
+   .lg-lite: CSS-only version (no SVG refraction) for high-count/dynamic elements. */
+.lg-glass, .lg-lite {
+  isolation: isolate;
+  /* The ::before below is the single glass layer; neutralize the element's own. */
+  background: transparent !important;
+  border-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+/* Position relative for the ::before layer, unless already positioned (fixed/sticky). */
+.lg-glass:not(.nav):not(.chat-head):not(.chat-inputrow),
+.lg-lite {
+  position: relative;
+}
+.lg-glass::before, .lg-lite::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  background: var(--lg-tint);
+  border: var(--lg-border);
+  box-shadow: var(--lg-shadow);
+  z-index: 0;
+  pointer-events: none;
+}
+.lg-glass > *, .lg-lite > * {
+  position: relative;
+  z-index: 1;
+}
+/* Tier 2 children must paint above the ::before glass layer. */
+.btn > *, .vote > *, .tag > *, .car-btn > *, .stock-pill > *, .card > *,
+.bag-stepper > *, .tagdrop > *, .tagmenu > *, .ptag > *,
+.qty button > *, .replying-to > *, .chat-msg .bubble > *,
+.embed-badge > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tier 2: CSS-only liquid glass for controls, pills, badges, and dynamic elements.
+   (Tier 1 elements get data-liquid-glass for JS-driven SDF refraction.) */
+.btn, .vote, .tag, .car-btn, .stock-pill, .bag-stepper, .card,
+.tagdrop, .ptag, .qty button, .replying-to,
+.chat-msg .bubble, .embed-badge {
+  position: relative;
+  isolation: isolate;
+  background: transparent !important;
+  border-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+/* .tagmenu is position:absolute; keep it positioned without overriding. */
+.tagmenu {
+  isolation: isolate;
+  background: transparent !important;
+  border-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+.btn::before, .vote::before, .tag::before, .car-btn::before, .card::before,
+.stock-pill::before, .bag-stepper::before, .tagdrop::before,
+.tagmenu::before, .ptag::before, .qty button::before,
+.replying-to::before, .chat-msg .bubble::before, .embed-badge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  background: var(--lg-tint);
+  border: var(--lg-border);
+  box-shadow: var(--lg-shadow);
+  z-index: 0;
+  pointer-events: none;
+}
 html, body { min-height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
