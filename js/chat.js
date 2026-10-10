@@ -381,6 +381,9 @@
       api("/api/x/pkce-start", { method: "POST", body: {} }).then(function (r) {
         if (!r || !r.ok) { xBtn.disabled = false; return; }
         try { sessionStorage.setItem("x_state", r.state); } catch (e) {}
+        // iOS can open the X callback in a new tab (no sessionStorage there),
+        // so keep a localStorage backup as well.
+        try { localStorage.setItem("x_state", r.state); } catch (e) {}
         var state = r.state + "." + deviceId();
         var url = "https://x.com/i/oauth2/authorize" +
           "?response_type=code" +
@@ -1560,15 +1563,18 @@
     if (!tm) return null;
     var saved = null;
     try { saved = sessionStorage.getItem("x_state"); } catch (e) {}
+    if (!saved) { try { saved = localStorage.getItem("x_state"); } catch (e) {} }
     var st = sm ? decodeURIComponent(sm[1]) : "";
     // Link flow returns x_state=linked (no sessionStorage check needed)
     if (st === "linked") {
       try { sessionStorage.removeItem("x_state"); } catch (e) {}
+      try { localStorage.removeItem("x_state"); } catch (e) {}
       return { token: decodeURIComponent(tm[1]), linked: true };
     }
     // New format: state is {pkceState}.{deviceId}, saved is {pkceState}
     if (!saved || st.split(".")[0] !== saved) return { error: "Sign-in didn't verify. Try again." };
     try { sessionStorage.removeItem("x_state"); } catch (e) {}
+    try { localStorage.removeItem("x_state"); } catch (e) {}
     return { token: decodeURIComponent(tm[1]) };
   }
 
