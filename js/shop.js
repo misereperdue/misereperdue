@@ -146,8 +146,8 @@ var MPShop = (function () {
         }).join("") + "</div>"
       : "";
     var arrows = list.length > 1
-      ? '<button type="button" class="car-btn prev" aria-label="Previous image">' + SFIcon('chevron-left') + '</button>' +
-        '<button type="button" class="car-btn next" aria-label="Next image">' + SFIcon('chevron-right') + '</button>'
+      ? '<button type="button" class="car-btn prev" aria-label="Previous image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>' +
+        '<button type="button" class="car-btn next" aria-label="Next image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>'
       : "";
     return '<div class="carousel"><div class="carousel-track">' + imgs + "</div>" + arrows + dots + "</div>";
   }
