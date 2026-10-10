@@ -420,20 +420,7 @@
       "</div></div>" +
       '<div class="chat-msgs" aria-live="polite"></div>' +
       '<div class="chat-attach" hidden></div>' +
-      '<div class="chat-toolbar" hidden>' +
-      '<div class="chat-toolbar-options">' +
-      '<button type="button" class="chat-tool" data-kind="image" aria-label="Send image">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' +
-      '<span>Image</span></button>' +
-      '<button type="button" class="chat-tool" data-kind="video" aria-label="Send video">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="13" height="12" rx="3"/><path d="M15 10l7-4v12l-7-4z"/></svg>' +
-      '<span>Video</span></button>' +
-      '<button type="button" class="chat-tool" data-kind="file" aria-label="Send file">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
-      '<span>File</span></button>' +
-      '</div>' +
-      '<div class="chat-toolbar-recent" hidden><div class="chat-toolbar-recent-label">Recent</div><div class="chat-toolbar-recent-strip"></div></div>' +
-      '</div>' +
+
       '<div class="chat-typing" hidden></div>' +
       '<div class="chat-inputrow">' +
       '<button type="button" class="chat-plus" aria-label="Add photo or video">' +
@@ -527,7 +514,6 @@
         .then(function (r) {
           if (r && r.ok) {
             attachMedia = { id: r.id, kind: r.kind };
-            if (r.kind === "image") saveRecent({ id: r.id, kind: r.kind });
             renderAttach();
           } else {
             attachError((r && r.error) || "Couldn't upload.");
@@ -553,53 +539,6 @@
       im.onerror = function () { URL.revokeObjectURL(url); attachError("Couldn't read that photo."); };
       im.src = url;
     }
-    // Media toolbar
-    var toolbar = root.querySelector(".chat-toolbar");
-    var recentWrap = toolbar ? toolbar.querySelector(".chat-toolbar-recent") : null;
-    var recentStrip = toolbar ? toolbar.querySelector(".chat-toolbar-recent-strip") : null;
-    var RECENT_KEY = "chat_recent_media";
-    function getRecent() {
-      try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch (e) { return []; }
-    }
-    function saveRecent(item) {
-      try {
-        var list = getRecent().filter(function(x) { return x.id !== item.id; });
-        list.unshift(item);
-        localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 12)));
-      } catch (e) {}
-    }
-    function renderRecent() {
-      if (!recentStrip) return;
-      var list = getRecent().filter(function(x) { return x.kind === "image"; });
-      recentStrip.innerHTML = "";
-      if (!list.length) { if (recentWrap) recentWrap.hidden = true; return; }
-      if (recentWrap) recentWrap.hidden = false;
-      list.forEach(function(item) {
-        var th = document.createElement("img");
-        th.src = CHAT_API + "/api/media/" + item.id;
-        th.className = "chat-recent-thumb";
-        th.alt = "";
-        th.loading = "lazy";
-        th.addEventListener("click", function() {
-          attachMedia = { id: item.id, kind: item.kind };
-          renderAttach();
-          toggleToolbar(false);
-        });
-        recentStrip.appendChild(th);
-      });
-    }
-    function toggleToolbar(show) {
-      if (!toolbar) return;
-      var willShow = show !== undefined ? show : toolbar.hidden;
-      if (willShow) {
-        renderRecent();
-        toolbar.hidden = false;
-        requestAnimationFrame(function() { toolbar.classList.add("open"); });
-      } else {
-        toolbar.classList.remove("open");
-        setTimeout(function() { if (!toolbar.classList.contains("open")) toolbar.hidden = true; }, 200);
-      }
-    }
     if (plusBtn && fileInput) {
       fileInput.addEventListener("change", function () {
         var f = fileInput.files && fileInput.files[0];
@@ -616,38 +555,16 @@
         } else if (f.type.indexOf("image/") === 0) {
           compressAndUpload(f);
         } else {
-          // Generic file
-          var rd = new FileReader();
-          rd.onload = function () { uploadAttach(rd.result, "file", f.name); };
-          rd.onerror = function () { attachError("Couldn't read that file."); };
-          rd.readAsDataURL(f);
+          attachError("Only photos and videos.");
         }
       });
-      // Toolbar option buttons
-      if (toolbar) {
-        toolbar.querySelectorAll(".chat-tool").forEach(function(btn) {
-          btn.addEventListener("click", function() {
-            var kind = btn.getAttribute("data-kind");
-            if (kind === "image") fileInput.setAttribute("accept", "image/*");
-            else if (kind === "video") fileInput.setAttribute("accept", "video/*");
-            else fileInput.setAttribute("accept", "*/*");
-            fileInput.click();
-          });
-        });
-      }
-      // Plus button toggles toolbar
+      // Plus button opens native picker (images/videos only)
       if (plusBtn) {
-        plusBtn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          toggleToolbar();
+        plusBtn.addEventListener("click", function() {
+          fileInput.setAttribute("accept", "image/*,video/*");
+          fileInput.click();
         });
       }
-      // Close toolbar when tapping outside
-      document.addEventListener("click", function(e) {
-        if (toolbar && !toolbar.hidden && !toolbar.contains(e.target) && e.target !== plusBtn && !plusBtn.contains(e.target)) {
-          toggleToolbar(false);
-        }
-      });
     }
 
     api("/api/messages?limit=200").then(function (r) {
