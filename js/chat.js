@@ -176,19 +176,6 @@
         bv.textContent = u.bio;
         sheet.appendChild(bv);
       }
-      // Analytics button (owner viewing own profile)
-      if (me && me.owner && u.username === me.username) {
-        var anBtn = document.createElement("button");
-        anBtn.type = "button";
-        anBtn.className = "share-btn";
-        anBtn.style.marginTop = "12px";
-        anBtn.textContent = "View Analytics";
-        anBtn.addEventListener("click", function() {
-          closeProfile();
-          if (window.openAnalytics) window.openAnalytics();
-        });
-        sheet.appendChild(anBtn);
-      }
       var adminView = !!(me && me.owner && u.username !== me.username);
       if (!adminView && u.badges && u.badges.length) {
         var vTitle = document.createElement("div");
@@ -449,7 +436,10 @@
     refreshMeBadge(meBtn);
     setPoints(me.points || 0);
 
-    meBtn.addEventListener("click", openProfile);
+    meBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      toggleMeMenu();
+    });
 
     var form = root.querySelector(".chat-inputbar");
     var input = form.querySelector("input");
@@ -1169,6 +1159,70 @@
 
   /* ---------- profile sheet ---------- */
 
+
+  var meMenu = null;
+  function closeMeMenu() {
+    if (meMenu && meMenu.parentNode) meMenu.parentNode.removeChild(meMenu);
+    meMenu = null;
+    document.removeEventListener("click", closeMeMenu);
+  }
+  function toggleMeMenu() {
+    if (meMenu) { closeMeMenu(); return; }
+    closeMeMenu();
+    meMenu = document.createElement("div");
+    meMenu.className = "chat-me-menu";
+
+    // Profile
+    var prof = document.createElement("button");
+    prof.type = "button";
+    prof.className = "chat-me-item";
+    prof.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg><span>Profile</span>';
+    prof.addEventListener("click", function(e) {
+      e.stopPropagation();
+      closeMeMenu();
+      openProfile();
+    });
+    meMenu.appendChild(prof);
+
+    // Analytics (owner only)
+    if (me && me.owner) {
+      var ana = document.createElement("button");
+      ana.type = "button";
+      ana.className = "chat-me-item";
+      ana.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span>Analytics</span>';
+      ana.addEventListener("click", function(e) {
+        e.stopPropagation();
+        closeMeMenu();
+        if (window.openAnalytics) window.openAnalytics();
+      });
+      meMenu.appendChild(ana);
+    }
+
+    // Log out
+    var out = document.createElement("button");
+    out.type = "button";
+    out.className = "chat-me-item chat-me-logout";
+    out.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Log out</span>';
+    out.addEventListener("click", function(e) {
+      e.stopPropagation();
+      doLogout();
+    });
+    meMenu.appendChild(out);
+
+    document.body.appendChild(meMenu);
+    // Close when tapping outside
+    setTimeout(function() {
+      document.addEventListener("click", closeMeMenu);
+    }, 10);
+  }
+
+  function doLogout() {
+    try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    token = null;
+    closeProfile();
+    closeMeMenu();
+    renderAuth();
+  }
   function openProfile() {
     closeProfile();
     var back = document.createElement("div");
@@ -1560,12 +1614,7 @@
     out.type = "button";
     out.className = "chat-logout";
     out.textContent = "Log out";
-    out.addEventListener("click", function () {
-      try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-      token = null;
-      closeProfile();
-      renderAuth();
-    });
+    out.addEventListener("click", doLogout);
     sheet.appendChild(out);
 
     back.appendChild(sheet);
