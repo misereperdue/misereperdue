@@ -1229,14 +1229,18 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-bubble-media { padding: 4px; }
 .chat-bubble { position: relative; }
 .chat-embed-badge {
-  position: absolute; bottom: -7px; width: 24px; height: 24px;
-  border-radius: 50%; overflow: hidden; background: transparent;
-  border: none;
-  box-shadow: 0 0 10px 2px var(--badge-glow, rgba(255,255,255,0.25));
+  position: absolute; bottom: -7px; width: 26px; height: 26px;
+  border-radius: 50%; overflow: hidden;
+  background: rgba(255,255,255,.16);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  backdrop-filter: blur(12px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow: 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.25);
+  display: grid; place-items: center;
 }
 .chat-msg.mine .chat-embed-badge { left: -7px; }
 .chat-msg:not(.mine) .chat-embed-badge { right: -7px; }
-.chat-embed-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chat-embed-badge img { width: 15px; height: 15px; object-fit: contain; display: block; }
 .chat-media { max-width: 220px; max-height: 260px; border-radius: 12px; display: block; }
 .chat-bubble-media .chat-text { padding: 5px 8px 3px; }
 .chat-bubble a { color: inherit; }
