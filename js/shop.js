@@ -1,3 +1,17 @@
+
+  /* ---------- Native share ---------- */
+  function nativeShare(title, text, url) {
+    if (navigator.share) {
+      navigator.share({ title: title, text: text, url: url }).catch(function() {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).catch(function() {});
+    }
+  }
+  function shareProduct(p) {
+    var url = "https://misereperdue.com/#product-" + encodeURIComponent(p.id || "");
+    nativeShare(p.name, "Check out " + p.name + " on Misère Perdue", url);
+  }
+
 /* MISERY shop UI — catalog grid, product detail, cart panel, nav badge. */
 var MPShop = (function () {
   "use strict";
@@ -204,6 +218,7 @@ var MPShop = (function () {
       var add = document.getElementById("add-bag");
       if (add) {
         add.onclick = function () {
+          if (window.haptic) window.haptic(20);
           MP.addItem(p.id, getSize());
           updateCartBadge();
           add.classList.add("done");
@@ -241,6 +256,7 @@ var MPShop = (function () {
         carouselHTML(imgs, p.name) +
         "<h1>" + esc(p.name) + "</h1>" +
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
+        '<button type="button" class="share-btn" aria-label="Share product"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 7l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Share</button>' +
         sizes + '<div id="bag-action"></div>' +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
@@ -256,6 +272,8 @@ var MPShop = (function () {
       };
     });
     refreshAction();
+    var shBtn = view.querySelector('.share-btn');
+    if (shBtn) shBtn.onclick = function() { shareProduct(p); };
     if (window.MPNav) MPNav.showProduct(id);
   }
 
