@@ -828,6 +828,23 @@
   }
   // Expose globally for console access
   window.openAnalytics = openAnalytics;
+  // Analytics via URL hash (e.g. misereperdue.com/#analytics)
+  (function() {
+    function checkHash() {
+      if (location.hash === "#analytics") {
+        history.replaceState(null, "", location.pathname);
+        if (window.openAnalytics) window.openAnalytics();
+      }
+    }
+    window.addEventListener("hashchange", checkHash);
+    // Check on load too
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", checkHash);
+    } else {
+      checkHash();
+    }
+  })();
+
 
   function showMsgPopup(fullText, username, timeStr) {
     closeMsgPopup();
