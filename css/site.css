@@ -1117,7 +1117,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-msgs {
   overflow: visible;
   display: flex; flex-direction: column; gap: 14px;
-  padding: 4px 2px 12px;
+  padding: 4px 2px 96px;
 }
 .chat-msg { display: flex; gap: 9px; align-items: flex-end; max-width: 88%; }
 .chat-msg.mine { align-self: flex-end; max-width: 82%; }
@@ -1156,7 +1156,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 [data-theme="light"] .chat-msg.mine .chat-bubble { background: rgba(0, 122, 255, 0.6); }
 
 /* input bar — fixed to viewport so it never moves while scrolling */
-.chat-inputrow { display: flex; gap: 8px; align-items: center; position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); z-index: 50; margin-top: 0; }
+.chat-inputrow { display: flex; gap: 8px; align-items: center; position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); z-index: 50; margin-top: 0; }
 .chat-inputbar {
   display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0;
   border: var(--glass-hairline);
@@ -1330,4 +1330,4 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 /* Minimal copyright — fixed just under the message box */
-.site-copy { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--muted); opacity: .6; padding: 0 16px; pointer-events: none; }
+.site-copy { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 5px); left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--muted); opacity: .6; padding: 0 16px; pointer-events: none; }
