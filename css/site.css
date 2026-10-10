@@ -1421,16 +1421,19 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-me-menu {
   position: fixed;
   z-index: 300;
-  min-width: 180px;
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-regular);
-  backdrop-filter: var(--glass-regular);
+  min-width: 200px;
+  background: rgba(18, 18, 26, 0.6);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
   border: var(--glass-hairline);
-  border-radius: 16px;
-  padding: 6px;
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
   transform-origin: top right;
   animation: menuPop .18s cubic-bezier(.2,.9,.3,1.2);
+}
+[data-theme="light"] .chat-me-menu {
+  background: rgba(255, 255, 255, 0.55);
 }
 @keyframes menuPop {
   from { opacity: 0; transform: scale(.9) translateY(-8px); }
