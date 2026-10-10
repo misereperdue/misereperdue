@@ -1315,3 +1315,43 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   border: 0; background: transparent; color: #ff453a;
   font-size: 15px; font-weight: 600; padding: 10px; cursor: pointer;
 }
+
+/* ===== Site footer: flip-clock countdown, collapsible ===== */
+.site-footer-wrap { position: relative; max-width: 520px; margin: 0 auto; padding: 0 16px 24px; }
+.site-footer-collapse {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%); z-index: 2;
+  background: rgba(255,255,255,.09);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px; color: rgba(255,255,255,.75);
+  font-size: 10px; letter-spacing: .08em; padding: 5px 14px; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.site-footer { background: rgba(7,15,41,.6); border: 1px solid rgba(255,255,255,.08); border-radius: 16px;
+  padding: 20px 16px 14px; text-align: center; overflow: hidden;
+  max-height: 400px; transition: max-height .45s ease, opacity .3s ease, padding .45s ease; }
+.site-footer.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+.site-footer .kicker { font-size: 9px; letter-spacing: 0.26em; color: rgba(255,255,255,.38); margin-bottom: 10px; }
+.site-footer .flip-clock { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+.site-footer .flip-unit { display: flex; flex-direction: column; align-items: center; }
+.site-footer .flip-card {
+  position: relative; min-width: 44px; padding: 6px 6px;
+  background: linear-gradient(180deg, #17171f 0%, #17171f 49%, #000 50%, #23232e 51%, #23232e 100%);
+  border-radius: 7px; border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.site-footer .flip-card span {
+  font-size: 20px; font-weight: 800; letter-spacing: .02em; color: #fff;
+  font-variant-numeric: tabular-nums; line-height: 1.15; display: block;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+.site-footer .flip-card span.tick { animation: flipTick .35s ease; }
+@keyframes flipTick { 0% { transform: rotateX(0); } 50% { transform: rotateX(-38deg); } 100% { transform: rotateX(0); } }
+.site-footer .flip-unit label { font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.32); margin-top: 5px; }
+.site-footer form { display: flex; gap: 6px; margin-bottom: 12px; }
+.site-footer input { flex: 1; min-width: 0; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px; padding: 8px 10px; color: #fff; font-size: 12px; outline: none; }
+.site-footer input::placeholder { color: rgba(255,255,255,.32); }
+.site-footer button.join { background: #fff; color: #070f29; border: none; border-radius: 10px;
+  padding: 0 16px; font-weight: 700; font-size: 12px; cursor: pointer; }
+.site-footer .copy { font-size: 10px; letter-spacing: .06em; color: rgba(255,255,255,.3); }
