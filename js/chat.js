@@ -78,15 +78,14 @@
       '<clipPath id="' + cid + '"><path d="' + SEAL_PATH + '"/></clipPath>' +
       '<linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0">' +
       '<stop offset="0" stop-color="#fff" stop-opacity="0"/>' +
-      '<stop offset="0.5" stop-color="#fff" stop-opacity="0.75"/>' +
+      '<stop offset="0.5" stop-color="#fff" stop-opacity="0.9"/>' +
       '<stop offset="1" stop-color="#fff" stop-opacity="0"/>' +
       '</linearGradient>' +
       '</defs>' +
       '<path class="seal" d="' + SEAL_PATH + '"/>' +
       '<g clip-path="url(#' + cid + ')">' +
-      '<rect x="-10" y="-4" width="7" height="32" fill="url(#' + gid + ')" transform="skewX(-18)">' +
-      '<animateTransform attributeName="transform" type="translate" additive="replace" from="-14 0" to="38 0" dur="3.4s" repeatCount="indefinite"/>' +
-      '</rect></g>' +
+      '<rect class="seal-sheen-rect" x="-9" y="-4" width="9" height="32" fill="url(#' + gid + ')"/>' +
+      '</g>' +
       '<path class="vcheck" d="M8.5 12.3l2.1 2 4.9-5.2" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
       "</svg>";
     return '<span class="chat-verified" title="Verified" aria-label="Verified">' + svg + "</span>";
