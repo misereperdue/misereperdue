@@ -826,12 +826,12 @@
       if (!token) { errDiv.textContent = "Enter the secret."; return; }
       goBtn.textContent = "Loading...";
       goBtn.disabled = true;
-      fetch(CHAT_API + "/api/analytics/stats?token=" + encodeURIComponent(token))
-        .then(function(r) { return r.json().then(function(j) { return { status: r.status, body: j }; }); })
-        .then(function(res) {
-          if (!res.body.ok) throw new Error("unauthorized");
+      // Use api() helper (proven to work in Safari)
+      api("/api/analytics/stats?token=" + encodeURIComponent(token))
+        .then(function(j) {
+          if (!j || !j.ok) throw new Error("unauthorized");
           closeMsgPopup();
-          showAnalyticsDashboard(res.body.stats);
+          showAnalyticsDashboard(j.stats);
         })
         .catch(function(e) {
           goBtn.textContent = "View Stats";
