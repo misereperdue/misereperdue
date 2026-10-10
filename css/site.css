@@ -1351,9 +1351,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0,0,0,.65);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: rgba(0,0,0,.32);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1388,4 +1388,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.msg-popup-meta {
+  margin-top: 12px;
+  font-size: 13px;
+  opacity: .55;
+  text-align: center;
+  font-weight: 500;
 }
