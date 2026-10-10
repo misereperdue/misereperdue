@@ -175,8 +175,8 @@
   tick(); setInterval(tick, 1000);
   var btn = document.getElementById('f4CollapseBtn'), f = document.getElementById('f4Footer');
   btn.addEventListener('click', function(){
-    var c = f.classList.toggle('collapsed');
-    btn.textContent = c ? 'expand' : 'collapse';
+    f.classList.add('collapsed');
+    btn.style.display = 'none'; // one-way: footer returns only on refresh
   });
 })();
 </script>
