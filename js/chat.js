@@ -655,6 +655,9 @@
       if (r && r.messages) r.messages.forEach(addMessage);
       scrollBottom(true);
       scheduleFade();
+      // Re-scroll after images load (layout shifts)
+      setTimeout(function() { window.scrollTo(0, document.documentElement.scrollHeight); }, 800);
+      setTimeout(function() { window.scrollTo(0, document.documentElement.scrollHeight); }, 2000);
     }).catch(function () {});
     connect();
     if (!window.__chatFadeHook) {
@@ -1351,6 +1354,7 @@
         }
         if (o.messages) o.messages.forEach(addMessage);
         scrollBottom(true);
+        setTimeout(function() { window.scrollTo(0, document.documentElement.scrollHeight); }, 800);
       } else if (o.t === "badge" && o.user) {
         if (o.badge) userBadges[o.user] = o.badge; else delete userBadges[o.user];
         var sel = '.chat-msg[data-user="' + o.user + '"]';
