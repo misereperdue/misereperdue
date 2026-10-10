@@ -1241,7 +1241,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-msg.mine .chat-embed-badge { left: -7px; }
 .chat-msg:not(.mine) .chat-embed-badge { right: -7px; }
-.chat-embed-badge img { width: 15px; height: 15px; object-fit: contain; display: block; }
+.chat-embed-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .chat-media { max-width: 220px; max-height: 260px; border-radius: 12px; display: block; }
 .chat-bubble-media .chat-text { padding: 5px 8px 3px; }
 .chat-bubble a { color: inherit; }
