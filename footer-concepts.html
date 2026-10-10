@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Footer Concepts — Misère Perdue</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0f; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; padding: 32px 16px 64px; }
+  h1 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .sub { text-align: center; color: rgba(255,255,255,.5); font-size: 13px; margin-bottom: 32px; }
+  .concept { max-width: 390px; margin: 0 auto 48px; }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,.45); margin-bottom: 12px; }
+  .label span { color: #fff; }
+  .frame { border: 1px solid rgba(255,255,255,.12); border-radius: 18px; overflow: hidden; }
+  .demo-page { height: 120px; background: linear-gradient(180deg, #101024, #070f29); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.25); font-size: 12px; letter-spacing: .1em; }
+
+  /* ===== CONCEPT 1: NOTHING ===== */
+  .f1 { background: #070f29; padding: 40px 24px 28px; text-align: center; }
+  .f1 .brand { font-size: 15px; font-weight: 800; letter-spacing: 0.28em; margin-bottom: 18px; }
+  .f1 .links { display: flex; justify-content: center; gap: 22px; margin-bottom: 22px; }
+  .f1 .links a { color: rgba(255,255,255,.55); text-decoration: none; font-size: 13px; }
+  .f1 .copy { font-size: 11px; color: rgba(255,255,255,.3); }
+
+  /* ===== CONCEPT 2: THE SPLIT ===== */
+  .f2 { display: flex; background: #070f29; }
+  .f2 .half { flex: 1; padding: 28px 20px 24px; }
+  .f2 .half.light { background: #f4f4f6; color: #0a0a0f; }
+  .f2 .half h4 { font-size: 12px; font-weight: 800; letter-spacing: 0.22em; margin-bottom: 14px; }
+  .f2 .half a { display: block; text-decoration: none; font-size: 13px; margin-bottom: 9px; opacity: .65; }
+  .f2 .half.light a { color: #0a0a0f; }
+  .f2 .half.dark a { color: #fff; }
+  .f2 .base { background: #070f29; text-align: center; padding: 16px; font-size: 11px; color: rgba(255,255,255,.3); border-top: 1px solid rgba(255,255,255,.07); }
+
+  /* ===== CONCEPT 3: THE CONGREGATION ===== */
+  .f3 { background: #070f29; padding: 36px 24px 26px; text-align: center; }
+  .f3 .invite { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .f3 .count { font-size: 12px; color: rgba(255,255,255,.45); margin-bottom: 20px; }
+  .f3 .count b { color: #34c759; }
+  .f3 .cta { display: inline-block; background: #fff; color: #070f29; font-weight: 700; font-size: 14px; padding: 12px 34px; border-radius: 999px; text-decoration: none; margin-bottom: 24px; }
+  .f3 .row { display: flex; justify-content: center; gap: 20px; }
+  .f3 .row a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 12px; }
+  .f3 .copy { margin-top: 20px; font-size: 11px; color: rgba(255,255,255,.28); }
+
+  /* ===== CONCEPT 4: THE DROP ===== */
+  .f4 { background: #070f29; padding: 36px 24px 26px; text-align: center; }
+  .f4 .kicker { font-size: 11px; letter-spacing: 0.24em; color: rgba(255,255,255,.4); margin-bottom: 10px; }
+  .f4 .timer { font-size: 34px; font-weight: 800; letter-spacing: 0.04em; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+  .f4 .until { font-size: 12px; color: rgba(255,255,255,.45); margin-bottom: 20px; }
+  .f4 form { display: flex; gap: 8px; margin-bottom: 22px; }
+  .f4 input { flex: 1; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 12px 14px; color: #fff; font-size: 14px; outline: none; }
+  .f4 input::placeholder { color: rgba(255,255,255,.35); }
+  .f4 button { background: #fff; color: #070f29; border: none; border-radius: 12px; padding: 0 20px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .f4 .links { display: flex; justify-content: center; gap: 20px; margin-bottom: 18px; }
+  .f4 .links a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 12px; }
+  .f4 .copy { font-size: 11px; color: rgba(255,255,255,.28); }
+</style>
+</head>
+<body>
+<h1>Footer Concepts</h1>
+<p class="sub">Tap through — tell me which number, or what to steal from each.</p>
+
+<div class="concept">
+  <div class="label"><span>01</span> — Nothing. Just the name.</div>
+  <div class="frame">
+    <div class="demo-page">PAGE CONTENT</div>
+    <footer class="f1">
+      <div class="brand">MISÈRE PERDUE</div>
+      <div class="links"><a href="#">Chat</a><a href="#">Shop</a><a href="#">Instagram</a></div>
+      <div class="copy">© 2026 — Toronto</div>
+    </footer>
+  </div>
+</div>
+
+<div class="concept">
+  <div class="label"><span>02</span> — The Split. Paradis / Misère.</div>
+  <div class="frame">
+    <div class="demo-page">PAGE CONTENT</div>
+    <footer>
+      <div class="f2">
+        <div class="half light"><h4>PARADIS</h4><a href="#">Shop</a><a href="#">Lookbook</a><a href="#">Stockists</a></div>
+        <div class="half dark"><h4>MISÈRE</h4><a href="#">Chat</a><a href="#">Manifesto</a><a href="#">Contact</a></div>
+      </div>
+      <div class="base">© 2026 Misère Perdue — Toronto</div>
+    </footer>
+  </div>
+</div>
+
+<div class="concept">
+  <div class="label"><span>03</span> — The Congregation. Community first.</div>
+  <div class="frame">
+    <div class="demo-page">PAGE CONTENT</div>
+    <footer class="f3">
+      <div class="invite">The chat is where it happens.</div>
+      <div class="count"><b>●</b> 128 lost souls online</div>
+      <a class="cta" href="#">Join the chat</a>
+      <div class="row"><a href="#">Shop</a><a href="#">Instagram</a><a href="#">Contact</a></div>
+      <div class="copy">© 2026 Misère Perdue</div>
+    </footer>
+  </div>
+</div>
+
+<div class="concept">
+  <div class="label"><span>04</span> — The Drop. Countdown + early access.</div>
+  <div class="frame">
+    <div class="demo-page">PAGE CONTENT</div>
+    <footer class="f4">
+      <div class="kicker">NEXT DROP</div>
+      <div class="timer">12 : 47 : 33</div>
+      <div class="until">until the 27th — 27 pieces</div>
+      <form onsubmit="return false"><input type="email" placeholder="Email for early access"><button>Join</button></form>
+      <div class="links"><a href="#">Chat</a><a href="#">Shop</a><a href="#">Instagram</a></div>
+      <div class="copy">© 2026 Misère Perdue — Toronto</div>
+    </footer>
+  </div>
+</div>
+
+</body>
+</html>
