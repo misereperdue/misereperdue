@@ -1329,5 +1329,3 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-size: 15px; font-weight: 600; padding: 10px; cursor: pointer;
 }
 
-/* Minimal copyright — fixed just under the message box */
-.site-copy { position: fixed; bottom: 8px; left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--muted); opacity: .6; padding: 0 16px; pointer-events: none; }
