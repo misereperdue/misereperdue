@@ -1475,3 +1475,17 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-me-logout svg {
   opacity: 1;
 }
+
+/* Dashboard graph bars */
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* Paused chat input state */
+.chat-is-paused .chat-inputbar input:disabled {
+  opacity: .5;
+}
+.chat-is-paused .chat-inputbar {
+  opacity: .7;
+}
