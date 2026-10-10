@@ -1117,7 +1117,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-msgs {
   overflow: visible;
   display: flex; flex-direction: column; gap: 14px;
-  padding: 4px 2px 80px;
+  padding: 4px 2px 24px;
 }
 .chat-msg { display: flex; gap: 9px; align-items: flex-end; max-width: 88%; }
 .chat-msg.mine { align-self: flex-end; max-width: 82%; }
