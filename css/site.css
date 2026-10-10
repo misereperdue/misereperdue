@@ -1397,3 +1397,22 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   text-align: center;
   font-weight: 500;
 }
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.share-btn svg {
+  width: 16px;
+  height: 16px;
+}
