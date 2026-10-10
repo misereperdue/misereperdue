@@ -419,12 +419,12 @@
       '<div class="chat-typing" hidden></div>' +
       '<div class="chat-inputrow">' +
       '<button type="button" class="chat-plus" aria-label="Add photo or video">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
+      SFIcon('plus') +
       "</button>" +
       '<form class="chat-inputbar">' +
       '<input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message">' +
       '<button type="submit" class="chat-send" aria-label="Send">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>' +
+      SFIcon('arrow-up') +
       "</button></form></div>" +
       '<input type="file" class="chat-file" accept="image/*,video/*" hidden>';
 
