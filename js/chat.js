@@ -780,7 +780,7 @@
   }
 
 
-  function showMsgPopup(fullText) {
+  function showMsgPopup(fullText, username, timeStr) {
     closeMsgPopup();
     var ov = document.createElement("div");
     ov.className = "msg-popup";
@@ -790,6 +790,10 @@
     var body = document.createElement("div");
     body.innerHTML = linkify(fullText);
     inner.appendChild(body);
+    var meta = document.createElement("div");
+    meta.className = "msg-popup-meta";
+    meta.textContent = username + (timeStr ? " \u00B7 " + timeStr : "");
+    inner.appendChild(meta);
     var btn = document.createElement("button");
     btn.className = "msg-popup-close";
     btn.textContent = "Close";
@@ -814,10 +818,13 @@
       void tx.offsetHeight;
       if (tx.scrollHeight > tx.clientHeight + 4) {
         var full = tx.textContent;
+        var uname = row.getAttribute("data-user") || "";
+        var tEl = row.querySelector(".chat-time");
+        var tStr = tEl ? tEl.textContent : "";
         var more = document.createElement("span");
         more.className = "chat-more";
         more.textContent = "\u00B7\u00B7\u00B7 more";
-        var open = function(e) { e.stopPropagation(); showMsgPopup(full); };
+        var open = function(e) { e.stopPropagation(); showMsgPopup(full, uname, tStr); };
         more.addEventListener("click", open);
         tx.style.cursor = "pointer";
         tx.addEventListener("click", open);
