@@ -791,13 +791,18 @@
   function openAnalytics() {
     var token = prompt("Owner secret:");
     if (!token) return;
-    fetch("https://misery-chat.freeglory416.workers.dev/api/analytics/stats?token=" + encodeURIComponent(token))
-      .then(function(r) { return r.json(); })
+    fetch(CHAT_API + "/api/analytics/stats?token=" + encodeURIComponent(token))
+      .then(function(r) {
+        if (!r.ok && r.status === 401) throw new Error("unauthorized");
+        return r.json();
+      })
       .then(function(j) {
-        if (!j.ok) { alert("Unauthorized"); return; }
+        if (!j.ok) throw new Error(j.error || "unauthorized");
         showAnalyticsDashboard(j.stats);
       })
-      .catch(function() { alert("Failed to load stats"); });
+      .catch(function(e) {
+        alert(e.message === "unauthorized" ? "Wrong secret. Try again." : "Failed to load stats: " + e.message);
+      });
   }
   function showAnalyticsDashboard(stats) {
     closeMsgPopup();
@@ -1210,6 +1215,13 @@
     meMenu.appendChild(out);
 
     document.body.appendChild(meMenu);
+    // Position below the avatar button
+    var meBtn = root.querySelector(".chat-me");
+    if (meBtn) {
+      var rect = meBtn.getBoundingClientRect();
+      meMenu.style.top = (rect.bottom + 8) + "px";
+      meMenu.style.right = Math.max(8, window.innerWidth - rect.right) + "px";
+    }
     // Close when tapping outside
     setTimeout(function() {
       document.addEventListener("click", closeMeMenu);
