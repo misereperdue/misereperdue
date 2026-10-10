@@ -774,8 +774,58 @@
 
 
     b.appendChild(row);
+    applyMsgClamp(row);
     if (stick) window.scrollTo(0, document.documentElement.scrollHeight);
     scheduleFade();
+  }
+
+
+  function showMsgPopup(fullText) {
+    closeMsgPopup();
+    var ov = document.createElement("div");
+    ov.className = "msg-popup";
+    ov.id = "msg-popup";
+    var inner = document.createElement("div");
+    inner.className = "msg-popup-inner";
+    var body = document.createElement("div");
+    body.innerHTML = linkify(fullText);
+    inner.appendChild(body);
+    var btn = document.createElement("button");
+    btn.className = "msg-popup-close";
+    btn.textContent = "Close";
+    btn.onclick = function(e) { e.stopPropagation(); closeMsgPopup(); };
+    inner.appendChild(btn);
+    ov.appendChild(inner);
+    ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
+    document.body.appendChild(ov);
+  }
+  function closeMsgPopup() {
+    var p = document.getElementById("msg-popup");
+    if (p && p.parentNode) p.parentNode.removeChild(p);
+  }
+  function applyMsgClamp(row) {
+    row.querySelectorAll(".chat-text").forEach(function(tx) {
+      // Skip if already processed
+      if (tx.dataset.clamped) return;
+      tx.dataset.clamped = "1";
+      // Measure: apply clamp, check if content overflows
+      tx.classList.add("clamped");
+      // Force reflow
+      void tx.offsetHeight;
+      if (tx.scrollHeight > tx.clientHeight + 4) {
+        var full = tx.textContent;
+        var more = document.createElement("span");
+        more.className = "chat-more";
+        more.textContent = "\u00B7\u00B7\u00B7 more";
+        var open = function(e) { e.stopPropagation(); showMsgPopup(full); };
+        more.addEventListener("click", open);
+        tx.style.cursor = "pointer";
+        tx.addEventListener("click", open);
+        tx.parentNode.insertBefore(more, tx.nextSibling);
+      } else {
+        tx.classList.remove("clamped");
+      }
+    });
   }
 
   function removeMessage(id) {
