@@ -112,17 +112,9 @@
     if (mb) wrap.insertAdjacentHTML("beforeend", mb);
   }
 
-  var FLAME_USERNAME = "dc"; // flames show above this user's avatar only
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
-    if (username === FLAME_USERNAME) {
-      var fl = document.createElement("span");
-      fl.className = "avatar-flames";
-      fl.setAttribute("aria-hidden", "true");
-      fl.innerHTML = "<i></i><i></i><i></i><i></i>";
-      wrap.appendChild(fl);
-    }
     if (imgV !== undefined && imgV !== null) {
       var im = document.createElement("img");
       im.className = "chat-avatar-img" + (size ? " " + size : "");
