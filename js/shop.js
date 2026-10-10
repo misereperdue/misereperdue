@@ -49,13 +49,40 @@ var MPShop = (function () {
   }
 
   var SHOP_DIAG = "";
+  function cachedProducts() {
+    try {
+      var c = localStorage.getItem("mp_products_cache");
+      if (c) { var list = JSON.parse(c); if (list && list.length) return list; }
+    } catch (e) {}
+    return null;
+  }
+
   function shopifyList(tried) {
     return MPShopify.fetchProducts().then(function (list) {
-      list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
-      return list.length ? list : [PLACEHOLDER];
+      if (list && list.length) {
+        list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
+        try { localStorage.setItem("mp_products_cache", JSON.stringify(list)); } catch (e) {}
+        return list;
+      }
+      // Empty list: retry once, then use cache, then placeholder
+      if (!tried) return shopifyList(true);
+      var cached = cachedProducts();
+      if (cached) {
+        cached.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
+        SHOP_DIAG = "showing cached products";
+        return cached;
+      }
+      return [PLACEHOLDER];
     }).catch(function (e) {
+      if (!tried) return shopifyList(true);
+      var cached = cachedProducts();
+      if (cached) {
+        cached.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
+        SHOP_DIAG = "store unreachable, showing cached";
+        return cached;
+      }
       SHOP_DIAG = "store unreachable (" + (e && e.message ? e.message : "network") + ")";
-      return tried ? [PLACEHOLDER] : shopifyList(true);
+      return [PLACEHOLDER];
     });
   }
 
@@ -119,8 +146,8 @@ var MPShop = (function () {
         }).join("") + "</div>"
       : "";
     var arrows = list.length > 1
-      ? '<button type="button" class="car-btn prev" aria-label="Previous image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>' +
-        '<button type="button" class="car-btn next" aria-label="Next image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>'
+      ? '<button type="button" class="car-btn prev" aria-label="Previous image">' + SFIcon('chevron-left') + '</button>' +
+        '<button type="button" class="car-btn next" aria-label="Next image">' + SFIcon('chevron-right') + '</button>'
       : "";
     return '<div class="carousel"><div class="carousel-track">' + imgs + "</div>" + arrows + dots + "</div>";
   }
