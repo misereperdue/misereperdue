@@ -673,14 +673,6 @@
     return a;
   }
 
-  var BRAND_GLOW = {
-    "music.apple.com": "#fa243c", "open.spotify.com": "#1db954",
-    "youtube.com": "#ff0000", "www.youtube.com": "#ff0000", "youtu.be": "#ff0000",
-    "x.com": "#e7e9ea", "twitter.com": "#1d9bf0",
-    "instagram.com": "#e1306c", "www.instagram.com": "#e1306c",
-    "tiktok.com": "#fe2c55", "www.tiktok.com": "#fe2c55",
-    "soundcloud.com": "#ff5500", "genius.com": "#ffff64", "www.genius.com": "#ffff64"
-  };
   function faviconBadge(embed) {
     if (!embed || !embed.url) return null;
     var host = "";
@@ -688,8 +680,6 @@
     if (!host) return null;
     var s = document.createElement("span");
     s.className = "chat-embed-badge";
-    var glow = BRAND_GLOW[host] || BRAND_GLOW[host.replace(/^www\./, "")];
-    if (glow) s.style.setProperty("--badge-glow", glow);
     var im = document.createElement("img");
     im.src = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64";
     im.alt = "";
