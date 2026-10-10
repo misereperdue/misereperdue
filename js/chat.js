@@ -780,6 +780,52 @@
   }
 
 
+
+  /* ---------- Analytics Dashboard (owner only) ---------- */
+  function openAnalytics() {
+    var token = prompt("Owner secret:");
+    if (!token) return;
+    fetch("https://misery-chat.freeglory416.workers.dev/api/analytics/stats?token=" + encodeURIComponent(token))
+      .then(function(r) { return r.json(); })
+      .then(function(j) {
+        if (!j.ok) { alert("Unauthorized"); return; }
+        showAnalyticsDashboard(j.stats);
+      })
+      .catch(function() { alert("Failed to load stats"); });
+  }
+  function showAnalyticsDashboard(stats) {
+    closeMsgPopup();
+    var ov = document.createElement("div");
+    ov.className = "msg-popup";
+    ov.id = "msg-popup";
+    var inner = document.createElement("div");
+    inner.className = "msg-popup-inner";
+    inner.style.maxWidth = "min(480px, 94vw)";
+    var html = '<h3 style="margin:0 0 12px;font-size:18px;">Analytics — Last 7 Days</h3>';
+    html += '<div style="display:flex;gap:12px;margin-bottom:16px;">';
+    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalViews + '</div><div style="font-size:12px;opacity:.6;">Views</div></div>';
+    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalVisitors + '</div><div style="font-size:12px;opacity:.6;">Visitors</div></div>';
+    html += '<div style="flex:1;text-align:center;"><div style="font-size:24px;font-weight:700;">' + stats.totalMessages + '</div><div style="font-size:12px;opacity:.6;">Messages</div></div>';
+    html += '</div>';
+    html += '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
+    html += '<tr style="opacity:.6;"><th style="text-align:left;padding:4px;">Date</th><th style="text-align:right;padding:4px;">Views</th><th style="text-align:right;padding:4px;">Visitors</th><th style="text-align:right;padding:4px;">Msgs</th></tr>';
+    stats.days.forEach(function(d) {
+      html += '<tr style="border-top:1px solid rgba(255,255,255,.08);"><td style="padding:6px 4px;">' + d.date + '</td><td style="text-align:right;padding:6px 4px;">' + d.views + '</td><td style="text-align:right;padding:6px 4px;">' + d.visitors + '</td><td style="text-align:right;padding:6px 4px;">' + d.messages + '</td></tr>';
+    });
+    html += '</table>';
+    inner.innerHTML = html;
+    var btn = document.createElement("button");
+    btn.className = "msg-popup-close";
+    btn.textContent = "Close";
+    btn.onclick = function(e) { e.stopPropagation(); closeMsgPopup(); };
+    inner.appendChild(btn);
+    ov.appendChild(inner);
+    ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
+    document.body.appendChild(ov);
+  }
+  // Expose globally for console access
+  window.openAnalytics = openAnalytics;
+
   function showMsgPopup(fullText, username, timeStr) {
     closeMsgPopup();
     var ov = document.createElement("div");
@@ -842,6 +888,7 @@
   }
 
   function send(text, media) {
+    if (window.haptic) window.haptic(15);
     var payload = { t: "send", text: text };
     if (media) payload.media = media;
     if (ws && ws.readyState === 1) {
