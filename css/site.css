@@ -1110,7 +1110,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   display: flex; flex-direction: column; gap: 14px;
   padding: 4px 2px 12px;
 }
-.chat-msg { display: flex; gap: 9px; align-items: center; max-width: 88%; }
+.chat-msg { display: flex; gap: 9px; align-items: flex-end; max-width: 88%; }
 .chat-msg.mine { align-self: flex-end; max-width: 82%; }
 .chat-msg-main { min-width: 0; }
 .chat-msg-head { display: flex; align-items: baseline; gap: 7px; margin-bottom: 3px; padding-left: 2px; }
