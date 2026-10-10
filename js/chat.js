@@ -84,16 +84,22 @@
     return sealHTML();
   }
   var userBadges = {};
+  function canShowBadge(username, badgeId) {
+    if (badgeId === "robot" && username !== "grim") return false;
+    return true;
+  }
   function effectiveActive(u) {
     if (!u) return null;
     return u.activeBadge || (u.verified ? "verified" : null);
   }
   function badgeFor(u) {
     var b = effectiveActive(u);
+    if (b && !canShowBadge(u.username, b)) return "";
     return b ? badgeHTML(b) : "";
   }
   function msgBadge(m) {
     var b = (m.user && userBadges[m.user]) || m.badge || (m.verified ? "verified" : null);
+    if (b && !canShowBadge(m.user, b)) return "";
     return b ? badgeHTML(b) : "";
   }
   function refreshRowBadge(row, username) {
@@ -178,6 +184,7 @@
         var vRow = document.createElement("div");
         vRow.className = "chat-badge-row";
         u.badges.forEach(function (bid) {
+          if (!canShowBadge(u.username, bid)) return;
           var vb = document.createElement("span");
           vb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "");
           vb.innerHTML = badgeHTML(bid);
