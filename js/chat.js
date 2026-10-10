@@ -789,58 +789,30 @@
 
   /* ---------- Analytics Dashboard (owner only) ---------- */
   function openAnalytics() {
-    closeMsgPopup();
-    var ov = document.createElement("div");
-    ov.className = "msg-popup";
-    ov.id = "msg-popup";
-    var inner = document.createElement("div");
-    inner.className = "msg-popup-inner";
-    inner.innerHTML = '<h3 style="margin:0 0 12px;font-size:17px;">Analytics</h3>' +
-      '<p style="font-size:14px;opacity:.7;margin:0 0 12px;">Enter owner secret:</p>';
-    var inp = document.createElement("input");
-    inp.type = "password";
-    inp.placeholder = "Owner secret";
-    inp.style.cssText = "width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:16px;margin-bottom:12px;box-sizing:border-box;";
-    inner.appendChild(inp);
-    var errDiv = document.createElement("div");
-    errDiv.style.cssText = "color:#ff6b6b;font-size:13px;min-height:18px;margin-bottom:8px;";
-    inner.appendChild(errDiv);
-    var goBtn = document.createElement("button");
-    goBtn.className = "msg-popup-close";
-    goBtn.textContent = "View Stats";
-    goBtn.style.marginTop = "4px";
-    inner.appendChild(goBtn);
-    var cancelBtn = document.createElement("button");
-    cancelBtn.className = "msg-popup-close";
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.style.background = "transparent";
-    cancelBtn.style.marginTop = "8px";
-    cancelBtn.onclick = function() { closeMsgPopup(); };
-    inner.appendChild(cancelBtn);
-    ov.appendChild(inner);
-    ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
-    document.body.appendChild(ov);
-    setTimeout(function() { inp.focus(); }, 100);
-    function doFetch() {
-      var token = inp.value.trim();
-      if (!token) { errDiv.textContent = "Enter the secret."; return; }
-      goBtn.textContent = "Loading...";
-      goBtn.disabled = true;
-      // Use api() helper (proven to work in Safari)
-      api("/api/analytics/stats?token=" + encodeURIComponent(token))
-        .then(function(j) {
-          if (!j || !j.ok) throw new Error("unauthorized");
-          closeMsgPopup();
-          showAnalyticsDashboard(j.stats);
-        })
-        .catch(function(e) {
-          goBtn.textContent = "View Stats";
-          goBtn.disabled = false;
-          errDiv.textContent = e.message === "unauthorized" ? "Wrong secret. Try again." : "Couldn't reach server. Check connection.";
-        });
-    }
-    goBtn.onclick = doFetch;
-    inp.addEventListener("keydown", function(e) { if (e.key === "Enter") doFetch(); });
+    // Owner is already logged in — api() sends the auth token, no secret needed
+    api("/api/analytics/stats")
+      .then(function(j) {
+        if (!j || !j.ok) throw new Error("unauthorized");
+        showAnalyticsDashboard(j.stats);
+      })
+      .catch(function() {
+        // Fallback: show error in a simple popup
+        closeMsgPopup();
+        var ov = document.createElement("div");
+        ov.className = "msg-popup";
+        ov.id = "msg-popup";
+        var inner = document.createElement("div");
+        inner.className = "msg-popup-inner";
+        inner.innerHTML = '<p style="font-size:15px;margin:0 0 16px;">Couldn\'t load analytics. Try again.</p>';
+        var btn = document.createElement("button");
+        btn.className = "msg-popup-close";
+        btn.textContent = "Close";
+        btn.onclick = function() { closeMsgPopup(); };
+        inner.appendChild(btn);
+        ov.appendChild(inner);
+        ov.onclick = function(e) { if (e.target === ov) closeMsgPopup(); };
+        document.body.appendChild(ov);
+      });
   }
   function showAnalyticsDashboard(stats) {
     closeMsgPopup();
