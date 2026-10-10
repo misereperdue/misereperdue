@@ -229,14 +229,14 @@ button, input, textarea { font-family: inherit; color: inherit; }
 }
 
 .hero {
-  position: relative;
-  height: 52vw;
-  min-height: 230px;
-  max-height: 360px;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1;
+  height: calc(140px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: var(--bg);
-  margin-top: calc(env(safe-area-inset-top, 0px) * -1);
 }
+body { padding-top: calc(140px + env(safe-area-inset-top, 0px)); }
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
