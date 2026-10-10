@@ -977,11 +977,21 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* header */
 .chat-head {
-  position: sticky; top: 96px; z-index: 6;
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 82px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 32px));
+  z-index: 29;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 2px 18px;
-  margin-bottom: -6px;
-  background: linear-gradient(to bottom, var(--bg) 65%, transparent);
+  margin: 0;
+  padding: 10px 16px 12px;
+  background: rgba(18, 18, 26, 0.6);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border: var(--glass-hairline);
+  border-radius: 20px;
+  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-online { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; vertical-align: middle; }
