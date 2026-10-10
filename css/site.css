@@ -988,7 +988,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   background: linear-gradient(to bottom, transparent 0%, var(--bg) 14%, var(--bg) 58%, transparent 100%);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
-.chat-title::after { content: " v142"; color: #ff3b30; font-size: 12px; font-weight: 400; }
 .chat-online { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; vertical-align: middle; }
 .chat-online[hidden] { display: none; }
 .chat-online-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; display: inline-block; animation: chat-pulse 2s ease-in-out infinite; }
