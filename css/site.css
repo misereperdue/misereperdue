@@ -984,7 +984,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   margin-top: -120px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 2px 26px;
-  margin-bottom: -6px;
+  margin-bottom: -24px;
   background: linear-gradient(to bottom, transparent 0%, var(--bg) 22%);
 }
 .chat-head::after {
