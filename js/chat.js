@@ -792,18 +792,18 @@
     // Owner is already logged in — api() sends the auth token, no secret needed
     api("/api/analytics/stats")
       .then(function(j) {
-        if (!j || !j.ok) throw new Error("unauthorized");
+        if (!j || !j.ok) throw new Error("unauthorized: " + JSON.stringify(j));
         showAnalyticsDashboard(j.stats);
       })
-      .catch(function() {
-        // Fallback: show error in a simple popup
+      .catch(function(e) {
+        // Fallback: show error in a simple popup (with debug info)
         closeMsgPopup();
         var ov = document.createElement("div");
         ov.className = "msg-popup";
         ov.id = "msg-popup";
         var inner = document.createElement("div");
         inner.className = "msg-popup-inner";
-        inner.innerHTML = '<p style="font-size:15px;margin:0 0 16px;">Couldn\'t load analytics. Try again.</p>';
+        inner.innerHTML = '<p style="font-size:15px;margin:0 0 8px;">Couldn\'t load analytics.</p><p style="font-size:12px;opacity:.6;margin:0 0 16px;word-break:break-all;">' + String(e.message || e).substring(0, 200) + '</p>';
         var btn = document.createElement("button");
         btn.className = "msg-popup-close";
         btn.textContent = "Close";
