@@ -981,9 +981,14 @@
   }
   setInterval(function () {
     if (!token || !me) return;
-    // 3s when tab is visible, 10s when hidden (saves Cloudflare quota)
-    if (!document.hidden) safetyTick();
+    // Fast catch-up only while WS is down; when WS is healthy the slow net below suffices.
+    if (!document.hidden && (!ws || ws.readyState !== 1)) safetyTick();
   }, 3000);
+  setInterval(function () {
+    if (!token || !me || document.hidden) return;
+    // Slow safety net while WS looks healthy (catches zombie connections). Saves Cloudflare quota.
+    if (ws && ws.readyState === 1) safetyTick();
+  }, 60000);
   setInterval(function () {
     if (token && me && document.hidden) safetyTick();
   }, 10000);
