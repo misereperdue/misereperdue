@@ -176,6 +176,19 @@
         bv.textContent = u.bio;
         sheet.appendChild(bv);
       }
+      // Analytics button (owner viewing own profile)
+      if (me && me.owner && u.username === me.username) {
+        var anBtn = document.createElement("button");
+        anBtn.type = "button";
+        anBtn.className = "share-btn";
+        anBtn.style.marginTop = "12px";
+        anBtn.textContent = "View Analytics";
+        anBtn.addEventListener("click", function() {
+          closeProfile();
+          if (window.openAnalytics) window.openAnalytics();
+        });
+        sheet.appendChild(anBtn);
+      }
       var adminView = !!(me && me.owner && u.username !== me.username);
       if (!adminView && u.badges && u.badges.length) {
         var vTitle = document.createElement("div");
