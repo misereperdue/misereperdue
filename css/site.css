@@ -980,12 +980,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* header */
 .chat-head {
-  position: sticky; top: calc(var(--hero-h) - 80px); z-index: 6;
-  margin-top: -80px;
+  position: sticky; top: calc(var(--hero-h) - 120px); z-index: 6;
+  margin-top: -120px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 2px 18px;
   margin-bottom: -6px;
-  background: linear-gradient(to bottom, var(--bg) 65%, transparent);
+  background: linear-gradient(to bottom, transparent 0%, var(--bg) 45%);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-online { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; vertical-align: middle; }
