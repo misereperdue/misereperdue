@@ -24,7 +24,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=175">
+  <link rel="stylesheet" href="css/site.css?v=176">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -40,18 +40,18 @@
   <div class="nav-wrap">
     <nav class="nav" id="nav" aria-label="Main">
       <span class="seg" aria-hidden="true"></span>
-      <button type="button" class="on" data-view="journal" aria-label="Chat"><span data-sf="message" data-sf-class="mark"></span></button>
+      <button type="button" class="on" data-view="journal" aria-label="Chat"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg></button>
       <button type="button" data-view="shop" aria-label="Store">
-        <span data-sf="bag" data-sf-class="mark"></span>
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
       </button>
       <button type="button" data-view="cart" aria-label="Bag" id="cart-btn" class="cart-btn hidden">
-        <span data-sf="cart" data-sf-class="mark"></span>
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg>
         <span class="badge hidden" id="cart-badge" aria-hidden="true">0</span>
       </button>
       <span class="split" aria-hidden="true"></span>
       <button type="button" class="page-btn" data-view="post" aria-label="Post" id="post-btn">
-        <span data-sf="square-and-pencil" data-sf-class="mark ic-post"></span>
-        <span data-sf="bag" data-sf-class="mark ic-bag"></span>
+        <svg class="mark ic-post" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.2 4.8l5 5L9.4 19.6 4.5 20l.4-4.9z"/><path d="M12.6 6.4l5 5"/></svg>
+        <svg class="mark ic-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg>
         <span class="badge hidden" id="post-badge" aria-hidden="true">0</span>
       </button>
     </nav>
@@ -87,9 +87,8 @@
   <script src="js/store.js?v=6"></script>
   <script src="js/shopify.js?v=8"></script>
   <script src="js/comments.js?v=11"></script>
-  <script src="js/sf-icons.js?v=2"></script>
-  <script src="js/shop.js?v=25"></script>
-  <script src="js/chat.js?v=52"></script>
+  <script src="js/shop.js?v=26"></script>
+  <script src="js/chat.js?v=53"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -262,7 +261,7 @@
         '<a class="share" href="' + share + '" target="_blank" rel="noopener">' + X_SVG + "Share on X</a>" +
         '<span class="split"></span>' +
         '<button type="button" class="share" id="copy-url">' +
-        '<span data-sf="link"></span>Copy link</button>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1l-.8.8"/><path d="M14 11a5 5 0 0 0-7.1-.1l-1.4 1.4a5 5 0 0 0 7.1 7.1l.8-.8"/></svg>Copy link</button>' +
         '</div><section class="comments"><div class="comment-list" id="comment-list"><div class="lg-spin-wrap"><span class="lg-spin" role="status" aria-label="Loading comments"></span></div></div>' +
         '<form class="stack comment-form" id="comment-form">' +
         '<div class="replying-to hidden" id="replying-to"><span>Replying to <strong id="replying-to-name"></strong></span><button type="button" id="cancel-reply" aria-label="Cancel reply">×</button></div>' +
