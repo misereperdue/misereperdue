@@ -856,9 +856,9 @@
     // Metric toggle
     var toggleRow = document.createElement("div");
     toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
-    var currentMetric = "messages";
+    var currentMetric = "views";
     var metricBtns = {};
-    ["messages", "views", "visitors"].forEach(function(metric) {
+    ["views", "visitors", "messages"].forEach(function(metric) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = metric.charAt(0).toUpperCase() + metric.slice(1);
@@ -920,6 +920,55 @@
     }
     // Draw after layout
     setTimeout(drawGraph, 50);
+
+    // Newest users section
+    var usersTitle = document.createElement("div");
+    usersTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
+    usersTitle.textContent = "Newest Users";
+    inner.appendChild(usersTitle);
+    var usersWrap = document.createElement("div");
+    usersWrap.style.cssText = "margin-bottom:20px;";
+    usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Loading...</div>';
+    inner.appendChild(usersWrap);
+    api("/api/users/recent").then(function(r) {
+      if (!r || !r.ok || !r.users) {
+        usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>';
+        return;
+      }
+      usersWrap.innerHTML = "";
+      r.users.forEach(function(u) {
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);";
+        // Avatar
+        var avWrap = document.createElement("div");
+        avWrap.style.cssText = "width:36px;height:36px;flex:none;";
+        avWrap.appendChild(avatarNode(u.username, u.avatar, "sm", u.hasAvatarImg ? u.avatarV : undefined));
+        row.appendChild(avWrap);
+        // Name + date
+        var info = document.createElement("div");
+        info.style.cssText = "flex:1;min-width:0;";
+        var nm = document.createElement("div");
+        nm.style.cssText = "font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+        nm.textContent = u.username;
+        info.appendChild(nm);
+        var dt = document.createElement("div");
+        dt.style.cssText = "font-size:12px;opacity:.5;";
+        dt.textContent = "Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        info.appendChild(dt);
+        row.appendChild(info);
+        // Points
+        var pts = document.createElement("div");
+        pts.style.cssText = "font-size:13px;opacity:.6;flex:none;";
+        pts.textContent = "★ " + (u.points || 0);
+        row.appendChild(pts);
+        usersWrap.appendChild(row);
+      });
+      if (!r.users.length) {
+        usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">No users yet.</div>';
+      }
+    }).catch(function() {
+      usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>';
+    });
 
     // Action buttons
     var btnRow = document.createElement("div");
@@ -1368,7 +1417,8 @@
     prof.addEventListener("click", function(e) {
       e.stopPropagation();
       closeMeMenu();
-      openProfile();
+      // Small delay lets the menu fade before the sheet slides in
+      setTimeout(function() { openProfile(true); }, 120);
     });
     meMenu.appendChild(prof);
 
@@ -1419,7 +1469,16 @@
     closeMeMenu();
     renderAuth();
   }
-  function openProfile() {
+  function openProfile(animate) {
+    if (animate) {
+      // Add entrance animation class after sheet is created
+      setTimeout(function() {
+        var sheet = document.querySelector(".chat-user-sheet");
+        var back = document.querySelector(".chat-sheet-backdrop");
+        if (sheet) sheet.classList.add("sheet-enter");
+        if (back) back.classList.add("backdrop-enter");
+      }, 10);
+    }
     closeProfile();
     var back = document.createElement("div");
     back.className = "chat-sheet-backdrop";
