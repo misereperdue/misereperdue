@@ -7,6 +7,12 @@
 
   // SF Symbol SVG paths (24x24 viewBox, matching Apple's designs)
   var ICONS = {
+    // message - Chat bubble, outline
+    "message": '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    // bag - Shopping bag, outline
+    "bag": '<path d="M6 7V6a6 6 0 1 1 12 0v1h3a1 1 0 0 1 1 1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a1 1 0 0 1 1-1h3zm2 0h8V6a4 4 0 1 0-8 0v1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    // cart - Shopping cart, outline
+    "cart": '<path d="M2.5 4h2.2l2.3 10.5a1 1 0 0 0 1 .8h7.9a1 1 0 0 0 1-.8L19.5 8H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9.5" cy="19.5" r="1.3" fill="currentColor"/><circle cx="16.5" cy="19.5" r="1.3" fill="currentColor"/>',
     // message.fill - Chat bubble, filled
     "message-fill": '<path d="M12 3C6.48 3 2 6.92 2 11.75c0 2.63 1.32 4.99 3.4 6.56-.14 1.18-.77 3.08-2.04 4.19-.28.25-.14.72.22.72.64 0 2.6-.8 4.06-1.78.93.26 1.93.4 2.96.4 5.52 0 10-3.92 10-8.75S17.52 3 12 3z"/>',
 
