@@ -1331,3 +1331,16 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-size: 15px; font-weight: 600; padding: 10px; cursor: pointer;
 }
 
+
+/* SF Symbols icon set */
+.sf-icon {
+  width: 1.25em;
+  height: 1.25em;
+  display: inline-block;
+  vertical-align: -0.25em;
+  flex: none;
+}
+.sf-icon.mark {
+  width: 22px;
+  height: 22px;
+}
