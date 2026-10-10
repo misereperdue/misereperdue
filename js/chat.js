@@ -408,7 +408,7 @@
     seen = {};
     lastTs = 0;
     root.innerHTML =
-      '<div class="chat-head">' +
+      '<div class="chat-head lg-glass" data-liquid-glass=\'{"strength":0.08}\'>' +
       '<div class="chat-title">Chat <span class="chat-online" hidden><span class="chat-online-dot"></span><span class="chat-online-num"></span></span></div>' +
       '<div class="chat-head-right">' +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num">0</span></span>' +
@@ -417,7 +417,7 @@
       '<div class="chat-msgs" aria-live="polite"></div>' +
       '<div class="chat-attach" hidden></div>' +
       '<div class="chat-typing" hidden></div>' +
-      '<div class="chat-inputrow">' +
+      '<div class="chat-inputrow lg-glass" data-liquid-glass=\'{"strength":0.08}\'>' +
       '<button type="button" class="chat-plus" aria-label="Add photo or video">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
       "</button>" +
