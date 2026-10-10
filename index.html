@@ -24,7 +24,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=146">
+  <link rel="stylesheet" href="css/site.css?v=147">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -120,6 +120,7 @@
       var onProduct = current.type === "product";
       var onPost = current.type === "post";
       var n = MP.cartCount();
+      // the bag always lives in the sectioned area; on product pages the sectioned slot becomes the bag
       var bagMode = onProduct && n > 0;
       var showPencil = bagMode || onPost;
       var showSplit = bagMode || onPost || n > 0;
@@ -131,11 +132,13 @@
         badge.classList.toggle("hidden", !bagMode || n === 0);
         badge.textContent = n > 99 ? "99+" : String(n);
       }
+      // the sectioned bag replaces the regular cart tab on product pages
       if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
     }
     function show(view, id) {
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
+      // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
       document.getElementById("journal").classList.toggle("on", view === "journal");
       document.getElementById("shop").classList.toggle("on", view === "shop");
@@ -186,6 +189,7 @@
       saveDefaultHero();
       var h = document.querySelector("header.hero");
       if (!h || h.getAttribute("data-custom") !== "1") return;
+      // Crossfade back to default
       var layer = document.createElement("div");
       layer.className = "hero-cross";
       layer.innerHTML = defaultHeroHTML;
@@ -203,6 +207,7 @@
       var h = document.querySelector("header.hero");
       if (!h) return;
       if (!url) { restoreHero(); return; }
+      // Crossfade: layer new header over old, fade in, then clean up
       var isV = /\.(mp4|webm|mov)(\?|$)/i.test(url);
       var layer = document.createElement("div");
       layer.className = "hero-cross";
@@ -278,24 +283,105 @@
       var m;
       if ((m = h.match(/^#post\/(.+)$/))) {
         var slug = decodeURIComponent(m[1]);
+        // Posts load async; openPost handles missing gracefully, retry after load
         if (posts && posts.length) openPost(slug);
-        else setTimeout(function () { openPost(slug); }, 600);
-      } else if (h === "#shop") show("shop");
-      else if (h === "#cart") show("cart");
-      else if ((m = h.match(/^#product\/(.+)$/))) {
-        show("product", decodeURIComponent(m[1]));
-      } else show("journal");
+        else {
+          var iv = setInterval(function () {
+            if (posts && posts.length) { clearInterval(iv); openPost(slug); }
+          }, 200);
+          setTimeout(function () { clearInterval(iv); }, 8000);
+        }
+        return true;
+      }
+      if ((m = h.match(/^#product\/(.+)$/))) {
+        var pid = decodeURIComponent(m[1]);
+        var tryOpen = function () {
+          if (window.MPShop && MPShop.openProduct) MPShop.openProduct(pid);
+        };
+        tryOpen();
+        // Retry once products load (Shopify fetch is async)
+        var iv = setInterval(function () {
+          if (window.MP && MP.PRODUCTS && MP.PRODUCTS[pid]) { clearInterval(iv); tryOpen(); }
+        }, 500);
+        setTimeout(function () { clearInterval(iv); }, 8000);
+        return true;
+      }
+      if (h === "#shop") { show("shop"); return true; }
+      if (h === "#cart") { show("cart"); return true; }
+      if (h === "#journal" || h === "#") { show("journal"); return true; }
+      return false;
     }
-    window.addEventListener("hashchange", routeFromHash);
     routeFromHash();
+    window.addEventListener("hashchange", routeFromHash);
 
-    function loadPosts() {
-      fetch("https://misery-chat.freeglory416.workers.dev/api/posts").then(function (r) { return r.json(); }).then(function (data) {
-        posts = (data && data.posts) || [];
-        if (current.type === "post" && current.id) openPost(current.id);
-      }).catch(function () {});
+    function tagDropdown(tags) {
+      if (!tags || !tags.length) return "";
+      if (tags.length <= 3) {
+        return '<div class="ptags">' + tags.map(function (t) {
+          return '<span class="ptag">' + esc(t) + "</span>";
+        }).join("") + "</div>";
+      }
+      return '<div class="tagwrap"><button type="button" class="tagdrop" id="tagdrop">' +
+        esc(tags.length + " Tags") + ' <span class="chev">▾</span></button>' +
+        '<div class="tagmenu hidden" id="tagmenu">' +
+        tags.map(function (t) {
+          return '<span class="tagitem">' + esc(t) + "</span>";
+        }).join("") + "</div></div>";
     }
-    loadPosts();
+    function wireTagDropdown() {
+      var drop = document.getElementById("tagdrop");
+      var menu = document.getElementById("tagmenu");
+      if (!drop || !menu) return;
+      drop.onclick = function (e) {
+        e.stopPropagation();
+        menu.classList.toggle("hidden");
+        drop.querySelector(".chev").textContent = menu.classList.contains("hidden") ? "▾" : "▴";
+      };
+      document.addEventListener("click", function () {
+        if (!menu.classList.contains("hidden")) {
+          menu.classList.add("hidden");
+          drop.querySelector(".chev").textContent = "▾";
+        }
+      });
+    }
+    function renderFeed(list) {
+      var feed = document.getElementById("feed");
+      if (!feed) return;
+      feed.innerHTML = "";
+      list.forEach(function (post) {
+        var slug = post.slug || post._id;
+        var date = (post.publishedAt || "").slice(0, 10);
+        var author = post.author || "dc";
+        var a = document.createElement("a");
+        a.className = "card";
+        a.href = "#post/" + slug;
+        a.innerHTML = byline(author, date) + "<h2>" + esc(post.title || "Untitled") + "</h2><p>" +
+          esc(post.excerpt || SanityBlog.textFrom(post.body)[0] || "") + "</p>";
+        a.onclick = function (e) { e.preventDefault(); openPost(slug); };
+        feed.appendChild(a);
+      });
+    }
+    SanityBlog.loadPosts().then(function (list) {
+      posts = list;
+      renderFeed(posts);
+    });
+
+    MPShop.updateCartBadge();
   </script>
+<script>
+(function(){
+  var badges = {
+    shopify: "images/pay-shopify.png.b64",
+    paypal: "images/pay-paypal.png.b64",
+    visa: "images/pay-visa.png.b64"
+  };
+  Object.keys(badges).forEach(function(k){
+    fetch(badges[k]).then(function(r){ return r.text(); }).then(function(b){
+      var el = document.querySelector('img[data-paybadge="' + k + '"]');
+      if (el && b.trim()) el.src = "data:image/png;base64," + b.trim();
+    }).catch(function(){});
+  });
+})();
+</script>
 </body>
 </html>
