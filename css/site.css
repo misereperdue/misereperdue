@@ -1117,7 +1117,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-msgs {
   overflow: visible;
   display: flex; flex-direction: column; gap: 14px;
-  padding: 4px 2px 96px;
+  padding: 4px 2px 80px;
 }
 .chat-msg { display: flex; gap: 9px; align-items: flex-end; max-width: 88%; }
 .chat-msg.mine { align-self: flex-end; max-width: 82%; }
@@ -1330,4 +1330,4 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 /* Minimal copyright — fixed just under the message box */
-.site-copy { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 5px); left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--muted); opacity: .6; padding: 0 16px; pointer-events: none; }
+.site-copy { position: fixed; bottom: 8px; left: 0; right: 0; z-index: 50; text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--muted); opacity: .6; padding: 0 16px; pointer-events: none; }
