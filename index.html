@@ -24,7 +24,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=149">
+  <link rel="stylesheet" href="css/site.css?v=150">
   <script src="js/theme.js?v=7"></script>
 </head>
 <body class="home">
@@ -135,7 +135,11 @@
       // the sectioned bag replaces the regular cart tab on product pages
       if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
     }
+    var viewScroll = {};
     function show(view, id) {
+      // Save scroll position before leaving the current view
+      var prevType = current.type === "product" ? "shop" : current.type;
+      if (prevType) viewScroll[prevType] = window.scrollY;
       current = { type: view, id: id || "" };
       var reading = view === "post" || view === "product";
       // Restore default site hero when not viewing a post with custom header
@@ -153,6 +157,17 @@
         b.classList.toggle("on", active);
       });
       if (reading) window.scrollTo(0, 0);
+      // Restore saved scroll position when returning to a view
+      if (!reading) {
+        var restoreKey = view === "product" ? "shop" : view;
+        requestAnimationFrame(function() {
+          if (viewScroll[restoreKey] !== undefined) {
+            window.scrollTo(0, viewScroll[restoreKey]);
+          } else if (view === "journal") {
+            window.scrollTo(0, document.documentElement.scrollHeight);
+          }
+        });
+      }
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
       refreshSeg();
