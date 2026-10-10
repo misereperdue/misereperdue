@@ -66,14 +66,30 @@
     }).then(function (r) { return r.json(); });
   }
 
-  /* Verified seal — same artwork as comments (theme colors come from CSS). */
-  var SEAL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-    '<path class="seal" d="M22.1 12.0L21.7 12.9L21.0 13.6L20.3 14.2L20.0 14.9L20.1 15.8L20.4 16.8L20.2 17.8L19.6 18.3L18.5 18.5L17.6 18.6L16.9 18.9L16.4 19.7L16.0 20.6L15.4 21.4L14.6 21.6L13.6 21.2L12.8 20.7L12.0 20.4L11.2 20.7L10.4 21.2L9.4 21.6L8.6 21.4L8.0 20.6L7.6 19.7L7.1 18.9L6.4 18.6L5.5 18.5L4.4 18.3L3.8 17.8L3.6 16.8L3.9 15.8L4.0 14.9L3.7 14.2L3.0 13.6L2.3 12.9L1.9 12.0L2.3 11.1L3.0 10.4L3.7 9.8L4.0 9.1L3.9 8.2L3.6 7.2L3.8 6.2L4.4 5.7L5.5 5.5L6.4 5.4L7.1 5.1L7.6 4.3L8.0 3.4L8.6 2.6L9.4 2.4L10.4 2.8L11.2 3.3L12.0 3.6L12.8 3.3L13.6 2.8L14.6 2.4L15.4 2.6L16.0 3.4L16.4 4.3L16.9 5.1L17.6 5.4L18.5 5.5L19.6 5.7L20.2 6.2L20.4 7.2L20.1 8.2L20.0 9.1L20.3 9.8L21.0 10.4L21.7 11.1Z"/>' +
-    '<path class="vcheck" d="M8.5 12.3l2.1 2 4.9-5.2" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
-    "</svg>";
-
+  /* Verified seal — same artwork as comments (theme colors come from CSS).
+     Sheen is clipped to the seal path via clipPath so it masks perfectly. */
+  var sealUID = 0;
+  var SEAL_PATH = "M22.1 12.0L21.7 12.9L21.0 13.6L20.3 14.2L20.0 14.9L20.1 15.8L20.4 16.8L20.2 17.8L19.6 18.3L18.5 18.5L17.6 18.6L16.9 18.9L16.4 19.7L16.0 20.6L15.4 21.4L14.6 21.6L13.6 21.2L12.8 20.7L12.0 20.4L11.2 20.7L10.4 21.2L9.4 21.6L8.6 21.4L8.0 20.6L7.6 19.7L7.1 18.9L6.4 18.6L5.5 18.5L4.4 18.3L3.8 17.8L3.6 16.8L3.9 15.8L4.0 14.9L3.7 14.2L3.0 13.6L2.3 12.9L1.9 12.0L2.3 11.1L3.0 10.4L3.7 9.8L4.0 9.1L3.9 8.2L3.6 7.2L3.8 6.2L4.4 5.7L5.5 5.5L6.4 5.4L7.1 5.1L7.6 4.3L8.0 3.4L8.6 2.6L9.4 2.4L10.4 2.8L11.2 3.3L12.0 3.6L12.8 3.3L13.6 2.8L14.6 2.4L15.4 2.6L16.0 3.4L16.4 4.3L16.9 5.1L17.6 5.4L18.5 5.5L19.6 5.7L20.2 6.2L20.4 7.2L20.1 8.2L20.0 9.1L20.3 9.8L21.0 10.4L21.7 11.1Z";
   function sealHTML() {
-    return '<span class="chat-verified" title="Verified" aria-label="Verified">' + SEAL_SVG + "</span>";
+    sealUID++;
+    var cid = "sealclip" + sealUID, gid = "sealsheen" + sealUID;
+    var svg = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<defs>' +
+      '<clipPath id="' + cid + '"><path d="' + SEAL_PATH + '"/></clipPath>' +
+      '<linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0" stop-color="#fff" stop-opacity="0"/>' +
+      '<stop offset="0.5" stop-color="#fff" stop-opacity="0.75"/>' +
+      '<stop offset="1" stop-color="#fff" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '</defs>' +
+      '<path class="seal" d="' + SEAL_PATH + '"/>' +
+      '<g clip-path="url(#' + cid + ')">' +
+      '<rect x="-10" y="-4" width="7" height="32" fill="url(#' + gid + ')" transform="skewX(-18)">' +
+      '<animateTransform attributeName="transform" type="translate" additive="replace" from="-14 0" to="38 0" dur="3.4s" repeatCount="indefinite"/>' +
+      '</rect></g>' +
+      '<path class="vcheck" d="M8.5 12.3l2.1 2 4.9-5.2" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+      "</svg>";
+    return '<span class="chat-verified" title="Verified" aria-label="Verified">' + svg + "</span>";
   }
 
   /* Badges: "verified" = seal, "100" = \u{1F4AF}, "heart" = theme-adaptive heart, "robot" = bot. */
@@ -672,6 +688,14 @@
     return a;
   }
 
+  var BRAND_GLOW = {
+    "music.apple.com": "#fa243c", "open.spotify.com": "#1db954",
+    "youtube.com": "#ff0000", "www.youtube.com": "#ff0000", "youtu.be": "#ff0000",
+    "x.com": "#e7e9ea", "twitter.com": "#1d9bf0",
+    "instagram.com": "#e1306c", "www.instagram.com": "#e1306c",
+    "tiktok.com": "#fe2c55", "www.tiktok.com": "#fe2c55",
+    "soundcloud.com": "#ff5500", "genius.com": "#ffff64", "www.genius.com": "#ffff64"
+  };
   function faviconBadge(embed) {
     if (!embed || !embed.url) return null;
     var host = "";
@@ -679,22 +703,13 @@
     if (!host) return null;
     var s = document.createElement("span");
     s.className = "chat-embed-badge";
+    var glow = BRAND_GLOW[host] || BRAND_GLOW[host.replace(/^www\./, "")];
+    if (glow) s.style.setProperty("--badge-glow", glow);
     var im = document.createElement("img");
     im.src = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64";
     im.alt = "";
     im.loading = "lazy";
     im.referrerPolicy = "no-referrer";
-    im.crossOrigin = "anonymous";
-    im.onload = function() {
-      try {
-        var c = document.createElement("canvas");
-        c.width = 1; c.height = 1;
-        var ctx = c.getContext("2d");
-        ctx.drawImage(im, 0, 0, 1, 1);
-        var d = ctx.getImageData(0, 0, 1, 1).data;
-        s.style.setProperty("--badge-glow", "rgba(" + d[0] + "," + d[1] + "," + d[2] + ",0.6)");
-      } catch (e) { /* CORS taint - keep default glow */ }
-    };
     s.appendChild(im);
     return s;
   }
