@@ -306,6 +306,103 @@
   }
   setTimeout(labelMetricTabs, 1000);
   setInterval(labelMetricTabs, 2000);
+
+  // Reorder tabs: Views, Visitors, Users, Posts (move Posts to end, rename New Users)
+  function reorderMetricTabs() {
+    // Find the toggle row (contains the 4 metric buttons)
+    var buttons = document.querySelectorAll('button[aria-label="Views"], button[aria-label="Visitors"], button[aria-label="Posts"], button[aria-label="New Users"], button[aria-label="Users"]');
+    if (buttons.length !== 4) return;
+    
+    var container = buttons[0].parentElement;
+    if (!container || container.getAttribute("data-reordered")) return;
+    
+    // Rename New Users -> Users
+    buttons.forEach(function(btn) {
+      if (btn.getAttribute("aria-label") === "New Users") {
+        btn.setAttribute("aria-label", "Users");
+        btn.setAttribute("title", "Users");
+        var label = btn.querySelector(".metric-label");
+        if (label) label.textContent = "Users";
+      }
+    });
+    
+    // Re-query after rename
+    var viewsBtn = document.querySelector('button[aria-label="Views"]');
+    var visitorsBtn = document.querySelector('button[aria-label="Visitors"]');
+    var usersBtn = document.querySelector('button[aria-label="Users"]');
+    var postsBtn = document.querySelector('button[aria-label="Posts"]');
+    
+    if (viewsBtn && visitorsBtn && usersBtn && postsBtn) {
+      // Order: Views, Visitors, Users, Posts
+      container.appendChild(viewsBtn);
+      container.appendChild(visitorsBtn);
+      container.appendChild(usersBtn);
+      container.appendChild(postsBtn);
+      container.setAttribute("data-reordered", "1");
+    }
+  }
+  setTimeout(reorderMetricTabs, 1500);
+  setInterval(reorderMetricTabs, 3000);
+
+  // Add Countries section below Newest Users
+  function addCountriesSection() {
+    // Find Newest Users section
+    var headers = document.querySelectorAll("div");
+    var newestHeader = null;
+    headers.forEach(function(h) {
+      if (h.textContent.trim() === "Newest Users" && h.children.length === 0) {
+        newestHeader = h;
+      }
+    });
+    if (!newestHeader) return;
+    
+    var container = newestHeader.parentElement;
+    if (!container || document.getElementById("countries-section")) return;
+    
+    // Create section
+    var section = document.createElement("div");
+    section.id = "countries-section";
+    section.style.cssText = "margin-top:20px;";
+    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:12px;">Countries</div>' +
+      '<div id="countries-list" style="font-size:13px;opacity:0.7;">Loading...</div>';
+    container.appendChild(section);
+    
+    // Fetch and display
+    try {
+      var token = "";
+      // Try to get owner token from localStorage or use the analytics endpoint
+      fetch("/api/analytics/stats", {
+        headers: { "Authorization": "Bearer " + (localStorage.getItem("mp_token") || "") }
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.ok || !data.stats || !data.stats.days) return;
+        // Aggregate countries across all days
+        var totals = {};
+        data.stats.days.forEach(function(day) {
+          var countries = day.countries || {};
+          Object.keys(countries).forEach(function(c) {
+            totals[c] = (totals[c] || 0) + countries[c];
+          });
+        });
+        // Sort by count
+        var sorted = Object.keys(totals).sort(function(a, b) { return totals[b] - totals[a]; });
+        var list = document.getElementById("countries-list");
+        if (!list) return;
+        if (!sorted.length) {
+          list.textContent = "No country data yet.";
+          return;
+        }
+        list.style.opacity = "1";
+        list.innerHTML = sorted.slice(0, 10).map(function(c) {
+          return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(127,127,127,0.1);">' +
+            '<span>' + c + '</span><span style="opacity:0.7;">' + totals[c] + '</span></div>';
+        }).join("");
+      }).catch(function() {});
+    } catch (e) {}
+  }
+  setTimeout(addCountriesSection, 2000);
+  setInterval(function() {
+    if (!document.getElementById("countries-section")) addCountriesSection();
+  }, 5000);
   // Watch for metric re-renders
   try {
     new MutationObserver(function() { replaceMetricIcons(); })
