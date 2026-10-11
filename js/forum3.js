@@ -849,12 +849,11 @@
         hideDropdown();
         dropdown = document.createElement("div");
         dropdown.className = "forum-mention-dropdown";
-        dropdown.style.cssText = "position:absolute;z-index:1000;background:rgba(20,25,45,.98);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:4px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4);";
         matches.forEach(function (uname) {
           var item = document.createElement("button");
           item.type = "button";
           item.textContent = "@" + uname;
-          item.style.cssText = "display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:none;color:#fff;border-radius:6px;cursor:pointer;font-size:14px;";
+          item.className = "forum-mention-item";
           item.addEventListener("click", function () {
             // Replace @query with @username
             var tr = editor.state.tr;
@@ -866,8 +865,7 @@
             editor.view.focus();
             hideDropdown();
           });
-          item.addEventListener("mouseenter", function () { item.style.background = "rgba(80,140,255,.2)"; });
-          item.addEventListener("mouseleave", function () { item.style.background = "none"; });
+
           dropdown.appendChild(item);
         });
         // Position near cursor
@@ -1135,6 +1133,7 @@
         pollHTML(t) +
         signatureHTML(t, false) +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
+          (token() ? '<button type="button" class="forum-admin-btn" id="forum-reply-op">Reply</button>' : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
           ((meInfo && (isOwner || meInfo.username.toLowerCase() === String(t.author).toLowerCase()) && cache.threads.length && ("excerpt" in cache.threads[0])) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") + "</div>" + "</article>";
@@ -1217,6 +1216,11 @@
       });
       wireAvatars(); wireBell();
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      var opReplyBtn = root.querySelector("#forum-reply-op");
+      if (opReplyBtn) opReplyBtn.addEventListener("click", function () {
+        view.replyTo = null;
+        if (typeof focusComposer === "function") focusComposer();
+      });
       var copyBtn = root.querySelector("#forum-copy-link");
       if (copyBtn) copyBtn.addEventListener("click", function () {
         var link = API + "/t/" + t.id;
