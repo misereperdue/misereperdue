@@ -1694,3 +1694,31 @@ button.forum-glass-pill:active { transform: scale(.97); }
   to { opacity: 1; }
 }
 .forum-anim { animation: forumViewIn .25s ease; }
+
+/* Nested replies (Threads-style) */
+.forum-nested { margin-left: 28px; position: relative; }
+.forum-nested::before {
+  content: ""; position: absolute; left: -18px; top: 0; bottom: 0;
+  width: 2px; border-radius: 1px; background: var(--glass-hairline);
+  opacity: .6;
+}
+.forum-children .forum-nested { margin-top: 8px; }
+.forum-reply-btn {
+  margin-left: auto; background: none; border: none; padding: 4px 8px;
+  font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.forum-reply-btn:active { opacity: .6; }
+.forum-show-replies {
+  display: block; margin: 8px 0 0 0; background: none; border: none; padding: 4px 0;
+  font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.forum-show-replies:active { opacity: .6; }
+.forum-replying-to {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--muted); margin-bottom: 8px;
+}
+.forum-replying-to b { color: var(--ink); }
+.forum-replying-to button {
+  margin-left: auto; background: none; border: none; font-size: 18px;
+  color: var(--muted); cursor: pointer; line-height: 1; padding: 4px;
+}
