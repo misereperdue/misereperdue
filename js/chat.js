@@ -905,11 +905,14 @@
     topNav.appendChild(topSlider);
     var chatDashBtn = document.createElement("button");
     var forumDashBtn = document.createElement("button");
-    [["Chat", chatDashBtn], ["Forum", forumDashBtn]].forEach(function(pair) {
+    var CHAT_ICON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+    var FORUM_ICON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V6z"/><path d="M8 9.5h8"/><path d="M8 12.5h5"/></svg>';
+    [[CHAT_ICON_SVG, chatDashBtn, "Chat"], [FORUM_ICON_SVG, forumDashBtn, "Forum"]].forEach(function(pair) {
       var btn = pair[1];
       btn.type = "button";
-      btn.textContent = pair[0];
-      btn.style.cssText = "position:relative;z-index:1;flex:1;padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
+      btn.innerHTML = pair[0];
+      btn.setAttribute("aria-label", pair[2]);
+      btn.style.cssText = "position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:6px 18px;border:none;border-radius:7px;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
     });
     chatDashBtn.style.color = "var(--ink)";
     topNav.appendChild(chatDashBtn);
@@ -1279,12 +1282,8 @@
         loadForumPage();
       }
 
-      Promise.all([
-        api("/api/forum/categories"),
-        api("/api/forum/threads")
-      ]).then(function (results) {
-        var cats = (results[0].ok && results[0].categories) || [];
-        var threads = (results[1].ok && results[1].threads) || [];
+      api("/api/forum/categories").then(function (res) {
+        var cats = (res.ok && res.categories) || [];
         forumPage.innerHTML = "";
 
         // Categories section
@@ -1363,49 +1362,6 @@
         newCatRow.appendChild(newCatBtn);
         forumPage.appendChild(newCatRow);
 
-        var thTitle = document.createElement("div");
-        thTitle.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;";
-        thTitle.textContent = "Threads (" + threads.length + ")";
-        forumPage.appendChild(thTitle);
-
-        var thList = document.createElement("div");
-        thList.style.cssText = "display:flex;flex-direction:column;gap:6px;";
-        if (!threads.length) {
-          thList.innerHTML = '<div style="opacity:.5;font-size:13px;text-align:center;padding:16px;">No threads yet.</div>';
-        }
-        threads.forEach(function (t) {
-          var row = document.createElement("div");
-          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
-          var info = document.createElement("div");
-          info.style.cssText = "flex:1;min-width:0;";
-          info.innerHTML = '<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
-            (t.pinned ? "📌 " : "") + esc(t.title) + '</div>' +
-            '<div style="font-size:11px;opacity:.5;">' + esc(t.author) + " · " + esc(t.categoryName) + " · " + t.replies + " replies</div>";
-          row.appendChild(info);
-
-          var pinBtn = document.createElement("button");
-          pinBtn.type = "button";
-          pinBtn.textContent = t.pinned ? "Unpin" : "Pin";
-          pinBtn.style.cssText = "font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);background:transparent;color:var(--ink);cursor:pointer;";
-          pinBtn.addEventListener("click", function () {
-            api("/api/forum/thread/" + encodeURIComponent(t.id) + "/pin", { method: "POST" })
-              .then(function (r) { if (r.ok) refresh(); });
-          });
-          row.appendChild(pinBtn);
-
-          var delBtn = document.createElement("button");
-          delBtn.type = "button";
-          delBtn.textContent = "Delete";
-          delBtn.style.cssText = "font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:none;background:rgba(255,60,60,.15);color:#ff6b6b;cursor:pointer;";
-          delBtn.addEventListener("click", function () {
-            if (!confirm("Delete thread '" + t.title + "' and all its replies?")) return;
-            api("/api/forum/thread/" + encodeURIComponent(t.id), { method: "DELETE" })
-              .then(function (r) { if (r.ok) refresh(); });
-          });
-          row.appendChild(delBtn);
-          thList.appendChild(row);
-        });
-        forumPage.appendChild(thList);
       }).catch(function () {
         forumPage.innerHTML = '<div style="text-align:center;opacity:.5;padding:20px;">Couldn’t load forum data.</div>';
       });
