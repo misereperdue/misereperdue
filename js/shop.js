@@ -46,7 +46,7 @@ var MPShop = (function () {
     var n = String(name || "").toLowerCase();
     if (n.indexOf("jersey") !== -1) return "👕";
     if (n.indexOf("mask") !== -1 || n.indexOf("sleeping") !== -1) return "🥽";
-    if (n.indexOf("membership") !== -1) return "⭐";
+    if (n.indexOf("membership") !== -1 || n.indexOf("vip") !== -1) return "⭐";
     return null;
   }
 
