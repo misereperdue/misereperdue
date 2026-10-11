@@ -37,7 +37,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=249">
+  <link rel="stylesheet" href="css/site.css?v=251">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -124,8 +124,8 @@
   </script>
   <script src="js/shop.js?v=39"></script>
   <script src="js/social-logos.js?v=2"></script>
-  <script src="js/chat.js?v=102"></script>
-  <script src="js/forum.js?v=49"></script>
+  <script src="js/chat.js?v=103"></script>
+  <script src="js/forum.js?v=50"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -259,6 +259,18 @@
       document.getElementById("cart").classList.toggle("on", view === "cart");
       document.getElementById("forum").classList.toggle("on", view === "forum");
       document.getElementById("postview").classList.toggle("on", reading);
+      // Smooth transition via WAAPI (reliable on iOS, unlike CSS animations
+      // on display-toggled elements)
+      var activePanel = document.querySelector(".panel.on");
+      if (activePanel && activePanel.animate) {
+        try {
+          activePanel.animate(
+            [{ opacity: 0, transform: "translateY(10px)" },
+             { opacity: 1, transform: "translateY(0)" }],
+            { duration: 250, easing: "cubic-bezier(.2,.7,.3,1)" }
+          );
+        } catch (e) {}
+      }
       nav.classList.toggle("shop", view === "shop");
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
