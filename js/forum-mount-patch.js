@@ -560,6 +560,21 @@
       
       var totalNum = parseInt(total.replace(/,/g, '')) || 0;
       var peakNum = parseInt(peak.replace(/,/g, '')) || 0;
+      // Format date: "10-11" -> "October 11th"
+      function formatDate(md) {
+        if (!md || md.indexOf('-') === -1) return md;
+        var parts = md.split('-');
+        var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        var m = parseInt(parts[0]) - 1;
+        var d = parseInt(parts[1]);
+        if (m < 0 || m > 11 || !d) return md;
+        var suffix = 'th';
+        if (d === 1 || d === 21 || d === 31) suffix = 'st';
+        else if (d === 2 || d === 22) suffix = 'nd';
+        else if (d === 3 || d === 23) suffix = 'rd';
+        return months[m] + ' ' + d + suffix;
+      }
+      var peakDateFull = formatDate(peakDate);
       
       if (totalNum === 0) {
         html += 'No ' + metricUnit + ' yet in the last 30 days. Once activity picks up, you\'ll see the trend here.';
@@ -568,7 +583,7 @@
         html += ' (' + avg + '/day avg).';
         if (peakNum > 0) {
           var pct = Math.round((peakNum / totalNum) * 100);
-          html += ' Peak was <strong>' + peak + '</strong> on <strong>' + peakDate + '</strong>';
+          html += ' Peak was <strong>' + peak + '</strong> on <strong>' + peakDateFull + '</strong>';
           if (pct >= 50) {
             html += ' — that\'s <strong>' + pct + '%</strong> of all activity in a single day. ';
             html += 'Something drove a spike then — check what you posted or shared that day.';
@@ -588,7 +603,8 @@
       
       briefing.innerHTML = html;
       // Tight spacing to Newest Users
-      briefing.style.marginBottom = '4px';
+      briefing.style.marginBottom = '2px';
+      briefing.style.marginTop = '8px';
       graphSummary.parentElement.insertBefore(briefing, graphSummary.nextSibling);
       
       // Update when metric changes
@@ -671,9 +687,9 @@
     // Create section (left-aligned, tight spacing)
     var section = document.createElement("div");
     section.id = "countries-section";
-    section.style.cssText = "margin-top:16px;text-align:left;width:100%;";
-    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:8px;text-align:left;">Countries</div>' +
-      '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;">Loading...</div>';
+    section.style.cssText = "margin-top:12px;text-align:left;width:100%;padding:0;";
+    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:6px;text-align:left;padding:0;">Countries</div>' +
+      '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;padding:0;margin:0;">Loading...</div>';
     container.appendChild(section);
     
     // Fetch and display using direct fetch with the stored token
@@ -727,9 +743,10 @@
           list.innerHTML = sorted.slice(0, 10).map(function(c) {
             var info = countryInfo[c] || [c, "\uD83C\uDF10"];
             return '<div style="display:flex;justify-content:space-between;align-items:center;' +
-              'padding:10px 14px;margin-bottom:8px;margin-left:0;margin-right:0;border-radius:12px;' +
+              'padding:10px 14px;margin:0 0 8px 0;border-radius:12px;' +
               'background:rgba(127,127,127,0.12);border:1px solid rgba(255,255,255,0.12);' +
-              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;">' +
+              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;' +
+              'margin-left:0 !important;">' +
               '<span style="font-weight:600;">' + info[1] + ' ' + info[0] + '</span>' +
               '<span style="opacity:0.7;font-weight:700;">' + totals[c] + '</span></div>';
           }).join("");
