@@ -1929,7 +1929,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-tag-more { color: var(--muted); }
 .forum-tagbar { display: flex; align-items: center; gap: 8px; margin: 0 2px 10px; font-size: 12.5px; color: var(--muted); }
 .forum-tag-clear { appearance: none; border: none; background: none; color: var(--blue); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
-.forum-post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.forum-post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
 .forum-tag-editor { position: relative; border: var(--glass-hairline); border-radius: 12px; background: rgba(255,255,255,.04); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .forum-tag-pills { display: contents; }
 .forum-tag.chosen { display: inline-flex; align-items: center; gap: 4px; cursor: default; }
