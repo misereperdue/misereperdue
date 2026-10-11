@@ -451,7 +451,7 @@
     html += '<button type="button" class="forum-cat' + (view.category === "" ? " on" : "") + '" data-cat="">All</button>';
     cache.categories.forEach(function (c) {
       html += '<button type="button" class="forum-cat' + (view.category === c.id ? " on" : "") + '" data-cat="' + esc(c.id) + '">' +
-        esc(c.name) + (c.membersOnly ? " \u2B50" : "") + "</button>";
+        esc(c.name) + (c.membersOnly ? " \u2B50" : "") + (c.ownerOnly ? " \uD83D\uDD13" : "") + "</button>";
     });
     html += "</div>";
 
