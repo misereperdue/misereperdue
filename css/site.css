@@ -2111,7 +2111,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* Force top nav opaque - higher specificity */
 nav#nav.nav,
 .nav-wrap .nav {
-  background: rgba(18, 18, 26, 0.85) !important;
+  background: rgba(18, 18, 26, 0.95) !important;
   -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
 }
