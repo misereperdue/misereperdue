@@ -1058,7 +1058,7 @@
     root.innerHTML = html;
     
 
-    wireAvatars(); wireBell();
+    wireAvatars(); try { wireBell(); } catch (e) {}
     // Content is painted; now pin to top (images loading later won't shift us)
     if (view.name === "list") window.scrollTo(0, 0);
     root.querySelectorAll(".forum-cat").forEach(function (b) {
@@ -1134,7 +1134,7 @@
           '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
           '<div class="forum-locked-sub">' + lockMsg + "</div></div></div>";
-        wireAvatars(); wireBell();
+        wireAvatars(); try { wireBell(); } catch (e) {}
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
       }
@@ -1263,7 +1263,7 @@
           }).catch(function () { btn.disabled = false; });
         });
       });
-      wireAvatars(); wireBell();
+      wireAvatars(); try { wireBell(); } catch (e) {}
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var opReplyBtn = root.querySelector("#forum-reply-op");
       if (opReplyBtn) opReplyBtn.addEventListener("click", function () {
@@ -1667,7 +1667,7 @@
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(1500);
-    wireAvatars(); wireBell();
+    wireAvatars(); try { wireBell(); } catch (e) {}
     wireTagEditor("forum-edit", editTagState);
     var rerender = function () { view.name = "thread"; renderThread(); };
     root.querySelector("#forum-edit-back").addEventListener("click", rerender);
@@ -1772,7 +1772,7 @@
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(2000);
-    wireAvatars(); wireBell();
+    wireAvatars(); try { wireBell(); } catch (e) {}
     var nbTop2 = root.querySelector("#forum-new-top");
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("#forum-back").addEventListener("click", backToList);
