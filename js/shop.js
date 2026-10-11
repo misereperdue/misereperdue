@@ -293,11 +293,10 @@ var MPShop = (function () {
     }
     var sizes;
     if (memberAmounts) {
-      sizes = '<div class="member-slider">' +
-        '<div class="member-top"><span>Amount</span><span class="member-val" id="member-val"></span></div>' +
-        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
-        '<div class="member-ticks">' + memberAmounts.map(function (a, i) { return '<span data-tick="' + i + '"' + (i === 0 ? ' class="on"' : "") + ">$" + esc(a) + "</span>"; }).join("") + "</div>" +
-        "</div>";
+      sizes = '<div class="member-segs" role="group" aria-label="Membership amount">' +
+        memberAmounts.map(function (a, i) {
+          return '<button type="button" data-amt="' + esc(a) + '"' + (i === 0 ? ' class="on"' : "") + ">$" + esc(a) + "</button>";
+        }).join("") + "</div>";
     } else if (p.sizes && p.sizes.length) {
       sizes = (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
         '<div class="sizes">' + p.sizes.map(function (s, i) {
@@ -328,40 +327,16 @@ var MPShop = (function () {
     });
     if (memberAmounts) {
       size = memberAmounts[0];
-      var range = view.querySelector("#member-range");
-      var priceEl = view.querySelector(".price");
-      var valEl = view.querySelector("#member-val");
-      var tickEls = view.querySelectorAll("[data-tick]");
-      var shownPct = 0, tweenId = null;
-      function paintSlider(animate) {
-        var idx = parseInt(range.value, 10) || 0;
-        size = memberAmounts[idx];
-        var amt = (p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size);
-        if (priceEl) priceEl.textContent = MP.money(amt);
-        if (valEl && valEl.textContent !== MP.money(amt)) {
-          valEl.textContent = MP.money(amt);
-          if (animate) { valEl.classList.remove("bump"); void valEl.offsetWidth; valEl.classList.add("bump"); }
-        }
-        tickEls.forEach(function (t, i) { t.classList.toggle("on", i === idx); });
-        var target = memberAmounts.length > 1 ? (idx / (memberAmounts.length - 1)) * 100 : 0;
-        if (!animate) {
-          shownPct = target;
-          range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + target + "%, rgba(255,255,255,.14) " + target + "%)";
-          return;
-        }
-        if (tweenId) cancelAnimationFrame(tweenId);
-        var from = shownPct, startT = null;
-        function step(t) {
-          if (!startT) startT = t;
-          var k = Math.min(1, (t - startT) / 160);
-          var e = 1 - Math.pow(1 - k, 3);
-          shownPct = from + (target - from) * e;
-          range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + shownPct + "%, rgba(255,255,255,.14) " + shownPct + "%)";
-          if (k < 1) tweenId = requestAnimationFrame(step);
-        }
-        tweenId = requestAnimationFrame(step);
-      }
-      if (range) { range.addEventListener("input", function () { paintSlider(true); refreshAction(); }); paintSlider(false); }
+      var priceEl2 = view.querySelector(".price");
+      view.querySelectorAll("[data-amt]").forEach(function (b) {
+        b.onclick = function () {
+          size = b.dataset.amt;
+          view.querySelectorAll("[data-amt]").forEach(function (x) { x.classList.remove("on"); });
+          b.classList.add("on");
+          if (priceEl2) priceEl2.textContent = MP.money((p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size));
+          refreshAction();
+        };
+      });
     }
     refreshAction();
     var shBtn = view.querySelector('.share-btn');
