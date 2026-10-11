@@ -2421,69 +2421,56 @@
     bioInput.addEventListener("blur", saveBio);
 
     // ===== Forum signature =====
-    var sigTitle = document.createElement("div");
-    sigTitle.className = "chat-pw-title";
-    sigTitle.textContent = "Signature";
-    sheet.appendChild(sigTitle);
+    function mk(t, c, p, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; if (p) p.appendChild(e); return e; }
+    mk("div", "chat-pw-title", sheet, "Signature");
     var sigIsMember = !!(me.member || me.owner);
-    var sigNote = document.createElement("div");
+    var sigNote = mk("div", null, sheet, sigIsMember ? "Shows under your forum posts. You can add photos and embeds." : "Shows under your forum posts. Members can also add photos and embeds.");
     sigNote.style.cssText = "font-size:12px;opacity:.55;margin:2px 0 8px;";
-    sigNote.textContent = sigIsMember
-      ? "Shows under your forum posts. You can add photos and embeds."
-      : "Shows under your forum posts. Members can also add photos and embeds.";
-    sheet.appendChild(sigNote);
-    var sigBubble = document.createElement("div");
-    sigBubble.className = "sig-bubble";
-    var sigMount = document.createElement("div");
-    sigMount.className = "sig-mount";
-    sigBubble.appendChild(sigMount);
-    var sigEmbedsEl = document.createElement("div");
-    sigEmbedsEl.className = "sig-embeds";
-    sigBubble.appendChild(sigEmbedsEl);
-    sheet.appendChild(sigBubble);
-    var sigStatus = document.createElement("div");
-    sigStatus.className = "chat-bio-count";
-    sheet.appendChild(sigStatus);
-
-    var sigEmbeds = [];
-    var sigEditor = null;
-    var sigFallback = null;
-    var sigSaveTimer = null;
-    function embedLabel(src) {
-      if (/spotify/i.test(src)) return "\uD83C\uDFB5 Spotify";
-      if (/soundcloud/i.test(src)) return "\uD83C\uDFB5 SoundCloud";
-      if (/vimeo/i.test(src)) return "\uD83C\uDFAC Vimeo";
-      return "\uD83D\uDD17 Embed";
+    var sigBubble = mk("div", "sig-bubble", sheet);
+    var sigMount = mk("div", "sig-mount", sigBubble);
+    var sigEmbedsEl = mk("div", "sig-embeds", sigBubble);
+    var sigStatus = mk("div", "chat-bio-count", sheet);
+    var sigEmbeds = [], sigEditor = null, sigFallback = null, sigSaveTimer = null;
+    function socialGlyph(n) { return n === "x" ? "\uD83D\uDC26" : n === "instagram" ? "\uD83D\uDCF8" : n === "tiktok" ? "\uD83C\uDFB5" : "\u25B6"; }
+    function parseSocialUrl(raw) {
+      var u = String(raw || "").trim(), m, network, user;
+      if ((m = u.match(/^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,30})/i))) { network = "x"; user = m[1]; }
+      else if ((m = u.match(/^https?:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9_.]{1,30})/i))) { network = "instagram"; user = m[1]; }
+      else if ((m = u.match(/^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9_.]{1,30})/i))) { network = "tiktok"; user = "@" + m[1]; }
+      else if ((m = u.match(/^https?:\/\/(?:www\.)?youtube\.com\/((?:@|channel\/|c\/|user\/)[A-Za-z0-9_.\/-]{1,40})/i))) { network = "youtube"; user = m[1]; }
+      else return null;
+      var base = { x: "https://x.com", instagram: "https://instagram.com", tiktok: "https://tiktok.com", youtube: "https://youtube.com" }[network];
+      return { kind: "social", network: network, handle: (network === "x" || network === "instagram") ? "@" + user : user, url: base + "/" + user };
+    }
+    function embedLabel(e) {
+      if (!e) return "\uD83D\uDD17 Embed";
+      if (e.kind === "social") return socialGlyph(e.network) + " " + e.handle;
+      var s = e.src || "";
+      return /spotify/i.test(s) ? "\uD83C\uDFB5 Spotify" : /soundcloud/i.test(s) ? "\uD83C\uDFB5 SoundCloud" : /vimeo/i.test(s) ? "\uD83C\uDFAC Vimeo" : "\uD83D\uDD17 Embed";
     }
     function paintSigEmbeds() {
       sigEmbedsEl.innerHTML = "";
       sigEmbeds.forEach(function (e, i) {
-        var chip = document.createElement("span");
-        chip.className = "sig-chip";
-        chip.textContent = embedLabel(e.src) + " ";
-        var rm = document.createElement("button");
+        var chip = mk("span", "sig-chip", sigEmbedsEl, embedLabel(e) + " ");
+        var rm = mk("button", "sig-chip-x", chip, "\u00D7");
         rm.type = "button";
-        rm.textContent = "\u00D7";
-        rm.className = "sig-chip-x";
         rm.setAttribute("aria-label", "Remove embed");
         rm.addEventListener("click", function () { sigEmbeds.splice(i, 1); paintSigEmbeds(); saveSignature(); });
-        chip.appendChild(rm);
-        sigEmbedsEl.appendChild(chip);
       });
     }
     function extractEmbedSrc(raw) {
-      raw = String(raw || "").trim();
-      var m = raw.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) || raw.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i);
-      var url = m ? m[1] : raw;
-      
+      var soc = parseSocialUrl(raw);
+      if (soc) return soc;
+      var url = String(raw || "").trim();
+      var m = url.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) || url.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i);
+      url = m ? m[1] : url;
+      var f = function (s) { return { kind: "iframe", src: s }; };
       var sp = url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i);
-      if (sp) return "https://open.spotify.com/embed/" + sp[1] + "/" + sp[2];
-      if (/open\.spotify\.com\/embed\//i.test(url)) return url;
+      if (sp) return f("https://open.spotify.com/embed/" + sp[1] + "/" + sp[2]);
       var vm = url.match(/vimeo\.com\/(\d+)/i);
-      if (vm) return "https://player.vimeo.com/video/" + vm[1];
-      if (/player\.vimeo\.com\//i.test(url)) return url;
-      if (/soundcloud\.com\//i.test(url) && !/w\.soundcloud\.com/i.test(url)) return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url);
-      if (/w\.soundcloud\.com\/player\//i.test(url)) return url;
+      if (vm) return f("https://player.vimeo.com/video/" + vm[1]);
+      if (/open\.spotify\.com\/embed\//i.test(url) || /player\.vimeo\.com\//i.test(url) || /w\.soundcloud\.com\/player\//i.test(url)) return f(url);
+      if (/soundcloud\.com\//i.test(url)) return f("https://w.soundcloud.com/player/?url=" + encodeURIComponent(url));
       return null;
     }
     function composeSignature() {
@@ -2491,104 +2478,82 @@
       if (sigEditor) html = sigEditor.getHTML();
       else if (sigFallback) html = sigFallback.value.split(/\n\s*\n/).map(function (p) { return "<p>" + esc(p).replace(/\n/g, "<br>") + "</p>"; }).join("");
       sigEmbeds.forEach(function (e) {
-        html += '<div class="sig-embed"><iframe src="' + e.src.replace(/"/g, "%22") + '" allowfullscreen loading="lazy"></iframe></div>';
+        if (e.kind === "social") html += '<div class="sig-social"><a href="' + String(e.url).replace(/"/g, "%22") + '">' + socialGlyph(e.network) + " " + esc(e.handle) + "</a></div>";
+        else if (e.src) html += '<div class="sig-embed"><iframe src="' + e.src.replace(/"/g, "%22") + '" allowfullscreen loading="lazy"></iframe></div>';
       });
       if (html === "<p></p>") html = "";
       return html;
     }
     function saveSignature() {
-      var html = composeSignature();
-      api("/api/profile", { method: "POST", body: { signature: html } })
-        .then(function (r) {
-          if (r && r.ok && r.user) { me = r.user; sigStatus.textContent = "Saved \u2713"; setTimeout(function () { if (sigStatus.textContent === "Saved \u2713") sigStatus.textContent = ""; }, 2000); }
-          else sigStatus.textContent = (r && r.error) || "Couldn't save signature.";
-        })
-        .catch(function () { sigStatus.textContent = "Couldn't reach the server."; });
+      api("/api/profile", { method: "POST", body: { signature: composeSignature() } }).then(function (r) {
+        if (r && r.ok && r.user) { me = r.user; sigStatus.textContent = "Saved \u2713"; setTimeout(function () { if (sigStatus.textContent === "Saved \u2713") sigStatus.textContent = ""; }, 2000); }
+        else sigStatus.textContent = (r && r.error) || "Couldn't save signature.";
+      }).catch(function () { sigStatus.textContent = "Couldn't reach the server."; });
     }
-    function scheduleSigSave() {
-      sigStatus.textContent = "";
-      clearTimeout(sigSaveTimer);
-      sigSaveTimer = setTimeout(saveSignature, 1200);
-    }
-    // Split the stored signature: embeds become chips, the rest goes to the editor
+    function scheduleSigSave() { sigStatus.textContent = ""; clearTimeout(sigSaveTimer); sigSaveTimer = setTimeout(saveSignature, 1200); }
     (function initSig() {
       var stored = me.signature || "";
       try {
         var doc = new DOMParser().parseFromString(stored, "text/html");
         doc.querySelectorAll("iframe").forEach(function (f) {
           var src = f.getAttribute("src") || "";
-          if (src && sigEmbeds.length < 2) sigEmbeds.push({ src: src });
-          var wrap = f.closest ? (f.closest(".sig-embed") || f) : f;
-          wrap.remove();
+          if (src && sigEmbeds.length < 2) sigEmbeds.push({ kind: "iframe", src: src });
+          (f.closest ? (f.closest(".sig-embed") || f) : f).remove();
+        });
+        doc.querySelectorAll(".sig-social").forEach(function (d) {
+          var a = d.querySelector("a"), href = a ? (a.getAttribute("href") || "") : "", soc = parseSocialUrl(href);
+          if (soc && sigEmbeds.length < 2) sigEmbeds.push(soc);
+          d.remove();
         });
         stored = doc.body.innerHTML;
       } catch (e) {}
       paintSigEmbeds();
       if (window.MPSigEditor) {
         if (window.__mpSigEd) { try { window.__mpSigEd.destroy(); } catch (e) {} window.__mpSigEd = null; }
-        window.MPSigEditor.mount(sigMount, { html: stored, member: sigIsMember, placeholder: "Your signature\u2026" })
-          .then(function (ed) {
-            sigEditor = ed;
-            window.__mpSigEd = ed;
-            if (ed) ed.on("update", scheduleSigSave);
-            else {
-              sigFallback = document.createElement("textarea");
-              sigFallback.className = "chat-bio";
-              sigFallback.rows = 3;
-              sigFallback.value = stored.replace(/<[^>]*>/g, "");
-              sigFallback.addEventListener("blur", saveSignature);
-              sigMount.appendChild(sigFallback);
-            }
-          });
+        window.MPSigEditor.mount(sigMount, { html: stored, member: sigIsMember, placeholder: "Your signature\u2026" }).then(function (ed) {
+          sigEditor = ed; window.__mpSigEd = ed;
+          if (ed) ed.on("update", scheduleSigSave);
+          else {
+            sigFallback = mk("textarea", "chat-bio", sigMount);
+            sigFallback.rows = 3;
+            sigFallback.value = stored.replace(/<[^>]*>/g, "");
+            sigFallback.addEventListener("blur", saveSignature);
+          }
+        });
       }
       if (sigIsMember) {
-        var embBtn = document.createElement("button");
+        var embBtn = mk("button", "btn sig-embed-btn", sigBubble, "\uFF0B Add embed");
         embBtn.type = "button";
-        embBtn.className = "btn sig-embed-btn";
-        embBtn.textContent = "\uFF0B Add embed";
-        var embBar = document.createElement("div");
-        embBar.className = "sig-embed-bar hidden";
-        embBar.innerHTML = '<input type="text" class="sig-embed-input" placeholder="Paste a link or embed code (Spotify, SoundCloud, Vimeo\u2026)"><button type="button" class="btn accent sig-embed-add">Add</button>';
+        var embBar = mk("div", "sig-embed-bar hidden", sigBubble);
+        embBar.innerHTML = '<input type="text" class="sig-embed-input" placeholder="Paste a music link or a social profile link\u2026"><button type="button" class="btn accent sig-embed-add">Add</button>';
         embBtn.addEventListener("click", function () { embBar.classList.toggle("hidden"); });
         embBar.querySelector(".sig-embed-add").addEventListener("click", function () {
-          var inp = embBar.querySelector(".sig-embed-input");
-          var src = extractEmbedSrc(inp.value);
-          if (!src) { sigStatus.textContent = "That embed isn't supported \u2014 try a Spotify, SoundCloud or Vimeo link."; return; }
+          var inp = embBar.querySelector(".sig-embed-input"), emb = extractEmbedSrc(inp.value);
+          if (!emb) { sigStatus.textContent = "That embed isn't supported \u2014 try a Spotify, SoundCloud, Vimeo or social profile link."; return; }
           if (sigEmbeds.length >= 2) { sigStatus.textContent = "Two embeds max."; return; }
-          sigEmbeds.push({ src: src });
+          sigEmbeds.push(emb);
           inp.value = "";
           embBar.classList.add("hidden");
           paintSigEmbeds();
           saveSignature();
         });
-        sigBubble.appendChild(embBtn);
-        sigBubble.appendChild(embBar);
       }
     })();
-
-    // Show/hide signatures viewer preference
-    var sigPrefRow = document.createElement("div");
+    var sigPrefRow = mk("div", null, sheet);
     sigPrefRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px;";
-    var sigPrefLab = document.createElement("span");
-    sigPrefLab.style.cssText = "font-size:13px;opacity:.75;";
-    sigPrefLab.textContent = "Show signatures";
-    var sigPrefBtn = document.createElement("button");
+    mk("span", null, sigPrefRow, "Show signatures").style.cssText = "font-size:13px;opacity:.75;";
+    var sigPrefBtn = mk("button", "btn", sigPrefRow, "On");
     sigPrefBtn.type = "button";
-    sigPrefBtn.className = "btn";
     function paintSigPref() {
       var on = true;
       try { on = localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) {}
       sigPrefBtn.textContent = on ? "On" : "Off";
     }
     sigPrefBtn.addEventListener("click", function () {
-      var on = true;
-      try { on = localStorage.getItem("mp_show_sigs") !== "0"; localStorage.setItem("mp_show_sigs", on ? "0" : "1"); } catch (e) {}
+      try { var on = localStorage.getItem("mp_show_sigs") !== "0"; localStorage.setItem("mp_show_sigs", on ? "0" : "1"); } catch (e) {}
       paintSigPref();
     });
     paintSigPref();
-    sigPrefRow.appendChild(sigPrefLab);
-    sigPrefRow.appendChild(sigPrefBtn);
-    sheet.appendChild(sigPrefRow);
 
     var errBox = document.createElement("div");
     errBox.className = "chat-err";
