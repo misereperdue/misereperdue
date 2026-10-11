@@ -142,7 +142,7 @@
           (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + esc(t.author) + badgeFor(t.authorBadge) ? " " + badgeFor(t.authorBadge) : "" + " \u00B7 " + esc(t.categoryName) +
+          '<span class="forum-thread-meta">' + esc(t.author) + (badgeFor(t.authorBadge) ? " " + badgeFor(t.authorBadge) : "") + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + "</span>" +
           "</span>" +
           '<span class="forum-thread-count">' + t.replies + "</span>" +
@@ -343,10 +343,16 @@
     if (token()) {
       api("/api/me").then(function (r) {
         if (r && r.user) {
+          var hadMe = !!meInfo;
           meInfo = r.user;
           isOwner = !!r.user.owner;
           var pn = document.getElementById("forum-points");
           if (pn) pn.textContent = meInfo.points || 0;
+          // If topbar rendered before meInfo arrived, re-render to show avatar
+          if (!hadMe && root && view.name === "list") {
+            var meBtn = root.querySelector("#forum-me");
+            if (!meBtn || !meBtn.innerHTML.trim()) renderList();
+          }
         }
       }).catch(function () {});
     }
