@@ -2003,7 +2003,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .mp-locked { border: 1.5px dashed rgba(140,160,255,.4); border-radius: 12px; padding: 10px 14px; margin: 10px 0; background: rgba(140,160,255,.07); }
 .mp-locked-note { display: flex; align-items: center; gap: 10px; padding: 12px 4px; color: var(--muted); font-size: 13.5px; }
 .mp-locked-note span:first-child { font-size: 18px; }
-.forum-lockbar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin-top: 6px; border-radius: 12px; background: rgba(140,160,255,.08); border: var(--glass-hairline); font-size: 12px; }
+.forum-lockbar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin: 8px 10px 0; border-radius: 12px; background: rgba(140,160,255,.08); border: var(--glass-hairline); font-size: 12px; }
 .forum-lockbar-label { color: var(--muted); }
 .forum-lockbar button[data-lockmode] { padding: 5px 10px; border-radius: 999px; border: var(--glass-hairline); background: rgba(255,255,255,.06); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex: none; }
 .forum-lock-cancel { margin-left: auto; background: none; border: none; font-size: 16px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
