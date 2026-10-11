@@ -2113,9 +2113,21 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* Force top nav opaque - higher specificity */
 nav#nav.nav,
 .nav-wrap .nav {
-  background: #0a1230 !important;
+  background: rgba(7, 15, 41, 0.55) !important;
   border: 1px solid rgba(255,255,255,0.12) !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+  position: relative;
+  isolation: isolate;
+}
+.nav-wrap .nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(7, 15, 41, 0.3);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  z-index: -1;
 }
 [data-theme="light"] nav#nav.nav,
 [data-theme="light"] .nav-wrap .nav {
