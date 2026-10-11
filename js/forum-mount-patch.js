@@ -344,62 +344,149 @@
 
 
 
-
-
-  // Bulletproof activity slider - every step wrapped, cannot break dashboard
+  // Simple, robust sliding pills for dashboard
   (function() {
-    function trySetup() {
-      try {
-        var viewsBtn = document.querySelector('button[aria-label="Views"]');
-        if (!viewsBtn) return;
-        if (document.getElementById('bp-slider')) return;
-        
-        var container = viewsBtn.parentElement;
-        if (!container) return;
-        
-        var btns = [];
-        try {
-          ["Views","Visitors","Users","Posts"].forEach(function(l) {
-            var b = container.querySelector('button[aria-label="' + l + '"]');
-            if (b) btns.push(b);
-          });
-        } catch (e) { return; }
-        if (btns.length !== 4) return;
-        
-        try {
-          container.style.position = 'relative';
-          var slider = document.createElement('div');
-          slider.id = 'bp-slider';
-          slider.style.position = 'absolute';
-          slider.style.top = '3px';
-          slider.style.bottom = '3px';
-          slider.style.left = '3px';
-          slider.style.width = 'calc(25% - 3px)';
-          slider.style.borderRadius = '11px';
-          slider.style.background = 'rgba(255,255,255,0.22)';
-          slider.style.transition = 'transform 0.3s ease';
-          slider.style.pointerEvents = 'none';
-          container.insertBefore(slider, container.firstChild);
-        } catch (e) { return; }
-        
-        try {
-          btns.forEach(function(btn, idx) {
-            btn.addEventListener('click', function() {
-              try {
-                var sl = document.getElementById('bp-slider');
-                if (sl) sl.style.transform = 'translateX(' + (idx * 100) + '%)';
-              } catch (e) {}
-            });
-          });
-        } catch (e) {}
-      } catch (e) {}
+    function setupPills() {
+      // Find dashboard (has both Chat and Views buttons)
+      var dash = null;
+      var divs = document.querySelectorAll('div');
+      for (var i = 0; i < divs.length; i++) {
+        if (divs[i].querySelector('button[aria-label="Chat"]') && 
+            divs[i].querySelector('button[aria-label="Views"]')) {
+          dash = divs[i];
+          break;
+        }
+      }
+      if (!dash) return;
+
+      // Setup for each nav container
+      setupNav(dash, ["Chat", "Globe", "Forum", "Manage"]);
+      setupNav(dash, ["Views", "Visitors", "Users", "Posts"]);
     }
-    
+
+    function setupNav(dash, labels) {
+      var btns = labels.map(function(l) {
+        return dash.querySelector('button[aria-label="' + l + '"]');
+      }).filter(Boolean);
+      if (btns.length < 2) return;
+      
+      var container = btns[0].parentElement;
+      if (!container || container.hasAttribute('data-pills')) return;
+      container.setAttribute('data-pills', '1');
+
+      // Container: no overflow:hidden (Safari bug with backdrop-filter), 
+      // instead we mathematically constrain the pill
+      container.style.position = 'relative';
+      container.style.display = 'flex';
+      container.style.background = 'rgba(120,120,128,0.18)';
+      container.style.borderRadius = '24px';
+      container.style.padding = '3px';
+      container.style.backdropFilter = 'blur(20px)';
+      container.style.webkitBackdropFilter = 'blur(20px)';
+      container.style.border = '1px solid rgba(255,255,255,0.12)';
+
+      // Pill: opaque to hide dashboard's underlying colors
+      var pill = document.createElement('div');
+      pill.className = 'dash-pill-slider';
+      pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;border-radius:18px;' +
+        'background:linear-gradient(180deg, #4a4a4e, #3a3a3e);' +
+        'border:0.5px solid rgba(255,255,255,0.25);' +
+        'box-shadow:0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25);' +
+        'transition:transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1);' +
+        'pointer-events:none;z-index:0;margin:0;padding:0;';
+      container.insertBefore(pill, container.firstChild);
+
+      btns.forEach(function(b) {
+        b.style.position = 'relative';
+        b.style.zIndex = '1';
+        b.style.setProperty('background', 'transparent', 'important');
+        b.style.setProperty('background-color', 'transparent', 'important');
+        b.style.border = 'none';
+        b.style.flex = '1';
+        b.style.margin = '0';
+      });
+
+      function movePill(idx, animate) {
+        var btn = btns[idx];
+        if (!btn || !pill.isConnected) return;
+        // Calculate relative to container's padding box
+        // pill left:3px, so x = btn.offsetLeft - 3 (to account for pill's left offset)
+        // Actually simpler: use offsetLeft which is relative to offsetParent (container)
+        var x = btn.offsetLeft;
+        var w = btn.offsetWidth;
+        // Constrain: pill left:3px, so translate = x - 3
+        // This keeps pill inside the 3px padding
+        var tx = x - 3;
+        // Ensure it doesn't go negative or overflow
+        tx = Math.max(0, tx);
+        if (animate) {
+          pill.style.transition = 'transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1)';
+        } else {
+          pill.style.transition = 'none';
+        }
+        pill.style.transform = 'translateX(' + tx + 'px)';
+        pill.style.width = w + 'px';
+        if (!animate) {
+          void pill.offsetWidth;
+          pill.style.transition = 'transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1)';
+        }
+        btns.forEach(function(b2) {
+          b2.style.setProperty('background', 'transparent', 'important');
+          b2.style.setProperty('box-shadow', 'none', 'important');
+          b2.style.setProperty('background-color', 'transparent', 'important');
+        });
+      }
+
+      // Use capture phase to ensure we run before dashboard's own handlers
+      btns.forEach(function(btn, idx) {
+        btn.addEventListener('click', function() {
+          // Move immediately on click for responsiveness, dashboard updates after
+          movePill(idx, true);
+        }, true);
+      });
+
+      // Initial
+      setTimeout(function() { movePill(0, false); }, 150);
+      setTimeout(function() { movePill(0, false); }, 600);
+    }
+
+    // Run when dashboard appears
+    var observer = new MutationObserver(function(muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var added = muts[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var n = added[j];
+          if (n.nodeType === 1 && n.querySelector && n.querySelector('button[aria-label="Views"]')) {
+            setTimeout(setupPills, 200);
+            return;
+          }
+        }
+      }
+    });
     try {
-      setInterval(function() {
-        try { trySetup(); } catch (e) {}
-      }, 3000);
+      observer.observe(document.body, { childList: true, subtree: true });
     } catch (e) {}
+    
+    // Fallback
+    setTimeout(setupPills, 2000);
+  })();
+
+
+
+  // Track which metric tab is active globally
+  (function() {
+    if (window._metricTrackerSetup) return;
+    window._metricTrackerSetup = true;
+    window._activeMetric = 'Visitors'; // default
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest ? e.target.closest('button[aria-label]') : null;
+      if (btn) {
+        var label = btn.getAttribute('aria-label');
+        if (['Views','Visitors','Users','Posts'].indexOf(label) !== -1) {
+          window._activeMetric = label;
+        }
+      }
+    }, true);
   })();
 
   // Assistant briefing under the graph
@@ -613,11 +700,6 @@
         margin-right: 0 !important;
         width: 100% !important;
         box-sizing: border-box !important;
-      }
-      /* Dashboard Close button: move down a bit */
-      #countries-section + button,
-      #countries-section ~ button {
-        margin-top: 16px !important;
       }
       /* Break out of parent padding to align flush left */
       #countries-section.flush-fix {

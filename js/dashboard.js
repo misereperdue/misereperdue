@@ -152,7 +152,7 @@
 
     // Metric toggle
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;";
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" };
@@ -190,7 +190,7 @@
     // Legend for the two-shade Posts graph (darker = posts, lighter = replies)
     var graphLegend = document.createElement("div");
     graphLegend.style.cssText = "display:none;font-size:11px;opacity:.6;margin:-12px 0 16px;text-align:center;";
-    graphLegend.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1d4ed8;vertical-align:baseline;"></span> Posts <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#60a5fa;vertical-align:baseline;margin-left:10px;"></span> Replies';
+    graphLegend.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#7c3aed;vertical-align:baseline;"></span> Posts <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#a78bfa;vertical-align:baseline;margin-left:10px;"></span> Replies';
     overviewPage.appendChild(graphLegend);
 
     // Summary line under graph (inserted after usersTitle is created below)
@@ -278,7 +278,7 @@
           var tipText = d.date + ": " + p + " post" + (p === 1 ? "" : "s") + " · " + r + " repl" + (r === 1 ? "y" : "ies");
           var rp = document.createElementNS(NS, "rect");
           rp.setAttribute("x", x); rp.setAttribute("y", y + rh); rp.setAttribute("width", bw); rp.setAttribute("height", ph);
-          rp.setAttribute("rx", Math.min(4, bw / 2)); rp.setAttribute("fill", "#1d4ed8");
+          rp.setAttribute("rx", Math.min(4, bw / 2)); rp.setAttribute("fill", "#7c3aed");
           rp.style.transformOrigin = "bottom"; rp.style.transformBox = "fill-box";
           rp.style.animation = "barRise .6s cubic-bezier(.2,.9,.25,1.15) both";
           rp.style.animationDelay = (i * 18) + "ms";
@@ -289,7 +289,7 @@
           if (r > 0) {
             var rr = document.createElementNS(NS, "rect");
             rr.setAttribute("x", x); rr.setAttribute("y", y); rr.setAttribute("width", bw); rr.setAttribute("height", rh);
-            rr.setAttribute("rx", Math.min(4, bw / 2)); rr.setAttribute("fill", "#60a5fa");
+            rr.setAttribute("rx", Math.min(4, bw / 2)); rr.setAttribute("fill", "#a78bfa");
             rr.style.transformOrigin = "bottom"; rr.style.transformBox = "fill-box";
             rr.style.animation = "barRise .6s cubic-bezier(.2,.9,.25,1.15) both";
             rr.style.animationDelay = (i * 18) + "ms";
@@ -305,7 +305,7 @@
             plbl.setAttribute("text-anchor", "middle");
             plbl.setAttribute("font-size", "10");
             plbl.setAttribute("font-weight", "700");
-            plbl.setAttribute("fill", "#1d4ed8");
+            plbl.setAttribute("fill", "#7c3aed");
             plbl.textContent = v;
             plbl.style.animation = "fadeIn .4s ease both";
             plbl.style.animationDelay = (i * 18 + 400) + "ms";
