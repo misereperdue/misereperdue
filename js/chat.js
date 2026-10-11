@@ -901,13 +901,15 @@
     var topNav = document.createElement("div");
     topNav.style.cssText = "position:relative;display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
     var topSlider = document.createElement("span");
-    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(50% - 3px);border-radius:7px;background:var(--glass-regular-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.3,1.3,.4,1);pointer-events:none;";
+    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(33.333% - 2px);border-radius:7px;background:var(--glass-regular-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.3,1.3,.4,1);pointer-events:none;";
     topNav.appendChild(topSlider);
     var chatDashBtn = document.createElement("button");
     var forumDashBtn = document.createElement("button");
+    var manageDashBtn = document.createElement("button");
     var CHAT_ICON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg>';
     var FORUM_ICON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V6z"/><path d="M8 9.5h8"/><path d="M8 12.5h5"/></svg>';
-    [[CHAT_ICON_SVG, chatDashBtn, "Chat"], [FORUM_ICON_SVG, forumDashBtn, "Forum"]].forEach(function(pair) {
+    var GEAR_ICON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    [[CHAT_ICON_SVG, chatDashBtn, "Chat"], [FORUM_ICON_SVG, forumDashBtn, "Forum"], [GEAR_ICON_SVG, manageDashBtn, "Manage"]].forEach(function(pair) {
       var btn = pair[1];
       btn.type = "button";
       btn.innerHTML = pair[0];
@@ -917,66 +919,47 @@
     chatDashBtn.style.color = "var(--ink)";
     topNav.appendChild(chatDashBtn);
     topNav.appendChild(forumDashBtn);
+    topNav.appendChild(manageDashBtn);
     headRow.appendChild(topNav);
     inner.appendChild(headRow);
 
-    // Chat dashboard section (with Overview/Manage sub-tabs)
+    // Three dashboard sections: Chat (overview), Forum (categories), Manage (users)
     var chatSection = document.createElement("div");
-    var chatSubNav = document.createElement("div");
-    chatSubNav.style.cssText = "display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);margin-bottom:16px;width:fit-content;";
-    var overviewBtn = document.createElement("button");
-    var manageBtn = document.createElement("button");
-    [["Overview", overviewBtn], ["Manage", manageBtn]].forEach(function(pair) {
-      var btn = pair[1];
-      btn.type = "button";
-      btn.textContent = pair[0];
-      btn.style.cssText = "padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);";
-    });
-    overviewBtn.style.background = "var(--glass-regular-tint)";
-    overviewBtn.style.color = "var(--ink)";
-    chatSubNav.appendChild(overviewBtn);
-    chatSubNav.appendChild(manageBtn);
-    chatSection.appendChild(chatSubNav);
     inner.appendChild(chatSection);
 
-    // Forum dashboard section
     var forumSection = document.createElement("div");
     forumSection.style.display = "none";
     inner.appendChild(forumSection);
+
+    var manageSection = document.createElement("div");
+    manageSection.style.display = "none";
+    inner.appendChild(manageSection);
 
     // Page containers
     var overviewPage = document.createElement("div");
     var managePage = document.createElement("div");
     var forumPage = document.createElement("div");
-    managePage.style.display = "none";
     chatSection.appendChild(overviewPage);
-    chatSection.appendChild(managePage);
     forumSection.appendChild(forumPage);
-
-    function showChatPage(which) {
-      var isOver = which === "overview";
-      overviewPage.style.display = isOver ? "" : "none";
-      managePage.style.display = isOver ? "none" : "";
-      overviewBtn.style.background = isOver ? "var(--glass-regular-tint)" : "transparent";
-      overviewBtn.style.color = isOver ? "var(--ink)" : "var(--muted)";
-      manageBtn.style.background = isOver ? "transparent" : "var(--glass-regular-tint)";
-      manageBtn.style.color = isOver ? "var(--muted)" : "var(--ink)";
-      if (!isOver && !managePage.dataset.loaded) loadManagePage();
-    }
-    overviewBtn.addEventListener("click", function() { showChatPage("overview"); });
-    manageBtn.addEventListener("click", function() { showChatPage("manage"); });
+    manageSection.appendChild(managePage);
 
     function showDashSection(which) {
       var isChat = which === "chat";
+      var isForum = which === "forum";
+      var isManage = which === "manage";
       chatSection.style.display = isChat ? "" : "none";
-      forumSection.style.display = isChat ? "none" : "";
-      topSlider.style.transform = isChat ? "translateX(0)" : "translateX(100%)";
+      forumSection.style.display = isForum ? "" : "none";
+      manageSection.style.display = isManage ? "" : "none";
+      topSlider.style.transform = isChat ? "translateX(0)" : isForum ? "translateX(100%)" : "translateX(200%)";
       chatDashBtn.style.color = isChat ? "var(--ink)" : "var(--muted)";
-      forumDashBtn.style.color = isChat ? "var(--muted)" : "var(--ink)";
-      if (!isChat && !forumPage.dataset.loaded) loadForumPage();
+      forumDashBtn.style.color = isForum ? "var(--ink)" : "var(--muted)";
+      manageDashBtn.style.color = isManage ? "var(--ink)" : "var(--muted)";
+      if (isForum && !forumPage.dataset.loaded) loadForumPage();
+      if (isManage && !managePage.dataset.loaded) loadManagePage();
     }
     chatDashBtn.addEventListener("click", function() { showDashSection("chat"); });
     forumDashBtn.addEventListener("click", function() { showDashSection("forum"); });
+    manageDashBtn.addEventListener("click", function() { showDashSection("manage"); });
 
     // Stats row
     var statsRow = document.createElement("div");
