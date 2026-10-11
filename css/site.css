@@ -2107,3 +2107,15 @@ button.forum-glass-pill:active { transform: scale(.97); }
 [data-theme="light"] .chat-me-menu {
   background: rgba(255, 255, 255, 0.7) !important;
 }
+
+/* Force top nav opaque - higher specificity */
+nav#nav.nav,
+.nav-wrap .nav {
+  background: rgba(18, 18, 26, 0.85) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+}
+[data-theme="light"] nav#nav.nav,
+[data-theme="light"] .nav-wrap .nav {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
