@@ -374,9 +374,10 @@
       if (!container || container.hasAttribute('data-pills')) return;
       container.setAttribute('data-pills', '1');
 
-      // Container styling
+      // Container styling - proper pill track with overflow hidden for masking
       container.style.position = 'relative';
       container.style.display = 'flex';
+      container.style.overflow = 'hidden';
       container.style.background = 'rgba(120,120,128,0.18)';
       container.style.borderRadius = '24px';
       container.style.padding = '3px';
@@ -384,53 +385,71 @@
       container.style.webkitBackdropFilter = 'blur(20px)';
       container.style.border = '1px solid rgba(255,255,255,0.12)';
 
-      // Pill element
+      // Pill element - uses getBoundingClientRect for accurate positioning
       var pill = document.createElement('div');
       pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:0;border-radius:20px;' +
-        'background:rgba(255,255,255,0.25);' +
-        'border:1px solid rgba(255,255,255,0.3);' +
-        'box-shadow:0 2px 8px rgba(0,0,0,0.15);' +
-        'transition:transform 0.3s ease, width 0.3s ease;' +
-        'pointer-events:none;';
+        'background:linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.16));' +
+        'border:0.5px solid rgba(255,255,255,0.35);' +
+        'box-shadow:0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4);' +
+        'backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
+        'transition:transform 0.35s cubic-bezier(0.32,0.72,0,1), width 0.35s cubic-bezier(0.32,0.72,0,1);' +
+        'pointer-events:none;z-index:0;';
       container.insertBefore(pill, container.firstChild);
 
-      // Button styling
+      // Button styling - ensure proper stacking
       btns.forEach(function(b) {
         b.style.position = 'relative';
         b.style.zIndex = '1';
         b.style.background = 'transparent';
         b.style.border = 'none';
+        b.style.flex = '1';
       });
 
-      // Track active index
-      var activeIdx = 0;
-
       function movePill(idx, animate) {
-        activeIdx = idx;
         var btn = btns[idx];
         if (!btn) return;
-        // Use offsetLeft/offsetWidth relative to container
-        var x = btn.offsetLeft;
-        var w = btn.offsetWidth;
+        // Use getBoundingClientRect for pixel-perfect positioning
+        var cRect = container.getBoundingClientRect();
+        var bRect = btn.getBoundingClientRect();
+        var x = bRect.left - cRect.left;
+        var w = bRect.width;
         if (!animate) pill.style.transition = 'none';
+        // Account for container border (1px) - pill left is 0, so x is relative to padding box
         pill.style.transform = 'translateX(' + x + 'px)';
         pill.style.width = w + 'px';
         if (!animate) {
-          pill.offsetHeight; // reflow
+          pill.offsetHeight;
           pill.style.transition = '';
         }
+        // Clear dashboard's active background, pill shows state instead
+        btns.forEach(function(b2, i2) {
+          b2.style.background = 'transparent';
+          b2.style.boxShadow = 'none';
+        });
       }
 
-      // Click handlers - move pill directly
+      // Click handlers
       btns.forEach(function(btn, idx) {
         btn.addEventListener('click', function() {
-          // Small delay to let dashboard update, then move
-          setTimeout(function() { movePill(idx, true); }, 30);
+          setTimeout(function() { movePill(idx, true); }, 40);
         });
       });
 
-      // Initial position
-      setTimeout(function() { movePill(0, false); }, 200);
+      // Initial position after layout settles
+      requestAnimationFrame(function() {
+        setTimeout(function() { movePill(0, false); }, 50);
+      });
+      
+      // Re-position if layout shifts (fonts loading, etc)
+      setTimeout(function() { 
+        var activeIdx = 0;
+        // Try to find which is actually active
+        btns.forEach(function(b, i) {
+          var bg = b.style.background || '';
+          if (bg.indexOf('122,255') !== -1) activeIdx = i;
+        });
+        movePill(activeIdx, false); 
+      }, 500);
     }
 
     // Run when dashboard appears
