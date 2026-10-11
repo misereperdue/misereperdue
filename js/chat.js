@@ -217,7 +217,7 @@
           grimBadge.title = "Bot badge (permanent)";
           gRow.appendChild(grimBadge);
         } else {
-        ["100", "heart"].forEach(function (bid) {
+        ["100", "heart", "member"].forEach(function (bid) {
           var gb = document.createElement("button");
           gb.type = "button";
           var hasBadge = u.badges && u.badges.indexOf(bid) !== -1;
@@ -233,7 +233,7 @@
                   u = r.user;
                   var userBadges = u.badges || [];
                   gRow.querySelectorAll(".chat-badge-opt").forEach(function (n, idx) {
-                    var b = ["100", "heart"][idx];
+                    var b = ["100", "heart", "member"][idx];
                     var has = userBadges.indexOf(b) !== -1;
                     n.classList.toggle("on", n === gb && has);
                     n.classList.toggle("has", has);
