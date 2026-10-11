@@ -454,6 +454,112 @@
     setTimeout(setupPills, 2000);
   })();
 
+
+  // Assistant briefing under the graph
+  (function() {
+    function addBriefing() {
+      // Find the graph summary (has "total ·" text)
+      var summaries = document.querySelectorAll('div');
+      var graphSummary = null;
+      for (var i = 0; i < summaries.length; i++) {
+        var t = summaries[i].textContent;
+        if (t.indexOf('total') !== -1 && t.indexOf('/day avg') !== -1 && summaries[i].children.length === 0) {
+          graphSummary = summaries[i];
+          break;
+        }
+      }
+      if (!graphSummary || document.getElementById('chart-briefing')) return;
+      
+      // Find which metric is active
+      var activeBtn = null;
+      var metricBtns = document.querySelectorAll('button[aria-label="Views"], button[aria-label="Visitors"], button[aria-label="Users"], button[aria-label="Posts"]');
+      // The pill position tells us which is active, or check the summary context
+      // For now, infer from the graph container
+      
+      var briefing = document.createElement('div');
+      briefing.id = 'chart-briefing';
+      briefing.style.cssText = 'margin-top:12px;padding:14px 16px;border-radius:14px;' +
+        'background:rgba(120,120,128,0.12);border:1px solid rgba(255,255,255,0.1);' +
+        'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);' +
+        'font-size:13px;line-height:1.5;text-align:left;';
+      
+      // Parse the summary text for numbers
+      var text = graphSummary.textContent;
+      var totalMatch = text.match(/([\d,]+) total/);
+      var avgMatch = text.match(/([\d.]+)\/day avg/);
+      var peakMatch = text.match(/peak ([\d,]+) on ([\d-]+)/);
+      
+      var total = totalMatch ? totalMatch[1] : '0';
+      var avg = avgMatch ? avgMatch[1] : '0';
+      var peak = peakMatch ? peakMatch[1] : '0';
+      var peakDate = peakMatch ? peakMatch[2] : '';
+      
+      // Determine metric name from context
+      var metricName = 'activity';
+      // Check which tab is visually active by pill position or button order
+      var viewsBtn = document.querySelector('button[aria-label="Views"]');
+      if (viewsBtn) {
+        // Try to determine active metric from the graph title or nearby text
+        var container = viewsBtn.parentElement;
+        if (container) {
+          var btns = Array.prototype.slice.call(container.querySelectorAll('button'));
+          // The first button is Views, check pill position or just use a generic message
+        }
+      }
+      
+      // Generate briefing
+      var html = '<div style="font-weight:700;margin-bottom:6px;opacity:0.9;">What this shows</div>';
+      html += '<div style="opacity:0.75;">';
+      
+      if (parseInt(total.replace(/,/g, '')) === 0) {
+        html += 'No data yet for this period. Once visitors start coming in, you\'ll see the breakdown here.';
+      } else {
+        html += 'You\'ve had <strong>' + total + '</strong> total in the last 30 days';
+        html += ', averaging <strong>' + avg + '</strong> per day.';
+        if (peak !== '0') {
+          html += ' Your busiest day was <strong>' + peakDate + '</strong> with <strong>' + peak + '</strong>.';
+        }
+        var avgNum = parseFloat(avg);
+        if (avgNum < 1) {
+          html += ' Things are quiet right now — typical for a new site finding its audience.';
+        } else if (avgNum < 10) {
+          html += ' Steady trickle of activity — good foundation to build on.';
+        } else {
+          html += ' Solid momentum — keep it going.';
+        }
+      }
+      html += '</div>';
+      
+      briefing.innerHTML = html;
+      graphSummary.parentElement.insertBefore(briefing, graphSummary.nextSibling);
+      
+      // Update when metric changes
+      metricBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          setTimeout(function() {
+            var b = document.getElementById('chart-briefing');
+            if (b) b.remove();
+            addBriefing();
+          }, 300);
+        });
+      });
+    }
+    
+    // Watch for graph summary appearing
+    try {
+      new MutationObserver(function() {
+        if (!document.getElementById('chart-briefing')) {
+          addBriefing();
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    } catch (e) {}
+    
+    setTimeout(addBriefing, 2000);
+    setInterval(function() {
+      if (!document.getElementById('chart-briefing')) addBriefing();
+    }, 5000);
+  })();
+
   // Pill styling removed - using native dashboard styles
 
   // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
