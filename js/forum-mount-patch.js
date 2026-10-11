@@ -543,10 +543,14 @@
       '<div id="countries-list" style="font-size:13px;opacity:0.7;">Loading...</div>';
     container.appendChild(section);
     
-    // Fetch and display using the api() helper (sends auth token)
+    // Fetch and display using direct fetch with the stored token
     try {
-      if (typeof api === "function") {
-        api("/api/analytics/stats").then(function(data) {
+      var chatToken = null;
+      try { chatToken = localStorage.getItem("chat_token"); } catch (e) {}
+      if (chatToken) {
+        fetch("https://misery-chat.freeglory416.workers.dev/api/analytics/stats", {
+          headers: { "Authorization": "Bearer " + chatToken, "Content-Type": "application/json" }
+        }).then(function(r) { return r.json(); }).then(function(data) {
           var list = document.getElementById("countries-list");
           if (!list) return;
           if (!data || !data.ok || !data.stats || !data.stats.days) {
@@ -576,6 +580,9 @@
           var list = document.getElementById("countries-list");
           if (list) list.textContent = "No country data yet.";
         });
+      } else {
+        var list2 = document.getElementById("countries-list");
+        if (list2) list2.textContent = "No country data yet.";
       }
     } catch (e) {}
   }
