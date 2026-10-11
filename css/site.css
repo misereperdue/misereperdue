@@ -1606,7 +1606,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 /* Forum */
-.forum { max-width: 720px; margin: 0 auto; padding: 16px 12px 80px; }
+.forum { max-width: 720px; margin: 0 auto; padding: 16px 12px 80px;  overflow-anchor: none;}
 .forum-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .forum-title { font-size: 22px; font-weight: 700; margin: 0; }
 .forum-back { background: none; border: 0; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; padding: 4px 0; }
