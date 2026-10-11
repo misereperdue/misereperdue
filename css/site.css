@@ -1667,7 +1667,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* Forum top bar new thread button */
 .forum-topbar-signin { padding: 8px 16px; font-size: 13px; }
-.forum-topbar-new { font-size: 13px; padding: 7px 14px; white-space: nowrap; }
+.forum-topbar-new { font-size: 13px; padding: 7px 12px; white-space: nowrap; flex: none; }
+.forum-topbar .chat-title { flex: none; margin-right: 4px; }
+.forum-topbar .chat-head-right { gap: 6px; flex: none; }
+.forum-topbar .chat-points { flex: none; font-size: 13px; padding: 6px 10px; }
+@media (max-width: 380px) {
+  .forum-topbar-new { font-size: 12px; padding: 6px 10px; }
+  .forum-topbar .chat-title { font-size: 18px; }
+}
 .chat-head-right { display: flex; align-items: center; gap: 8px; }
 
 
@@ -2055,9 +2062,9 @@ button.forum-glass-pill:active { transform: scale(.97); }
   font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center; padding: 0 4px; }
 .forum-bell-badge.hidden { display: none; }
-.forum-notif-panel { position: fixed; top: 70px; right: 12px; z-index: 2000; width: 320px; max-height: 400px;
-  overflow-y: auto; background: rgba(18,22,40,.98); border: 1px solid rgba(255,255,255,.12);
-  border-radius: 14px; padding: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+.forum-notif-panel { position: fixed; top: 70px; right: 12px; z-index: 2000; width: min(320px, calc(100vw - 24px)); max-height: 400px;
+  overflow-y: auto; background: var(--bg); border: 1px solid rgba(127,127,127,.25);
+  border-radius: 14px; padding: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.25); color: var(--ink); }
 
 .forum-poll-input { width: 100%; padding: 10px; border-radius: 10px;
   border: 1px solid rgba(127,127,127,.3); background: rgba(127,127,127,.08);
