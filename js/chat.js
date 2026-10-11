@@ -1390,6 +1390,82 @@
         newCatRow.appendChild(newCatBtn);
         forumPage.appendChild(newCatRow);
 
+        // Private access: grant/revoke per-user access to private categories
+        var privCats = cats.filter(function (x) { return x.ownerOnly; });
+        if (privCats.length) {
+          var paTitle = document.createElement("div");
+          paTitle.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;";
+          paTitle.textContent = "Private access";
+          forumPage.appendChild(paTitle);
+          var paNote = document.createElement("div");
+          paNote.style.cssText = "font-size:12px;opacity:.55;margin-bottom:10px;";
+          paNote.textContent = "Pick a user and a private category, then set whether they can access it. Members always have access to the \uD83D\uDCB5 category.";
+          forumPage.appendChild(paNote);
+          var paRow = document.createElement("div");
+          paRow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;";
+          var selStyle = "flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);font-size:14px;";
+          var userSel = document.createElement("select");
+          userSel.style.cssText = selStyle;
+          var catSel = document.createElement("select");
+          catSel.style.cssText = selStyle;
+          privCats.forEach(function (pc) {
+            var o = document.createElement("option");
+            o.value = pc.id; o.textContent = pc.name;
+            catSel.appendChild(o);
+          });
+          var paBtn = document.createElement("button");
+          paBtn.type = "button";
+          paBtn.style.cssText = "width:100%;padding:10px;border-radius:10px;border:var(--glass-hairline);font-size:13px;font-weight:700;cursor:pointer;";
+          var paUsers = [];
+          function paCurrent() {
+            var u = paUsers.find(function (x) { return x.username === userSel.value; });
+            if (!u) return false;
+            return (u.catAccess || []).indexOf(catSel.value) >= 0;
+          }
+          function paPaint() {
+            var has = paCurrent();
+            paBtn.textContent = has ? "Has access \u2014 tap to revoke" : "No access \u2014 tap to grant";
+            paBtn.style.background = has ? "rgba(52,199,89,.22)" : "rgba(255,255,255,.06)";
+            paBtn.style.color = "var(--ink)";
+          }
+          userSel.addEventListener("change", paPaint);
+          catSel.addEventListener("change", paPaint);
+          paBtn.addEventListener("click", function () {
+            var uname = userSel.value, cid = catSel.value;
+            if (!uname || !cid) return;
+            var next = !paCurrent();
+            paBtn.disabled = true;
+            api("/api/forum/category-access", { method: "POST", body: { username: uname, categoryId: cid, access: next } })
+              .then(function (r) {
+                paBtn.disabled = false;
+                if (r && r.ok) {
+                  var u = paUsers.find(function (x) { return x.username === uname; });
+                  if (u) {
+                    if (!Array.isArray(u.catAccess)) u.catAccess = [];
+                    var ix = u.catAccess.indexOf(cid);
+                    if (next && ix < 0) u.catAccess.push(cid);
+                    if (!next && ix >= 0) u.catAccess.splice(ix, 1);
+                  }
+                  paPaint();
+                } else alert((r && r.error) || "Failed");
+              }).catch(function () { paBtn.disabled = false; alert("Couldn't reach server."); });
+          });
+          paRow.appendChild(userSel);
+          paRow.appendChild(catSel);
+          paRow.appendChild(paBtn);
+          forumPage.appendChild(paRow);
+          api("/api/users").then(function (r2) {
+            if (!r2 || !r2.ok) return;
+            paUsers = (r2.users || []).filter(function (x) { return !(me && x.username.toLowerCase() === me.username.toLowerCase()); });
+            paUsers.forEach(function (x) {
+              var o = document.createElement("option");
+              o.value = x.username; o.textContent = x.username;
+              userSel.appendChild(o);
+            });
+            paPaint();
+          }).catch(function () {});
+        }
+
       }).catch(function () {
         forumPage.innerHTML = '<div style="text-align:center;opacity:.5;padding:20px;">Couldn’t load forum data.</div>';
       });
