@@ -1845,17 +1845,21 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .topfade {
   position: fixed;
   left: 0; right: 0;
-  top: calc(96px + env(safe-area-inset-top, 0px));
-  height: 120px;
+  top: calc(78px + env(safe-area-inset-top, 0px));
+  height: 190px;
   z-index: 28;
   pointer-events: none;
   background: linear-gradient(to bottom,
-    var(--bg) 0%,
-    color-mix(in srgb, var(--bg) 72%, transparent) 34%,
-    color-mix(in srgb, var(--bg) 32%, transparent) 62%,
-    transparent 100%);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 22%, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 22%, transparent 88%);
+    transparent 0%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 30%,
+    var(--bg) 42%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 62%,
+    transparent 88%);
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%, #000 48%, transparent 88%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 34%, #000 48%, transparent 88%);
 }
+
+/* Preview cards use normal text color, not link blue */
+.forum-post-body a.forum-linkcard { color: inherit; }
