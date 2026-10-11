@@ -899,16 +899,18 @@
     title.textContent = "Dashboard";
     headRow.appendChild(title);
     var topNav = document.createElement("div");
-    topNav.style.cssText = "display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
+    topNav.style.cssText = "position:relative;display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
+    var topSlider = document.createElement("span");
+    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(50% - 3px);border-radius:7px;background:var(--glass-regular-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.3,1.3,.4,1);pointer-events:none;";
+    topNav.appendChild(topSlider);
     var chatDashBtn = document.createElement("button");
     var forumDashBtn = document.createElement("button");
     [["Chat", chatDashBtn], ["Forum", forumDashBtn]].forEach(function(pair) {
       var btn = pair[1];
       btn.type = "button";
       btn.textContent = pair[0];
-      btn.style.cssText = "padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);";
+      btn.style.cssText = "position:relative;z-index:1;flex:1;padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
     });
-    chatDashBtn.style.background = "var(--glass-regular-tint)";
     chatDashBtn.style.color = "var(--ink)";
     topNav.appendChild(chatDashBtn);
     topNav.appendChild(forumDashBtn);
@@ -965,9 +967,8 @@
       var isChat = which === "chat";
       chatSection.style.display = isChat ? "" : "none";
       forumSection.style.display = isChat ? "none" : "";
-      chatDashBtn.style.background = isChat ? "var(--glass-regular-tint)" : "transparent";
+      topSlider.style.transform = isChat ? "translateX(0)" : "translateX(100%)";
       chatDashBtn.style.color = isChat ? "var(--ink)" : "var(--muted)";
-      forumDashBtn.style.background = isChat ? "transparent" : "var(--glass-regular-tint)";
       forumDashBtn.style.color = isChat ? "var(--muted)" : "var(--ink)";
       if (!isChat && !forumPage.dataset.loaded) loadForumPage();
     }
