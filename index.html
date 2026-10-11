@@ -40,7 +40,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=268">
+  <link rel="stylesheet" href="css/site.css?v=269">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -228,13 +228,18 @@
           }
         }, 250);
       } else {
-        // Non-chat views: pin to top. Safari restores scroll late, so retry.
+        // Non-chat views: pin to top, but stop if user scrolls (don't fight them)
         var tries2 = 0;
+        var userScrolled = false;
+        var onUserScroll = function() { userScrolled = true; };
+        window.addEventListener("touchmove", onUserScroll, { once: true, passive: true });
+        window.addEventListener("wheel", onUserScroll, { once: true, passive: true });
         var iv2 = setInterval(function () {
+          if (userScrolled) { clearInterval(iv2); return; }
           window.scrollTo(0, 0);
           document.documentElement.scrollTop = 0;
           document.body.scrollTop = 0;
-          if (++tries2 > 10) clearInterval(iv2);
+          if (++tries2 > 5) clearInterval(iv2);
         }, 100);
       }
     }

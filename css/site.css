@@ -1635,11 +1635,11 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-post-body { font-size: 14px; line-height: 1.6; word-wrap: break-word; }
 .forum-replies { margin-top: 16px; }
 .forum-replybox { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
-.forum-replybox textarea { border: var(--glass-hairline); background: var(--glass-clear-tint); border-radius: 12px; padding: 10px 12px; font-size: 14px; color: var(--ink); resize: vertical; font-family: inherit; }
+.forum-replybox textarea { border: var(--glass-hairline); background: var(--glass-clear-tint); border-radius: 12px; padding: 10px 12px; font-size: 16px; color: var(--ink); resize: vertical; font-family: inherit; }
 .forum-signin { text-align: center; color: var(--muted); padding: 20px; font-size: 14px; }
 .forum-form { display: flex; flex-direction: column; gap: 12px; }
 .forum-form select { width: 100%; padding: 10px 12px; border-radius: 12px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 14px; font-family: inherit; }
-.forum-form textarea { width: 100%; padding: 10px 12px; border-radius: 12px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 14px; font-family: inherit; resize: vertical; }
+.forum-form textarea { width: 100%; padding: 10px 12px; border-radius: 12px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 16px; font-family: inherit; resize: vertical; }
 .forum-locked { text-align: center; padding: 60px 20px; }
 .forum-locked-icon { font-size: 40px; margin-bottom: 12px; }
 .forum-locked-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
@@ -1934,7 +1934,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-tag-pills { display: contents; }
 .forum-tag.chosen { display: inline-flex; align-items: center; gap: 4px; cursor: default; }
 .forum-tag-x { appearance: none; border: none; background: none; color: var(--muted); font-size: 13px; line-height: 1; cursor: pointer; padding: 0 1px; }
-.forum-tag-input { flex: 1; min-width: 110px; border: none; background: none; color: var(--ink); font-size: 13.5px; padding: 4px 2px; outline: none; }
+.forum-tag-input { flex: 1; min-width: 110px; border: none; background: none; color: var(--ink); font-size: 16px; padding: 4px 2px; outline: none; }
 .forum-tag-suggest { position: absolute; left: 8px; right: 8px; top: calc(100% + 4px); z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 12px; background: rgba(20,26,48,.97); border: var(--glass-hairline); box-shadow: 0 12px 32px rgba(0,0,0,.4); }
 [data-theme="light"] .forum-tag-suggest { background: rgba(255,255,255,.98); }
 .forum-tag-sug { appearance: none; border: var(--glass-hairline); background: rgba(255,255,255,.07); color: var(--ink); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -1994,7 +1994,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-sig img { max-width: 100%; max-height: 140px; border-radius: 8px; }
 .forum-sig iframe { width: 100%; max-width: 430px; aspect-ratio: 16/9; border: 0; border-radius: 10px; display: block; margin: 6px 0; }
 /* Signature editor inside the profile sheet */
-.sig-mount .forum-editor-input { min-height: 64px; font-size: 13.5px; }
+.sig-mount .forum-editor-input { min-height: 64px; font-size: 16px; }
 .sig-embeds { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .sig-chip { display: inline-flex; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 600; padding: 4px 6px 4px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border: var(--glass-hairline); }
 .sig-chip svg { width: 13px; height: 13px; flex: none; }
@@ -2022,13 +2022,13 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .sig-embed-btn { margin-top: 10px; padding: 7px 14px; font-size: 13px; }
 .sig-embed-bar { display: flex; gap: 8px; margin-top: 8px; }
 .sig-embed-bar.hidden { display: none; }
-.sig-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
+.sig-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 16px; }
 .sig-embed-add { padding: 8px 14px; font-size: 13px; }
 
 /* Signature editor bubble (profile sheet) */
 .sig-bubble { border: var(--glass-hairline); border-radius: 16px; background: rgba(255,255,255,.04); margin: 0 0 10px; overflow: hidden; }
 .sig-bubble .forum-toolbar { border-bottom: var(--glass-hairline); padding: 8px; margin: 0; }
-.sig-mount .forum-editor-input { min-height: 56px; max-height: 160px; font-size: 14px; padding: 8px 12px; }
+.sig-mount .forum-editor-input { min-height: 56px; max-height: 160px; font-size: 16px; padding: 8px 12px; }
 .sig-embeds { margin: 0; padding: 0 10px; }
 .sig-embeds:empty { display: none; }
 .sig-chip { margin-top: 8px; }
@@ -2039,7 +2039,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* YouTube embeds in forum posts */
 .forum-embedbar { display: flex; gap: 8px; padding: 8px; border-bottom: var(--glass-hairline); }
 .forum-embedbar.hidden { display: none; }
-.forum-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
+.forum-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 16px; }
 .forum-embed-add, .forum-embed-cancel { padding: 8px 12px; font-size: 13px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); cursor: pointer; }
 .forum-embed-add { background: var(--blue); border-color: transparent; color: #fff; font-weight: 700; }
 .forum-embed-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px; }
