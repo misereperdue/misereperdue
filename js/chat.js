@@ -1790,7 +1790,7 @@
     var out = document.createElement("button");
     out.type = "button";
     out.className = "chat-me-item chat-me-logout";
-    out.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Log out</span>';
+    out.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Sign out</span>';
     out.addEventListener("click", function(e) {
       e.stopPropagation();
       doLogout();
@@ -2220,7 +2220,7 @@
     var out = document.createElement("button");
     out.type = "button";
     out.className = "chat-logout";
-    out.textContent = "Log out";
+    out.textContent = "Sign out";
     out.addEventListener("click", doLogout);
     sheet.appendChild(out);
 
