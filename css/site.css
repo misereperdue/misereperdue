@@ -2114,6 +2114,8 @@ nav#nav.nav,
   background: rgba(18, 18, 26, 0.75) !important;
   -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
+  transform: translateZ(0);
+  will-change: backdrop-filter;
 }
 [data-theme="light"] nav#nav.nav,
 [data-theme="light"] .nav-wrap .nav {
