@@ -37,7 +37,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=210">
+  <link rel="stylesheet" href="css/site.css?v=211">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -62,6 +62,7 @@
     </video>
     <div class="hero-fade"></div>
   </header>
+  <div class="topfade" aria-hidden="true"></div>
   <div class="nav-wrap">
     <nav class="nav" id="nav" aria-label="Main">
       <span class="seg" aria-hidden="true"></span>
@@ -124,7 +125,7 @@
   </script>
   <script src="js/shop.js?v=27"></script>
   <script src="js/chat.js?v=89"></script>
-  <script src="js/forum.js?v=17"></script>
+  <script src="js/forum.js?v=18"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -210,7 +211,10 @@
       }
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
-      if (view === "forum" && window.MPForum) MPForum.render();
+      if (view === "forum" && window.MPForum) {
+        if (MPForum.goHome) MPForum.goHome();
+        else MPForum.render();
+      }
       refreshSeg();
       refreshPostBtn();
       var hash = "#";
