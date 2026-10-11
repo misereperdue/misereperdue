@@ -96,43 +96,28 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
-  // Debounce MPForum.render to prevent rapid re-render glitching
-  // If render is called multiple times within 800ms, only the last one runs
+  // Dedupe concurrent forum API requests to prevent race-condition re-renders
+  // If two /api/forum/threads requests are in-flight, they share the same promise
   try {
-    var renderTimer = null;
-    var origRender = null;
-    function wrapRender() {
-      if (window.MPForum && MPForum.render && !origRender) {
-        origRender = MPForum.render;
-        MPForum.render = function() {
-          var args = arguments;
-          var ctx = this;
-          if (renderTimer) clearTimeout(renderTimer);
-          renderTimer = setTimeout(function() {
-            renderTimer = null;
-            origRender.apply(ctx, args);
-          }, 800);
-        };
-        // Also debounce goHome which triggers render
-        var origGoHome = MPForum.goHome;
-        if (origGoHome) {
-          MPForum.goHome = function() {
-            var args = arguments;
-            var ctx = this;
-            if (renderTimer) clearTimeout(renderTimer);
-            renderTimer = setTimeout(function() {
-              renderTimer = null;
-              origGoHome.apply(ctx, args);
-            }, 800);
-          };
+    var origFetch = window.fetch;
+    var inflight = {};
+    window.fetch = function(url, opts) {
+      var urlStr = String(url || "");
+      // Only dedupe GET requests to forum threads/categories
+      if ((!opts || !opts.method || opts.method === "GET") &&
+          (urlStr.indexOf("/api/forum/threads") !== -1 || urlStr.indexOf("/api/forum/categories") !== -1)) {
+        if (inflight[urlStr]) {
+          return inflight[urlStr];
         }
+        var p = origFetch.apply(this, arguments);
+        inflight[urlStr] = p;
+        var cleanup = function() { delete inflight[urlStr]; };
+        p.then(cleanup, cleanup);
+        return p;
       }
-    }
-    // Try immediately and on interval until MPForum exists
-    wrapRender();
-    var wrapInt = setInterval(function() {
-      wrapRender();
-      if (origRender) clearInterval(wrapInt);
-    }, 500);
+      return origFetch.apply(this, arguments);
+    };
   } catch (e) {}
+
+
 })();
