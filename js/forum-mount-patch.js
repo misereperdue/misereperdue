@@ -344,6 +344,97 @@
 
 
 
+
+  // Activity nav sliding pill (via patch - doesn't touch dashboard.js)
+  (function() {
+    function setupActivitySlider() {
+      // Find activity nav: contains Views, Visitors, Users, Posts buttons
+      var viewsBtn = document.querySelector('button[aria-label="Views"]');
+      if (!viewsBtn || document.getElementById('activity-slider')) return;
+      
+      var container = viewsBtn.parentElement;
+      if (!container) return;
+      
+      var labels = ["Views", "Visitors", "Users", "Posts"];
+      var btns = labels.map(function(l) {
+        return container.querySelector('button[aria-label="' + l + '"]');
+      }).filter(Boolean);
+      if (btns.length !== 4) return;
+      
+      // Style container as pill track
+      container.style.position = 'relative';
+      container.style.display = 'flex';
+      container.style.background = 'rgba(120,120,128,0.18)';
+      container.style.borderRadius = '14px';
+      container.style.padding = '3px';
+      container.style.gap = '0';
+      
+      // Create slider
+      var slider = document.createElement('div');
+      slider.id = 'activity-slider';
+      slider.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);' +
+        'border-radius:11px;background:rgba(255,255,255,0.22);' +
+        'transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;';
+      container.insertBefore(slider, container.firstChild);
+      
+      // Make buttons transparent (remove blue)
+      btns.forEach(function(b) {
+        b.style.background = 'transparent';
+        b.style.border = 'none';
+        b.style.position = 'relative';
+        b.style.zIndex = '1';
+      });
+      
+      // Track and move slider on click
+      btns.forEach(function(btn, idx) {
+        btn.addEventListener('click', function() {
+          slider.style.transform = 'translateX(' + (idx * 100) + '%)';
+          // Clear any blue background the dashboard tries to set
+          setTimeout(function() {
+            btns.forEach(function(b) { b.style.background = 'transparent'; });
+          }, 10);
+        });
+      });
+      
+      // Watch for dashboard re-applying blue background
+      var obs = new MutationObserver(function() {
+        btns.forEach(function(b) {
+          if (b.style.background && b.style.background.indexOf('122,255') !== -1) {
+            b.style.background = 'transparent';
+          }
+        });
+      });
+      try {
+        btns.forEach(function(b) {
+          obs.observe(b, { attributes: true, attributeFilter: ['style'] });
+        });
+      } catch (e) {}
+    }
+    
+    // Run when dashboard opens
+    var dashObs = new MutationObserver(function(muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var nodes = muts[i].addedNodes;
+        for (var j = 0; j < nodes.length; j++) {
+          var n = nodes[j];
+          if (n.nodeType === 1 && n.querySelector && n.querySelector('button[aria-label="Views"]')) {
+            setTimeout(setupActivitySlider, 300);
+            return;
+          }
+        }
+      }
+    });
+    try {
+      dashObs.observe(document.body, { childList: true, subtree: true });
+    } catch (e) {}
+    
+    setInterval(function() {
+      if (document.querySelector('button[aria-label="Views"]') && !document.getElementById('activity-slider')) {
+        setupActivitySlider();
+      }
+    }, 2000);
+  })();
+
   // Assistant briefing under the graph
   (function() {
     function addBriefing() {
