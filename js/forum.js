@@ -638,7 +638,7 @@
         uploadEditorFile(file, function (res) {
           if (!res) return;
           editor.chain().focus().insertContent(
-            '<p><a href="' + res.url.replace(/"/g, "%22") + '">' + "\uD83D\uDCCE " + esc(res.name) + " \u00B7 " + fmtSize(res.size) + "</a></p><p></p>"
+            '<p><a href="' + res.url.replace(/"/g, "%22") + '" download>' + "\uD83D\uDCCE " + esc(res.name) + " \u00B7 " + fmtSize(res.size) + "</a></p><p></p>"
           ).run();
         });
       });
