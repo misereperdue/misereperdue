@@ -1948,23 +1948,20 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-admin > * { flex: none; }
 
 /* Membership amount slider */
-.member-slider { margin: 16px 0 6px; padding: 14px 16px 10px; border-radius: 18px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .09); }
+.member-slider { margin: 16px 0 16px; padding: 14px 16px 10px; border-radius: 18px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .09); }
 .member-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; opacity: .75; margin-bottom: 8px; }
 .member-top .member-val { font-size: 17px; font-weight: 700; letter-spacing: 0; text-transform: none; opacity: 1; color: #fff; display: inline-block; }
 .member-val.bump { animation: memberBump .28s cubic-bezier(.3, 1.4, .5, 1); }
 @keyframes memberBump { 0% { transform: scale(1); } 40% { transform: scale(1.22); color: #7db1ff; } 100% { transform: scale(1); } }
-.member-trackwrap { position: relative; height: 28px; margin: 2px 0 4px; }
-.member-track { position: absolute; left: 0; right: 0; top: 50%; height: 8px; transform: translateY(-50%); border-radius: 999px; background: rgba(255, 255, 255, .13); }
-.member-fill { height: 100%; width: 12px; border-radius: 999px; background: linear-gradient(90deg, #2f7cf6, #5ea0ff); box-shadow: 0 0 14px rgba(47, 124, 246, .5); transition: width .22s cubic-bezier(.3, .7, .3, 1); }
-.member-dots i { position: absolute; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: rgba(255, 255, 255, .55); transform: translate(-50%, -50%); }
-.member-slider input[type="range"] { -webkit-appearance: none; appearance: none; position: absolute; inset: 0; width: 100%; height: 28px; background: transparent; outline: none; margin: 0; padding: 0; border: none; }
+.member-slider input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; border-radius: 999px; background-color: transparent; background-repeat: no-repeat; background-position: center; background-size: 100% 8px; outline: none; margin: 2px 0 4px; padding: 0; border: none; }
 .member-slider input[type="range"]::-webkit-slider-runnable-track { height: 28px; border-radius: 999px; background: transparent; }
 .member-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: none; box-shadow: 0 2px 10px rgba(0, 0, 0, .5), 0 0 0 4px rgba(47, 124, 246, .18); cursor: pointer; transition: transform .15s ease; }
 .member-slider input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.18); }
 .member-slider input[type="range"]::-moz-range-track { height: 28px; border-radius: 999px; background: transparent; }
 .member-slider input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: none; box-shadow: 0 2px 10px rgba(0, 0, 0, .5), 0 0 0 4px rgba(47, 124, 246, .18); cursor: pointer; }
 .member-ticks { display: flex; justify-content: space-between; font-size: 12px; opacity: .55; margin-top: 6px; }
-.member-ticks span { transition: color .18s ease, opacity .18s ease, font-weight .18s ease; }
+.member-ticks span { transition: color .18s ease, opacity .18s ease; }
 .member-ticks span.on { color: #fff; opacity: 1; font-weight: 700; }
+
 
 
