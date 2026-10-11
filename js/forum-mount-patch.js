@@ -96,6 +96,19 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
+  // Reserve space for async forum elements to prevent layout shift
+  // Admin buttons (Pin/Delete) appear after /api/me resolves - reserve space now
+  try {
+    var layoutStyle = document.createElement("style");
+    layoutStyle.textContent = [
+      ".forum-admin{min-height:34px;}",
+      ".forum-thread-row{min-height:80px;}",
+      // Prevent avatar pop-in shift
+      ".forum-thread-meta img,.forum-thread-meta .avatar{width:24px;height:24px;min-width:24px;min-height:24px;}"
+    ].join("");
+    document.head.appendChild(layoutStyle);
+  } catch (e) {}
+
   // Dedupe concurrent forum API requests to prevent race-condition re-renders
   // If two /api/forum/threads requests are in-flight, they share the same promise
   try {
