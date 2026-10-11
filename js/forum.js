@@ -352,7 +352,7 @@
     return '<div class="chat-head forum-topbar">' +
       '<div class="chat-title">Forum</div>' +
       '<div class="chat-head-right">' +
-      (token() ? (view.name === "thread"
+      (token() && view.name !== "new" ? (view.name === "thread"
         ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top">New reply</button>'
         : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
@@ -824,11 +824,12 @@
     html += "</select></label>" +
       '<label class="chat-field"><span>Title</span>' +
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
-      '<span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
+      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
+    window.scrollTo(0, 0);
     wireAvatars();
     var nbTop2 = root.querySelector("#forum-new-top");
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
