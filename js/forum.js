@@ -267,16 +267,22 @@
     try { return localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) { return true; }
   }
   var SIG_EMOJI_NET = { "\uD83D\uDC26": "x", "\uD83D\uDCF8": "instagram", "\uD83C\uDFB5": "tiktok", "\u25B6": "youtube" };
-  var SIG_SOCIAL_DOM = /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com|instagram\.com|tiktok\.com|youtube\.com|youtu\.be)(\/|$)/i;
+  function sigNet(url) {
+    var m = String(url || "").match(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com|instagram\.com|tiktok\.com|youtube\.com|youtu\.be)(\/|$)/i);
+    if (!m) return "";
+    var d = m[3].toLowerCase();
+    return (d === "x.com" || d === "twitter.com") ? "x" : d === "instagram.com" ? "instagram" : d === "tiktok.com" ? "tiktok" : "youtube";
+  }
   function upgradeSigSocial(html) {
     var out = String(html || "").replace(/(<a href="[^"]*"[^>]*>)(\uD83D\uDC26|\uD83D\uDCF8|\uD83C\uDFB5|\u25B6)\s?/g, function (m, open, emo) {
       var logo = (window.MPSocialLogos || {})[SIG_EMOJI_NET[emo]] || "";
       return logo ? open + logo + " " : m;
     });
     out = out.replace(/<div>(<a href="([^"]*)"[^>]*>.*?<\/a>)<\/div>/g, function (m, a, url) {
-      return SIG_SOCIAL_DOM.test(url) ? '<span class="sig-social-item">' + a + "</span>" : m;
+      var net = sigNet(url);
+      return net ? '<span class="sig-social-item net-' + net + '">' + a + "</span>" : m;
     });
-    out = out.replace(/((?:<span class="sig-social-item">.*?<\/span>)+)/g, '<div class="sig-social-row">$1</div>');
+    out = out.replace(/((?:<span class="sig-social-item[^"]*">.*?<\/span>)+)/g, '<div class="sig-social-row">$1</div>');
     return out;
   }
   function signatureHTML(post, compact) {
