@@ -385,13 +385,13 @@
       container.style.webkitBackdropFilter = 'blur(20px)';
       container.style.border = '1px solid rgba(255,255,255,0.12)';
 
-      // Pill: inset by 3px via top/bottom, left calculated to stay inside
+      // Pill: opaque to hide dashboard's underlying colors
       var pill = document.createElement('div');
       pill.className = 'dash-pill-slider';
       pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;border-radius:18px;' +
-        'background:linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.18));' +
-        'border:0.5px solid rgba(255,255,255,0.35);' +
-        'box-shadow:0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4);' +
+        'background:linear-gradient(180deg, #4a4a4e, #3a3a3e);' +
+        'border:0.5px solid rgba(255,255,255,0.25);' +
+        'box-shadow:0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25);' +
         'transition:transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1);' +
         'pointer-events:none;z-index:0;margin:0;padding:0;';
       container.insertBefore(pill, container.firstChild);
@@ -399,7 +399,8 @@
       btns.forEach(function(b) {
         b.style.position = 'relative';
         b.style.zIndex = '1';
-        b.style.background = 'transparent';
+        b.style.setProperty('background', 'transparent', 'important');
+        b.style.setProperty('background-color', 'transparent', 'important');
         b.style.border = 'none';
         b.style.flex = '1';
         b.style.margin = '0';
@@ -430,8 +431,9 @@
           pill.style.transition = 'transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1)';
         }
         btns.forEach(function(b2) {
-          b2.style.background = 'transparent';
-          b2.style.boxShadow = 'none';
+          b2.style.setProperty('background', 'transparent', 'important');
+          b2.style.setProperty('box-shadow', 'none', 'important');
+          b2.style.setProperty('background-color', 'transparent', 'important');
         });
       }
 
