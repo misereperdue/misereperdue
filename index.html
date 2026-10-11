@@ -257,12 +257,12 @@
       var reading = view === "post" || view === "product";
       // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
-      // Bulletproof panel switching: inline display bypasses any CSS issues
-      document.getElementById("journal").style.display = view === "journal" ? "" : "none";
-      document.getElementById("shop").style.display = view === "shop" ? "" : "none";
-      document.getElementById("cart").style.display = view === "cart" ? "" : "none";
-      document.getElementById("forum").style.display = view === "forum" ? "" : "none";
-      document.getElementById("postview").style.display = reading ? "" : "none";
+      // Panel switching via class (CSS handles display)
+      document.getElementById("journal").classList.toggle("on", view === "journal");
+      document.getElementById("shop").classList.toggle("on", view === "shop");
+      document.getElementById("cart").classList.toggle("on", view === "cart");
+      document.getElementById("forum").classList.toggle("on", view === "forum");
+      document.getElementById("postview").classList.toggle("on", reading);
       nav.classList.toggle("shop", view === "shop");
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
