@@ -264,7 +264,7 @@ var MPShop = (function () {
       var vals = Object.keys(p.priceBySize).map(function (k) { return p.priceBySize[k]; })
         .filter(function (v, i, a) { return v != null && a.indexOf(v) === i; })
         .sort(function (a, b) { return a - b; });
-      if (vals.length > 1) return "$" + vals[0] + "-$" + vals[vals.length - 1] + " CAD";
+      if (vals.length > 1) return "$" + vals[0] + "-" + vals[vals.length - 1] + " CAD";
     }
     return p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon");
   }
