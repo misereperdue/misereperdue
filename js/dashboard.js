@@ -57,15 +57,15 @@
 
     // Title + top-level Chat/Forum selector
     var headRow = document.createElement("div");
-    headRow.style.cssText = "display:flex;align-items:center;gap:12px;margin-bottom:16px;";
+    headRow.style.cssText = "display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:16px;";
     var title = document.createElement("h3");
     title.style.cssText = "margin:0;font-size:20px;font-weight:700;";
     title.textContent = "Dashboard";
     headRow.appendChild(title);
     var topNav = document.createElement("div");
-    topNav.style.cssText = "position:relative;display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
+    topNav.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.18);border-radius:14px;padding:3px;";
     var topSlider = document.createElement("span");
-    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(33.333% - 2px);border-radius:7px;background:var(--glass-regular-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.3,1.3,.4,1);pointer-events:none;";
+    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(33.333% - 3px);border-radius:11px;background:#3a3a3e;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;";
     topNav.appendChild(topSlider);
     var chatDashBtn = document.createElement("button");
     var forumDashBtn = document.createElement("button");
@@ -150,12 +150,16 @@
     graphTitle.textContent = "Activity — Last 30 Days";
     overviewPage.appendChild(graphTitle);
 
-    // Metric toggle
+    // Metric toggle (pill container with slider)
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;";
+    toggleRow.style.cssText = "position:relative;display:flex;gap:4px;margin-bottom:12px;background:rgba(120,120,128,0.18);border-radius:14px;padding:3px;";
+    var actSlider = document.createElement("div");
+    actSlider.style.cssText = "position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:#3a3a3e;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;";
+    toggleRow.appendChild(actSlider);
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" };
+    var metricOrder = ["views", "visitors", "newUsers", "messages"];
     var metricIcons = {
       views: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
       visitors: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3.2"/><path d="M6.6 18.4a6.4 6.4 0 0 1 10.8 0"/><path d="M15.2 15.8l1.7 1.7 3.1-3.5"/></svg>',
@@ -168,13 +172,11 @@
       btn.innerHTML = metricIcons[metric];
       btn.title = metricLabels[metric];
       btn.setAttribute("aria-label", metricLabels[metric]);
-      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:var(--glass-hairline);background:" +
-        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;";
+      btn.style.cssText = "flex:1;padding:10px 8px;border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
-        Object.keys(metricBtns).forEach(function(k) {
-          metricBtns[k].style.background = "transparent";
-        });
+        var idx = metricOrder.indexOf(metric);
+        actSlider.style.transform = "translateX(" + (idx * 100) + "%)";
         drawGraph();
       });
       metricBtns[metric] = btn;
