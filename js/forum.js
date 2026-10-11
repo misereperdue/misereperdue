@@ -659,9 +659,10 @@
         if (!file) return;
         uploadEditorFile(file, function (res) {
           if (!res) return;
-          editor.chain().focus().insertContent(
-            '<div class="mp-file" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);"><span class="mp-file-name" style="color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" style="width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div><p></p>'
-          ).run();
+          editor.chain().focus().insertContent({
+            type: "fileRow",
+            attrs: { url: res.url, name: res.name.replace(/\.[a-z0-9]+$/i, "") }
+          }).run();
         });
       });
     }
@@ -777,6 +778,47 @@
       }
     });
   }
+  function fileRowNode(Node) {
+    return Node.create({
+      name: "fileRow",
+      group: "block",
+      atom: true,
+      draggable: false,
+      addAttributes: function () {
+        return {
+          url: { default: "" },
+          name: { default: "" }
+        };
+      },
+      parseHTML: function () {
+        return [{
+          tag: "div.mp-file",
+          getAttrs: function (el) {
+            var a = el.querySelector("a.mp-file-dl");
+            var n = el.querySelector(".mp-file-name");
+            return { url: a ? a.getAttribute("href") : "", name: n ? n.textContent : "" };
+          }
+        }];
+      },
+      renderHTML: function (ctx) {
+        var at = ctx.HTMLAttributes;
+        var rowStyle = "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);";
+        var nameStyle = "color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+        var btnStyle = "width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;";
+        var svgStyle = "width:28px;height:28px;display:block;";
+        return ["div", { class: "mp-file", style: rowStyle },
+          ["span", { class: "mp-file-name", style: nameStyle }, at.name],
+          ["a", { class: "mp-file-dl", href: at.url, download: "", "aria-label": "Download", style: btnStyle },
+            ["svg", { viewBox: "0 0 24 24", style: svgStyle, fill: "none", stroke: "#fff", "stroke-width": "2.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" },
+              ["path", { d: "M12 3v12" }],
+              ["path", { d: "M7 10l5 5 5-5" }],
+              ["path", { d: "M4 21h16" }]
+            ]
+          ]
+        ];
+      }
+    });
+  }
   function createEditor(mount, placeholder, initialHTML) {
     return loadEditorLib().then(function (lib) {
       if (!lib) return null;
@@ -787,7 +829,7 @@
           lib.Placeholder.configure({ placeholder: placeholder }),
           lib.Link.configure({ openOnClick: false, autolink: true }),
           lib.Image.configure({ inline: false })
-        ].concat(lib.Node ? [lockedBlockNode(lib.Node)] : []),
+        ].concat(lib.Node ? [lockedBlockNode(lib.Node), fileRowNode(lib.Node)] : []),
         content: initialHTML || "",
         editorProps: { attributes: { class: "forum-editor-input" } }
       });
