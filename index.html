@@ -212,7 +212,11 @@
       return !!document.querySelector(".chat-auth");
     }
     function assertScroll() {
-      if (isAuthView()) return; // Don't fight the auth page layout
+      if (isAuthView()) {
+        // Auth page: single scroll to top after layout settles
+        setTimeout(function() { window.scrollTo(0, 0); }, 800);
+        return;
+      }
       if (current.type === "journal") {
         // Chat belongs at the newest message; MPChat may still be booting,
         // so retry until it can scroll, then hold the bottom briefly.
