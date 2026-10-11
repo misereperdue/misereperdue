@@ -2070,3 +2070,11 @@ button.forum-glass-pill:active { transform: scale(.97); }
   border: 1px solid rgba(127,127,127,.3); background: rgba(127,127,127,.08);
   color: var(--ink); font-size: 14px; margin-bottom: 8px; }
 .forum-poll-input::placeholder { color: var(--muted); opacity: .7; }
+
+.forum-mention-dropdown { position: absolute; z-index: 1000; background: var(--bg);
+  border: 1px solid rgba(127,127,127,.3); border-radius: 10px; padding: 4px;
+  min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.forum-mention-item { display: block; width: 100%; text-align: left; padding: 8px 10px;
+  border: none; background: none; color: var(--ink); border-radius: 6px;
+  cursor: pointer; font-size: 14px; }
+.forum-mention-item:hover { background: rgba(80,140,255,.15); }
