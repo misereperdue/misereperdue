@@ -74,7 +74,13 @@ var MPShopify = (function () {
       currency: price.currencyCode || "CAD",
       images: images,
       image: images[0] || "",
-      details: (n.description || "").slice(0, 1000),
+      details: (function () {
+        var html = n.descriptionHtml || "";
+        if (!html) return (n.description || "").slice(0, 1000);
+        var t = html.replace(/<\/p>/gi, "\n\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+        t = t.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+        return t.trim().slice(0, 1000);
+      })(),
       sizes: sizes.length ? sizes : null,
       variantList: variantList,
       priceBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.price != null) m[vv.size] = vv.price; return m; }, {}),
@@ -84,7 +90,7 @@ var MPShopify = (function () {
   }
 
   function fetchProducts() {
-    var query = "{ products(first: 24) { edges { node { id title handle description " +
+    var query = "{ products(first: 24) { edges { node { id title handle description descriptionHtml " +
       "availableForSale priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
       "variants(first: 25) { edges { node { id title availableForSale quantityAvailable price { amount currencyCode } selectedOptions { name value } } } } } } } }";
