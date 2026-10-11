@@ -374,10 +374,10 @@
       if (!container || container.hasAttribute('data-pills')) return;
       container.setAttribute('data-pills', '1');
 
-      // Container styling - proper pill track with overflow hidden for masking
+      // Container: no overflow:hidden (Safari bug with backdrop-filter), 
+      // instead we mathematically constrain the pill
       container.style.position = 'relative';
       container.style.display = 'flex';
-      container.style.overflow = 'hidden';
       container.style.background = 'rgba(120,120,128,0.18)';
       container.style.borderRadius = '24px';
       container.style.padding = '3px';
@@ -385,71 +385,67 @@
       container.style.webkitBackdropFilter = 'blur(20px)';
       container.style.border = '1px solid rgba(255,255,255,0.12)';
 
-      // Pill element - uses getBoundingClientRect for accurate positioning
+      // Pill: inset by 3px via top/bottom, left calculated to stay inside
       var pill = document.createElement('div');
-      pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:0;border-radius:20px;' +
-        'background:linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.16));' +
+      pill.className = 'dash-pill-slider';
+      pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;border-radius:18px;' +
+        'background:linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.18));' +
         'border:0.5px solid rgba(255,255,255,0.35);' +
         'box-shadow:0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4);' +
-        'backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
-        'transition:transform 0.35s cubic-bezier(0.32,0.72,0,1), width 0.35s cubic-bezier(0.32,0.72,0,1);' +
-        'pointer-events:none;z-index:0;';
+        'transition:transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1);' +
+        'pointer-events:none;z-index:0;margin:0;padding:0;';
       container.insertBefore(pill, container.firstChild);
 
-      // Button styling - ensure proper stacking
       btns.forEach(function(b) {
         b.style.position = 'relative';
         b.style.zIndex = '1';
         b.style.background = 'transparent';
         b.style.border = 'none';
         b.style.flex = '1';
+        b.style.margin = '0';
       });
 
       function movePill(idx, animate) {
         var btn = btns[idx];
-        if (!btn) return;
-        // Use getBoundingClientRect for pixel-perfect positioning
-        var cRect = container.getBoundingClientRect();
-        var bRect = btn.getBoundingClientRect();
-        var x = bRect.left - cRect.left;
-        var w = bRect.width;
-        if (!animate) pill.style.transition = 'none';
-        // Account for container border (1px) - pill left is 0, so x is relative to padding box
-        pill.style.transform = 'translateX(' + x + 'px)';
+        if (!btn || !pill.isConnected) return;
+        // Calculate relative to container's padding box
+        // pill left:3px, so x = btn.offsetLeft - 3 (to account for pill's left offset)
+        // Actually simpler: use offsetLeft which is relative to offsetParent (container)
+        var x = btn.offsetLeft;
+        var w = btn.offsetWidth;
+        // Constrain: pill left:3px, so translate = x - 3
+        // This keeps pill inside the 3px padding
+        var tx = x - 3;
+        // Ensure it doesn't go negative or overflow
+        tx = Math.max(0, tx);
+        if (animate) {
+          pill.style.transition = 'transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1)';
+        } else {
+          pill.style.transition = 'none';
+        }
+        pill.style.transform = 'translateX(' + tx + 'px)';
         pill.style.width = w + 'px';
         if (!animate) {
-          pill.offsetHeight;
-          pill.style.transition = '';
+          void pill.offsetWidth;
+          pill.style.transition = 'transform 0.38s cubic-bezier(0.32,0.72,0,1), width 0.38s cubic-bezier(0.32,0.72,0,1)';
         }
-        // Clear dashboard's active background, pill shows state instead
-        btns.forEach(function(b2, i2) {
+        btns.forEach(function(b2) {
           b2.style.background = 'transparent';
           b2.style.boxShadow = 'none';
         });
       }
 
-      // Click handlers
+      // Use capture phase to ensure we run before dashboard's own handlers
       btns.forEach(function(btn, idx) {
         btn.addEventListener('click', function() {
-          setTimeout(function() { movePill(idx, true); }, 40);
-        });
+          // Move immediately on click for responsiveness, dashboard updates after
+          movePill(idx, true);
+        }, true);
       });
 
-      // Initial position after layout settles
-      requestAnimationFrame(function() {
-        setTimeout(function() { movePill(0, false); }, 50);
-      });
-      
-      // Re-position if layout shifts (fonts loading, etc)
-      setTimeout(function() { 
-        var activeIdx = 0;
-        // Try to find which is actually active
-        btns.forEach(function(b, i) {
-          var bg = b.style.background || '';
-          if (bg.indexOf('122,255') !== -1) activeIdx = i;
-        });
-        movePill(activeIdx, false); 
-      }, 500);
+      // Initial
+      setTimeout(function() { movePill(0, false); }, 150);
+      setTimeout(function() { movePill(0, false); }, 600);
     }
 
     // Run when dashboard appears
