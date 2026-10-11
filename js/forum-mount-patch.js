@@ -74,8 +74,22 @@
   var scrollWrapIv = setInterval(function() {
     if (window.MPChat && MPChat.scrollToLatest && !MPChat.scrollToLatest._scoped) {
       var orig = MPChat.scrollToLatest;
+      // Track user scroll to prevent scroll-fighting
+      var userScrolling = false;
+      var scrollTimeout = null;
+      window.addEventListener("scroll", function() {
+        userScrolling = true;
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() { userScrolling = false; }, 150);
+      }, { passive: true });
       var wrapped = function() {
         if (!isChatPage()) return;
+        // Don't yank scroll if user is actively scrolling
+        if (userScrolling) return;
+        // Don't pull down if user scrolled up intentionally
+        var h = document.documentElement;
+        var atBottom = (h.scrollHeight - window.scrollY - window.innerHeight) < 300;
+        if (!atBottom) return;
         return orig.apply(this, arguments);
       };
       wrapped._scoped = true;
@@ -95,19 +109,6 @@
     obs.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
-
-  // Fix chat scroll glitch: disable the opacity fade that causes message duplication
-  // The fade logic in chat.js sets opacity on scroll, which glitches on iOS
-  try {
-    var chatFix = document.createElement("style");
-    chatFix.textContent = [
-      // Disable the fade effect entirely - messages stay fully visible
-      ".msg[data-fade]{opacity:1!important;pointer-events:auto!important;}",
-      // Force proper compositing to prevent visual duplication
-      "#chat-msgs,.chat-msgs{transform:translateZ(0);-webkit-transform:translateZ(0);}"
-    ].join("");
-    document.head.appendChild(chatFix);
-  } catch (e) {}
 
   // Reserve space for async forum elements to prevent layout shift
   // Admin buttons (Pin/Delete) appear after /api/me resolves - reserve space now
