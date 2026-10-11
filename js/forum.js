@@ -680,6 +680,12 @@
     }
   };
 
+  function wireSigninTop() {
+    var b = root && root.querySelector("#forum-signin-top");
+    if (b) b.addEventListener("click", function () {
+      if (window.MPNav && window.MPNav.show) window.MPNav.show("journal");
+    });
+  }
   function forumTopBar() {
     var pts = meInfo ? (meInfo.points || 0) : 0;
     var avHtml = "";
@@ -693,6 +699,7 @@
       (token() && view.name !== "new" ? (view.name === "thread"
         ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top">New reply</button>'
         : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
+      (!token() ? '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>' : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
@@ -802,6 +809,7 @@
           .then(function (r) { if (r.ok) { view.name = "list"; view.threadId = null; render(); } });
       });
     });
+    wireSigninTop();
     var nbTop = root.querySelector("#forum-new-top");
     if (nbTop) nbTop.addEventListener("click", function () {
       view.name = "new";
@@ -946,6 +954,7 @@
           }
         }, 350);
       }
+      wireSigninTop();
       var replyTop = root.querySelector("#forum-reply-top");
       if (replyTop) replyTop.addEventListener("click", focusComposer);
       root.querySelectorAll("[data-replyto]").forEach(function (b) {
