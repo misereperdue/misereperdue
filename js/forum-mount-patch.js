@@ -48,6 +48,13 @@
     }
   } catch (e) {}
 
+  // Fix share button visibility in light mode (CSS too large to push, inject here)
+  try {
+    var style = document.createElement("style");
+    style.textContent = ".share-btn{background:var(--glass-clear-tint)!important;border:var(--glass-hairline)!important;color:var(--ink)!important;}";
+    document.head.appendChild(style);
+  } catch (e) {}
+
   // Hide forum loader when threads render
   function checkForumLoaded() {
     var loader = document.getElementById("forum-loader");
