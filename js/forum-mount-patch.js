@@ -110,53 +110,6 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
-  // Site-wide solid icons
-  // Converts stroke-based icons to solid fill
-  function applySolid(svg) {
-    if (!svg || svg.getAttribute("data-solid")) return;
-    svg.setAttribute("data-solid", "1");
-    // Set fill to currentColor, remove all stroke attributes
-    svg.setAttribute("fill", "currentColor");
-    svg.removeAttribute("stroke");
-    svg.removeAttribute("stroke-width");
-    svg.removeAttribute("stroke-linecap");
-    svg.removeAttribute("stroke-linejoin");
-    var els = svg.querySelectorAll("path, circle, rect");
-    els.forEach(function(el) {
-      // Skip duotone fill layers from previous version
-      if (el.getAttribute("data-duo-fill")) {
-        el.remove();
-        return;
-      }
-      el.setAttribute("fill", "currentColor");
-      el.removeAttribute("stroke");
-      el.removeAttribute("stroke-width");
-      el.removeAttribute("stroke-linecap");
-      el.removeAttribute("stroke-linejoin");
-      el.removeAttribute("opacity");
-    });
-    // Remove any duotone fill layers at svg level
-    svg.querySelectorAll("[data-duo-fill]").forEach(function(el) { el.remove(); });
-    svg.removeAttribute("data-duo");
-  }
-  
-  function scanSolid() {
-    document.querySelectorAll("svg:not([data-solid])").forEach(applySolid);
-  }
-  setTimeout(scanSolid, 500);
-  setInterval(scanSolid, 1500);
-  try {
-    new MutationObserver(function(muts) {
-      muts.forEach(function(m) {
-        m.addedNodes.forEach(function(n) {
-          if (n.nodeType === 1) {
-            if (n.tagName === "SVG") applySolid(n);
-            n.querySelectorAll && n.querySelectorAll("svg:not([data-solid])").forEach(applySolid);
-          }
-        });
-      });
-    }).observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
 
 
 
