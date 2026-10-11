@@ -2087,7 +2087,3 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .chat-auth { position: relative; }
 body:has(.chat-auth) { overflow: hidden; }
 body:has(.chat-auth) .chat-auth { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
-/* Structural scroll fix: body never scrolls, #app is the scroller */
-html, body { overflow: hidden; height: 100%; margin: 0; }
-#app { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
