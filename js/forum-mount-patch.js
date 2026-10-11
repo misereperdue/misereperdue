@@ -48,6 +48,39 @@
     }
   } catch (e) {}
 
+  // Hide forum loader when threads render
+  function checkForumLoaded() {
+    var loader = document.getElementById("forum-loader");
+    if (!loader || loader.classList.contains("hidden")) return;
+    var threads = document.querySelectorAll(".forum-thread");
+    if (threads.length > 0) {
+      // Wait a beat for images/layout to settle, then fade
+      setTimeout(function() {
+        loader.classList.add("hidden");
+        setTimeout(function() { loader.style.display = "none"; }, 500);
+      }, 300);
+    }
+  }
+  setInterval(checkForumLoaded, 500);
+  // Show loader when forum panel becomes active
+  try {
+    var forumPanel = document.getElementById("forum");
+    if (forumPanel) {
+      var panelObs = new MutationObserver(function() {
+        var loader = document.getElementById("forum-loader");
+        if (!loader) return;
+        if (forumPanel.classList.contains("on")) {
+          // Forum activated: show loader until threads render
+          if (loader.classList.contains("hidden")) {
+            loader.classList.remove("hidden");
+            loader.style.display = "";
+          }
+        }
+      });
+      panelObs.observe(forumPanel, { attributes: true, attributeFilter: ["class"] });
+    }
+  } catch (e) {}
+
   // Scope chat's scroll-to-latest to ONLY the chat page.
   // The chat code calls scrollToLatest on timers/events that fire on other pages too.
   function isChatPage() {

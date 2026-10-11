@@ -2085,3 +2085,24 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 
 
+
+.forum-loader {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #0a0a1a 50%, #16213e 75%, #0a0a1a 100%);
+  background-size: 400% 400%;
+  animation: forum-load-pulse 2s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.forum-loader.hidden { opacity: 0; }
+@keyframes forum-load-pulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+#forum { position: relative; }
+[data-theme="light"] .forum-loader {
+  background: linear-gradient(135deg, #f0f0f5 0%, #e0e0ec 25%, #f0f0f5 50%, #d8d8e8 75%, #f0f0f5 100%);
+  background-size: 400% 400%;
+}
