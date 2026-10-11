@@ -1938,3 +1938,6 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-tag-suggest { position: absolute; left: 8px; right: 8px; top: calc(100% + 4px); z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 12px; background: rgba(20,26,48,.97); border: var(--glass-hairline); box-shadow: 0 12px 32px rgba(0,0,0,.4); }
 [data-theme="light"] .forum-tag-suggest { background: rgba(255,255,255,.98); }
 .forum-tag-sug { appearance: none; border: var(--glass-hairline); background: rgba(255,255,255,.07); color: var(--ink); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* Product option selector label (e.g. Amount) */
+.option-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
