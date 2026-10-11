@@ -282,9 +282,14 @@
     });
   }
   setTimeout(replaceMetricIcons, 500);
-  // Add visible labels to activity metric tabs
+  // Add visible labels to activity metric tabs (Messages -> Posts)
   function labelMetricTabs() {
-    var labels = { "Views": "Views", "Visitors": "Visitors", "Messages": "Messages", "New Users": "New Users" };
+    var labels = { "Views": "Views", "Visitors": "Visitors", "Messages": "Posts", "New Users": "New Users" };
+    // Also update the aria-label
+    document.querySelectorAll('button[aria-label="Messages"]').forEach(function(btn) {
+      btn.setAttribute("aria-label", "Posts");
+      btn.setAttribute("title", "Posts");
+    });
     document.querySelectorAll("button[aria-label]").forEach(function(btn) {
       var label = btn.getAttribute("aria-label");
       if (labels[label] && !btn.querySelector(".metric-label")) {
