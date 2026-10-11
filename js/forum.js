@@ -158,7 +158,7 @@
 
   /* ---------- rich text ---------- */
 
-  var RICH_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1 };
+  var RICH_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1 , IFRAME: 1, DIV: 1 };
   function sanitizeHTML(html) {
     try {
       var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
@@ -173,7 +173,7 @@
             child.remove();
             return;
           }
-          var keepHref = null, keepSrc = null;
+          var keepHref = null, keepSrc = null, keepFrame = null;
           if (child.tagName === "A") {
             var href = child.getAttribute("href") || "";
             if (/^https?:\/\//i.test(href)) keepHref = href;
@@ -182,10 +182,22 @@
             var src = child.getAttribute("src") || "";
             if (/^https?:\/\//i.test(src)) keepSrc = src;
           }
+          if (child.tagName === "IFRAME") {
+            var fsrc = child.getAttribute("src") || "";
+            if (YT_EMBED_OK.test(fsrc)) keepFrame = fsrc;
+          }
           Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
           if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
           if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
           if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
+          if (child.tagName === "IFRAME") {
+            if (!keepFrame) { child.remove(); return; }
+            child.setAttribute("src", keepFrame);
+            child.setAttribute("loading", "lazy");
+            child.setAttribute("allowfullscreen", "");
+            child.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
+            child.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+          }
           walk(child);
         });
       })(doc.body);
@@ -193,7 +205,7 @@
     } catch (e) { return ""; }
   }
   var SIG_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1, IFRAME: 1, DIV: 1 };
-  var EMBED_SRC_OK = /^https:\/\/(www\.youtube\.com|www\.youtube-nocookie\.com|open\.spotify\.com|w\.soundcloud\.com|player\.vimeo\.com)\//i;
+  var EMBED_SRC_OK = /^https:\/\/(open\.spotify\.com|w\.soundcloud\.com|player\.vimeo\.com)\//i;
   function sanitizeSignature(html) {
     try {
       var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
@@ -239,6 +251,8 @@
       return doc.body.innerHTML;
     } catch (e) { return ""; }
   }
+  function canPostEmbed() { return !!(meInfo && (meInfo.member || isOwner)); }
+
   function sigVisible() {
     try { return localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) { return true; }
   }
@@ -292,15 +306,84 @@
     { act: "link", label: "\uD83D\uDD17", cls: "" },
     { act: "image", label: "\uD83D\uDCF7", cls: "" }
   ];
-  function toolbarHTML() {
+  function toolbarHTML(showEmbed) {
     var h = '<div class="forum-toolbar">';
     TOOLBAR.forEach(function (b) {
       h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '">' + b.label + "</button>";
     });
+    if (showEmbed) h += '<button type="button" class="forum-tb forum-tb-embed" data-act="embed" title="Embed YouTube video">\u25B6</button>';
     h += "</div>";
     h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
+    if (showEmbed) h += '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">\u00D7</button></div>';
     h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
     return h;
+  }
+  var YT_EMBED_OK = /^https:\/\/(www\.youtube\.com|www\.youtube-nocookie\.com)\/embed\//i;
+  function extractYouTubeEmbed(raw) {
+    raw = String(raw || "").trim();
+    var m = raw.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) || raw.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i);
+    var url = m ? m[1] : raw;
+    if (YT_EMBED_OK.test(url)) return url;
+    var id = (url.match(/(?:youtube\.com\/(?:watch\?[^\s]*v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i) || [])[1];
+    if (id) return "https://www.youtube.com/embed/" + id;
+    return null;
+  }
+  function splitPostEmbeds(html) {
+    var embeds = [];
+    try {
+      var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+      doc.querySelectorAll("iframe").forEach(function (f) {
+        var src = f.getAttribute("src") || "";
+        if (src && embeds.length < 2) embeds.push({ src: src });
+        var w = f.closest ? (f.closest(".forum-embed") || f) : f;
+        w.remove();
+      });
+      html = doc.body.innerHTML;
+    } catch (e) {}
+    return { html: html, embeds: embeds };
+  }
+  function appendPostEmbeds(html, embeds) {
+    (embeds || []).forEach(function (e) {
+      if (!e || !e.src) return;
+      html += '<div class="forum-embed"><iframe src="' + String(e.src).replace(/"/g, "%22") + '" allowfullscreen loading="lazy"></iframe></div>';
+    });
+    return html;
+  }
+  function paintPostEmbedChips(mount) {
+    var box = mount.querySelector(".forum-embed-chips");
+    if (!box) return;
+    box.innerHTML = "";
+    (mount._postEmbeds || []).forEach(function (e, i) {
+      var chip = document.createElement("span");
+      chip.className = "sig-chip";
+      chip.textContent = "\u25B6 YouTube ";
+      var rm = document.createElement("button");
+      rm.type = "button"; rm.className = "sig-chip-x"; rm.textContent = "\u00D7";
+      rm.setAttribute("aria-label", "Remove embed");
+      rm.addEventListener("click", function () { (mount._postEmbeds || []).splice(i, 1); paintPostEmbedChips(mount); });
+      chip.appendChild(rm);
+      box.appendChild(chip);
+    });
+  }
+  function wirePostEmbeds(mount) {
+    if (!mount._postEmbeds) mount._postEmbeds = [];
+    var bar = mount.querySelector(".forum-embedbar");
+    if (!bar) return;
+    var chips = document.createElement("div");
+    chips.className = "forum-embed-chips";
+    mount.appendChild(chips);
+    paintPostEmbedChips(mount);
+    bar.querySelector(".forum-embed-add").addEventListener("click", function () {
+      var inp = bar.querySelector(".forum-embed-input");
+      var src = extractYouTubeEmbed(inp.value);
+      if (!src) { alert("Paste a YouTube video link or embed code."); return; }
+      if (mount._postEmbeds.length >= 2) { alert("Two embeds max."); return; }
+      mount._postEmbeds.push({ src: src });
+      inp.value = "";
+      bar.classList.add("hidden");
+      paintPostEmbedChips(mount);
+    });
+    bar.querySelector(".forum-embed-cancel").addEventListener("click", function () { bar.classList.add("hidden"); });
   }
   function refreshToolbar(editor, bar) {
     if (!editor || !bar) return;
@@ -324,6 +407,17 @@
       btn.addEventListener("click", function () {
         var act = btn.getAttribute("data-act");
         if (act === "link") { toggleLinkBar(editor, mountEl); return; }
+        if (act === "embed") {
+          var lb2 = mountEl.querySelector(".forum-linkbar");
+          if (lb2) lb2.classList.add("hidden");
+          var eb = mountEl.querySelector(".forum-embedbar");
+          if (eb) {
+            var opening = eb.classList.contains("hidden");
+            eb.classList.toggle("hidden", !opening);
+            if (opening) { var ein = eb.querySelector(".forum-embed-input"); if (ein) setTimeout(function () { ein.focus(); }, 50); }
+          }
+          return;
+        }
         if (act === "image") {
           var lb = mountEl.querySelector(".forum-linkbar");
           if (lb) lb.classList.add("hidden");
@@ -722,7 +816,7 @@
         var rtName = view.replyTo ? view.replyTo.name : null;
         html += '<div class="forum-replybox">' +
           (rtName ? '<div class="forum-replying-to">Replying to <b>' + esc(rtName) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button></div>' : "") +
-          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div>' +
+          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML(canPostEmbed()) + '<div class="forum-editor-mount"></div></div>' +
           '<button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else {
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
@@ -876,7 +970,7 @@
         var content = "", rich = false;
         if (replyEditor) {
           if (replyEditor.isEmpty) return;
-          content = replyEditor.getHTML();
+          content = appendPostEmbeds(replyEditor.getHTML(), mount._postEmbeds);
           rich = true;
         } else {
           var ta = root.querySelector("#forum-reply");
@@ -988,6 +1082,7 @@
 
   function initReplyEditor() {
     var mount = root.querySelector("#forum-reply-editor");
+    wirePostEmbeds(mount);
     if (!mount) { replyEditor = null; return; }
     if (replyEditor) { try { replyEditor.destroy(); } catch (e) {} replyEditor = null; }
     createEditor(mount, "Write a reply\u2026").then(function (ed) {
@@ -1105,7 +1200,7 @@
       '<input type="text" id="forum-edit-title" maxlength="120" value="' + esc(t.title) + '"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML(canPostEmbed()) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-ethumb-preview">' + (t.thumb ? '<img src="' + API + "/api/media/" + esc(t.thumb) + '" alt="">' : "") + '</span>' +
@@ -1126,7 +1221,10 @@
     root.querySelector("#forum-edit-cancel").addEventListener("click", rerender);
     var editMount = root.querySelector("#forum-edit-editor");
     if (editMount) {
-      createEditor(editMount, "Edit your post\u2026", t.rich ? t.content : plainToHTML(t.content)).then(function (ed) {
+      var editSplit = splitPostEmbeds(t.rich ? t.content : plainToHTML(t.content));
+      editMount._postEmbeds = editSplit.embeds;
+      wirePostEmbeds(editMount);
+      createEditor(editMount, "Edit your post\u2026", editSplit.html).then(function (ed) {
         if (ed) { editEditor = ed; return; }
         var wrap = document.createElement("div");
         wrap.innerHTML = '<textarea id="forum-edit-content" rows="6" maxlength="5000">' + esc(t.rich ? String(t.content).replace(/<[^>]*>/g, " ") : t.content) + "</textarea>";
@@ -1168,7 +1266,7 @@
       var title = root.querySelector("#forum-edit-title").value.trim();
       var content = "", rich = false;
       if (editEditor) {
-        if (!editEditor.isEmpty) { content = editEditor.getHTML(); rich = true; }
+        if (!editEditor.isEmpty) { content = appendPostEmbeds(editEditor.getHTML(), editMount._postEmbeds); rich = true; }
       } else {
         var cta = root.querySelector("#forum-edit-content");
         content = cta ? cta.value.trim() : "";
@@ -1201,7 +1299,7 @@
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML(canPostEmbed()) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-thumb-preview"></span>' +
@@ -1219,6 +1317,7 @@
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("#forum-back").addEventListener("click", backToList);
     var newMount = root.querySelector("#forum-new-editor");
+    wirePostEmbeds(newMount);
     if (newMount) {
       if (newEditor) { try { newEditor.destroy(); } catch (e) {} newEditor = null; }
       createEditor(newMount, "Say it\u2026").then(function (ed) {
@@ -1267,7 +1366,7 @@
       var title = root.querySelector("#forum-title").value.trim();
       var content = "", rich = false;
       if (newEditor) {
-        if (!newEditor.isEmpty) { content = newEditor.getHTML(); rich = true; }
+        if (!newEditor.isEmpty) { content = appendPostEmbeds(newEditor.getHTML(), newMount._postEmbeds); rich = true; }
       } else {
         var cta = root.querySelector("#forum-content");
         content = cta ? cta.value.trim() : "";
