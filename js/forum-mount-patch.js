@@ -48,49 +48,6 @@
     }
   } catch (e) {}
 
-  // Set nav avatar from user's actual avatar
-  function updateNavAvatar() {
-    var img = document.getElementById("nav-avatar-img");
-    if (!img) return;
-    var avatarUrl = null;
-    try {
-      // Try to get from MPChat
-      if (window.MPChat && MPChat.me && MPChat.me.avatar) avatarUrl = MPChat.me.avatar;
-      // Fallback: find avatar in forum topbar
-      if (!avatarUrl) {
-        var forumAvatar = document.querySelector("#forum-me img");
-        if (forumAvatar) avatarUrl = forumAvatar.src;
-      }
-      // Fallback: chat header avatar
-      if (!avatarUrl) {
-        var chatAvatar = document.querySelector(".chat-header-avatar img, #chat-avatar img");
-        if (chatAvatar) avatarUrl = chatAvatar.src;
-      }
-    } catch (e) {}
-    if (avatarUrl && img.src !== avatarUrl) img.src = avatarUrl;
-  }
-  setInterval(updateNavAvatar, 2000);
-  updateNavAvatar();
-
-  // Nav avatar opens profile menu
-  try {
-    var navAvatar = document.getElementById("nav-avatar");
-    if (navAvatar && !navAvatar._wired) {
-      navAvatar._wired = true;
-      navAvatar.addEventListener("click", function(e) {
-        e.stopPropagation();
-        if (window.MPChat && MPChat.toggleMeMenu) {
-          MPChat.toggleMeMenu(navAvatar);
-        } else if (window.MPChat && MPChat.openUserSheet) {
-          try {
-            var me = (MPChat.me && MPChat.me.username) || "dc";
-            MPChat.openUserSheet(me);
-          } catch (err) {}
-        }
-      });
-    }
-  } catch (e) {}
-
   // Scope chat's scroll-to-latest to ONLY the chat page.
   // The chat code calls scrollToLatest on timers/events that fire on other pages too.
   function isChatPage() {
