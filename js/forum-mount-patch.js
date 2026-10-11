@@ -513,7 +513,7 @@
         
         var slider = document.createElement('div');
         slider.id = 'act-slider';
-        slider.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:rgba(255,255,255,0.22);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;';
+        slider.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:#3a3a3e;transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.3);';
         container.insertBefore(slider, container.firstChild);
         
         btns.forEach(function(b) {
@@ -538,6 +538,16 @@
     }
     setInterval(function() { try { setup(); } catch (e) {} }, 2500);
   })();
+
+
+  // Remove patch countries duplicates (keep native)
+  setInterval(function() {
+    try {
+      document.querySelectorAll('#countries-section').forEach(function(sec) {
+        if (sec.querySelector('#countries-list')) sec.remove();
+      });
+    } catch (e) {}
+  }, 1500);
 
   // Assistant briefing under the graph
   (function() {
