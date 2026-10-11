@@ -128,7 +128,7 @@
   <script src="js/shop.js?v=39"></script>
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=105"></script>
-  <script src="js/forum3.js?v=13"></script><script src="js/forum-mount-patch.js?v=1"></script>
+  <script src="js/forum3.js?v=13"></script><script src="js/forum-mount-patch.js?v=2"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -228,19 +228,21 @@
           }
         }, 250);
       } else {
-        // Non-chat views: pin to top, but stop if user scrolls (don't fight them)
-        var tries2 = 0;
-        var userScrolled = false;
-        var onUserScroll = function() { userScrolled = true; };
-        window.addEventListener("touchmove", onUserScroll, { once: true, passive: true });
-        window.addEventListener("wheel", onUserScroll, { once: true, passive: true });
-        var iv2 = setInterval(function () {
-          if (userScrolled) { clearInterval(iv2); return; }
-          window.scrollTo(0, 0);
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          if (++tries2 > 5) clearInterval(iv2);
-        }, 100);
+        // Non-chat views: pin to top. Safari restores scroll VERY late,
+        // so do a single correction after everything settles (1.5s).
+        // Stop if the user has manually scrolled.
+        var userScrolled2 = false;
+        var onUserScroll2 = function() { userScrolled2 = true; };
+        window.addEventListener("touchmove", onUserScroll2, { once: true, passive: true });
+        window.addEventListener("wheel", onUserScroll2, { once: true, passive: true });
+        setTimeout(function() {
+          if (userScrolled2) return;
+          if (window.scrollY > 100) {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          }
+        }, 1500);
       }
     }
     // bfcache restore (back/forward, tab restore): re-assert position
