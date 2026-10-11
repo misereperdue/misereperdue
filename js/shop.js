@@ -16,6 +16,20 @@
 var MPShop = (function () {
   "use strict";
 
+  var CHAT_API = "https://misery-chat.freeglory416.workers.dev";
+  function isMembership(p) {
+    return !!p && (p.handle === "membership" || /membership/i.test(p.name || ""));
+  }
+  function siteUsername() {
+    var tok = null;
+    try { tok = localStorage.getItem("chat_token"); } catch (e) {}
+    if (!tok) return Promise.resolve(null);
+    return fetch(CHAT_API + "/api/me", { headers: { "Authorization": "Bearer " + tok } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { return (d && d.user && d.user.username) || null; })
+      .catch(function () { return null; });
+  }
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -256,7 +270,8 @@ var MPShop = (function () {
     var imgs = (p.images || []).filter(Boolean);
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
-      ? '<div class="sizes">' + p.sizes.map(function (s, i) {
+      ? (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
+        '<div class="sizes">' + p.sizes.map(function (s, i) {
           return '<button type="button" data-size="' + esc(s) + '"' + (i === 0 ? ' class="on"' : "") + ">" + esc(s) + "</button>";
         }).join("") + "</div>"
       : '<div style="height:12px"></div>';
@@ -267,6 +282,7 @@ var MPShop = (function () {
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         '<button type="button" class="share-btn" aria-label="Share product"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 7l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Share</button>' +
         sizes + '<div id="bag-action"></div>' +
+        (isMembership(p) ? '<p class="meta">\u2B50 Star badge + access to member-only forum categories. Sign in to your Mis\u00E8re Perdue account before checkout so the membership activates on the right account. $20 members also get an exclusive card mailed later this year.</p>' : "") +
         (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
       "</article>";
     initCarousel(view);
@@ -297,14 +313,20 @@ var MPShop = (function () {
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spin"></span>'; }
     products().then(function () {
       var lines = [];
+      var hasMembership = false;
       MP.readCart().forEach(function (i) {
         var p = MP.PRODUCTS[i.id];
         if (!p || !p.shopify) return;
         var vid = MPShopify.variantIdFor(p, i.size);
-        if (vid && i.qty > 0) lines.push({ variantId: vid, qty: i.qty });
+        if (vid && i.qty > 0) { lines.push({ variantId: vid, qty: i.qty }); if (isMembership(p)) hasMembership = true; }
       });
       if (!lines.length) throw new Error("empty");
-      return MPShopify.createCheckout(lines);
+      if (!hasMembership) return MPShopify.createCheckout(lines);
+      return siteUsername().then(function (username) {
+        var attrs = [{ key: "membership", value: "yes" }];
+        if (username) attrs.push({ key: "account", value: username });
+        return MPShopify.createCheckout(lines, attrs);
+      });
     }).then(function (url) {
       window.location.href = url;
     }).catch(function () {
