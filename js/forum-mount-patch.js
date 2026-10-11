@@ -212,6 +212,44 @@
   setTimeout(renameForumToGlobe, 500);
   setInterval(renameForumToGlobe, 2000);
 
+  // Replace dashboard tab icons with Phosphor fill
+  var DASH_CHAT = "<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86Zm-16.25,1.47L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>";
+  var DASH_GLOBE = "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.62,87.62,0,0,1-6.4,32.94l-44.7-27.49a15.92,15.92,0,0,0-6.24-2.23l-22.82-3.08a16.11,16.11,0,0,0-16,7.86h-8.72l-3.8-7.86a15.91,15.91,0,0,0-11-8.67l-8-1.73L96.14,104h16.71a16.06,16.06,0,0,0,7.73-2l12.25-6.76a16.62,16.62,0,0,0,3-2.14l26.91-24.34A15.93,15.93,0,0,0,166,49.1l-.36-.65A88.11,88.11,0,0,1,216,128ZM40,128a87.53,87.53,0,0,1,8.54-37.8l11.34,30.27a16,16,0,0,0,11.62,10l21.43,4.61L96.74,143a16.09,16.09,0,0,0,14.4,9h1.48l-7.23,16.23a16,16,0,0,0,2.86,17.37l.14.14L128,205.94l-1.94,10A88.11,88.11,0,0,1,40,128Z\"/>";
+  var DASH_GEAR = "<path d=\"M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>";
+  function replaceDashIcons() {
+    // Find dashboard tab buttons by their SVG content
+    document.querySelectorAll("button").forEach(function(btn) {
+      var svg = btn.querySelector("svg");
+      if (!svg || btn.getAttribute("data-ph-dash")) return;
+      var html = svg.outerHTML;
+      var label = btn.getAttribute("aria-label") || "";
+      
+      var replacement = null;
+      // Chat tab (has chat bubble path)
+      if (html.indexOf("M21 11.5a8.5 8.5") !== -1) replacement = DASH_CHAT;
+      // Forum/Globe tab (has forum path)
+      else if (html.indexOf("M4 6a2 2 0 0 1 2-2h12") !== -1) {
+        replacement = DASH_GLOBE;
+        btn.setAttribute("aria-label", "Globe");
+      }
+      // Gear tab (has gear path)
+      else if (html.indexOf('cx="12" cy="12" r="3"') !== -1) replacement = DASH_GEAR;
+      
+      if (replacement) {
+        svg.setAttribute("viewBox", "0 0 256 256");
+        svg.setAttribute("fill", "currentColor");
+        svg.removeAttribute("stroke");
+        svg.removeAttribute("stroke-width");
+        svg.setAttribute("width", "18");
+        svg.setAttribute("height", "18");
+        svg.innerHTML = replacement;
+        btn.setAttribute("data-ph-dash", "1");
+      }
+    });
+  }
+  setTimeout(replaceDashIcons, 1000);
+  setInterval(replaceDashIcons, 2000);
+
 
 
 
