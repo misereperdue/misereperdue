@@ -247,6 +247,39 @@
   setTimeout(replaceDashIcons, 1000);
   setInterval(replaceDashIcons, 2000);
 
+  // Replace Activity metric tab icons with Phosphor fill
+  var METRIC_VIEWS = "<path d=\"M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>";
+  var METRIC_VISITORS = "<path d=\"M164.47,195.63a8,8,0,0,1-6.7,12.37H10.23a8,8,0,0,1-6.7-12.37,95.83,95.83,0,0,1,47.22-37.71,60,60,0,1,1,66.5,0A95.83,95.83,0,0,1,164.47,195.63Zm87.91-.15a95.87,95.87,0,0,0-47.13-37.56A60,60,0,0,0,144.7,54.59a4,4,0,0,0-1.33,6A75.83,75.83,0,0,1,147,150.53a4,4,0,0,0,1.07,5.53,112.32,112.32,0,0,1,29.85,30.83,23.92,23.92,0,0,1,3.65,16.47,4,4,0,0,0,3.95,4.64h60.3a8,8,0,0,0,7.73-5.93A8.22,8.22,0,0,0,252.38,195.48Z\"/>";
+  var METRIC_MESSAGES = "<path d=\"M232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Z\"/>";
+  var METRIC_NEWUSERS = "<path d=\"M256,136a8,8,0,0,1-8,8H232v16a8,8,0,0,1-16,0V144H200a8,8,0,0,1,0-16h16V112a8,8,0,0,1,16,0v16h16A8,8,0,0,1,256,136ZM144,157.68a68,68,0,1,0-71.9,0c-20.65,6.76-39.23,19.39-54.17,37.17A8,8,0,0,0,24,208H192a8,8,0,0,0,6.13-13.15C183.18,177.07,164.6,164.44,144,157.68Z\"/>";
+  function replaceMetricIcons() {
+    document.querySelectorAll("button").forEach(function(btn) {
+      var svg = btn.querySelector("svg");
+      if (!svg || btn.getAttribute("data-ph-metric")) return;
+      var label = btn.getAttribute("aria-label") || btn.getAttribute("title") || "";
+      var html = svg.outerHTML;
+      
+      var replacement = null;
+      // Match by aria-label or by path signature
+      if (label === "Views" || html.indexOf("M1 12s4-8 11-8") !== -1) replacement = METRIC_VIEWS;
+      else if (label === "Visitors" || html.indexOf("M17 21v-2a4 4 0 0 0-4-4H5") !== -1) replacement = METRIC_VISITORS;
+      else if (label === "Messages" || html.indexOf("M21 15a2 2 0 0 1-2 2H7l-4 4V5") !== -1) replacement = METRIC_MESSAGES;
+      else if (label === "New Users" || html.indexOf("M16 21v-2a4 4 0 0 0-4-4H5") !== -1) replacement = METRIC_NEWUSERS;
+      
+      if (replacement) {
+        svg.setAttribute("viewBox", "0 0 256 256");
+        svg.setAttribute("fill", "currentColor");
+        svg.removeAttribute("stroke");
+        svg.removeAttribute("stroke-width");
+        svg.setAttribute("style", "width:18px;height:18px;");
+        svg.innerHTML = replacement;
+        btn.setAttribute("data-ph-metric", "1");
+      }
+    });
+  }
+  setTimeout(replaceMetricIcons, 1000);
+  setInterval(replaceMetricIcons, 2000);
+
 
 
 
