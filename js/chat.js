@@ -201,7 +201,16 @@
         sheet.appendChild(gTitle);
         var gRow = document.createElement("div");
         gRow.className = "chat-badge-row";
-        ["100", "heart", "robot"].forEach(function (bid) {
+        var isGrim = u.username === "grim";
+        if (isGrim) {
+          // Grim: robot badge only, non-removable display
+          var grimBadge = document.createElement("span");
+          grimBadge.className = "chat-badge-opt has on";
+          grimBadge.innerHTML = badgeHTML("robot");
+          grimBadge.title = "Bot badge (permanent)";
+          gRow.appendChild(grimBadge);
+        } else {
+        ["100", "heart"].forEach(function (bid) {
           var gb = document.createElement("button");
           gb.type = "button";
           var hasBadge = u.badges && u.badges.indexOf(bid) !== -1;
@@ -217,7 +226,7 @@
                   u = r.user;
                   var userBadges = u.badges || [];
                   gRow.querySelectorAll(".chat-badge-opt").forEach(function (n, idx) {
-                    var b = ["100", "heart", "robot"][idx];
+                    var b = ["100", "heart"][idx];
                     var has = userBadges.indexOf(b) !== -1;
                     n.classList.toggle("on", n === gb && has);
                     n.classList.toggle("has", has);
@@ -235,6 +244,7 @@
           });
           gRow.appendChild(gb);
         });
+        } // end else (non-grim badge options)
         sheet.appendChild(gRow);
         var banBtn = document.createElement("button");
         banBtn.type = "button";
