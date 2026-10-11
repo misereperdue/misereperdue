@@ -16,8 +16,13 @@ function writeCart(items) { localStorage.setItem("mp_cart", JSON.stringify(items
 function cartCount() {
   return readCart().reduce((n, i) => n + (i.qty || 0), 0);
 }
+function unitPrice(i) {
+  const p = PRODUCTS[i.id];
+  if (p && p.priceBySize && i.size && p.priceBySize[i.size] != null) return p.priceBySize[i.size];
+  return i.price || 0;
+}
 function cartTotal() {
-  return readCart().reduce((n, i) => n + (i.price || 0) * (i.qty || 0), 0);
+  return readCart().reduce((n, i) => n + unitPrice(i) * (i.qty || 0), 0);
 }
 function addItem(id, size) {
   const p = PRODUCTS[id];
@@ -26,7 +31,7 @@ function addItem(id, size) {
   const key = id + ":" + (size || "one");
   const hit = cart.find(i => i.key === key);
   if (hit) hit.qty += 1;
-  else cart.push({ key, id, name: p.name, price: p.price, image: p.image, size: size || "one", qty: 1 });
+  else { const pv = (p.priceBySize && size && p.priceBySize[size] != null) ? p.priceBySize[size] : p.price; cart.push({ key, id, name: p.name, price: pv, image: p.image, size: size || "one", qty: 1 }); }
   writeCart(cart);
 }
 function removeItem(key) {
