@@ -1941,3 +1941,8 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 /* Product option selector label (e.g. Amount) */
 .option-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 4px 0 6px; }
+
+/* Bottom bars stay inside the box and scroll sideways */
+.forum-admin { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+.forum-admin::-webkit-scrollbar { display: none; }
+.forum-admin > * { flex: none; }
