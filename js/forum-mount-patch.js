@@ -403,56 +403,51 @@
   setInterval(cleanupMainNav, 3000);
   
   function setupSlidingPill(container, selector) {
-    if (!container) return;
+    if (!container || container.getAttribute("data-pill")) return;
     container.setAttribute("data-pill", "1");
-    container.style.position = "relative";
-    container.style.background = "rgba(127,127,127,0.12)";
-    container.style.backdropFilter = "blur(20px) saturate(180%)";
-    container.style.webkitBackdropFilter = "blur(20px) saturate(180%)";
-    container.style.borderRadius = "20px";
-    container.style.padding = "4px";
-    container.style.border = "1px solid rgba(255,255,255,0.15)";
-    
-    // Create the sliding pill
-    var pill = document.createElement("div");
-    pill.className = "sliding-pill";
-    pill.style.cssText = "position:absolute;top:4px;bottom:4px;border-radius:16px;" +
-      "background:rgba(255,255,255,0.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);" +
-      "border:1px solid rgba(255,255,255,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.15);" +
-      "transition:left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);" +
-      "pointer-events:none;z-index:0;";
-    container.insertBefore(pill, container.firstChild);
+    // Container: liquid glass pill container
+    container.style.cssText += ";position:relative;display:flex;background:rgba(127,127,127,0.15);" +
+      "backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);" +
+      "border-radius:22px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
     
     var buttons = Array.prototype.slice.call(container.querySelectorAll(selector));
     buttons.forEach(function(btn) {
-      btn.style.position = "relative";
-      btn.style.zIndex = "1";
-      btn.style.background = "transparent";
-      btn.style.border = "none";
-      btn.style.borderRadius = "16px";
+      // Each button: transparent by default, pill when active
+      btn.style.cssText += ";position:relative;z-index:1;background:transparent;border:none;border-radius:18px;" +
+        "transition:background 0.25s ease, box-shadow 0.25s ease;";
+      // Watch for active state changes via MutationObserver on style
+      new MutationObserver(function() {
+        updateActiveStyles();
+      }).observe(btn, { attributes: true, attributeFilter: ["style", "class"] });
+      btn.addEventListener("click", function() { setTimeout(updateActiveStyles, 60); });
     });
     
-    function movePill() {
-      var active = buttons.find(function(b) {
-        return b.style.background.indexOf("0,122,255") !== -1 || 
-               b.getAttribute("data-active") === "1" ||
-               b.classList.contains("active");
-      }) || buttons[0];
-      
-      if (active) {
-        pill.style.left = active.offsetLeft + "px";
-        pill.style.width = active.offsetWidth + "px";
-      }
+    function isActive(btn) {
+      var bg = btn.style.background || "";
+      return bg.indexOf("0,122,255") !== -1 || bg.indexOf("0, 122, 255") !== -1 ||
+             btn.classList.contains("active") || btn.getAttribute("data-active") === "1";
     }
     
-    // Watch for active changes
-    buttons.forEach(function(btn) {
-      btn.addEventListener("click", function() { setTimeout(movePill, 50); });
-    });
+    function updateActiveStyles() {
+      buttons.forEach(function(b) {
+        if (isActive(b)) {
+          // Active: liquid glass pill
+          b.style.background = "rgba(255,255,255,0.22)";
+          b.style.boxShadow = "0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)";
+          b.style.backdropFilter = "blur(10px)";
+          b.style.webkitBackdropFilter = "blur(10px)";
+          b.style.border = "1px solid rgba(255,255,255,0.25)";
+        } else {
+          // Inactive: transparent
+          b.style.background = "transparent";
+          b.style.boxShadow = "none";
+          b.style.border = "1px solid transparent";
+        }
+      });
+    }
     
-    setTimeout(movePill, 100);
-    // Re-position on resize
-    window.addEventListener("resize", movePill);
+    setTimeout(updateActiveStyles, 100);
+    setInterval(updateActiveStyles, 1000);
   }
   
   // Apply pills INSTANTLY when dashboard appears (no flash of old style)
@@ -571,10 +566,34 @@
             list.textContent = "No country data yet.";
             return;
           }
+          // Country code to full name and flag
+          var countryInfo = {
+            "US": ["United States", "\uD83C\uDDFA\uD83C\uDDF8"],
+            "CA": ["Canada", "\uD83C\uDDE8\uD83C\uDDE6"],
+            "GB": ["United Kingdom", "\uD83C\uDDEC\uD83C\uDDE7"],
+            "AU": ["Australia", "\uD83C\uDDE6\uD83C\uDDFA"],
+            "DE": ["Germany", "\uD83C\uDDE9\uD83C\uDDEA"],
+            "FR": ["France", "\uD83C\uDDEB\uD83C\uDDF7"],
+            "IT": ["Italy", "\uD83C\uDDEE\uD83C\uDDF9"],
+            "ES": ["Spain", "\uD83C\uDDEA\uD83C\uDDF8"],
+            "NL": ["Netherlands", "\uD83C\uDDF3\uD83C\uDDF1"],
+            "BR": ["Brazil", "\uD83C\uDDE7\uD83C\uDDF7"],
+            "IN": ["India", "\uD83C\uDDEE\uD83C\uDDF3"],
+            "JP": ["Japan", "\uD83C\uDDEF\uD83C\uDDF5"],
+            "KR": ["South Korea", "\uD83C\uDDF0\uD83C\uDDF7"],
+            "CN": ["China", "\uD83C\uDDE8\uD83C\uDDF3"],
+            "MX": ["Mexico", "\uD83C\uDDF2\uD83C\uDDFD"],
+            "Unknown": ["Unknown", "\uD83C\uDF10"]
+          };
           list.style.opacity = "1";
           list.innerHTML = sorted.slice(0, 10).map(function(c) {
-            return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(127,127,127,0.1);">' +
-              '<span>' + c + '</span><span style="opacity:0.7;">' + totals[c] + '</span></div>';
+            var info = countryInfo[c] || [c, "\uD83C\uDF10"];
+            return '<div style="display:flex;justify-content:space-between;align-items:center;' +
+              'padding:10px 14px;margin-bottom:8px;border-radius:12px;' +
+              'background:rgba(127,127,127,0.12);border:1px solid rgba(255,255,255,0.12);' +
+              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);">' +
+              '<span style="font-weight:600;">' + info[1] + ' ' + info[0] + '</span>' +
+              '<span style="opacity:0.7;font-weight:700;">' + totals[c] + '</span></div>';
           }).join("");
         }).catch(function() {
           var list = document.getElementById("countries-list");
@@ -590,10 +609,13 @@
   setInterval(function() {
     if (!document.getElementById("countries-section")) addCountriesSection();
   }, 5000);
-  // Watch for metric re-renders
+  // Watch for metric re-renders (debounced to prevent flicker)
+  var _metricT = null;
   try {
-    new MutationObserver(function() { replaceMetricIcons(); })
-      .observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(function() {
+      if (_metricT) clearTimeout(_metricT);
+      _metricT = setTimeout(function() { replaceMetricIcons(); }, 400);
+    }).observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
 
 
