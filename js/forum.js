@@ -192,6 +192,63 @@
       return doc.body.innerHTML;
     } catch (e) { return ""; }
   }
+  var SIG_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1, IFRAME: 1, DIV: 1 };
+  var EMBED_SRC_OK = /^https:\/\/(www\.youtube\.com|www\.youtube-nocookie\.com|open\.spotify\.com|w\.soundcloud\.com|player\.vimeo\.com)\//i;
+  function sanitizeSignature(html) {
+    try {
+      var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+      (function walk(node) {
+        var kids = Array.prototype.slice.call(node.childNodes);
+        kids.forEach(function (child) {
+          if (child.nodeType === 3) return;
+          if (child.nodeType !== 1) { child.remove(); return; }
+          if (!SIG_ALLOWED[child.tagName]) {
+            walk(child);
+            while (child.firstChild) node.insertBefore(child.firstChild, child);
+            child.remove();
+            return;
+          }
+          var keepHref = null, keepSrc = null, keepFrame = null;
+          if (child.tagName === "A") {
+            var href = child.getAttribute("href") || "";
+            if (/^https?:\/\//i.test(href)) keepHref = href;
+          }
+          if (child.tagName === "IMG") {
+            var src = child.getAttribute("src") || "";
+            if (/^https?:\/\//i.test(src)) keepSrc = src;
+          }
+          if (child.tagName === "IFRAME") {
+            var fsrc = child.getAttribute("src") || "";
+            if (EMBED_SRC_OK.test(fsrc)) keepFrame = fsrc;
+          }
+          Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
+          if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
+          if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
+          if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
+          if (child.tagName === "IFRAME") {
+            if (!keepFrame) { child.remove(); return; }
+            child.setAttribute("src", keepFrame);
+            child.setAttribute("loading", "lazy");
+            child.setAttribute("allowfullscreen", "");
+            child.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
+            child.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+          }
+          walk(child);
+        });
+      })(doc.body);
+      return doc.body.innerHTML;
+    } catch (e) { return ""; }
+  }
+  function sigVisible() {
+    try { return localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) { return true; }
+  }
+  function signatureHTML(post, compact) {
+    if (!post || !post.authorSignature || !sigVisible()) return "";
+    var clean = sanitizeSignature(post.authorSignature);
+    if (!clean.replace(/<[^>]*>/g, "").trim() && clean.indexOf("<img") < 0 && clean.indexOf("<iframe") < 0) return "";
+    return '<div class="forum-sig' + (compact ? " compact" : "") + '">' + clean + "</div>";
+  }
+
   function bodyHTML(item) {
     if (item.rich) return sanitizeHTML(item.content);
     return esc(item.content || "").replace(/\n/g, "<br>");
@@ -423,6 +480,20 @@
     });
   }
 
+  window.MPSigEditor = {
+    // Mounts the shared TipTap editor for signature editing.
+    // opts: { html, member, placeholder } -> Promise<Editor|null>
+    mount: function (container, opts) {
+      opts = opts || {};
+      container.innerHTML = toolbarHTML() + '<div class="forum-editor-mount"></div>';
+      if (!opts.member) {
+        var ib = container.querySelector('[data-act="image"]');
+        if (ib) ib.remove();
+      }
+      return createEditor(container, opts.placeholder || "Your signature\u2026", opts.html || "");
+    }
+  };
+
   function forumTopBar() {
     var pts = meInfo ? (meInfo.points || 0) : 0;
     var avHtml = "";
@@ -598,6 +669,7 @@
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         ((t.tags && t.tags.length) ? '<div class="forum-post-tags">' + tagsPillsHTML(t, 3) + "</div>" : "") +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
+        signatureHTML(t, false) +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
           ((meInfo && (isOwner || meInfo.username.toLowerCase() === String(t.author).toLowerCase()) && cache.threads.length && ("excerpt" in cache.threads[0])) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
@@ -620,6 +692,7 @@
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
           '<div class="forum-post-body">' + bodyHTML(r) + "</div>" +
+          signatureHTML(r, true) +
           ((token() || isOwner)
             ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
               (token() ? '<button type="button" class="forum-admin-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
