@@ -361,16 +361,16 @@
       var txt = (a.textContent || "").replace(/\uD83D\uDCCE\s*/, "").trim();
       var name = txt.replace(/\s*\u00B7\s*[\d.]+\s*(KB|MB|GB)\s*$/i, "").replace(/\.[a-z0-9]+$/i, "").trim() || txt;
       var wrap = document.createElement("div");
-      wrap.className = "mp-file";
+      wrap.setAttribute("style", "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);");
       var nm = document.createElement("span");
-      nm.className = "mp-file-name";
+      nm.setAttribute("style", "color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;");
       nm.textContent = name;
       var dl = document.createElement("a");
-      dl.className = "mp-file-dl";
+      dl.setAttribute("style", "width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;");
       dl.href = a.getAttribute("href");
       dl.setAttribute("download", "");
       dl.setAttribute("aria-label", "Download");
-      dl.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>';
+      dl.innerHTML = '<svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>';
       wrap.appendChild(nm);
       wrap.appendChild(dl);
       a.replaceWith(wrap);
@@ -660,7 +660,7 @@
         uploadEditorFile(file, function (res) {
           if (!res) return;
           editor.chain().focus().insertContent(
-            '<div class="mp-file"><span class="mp-file-name">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div><p></p>'
+            '<div class="mp-file" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);"><span class="mp-file-name" style="color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" style="width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div><p></p>'
           ).run();
         });
       });
