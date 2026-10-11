@@ -392,12 +392,12 @@
     var container = newestHeader.parentElement;
     if (!container || document.getElementById("countries-section")) return;
     
-    // Create section
+    // Create section (left-aligned, tight spacing)
     var section = document.createElement("div");
     section.id = "countries-section";
-    section.style.cssText = "margin-top:20px;";
-    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:12px;">Countries</div>' +
-      '<div id="countries-list" style="font-size:13px;opacity:0.7;">Loading...</div>';
+    section.style.cssText = "margin-top:16px;text-align:left;width:100%;";
+    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:8px;text-align:left;">Countries</div>' +
+      '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;">Loading...</div>';
     container.appendChild(section);
     
     // Fetch and display using direct fetch with the stored token
@@ -451,9 +451,9 @@
           list.innerHTML = sorted.slice(0, 10).map(function(c) {
             var info = countryInfo[c] || [c, "\uD83C\uDF10"];
             return '<div style="display:flex;justify-content:space-between;align-items:center;' +
-              'padding:10px 14px;margin-bottom:8px;border-radius:12px;' +
+              'padding:10px 14px;margin-bottom:8px;margin-left:0;margin-right:0;border-radius:12px;' +
               'background:rgba(127,127,127,0.12);border:1px solid rgba(255,255,255,0.12);' +
-              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);">' +
+              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;">' +
               '<span style="font-weight:600;">' + info[1] + ' ' + info[0] + '</span>' +
               '<span style="opacity:0.7;font-weight:700;">' + totals[c] + '</span></div>';
           }).join("");
