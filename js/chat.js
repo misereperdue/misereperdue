@@ -82,7 +82,7 @@
   function badgeHTML(badge) {
     if (badge === "100") return '<span class="chat-badge" title="100" aria-label="100 badge">\u{1F4AF}</span>';
     if (badge === "robot") return '<span class="chat-badge" title="Bot" aria-label="Bot badge">\u{1F916}</span>';
-    if (badge === "member") return '<span class="chat-badge chat-badge-member" title="Member" aria-label="Member badge">\u2B50</span>';
+    if (badge === "member") return '<span class="chat-badge chat-badge-member" title="VIP" aria-label="VIP badge">\u2B50</span>';
     if (badge === "heart") return '<span class="chat-badge" title="" aria-label="Heart badge"><span class="b-dark">\u{1F90D}</span><span class="b-light">\u{1F5A4}</span></span>';
     return sealHTML();
   }
@@ -1592,7 +1592,7 @@
                 }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
             });
             // Member toggle
-            mkBtn(u.member ? "Unmember" : "Member", u.member ? "#8e8e93" : "#ffd60a", function(btn) {
+            mkBtn(u.member ? "Remove VIP" : "VIP", u.member ? "#8e8e93" : "#ffd60a", function(btn) {
               if (u.member) {
                 if (!confirm("Remove VIP status from " + u.username + "?")) return;
                 btn.disabled = true;
