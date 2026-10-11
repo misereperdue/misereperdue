@@ -37,7 +37,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=245">
+  <link rel="stylesheet" href="css/site.css?v=246">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -287,8 +287,11 @@
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
       if (view === "forum" && window.MPForum) {
-        if (MPForum.goHome) MPForum.goHome();
-        else MPForum.render();
+        // Defer heavy thread-list render so the panel switch paints first
+        requestAnimationFrame(function () {
+          if (MPForum.goHome) MPForum.goHome();
+          else MPForum.render();
+        });
       }
       refreshSeg();
       refreshPostBtn();
