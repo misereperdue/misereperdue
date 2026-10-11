@@ -66,6 +66,13 @@
     return window.MPChat.badgeHTML(badgeId);
   }
 
+  function authorLine(item) {
+    var badge = badgeFor(item.authorBadge);
+    var pts = (item.authorPoints !== undefined && item.authorPoints !== null)
+      ? ' <span class="forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
+    return esc(item.author) + (badge ? " " + badge : "") + pts;
+  }
+
   function wireAvatars() {
     root.querySelectorAll(".forum-avatar-btn").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -142,7 +149,7 @@
           (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + esc(t.author) + (badgeFor(t.authorBadge) ? " " + badgeFor(t.authorBadge) : "") + " \u00B7 " + esc(t.categoryName) +
+          '<span class="forum-thread-meta">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + "</span>" +
           "</span>" +
           '<span class="forum-thread-count">' + t.replies + "</span>" +
@@ -222,7 +229,7 @@
 
       html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
-        '<span class="forum-post-author">' + esc(t.author) + badgeFor(t.authorBadge) + "</span>" +
+        '<span class="forum-post-author">' + authorLine(t) + "</span>" +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div>" +
@@ -232,7 +239,7 @@
       (t.replies || []).forEach(function (r) {
         html += '<article class="forum-post">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
-          '<span class="forum-post-author">' + esc(r.author) + badgeFor(r.authorBadge) + "</span>" +
+          '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span>" +
           (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
           '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div></article>";
