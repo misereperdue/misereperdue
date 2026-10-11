@@ -342,145 +342,7 @@
   setTimeout(reorderMetricTabs, 1500);
   setInterval(reorderMetricTabs, 3000);
 
-  // Liquid glass sliding pill for dashboard nav and activity tabs
-  // IMPORTANT: Only target elements INSIDE the dashboard modal, never the main site navbar
-  function initSlidingPills() {
-    // Find the dashboard modal/container (it contains "Dashboard" text)
-    var dashboard = null;
-    document.querySelectorAll("div").forEach(function(d) {
-      if (d.textContent.trim().indexOf("Dashboard") === 0 && d.children.length > 3) {
-        // Likely the dashboard container - verify it has the tab buttons
-        if (d.querySelector('button[aria-label="Chat"]') && d.querySelector('button[aria-label="Views"]')) {
-          dashboard = d;
-        }
-      }
-    });
-    if (!dashboard) return;
-    
-    // Dashboard nav (the 3 tabs: Chat, Globe, Manage) - ONLY inside dashboard
-    var chatBtn = dashboard.querySelector('button[aria-label="Chat"]');
-    if (chatBtn && chatBtn.parentElement && !chatBtn.parentElement.getAttribute("data-pill")) {
-      // Make sure this is NOT the main navbar (main navbar is not inside dashboard)
-      var navContainer = chatBtn.parentElement;
-      setupSlidingPill(navContainer, 'button[aria-label="Chat"], button[aria-label="Forum"], button[aria-label="Globe"], button[aria-label="Manage"]');
-    }
-    
-    // Activity metric tabs - ONLY inside dashboard
-    var viewsBtn = dashboard.querySelector('button[aria-label="Views"]');
-    if (viewsBtn && viewsBtn.parentElement && !viewsBtn.parentElement.getAttribute("data-pill")) {
-      var metricContainer = viewsBtn.parentElement;
-      setupSlidingPill(metricContainer, 'button[aria-label="Views"], button[aria-label="Visitors"], button[aria-label="Users"], button[aria-label="Posts"]');
-    }
-  }
-  
-  // Remove any pill effects from the main site navbar (cleanup)
-  function cleanupMainNav() {
-    // Main navbar is NOT inside dashboard - remove data-pill and restore
-    document.querySelectorAll("nav [data-pill], body > div [data-pill]").forEach(function(el) {
-      // Check if this is inside the dashboard
-      var inDashboard = false;
-      var p = el;
-      while (p) {
-        if (p.textContent && p.textContent.trim().indexOf("Dashboard") === 0) { inDashboard = true; break; }
-        p = p.parentElement;
-      }
-      if (!inDashboard) {
-        el.removeAttribute("data-pill");
-        var pill = el.querySelector(".sliding-pill");
-        if (pill) pill.remove();
-        // Restore original styles
-        el.style.position = "";
-        el.style.background = "";
-        el.style.backdropFilter = "";
-        el.style.webkitBackdropFilter = "";
-        el.style.borderRadius = "";
-        el.style.padding = "";
-        el.style.border = "";
-      }
-    });
-  }
-  setTimeout(cleanupMainNav, 1000);
-  setInterval(cleanupMainNav, 3000);
-  
-  function setupSlidingPill(container, selector) {
-    if (!container || container.getAttribute("data-pill")) return;
-    container.setAttribute("data-pill", "1");
-    // Container: liquid glass pill container
-    container.style.cssText += ";position:relative;display:flex;background:rgba(127,127,127,0.15);" +
-      "backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);" +
-      "border-radius:22px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
-    
-    var buttons = Array.prototype.slice.call(container.querySelectorAll(selector));
-    buttons.forEach(function(btn) {
-      // Each button: transparent by default, pill when active
-      btn.style.cssText += ";position:relative;z-index:1;background:transparent;border:none;border-radius:18px;" +
-        "transition:background 0.25s ease, box-shadow 0.25s ease;";
-      // Watch for active state changes via MutationObserver on style
-      new MutationObserver(function() {
-        updateActiveStyles();
-      }).observe(btn, { attributes: true, attributeFilter: ["style", "class"] });
-      btn.addEventListener("click", function() { setTimeout(updateActiveStyles, 60); });
-    });
-    
-    function isActive(btn) {
-      var bg = btn.style.background || "";
-      return bg.indexOf("0,122,255") !== -1 || bg.indexOf("0, 122, 255") !== -1 ||
-             btn.classList.contains("active") || btn.getAttribute("data-active") === "1";
-    }
-    
-    function updateActiveStyles() {
-      buttons.forEach(function(b) {
-        if (isActive(b)) {
-          // Active: liquid glass pill
-          b.style.background = "rgba(255,255,255,0.22)";
-          b.style.boxShadow = "0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)";
-          b.style.backdropFilter = "blur(10px)";
-          b.style.webkitBackdropFilter = "blur(10px)";
-          b.style.border = "1px solid rgba(255,255,255,0.25)";
-        } else {
-          // Inactive: transparent
-          b.style.background = "transparent";
-          b.style.boxShadow = "none";
-          b.style.border = "1px solid transparent";
-        }
-      });
-    }
-    
-    setTimeout(updateActiveStyles, 100);
-    setInterval(updateActiveStyles, 1000);
-  }
-  
-  // Apply pills INSTANTLY when dashboard appears (no flash of old style)
-  try {
-    new MutationObserver(function(muts) {
-      var dashboardAppeared = false;
-      muts.forEach(function(m) {
-        m.addedNodes.forEach(function(n) {
-          if (n.nodeType === 1) {
-            // Check if dashboard was added
-            if (n.querySelector) {
-              var chatBtn = n.querySelector('button[aria-label="Chat"]');
-              var viewsBtn = n.querySelector('button[aria-label="Views"]');
-              if (chatBtn && viewsBtn) dashboardAppeared = true;
-            }
-            // Or if the node itself is part of dashboard
-            if (n.getAttribute && (n.getAttribute("aria-label") === "Chat" || n.getAttribute("aria-label") === "Views")) {
-              dashboardAppeared = true;
-            }
-          }
-        });
-      });
-      if (dashboardAppeared) {
-        // Run immediately, don't wait
-        initSlidingPills();
-      }
-    }).observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
-  // Fallback: also try on interval for already-open dashboards
-  setTimeout(initSlidingPills, 500);
-  setInterval(function() {
-    if (!document.querySelector('[data-pill]')) initSlidingPills();
-  }, 3000);
+  // Pill styling removed - using native dashboard styles
 
   // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
   function enhancePostsGraph() {
@@ -605,10 +467,23 @@
       }
     } catch (e) {}
   }
-  setTimeout(addCountriesSection, 2000);
+  setTimeout(addCountriesSection, 1000);
   setInterval(function() {
     if (!document.getElementById("countries-section")) addCountriesSection();
-  }, 5000);
+  }, 2000);
+  // Also watch for dashboard re-renders
+  try {
+    new MutationObserver(function() {
+      // If dashboard is open (has Newest Users) but countries is missing, re-add
+      var hasNewest = false;
+      document.querySelectorAll("div").forEach(function(d) {
+        if (d.textContent.trim() === "Newest Users" && d.children.length === 0) hasNewest = true;
+      });
+      if (hasNewest && !document.getElementById("countries-section")) {
+        addCountriesSection();
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
   // Watch for metric re-renders (debounced to prevent flicker)
   var _metricT = null;
   try {
