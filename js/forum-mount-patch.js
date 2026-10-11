@@ -148,6 +148,29 @@
   setTimeout(replaceJSCIcons, 1000);
   setInterval(replaceJSCIcons, 2000);
 
+  // Replace notification bell with Phosphor fill
+  var BELL_INNER = "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z\"/>";
+  function replaceBell() {
+    var bell = document.getElementById("forum-bell");
+    if (bell && !bell.getAttribute("data-ph-bell")) {
+      var svg = bell.querySelector("svg");
+      if (svg) {
+        svg.setAttribute("viewBox", "0 0 256 256");
+        svg.setAttribute("fill", "currentColor");
+        svg.removeAttribute("stroke");
+        svg.removeAttribute("stroke-width");
+        svg.innerHTML = BELL_INNER;
+        // Ensure paths use currentColor
+        svg.querySelectorAll("path").forEach(function(p) {
+          p.setAttribute("fill", "currentColor");
+        });
+        bell.setAttribute("data-ph-bell", "1");
+      }
+    }
+  }
+  setTimeout(replaceBell, 1000);
+  setInterval(replaceBell, 2000);
+
 
 
 
