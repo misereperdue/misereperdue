@@ -1984,3 +1984,26 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .mp-dialog-grant { border: none; background: #2f7cf6; color: #fff; }
 
 .forum-cat-lock { width: 12px; height: 12px; vertical-align: -1px; flex: none; }
+
+/* Forum signatures */
+.forum-sig { border-top: 1px solid rgba(140,160,255,.14); margin-top: 12px; padding-top: 10px; font-size: 12.5px; line-height: 1.55; opacity: .88; word-wrap: break-word; }
+.forum-sig p { margin: 0 0 6px; }
+.forum-sig p:last-child { margin-bottom: 0; }
+.forum-sig h3 { font-size: 14px; margin: 6px 0 4px; }
+.forum-sig ul, .forum-sig ol { margin: 0 0 6px; padding-left: 20px; }
+.forum-sig img { max-width: 100%; max-height: 140px; border-radius: 8px; }
+.forum-sig iframe { width: 100%; max-width: 430px; aspect-ratio: 16/9; border: 0; border-radius: 10px; display: block; margin: 6px 0; }
+.forum-sig.compact { font-size: 11.5px; margin-top: 9px; padding-top: 8px; max-height: 64px; overflow: hidden; position: relative; }
+.forum-sig.compact img { max-height: 30px; }
+.forum-sig.compact iframe { display: none; }
+.forum-sig.compact p { margin-bottom: 3px; }
+/* Signature editor inside the profile sheet */
+.sig-mount .forum-editor-input { min-height: 64px; font-size: 13.5px; }
+.sig-embeds { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sig-chip { display: inline-flex; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 600; padding: 4px 6px 4px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border: var(--glass-hairline); }
+.sig-chip-x { appearance: none; border: none; background: none; color: var(--muted); font-size: 14px; line-height: 1; cursor: pointer; padding: 2px 5px; }
+.sig-embed-btn { margin-top: 10px; padding: 7px 14px; font-size: 13px; }
+.sig-embed-bar { display: flex; gap: 8px; margin-top: 8px; }
+.sig-embed-bar.hidden { display: none; }
+.sig-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
+.sig-embed-add { padding: 8px 14px; font-size: 13px; }
