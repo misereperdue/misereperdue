@@ -1721,9 +1721,12 @@
     view.threadId = null;
     view.replyTo = null;
     paintedThreadId = null;
+    // Scroll to top immediately, on next frame, and after content settles
+    window.scrollTo(0, 0);
     render();
-    // Always pin to top after render (even if render skipped due to unchanged data)
     requestAnimationFrame(function () { window.scrollTo(0, 0); });
+    setTimeout(function () { window.scrollTo(0, 0); }, 100);
+    setTimeout(function () { window.scrollTo(0, 0); }, 500);
   }
 
   function openThread(id) {
