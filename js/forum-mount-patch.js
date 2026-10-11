@@ -343,176 +343,115 @@
   setInterval(reorderMetricTabs, 3000);
 
 
-  // Beautiful sliding pills for dashboard navs - clean implementation
-  (function initDashboardPills() {
-    // Only run inside the dashboard modal
-    function getDashboard() {
-      // Dashboard is a modal containing "Dashboard" title and the tab buttons
-      var candidates = document.querySelectorAll('div');
-      for (var i = 0; i < candidates.length; i++) {
-        var d = candidates[i];
-        // Look for dashboard container: has both Chat tab and Views metric
-        if (d.querySelector('button[aria-label="Chat"]') && d.querySelector('button[aria-label="Views"]')) {
-          // Make sure it's not the main page (main page doesn't have Views button)
-          // Dashboard modal is typically a fixed/absolute positioned container
-          return d;
+
+  // Simple, robust sliding pills for dashboard
+  (function() {
+    function setupPills() {
+      // Find dashboard (has both Chat and Views buttons)
+      var dash = null;
+      var divs = document.querySelectorAll('div');
+      for (var i = 0; i < divs.length; i++) {
+        if (divs[i].querySelector('button[aria-label="Chat"]') && 
+            divs[i].querySelector('button[aria-label="Views"]')) {
+          dash = divs[i];
+          break;
         }
       }
-      return null;
+      if (!dash) return;
+
+      // Setup for each nav container
+      setupNav(dash, ["Chat", "Globe", "Forum", "Manage"]);
+      setupNav(dash, ["Views", "Visitors", "Users", "Posts"]);
     }
 
-    function createPill(container, buttons) {
-      if (container.hasAttribute('data-pills-done')) return;
-      container.setAttribute('data-pills-done', '1');
+    function setupNav(dash, labels) {
+      var btns = labels.map(function(l) {
+        return dash.querySelector('button[aria-label="' + l + '"]');
+      }).filter(Boolean);
+      if (btns.length < 2) return;
       
-      // Style container as pill track
+      var container = btns[0].parentElement;
+      if (!container || container.hasAttribute('data-pills')) return;
+      container.setAttribute('data-pills', '1');
+
+      // Container styling
       container.style.position = 'relative';
       container.style.display = 'flex';
-      container.style.background = 'rgba(120,120,128,0.16)';
-      container.style.backdropFilter = 'blur(20px) saturate(180%)';
-      container.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+      container.style.background = 'rgba(120,120,128,0.18)';
       container.style.borderRadius = '24px';
       container.style.padding = '3px';
-      container.style.border = '0.5px solid rgba(255,255,255,0.15)';
-      
-      // Create sliding indicator
-      var indicator = document.createElement('div');
-      indicator.className = 'pill-indicator';
-      indicator.style.cssText = 'position:absolute;top:3px;bottom:3px;border-radius:20px;' +
-        'background:linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.14));' +
-        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);' +
-        'border:0.5px solid rgba(255,255,255,0.3);' +
-        'box-shadow:0 2px 10px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);' +
-        'transition:transform 0.35s cubic-bezier(0.32,0.72,0,1), width 0.35s cubic-bezier(0.32,0.72,0,1);' +
-        'pointer-events:none;z-index:0;left:0;';
-      container.insertBefore(indicator, container.firstChild);
-      
-      // Style buttons
-      buttons.forEach(function(btn) {
-        btn.style.position = 'relative';
-        btn.style.zIndex = '1';
-        btn.style.background = 'transparent';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '20px';
-        btn.style.transition = 'color 0.25s ease';
+      container.style.backdropFilter = 'blur(20px)';
+      container.style.webkitBackdropFilter = 'blur(20px)';
+      container.style.border = '1px solid rgba(255,255,255,0.12)';
+
+      // Pill element
+      var pill = document.createElement('div');
+      pill.style.cssText = 'position:absolute;top:3px;bottom:3px;left:0;border-radius:20px;' +
+        'background:rgba(255,255,255,0.25);' +
+        'border:1px solid rgba(255,255,255,0.3);' +
+        'box-shadow:0 2px 8px rgba(0,0,0,0.15);' +
+        'transition:transform 0.3s ease, width 0.3s ease;' +
+        'pointer-events:none;';
+      container.insertBefore(pill, container.firstChild);
+
+      // Button styling
+      btns.forEach(function(b) {
+        b.style.position = 'relative';
+        b.style.zIndex = '1';
+        b.style.background = 'transparent';
+        b.style.border = 'none';
       });
-      
-      function findActive() {
-        // Active button has blue background from dashboard code
-        for (var i = 0; i < buttons.length; i++) {
-          var bg = buttons[i].style.background || '';
-          if (bg.indexOf('122,255') !== -1 || bg.indexOf('122, 255') !== -1) return buttons[i];
-        }
-        return buttons[0];
-      }
-      
-      function positionIndicator(animate) {
-        var active = findActive();
-        if (!active) return;
-        var cRect = container.getBoundingClientRect();
-        var bRect = active.getBoundingClientRect();
-        var x = bRect.left - cRect.left;
-        var w = bRect.width;
-        if (!animate) indicator.style.transition = 'none';
-        indicator.style.transform = 'translateX(' + x + 'px)';
-        indicator.style.width = w + 'px';
+
+      // Track active index
+      var activeIdx = 0;
+
+      function movePill(idx, animate) {
+        activeIdx = idx;
+        var btn = btns[idx];
+        if (!btn) return;
+        // Use offsetLeft/offsetWidth relative to container
+        var x = btn.offsetLeft;
+        var w = btn.offsetWidth;
+        if (!animate) pill.style.transition = 'none';
+        pill.style.transform = 'translateX(' + x + 'px)';
+        pill.style.width = w + 'px';
         if (!animate) {
-          // Force reflow then restore transition
-          indicator.offsetHeight;
-          indicator.style.transition = '';
+          pill.offsetHeight; // reflow
+          pill.style.transition = '';
         }
-        // Clear the dashboard's blue background since pill shows active state
-        buttons.forEach(function(b) {
-          if (b === active) {
-            b.style.background = 'transparent';
-            b.style.color = '#fff';
-          } else {
-            b.style.background = 'transparent';
-            b.style.color = '';
-          }
-        });
       }
-      
-      // Position after layout
-      requestAnimationFrame(function() { positionIndicator(false); });
-      setTimeout(function() { positionIndicator(false); }, 100);
-      
-      // Update on clicks
-      buttons.forEach(function(btn) {
+
+      // Click handlers - move pill directly
+      btns.forEach(function(btn, idx) {
         btn.addEventListener('click', function() {
-          setTimeout(function() { positionIndicator(true); }, 50);
+          // Small delay to let dashboard update, then move
+          setTimeout(function() { movePill(idx, true); }, 30);
         });
       });
-      
-      // Update on resize
-      var rzT = null;
-      window.addEventListener('resize', function() {
-        if (rzT) clearTimeout(rzT);
-        rzT = setTimeout(function() { positionIndicator(false); }, 150);
-      });
-      
-      // Watch for dashboard's own style changes (when it sets active)
-      var obs = new MutationObserver(function() {
-        positionIndicator(true);
-      });
-      buttons.forEach(function(b) {
-        obs.observe(b, { attributes: true, attributeFilter: ['style', 'class'] });
-      });
+
+      // Initial position
+      setTimeout(function() { movePill(0, false); }, 200);
     }
-    
-    function setup() {
-      var dash = getDashboard();
-      if (!dash) return;
-      
-      // Dashboard top nav: Chat, Globe, Manage
-      var chatBtn = dash.querySelector('button[aria-label="Chat"]');
-      if (chatBtn && chatBtn.parentElement && !chatBtn.parentElement.hasAttribute('data-pills-done')) {
-        var navBtns = ['Chat', 'Globe', 'Forum', 'Manage'].map(function(l) {
-          return dash.querySelector('button[aria-label="' + l + '"]');
-        }).filter(Boolean);
-        if (navBtns.length >= 2) createPill(chatBtn.parentElement, navBtns);
-      }
-      
-      // Activity tabs: Views, Visitors, Users, Posts
-      var viewsBtn = dash.querySelector('button[aria-label="Views"]');
-      if (viewsBtn && viewsBtn.parentElement && !viewsBtn.parentElement.hasAttribute('data-pills-done')) {
-        var metricBtns = ['Views', 'Visitors', 'Users', 'Posts'].map(function(l) {
-          return dash.querySelector('button[aria-label="' + l + '"]');
-        }).filter(Boolean);
-        if (metricBtns.length >= 2) createPill(viewsBtn.parentElement, metricBtns);
-      }
-    }
-    
-    // Watch for dashboard appearing
-    var setupDone = false;
-    try {
-      new MutationObserver(function(muts) {
-        var found = false;
-        muts.forEach(function(m) {
-          m.addedNodes.forEach(function(n) {
-            if (n.nodeType === 1 && n.querySelector) {
-              if (n.querySelector('button[aria-label="Views"]')) found = true;
-            }
-          });
-        });
-        if (found && !setupDone) {
-          setupDone = true;
-          setTimeout(setup, 100);
-          // Allow re-setup if dashboard re-renders
-          setTimeout(function() { setupDone = false; }, 2000);
+
+    // Run when dashboard appears
+    var observer = new MutationObserver(function(muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var added = muts[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var n = added[j];
+          if (n.nodeType === 1 && n.querySelector && n.querySelector('button[aria-label="Views"]')) {
+            setTimeout(setupPills, 200);
+            return;
+          }
         }
-      }).observe(document.body, { childList: true, subtree: true });
+      }
+    });
+    try {
+      observer.observe(document.body, { childList: true, subtree: true });
     } catch (e) {}
     
     // Fallback
-    setTimeout(setup, 1500);
-    setInterval(function() {
-      var dash = getDashboard();
-      if (dash) {
-        var chatP = dash.querySelector('button[aria-label="Chat"]');
-        if (chatP && chatP.parentElement && !chatP.parentElement.hasAttribute('data-pills-done')) setup();
-      }
-    }, 4000);
+    setTimeout(setupPills, 2000);
   })();
 
   // Pill styling removed - using native dashboard styles
