@@ -548,8 +548,7 @@
       root.querySelector("#forum-back").addEventListener("click", backToList);
       if (freshOpen) {
         window.scrollTo(0, 0);
-        // Media inside the post can shift layout right after paint; re-pin
-        requestAnimationFrame(function () { window.scrollTo(0, 0); });
+        if (window.MPScroll) MPScroll.pinTop(2000);
       }
       initReplyEditor();
       attachLinkPreviews();
@@ -804,6 +803,7 @@
     view.replyTo = null;
     view.showNested = {};
     window.scrollTo(0, 0);
+    if (window.MPScroll) MPScroll.pinTop(1500);
     render();
   }
 
@@ -830,6 +830,7 @@
 
     root.innerHTML = html;
     window.scrollTo(0, 0);
+    if (window.MPScroll) MPScroll.pinTop(2000);
     wireAvatars();
     var nbTop2 = root.querySelector("#forum-new-top");
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
@@ -917,6 +918,7 @@
     view.replyTo = null;
     paintedThreadId = null;
     window.scrollTo(0, 0);
+    if (window.MPScroll) MPScroll.pinTop(1500);
     render();
   }
 
