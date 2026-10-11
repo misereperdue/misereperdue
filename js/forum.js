@@ -444,8 +444,8 @@
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
           '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + " \u00B7 \uD83D\uDCAC " + t.replies + "</span></span>" +
-          "</span>" +
           (t.excerpt ? '<span class="forum-thread-excerpt">' + esc(t.excerpt) + "</span>" : "") +
+          "</span>" +
           (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
         if (isOwner) {
@@ -545,7 +545,7 @@
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
-          ((me && (isOwner || me.username.toLowerCase() === String(t.author).toLowerCase()) && cache.threads.length && ("excerpt" in cache.threads[0])) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
+          ((meInfo && (isOwner || meInfo.username.toLowerCase() === String(t.author).toLowerCase()) && cache.threads.length && ("excerpt" in cache.threads[0])) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") + "</div>" + "</article>";
 
       html += '<div class="forum-replies">';
