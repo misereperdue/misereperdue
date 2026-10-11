@@ -2007,6 +2007,16 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-lockbar-label { color: var(--muted); }
 .forum-lockbar button[data-lockmode] { padding: 5px 10px; border-radius: 999px; border: var(--glass-hairline); background: rgba(255,255,255,.06); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex: none; }
 .forum-lock-cancel { margin-left: auto; background: none; border: none; font-size: 16px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
+/* Downloadable file attachments */
+.forum-body a[href*="/api/media/"], .forum-post-body a[href*="/api/media/"] {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px; margin: 4px 0; border-radius: 12px;
+  background: rgba(140,160,255,.1); border: var(--glass-hairline);
+  text-decoration: none; font-weight: 600; font-size: 14px;
+}
+.forum-body a[href*="/api/media/"]::after, .forum-post-body a[href*="/api/media/"]::after {
+  content: "\2B07\FE0F"; font-size: 16px;
+}
 .forum-editor-input .mp-locked { margin: 8px 0; }
 .sig-social-row { display: flex; gap: 8px; overflow-x: auto; margin: 6px 0 2px; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .sig-social-row::-webkit-scrollbar { display: none; }
