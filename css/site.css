@@ -2030,3 +2030,16 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-embed { margin: 10px 0; }
 .forum-embed iframe { width: 100%; max-width: 480px; aspect-ratio: 16/9; border: 0; border-radius: 12px; display: block; }
 [data-theme="light"] .forum-admin-thread { background: rgba(255,255,255,.6); }
+
+/* AI writing bar */
+.forum-aibar { padding: 8px; border-bottom: var(--glass-hairline); }
+.forum-aibar.hidden { display: none; }
+.forum-ai-chips { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.forum-ai-chips button { appearance: none; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: var(--glass-hairline); background: rgba(255,255,255,.06); color: var(--ink); cursor: pointer; }
+.forum-ai-row { display: flex; gap: 8px; }
+.forum-ai-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
+.forum-ai-go { padding: 8px 14px; font-size: 13px; font-weight: 700; border-radius: 10px; border: none; background: var(--blue); color: #fff; cursor: pointer; white-space: nowrap; }
+.forum-ai-go:disabled { opacity: .6; }
+.forum-ai-status { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+/* File attachments in posts */
+.forum-post-body a[href*="/api/media/"] { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; border: var(--glass-hairline); background: rgba(255,255,255,.07); font-size: 13px; font-weight: 600; text-decoration: none; margin: 4px 0; }
