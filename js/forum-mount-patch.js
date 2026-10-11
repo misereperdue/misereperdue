@@ -419,6 +419,39 @@
     if (!document.querySelector('[data-pill]')) initSlidingPills();
   }, 5000);
 
+  // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
+  function enhancePostsGraph() {
+    // Check if Posts tab is active (look for the active pill position or button state)
+    var postsBtn = document.querySelector('button[aria-label="Posts"]');
+    if (!postsBtn) return;
+    
+    // Find the graph SVG
+    var svg = document.querySelector('svg[width]');
+    if (!svg || svg.getAttribute("data-stacked")) return;
+    
+    // Check if this is the Posts graph by looking at the summary text
+    var summary = document.querySelector('div[style*="text-align:center"]');
+    if (!summary || summary.textContent.indexOf("total") === -1) return;
+    
+    // Get the stats data from the dashboard (stored globally or fetch)
+    // For now, we'll watch for the data in the page
+    // This is a simplified version - the full implementation needs the stats data
+    
+    // Mark as processed to avoid re-processing
+    svg.setAttribute("data-stacked", "1");
+  }
+  
+  // Watch for graph updates
+  try {
+    new MutationObserver(function() {
+      // Only enhance if Posts tab appears to be active
+      var activeBtn = document.querySelector('button[aria-label="Posts"]');
+      if (activeBtn && activeBtn.style.background.indexOf("0,122,255") !== -1) {
+        setTimeout(enhancePostsGraph, 100);
+      }
+    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+  } catch (e) {}
+
   // Add Countries section below Newest Users
   function addCountriesSection() {
     // Find Newest Users section
@@ -442,36 +475,40 @@
       '<div id="countries-list" style="font-size:13px;opacity:0.7;">Loading...</div>';
     container.appendChild(section);
     
-    // Fetch and display
+    // Fetch and display using the api() helper (sends auth token)
     try {
-      var token = "";
-      // Try to get owner token from localStorage or use the analytics endpoint
-      fetch("/api/analytics/stats", {
-        headers: { "Authorization": "Bearer " + (localStorage.getItem("mp_token") || "") }
-      }).then(function(r) { return r.json(); }).then(function(data) {
-        if (!data.ok || !data.stats || !data.stats.days) return;
-        // Aggregate countries across all days
-        var totals = {};
-        data.stats.days.forEach(function(day) {
-          var countries = day.countries || {};
-          Object.keys(countries).forEach(function(c) {
-            totals[c] = (totals[c] || 0) + countries[c];
+      if (typeof api === "function") {
+        api("/api/analytics/stats").then(function(data) {
+          var list = document.getElementById("countries-list");
+          if (!list) return;
+          if (!data || !data.ok || !data.stats || !data.stats.days) {
+            list.textContent = "No country data yet.";
+            return;
+          }
+          // Aggregate countries across all days
+          var totals = {};
+          data.stats.days.forEach(function(day) {
+            var countries = day.countries || {};
+            Object.keys(countries).forEach(function(c) {
+              totals[c] = (totals[c] || 0) + countries[c];
+            });
           });
+          // Sort by count
+          var sorted = Object.keys(totals).sort(function(a, b) { return totals[b] - totals[a]; });
+          if (!sorted.length) {
+            list.textContent = "No country data yet.";
+            return;
+          }
+          list.style.opacity = "1";
+          list.innerHTML = sorted.slice(0, 10).map(function(c) {
+            return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(127,127,127,0.1);">' +
+              '<span>' + c + '</span><span style="opacity:0.7;">' + totals[c] + '</span></div>';
+          }).join("");
+        }).catch(function() {
+          var list = document.getElementById("countries-list");
+          if (list) list.textContent = "No country data yet.";
         });
-        // Sort by count
-        var sorted = Object.keys(totals).sort(function(a, b) { return totals[b] - totals[a]; });
-        var list = document.getElementById("countries-list");
-        if (!list) return;
-        if (!sorted.length) {
-          list.textContent = "No country data yet.";
-          return;
-        }
-        list.style.opacity = "1";
-        list.innerHTML = sorted.slice(0, 10).map(function(c) {
-          return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(127,127,127,0.1);">' +
-            '<span>' + c + '</span><span style="opacity:0.7;">' + totals[c] + '</span></div>';
-        }).join("");
-      }).catch(function() {});
+      }
     } catch (e) {}
   }
   setTimeout(addCountriesSection, 2000);
