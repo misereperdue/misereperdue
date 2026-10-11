@@ -1666,3 +1666,31 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 /* Forum author points */
 .forum-author-pts { font-size: 12px; color: var(--muted); font-weight: 600; }
 .forum-thread-meta .forum-author-pts { font-size: 11px; }
+
+/* Forum avatar badge (bottom-left, like chat) */
+.forum-avatar-wrap { position: relative; display: inline-block; flex: none; }
+.forum-avatar-badge { position: absolute; left: -4px; bottom: -4px; width: 16px; height: 16px; pointer-events: none; }
+.forum-avatar-badge .chat-badge { position: static; width: 16px; height: 16px; font-size: 14px; line-height: 16px; }
+.forum-avatar-badge .chat-verified { position: static; width: 15px; height: 15px; display: block; }
+
+/* Liquid Glass pills */
+.forum-glass-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--glass-clear-tint);
+  border: var(--glass-hairline);
+  -webkit-backdrop-filter: var(--glass-clear);
+  backdrop-filter: var(--glass-clear);
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+button.forum-glass-pill { cursor: pointer; }
+button.forum-glass-pill:active { transform: scale(.97); }
+.forum-back.forum-glass-pill { color: var(--accent); }
+.forum-author-pts { font-size: 12px; color: var(--muted); padding: 4px 10px; }
+
+/* Smooth forum view entrance */
+@keyframes forumViewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#forum.on .forum { animation: forumViewIn .3s cubic-bezier(.2,.9,.3,1); }
