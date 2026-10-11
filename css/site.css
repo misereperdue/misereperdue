@@ -1669,7 +1669,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* Forum avatar badge (bottom-left, like chat) */
 .forum-avatar-wrap { position: relative; display: inline-block; flex: none; }
-.forum-avatar-badge { position: absolute; left: -4px; bottom: -4px; width: 16px; height: 16px; pointer-events: none; }
+.forum-avatar-badge { position: absolute; right: -2px; bottom: -1px; width: 16px; height: 16px; pointer-events: none; }
 .forum-avatar-badge .chat-badge { position: static; width: 16px; height: 16px; font-size: 14px; line-height: 16px; }
 .forum-avatar-badge .chat-verified { position: static; width: 15px; height: 15px; display: block; }
 
@@ -1796,3 +1796,25 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-post-body code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 5px; }
 .forum-post-body pre { background: rgba(0,0,0,.25); border-radius: 8px; padding: 10px; overflow-x: auto; }
 .forum-post-body pre code { background: none; padding: 0; }
+
+/* Pin icon by timestamp */
+.forum-pin-ico { margin-left: auto; margin-right: 6px; font-size: 13px; }
+.forum-pin-ico + .forum-post-time { margin-left: 0; }
+
+/* Editor link bar + images */
+.forum-linkbar { display: flex; gap: 6px; align-items: center; padding: 6px 8px; border-bottom: var(--glass-hairline); }
+.forum-linkbar.hidden { display: none; }
+.forum-link-input {
+  flex: 1; min-width: 0; padding: 7px 10px; border-radius: 8px;
+  border: var(--glass-hairline); background: transparent; color: var(--ink); font-size: 13px;
+}
+.forum-link-apply, .forum-link-remove {
+  padding: 7px 10px; border-radius: 8px; border: var(--glass-hairline);
+  background: transparent; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.forum-link-remove { color: #ff6b6b; }
+.forum-file-input.hidden { display: none; }
+.forum-editor-input img, .forum-post-body img {
+  max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 6px 0;
+}
+.forum-post-body a { color: var(--accent); }
