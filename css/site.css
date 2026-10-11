@@ -2078,3 +2078,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
   border: none; background: none; color: var(--ink); border-radius: 6px;
   cursor: pointer; font-size: 14px; }
 .forum-mention-item:hover { background: rgba(80,140,255,.15); }
+
+.mp-loading-bubble { display: inline-block; padding: 12px 20px; background: var(--glass-clear-tint); border: var(--glass-hairline); border-radius: 20px; }
+.mp-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(127,127,127,.3); border-top-color: var(--ink); border-radius: 50%; animation: mp-spin 0.7s linear infinite; vertical-align: middle; }
+@keyframes mp-spin { to { transform: rotate(360deg); } }

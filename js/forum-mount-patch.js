@@ -20,9 +20,29 @@
     panel.style.width = "280px";
     panel._posFixed = true;
   }
+
+  // Replace "Loading users..." with spinner in a bubble
+  function fixLoadingText() {
+    var els = document.querySelectorAll("div");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el._spinnerFixed) continue;
+      if (el.textContent === "Loading users..." && el.children.length === 0) {
+        el._spinnerFixed = true;
+        el.innerHTML = '<div class="mp-loading-bubble"><span class="mp-spinner"></span></div>';
+        el.style.textAlign = "center";
+        el.style.padding = "20px";
+        el.style.opacity = "1";
+      }
+    }
+  }
+
   try {
-    var obs = new MutationObserver(function() { fixNotifPanel(); });
+    var obs = new MutationObserver(function() {
+      fixNotifPanel();
+      fixLoadingText();
+    });
     obs.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
-  setInterval(fixNotifPanel, 500);
+  setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 })();
