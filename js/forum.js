@@ -121,7 +121,7 @@
   }
 
   function renderList() {
-    var html = forumTopBar();
+    var html = '<div class="forum-anim">' + forumTopBar();
 
     // Category pills
     html += '<div class="forum-cats">';
@@ -163,6 +163,7 @@
       html += "</div>";
     }
 
+    html += "</div>";
     root.innerHTML = html;
 
     wireAvatars();
@@ -211,11 +212,11 @@
         return;
       }
       if (res.locked) {
-        root.innerHTML = forumTopBar() + '<div class="forum-head">' +
+        root.innerHTML = '<div class="forum-anim">' + forumTopBar() + '<div class="forum-head">' +
           '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>' +
           '<div class="forum-locked"><div class="forum-locked-icon">\u2B50</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
-          '<div class="forum-locked-sub">Members only. Become a member to read this thread.</div></div>';
+          '<div class="forum-locked-sub">Members only. Become a member to read this thread.</div></div></div>';
         wireAvatars();
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
@@ -252,7 +253,7 @@
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
       }
 
-      root.innerHTML = html;
+      root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       root.querySelectorAll("[data-delreply]").forEach(function (b) {
@@ -350,15 +351,15 @@
     if (token()) {
       api("/api/me").then(function (r) {
         if (r && r.user) {
-          var hadMe = !!meInfo;
           meInfo = r.user;
           isOwner = !!r.user.owner;
           var pn = document.getElementById("forum-points");
           if (pn) pn.textContent = meInfo.points || 0;
-          // If topbar rendered before meInfo arrived, re-render to show avatar
-          if (!hadMe && root && view.name === "list") {
-            var meBtn = root.querySelector("#forum-me");
-            if (!meBtn || !meBtn.innerHTML.trim()) renderList();
+          // Fill in avatar in place (no re-render, no animation replay)
+          var meBtn = root && root.querySelector("#forum-me");
+          if (meBtn && !meBtn.innerHTML.trim() && window.MPChat && window.MPChat.avatarNode) {
+            var node = window.MPChat.avatarNode(meInfo.username, meInfo.avatar, "sm", meInfo.avatarV || 0);
+            meBtn.innerHTML = node.outerHTML;
           }
         }
       }).catch(function () {});
