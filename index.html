@@ -124,7 +124,7 @@
   </script>
   <script src="js/shop.js?v=27"></script>
   <script src="js/chat.js?v=91"></script>
-  <script src="js/forum.js?v=23"></script>
+  <script src="js/forum.js?v=24"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -172,6 +172,47 @@
       if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
     }
     var viewScroll = {};
+    var pinState = { until: 0, enteredAt: 0, lastTouchAt: 0, running: false, observer: null };
+    ["touchstart", "touchmove", "wheel"].forEach(function (ev) {
+      window.addEventListener(ev, function () { pinState.lastTouchAt = Date.now(); }, { passive: true });
+    });
+    function pinTop(ms) {
+      pinState.enteredAt = Date.now();
+      pinState.lastTouchAt = 0;
+      pinState.until = Date.now() + (ms || 1500);
+      // Async DOM changes (content painting in) extend the guard briefly
+      if (pinState.observer) pinState.observer.disconnect();
+      var panel = document.querySelector(".panel.on");
+      if (panel && window.MutationObserver) {
+        pinState.observer = new MutationObserver(function () {
+          var cap = pinState.enteredAt + 5000;
+          pinState.until = Math.min(Date.now() + 500, cap);
+        });
+        pinState.observer.observe(panel, { childList: true, subtree: true });
+        setTimeout(function () { if (pinState.observer) pinState.observer.disconnect(); }, 5200);
+      }
+      if (pinState.running) return;
+      pinState.running = true;
+      var step = function () {
+        if (Date.now() > pinState.until || pinState.lastTouchAt > pinState.enteredAt) {
+          pinState.running = false;
+          return;
+        }
+        if (window.scrollY > 2) window.scrollTo(0, 0);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    window.MPScroll = { pinTop: pinTop };
+    // bfcache restore (back/forward, tab restore): re-assert position
+    window.addEventListener("pageshow", function (e) {
+      if (!e.persisted) return;
+      if (current.type === "journal") {
+        if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
+      } else {
+        pinTop(1500);
+      }
+    });
     function show(view, id) {
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
@@ -198,6 +239,7 @@
       // on a fresh session); every other view starts at the top.
       if (reading) {
         window.scrollTo(0, 0);
+        pinTop(1500);
       } else if (view === "journal") {
         // Chat always opens at the newest message
         if (window.MPChat && MPChat.scrollToLatest) {
@@ -207,6 +249,7 @@
         }
       } else {
         window.scrollTo(0, 0);
+        pinTop(1500);
       }
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
