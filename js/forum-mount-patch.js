@@ -636,6 +636,50 @@
     }, 5000);
   })();
 
+
+  // Make Posts graph purple instead of blue
+  (function() {
+    function makePurple() {
+      // Find the Posts graph bars (they have the specific blue fills)
+      var svg = document.querySelector('svg[width]');
+      if (!svg) return;
+      // Check if Posts tab is active
+      var postsBtn = document.querySelector('button[aria-label="Posts"]');
+      if (!postsBtn) return;
+      // Find rects with blue fills and change to purple
+      var rects = svg.querySelectorAll('rect');
+      rects.forEach(function(r) {
+        var fill = r.getAttribute('fill') || '';
+        if (fill === '#1d4ed8') {
+          r.setAttribute('fill', '#7c3aed'); // darker purple for posts
+        } else if (fill === '#60a5fa') {
+          r.setAttribute('fill', '#a78bfa'); // lighter purple for replies
+        } else if (fill.indexOf('barGrad-messages') !== -1) {
+          // Also handle the gradient case - replace with purple gradient
+          // Find the gradient and update its stops
+          var gradId = fill.match(/url\(#([^)]+)\)/);
+          if (gradId) {
+            var grad = document.getElementById(gradId[1]);
+            if (grad) {
+              var stops = grad.querySelectorAll('stop');
+              if (stops.length >= 2) {
+                stops[0].setAttribute('stop-color', '#7c3aed');
+                stops[1].setAttribute('stop-color', '#a78bfa');
+              }
+            }
+          }
+        }
+      });
+    }
+    // Watch for graph updates
+    try {
+      new MutationObserver(function() {
+        setTimeout(makePurple, 100);
+      }).observe(document.body, { childList: true, subtree: true });
+    } catch (e) {}
+    setInterval(makePurple, 2000);
+  })();
+
   // Pill styling removed - using native dashboard styles
 
   // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
@@ -689,8 +733,8 @@
     // Create section (left-aligned, tight spacing)
     var section = document.createElement("div");
     section.id = "countries-section";
-    section.style.cssText = "margin-top:12px;text-align:left;width:100%;padding:0;";
-    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:6px;text-align:left;padding:0;">Countries</div>' +
+    section.style.cssText = "margin-top:10px;margin-left:0;margin-right:0;text-align:left;width:100%;padding:0;";
+    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin:0 0 4px 0;text-align:left;padding:0;">Countries</div>' +
       '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;padding:0;margin:0;">Loading...</div>';
     container.appendChild(section);
     
@@ -745,10 +789,9 @@
           list.innerHTML = sorted.slice(0, 10).map(function(c) {
             var info = countryInfo[c] || [c, "\uD83C\uDF10"];
             return '<div style="display:flex;justify-content:space-between;align-items:center;' +
-              'padding:10px 14px;margin:0 0 8px 0;border-radius:12px;' +
+              'padding:10px 14px;margin:0 0 6px 0;border-radius:12px;' +
               'background:rgba(127,127,127,0.12);border:1px solid rgba(255,255,255,0.12);' +
-              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;' +
-              'margin-left:0 !important;">' +
+              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;">' +
               '<span style="font-weight:600;">' + info[1] + ' ' + info[0] + '</span>' +
               '<span style="opacity:0.7;font-weight:700;">' + totals[c] + '</span></div>';
           }).join("");
