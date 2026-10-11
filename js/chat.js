@@ -919,12 +919,13 @@
     var metrics = [
       { label: "Views", value: stats.totalViews },
       { label: "Visitors", value: stats.totalVisitors },
-      { label: "Messages", value: stats.totalMessages }
+      { label: "Messages", value: stats.totalMessages },
+      { label: "New Users", value: stats.totalNewUsers || 0 }
     ];
     metrics.forEach(function(m) {
       var cell = document.createElement("div");
       cell.style.cssText = "flex:1;text-align:center;";
-      cell.innerHTML = '<div style="font-size:28px;font-weight:700;">' + m.value + '</div>' +
+      cell.innerHTML = '<div style="font-size:24px;font-weight:700;">' + m.value + '</div>' +
         '<div style="font-size:12px;opacity:.6;margin-top:2px;">' + m.label + '</div>';
       statsRow.appendChild(cell);
     });
@@ -938,13 +939,14 @@
 
     // Metric toggle
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;";
     var currentMetric = "views";
     var metricBtns = {};
-    ["views", "visitors", "messages"].forEach(function(metric) {
+    var metricLabels = { views: "Views", visitors: "Visitors", messages: "Messages", newUsers: "New Users" };
+    ["views", "visitors", "messages", "newUsers"].forEach(function(metric) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = metric.charAt(0).toUpperCase() + metric.slice(1);
+      btn.textContent = metricLabels[metric];
       btn.style.cssText = "flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:" +
         (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:#fff;font-size:13px;font-weight:600;cursor:pointer;";
       btn.addEventListener("click", function() {
@@ -964,39 +966,126 @@
     graphWrap.style.cssText = "position:relative;height:160px;margin-bottom:20px;background:rgba(255,255,255,.03);border-radius:14px;padding:12px;overflow:hidden;";
     overviewPage.appendChild(graphWrap);
 
+    // Summary line under graph (inserted after usersTitle is created below)
+    var graphSummary = document.createElement("div");
+    graphSummary.style.cssText = "font-size:12px;opacity:.55;margin:-12px 0 16px;text-align:center;";
+
+    // Metric colors
+    var metricColors = {
+      views: ["#0a84ff", "#5ac8fa"],
+      visitors: ["#30d158", "#a6f3c0"],
+      messages: ["#bf5af2", "#e8c8ff"],
+      newUsers: ["#ff9f0a", "#ffd60a"]
+    };
+
     function drawGraph() {
       graphWrap.innerHTML = "";
       var W = graphWrap.clientWidth - 24 || 300;
-      var H = 136;
+      var H = 150;
+      var padB = 22, padT = 8;
+      var chartH = H - padB - padT;
       var data = stats.days.slice().reverse(); // oldest to newest
       var values = data.map(function(d) { return d[currentMetric] || 0; });
       var max = Math.max.apply(null, values.concat([1]));
-      var barW = W / data.length;
+      var total = values.reduce(function(a, b) { return a + b; }, 0);
+      var avg = (total / data.length).toFixed(1);
+      var peakIdx = values.indexOf(max);
+      var colors = metricColors[currentMetric] || metricColors.views;
+
+      // Update summary
+      var mLabel = metricLabels[currentMetric];
+      graphSummary.textContent = total + " total · " + avg + "/day avg" + (max > 0 ? " · peak " + max + " on " + data[peakIdx].date.slice(5) : "");
 
       var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("width", W);
       svg.setAttribute("height", H);
       svg.style.display = "block";
+      svg.style.overflow = "visible";
 
-      // Bars
+      // Defs: gradient
+      var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      var grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+      grad.setAttribute("id", "barGrad-" + currentMetric);
+      grad.setAttribute("x1", "0"); grad.setAttribute("y1", "0");
+      grad.setAttribute("x2", "0"); grad.setAttribute("y2", "1");
+      var s1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      s1.setAttribute("offset", "0%"); s1.setAttribute("stop-color", colors[0]);
+      var s2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      s2.setAttribute("offset", "100%"); s2.setAttribute("stop-color", colors[1]);
+      s2.setAttribute("stop-opacity", ".55");
+      grad.appendChild(s1); grad.appendChild(s2);
+      defs.appendChild(grad);
+      svg.appendChild(defs);
+
+      // Gridlines
+      [0.25, 0.5, 0.75, 1].forEach(function(f) {
+        var y = padT + chartH * (1 - f);
+        var ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        ln.setAttribute("x1", 0); ln.setAttribute("x2", W);
+        ln.setAttribute("y1", y); ln.setAttribute("y2", y);
+        ln.setAttribute("stroke", "rgba(255,255,255,.07)");
+        ln.setAttribute("stroke-dasharray", "3,4");
+        svg.appendChild(ln);
+      });
+
+      var barW = W / data.length;
+      var bw = Math.max(2, Math.min(14, barW - 3));
+
+      // Bars with staggered animation
       data.forEach(function(d, i) {
         var v = values[i];
-        var h = Math.max(2, (v / max) * (H - 20));
+        var h = Math.max(v > 0 ? 4 : 2, (v / max) * chartH);
+        var x = i * barW + (barW - bw) / 2;
+        var y = padT + chartH - h;
+        var isPeak = i === peakIdx && max > 0;
+
         var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", i * barW + 1);
-        rect.setAttribute("y", H - h);
-        rect.setAttribute("width", Math.max(1, barW - 2));
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", bw);
         rect.setAttribute("height", h);
-        rect.setAttribute("rx", "2");
-        rect.setAttribute("fill", "rgba(0,122,255,.7)");
+        rect.setAttribute("rx", Math.min(4, bw / 2));
+        rect.setAttribute("fill", "url(#barGrad-" + currentMetric + ")");
+        if (isPeak) {
+          rect.setAttribute("stroke", colors[0]);
+          rect.setAttribute("stroke-width", "1.5");
+        }
+        if (v === 0) rect.setAttribute("opacity", ".25");
         rect.style.transformOrigin = "bottom";
-        rect.style.animation = "barGrow .5s cubic-bezier(.2,.9,.3,1.2) both";
-        rect.style.animationDelay = (i * 15) + "ms";
+        rect.style.transformBox = "fill-box";
+        rect.style.animation = "barRise .6s cubic-bezier(.2,.9,.25,1.15) both";
+        rect.style.animationDelay = (i * 18) + "ms";
+        // Value label on peak bar
+        if (isPeak && v > 0) {
+          var lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          lbl.setAttribute("x", x + bw / 2);
+          lbl.setAttribute("y", y - 5);
+          lbl.setAttribute("text-anchor", "middle");
+          lbl.setAttribute("font-size", "10");
+          lbl.setAttribute("font-weight", "700");
+          lbl.setAttribute("fill", colors[0]);
+          lbl.textContent = v;
+          lbl.style.animation = "fadeIn .4s ease both";
+          lbl.style.animationDelay = (i * 18 + 400) + "ms";
+          svg.appendChild(lbl);
+        }
         // Tooltip
         var titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
-        titleEl.textContent = d.date + ": " + v + " " + currentMetric;
+        titleEl.textContent = d.date + ": " + v + " " + mLabel.toLowerCase();
         rect.appendChild(titleEl);
         svg.appendChild(rect);
+
+        // Date labels every 5 days
+        if (i % 5 === 0 || i === data.length - 1) {
+          var dt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          dt.setAttribute("x", i * barW + barW / 2);
+          dt.setAttribute("y", H - 6);
+          dt.setAttribute("text-anchor", "middle");
+          dt.setAttribute("font-size", "9");
+          dt.setAttribute("fill", "rgba(255,255,255,.35)");
+          dt.textContent = d.date.slice(5).replace("-", "/");
+          svg.appendChild(dt);
+        }
       });
 
       graphWrap.appendChild(svg);
@@ -1013,6 +1102,7 @@
     usersWrap.style.cssText = "margin-bottom:20px;";
     usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Loading...</div>';
     overviewPage.appendChild(usersWrap);
+    overviewPage.insertBefore(graphSummary, usersTitle);
     api("/api/users/recent").then(function(r) {
       if (!r || !r.ok || !r.users) {
         usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>';
