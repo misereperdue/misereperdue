@@ -453,11 +453,15 @@
         return;
       }
       if (res.locked) {
+        var lockIcon = res.privateLock ? "\uD83D\uDD12" : "\u2B50";
+        var lockMsg = res.privateLock
+          ? "Private. Only the owner can view this thread."
+          : "Members only. Become a member to read this thread.";
         root.innerHTML = '<div class="forum-anim">' + forumTopBar() + '<div class="forum-head">' +
           '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>' +
-          '<div class="forum-locked"><div class="forum-locked-icon">\u2B50</div>' +
+          '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
-          '<div class="forum-locked-sub">Members only. Become a member to read this thread.</div></div></div>';
+          '<div class="forum-locked-sub">' + lockMsg + "</div></div></div>";
         wireAvatars();
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
