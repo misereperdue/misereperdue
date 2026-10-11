@@ -48,6 +48,53 @@
     }
   } catch (e) {}
 
+  // Skeleton placeholders + image aspect ratios to prevent layout shift
+  try {
+    var skelStyle = document.createElement("style");
+    skelStyle.textContent = [
+      ".forum-skel{padding:12px;display:flex;flex-direction:column;gap:12px;}",
+      ".forum-skel-item{background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:16px;padding:16px;min-height:120px;}",
+      ".forum-skel-line{height:14px;border-radius:7px;background:linear-gradient(90deg,rgba(127,127,127,.15) 25%,rgba(127,127,127,.25) 50%,rgba(127,127,127,.15) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s infinite;}",
+      ".forum-skel-line.short{width:60%;}",
+      ".forum-skel-line.tiny{width:40%;height:10px;}",
+      "@keyframes skel-shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}",
+      ".forum-post-body img{aspect-ratio:16/10;object-fit:cover;width:100%;background:var(--glass-clear-tint);}",
+      ".forum-thread img{aspect-ratio:16/10;object-fit:cover;}"
+    ].join("");
+    document.head.appendChild(skelStyle);
+  } catch (e) {}
+
+  function showSkeletons() {
+    var root = document.getElementById("forum-root");
+    if (!root || root._skelShown) return;
+    // Only show if forum is empty (hasn't rendered yet)
+    if (root.children.length === 0 || root.textContent.trim() === "") {
+      root._skelShown = true;
+      var html = '<div class="forum-skel">';
+      for (var i = 0; i < 4; i++) {
+        html += '<div class="forum-skel-item"><div class="forum-skel-line short"></div><div style="height:8px"></div><div class="forum-skel-line"></div><div style="height:8px"></div><div class="forum-skel-line tiny"></div></div>';
+      }
+      html += '</div>';
+      root.innerHTML = html;
+    }
+  }
+  // Show skeletons when forum panel activates
+  try {
+    var fPanel = document.getElementById("forum");
+    if (fPanel) {
+      new MutationObserver(function() {
+        if (fPanel.classList.contains("on")) {
+          // Reset skeleton flag so they show on re-entry
+          var r = document.getElementById("forum-root");
+          if (r) r._skelShown = false;
+          showSkeletons();
+        }
+      }).observe(fPanel, { attributes: true, attributeFilter: ["class"] });
+    }
+  } catch (e) {}
+  // Also try on load in case forum is the default view
+  setTimeout(showSkeletons, 100);
+
   // Fix share button visibility in light mode (CSS too large to push, inject here)
   try {
     var style = document.createElement("style");
