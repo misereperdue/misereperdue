@@ -33,21 +33,40 @@ var MPShopify = (function () {
     var n = edge.node || {};
     var price = (((n.priceRange || {}).minVariantPrice) || {});
     var images = ((n.images || {}).edges || []).map(function (e) { return e.node && e.node.url; }).filter(Boolean);
-    var sizeSet = {};
-    var variantList = [];
+    var optValues = {};
+    var optOrder = [];
+    var rawVariants = [];
     ((n.variants || {}).edges || []).forEach(function (e) {
       var v = e.node || {};
-      var sizeVal = null;
+      var chosen = {};
       ((v.selectedOptions || [])).forEach(function (o) {
-        if (/size/i.test(o.name || "") && o.value && !/default/i.test(o.value)) { sizeSet[o.value] = true; sizeVal = o.value; }
+        if (!o.name || !o.value || /default/i.test(o.value)) return;
+        if (!optValues[o.name]) { optValues[o.name] = {}; optOrder.push(o.name); }
+        optValues[o.name][o.value] = true;
+        chosen[o.name] = o.value;
       });
-      if (v.id) variantList.push({ id: v.id, size: sizeVal, available: v.availableForSale !== false, qty: v.quantityAvailable });
+      if (v.id) rawVariants.push({ id: v.id, opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable });
     });
-    var sizes = Object.keys(sizeSet);
+    var optionName = null;
+    for (var oi = 0; oi < optOrder.length; oi++) {
+      if (/size/i.test(optOrder[oi])) { optionName = optOrder[oi]; break; }
+    }
+    if (!optionName) {
+      for (var oj = 0; oj < optOrder.length; oj++) {
+        if (Object.keys(optValues[optOrder[oj]]).length > 1) { optionName = optOrder[oj]; break; }
+      }
+    }
+    if (!optionName && optOrder.length) optionName = optOrder[0];
+    var sizes = optionName ? Object.keys(optValues[optionName]) : [];
+    var variantList = rawVariants.map(function (rv) {
+      return { id: rv.id, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty };
+    });
     var stockQty = 0, stockTracked = false;
     variantList.forEach(function (vv) { if (vv.qty != null) { stockTracked = true; stockQty += vv.qty; } });
     return {
       id: n.id || n.handle,
+      handle: n.handle || "",
+      optionName: optionName,
       shopify: true,
       name: n.title || "Untitled",
       price: parseFloat(price.amount || "0"),
@@ -96,8 +115,10 @@ var MPShopify = (function () {
     return vs.length ? vs[0].id : null;
   }
 
-  function createCheckout(lines) {
+  function createCheckout(lines, attributes) {
     var query = "mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }";
+    var input = { lines: lines.map(function (l) { return { merchandiseId: l.variantId, quantity: l.qty }; }) };
+    if (attributes && attributes.length) input.attributes = attributes;
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
@@ -106,7 +127,7 @@ var MPShopify = (function () {
       },
       body: JSON.stringify({
         query: query,
-        variables: { input: { lines: lines.map(function (l) { return { merchandiseId: l.variantId, quantity: l.qty }; }) } }
+        variables: { input: input }
       })
     })
       .then(function (r) { return r.json(); })
