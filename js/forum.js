@@ -149,7 +149,7 @@
   }
 
   function memberBadgeHTML() {
-    return '<span class="chat-badge chat-badge-member" title="Member" aria-label="Member badge">\u2B50</span>';
+    return '<span class="chat-badge chat-badge-member" title="VIP" aria-label="VIP badge">\u2B50</span>';
   }
 
   /* ---------- list view ---------- */
@@ -415,7 +415,7 @@
       h += '<button type="button" class="forum-tb" data-act="' + b.act + '" title="' + b.title + '">' + b.label + "</button>";
     });
     h += "</div>";
-    if (opts.lock) h += '<div class="forum-lockbar hidden"><span class="forum-lockbar-label">Hidden for:</span><button type="button" data-lockmode="reply">\uD83D\uDCAC Repliers</button><button type="button" data-lockmode="member">\u2B50 Members</button><button type="button" class="forum-lock-cancel" aria-label="Cancel">\u00D7</button></div>';
+    if (opts.lock) h += '<div class="forum-lockbar hidden"><span class="forum-lockbar-label">Hidden for:</span><button type="button" data-lockmode="reply">\uD83D\uDCAC Repliers</button><button type="button" data-lockmode="member">\u2B50 VIPs</button><button type="button" class="forum-lock-cancel" aria-label="Cancel">\u00D7</button></div>';
     h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
     if (opts.embed) h += '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">\u00D7</button></div>';
     h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
@@ -463,7 +463,7 @@
     return bytes + " B";
   }
   function uploadEditorFile(file, done) {
-    if (file.size > 50 * 1024 * 1024) { alert("Files are capped at 50MB for members."); done(null); return; }
+    if (file.size > 50 * 1024 * 1024) { alert("Files are capped at 50MB for VIPs."); done(null); return; }
     var reader = new FileReader();
     reader.onload = function () {
       api("/api/media", { method: "POST", body: { dataUrl: String(reader.result || ""), kind: "file", filename: file.name } })
@@ -938,7 +938,7 @@
         var lockIcon = res.privateLock ? "\uD83D\uDD12" : "\u2B50";
         var lockMsg = res.privateLock
           ? "Private. Only the owner can view this thread."
-          : "Members only. Become a member to read this thread.";
+          : "VIPs only. Become a VIP to read this thread.";
         root.innerHTML = '<div class="forum-anim">' + forumTopBar() + '<div class="forum-head">' +
           '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>' +
           '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
