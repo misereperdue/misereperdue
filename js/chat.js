@@ -2420,6 +2420,176 @@
     };
     bioInput.addEventListener("blur", saveBio);
 
+    // ===== Forum signature =====
+    var sigTitle = document.createElement("div");
+    sigTitle.className = "chat-pw-title";
+    sigTitle.textContent = "Forum signature";
+    sheet.appendChild(sigTitle);
+    var sigIsMember = !!(me.member || me.owner);
+    var sigNote = document.createElement("div");
+    sigNote.style.cssText = "font-size:12px;opacity:.55;margin:-2px 0 8px;";
+    sigNote.textContent = sigIsMember
+      ? "Shows under your forum posts. You can add photos and embeds."
+      : "Shows under your forum posts. Members can also add photos and embeds.";
+    sheet.appendChild(sigNote);
+    var sigMount = document.createElement("div");
+    sigMount.className = "sig-mount";
+    sheet.appendChild(sigMount);
+    var sigEmbedsEl = document.createElement("div");
+    sigEmbedsEl.className = "sig-embeds";
+    sheet.appendChild(sigEmbedsEl);
+    var sigStatus = document.createElement("div");
+    sigStatus.className = "chat-bio-count";
+    sheet.appendChild(sigStatus);
+
+    var sigEmbeds = [];
+    var sigEditor = null;
+    var sigFallback = null;
+    var sigSaveTimer = null;
+    function embedLabel(src) {
+      if (/youtube/i.test(src)) return "\uD83C\uDFAC YouTube";
+      if (/spotify/i.test(src)) return "\uD83C\uDFB5 Spotify";
+      if (/soundcloud/i.test(src)) return "\uD83C\uDFB5 SoundCloud";
+      if (/vimeo/i.test(src)) return "\uD83C\uDFAC Vimeo";
+      return "\uD83D\uDD17 Embed";
+    }
+    function paintSigEmbeds() {
+      sigEmbedsEl.innerHTML = "";
+      sigEmbeds.forEach(function (e, i) {
+        var chip = document.createElement("span");
+        chip.className = "sig-chip";
+        chip.textContent = embedLabel(e.src) + " ";
+        var rm = document.createElement("button");
+        rm.type = "button";
+        rm.textContent = "\u00D7";
+        rm.className = "sig-chip-x";
+        rm.setAttribute("aria-label", "Remove embed");
+        rm.addEventListener("click", function () { sigEmbeds.splice(i, 1); paintSigEmbeds(); saveSignature(); });
+        chip.appendChild(rm);
+        sigEmbedsEl.appendChild(chip);
+      });
+    }
+    function extractEmbedSrc(raw) {
+      raw = String(raw || "").trim();
+      var m = raw.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) || raw.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i);
+      var url = m ? m[1] : raw;
+      var yt = url.match(/(?:youtube\.com\/watch\?[^\s]*v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/i);
+      if (yt) return "https://www.youtube.com/embed/" + yt[1];
+      if (/youtube\.com\/embed\//i.test(url)) return url;
+      var sp = url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i);
+      if (sp) return "https://open.spotify.com/embed/" + sp[1] + "/" + sp[2];
+      if (/open\.spotify\.com\/embed\//i.test(url)) return url;
+      var vm = url.match(/vimeo\.com\/(\d+)/i);
+      if (vm) return "https://player.vimeo.com/video/" + vm[1];
+      if (/player\.vimeo\.com\//i.test(url)) return url;
+      if (/soundcloud\.com\//i.test(url) && !/w\.soundcloud\.com/i.test(url)) return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url);
+      if (/w\.soundcloud\.com\/player\//i.test(url)) return url;
+      return null;
+    }
+    function composeSignature() {
+      var html = "";
+      if (sigEditor) html = sigEditor.getHTML();
+      else if (sigFallback) html = sigFallback.value.split(/\n\s*\n/).map(function (p) { return "<p>" + esc(p).replace(/\n/g, "<br>") + "</p>"; }).join("");
+      sigEmbeds.forEach(function (e) {
+        html += '<div class="sig-embed"><iframe src="' + e.src.replace(/"/g, "%22") + '" allowfullscreen loading="lazy"></iframe></div>';
+      });
+      if (html === "<p></p>") html = "";
+      return html;
+    }
+    function saveSignature() {
+      var html = composeSignature();
+      api("/api/profile", { method: "POST", body: { signature: html } })
+        .then(function (r) {
+          if (r && r.ok && r.user) { me = r.user; sigStatus.textContent = "Saved \u2713"; setTimeout(function () { if (sigStatus.textContent === "Saved \u2713") sigStatus.textContent = ""; }, 2000); }
+          else sigStatus.textContent = (r && r.error) || "Couldn't save signature.";
+        })
+        .catch(function () { sigStatus.textContent = "Couldn't reach the server."; });
+    }
+    function scheduleSigSave() {
+      sigStatus.textContent = "";
+      clearTimeout(sigSaveTimer);
+      sigSaveTimer = setTimeout(saveSignature, 1200);
+    }
+    // Split the stored signature: embeds become chips, the rest goes to the editor
+    (function initSig() {
+      var stored = me.signature || "";
+      try {
+        var doc = new DOMParser().parseFromString(stored, "text/html");
+        doc.querySelectorAll("iframe").forEach(function (f) {
+          var src = f.getAttribute("src") || "";
+          if (src && sigEmbeds.length < 2) sigEmbeds.push({ src: src });
+          var wrap = f.closest ? (f.closest(".sig-embed") || f) : f;
+          wrap.remove();
+        });
+        stored = doc.body.innerHTML;
+      } catch (e) {}
+      paintSigEmbeds();
+      if (window.MPSigEditor) {
+        if (window.__mpSigEd) { try { window.__mpSigEd.destroy(); } catch (e) {} window.__mpSigEd = null; }
+        window.MPSigEditor.mount(sigMount, { html: stored, member: sigIsMember, placeholder: "Your signature\u2026" })
+          .then(function (ed) {
+            sigEditor = ed;
+            window.__mpSigEd = ed;
+            if (ed) ed.on("update", scheduleSigSave);
+            else {
+              sigFallback = document.createElement("textarea");
+              sigFallback.className = "chat-bio";
+              sigFallback.rows = 3;
+              sigFallback.value = stored.replace(/<[^>]*>/g, "");
+              sigFallback.addEventListener("blur", saveSignature);
+              sigMount.appendChild(sigFallback);
+            }
+          });
+      }
+      if (sigIsMember) {
+        var embBtn = document.createElement("button");
+        embBtn.type = "button";
+        embBtn.className = "btn sig-embed-btn";
+        embBtn.textContent = "\uFF0B Add embed";
+        var embBar = document.createElement("div");
+        embBar.className = "sig-embed-bar hidden";
+        embBar.innerHTML = '<input type="text" class="sig-embed-input" placeholder="Paste a link or embed code (YouTube, Spotify\u2026)"><button type="button" class="btn accent sig-embed-add">Add</button>';
+        embBtn.addEventListener("click", function () { embBar.classList.toggle("hidden"); });
+        embBar.querySelector(".sig-embed-add").addEventListener("click", function () {
+          var inp = embBar.querySelector(".sig-embed-input");
+          var src = extractEmbedSrc(inp.value);
+          if (!src) { sigStatus.textContent = "That embed isn't supported \u2014 try a YouTube, Spotify, SoundCloud or Vimeo link."; return; }
+          if (sigEmbeds.length >= 2) { sigStatus.textContent = "Two embeds max."; return; }
+          sigEmbeds.push({ src: src });
+          inp.value = "";
+          embBar.classList.add("hidden");
+          paintSigEmbeds();
+          saveSignature();
+        });
+        sheet.insertBefore(embBtn, sigStatus);
+        sheet.insertBefore(embBar, sigStatus);
+      }
+    })();
+
+    // Show/hide signatures viewer preference
+    var sigPrefRow = document.createElement("div");
+    sigPrefRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;";
+    var sigPrefLab = document.createElement("span");
+    sigPrefLab.style.cssText = "font-size:13px;opacity:.75;";
+    sigPrefLab.textContent = "Show signatures in the forum";
+    var sigPrefBtn = document.createElement("button");
+    sigPrefBtn.type = "button";
+    sigPrefBtn.className = "btn";
+    function paintSigPref() {
+      var on = true;
+      try { on = localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) {}
+      sigPrefBtn.textContent = on ? "On" : "Off";
+    }
+    sigPrefBtn.addEventListener("click", function () {
+      var on = true;
+      try { on = localStorage.getItem("mp_show_sigs") !== "0"; localStorage.setItem("mp_show_sigs", on ? "0" : "1"); } catch (e) {}
+      paintSigPref();
+    });
+    paintSigPref();
+    sigPrefRow.appendChild(sigPrefLab);
+    sigPrefRow.appendChild(sigPrefBtn);
+    sheet.appendChild(sigPrefRow);
+
     var errBox = document.createElement("div");
     errBox.className = "chat-err";
     errBox.setAttribute("role", "alert");
