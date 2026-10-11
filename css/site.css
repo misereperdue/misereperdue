@@ -1922,3 +1922,19 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 /* Pin bubble in the list bottom bar */
 .forum-pin-bubble { width: 30px; height: 30px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(255,255,255,.09); border: var(--glass-hairline); align-self: center; }
+
+/* Forum tags */
+.forum-tag { appearance: none; border: var(--glass-hairline); background: rgba(255,255,255,.07); color: var(--ink); border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; align-self: center; }
+.forum-tag.on { background: var(--blue); border-color: transparent; color: #fff; }
+.forum-tag-more { color: var(--muted); }
+.forum-tagbar { display: flex; align-items: center; gap: 8px; margin: 0 2px 10px; font-size: 12.5px; color: var(--muted); }
+.forum-tag-clear { appearance: none; border: none; background: none; color: var(--blue); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
+.forum-post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.forum-tag-editor { position: relative; border: var(--glass-hairline); border-radius: 12px; background: rgba(255,255,255,.04); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.forum-tag-pills { display: contents; }
+.forum-tag.chosen { display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+.forum-tag-x { appearance: none; border: none; background: none; color: var(--muted); font-size: 13px; line-height: 1; cursor: pointer; padding: 0 1px; }
+.forum-tag-input { flex: 1; min-width: 110px; border: none; background: none; color: var(--ink); font-size: 13.5px; padding: 4px 2px; outline: none; }
+.forum-tag-suggest { position: absolute; left: 8px; right: 8px; top: calc(100% + 4px); z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 12px; background: rgba(20,26,48,.97); border: var(--glass-hairline); box-shadow: 0 12px 32px rgba(0,0,0,.4); }
+[data-theme="light"] .forum-tag-suggest { background: rgba(255,255,255,.98); }
+.forum-tag-sug { appearance: none; border: var(--glass-hairline); background: rgba(255,255,255,.07); color: var(--ink); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
