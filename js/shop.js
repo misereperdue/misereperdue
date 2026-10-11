@@ -283,14 +283,9 @@ var MPShop = (function () {
     }
     var sizes;
     if (memberAmounts) {
-      var dots = memberAmounts.map(function (a, i) {
-        var f = memberAmounts.length > 1 ? i / (memberAmounts.length - 1) : 0;
-        return '<i style="left:calc(12px + (100% - 24px) * ' + f + ')"></i>';
-      }).join("");
       sizes = '<div class="member-slider">' +
         '<div class="member-top"><span>Amount</span><span class="member-val" id="member-val"></span></div>' +
-        '<div class="member-trackwrap"><div class="member-track"><div class="member-fill" id="member-fill"></div><div class="member-dots">' + dots + '</div></div>' +
-        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount"></div>' +
+        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
         '<div class="member-ticks">' + memberAmounts.map(function (a, i) { return '<span data-tick="' + i + '"' + (i === 0 ? ' class="on"' : "") + ">$" + esc(a) + "</span>"; }).join("") + "</div>" +
         "</div>";
     } else if (p.sizes && p.sizes.length) {
@@ -326,8 +321,8 @@ var MPShop = (function () {
       var range = view.querySelector("#member-range");
       var priceEl = view.querySelector(".price");
       var valEl = view.querySelector("#member-val");
-      var fillEl = view.querySelector("#member-fill");
       var tickEls = view.querySelectorAll("[data-tick]");
+      var shownPct = 0, tweenId = null;
       function paintSlider(animate) {
         var idx = parseInt(range.value, 10) || 0;
         size = memberAmounts[idx];
@@ -337,9 +332,24 @@ var MPShop = (function () {
           valEl.textContent = MP.money(amt);
           if (animate) { valEl.classList.remove("bump"); void valEl.offsetWidth; valEl.classList.add("bump"); }
         }
-        var f = memberAmounts.length > 1 ? idx / (memberAmounts.length - 1) : 0;
-        if (fillEl) fillEl.style.width = "calc(" + (f * 100) + "% + " + (12 - f * 24) + "px)";
         tickEls.forEach(function (t, i) { t.classList.toggle("on", i === idx); });
+        var target = memberAmounts.length > 1 ? (idx / (memberAmounts.length - 1)) * 100 : 0;
+        if (!animate) {
+          shownPct = target;
+          range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + target + "%, rgba(255,255,255,.14) " + target + "%)";
+          return;
+        }
+        if (tweenId) cancelAnimationFrame(tweenId);
+        var from = shownPct, startT = null;
+        function step(t) {
+          if (!startT) startT = t;
+          var k = Math.min(1, (t - startT) / 160);
+          var e = 1 - Math.pow(1 - k, 3);
+          shownPct = from + (target - from) * e;
+          range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + shownPct + "%, rgba(255,255,255,.14) " + shownPct + "%)";
+          if (k < 1) tweenId = requestAnimationFrame(step);
+        }
+        tweenId = requestAnimationFrame(step);
       }
       if (range) { range.addEventListener("input", function () { paintSlider(true); refreshAction(); }); paintSlider(false); }
     }
