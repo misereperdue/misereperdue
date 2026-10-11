@@ -1507,3 +1507,16 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 
 
+
+/* Unsupported file type message */
+.chat-unsupported {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--ink);
+  font-size: 13px;
+  opacity: .6;
+  font-style: italic;
+  max-width: 240px;
+}
