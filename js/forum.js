@@ -7,7 +7,8 @@
   var TOKEN_KEY = "chat_token";
 
   var root = null;
-  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {}, scrollTop: false };
+  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {} };
+  var paintedThreadId = null;
   var cache = { categories: [], threads: [], thread: null };
 
   function token() {
@@ -416,7 +417,6 @@
       b.addEventListener("click", function () {
         view.name = "thread";
         view.threadId = b.getAttribute("data-id");
-        view.scrollTop = true;
         renderThread();
       });
     });
@@ -469,8 +469,8 @@
   function paintThread() {
     var t = cache.thread;
     if (!t) return;
-    var wantTop = view.scrollTop;
-    view.scrollTop = false;
+    var freshOpen = paintedThreadId !== t.id;
+    paintedThreadId = t.id;
     var html = forumTopBar() +
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
@@ -540,7 +540,11 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
-      if (wantTop) window.scrollTo(0, 0);
+      if (freshOpen) {
+        window.scrollTo(0, 0);
+        // Media inside the post can shift layout right after paint; re-pin
+        requestAnimationFrame(function () { window.scrollTo(0, 0); });
+      }
       initReplyEditor();
       attachLinkPreviews();
       function focusComposer() {
@@ -759,6 +763,7 @@
   function backToList() {
     view.name = "list";
     view.threadId = null;
+    paintedThreadId = null;
     view.replyTo = null;
     view.showNested = {};
     window.scrollTo(0, 0);
@@ -864,5 +869,14 @@
     });
   }
 
-  window.MPForum = { render: render };
+  function goHome() {
+    view.name = "list";
+    view.threadId = null;
+    view.replyTo = null;
+    paintedThreadId = null;
+    window.scrollTo(0, 0);
+    render();
+  }
+
+  window.MPForum = { render: render, goHome: goHome };
 })();
