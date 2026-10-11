@@ -71,7 +71,7 @@
   function starBtn(item, replyId) {
     var count = item.stars || 0;
     var mine = meInfo && item.author && meInfo.username.toLowerCase() === String(item.author).toLowerCase();
-    if (mine) return count > 0 ? '<span class="forum-star-count">\u2605 ' + count + "</span>" : "";
+    if (mine) return '<span class="forum-star-count">\u2605 ' + count + "</span>";
     if (!token()) return count > 0 ? '<span class="forum-star-count">\u2605 ' + count + "</span>" : "";
     var given = meInfo && Array.isArray(item.starredBy) && item.starredBy.indexOf(meInfo.username.toLowerCase()) !== -1;
     return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
@@ -112,6 +112,120 @@
   /* ---------- list view ---------- */
 
   var meInfo = null;
+
+  /* ---------- rich text ---------- */
+
+  var RICH_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1 };
+  function sanitizeHTML(html) {
+    try {
+      var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+      (function walk(node) {
+        var kids = Array.prototype.slice.call(node.childNodes);
+        kids.forEach(function (child) {
+          if (child.nodeType === 3) return;
+          if (child.nodeType !== 1) { child.remove(); return; }
+          if (!RICH_ALLOWED[child.tagName]) {
+            walk(child);
+            while (child.firstChild) node.insertBefore(child.firstChild, child);
+            child.remove();
+            return;
+          }
+          Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
+          walk(child);
+        });
+      })(doc.body);
+      return doc.body.innerHTML;
+    } catch (e) { return ""; }
+  }
+  function bodyHTML(item) {
+    if (item.rich) return sanitizeHTML(item.content);
+    return esc(item.content || "").replace(/\n/g, "<br>");
+  }
+
+  var replyEditor = null;
+  var newEditor = null;
+  var editorLibPromise = null;
+  function loadEditorLib() {
+    if (!editorLibPromise) {
+      editorLibPromise = Promise.all([
+        import("https://cdn.jsdelivr.net/npm/@tiptap/core@2/+esm"),
+        import("https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2/+esm"),
+        import("https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2/+esm")
+      ]).then(function (mods) {
+        return { Editor: mods[0].Editor, StarterKit: mods[1].default, Placeholder: mods[2].default };
+      }).catch(function () { return null; });
+    }
+    return editorLibPromise;
+  }
+
+  var TOOLBAR = [
+    { act: "bold", label: "B", cls: "tb-bold" },
+    { act: "italic", label: "I", cls: "tb-italic" },
+    { act: "strike", label: "S", cls: "tb-strike" },
+    { act: "code", label: "<>", cls: "tb-code" },
+    { act: "h3", label: "H", cls: "" },
+    { act: "bullet", label: "\u2022\u2261", cls: "" },
+    { act: "ordered", label: "1.\u2261", cls: "" },
+    { act: "quote", label: "\u201D", cls: "" }
+  ];
+  function toolbarHTML() {
+    var h = '<div class="forum-toolbar">';
+    TOOLBAR.forEach(function (b) {
+      h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '">' + b.label + "</button>";
+    });
+    return h + "</div>";
+  }
+  function refreshToolbar(editor, bar) {
+    if (!editor || !bar) return;
+    var map = { bold: "bold", italic: "italic", strike: "strike", code: "code", bullet: "bulletList", ordered: "orderedList", quote: "blockquote" };
+    bar.querySelectorAll("[data-act]").forEach(function (btn) {
+      var act = btn.getAttribute("data-act");
+      var on = false;
+      try {
+        if (act === "h3") on = editor.isActive("heading", { level: 3 });
+        else if (map[act]) on = editor.isActive(map[act]);
+      } catch (e) {}
+      btn.classList.toggle("on", !!on);
+    });
+  }
+  function wireToolbar(editor, mountEl) {
+    var bar = mountEl.querySelector(".forum-toolbar");
+    if (!bar || !editor) return;
+    bar.querySelectorAll("[data-act]").forEach(function (btn) {
+      btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+      btn.addEventListener("click", function () {
+        var act = btn.getAttribute("data-act");
+        var ch = editor.chain().focus();
+        if (act === "bold") ch.toggleBold().run();
+        else if (act === "italic") ch.toggleItalic().run();
+        else if (act === "strike") ch.toggleStrike().run();
+        else if (act === "code") ch.toggleCode().run();
+        else if (act === "h3") ch.toggleHeading({ level: 3 }).run();
+        else if (act === "bullet") ch.toggleBulletList().run();
+        else if (act === "ordered") ch.toggleOrderedList().run();
+        else if (act === "quote") ch.toggleBlockquote().run();
+        refreshToolbar(editor, bar);
+      });
+    });
+    editor.on("selectionUpdate", function () { refreshToolbar(editor, bar); });
+    editor.on("update", function () { refreshToolbar(editor, bar); });
+  }
+  function createEditor(mount, placeholder) {
+    return loadEditorLib().then(function (lib) {
+      if (!lib) return null;
+      var editor = new lib.Editor({
+        element: mount.querySelector(".forum-editor-mount"),
+        extensions: [
+          lib.StarterKit.configure({ heading: { levels: [3] } }),
+          lib.Placeholder.configure({ placeholder: placeholder })
+        ],
+        content: "",
+        editorProps: { attributes: { class: "forum-editor-input" } }
+      });
+      wireToolbar(editor, mount);
+      return editor;
+    });
+  }
 
   function forumTopBar() {
     var pts = meInfo ? (meInfo.points || 0) : 0;
@@ -249,7 +363,7 @@
         '<span class="forum-post-author">' + authorLine(t) + "</span>" +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
-        '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div>" +
+        '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         ((token() || isOwner) ? '<div class="forum-admin forum-admin-thread">' + starBtn(t, null) +
           (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button>' : "") + "</div>" : "") + "</article>";
 
@@ -269,7 +383,7 @@
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
-          '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div>" +
+          '<div class="forum-post-body">' + bodyHTML(r) + "</div>" +
           ((token() || isOwner)
             ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
               (token() ? '<button type="button" class="forum-admin-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
@@ -299,7 +413,7 @@
         var rtName = view.replyTo ? view.replyTo.name : null;
         html += '<div class="forum-replybox">' +
           (rtName ? '<div class="forum-replying-to">Replying to <b>' + esc(rtName) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button></div>' : "") +
-          '<textarea id="forum-reply" rows="3" maxlength="5000" placeholder="' + (rtName ? "Write a reply to " + esc(rtName) + "\u2026" : "Write a reply\u2026") + '"></textarea>' +
+          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div>' +
           '<button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else {
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
@@ -308,20 +422,26 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
-      var replyTop = root.querySelector("#forum-reply-top");
-      if (replyTop) replyTop.addEventListener("click", function () {
+      initReplyEditor();
+      function focusComposer() {
         var box = root.querySelector(".forum-replybox");
-        var ta = root.querySelector("#forum-reply");
         if (box) box.scrollIntoView({ behavior: "smooth", block: "center" });
-        if (ta) setTimeout(function () { ta.focus(); }, 350);
-      });
+        setTimeout(function () {
+          if (replyEditor) replyEditor.commands.focus();
+          else {
+            var ta = root.querySelector("#forum-reply");
+            if (ta) ta.focus();
+          }
+        }, 350);
+      }
+      var replyTop = root.querySelector("#forum-reply-top");
+      if (replyTop) replyTop.addEventListener("click", focusComposer);
       root.querySelectorAll("[data-replyto]").forEach(function (b) {
         b.addEventListener("click", function () {
           view.replyTo = { id: b.getAttribute("data-replyto"), name: b.getAttribute("data-replyname") };
           // Update composer in place, then glide to it
           var box = root.querySelector(".forum-replybox");
-          var ta = root.querySelector("#forum-reply");
-          if (box && ta) {
+          if (box) {
             var ind = box.querySelector(".forum-replying-to");
             if (!ind) {
               ind = document.createElement("div");
@@ -330,21 +450,17 @@
             }
             ind.innerHTML = "Replying to <b>" + esc(view.replyTo.name) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button>';
             ind.querySelector("#forum-cancel-reply").addEventListener("click", cancelReplyTo);
-            ta.placeholder = "Write a reply to " + view.replyTo.name + "\u2026";
-            box.scrollIntoView({ behavior: "smooth", block: "center" });
-            setTimeout(function () { ta.focus(); }, 350);
+            focusComposer();
           }
         });
       });
       function cancelReplyTo() {
         view.replyTo = null;
         var box = root.querySelector(".forum-replybox");
-        var ta = root.querySelector("#forum-reply");
         if (box) {
           var ind = box.querySelector(".forum-replying-to");
           if (ind) ind.remove();
         }
-        if (ta) ta.placeholder = "Write a reply\u2026";
       }
       root.querySelectorAll("[data-showreplies]").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -419,11 +535,18 @@
 
       var send = root.querySelector("#forum-send");
       if (send) send.addEventListener("click", function () {
-        var ta = root.querySelector("#forum-reply");
-        var content = ta.value.trim();
-        if (!content) return;
+        var content = "", rich = false;
+        if (replyEditor) {
+          if (replyEditor.isEmpty) return;
+          content = replyEditor.getHTML();
+          rich = true;
+        } else {
+          var ta = root.querySelector("#forum-reply");
+          content = ta ? ta.value.trim() : "";
+          if (!content) return;
+        }
         send.disabled = true;
-        var payload = { content: content };
+        var payload = { content: content, rich: rich };
         if (view.replyTo) payload.parentId = view.replyTo.id;
         api("/api/forum/thread/" + encodeURIComponent(view.threadId) + "/replies", {
           method: "POST", body: payload
@@ -437,6 +560,19 @@
           else { send.disabled = false; alert(r2.error || "Failed"); }
         });
       });
+  }
+
+  function initReplyEditor() {
+    var mount = root.querySelector("#forum-reply-editor");
+    if (!mount) { replyEditor = null; return; }
+    if (replyEditor) { try { replyEditor.destroy(); } catch (e) {} replyEditor = null; }
+    createEditor(mount, "Write a reply\u2026").then(function (ed) {
+      if (ed) { replyEditor = ed; return; }
+      // Fallback: plain textarea if the editor library fails to load
+      var wrap = document.createElement("div");
+      wrap.innerHTML = '<textarea id="forum-reply" rows="3" maxlength="5000" placeholder="Write a reply\u2026"></textarea>';
+      mount.replaceWith(wrap.firstChild);
+    });
   }
 
   function renderThreadInPlace() {
@@ -469,19 +605,35 @@
     html += "</select></label>" +
       '<label class="chat-field"><span>Title</span>' +
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
-      '<label class="chat-field"><span>Content</span>' +
-      '<textarea id="forum-content" rows="6" maxlength="5000" placeholder="Say it\u2026"></textarea></label>' +
+      '<label class="chat-field"><span>Content</span></label>' +
+      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div>' +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
     root.querySelector("#forum-back").addEventListener("click", backToList);
+    var newMount = root.querySelector("#forum-new-editor");
+    if (newMount) {
+      if (newEditor) { try { newEditor.destroy(); } catch (e) {} newEditor = null; }
+      createEditor(newMount, "Say it\u2026").then(function (ed) {
+        if (ed) { newEditor = ed; return; }
+        var wrap = document.createElement("div");
+        wrap.innerHTML = '<textarea id="forum-content" rows="6" maxlength="5000" placeholder="Say it\u2026"></textarea>';
+        newMount.replaceWith(wrap.firstChild);
+      });
+    }
     root.querySelector("#forum-post").addEventListener("click", function () {
       var title = root.querySelector("#forum-title").value.trim();
-      var content = root.querySelector("#forum-content").value.trim();
+      var content = "", rich = false;
+      if (newEditor) {
+        if (!newEditor.isEmpty) { content = newEditor.getHTML(); rich = true; }
+      } else {
+        var cta = root.querySelector("#forum-content");
+        content = cta ? cta.value.trim() : "";
+      }
       var cat = root.querySelector("#forum-cat-sel").value;
       if (!title || !content) { alert("Title and content required"); return; }
       api("/api/forum/threads", {
-        method: "POST", body: { title: title, content: content, category: cat }
+        method: "POST", body: { title: title, content: content, category: cat, rich: rich }
       }).then(function (res) {
         if (res.ok && res.thread) {
           view.name = "thread";
