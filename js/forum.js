@@ -439,7 +439,6 @@
       threads.forEach(function (t) {
         html += '<div class="forum-thread-row">' +
           '<button type="button" class="forum-thread' + (t.thumb ? " has-thumb" : "") + '" data-id="' + esc(t.id) + '">' +
-          (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
           '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
@@ -448,10 +447,11 @@
           "</span>" +
           (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
-        if (isOwner) {
+        if (isOwner || t.pinned) {
           html += '<div class="forum-admin">' +
-            '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + "</button>" +
-            '<button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' +
+            (t.pinned ? '<span class="forum-pin-bubble" title="Pinned">\uD83D\uDCCC</span>' : "") +
+            (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + "</button>" +
+            '<button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") +
             "</div>";
         }
         html += "</div>";
