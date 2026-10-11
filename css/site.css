@@ -1818,3 +1818,8 @@ button.forum-glass-pill:active { transform: scale(.97); }
   max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 6px 0;
 }
 .forum-post-body a { color: var(--accent); }
+
+/* Main post glow */
+.forum-op {
+  box-shadow: 0 0 0 1px rgba(80, 140, 255, .25), 0 0 22px rgba(80, 140, 255, .28), 0 0 46px rgba(80, 140, 255, .12);
+}
