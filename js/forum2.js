@@ -135,6 +135,64 @@
     }
   }
 
+  function updateBellBadge() {
+    if (!token()) return;
+    api("/api/notifications").then(function (r) {
+      if (!r || !r.ok) return;
+      var badge = document.getElementById("forum-bell-badge");
+      if (badge) {
+        if (r.unread > 0) {
+          badge.textContent = r.unread > 9 ? "9+" : r.unread;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+    }).catch(function () {});
+  }
+
+  function showNotifications() {
+    var existing = document.querySelector(".forum-notif-panel");
+    if (existing) { existing.remove(); return; }
+    api("/api/notifications").then(function (r) {
+      if (!r || !r.ok) return;
+      var panel = document.createElement("div");
+      panel.className = "forum-notif-panel";
+      var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;">×</button></div>';
+      if (!r.notifications.length) {
+        h += '<div style="text-align:center;opacity:.6;padding:20px;">No notifications</div>';
+      } else {
+        r.notifications.forEach(function (n) {
+          var msg = n.type === "mention" ? "mentioned you" : (n.type === "reply" ? "replied" : "notified you");
+          h += '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' + (n.read ? "rgba(255,255,255,.03)" : "rgba(80,140,255,.08)") + ';">';
+          h += '<div style="font-size:14px;"><strong>@' + esc(n.from) + '</strong> ' + msg + ' in <a href="#" data-thread="' + esc(n.threadId) + '" class="forum-notif-link" style="color:#6ea8ff;">' + esc(n.threadTitle || "a thread") + '</a></div>';
+          h += '<div style="font-size:12px;opacity:.6;margin-top:4px;">' + timeAgo(n.ts) + '</div></div>';
+        });
+      }
+      panel.innerHTML = h;
+      document.body.appendChild(panel);
+      panel.querySelector("#forum-notif-close").addEventListener("click", function () { panel.remove(); });
+      api("/api/notifications/read", { method: "POST" }).then(function () { updateBellBadge(); });
+      panel.querySelectorAll(".forum-notif-link").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          panel.remove();
+          var tid = a.getAttribute("data-thread");
+          if (tid && typeof openThread === "function") openThread(tid);
+        });
+      });
+    });
+  }
+
+  function wireBell() {
+    updateBellBadge();
+    var bell = document.getElementById("forum-bell");
+    if (bell && !bell._wired) {
+      bell._wired = true;
+      bell.addEventListener("click", function (e) { e.stopPropagation(); showNotifications(); });
+    }
+  }
+
   function wireAvatars() {
     root.querySelectorAll(".forum-avatar-btn").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -887,9 +945,9 @@
         : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
       (!token() ? '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>' : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
-      (token() ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications" style="position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;">' +
+      (token() ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications">' +
         '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>' +
-        '<span id="forum-bell-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;background:#ff4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;"></span></button>' : "") +
+        '<span id="forum-bell-badge" class="forum-bell-badge hidden"></span></button>' : "") +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
   }
