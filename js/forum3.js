@@ -135,6 +135,64 @@
     }
   }
 
+  function updateBellBadge() {
+    if (!token()) return;
+    api("/api/notifications").then(function (r) {
+      if (!r || !r.ok) return;
+      var badge = document.getElementById("forum-bell-badge");
+      if (badge) {
+        if (r.unread > 0) {
+          badge.textContent = r.unread > 9 ? "9+" : r.unread;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+    }).catch(function () {});
+  }
+
+  function showNotifications() {
+    var existing = document.querySelector(".forum-notif-panel");
+    if (existing) { existing.remove(); return; }
+    api("/api/notifications").then(function (r) {
+      if (!r || !r.ok) return;
+      var panel = document.createElement("div");
+      panel.className = "forum-notif-panel";
+      var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:var(--ink);font-size:18px;cursor:pointer;">×</button></div>';
+      if (!r.notifications.length) {
+        h += '<div style="text-align:center;color:var(--muted);padding:20px;">No notifications</div>';
+      } else {
+        r.notifications.forEach(function (n) {
+          var msg = n.type === "mention" ? "mentioned you" : (n.type === "reply" ? "replied" : "notified you");
+          h += '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' + (n.read ? "rgba(127,127,127,.06)" : "rgba(80,140,255,.1)") + ';">';
+          h += '<div style="font-size:14px;color:var(--ink);"><strong>@' + esc(n.from) + '</strong> ' + msg + ' in <a href="#" data-thread="' + esc(n.threadId) + '" class="forum-notif-link" style="color:#6ea8ff;">' + esc(n.threadTitle || "a thread") + '</a></div>';
+          h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + timeAgo(n.ts) + '</div></div>';
+        });
+      }
+      panel.innerHTML = h;
+      document.body.appendChild(panel);
+      panel.querySelector("#forum-notif-close").addEventListener("click", function () { panel.remove(); });
+      api("/api/notifications/read", { method: "POST" }).then(function () { updateBellBadge(); });
+      panel.querySelectorAll(".forum-notif-link").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          panel.remove();
+          var tid = a.getAttribute("data-thread");
+          if (tid && typeof openThread === "function") openThread(tid);
+        });
+      });
+    });
+  }
+
+  function wireBell() {
+    updateBellBadge();
+    var bell = document.getElementById("forum-bell");
+    if (bell && !bell._wired) {
+      bell._wired = true;
+      bell.addEventListener("click", function (e) { e.stopPropagation(); showNotifications(); });
+    }
+  }
+
   function wireAvatars() {
     root.querySelectorAll(".forum-avatar-btn").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -886,8 +944,11 @@
         ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top">New reply</button>'
         : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
       (!token() ? '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>' : "") +
-      '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
+      (token() ? '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" : "") +
 
+      (token() ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>' +
+        '<span id="forum-bell-badge" class="forum-bell-badge hidden"></span></button>' : "") +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
   }
@@ -950,7 +1011,7 @@
     root.innerHTML = html;
     
 
-    wireAvatars();
+    wireAvatars(); wireBell();
     // Content is painted; now pin to top (images loading later won't shift us)
     if (view.name === "list") window.scrollTo(0, 0);
     root.querySelectorAll(".forum-cat").forEach(function (b) {
@@ -1026,7 +1087,7 @@
           '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
           '<div class="forum-locked-sub">' + lockMsg + "</div></div></div>";
-        wireAvatars();
+        wireAvatars(); wireBell();
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
       }
@@ -1154,7 +1215,7 @@
           }).catch(function () { btn.disabled = false; });
         });
       });
-      wireAvatars();
+      wireAvatars(); wireBell();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
       if (copyBtn) copyBtn.addEventListener("click", function () {
@@ -1546,7 +1607,7 @@
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(1500);
-    wireAvatars();
+    wireAvatars(); wireBell();
     wireTagEditor("forum-edit", editTagState);
     var rerender = function () { view.name = "thread"; renderThread(); };
     root.querySelector("#forum-edit-back").addEventListener("click", rerender);
@@ -1651,7 +1712,7 @@
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(2000);
-    wireAvatars();
+    wireAvatars(); wireBell();
     var nbTop2 = root.querySelector("#forum-new-top");
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("#forum-back").addEventListener("click", backToList);
