@@ -659,9 +659,10 @@
         if (!file) return;
         uploadEditorFile(file, function (res) {
           if (!res) return;
+          var fname = (res.name || "File").replace(/\.[a-z0-9]+$/i, "") || "File";
           editor.chain().focus().insertContent({
             type: "fileRow",
-            attrs: { url: res.url, name: res.name.replace(/\.[a-z0-9]+$/i, "") }
+            attrs: { url: res.url, name: fname }
           }).run();
         });
       });
