@@ -114,7 +114,9 @@
     return '<div class="chat-head forum-topbar">' +
       '<div class="chat-title">Forum</div>' +
       '<div class="chat-head-right">' +
-      (token() ? '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>' : "") +
+      (token() ? (view.name === "thread"
+        ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top">New reply</button>'
+        : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
@@ -249,10 +251,14 @@
         var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
-          '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span>" +
-          (token() ? '<button type="button" class="forum-reply-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
-          (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
-          '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div>";
+          '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
+          '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div>" +
+          ((token() || isOwner)
+            ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
+              (token() ? '<button type="button" class="forum-admin-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
+              (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") +
+              "</div>"
+            : "");
         h += "</article>";
         if (kids.length) {
           var visibleKids = expanded ? kids : kids.slice(0, 1);
@@ -283,6 +289,13 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      var replyTop = root.querySelector("#forum-reply-top");
+      if (replyTop) replyTop.addEventListener("click", function () {
+        var box = root.querySelector(".forum-replybox");
+        var ta = root.querySelector("#forum-reply");
+        if (box) box.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (ta) setTimeout(function () { ta.focus(); }, 350);
+      });
       root.querySelectorAll("[data-replyto]").forEach(function (b) {
         b.addEventListener("click", function () {
           view.replyTo = { id: b.getAttribute("data-replyto"), name: b.getAttribute("data-replyname") };
