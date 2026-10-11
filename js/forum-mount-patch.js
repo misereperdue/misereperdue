@@ -48,6 +48,33 @@
     }
   } catch (e) {}
 
+  // Scope chat's scroll-to-latest to ONLY the chat page.
+  // The chat code calls scrollToLatest on timers/events that fire on other pages too.
+  function isChatPage() {
+    // NOT chat if forum, shop, or auth is visible
+    if (document.querySelector(".forum-topbar")) return false;
+    if (document.querySelector(".chat-auth")) return false;
+    // Shop detection: look for shop-specific containers
+    if (document.querySelector("[data-shop-view]")) return false;
+    return true;
+  }
+  // Wrap MPChat.scrollToLatest once chat.js has loaded it
+  var scrollWrapTries = 0;
+  var scrollWrapIv = setInterval(function() {
+    if (window.MPChat && MPChat.scrollToLatest && !MPChat.scrollToLatest._scoped) {
+      var orig = MPChat.scrollToLatest;
+      var wrapped = function() {
+        if (!isChatPage()) return;
+        return orig.apply(this, arguments);
+      };
+      wrapped._scoped = true;
+      MPChat.scrollToLatest = wrapped;
+      clearInterval(scrollWrapIv);
+    } else if (++scrollWrapTries > 40) {
+      clearInterval(scrollWrapIv);
+    }
+  }, 250);
+
 
   try {
     var obs = new MutationObserver(function() {
