@@ -208,7 +208,11 @@
       requestAnimationFrame(step);
     }
     window.MPScroll = { pinTop: pinTop };
+    function isAuthView() {
+      return !!document.querySelector(".chat-auth");
+    }
     function assertScroll() {
+      if (isAuthView()) return; // Don't fight the auth page layout
       if (current.type === "journal") {
         // Chat belongs at the newest message; MPChat may still be booting,
         // so retry until it can scroll, then hold the bottom briefly.
@@ -280,6 +284,7 @@
     document.addEventListener("visibilitychange", function() {
       if (document.visibilityState !== "visible") return;
       if (visUserScrolled) return;
+      if (isAuthView()) return;
       if (current.type === "journal") return;
       if (window.scrollY > 100) {
         window.scrollTo(0, 0);
