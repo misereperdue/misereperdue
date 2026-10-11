@@ -8,6 +8,13 @@
   updateMount();
 
   function fixNotifPanel() {
+    var panels = document.querySelectorAll(".forum-notif-panel");
+    // Remove duplicates, keep only the last (most recent)
+    if (panels.length > 1) {
+      for (var i = 0; i < panels.length - 1; i++) {
+        panels[i].remove();
+      }
+    }
     var panel = document.querySelector(".forum-notif-panel");
     if (!panel || panel._posFixed) return;
     var topbar = document.querySelector(".forum-topbar");
