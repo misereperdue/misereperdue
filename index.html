@@ -37,7 +37,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=216">
+  <link rel="stylesheet" href="css/site.css?v=217">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -124,7 +124,7 @@
   </script>
   <script src="js/shop.js?v=27"></script>
   <script src="js/chat.js?v=91"></script>
-  <script src="js/forum.js?v=24"></script>
+  <script src="js/forum.js?v=25"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -266,7 +266,8 @@
       else if (view === "post" && id) hash = "#post/" + id;
       else if (view === "product" && id) hash = "#product/" + id;
       else if (reading) hash = "#post";
-      if (location.hash !== hash) history.pushState(null, "", hash);
+      var keepThreadLink = view === "forum" && /^#thread\//.test(location.hash || "");
+      if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     window.MPNav = {
       show: show,
@@ -384,6 +385,19 @@
     function routeFromHash() {
       var h = location.hash || "#";
       var m;
+      if ((m = h.match(/^#thread\/(.+)$/))) {
+        var tid = decodeURIComponent(m[1]);
+        show("forum");
+        var tryThread = function () {
+          if (window.MPForum && MPForum.openThread) { MPForum.openThread(tid); return true; }
+          return false;
+        };
+        if (!tryThread()) {
+          var tiv = setInterval(function () { if (tryThread()) clearInterval(tiv); }, 200);
+          setTimeout(function () { clearInterval(tiv); }, 8000);
+        }
+        return true;
+      }
       if ((m = h.match(/^#post\/(.+)$/))) {
         var slug = decodeURIComponent(m[1]);
         // Posts load async; openPost handles missing gracefully, retry after load
