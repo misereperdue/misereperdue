@@ -455,10 +455,37 @@
     window.addEventListener("resize", movePill);
   }
   
-  setTimeout(initSlidingPills, 2000);
+  // Apply pills INSTANTLY when dashboard appears (no flash of old style)
+  try {
+    new MutationObserver(function(muts) {
+      var dashboardAppeared = false;
+      muts.forEach(function(m) {
+        m.addedNodes.forEach(function(n) {
+          if (n.nodeType === 1) {
+            // Check if dashboard was added
+            if (n.querySelector) {
+              var chatBtn = n.querySelector('button[aria-label="Chat"]');
+              var viewsBtn = n.querySelector('button[aria-label="Views"]');
+              if (chatBtn && viewsBtn) dashboardAppeared = true;
+            }
+            // Or if the node itself is part of dashboard
+            if (n.getAttribute && (n.getAttribute("aria-label") === "Chat" || n.getAttribute("aria-label") === "Views")) {
+              dashboardAppeared = true;
+            }
+          }
+        });
+      });
+      if (dashboardAppeared) {
+        // Run immediately, don't wait
+        initSlidingPills();
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+  // Fallback: also try on interval for already-open dashboards
+  setTimeout(initSlidingPills, 500);
   setInterval(function() {
     if (!document.querySelector('[data-pill]')) initSlidingPills();
-  }, 5000);
+  }, 3000);
 
   // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
   function enhancePostsGraph() {
