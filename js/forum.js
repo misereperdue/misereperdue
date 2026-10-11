@@ -45,7 +45,7 @@
   }
 
   function avatarHTML(author) {
-    // author: { author, authorAvatar, hasAvatarImg, avatarV }
+    // author: { author, authorAvatar, hasAvatarImg, avatarV, authorBadge }
     var name = author.author || "?";
     var inner = "";
     if (author.hasAvatarImg) {
@@ -56,7 +56,9 @@
       inner = esc(e);
     }
     var cls = author.hasAvatarImg ? "forum-avatar" : "forum-avatar forum-avatar-emoji";
-    return '<button type="button" class="' + cls + ' forum-avatar-btn" data-username="' + esc(name) + '">' + inner + "</button>";
+    var badge = badgeFor(author.authorBadge);
+    return '<span class="forum-avatar-wrap"><button type="button" class="' + cls + ' forum-avatar-btn" data-username="' + esc(name) + '">' + inner + "</button>" +
+      (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
   function badgeFor(badgeId) {
@@ -67,10 +69,9 @@
   }
 
   function authorLine(item) {
-    var badge = badgeFor(item.authorBadge);
     var pts = (item.authorPoints !== undefined && item.authorPoints !== null)
-      ? ' <span class="forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
-    return esc(item.author) + (badge ? " " + badge : "") + pts;
+      ? ' <span class="forum-glass-pill forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
+    return esc(item.author) + pts;
   }
 
   function wireAvatars() {
@@ -120,10 +121,7 @@
   }
 
   function renderList() {
-    var html = forumTopBar() +
-      '<div class="forum-head">' +
-      '<h2 class="forum-title">Threads</h2>' +
-      "</div>";
+    var html = forumTopBar();
 
     // Category pills
     html += '<div class="forum-cats">';
@@ -225,7 +223,7 @@
       var t = res.thread;
       var html = forumTopBar() +
         '<div class="forum-head">' +
-        '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>';
+        '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
       html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
