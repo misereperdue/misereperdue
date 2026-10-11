@@ -1670,6 +1670,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-thread-meta .chat-badge { vertical-align: -2px; }
 
 /* Forum top bar new thread button */
+.forum-topbar-signin { padding: 8px 16px; font-size: 13px; }
 .forum-topbar-new { font-size: 13px; padding: 7px 14px; white-space: nowrap; }
 .chat-head-right { display: flex; align-items: center; gap: 8px; }
 
