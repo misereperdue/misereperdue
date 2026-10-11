@@ -167,14 +167,15 @@
         kids.forEach(function (child) {
           if (child.nodeType === 3) return;
           if (child.nodeType !== 1) { child.remove(); return; }
-          if (!RICH_ALLOWED[child.tagName]) {
+          var tn = (child.tagName || "").toUpperCase();
+          if (!RICH_ALLOWED[tn]) {
             walk(child);
             while (child.firstChild) node.insertBefore(child.firstChild, child);
             child.remove();
             return;
           }
           var keepHref = null, keepSrc = null, keepFrame = null, keepPath = null, keepLock = null;
-          if (child.tagName === "DIV") {
+          if (tn === "DIV") {
             var dcls = (child.getAttribute("class") || "").split(/\s+/);
             if (dcls.indexOf("mp-locked") !== -1) {
               var lm = child.getAttribute("data-mode");
@@ -185,24 +186,28 @@
               }
             }
           }
-          if (child.tagName === "A") {
+          if (tn === "A") {
             var href = child.getAttribute("href") || "";
             if (/^https?:\/\//i.test(href)) keepHref = href;
           }
-          if (child.tagName === "IMG") {
+          if (tn === "IMG") {
             var src = child.getAttribute("src") || "";
             if (/^https?:\/\//i.test(src)) keepSrc = src;
           }
-          if (child.tagName === "IFRAME") {
+          if (tn === "IFRAME") {
             var fsrc = child.getAttribute("src") || "";
             if (YT_EMBED_OK.test(fsrc)) keepFrame = fsrc;
+          }
+          if (tn === "PATH") {
+            var rpd = child.getAttribute("d") || "";
+            if (/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s\-+eE]+$/.test(rpd)) keepPath = rpd;
           }
           Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
           if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
           if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
-          if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
-          if (child.tagName === "SVG") child.setAttribute("viewBox", "0 0 24 24");
-          if (child.tagName === "PATH") {
+          if (tn === "IMG" && !keepSrc) { child.remove(); return; }
+          if (tn === "SVG") child.setAttribute("viewBox", "0 0 24 24");
+          if (tn === "PATH") {
             if (!keepPath) { child.remove(); return; }
             child.setAttribute("d", keepPath);
             child.setAttribute("fill", "currentColor");
@@ -212,7 +217,7 @@
             child.setAttribute("data-mode", keepLock.mode);
             if (keepLock.author) child.setAttribute("data-author", keepLock.author);
           }
-          if (child.tagName === "IFRAME") {
+          if (tn === "IFRAME") {
             if (!keepFrame) { child.remove(); return; }
             child.setAttribute("src", keepFrame);
             child.setAttribute("loading", "lazy");
@@ -236,40 +241,47 @@
         kids.forEach(function (child) {
           if (child.nodeType === 3) return;
           if (child.nodeType !== 1) { child.remove(); return; }
-          if (!SIG_ALLOWED[child.tagName]) {
+          var tn2 = (child.tagName || "").toUpperCase();
+          if (!SIG_ALLOWED[tn2]) {
             walk(child);
             while (child.firstChild) node.insertBefore(child.firstChild, child);
             child.remove();
             return;
           }
-          var keepHref = null, keepSrc = null, keepFrame = null;
-          if (child.tagName === "A") {
+          var keepHref = null, keepSrc = null, keepFrame = null, keepPath = null;
+          if (tn2 === "A") {
             var href = child.getAttribute("href") || "";
             if (/^https?:\/\//i.test(href)) keepHref = href;
           }
-          if (child.tagName === "IMG") {
+          if (tn2 === "IMG") {
             var src = child.getAttribute("src") || "";
             if (/^https?:\/\//i.test(src)) keepSrc = src;
           }
-          if (child.tagName === "IFRAME") {
+          if (tn2 === "IFRAME") {
             var fsrc = child.getAttribute("src") || "";
             if (EMBED_SRC_OK.test(fsrc)) keepFrame = fsrc;
           }
-          if (child.tagName === "PATH") {
+          if (tn2 === "PATH") {
             var pd = child.getAttribute("d") || "";
             if (/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s\-+eE]+$/.test(pd)) keepPath = pd;
           }
           Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
           if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
           if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
-          if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
-          if (child.tagName === "IFRAME") {
+          if (tn2 === "IMG" && !keepSrc) { child.remove(); return; }
+          if (tn2 === "IFRAME") {
             if (!keepFrame) { child.remove(); return; }
             child.setAttribute("src", keepFrame);
             child.setAttribute("loading", "lazy");
             child.setAttribute("allowfullscreen", "");
             child.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation");
             child.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+          }
+          if (tn2 === "SVG") { child.setAttribute("viewBox", "0 0 24 24"); child.setAttribute("width", "13"); child.setAttribute("height", "13"); }
+          if (tn2 === "PATH") {
+            if (!keepPath) { child.remove(); return; }
+            child.setAttribute("d", keepPath);
+            child.setAttribute("fill", "currentColor");
           }
           walk(child);
         });
@@ -293,7 +305,7 @@
     var ext = (window.MPSocialLogos || {})[n];
     if (ext) return ext;
     var d = SIG_LOGO_PATHS[n];
-    return d ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>' : "";
+    return d ? '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>' : "";
   }
   function sigNet(url) {
     var m = String(url || "").match(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com|instagram\.com|tiktok\.com|youtube\.com|youtu\.be)(\/|$)/i);
