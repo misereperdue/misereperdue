@@ -2007,3 +2007,14 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .sig-embed-bar.hidden { display: none; }
 .sig-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
 .sig-embed-add { padding: 8px 14px; font-size: 13px; }
+
+/* Signature editor bubble (profile sheet) */
+.sig-bubble { border: var(--glass-hairline); border-radius: 16px; background: rgba(255,255,255,.04); margin: 0 0 10px; overflow: hidden; }
+.sig-bubble .forum-toolbar { border-bottom: var(--glass-hairline); padding: 8px; margin: 0; }
+.sig-mount .forum-editor-input { min-height: 56px; max-height: 160px; font-size: 14px; padding: 8px 12px; }
+.sig-embeds { margin: 0; padding: 0 10px; }
+.sig-embeds:empty { display: none; }
+.sig-chip { margin-top: 8px; }
+.sig-embed-btn { margin: 8px 10px 10px; padding: 6px 13px; font-size: 12.5px; }
+.sig-embed-bar { margin: 0 10px 10px; }
+.sig-embed-bar.hidden { display: none; }
