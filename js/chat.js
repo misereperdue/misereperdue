@@ -308,9 +308,15 @@
     stopAll();
     me = null;
     root.innerHTML =
-      '<div class="chat-auth"><div class="chat-card">' +
+      '<div class="chat-auth">' +
+      '<div class="chat-auth-head">' +
+      '<div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div>' +
+      '<div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-shop">View our webstore instead.</a></div>' +
+      "</div>" +
+      '<div class="chat-card">' +
       '<div class="chat-tabs">' +
-      '<button type="button" class="on" data-tab="login">Log in</button>' +
+      '<span class="chat-tabs-slider"></span>' +
+      '<button type="button" class="on" data-tab="login">Sign in</button>' +
       '<button type="button" data-tab="register">Sign up</button>' +
       "</div>" +
       '<label class="chat-field"><span>Username</span>' +
@@ -320,7 +326,7 @@
       '<label class="chat-field chat-secret hidden"><span>Owner secret</span>' +
       '<input type="password" name="secret" autocomplete="off"></label>' +
       '<div class="chat-err" role="alert"></div>' +
-      '<button type="button" class="btn accent chat-submit">Log in</button>' +
+      '<button type="button" class="btn accent chat-submit">Sign in</button>' +
       '<button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' + X_LOGO + "</span>Continue with X</button>" +
       "</div></div>";
 
@@ -339,16 +345,30 @@
       secretWrap.classList.toggle("hidden", !show);
     }
 
+    var tabsEl = root.querySelector(".chat-tabs");
+    var slider = root.querySelector(".chat-tabs-slider");
+    function moveSlider(toRegister) {
+      if (slider) slider.style.transform = toRegister ? "translateX(100%)" : "translateX(0)";
+    }
     root.querySelectorAll(".chat-tabs button").forEach(function (b) {
       b.addEventListener("click", function () {
         mode = b.getAttribute("data-tab");
+        var isReg = mode === "register";
         root.querySelectorAll(".chat-tabs button").forEach(function (x) {
           x.classList.toggle("on", x === b);
         });
-        submit.textContent = mode === "login" ? "Log in" : "Sign up";
+        moveSlider(isReg);
+        submit.textContent = isReg ? "Sign up" : "Sign in";
         setErr("");
         syncSecret();
       });
+    });
+    // Shop link - switch to webstore view
+    var shopLink = root.querySelector(".chat-auth-shop");
+    if (shopLink) shopLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      var shopBtn = document.querySelector('[data-view="shop"]');
+      if (shopBtn) shopBtn.click();
     });
     userInput.addEventListener("input", syncSecret);
 
