@@ -283,10 +283,15 @@ var MPShop = (function () {
     }
     var sizes;
     if (memberAmounts) {
+      var dots = memberAmounts.map(function (a, i) {
+        var f = memberAmounts.length > 1 ? i / (memberAmounts.length - 1) : 0;
+        return '<i style="left:calc(12px + (100% - 24px) * ' + f + ')"></i>';
+      }).join("");
       sizes = '<div class="member-slider">' +
         '<div class="member-top"><span>Amount</span><span class="member-val" id="member-val"></span></div>' +
-        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
-        '<div class="member-ticks">' + memberAmounts.map(function (a) { return "<span>$" + esc(a) + "</span>"; }).join("") + "</div>" +
+        '<div class="member-trackwrap"><div class="member-track"><div class="member-fill" id="member-fill"></div><div class="member-dots">' + dots + '</div></div>' +
+        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount"></div>' +
+        '<div class="member-ticks">' + memberAmounts.map(function (a, i) { return '<span data-tick="' + i + '"' + (i === 0 ? ' class="on"' : "") + ">$" + esc(a) + "</span>"; }).join("") + "</div>" +
         "</div>";
     } else if (p.sizes && p.sizes.length) {
       sizes = (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
@@ -321,16 +326,22 @@ var MPShop = (function () {
       var range = view.querySelector("#member-range");
       var priceEl = view.querySelector(".price");
       var valEl = view.querySelector("#member-val");
-      function paintSlider() {
+      var fillEl = view.querySelector("#member-fill");
+      var tickEls = view.querySelectorAll("[data-tick]");
+      function paintSlider(animate) {
         var idx = parseInt(range.value, 10) || 0;
         size = memberAmounts[idx];
         var amt = (p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size);
         if (priceEl) priceEl.textContent = MP.money(amt);
-        if (valEl) valEl.textContent = MP.money(amt);
-        var pct = memberAmounts.length > 1 ? (idx / (memberAmounts.length - 1)) * 100 : 0;
-        range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + pct + "%, rgba(255,255,255,.14) " + pct + "%)";
+        if (valEl && valEl.textContent !== MP.money(amt)) {
+          valEl.textContent = MP.money(amt);
+          if (animate) { valEl.classList.remove("bump"); void valEl.offsetWidth; valEl.classList.add("bump"); }
+        }
+        var f = memberAmounts.length > 1 ? idx / (memberAmounts.length - 1) : 0;
+        if (fillEl) fillEl.style.width = "calc(" + (f * 100) + "% + " + (12 - f * 24) + "px)";
+        tickEls.forEach(function (t, i) { t.classList.toggle("on", i === idx); });
       }
-      if (range) { range.addEventListener("input", function () { paintSlider(); refreshAction(); }); paintSlider(); }
+      if (range) { range.addEventListener("input", function () { paintSlider(true); refreshAction(); }); paintSlider(false); }
     }
     refreshAction();
     var shBtn = view.querySelector('.share-btn');
