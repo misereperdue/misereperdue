@@ -42,7 +42,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=1000">
+  <link rel="stylesheet" href="css/site.css?v=1002">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -68,12 +68,16 @@
     <div class="hero-fade"></div>
   </header>
   <div class="nav-wrap">
-    <nav class="nav" id="nav" aria-label="Main">
+    <nav class="nav nav-dark" id="nav" aria-label="Main">
       <span class="seg" aria-hidden="true"></span>
-      <button type="button" class="on" data-view="journal" aria-label="Chat"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg></button>
-      <button type="button" data-view="forum" aria-label="Forum"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V6z"/><path d="M8 9.5h8"/><path d="M8 12.5h5"/></svg></button>
+      <div class="nav-avatar-wrap" id="nav-avatar" aria-label="Profile">
+        <div class="nav-avatar-glow"></div>
+        <img id="nav-avatar-img" alt="" aria-hidden="true">
+      </div>
+      <button type="button" class="on" data-view="journal" aria-label="Chat"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.6 0-3.1-.4-4.4-1.1L3 20l1.1-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg><span>Chat</span></button>
+      <button type="button" data-view="forum" aria-label="Forum"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1 2 2H9l-5 4V6z"/><path d="M8 9.5h8"/><path d="M8 12.5h5"/></svg><span>Forum</span></button>
       <button type="button" data-view="shop" aria-label="Store">
-        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 8.5h11l-.8 10.2a1.5 1.5 0 0 1-1.5 1.3H8.8a1.5 1.5 0 0 1-1.5-1.3L6.5 8.5z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span>Shop</span>
       </button>
       <button type="button" data-view="cart" aria-label="Bag" id="cart-btn" class="cart-btn hidden">
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h7.9a1.5 1.5 0 0 0 1.5-1.2L20.5 8H6"/></svg>
@@ -130,7 +134,7 @@
   <script src="js/shop.js?v=39"></script>
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=105"></script>
-  <script src="js/forum3.js?v=999"></script><script src="js/forum-mount-patch.js?v=1001"></script>
+  <script src="js/forum3.js?v=999"></script><script src="js/forum-mount-patch.js?v=1002"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
