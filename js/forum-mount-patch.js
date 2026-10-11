@@ -556,6 +556,11 @@
         width: 100% !important;
         box-sizing: border-box !important;
       }
+      /* Dashboard Close button: move down a bit */
+      #countries-section + button,
+      #countries-section ~ button {
+        margin-top: 16px !important;
+      }
       /* Break out of parent padding to align flush left */
       #countries-section.flush-fix {
         margin-left: var(--parent-pad, 0) !important;
