@@ -110,6 +110,44 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
+  // Replace JS-rendered icons with Phosphor fill versions
+  // Maps old path signatures to Phosphor icon names
+  function replaceJSCIcons() {
+    if (!window.PHIcon) return;
+    document.querySelectorAll("svg:not([data-ph])").forEach(function(svg) {
+      // Skip nav icons (already Phosphor)
+      if (svg.classList.contains("mark")) return;
+      
+      var paths = svg.querySelectorAll("path");
+      if (!paths.length) return;
+      var d = paths[0].getAttribute("d") || "";
+      var replacement = null;
+      var cls = svg.getAttribute("class") || "";
+      
+      // Back chevron (shop)
+      if (d.indexOf("M14.5 5.5L8 12l6.5 6.5") !== -1) replacement = "back";
+      // Forward chevron (shop)
+      else if (d.indexOf("M9.5 5.5L16 12l-6.5 6.5") !== -1) replacement = "forward";
+      // Share/upload (shop product page)
+      else if (d.indexOf("M12 15V3") !== -1) replacement = "share";
+      // Star (forum)
+      else if (svg.innerHTML.indexOf("star") !== -1 || cls.indexOf("star") !== -1) replacement = "star";
+      
+      if (replacement) {
+        var tmp = document.createElement("div");
+        tmp.innerHTML = window.PHIcon(replacement, cls);
+        var newSvg = tmp.firstChild;
+        newSvg.setAttribute("data-ph", "1");
+        svg.replaceWith(newSvg);
+      } else {
+        // Mark as processed to avoid re-checking
+        svg.setAttribute("data-ph", "skip");
+      }
+    });
+  }
+  setTimeout(replaceJSCIcons, 1000);
+  setInterval(replaceJSCIcons, 2000);
+
 
 
 
