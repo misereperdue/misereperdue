@@ -126,15 +126,6 @@
     return esc(item.author) + pts;
   }
 
-  function wireBell() {
-    updateBellBadge();
-    var bell = document.getElementById("forum-bell");
-    if (bell && !bell._wired) {
-      bell._wired = true;
-      bell.addEventListener("click", function (e) { e.stopPropagation(); showNotifications(); });
-    }
-  }
-
   function updateBellBadge() {
     if (!token()) return;
     api("/api/notifications").then(function (r) {
@@ -151,13 +142,32 @@
     }).catch(function () {});
   }
 
+  function closeAllForumDropdowns() {
+    document.querySelectorAll(".forum-notif-panel").forEach(function (p) { p.remove(); });
+    if (window.MPChat && window.MPChat.closeDropdowns) {
+      try { window.MPChat.closeDropdowns(); } catch (e) {}
+    }
+  }
+
   function showNotifications() {
     var existing = document.querySelector(".forum-notif-panel");
     if (existing) { existing.remove(); return; }
+    closeAllForumDropdowns();
     api("/api/notifications").then(function (r) {
       if (!r || !r.ok) return;
       var panel = document.createElement("div");
       panel.className = "forum-notif-panel";
+      try {
+        var bellEl = document.getElementById("forum-bell");
+        var topbarEl = document.querySelector(".forum-topbar");
+        if (bellEl && topbarEl) {
+          var bellRect = bellEl.getBoundingClientRect();
+          var topbarRect = topbarEl.getBoundingClientRect();
+          panel.style.top = (topbarRect.bottom + 8) + "px";
+          panel.style.right = Math.max(8, window.innerWidth - bellRect.right - 20) + "px";
+          panel.style.left = "auto";
+        }
+      } catch (e) {}
       var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:var(--ink);font-size:18px;cursor:pointer;">×</button></div>';
       if (!r.notifications.length) {
         h += '<div style="text-align:center;color:var(--muted);padding:20px;">No notifications</div>';
@@ -190,6 +200,22 @@
     if (bell && !bell._wired) {
       bell._wired = true;
       bell.addEventListener("click", function (e) { e.stopPropagation(); showNotifications(); });
+    }
+    var me = document.getElementById("forum-me");
+    if (me && !me._notifWired) {
+      me._notifWired = true;
+      me.addEventListener("click", function () {
+        document.querySelectorAll(".forum-notif-panel").forEach(function (p) { p.remove(); });
+      });
+    }
+    if (!document._notifOutsideWired) {
+      document._notifOutsideWired = true;
+      document.addEventListener("click", function (e) {
+        var panel = document.querySelector(".forum-notif-panel");
+        if (panel && !panel.contains(e.target) && !e.target.closest("#forum-bell")) {
+          panel.remove();
+        }
+      });
     }
   }
 
