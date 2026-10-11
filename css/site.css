@@ -1365,8 +1365,10 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   to { opacity: 1; }
 }
 .msg-popup-inner {
-  background: rgba(28,28,40,.92);
-  border: 1px solid rgba(255,255,255,.12);
+  background: var(--glass-regular-tint);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
+  border: var(--glass-hairline);
   border-radius: 18px;
   padding: 20px 18px;
   max-width: min(420px, 92vw);
@@ -1374,8 +1376,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   overflow-y: auto;
   font-size: 16px;
   line-height: 1.5;
-  color: #fff;
-  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  color: var(--ink);
+  box-shadow: var(--glass-spec), var(--shadow);
 }
 .msg-popup-close {
   display: block;
