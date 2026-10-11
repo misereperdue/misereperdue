@@ -715,6 +715,46 @@
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
   } catch (e) {}
 
+
+  // Global dashboard spacing CSS - enforces consistent section gaps
+  (function() {
+    if (document.getElementById('dash-spacing-css')) return;
+    var style = document.createElement('style');
+    style.id = 'dash-spacing-css';
+    style.textContent = `
+      /* Briefing box: tight spacing above and below */
+      #chart-briefing {
+        margin-top: 8px !important;
+        margin-bottom: 10px !important;
+      }
+      /* Countries section: flush left, tight to title */
+      #countries-section {
+        margin-top: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        width: 100% !important;
+      }
+      #countries-section > div:first-child {
+        margin-bottom: 4px !important;
+        padding-left: 0 !important;
+      }
+      #countries-list {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      #countries-list > div {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
   // Add Countries section below Newest Users
   function addCountriesSection() {
     // Find Newest Users section
