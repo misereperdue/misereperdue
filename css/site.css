@@ -1704,10 +1704,10 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 /* Panels fade in as one consistent motion on view switch */
 @keyframes panelIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.panel.on { animation: panelIn .18s ease; }
+.panel.on { animation: panelIn .25s cubic-bezier(.2,.7,.3,1); }
 
 /* Nested replies (Threads-style) */
 .forum-nested { margin-left: 0; position: relative; }
