@@ -128,7 +128,7 @@
   <script src="js/shop.js?v=39"></script>
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=104"></script>
-  <script src="js/forum.js?v=52"></script>
+  <script src="js/forum.js?v=53"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -228,7 +228,7 @@
           }
         }, 250);
       } else {
-        pinTop(2500);
+        
       }
     }
     // bfcache restore (back/forward, tab restore): re-assert position
@@ -242,7 +242,7 @@
       if (current.type === "journal") {
         if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       } else {
-        pinTop(1500);
+        
       }
     });
     // Full load: catches Safari restoring scroll after async content paints
@@ -276,7 +276,7 @@
       // on a fresh session); every other view starts at the top.
       if (reading) {
         window.scrollTo(0, 0);
-        pinTop(1500);
+        
       } else if (view === "journal") {
         // Chat always opens at the newest message
         if (window.MPChat && MPChat.scrollToLatest) {
@@ -286,7 +286,7 @@
         }
       } else {
         window.scrollTo(0, 0);
-        pinTop(1500);
+        
       }
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();

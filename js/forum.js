@@ -1653,7 +1653,12 @@
       cache.categories = (res.ok && res.categories) || [];
       return api("/api/forum/threads");
     }).then(function (res) {
-      cache.threads = (res.ok && res.threads) || [];
+      var fresh = (res.ok && res.threads) || [];
+      // Skip re-render if data is unchanged (avoids visual glitch)
+      var same = fresh.length === cache.threads.length &&
+        fresh.every(function (t, i) { return t.id === cache.threads[i].id && t.updatedAt === cache.threads[i].updatedAt; });
+      cache.threads = fresh;
+      if (same) return;
       if (view.name === "thread" && view.threadId) renderThread();
       else if (view.name === "new") renderNew();
       else renderList();
@@ -1668,7 +1673,6 @@
     view.replyTo = null;
     paintedThreadId = null;
     window.scrollTo(0, 0);
-    if (window.MPScroll) MPScroll.pinTop(1500);
     render();
   }
 
