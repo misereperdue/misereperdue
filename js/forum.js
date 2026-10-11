@@ -752,9 +752,8 @@
           lib.StarterKit.configure({ heading: { levels: [3] } }),
           lib.Placeholder.configure({ placeholder: placeholder }),
           lib.Link.configure({ openOnClick: false, autolink: true }),
-          lib.Image.configure({ inline: false }),
-          lockedBlockNode(lib.Node)
-        ],
+          lib.Image.configure({ inline: false })
+        ].concat(lib.Node ? [lockedBlockNode(lib.Node)] : []),
         content: initialHTML || "",
         editorProps: { attributes: { class: "forum-editor-input" } }
       });
