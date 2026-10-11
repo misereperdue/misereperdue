@@ -7,7 +7,7 @@
   var TOKEN_KEY = "chat_token";
 
   var root = null;
-  var view = { name: "list", category: "", threadId: null };
+  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {} };
   var cache = { categories: [], threads: [] };
 
   function token() {
@@ -235,19 +235,43 @@
         (isOwner ? '<div class="forum-admin forum-admin-thread"><button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button></div>' : "") + "</article>";
 
       html += '<div class="forum-replies">';
-      (t.replies || []).forEach(function (r) {
-        html += '<article class="forum-post">' +
+      var allReplies = t.replies || [];
+      var topReplies = allReplies.filter(function (r) { return !r.parentId; });
+      var childMap = {};
+      allReplies.forEach(function (r) {
+        if (r.parentId) {
+          (childMap[r.parentId] = childMap[r.parentId] || []).push(r);
+        }
+      });
+      function replyHTML(r, depth) {
+        var kids = childMap[r.id] || [];
+        var kidsVisible = view.showNested[r.id];
+        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span>" +
+          (token() ? '<button type="button" class="forum-reply-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
-          '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div></article>";
-      });
+          '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div>";
+        if (kids.length && !kidsVisible) {
+          h += '<button type="button" class="forum-show-replies" data-showreplies="' + esc(r.id) + '">Show replies (' + kids.length + ")</button>";
+        }
+        h += "</article>";
+        if (kids.length && kidsVisible) {
+          h += '<div class="forum-children">';
+          kids.forEach(function (k) { h += replyHTML(k, depth + 1); });
+          h += "</div>";
+        }
+        return h;
+      }
+      topReplies.forEach(function (r) { html += replyHTML(r, 0); });
       html += "</div>";
 
       if (token()) {
+        var rtName = view.replyTo ? view.replyTo.name : null;
         html += '<div class="forum-replybox">' +
-          '<textarea id="forum-reply" rows="3" maxlength="5000" placeholder="Write a reply\u2026"></textarea>' +
+          (rtName ? '<div class="forum-replying-to">Replying to <b>' + esc(rtName) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button></div>' : "") +
+          '<textarea id="forum-reply" rows="3" maxlength="5000" placeholder="' + (rtName ? "Write a reply to " + esc(rtName) + "\u2026" : "Write a reply\u2026") + '"></textarea>' +
           '<button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else {
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
@@ -256,6 +280,27 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      root.querySelectorAll("[data-replyto]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          view.replyTo = { id: b.getAttribute("data-replyto"), name: b.getAttribute("data-replyname") };
+          renderThread();
+          setTimeout(function () {
+            var ta = document.getElementById("forum-reply");
+            if (ta) ta.focus();
+          }, 100);
+        });
+      });
+      root.querySelectorAll("[data-showreplies]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          view.showNested[b.getAttribute("data-showreplies")] = true;
+          renderThread();
+        });
+      });
+      var cancelBtn = root.querySelector("#forum-cancel-reply");
+      if (cancelBtn) cancelBtn.addEventListener("click", function () {
+        view.replyTo = null;
+        renderThread();
+      });
       root.querySelectorAll("[data-delreply]").forEach(function (b) {
         b.addEventListener("click", function () {
           if (!confirm("Delete this reply?")) return;
@@ -283,10 +328,17 @@
         var content = ta.value.trim();
         if (!content) return;
         send.disabled = true;
+        var payload = { content: content };
+        if (view.replyTo) payload.parentId = view.replyTo.id;
         api("/api/forum/thread/" + encodeURIComponent(view.threadId) + "/replies", {
-          method: "POST", body: { content: content }
+          method: "POST", body: payload
         }).then(function (r2) {
-          if (r2.ok) renderThread();
+          if (r2.ok) {
+            // Expand parent so the new reply is visible
+            if (view.replyTo) view.showNested[view.replyTo.id] = true;
+            view.replyTo = null;
+            renderThread();
+          }
           else { send.disabled = false; alert(r2.error || "Failed"); }
         });
       });
@@ -296,6 +348,8 @@
   function backToList() {
     view.name = "list";
     view.threadId = null;
+    view.replyTo = null;
+    view.showNested = {};
     render();
   }
 
