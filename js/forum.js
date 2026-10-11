@@ -8,7 +8,7 @@
 
   var root = null;
   var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {} };
-  var cache = { categories: [], threads: [] };
+  var cache = { categories: [], threads: [], thread: null };
 
   function token() {
     try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
@@ -66,6 +66,15 @@
     // Hide robot badge for non-grim (same rule as chat)
     if (badgeId === "robot") return "";
     return window.MPChat.badgeHTML(badgeId);
+  }
+
+  function starBtn(item, replyId) {
+    var count = item.stars || 0;
+    var mine = meInfo && item.author && meInfo.username.toLowerCase() === String(item.author).toLowerCase();
+    if (mine) return count > 0 ? '<span class="forum-star-count">\u2605 ' + count + "</span>" : "";
+    if (!token()) return count > 0 ? '<span class="forum-star-count">\u2605 ' + count + "</span>" : "";
+    var given = meInfo && Array.isArray(item.starredBy) && item.starredBy.indexOf(meInfo.username.toLowerCase()) !== -1;
+    return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
   }
 
   function authorLine(item) {
@@ -223,8 +232,15 @@
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
       }
-      var t = res.thread;
-      var html = forumTopBar() +
+      cache.thread = res.thread;
+      paintThread();
+    });
+  }
+
+  function paintThread() {
+    var t = cache.thread;
+    if (!t) return;
+    var html = forumTopBar() +
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
@@ -234,7 +250,8 @@
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div>" +
-        (isOwner ? '<div class="forum-admin forum-admin-thread"><button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button></div>' : "") + "</article>";
+        ((token() || isOwner) ? '<div class="forum-admin forum-admin-thread">' + starBtn(t, null) +
+          (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button>' : "") + "</div>" : "") + "</article>";
 
       html += '<div class="forum-replies">';
       var allReplies = t.replies || [];
@@ -256,6 +273,7 @@
           ((token() || isOwner)
             ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
               (token() ? '<button type="button" class="forum-admin-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
+              starBtn(r, r.id) +
               (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") +
               "</div>"
             : "");
@@ -300,29 +318,83 @@
       root.querySelectorAll("[data-replyto]").forEach(function (b) {
         b.addEventListener("click", function () {
           view.replyTo = { id: b.getAttribute("data-replyto"), name: b.getAttribute("data-replyname") };
-          renderThread();
-          setTimeout(function () {
-            var ta = document.getElementById("forum-reply");
-            if (ta) ta.focus();
-          }, 100);
+          // Update composer in place, then glide to it
+          var box = root.querySelector(".forum-replybox");
+          var ta = root.querySelector("#forum-reply");
+          if (box && ta) {
+            var ind = box.querySelector(".forum-replying-to");
+            if (!ind) {
+              ind = document.createElement("div");
+              ind.className = "forum-replying-to";
+              box.insertBefore(ind, box.firstChild);
+            }
+            ind.innerHTML = "Replying to <b>" + esc(view.replyTo.name) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button>';
+            ind.querySelector("#forum-cancel-reply").addEventListener("click", cancelReplyTo);
+            ta.placeholder = "Write a reply to " + view.replyTo.name + "\u2026";
+            box.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(function () { ta.focus(); }, 350);
+          }
         });
       });
+      function cancelReplyTo() {
+        view.replyTo = null;
+        var box = root.querySelector(".forum-replybox");
+        var ta = root.querySelector("#forum-reply");
+        if (box) {
+          var ind = box.querySelector(".forum-replying-to");
+          if (ind) ind.remove();
+        }
+        if (ta) ta.placeholder = "Write a reply\u2026";
+      }
       root.querySelectorAll("[data-showreplies]").forEach(function (b) {
         b.addEventListener("click", function () {
-          view.showNested[b.getAttribute("data-showreplies")] = true;
-          renderThread();
+          var id = b.getAttribute("data-showreplies");
+          b.innerHTML = '<span class="forum-spinner"></span>';
+          b.disabled = true;
+          setTimeout(function () {
+            view.showNested[id] = true;
+            renderThreadInPlace();
+          }, 350);
         });
       });
       root.querySelectorAll("[data-hidereplies]").forEach(function (b) {
         b.addEventListener("click", function () {
           view.showNested[b.getAttribute("data-hidereplies")] = false;
-          renderThread();
+          renderThreadInPlace();
         });
       });
       var cancelBtn = root.querySelector("#forum-cancel-reply");
-      if (cancelBtn) cancelBtn.addEventListener("click", function () {
-        view.replyTo = null;
-        renderThread();
+      if (cancelBtn) cancelBtn.addEventListener("click", cancelReplyTo);
+      root.querySelectorAll("[data-star]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          if (b.disabled) return;
+          b.disabled = true;
+          var replyId = b.getAttribute("data-star") || null;
+          api("/api/forum/thread/" + encodeURIComponent(view.threadId) + "/star", {
+            method: "POST", body: { replyId: replyId }
+          }).then(function (r) {
+            if (r.ok) {
+              b.classList.add("given");
+              b.innerHTML = "\u2605 " + r.stars;
+              if (meInfo) meInfo.points = r.myPoints;
+              var pn = document.getElementById("forum-points");
+              if (pn) pn.textContent = r.myPoints;
+              // Keep cache in sync for in-place re-renders
+              if (cache.thread) {
+                var tgt = replyId ? (cache.thread.replies || []).find(function (x) { return x.id === replyId; }) : cache.thread;
+                if (tgt) {
+                  tgt.stars = r.stars;
+                  tgt.authorPoints = r.authorPoints;
+                  if (!Array.isArray(tgt.starredBy)) tgt.starredBy = [];
+                  if (meInfo) tgt.starredBy.push(meInfo.username.toLowerCase());
+                }
+              }
+            } else {
+              b.disabled = false;
+              alert(r.error || "Couldn't give a star");
+            }
+          }).catch(function () { b.disabled = false; });
+        });
       });
       root.querySelectorAll("[data-delreply]").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -365,7 +437,12 @@
           else { send.disabled = false; alert(r2.error || "Failed"); }
         });
       });
-    });
+  }
+
+  function renderThreadInPlace() {
+    var y = window.scrollY;
+    paintThread();
+    window.scrollTo(0, y);
   }
 
   function backToList() {
