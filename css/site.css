@@ -1965,3 +1965,9 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 
 
+
+
+/* Membership amount segments */
+.member-segs { display: flex; gap: 8px; margin: 14px 0 4px; }
+.member-segs button { flex: 1; padding: 13px 0; border-radius: 14px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.member-segs button.on { background: #2f7cf6; border-color: #2f7cf6; box-shadow: 0 6px 18px rgba(47, 124, 246, .4); }
