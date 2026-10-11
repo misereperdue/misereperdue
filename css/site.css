@@ -93,14 +93,6 @@ button, input, textarea { font-family: inherit; color: inherit; }
   view-transition-name: pill;
   pointer-events: none;
 }
-.nav-wrap .nav {
-  background: rgba(7, 15, 41, 0.55) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  border-radius: 999px !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  pointer-events: auto;
-}
 .nav {
   pointer-events: auto;
   position: relative;
@@ -2132,3 +2124,7 @@ nav#nav.nav,
 .forum-bell:active {
   transform: scale(.88);
 }
+
+/* Nav blur fix: allow pointer events so Safari renders backdrop-filter */
+.nav-wrap { pointer-events: none; }
+.nav-wrap .nav { pointer-events: auto; }
