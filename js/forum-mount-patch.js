@@ -108,7 +108,6 @@
     });
     obs.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
-  setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
   // Replace JS-rendered icons with Phosphor fill versions
   // Maps old path signatures to Phosphor icon names
@@ -146,7 +145,8 @@
     });
   }
   setTimeout(replaceJSCIcons, 1000);
-  setInterval(replaceJSCIcons, 2000);
+  var _iconIv = setInterval(function() { replaceJSCIcons(); }, 2000);
+  setTimeout(function() { clearInterval(_iconIv); }, 20000); // stop after 20s
 
   // Replace notification bell with Phosphor bell-simple (immediate, no flash)
   var BELL_INNER = "<path d=\"M168,224a8,8,0,0,1-8,8H96a8,8,0,1,1,0-16h64A8,8,0,0,1,168,224Zm53.81-48.06C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H208a16,16,0,0,0,13.8-24.06Z\"/>";
@@ -182,7 +182,8 @@
     }).observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
   setTimeout(replaceBell, 100);
-  setInterval(replaceBell, 2000);
+  var _bellIv = setInterval(function() { replaceBell(); }, 2000);
+  setTimeout(function() { clearInterval(_bellIv); }, 20000);
 
   // Rename Forum to Globe everywhere (immediate, no flash)
   function renameForumToGlobe() {
@@ -303,7 +304,8 @@
     });
   }
   setTimeout(removeMetricLabels, 500);
-  setInterval(removeMetricLabels, 2000);
+  var _labelIv = setInterval(function() { removeMetricLabels(); }, 2000);
+  setTimeout(function() { clearInterval(_labelIv); }, 30000);
 
   // Reorder tabs: Views, Visitors, Users, Posts (move Posts to end, rename New Users)
   function reorderMetricTabs() {
@@ -340,7 +342,8 @@
     }
   }
   setTimeout(reorderMetricTabs, 1500);
-  setInterval(reorderMetricTabs, 3000);
+  var _reorderIv = setInterval(function() { reorderMetricTabs(); }, 3000);
+  setTimeout(function() { clearInterval(_reorderIv); }, 30000);
 
 
 
