@@ -173,7 +173,7 @@
       btn.addEventListener("click", function() {
         currentMetric = metric;
         Object.keys(metricBtns).forEach(function(k) {
-          metricBtns[k].style.background = k === metric ? "rgba(0,122,255,.25)" : "transparent";
+          metricBtns[k].style.background = "transparent";
         });
         drawGraph();
       });
