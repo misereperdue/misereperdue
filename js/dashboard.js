@@ -152,7 +152,10 @@
 
     // Metric toggle
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+    toggleRow.style.cssText = "position:relative;display:flex;margin-bottom:12px;background:rgba(120,120,128,0.18);border-radius:14px;padding:3px;";
+    var metricSlider = document.createElement("div");
+    metricSlider.style.cssText = "position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:rgba(255,255,255,0.22);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;";
+    toggleRow.appendChild(metricSlider);
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" };
@@ -168,13 +171,12 @@
       btn.innerHTML = metricIcons[metric];
       btn.title = metricLabels[metric];
       btn.setAttribute("aria-label", metricLabels[metric]);
-      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:var(--glass-hairline);background:" +
-        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;";
+      btn.style.cssText = "position:relative;z-index:1;flex:1;padding:10px 8px;border:none;border-radius:11px;background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
-        Object.keys(metricBtns).forEach(function(k) {
-          metricBtns[k].style.background = k === metric ? "rgba(0,122,255,.25)" : "transparent";
-        });
+        var order = ["views", "visitors", "newUsers", "messages"];
+        var idx = order.indexOf(metric);
+        metricSlider.style.transform = "translateX(" + (idx * 100) + "%)";
         drawGraph();
       });
       metricBtns[metric] = btn;
