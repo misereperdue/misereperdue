@@ -2018,3 +2018,15 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .sig-embed-btn { margin: 8px 10px 10px; padding: 6px 13px; font-size: 12.5px; }
 .sig-embed-bar { margin: 0 10px 10px; }
 .sig-embed-bar.hidden { display: none; }
+
+/* YouTube embeds in forum posts */
+.forum-embedbar { display: flex; gap: 8px; padding: 8px; border-bottom: var(--glass-hairline); }
+.forum-embedbar.hidden { display: none; }
+.forum-embed-input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); font-size: 13px; }
+.forum-embed-add, .forum-embed-cancel { padding: 8px 12px; font-size: 13px; border-radius: 10px; border: var(--glass-hairline); background: var(--glass-clear-tint); color: var(--ink); cursor: pointer; }
+.forum-embed-add { background: var(--blue); border-color: transparent; color: #fff; font-weight: 700; }
+.forum-embed-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px; }
+.forum-embed-chips:empty { display: none; }
+.forum-embed { margin: 10px 0; }
+.forum-embed iframe { width: 100%; max-width: 480px; aspect-ratio: 16/9; border: 0; border-radius: 12px; display: block; }
+[data-theme="light"] .forum-admin-thread { background: rgba(255,255,255,.6); }
