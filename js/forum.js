@@ -267,11 +267,17 @@
     try { return localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) { return true; }
   }
   var SIG_EMOJI_NET = { "\uD83D\uDC26": "x", "\uD83D\uDCF8": "instagram", "\uD83C\uDFB5": "tiktok", "\u25B6": "youtube" };
+  var SIG_SOCIAL_DOM = /^(https?:\/\/)?(www\.)?(x\.com|twitter\.com|instagram\.com|tiktok\.com|youtube\.com|youtu\.be)(\/|$)/i;
   function upgradeSigSocial(html) {
-    return String(html || "").replace(/(<a href="[^"]*"[^>]*>)(\uD83D\uDC26|\uD83D\uDCF8|\uD83C\uDFB5|\u25B6)\s?/g, function (m, open, emo) {
+    var out = String(html || "").replace(/(<a href="[^"]*"[^>]*>)(\uD83D\uDC26|\uD83D\uDCF8|\uD83C\uDFB5|\u25B6)\s?/g, function (m, open, emo) {
       var logo = (window.MPSocialLogos || {})[SIG_EMOJI_NET[emo]] || "";
       return logo ? open + logo + " " : m;
     });
+    out = out.replace(/<div>(<a href="([^"]*)"[^>]*>.*?<\/a>)<\/div>/g, function (m, a, url) {
+      return SIG_SOCIAL_DOM.test(url) ? '<span class="sig-social-item">' + a + "</span>" : m;
+    });
+    out = out.replace(/((?:<span class="sig-social-item">.*?<\/span>)+)/g, '<div class="sig-social-row">$1</div>');
+    return out;
   }
   function signatureHTML(post, compact) {
     if (!post || !post.authorSignature || !sigVisible()) return "";
@@ -854,7 +860,6 @@
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
           '<div class="forum-post-body">' + bodyHTML(r) + "</div>" +
-          signatureHTML(r, true) +
           ((token() || isOwner)
             ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
               (token() ? '<button type="button" class="forum-admin-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
