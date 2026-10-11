@@ -7,7 +7,35 @@
   var TOKEN_KEY = "chat_token";
 
   var root = null;
-  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {} };
+  var view = { name: "list", category: "", tag: "", threadId: null, replyTo: null, showNested: {} };
+  var tagExpand = {};
+  var allTagsCache = null;
+  function normTagClient(s) {
+    return String(s || "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 12);
+  }
+  function tagsPillsHTML(t, limit) {
+    var tags = t.tags || [];
+    if (!tags.length) return "";
+    var expanded = !!tagExpand[t.id];
+    var show = expanded ? tags : tags.slice(0, limit);
+    var out = show.map(function (tag) {
+      return '<button type="button" class="forum-tag" data-tag="' + esc(tag) + '">#' + esc(tag) + "</button>";
+    }).join("");
+    if (!expanded && tags.length > limit) {
+      out += '<button type="button" class="forum-tag forum-tag-more" data-tagmore="' + esc(t.id) + '">+' + (tags.length - limit) + "</button>";
+    }
+    return out;
+  }
+  function filterByTag(tag) {
+    view.tag = tag;
+    view.category = "";
+    view.name = "list";
+    view.threadId = null;
+    paintedThreadId = null;
+    renderList();
+    refreshThreads();
+    if (window.MPScroll) MPScroll.pinTop(1200);
+  }
   var paintedThreadId = null;
   var cache = { categories: [], threads: [], thread: null };
 
@@ -427,13 +455,19 @@
     });
     html += "</div>";
 
+    if (view.tag) {
+      html += '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' + esc(view.tag) + '</span>' +
+        '<button type="button" class="forum-tag-clear" id="forum-tag-clear">\u2715 Clear</button></div>';
+    }
+
     // Threads
     var threads = cache.threads.filter(function (t) {
+      if (view.tag) return (t.tags || []).indexOf(view.tag) !== -1;
       return !view.category || t.category === view.category;
     });
 
     if (!threads.length) {
-      html += '<div class="forum-empty">No threads yet. Start one.</div>';
+      html += '<div class="forum-empty">' + (view.tag ? "No posts with #" + esc(view.tag) + " yet." : "No threads yet. Start one.") + "</div>";
     } else {
       html += '<div class="forum-threads">';
       threads.forEach(function (t) {
@@ -447,9 +481,11 @@
           "</span>" +
           (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
-        if (isOwner || t.pinned) {
+        var rowTags = t.tags || [];
+        if (isOwner || t.pinned || rowTags.length) {
           html += '<div class="forum-admin">' +
             (t.pinned ? '<span class="forum-pin-bubble" title="Pinned">\uD83D\uDCCC</span>' : "") +
+            tagsPillsHTML(t, 2) +
             (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + "</button>" +
             '<button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") +
             "</div>";
@@ -465,8 +501,26 @@
     wireAvatars();
     root.querySelectorAll(".forum-cat").forEach(function (b) {
       b.addEventListener("click", function () {
+        view.tag = "";
         view.category = b.getAttribute("data-cat");
         renderList();
+      });
+    });
+    var tagClear = root.querySelector("#forum-tag-clear");
+    if (tagClear) tagClear.addEventListener("click", function () { view.tag = ""; renderList(); });
+    root.querySelectorAll("[data-tag]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        filterByTag(b.getAttribute("data-tag"));
+      });
+    });
+    root.querySelectorAll("[data-tagmore]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        tagExpand[b.getAttribute("data-tagmore")] = true;
+        var sy = window.scrollY;
+        renderList();
+        window.scrollTo(0, sy);
       });
     });
     root.querySelectorAll(".forum-thread").forEach(function (b) {
@@ -542,6 +596,7 @@
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
+        ((t.tags && t.tags.length) ? '<div class="forum-post-tags">' + tagsPillsHTML(t, 3) + "</div>" : "") +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
@@ -733,6 +788,15 @@
       });
       var editBtn = root.querySelector("#forum-edit-btn");
       if (editBtn) editBtn.addEventListener("click", function () { renderEdit(); });
+      root.querySelectorAll("[data-tag]").forEach(function (b) {
+        b.addEventListener("click", function () { filterByTag(b.getAttribute("data-tag")); });
+      });
+      root.querySelectorAll("[data-tagmore]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          tagExpand[b.getAttribute("data-tagmore")] = true;
+          renderThreadInPlace();
+        });
+      });
 
       var send = root.querySelector("#forum-send");
       if (send) send.addEventListener("click", function () {
@@ -881,6 +945,76 @@
 
   /* ---------- new thread ---------- */
 
+  var newTagState = { tags: [] };
+  var editTagState = { tags: [] };
+
+  function tagEditorHTML(prefix) {
+    return '<div class="forum-tag-editor">' +
+      '<div class="forum-tag-pills" id="' + prefix + '-tag-pills"></div>' +
+      '<input type="text" class="forum-tag-input" id="' + prefix + '-tag-input" placeholder="Add a tag and press enter" maxlength="24" autocomplete="off" autocapitalize="none">' +
+      '<div class="forum-tag-suggest hidden" id="' + prefix + '-tag-suggest"></div></div>';
+  }
+
+  function wireTagEditor(prefix, state) {
+    var pillsEl = root.querySelector("#" + prefix + "-tag-pills");
+    var input = root.querySelector("#" + prefix + "-tag-input");
+    var suggest = root.querySelector("#" + prefix + "-tag-suggest");
+    if (!pillsEl || !input) return;
+    function paintPills() {
+      pillsEl.innerHTML = state.tags.map(function (tag, i) {
+        return '<span class="forum-tag chosen">#' + esc(tag) + '<button type="button" class="forum-tag-x" data-untag="' + i + '" aria-label="Remove tag">\u00D7</button></span>';
+      }).join("");
+      pillsEl.querySelectorAll("[data-untag]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          state.tags.splice(parseInt(b.getAttribute("data-untag"), 10), 1);
+          paintPills();
+        });
+      });
+      input.style.display = state.tags.length >= 5 ? "none" : "";
+    }
+    function hideSuggest() { if (suggest) { suggest.classList.add("hidden"); suggest.innerHTML = ""; } }
+    function showSuggest() {
+      if (!suggest) return;
+      var q = normTagClient(input.value);
+      if (!q || !allTagsCache) { hideSuggest(); return; }
+      var matches = allTagsCache.filter(function (name) {
+        return name.indexOf(q) === 0 && state.tags.indexOf(name) === -1;
+      }).slice(0, 6);
+      if (!matches.length) { hideSuggest(); return; }
+      suggest.innerHTML = matches.map(function (name) {
+        return '<button type="button" class="forum-tag-sug" data-sug="' + esc(name) + '">#' + esc(name) + "</button>";
+      }).join("");
+      suggest.classList.remove("hidden");
+      suggest.querySelectorAll("[data-sug]").forEach(function (b) {
+        b.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          addTag(b.getAttribute("data-sug"));
+        });
+      });
+    }
+    function addTag(raw) {
+      var tag = normTagClient(raw);
+      if (!tag) return;
+      if (state.tags.length >= 5) { alert("Max 5 tags"); return; }
+      if (state.tags.indexOf(tag) === -1) state.tags.push(tag);
+      input.value = "";
+      hideSuggest();
+      paintPills();
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(input.value); }
+      else if (e.key === "Backspace" && !input.value && state.tags.length) { state.tags.pop(); paintPills(); }
+    });
+    input.addEventListener("input", showSuggest);
+    input.addEventListener("blur", function () { setTimeout(hideSuggest, 150); });
+    if (!allTagsCache) {
+      api("/api/forum/tags").then(function (r) {
+        if (r && r.ok) allTagsCache = r.tags.map(function (t) { return t.name; });
+      }).catch(function () {});
+    }
+    paintPills();
+  }
+
   function renderEdit() {
     destroyEditEditor();
     if (replyEditor) { try { replyEditor.destroy(); } catch (e) {} replyEditor = null; }
@@ -888,6 +1022,7 @@
     if (!t) { renderList(); return; }
     view.name = "edit";
     editThumbId = t.thumb || null;
+    editTagState = { tags: (t.tags || []).slice() };
     var html = forumTopBar() +
       '<div class="forum-head">' +
       '<button type="button" class="forum-back forum-glass-pill" id="forum-edit-back">\u2190 Back</button>' +
@@ -904,6 +1039,7 @@
       '<button type="button" class="forum-admin-btn forum-admin-del' + (t.thumb ? "" : " hidden") + '" id="forum-ethumb-remove">Remove</button>' +
       '<input type="file" id="forum-ethumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-edit-actions">' +
       '<button type="button" class="btn" id="forum-edit-cancel">Cancel</button>' +
       '<button type="button" class="btn accent" id="forum-edit-save">Save changes</button></div></div>';
@@ -911,6 +1047,7 @@
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(1500);
     wireAvatars();
+    wireTagEditor("forum-edit", editTagState);
     var rerender = function () { view.name = "thread"; renderThread(); };
     root.querySelector("#forum-edit-back").addEventListener("click", rerender);
     root.querySelector("#forum-edit-cancel").addEventListener("click", rerender);
@@ -965,7 +1102,7 @@
       }
       if (!title || !content) { alert("Title and content required"); return; }
       api("/api/forum/thread/" + encodeURIComponent(t.id), {
-        method: "PUT", body: { title: title, content: content, rich: rich, thumb: editThumbId }
+        method: "PUT", body: { title: title, content: content, rich: rich, thumb: editThumbId, tags: editTagState.tags }
       }).then(function (res) {
         if (res.ok) { destroyEditEditor(); view.name = "thread"; renderThread(); }
         else { alert(res.error || "Failed to save"); }
@@ -998,6 +1135,7 @@
       '<button type="button" class="forum-admin-btn forum-admin-del hidden" id="forum-thumb-remove">Remove</button>' +
       '<input type="file" id="forum-thumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
@@ -1019,6 +1157,8 @@
     }
     // Thumbnail picker: square-crop, upload immediately, keep the media id
     newThumbId = null;
+    newTagState = { tags: [] };
+    wireTagEditor("forum-new", newTagState);
     var thumbInput = root.querySelector("#forum-thumb-input");
     var thumbPreview = root.querySelector("#forum-thumb-preview");
     var thumbAdd = root.querySelector("#forum-thumb-add");
@@ -1062,7 +1202,7 @@
       var cat = root.querySelector("#forum-cat-sel").value;
       if (!title || !content) { alert("Title and content required"); return; }
       api("/api/forum/threads", {
-        method: "POST", body: { title: title, content: content, category: cat, rich: rich, thumb: newThumbId || undefined }
+        method: "POST", body: { title: title, content: content, category: cat, rich: rich, thumb: newThumbId || undefined, tags: newTagState.tags }
       }).then(function (res) {
         if (res.ok && res.thread) {
           view.name = "thread";
