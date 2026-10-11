@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <script>if ("scrollRestoration" in history) history.scrollRestoration = "manual";</script>
+  <link rel="preconnect" href="https://misery-chat.freeglory416.workers.dev">
+  <link rel="dns-prefetch" href="https://misery-chat.freeglory416.workers.dev">
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -212,12 +214,23 @@
       return !!document.querySelector(".chat-auth");
     }
     function assertScroll() {
-      // Check view type inside timeout since content renders async
-      setTimeout(function() {
-        if (isAuthView()) { window.scrollTo(0, 0); return; }
-        if (current.type === "journal") return; // Chat handles its own scroll
-        if (window.scrollY > 100) window.scrollTo(0, 0);
-      }, 800);
+      // For non-chat views: watch for 3s and correct if Safari restores late.
+      // Stop if user interacts.
+      if (current.type === "journal") {
+        // Chat handles its own scroll below; still do the auth check
+      } else {
+        var watchUserScrolled = false;
+        var markScroll = function() { watchUserScrolled = true; };
+        window.addEventListener("touchmove", markScroll, { once: true, passive: true });
+        window.addEventListener("wheel", markScroll, { once: true, passive: true });
+        var watchTries = 0;
+        var watchIv = setInterval(function() {
+          if (watchUserScrolled) { clearInterval(watchIv); return; }
+          if (isAuthView()) { window.scrollTo(0, 0); }
+          else if (window.scrollY > 100) { window.scrollTo(0, 0); }
+          if (++watchTries > 30) clearInterval(watchIv); // 3 seconds
+        }, 100);
+      }
       if (current.type === "journal") {
         // Chat belongs at the newest message; MPChat may still be booting,
         // so retry until it can scroll, then hold the bottom briefly.
