@@ -434,9 +434,8 @@
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
           '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
-          (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + (t.thumb ? " \u00B7 \uD83D\uDCAC " + t.replies : "") + "</span></span>" +
+          (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + " \u00B7 \uD83D\uDCAC " + t.replies + "</span></span>" +
           "</span>" +
-          (t.thumb ? "" : '<span class="forum-thread-count">' + t.replies + "</span>") +
           (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
         if (isOwner) {
@@ -535,8 +534,8 @@
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
-          '<button type="button" class="forum-admin-btn" id="forum-copy-link">\uD83D\uDD17 Copy link</button>' +
-          (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button>' : "") + "</div>" + "</article>";
+          '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
+          (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") + "</div>" + "</article>";
 
       html += '<div class="forum-replies">';
       var allReplies = t.replies || [];
@@ -597,8 +596,8 @@
       if (copyBtn) copyBtn.addEventListener("click", function () {
         var link = API + "/t/" + t.id;
         var done = function () {
-          copyBtn.textContent = "\u2713 Link copied";
-          setTimeout(function () { copyBtn.innerHTML = "\uD83D\uDD17 Copy link"; }, 1800);
+          copyBtn.textContent = "\u2713";
+          setTimeout(function () { copyBtn.innerHTML = "\uD83D\uDD17"; }, 1800);
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(link).then(done).catch(function () { window.prompt("Copy this link:", link); });
