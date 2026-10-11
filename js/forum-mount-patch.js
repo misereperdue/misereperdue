@@ -59,11 +59,14 @@
   // Scope chat's scroll-to-latest to ONLY the chat page.
   // The chat code calls scrollToLatest on timers/events that fire on other pages too.
   function isChatPage() {
-    // NOT chat if forum, shop, or auth is visible
-    if (document.querySelector(".forum-topbar")) return false;
+    // NOT chat if forum panel is active (visible)
+    var forumPanel = document.getElementById("forum");
+    if (forumPanel && forumPanel.classList.contains("on")) return false;
+    // NOT chat if auth is visible
     if (document.querySelector(".chat-auth")) return false;
-    // Shop detection: look for shop-specific containers
-    if (document.querySelector("[data-shop-view]")) return false;
+    // NOT chat if shop panel is active
+    var shopPanel = document.getElementById("shop");
+    if (shopPanel && shopPanel.classList.contains("on")) return false;
     return true;
   }
   // Wrap MPChat.scrollToLatest once chat.js has loaded it
