@@ -359,52 +359,6 @@
       }
     });
   }
-  function convertFilePlaceholders(root) {
-    if (!root || !root.querySelectorAll) return;
-    // Find text nodes containing [mpfile:url|name] and replace with row HTML
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
-    var nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(function (tn) {
-      var txt = tn.textContent;
-      if (txt.indexOf("[mpfile:") < 0) return;
-      var div = document.createElement("div");
-      div.innerHTML = txt.replace(/\[mpfile:([^\]|]+)\|([^\]]+)\]/g, function (m, url, name) {
-        var safeUrl = url.replace(/"/g, "%22");
-        var safeName = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);">' +
-          '<span style="color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + safeName + '</span>' +
-          '<a style="width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;" href="' + safeUrl + '" download aria-label="Download">' +
-          '<svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div>';
-      });
-      // Replace text node with the parsed nodes
-      var frag = document.createDocumentFragment();
-      while (div.firstChild) frag.appendChild(div.firstChild);
-      tn.parentNode.replaceChild(frag, tn);
-    });
-  }
-  function enhanceFileLinks(root) {
-    if (!root || !root.querySelectorAll) return;
-    root.querySelectorAll('a[href*="/api/media/"]').forEach(function (a) {
-      if (a.classList.contains("mp-file-dl") || a.closest(".mp-file")) return;
-      var txt = (a.textContent || "").replace(/\uD83D\uDCCE\s*/, "").trim();
-      var name = txt.replace(/\s*\u00B7\s*[\d.]+\s*(KB|MB|GB)\s*$/i, "").replace(/\.[a-z0-9]+$/i, "").trim() || txt;
-      var wrap = document.createElement("div");
-      wrap.setAttribute("style", "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);");
-      var nm = document.createElement("span");
-      nm.setAttribute("style", "color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;");
-      nm.textContent = name;
-      var dl = document.createElement("a");
-      dl.setAttribute("style", "width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;");
-      dl.href = a.getAttribute("href");
-      dl.setAttribute("download", "");
-      dl.setAttribute("aria-label", "Download");
-      dl.innerHTML = '<svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>';
-      wrap.appendChild(nm);
-      wrap.appendChild(dl);
-      a.replaceWith(wrap);
-    });
-  }
   function bodyHTML(item) {
     if (item.rich) return sanitizeHTML(item.content);
     return esc(item.content || "").replace(/\n/g, "<br>");
@@ -449,7 +403,6 @@
   ];
   var MEDIA_BTNS = [
     { act: "image", label: "\uD83D\uDCF7", member: false, title: "Upload media" },
-    { act: "file", label: "\uD83D\uDCCE", member: true, title: "Attach a file" },
     { act: "link", label: "\uD83D\uDD17", member: false, title: "Attach URL" },
     { act: "embed", label: "\uD83D\uDCFA", member: true, title: "Media embed" }
   ];
@@ -470,7 +423,7 @@
     h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
     if (opts.embed) h += '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">\u00D7</button></div>';
     h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
-    if (opts.member) h += '<input type="file" class="forum-doc-input hidden">';
+
     return h;
   }
   function toggleLockBar(mountEl) {
@@ -617,13 +570,6 @@
         var act = btn.getAttribute("data-act");
         if (act === "lock") { toggleLockBar(mountEl); return; }
         if (act === "link") { toggleLinkBar(editor, mountEl); return; }
-        if (act === "file") {
-          var lb4 = mountEl.querySelector(".forum-linkbar");
-          if (lb4) lb4.classList.add("hidden");
-          var di = mountEl.querySelector(".forum-doc-input");
-          if (di) di.click();
-          return;
-        }
         if (act === "embed") {
           var lb2 = mountEl.querySelector(".forum-linkbar");
           if (lb2) lb2.classList.add("hidden");
@@ -678,21 +624,6 @@
       linkBar.querySelector(".forum-link-remove").addEventListener("click", function () {
         editor.chain().focus().extendMarkRange("link").unsetLink().run();
         linkBar.classList.add("hidden");
-      });
-    }
-    var docInput = mountEl.querySelector(".forum-doc-input");
-    if (docInput && editor) {
-      docInput.addEventListener("change", function () {
-        var file = docInput.files && docInput.files[0];
-        docInput.value = "";
-        if (!file) return;
-        uploadEditorFile(file, function (res) {
-          if (!res) return;
-          var fname = (res.name || "File").replace(/\.[a-z0-9]+$/i, "") || "File";
-          // Insert as text placeholder - bodyHTML converts to pretty row at render time
-          // (bypasses TipTap HTML stripping)
-          editor.chain().focus().insertContent("[mpfile:" + res.url + "|" + fname + "]").run();
-        });
       });
     }
     wireLockBar(editor, mountEl);
@@ -807,47 +738,6 @@
       }
     });
   }
-  function fileRowNode(Node) {
-    return Node.create({
-      name: "fileRow",
-      group: "block",
-      atom: true,
-      draggable: false,
-      addAttributes: function () {
-        return {
-          url: { default: "" },
-          name: { default: "" }
-        };
-      },
-      parseHTML: function () {
-        return [{
-          tag: "div.mp-file",
-          getAttrs: function (el) {
-            var a = el.querySelector("a.mp-file-dl");
-            var n = el.querySelector(".mp-file-name");
-            return { url: a ? a.getAttribute("href") : "", name: n ? n.textContent : "" };
-          }
-        }];
-      },
-      renderHTML: function (ctx) {
-        var at = ctx.HTMLAttributes;
-        var rowStyle = "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);";
-        var nameStyle = "color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
-        var btnStyle = "width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;";
-        var svgStyle = "width:28px;height:28px;display:block;";
-        return ["div", { class: "mp-file", style: rowStyle },
-          ["span", { class: "mp-file-name", style: nameStyle }, at.name],
-          ["a", { class: "mp-file-dl", href: at.url, download: "", "aria-label": "Download", style: btnStyle },
-            ["svg", { viewBox: "0 0 24 24", style: svgStyle, fill: "none", stroke: "#fff", "stroke-width": "2.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" },
-              ["path", { d: "M12 3v12" }],
-              ["path", { d: "M7 10l5 5 5-5" }],
-              ["path", { d: "M4 21h16" }]
-            ]
-          ]
-        ];
-      }
-    });
-  }
   function createEditor(mount, placeholder, initialHTML) {
     return loadEditorLib().then(function (lib) {
       if (!lib) return null;
@@ -858,7 +748,7 @@
           lib.Placeholder.configure({ placeholder: placeholder }),
           lib.Link.configure({ openOnClick: false, autolink: true }),
           lib.Image.configure({ inline: false })
-        ].concat(lib.Node ? [lockedBlockNode(lib.Node), fileRowNode(lib.Node)] : []),
+        ].concat(lib.Node ? [lockedBlockNode(lib.Node)] : []),
         content: initialHTML || "",
         editorProps: { attributes: { class: "forum-editor-input" } }
       });
@@ -967,7 +857,7 @@
 
     html += "</div>";
     root.innerHTML = html;
-    convertFilePlaceholders(root); enhanceFileLinks(root);
+    
 
     wireAvatars();
     // Content is painted; now pin to top (images loading later won't shift us)
@@ -1132,7 +1022,7 @@
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       applyLockGates(cache.thread);
-      convertFilePlaceholders(root); enhanceFileLinks(root);
+      
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
