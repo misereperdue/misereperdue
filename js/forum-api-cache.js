@@ -1,8 +1,32 @@
-// Forum API response cache - prevents race conditions from concurrent refreshThreads() calls
-// If /api/forum/threads is requested twice within 5s, the second gets the cached response
+// Forum API response cache + normalizer
+// Prevents race-condition re-renders by ensuring consistent data
 (function() {
   var cache = {};
-  var CACHE_TTL = 5000; // 5 seconds
+  var CACHE_TTL = 10000; // 10 seconds
+  
+  // Normalize threads: round timestamps to nearest minute so the
+  // forum's "same data" check doesn't fail on millisecond differences
+  function normalizeThreads(data) {
+    try {
+      if (data && data.threads && Array.isArray(data.threads)) {
+        data.threads.forEach(function(t) {
+          // Round updatedAt/lastActivity to minute precision
+          if (t.updatedAt) {
+            var d = new Date(t.updatedAt);
+            d.setSeconds(0, 0);
+            t.updatedAt = d.toISOString();
+          }
+          if (t.lastActivity) {
+            var d2 = new Date(t.lastActivity);
+            d2.setSeconds(0, 0);
+            t.lastActivity = d2.toISOString();
+          }
+        });
+
+      }
+    } catch (e) {}
+    return data;
+  }
   
   var origFetch = window.fetch;
   window.fetch = function(url, opts) {
@@ -14,14 +38,23 @@
       var now = Date.now();
       var entry = cache[urlStr];
       if (entry && (now - entry.time) < CACHE_TTL) {
-        // Return cached response (clone it so it can be read twice)
         return Promise.resolve(entry.response.clone());
       }
-      // Fetch and cache
       return origFetch.apply(this, arguments).then(function(resp) {
-        // Only cache successful responses
         if (resp.ok) {
-          cache[urlStr] = { response: resp.clone(), time: now };
+          // Clone, normalize, and cache
+          return resp.clone().json().then(function(data) {
+            var normalized = normalizeThreads(data);
+            var normalizedResp = new Response(JSON.stringify(normalized), {
+              status: resp.status,
+              statusText: resp.statusText,
+              headers: resp.headers
+            });
+            cache[urlStr] = { response: normalizedResp.clone(), time: now };
+            return normalizedResp;
+          }).catch(function() {
+            return resp;
+          });
         }
         return resp;
       });
