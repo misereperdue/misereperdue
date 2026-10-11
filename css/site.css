@@ -2002,6 +2002,10 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .sig-social-row { display: flex; gap: 8px; overflow-x: auto; margin: 6px 0 2px; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .sig-social-row::-webkit-scrollbar { display: none; }
 .sig-social-item { flex: 0 0 auto; }
+.sig-social-item.net-x > a[href^="http"] { background: #000; border-color: transparent; color: #fff; }
+.sig-social-item.net-instagram > a[href^="http"] { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); border-color: transparent; color: #fff; }
+.sig-social-item.net-tiktok > a[href^="http"] { background: #0e0e0e; border-color: transparent; color: #fff; }
+.sig-social-item.net-youtube > a[href^="http"] { background: #ff0000; border-color: transparent; color: #fff; }
 .sig-social-item > a[href^="http"] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.08); border: var(--glass-hairline); font-size: 12px; font-weight: 700; text-decoration: none; margin: 2px 0; white-space: nowrap; }
 .sig-chip-x { appearance: none; border: none; background: none; color: var(--muted); font-size: 14px; line-height: 1; cursor: pointer; padding: 2px 5px; }
 .sig-embed-btn { margin-top: 10px; padding: 7px 14px; font-size: 13px; }
