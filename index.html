@@ -343,7 +343,7 @@
       var hash = "#";
       if (view === "shop") hash = "#shop";
       else if (view === "cart") hash = "#cart";
-      else if (view === "forum") hash = "#global";
+      else if (view === "forum") hash = "#globe";
       else if (view === "post" && id) hash = "#post/" + id;
       else if (view === "product" && id) hash = "#product/" + id;
       else if (reading) hash = "#post";
@@ -506,7 +506,7 @@
       }
       if (h === "#shop") { show("shop"); return true; }
       if (h === "#cart") { show("cart"); return true; }
-      if (h === "#global" || h === "#forum") { show("forum"); return true; }
+      if (h === "#globe" || h === "#global" || h === "#forum") { show("forum"); return true; }
       if (h === "#journal" || h === "#") { show("journal"); return true; }
       return false;
     }
