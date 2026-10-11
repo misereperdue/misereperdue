@@ -173,7 +173,7 @@
             child.remove();
             return;
           }
-          var keepHref = null, keepSrc = null, keepFrame = null;
+          var keepHref = null, keepSrc = null, keepFrame = null, keepPath = null;
           if (child.tagName === "A") {
             var href = child.getAttribute("href") || "";
             if (/^https?:\/\//i.test(href)) keepHref = href;
@@ -190,6 +190,12 @@
           if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
           if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
           if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
+          if (child.tagName === "SVG") child.setAttribute("viewBox", "0 0 24 24");
+          if (child.tagName === "PATH") {
+            if (!keepPath) { child.remove(); return; }
+            child.setAttribute("d", keepPath);
+            child.setAttribute("fill", "currentColor");
+          }
           if (child.tagName === "IFRAME") {
             if (!keepFrame) { child.remove(); return; }
             child.setAttribute("src", keepFrame);
@@ -204,7 +210,7 @@
       return doc.body.innerHTML;
     } catch (e) { return ""; }
   }
-  var SIG_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1, IFRAME: 1, DIV: 1 };
+  var SIG_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1, IFRAME: 1, DIV: 1 , SVG: 1, PATH: 1 };
   var EMBED_SRC_OK = /^https:\/\/(open\.spotify\.com|w\.soundcloud\.com|player\.vimeo\.com)\//i;
   function sanitizeSignature(html) {
     try {
@@ -232,6 +238,10 @@
           if (child.tagName === "IFRAME") {
             var fsrc = child.getAttribute("src") || "";
             if (EMBED_SRC_OK.test(fsrc)) keepFrame = fsrc;
+          }
+          if (child.tagName === "PATH") {
+            var pd = child.getAttribute("d") || "";
+            if (/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s\-+eE]+$/.test(pd)) keepPath = pd;
           }
           Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
           if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
