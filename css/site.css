@@ -1655,6 +1655,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-thread-row .forum-thread { border-radius: 14px 14px 0 0; border-bottom: none; }
 .forum-thread-row:not(:has(.forum-admin)) .forum-thread { border-radius: 14px; border-bottom: var(--glass-hairline); }
 .forum-admin { display: flex; gap: 6px; padding: 8px 12px; border: var(--glass-hairline); border-top: none; border-radius: 0 0 14px 14px; background: rgba(0,0,0,.15); }
+.forum-thread-row .forum-admin { background: rgba(0,0,0,.38); }
+[data-theme="light"] .forum-thread-row .forum-admin { background: rgba(0,0,0,.1); }
 .forum-admin-thread { margin-top: 10px; border: var(--glass-hairline); border-radius: 10px; }
 .forum-admin-btn { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: var(--glass-hairline); background: transparent; color: var(--ink); cursor: pointer; }
 .forum-admin-del { background: rgba(255,60,60,.15); border: none; color: #ff6b6b; }
@@ -1884,7 +1886,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-thread-meta-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .forum-avatar-sm .forum-avatar { width: 22px; height: 22px; font-size: 12px; }
 .forum-avatar-sm .forum-avatar-emoji { font-size: 12px; }
-.forum-avatar-sm .forum-avatar-badge { right: -3px; bottom: -3px; transform: scale(.6); transform-origin: bottom right; }
+.forum-avatar-sm .forum-avatar-badge { right: -2px; bottom: -1px; }
 .forum-thread { position: relative; overflow: hidden; }
 .forum-thread-thumb {
   position: absolute; right: 0; top: 0;
@@ -1909,3 +1911,6 @@ button.forum-glass-pill:active { transform: scale(.97); }
   content: "🖼️"; display: grid; place-items: center; height: 100%; font-size: 20px; opacity: .5;
 }
 .hidden { display: none !important; }
+
+/* Action bars never wrap their labels */
+.forum-admin-btn, .forum-star-count { white-space: nowrap; }
