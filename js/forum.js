@@ -1679,8 +1679,9 @@
     view.threadId = null;
     view.replyTo = null;
     paintedThreadId = null;
-    window.scrollTo(0, 0);
     render();
+    // Always pin to top after render (even if render skipped due to unchanged data)
+    requestAnimationFrame(function () { window.scrollTo(0, 0); });
   }
 
   function openThread(id) {
