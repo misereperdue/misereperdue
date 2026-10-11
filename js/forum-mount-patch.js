@@ -489,6 +489,69 @@
     }, true);
   })();
 
+
+  // Remove duplicate patch countries section (keep native dashboard one)
+  (function() {
+    function removePatchCountries() {
+      try {
+        var sec = document.getElementById('countries-section');
+        if (sec) sec.remove();
+      } catch (e) {}
+    }
+    setInterval(removePatchCountries, 2000);
+    setTimeout(removePatchCountries, 1000);
+  })();
+
+
+  // Activity nav sliding pill
+  (function() {
+    function setup() {
+      try {
+        var viewsBtn = document.querySelector('button[aria-label="Views"]');
+        if (!viewsBtn || document.getElementById('act-slider')) return;
+        var container = viewsBtn.parentElement;
+        if (!container) return;
+        var labels = ["Views","Visitors","Users","Posts"];
+        var btns = [];
+        labels.forEach(function(l) {
+          var b = container.querySelector('button[aria-label="' + l + '"]');
+          if (b) btns.push(b);
+        });
+        if (btns.length !== 4) return;
+        
+        container.style.position = 'relative';
+        container.style.background = 'rgba(120,120,128,0.18)';
+        container.style.borderRadius = '14px';
+        container.style.padding = '3px';
+        
+        var slider = document.createElement('div');
+        slider.id = 'act-slider';
+        slider.style.cssText = 'position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:rgba(255,255,255,0.22);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;';
+        container.insertBefore(slider, container.firstChild);
+        
+        btns.forEach(function(b) {
+          b.style.background = 'transparent';
+          b.style.border = 'none';
+          b.style.position = 'relative';
+          b.style.zIndex = '1';
+        });
+        
+        btns.forEach(function(btn, idx) {
+          btn.addEventListener('click', function() {
+            try {
+              var sl = document.getElementById('act-slider');
+              if (sl) sl.style.transform = 'translateX(' + (idx * 100) + '%)';
+              setTimeout(function() {
+                btns.forEach(function(b) { b.style.background = 'transparent'; });
+              }, 50);
+            } catch (e) {}
+          });
+        });
+      } catch (e) {}
+    }
+    setInterval(function() { try { setup(); } catch (e) {} }, 2500);
+  })();
+
   // Assistant briefing under the graph
   (function() {
     function addBriefing() {
