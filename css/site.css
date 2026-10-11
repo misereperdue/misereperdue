@@ -90,8 +90,10 @@ button, input, textarea { font-family: inherit; color: inherit; }
   right: 0;
   display: flex;
   justify-content: center;
-  pointer-events: none;
   view-transition-name: pill;
+}
+.nav-wrap .nav {
+  pointer-events: auto;
 }
 .nav {
   pointer-events: auto;
