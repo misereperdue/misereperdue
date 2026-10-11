@@ -1401,18 +1401,23 @@
           if (!content) return;
         }
         send.disabled = true;
+        var origText = send.innerHTML;
+        send.innerHTML = '<span class="forum-spinner"></span>';
         var payload = { content: content, rich: rich };
         if (view.replyTo) payload.parentId = view.replyTo.id;
         api("/api/forum/thread/" + encodeURIComponent(view.threadId) + "/replies", {
           method: "POST", body: payload
         }).then(function (r2) {
           if (r2.ok) {
-            // Expand parent so the new reply is visible
             if (view.replyTo) view.showNested[view.replyTo.id] = true;
             view.replyTo = null;
             renderThread();
           }
-          else { send.disabled = false; alert(r2.error || "Failed"); }
+          else { send.disabled = false; send.innerHTML = origText; alert(r2.error || "Failed"); }
+        }).catch(function (err) {
+          send.disabled = false;
+          send.innerHTML = origText;
+          alert("Failed to post reply. Check your connection.");
         });
       });
   }
