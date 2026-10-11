@@ -472,6 +472,23 @@
   })();
 
 
+
+  // Track which metric tab is active globally
+  (function() {
+    if (window._metricTrackerSetup) return;
+    window._metricTrackerSetup = true;
+    window._activeMetric = 'Visitors'; // default
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest ? e.target.closest('button[aria-label]') : null;
+      if (btn) {
+        var label = btn.getAttribute('aria-label');
+        if (['Views','Visitors','Users','Posts'].indexOf(label) !== -1) {
+          window._activeMetric = label;
+        }
+      }
+    }, true);
+  })();
+
   // Assistant briefing under the graph
   (function() {
     function addBriefing() {
@@ -524,37 +541,13 @@
         }
       }
       
-      // Determine which metric is active by checking the pill position or button order
-      var metricName = 'visitors';
+      // Determine active metric: use the globally tracked last-clicked metric
+      var metricName = window._activeMetric || 'visitors';
       var metricUnit = 'visitors';
-      // Try to infer from which button appears active (pill position)
-      // Default to visitors since that's what's shown in screenshot
-      // Check the URL hash or active tab
-      var postsBtn = document.querySelector('button[aria-label="Posts"]');
-      var viewsBtn = document.querySelector('button[aria-label="Views"]');
-      var usersBtn = document.querySelector('button[aria-label="Users"]');
-      // Simple heuristic: check which metric tab was clicked last via pill position
-      // For now, try to detect from the graph colors or just use generic
-      // Better: look at the metric buttons' parent and find pill position
-      try {
-        var pillEl = document.querySelector('.pill-indicator');
-        var mContainer = viewsBtn ? viewsBtn.parentElement : null;
-        if (pillEl && mContainer) {
-          var pRect = pillEl.getBoundingClientRect();
-          var btns = [viewsBtn, document.querySelector('button[aria-label="Visitors"]'), usersBtn, postsBtn].filter(Boolean);
-          for (var bi = 0; bi < btns.length; bi++) {
-            var bRect = btns[bi].getBoundingClientRect();
-            if (Math.abs(bRect.left - (pRect.left)) < 20) {
-              var lbl = btns[bi].getAttribute('aria-label');
-              if (lbl === 'Views') { metricName = 'views'; metricUnit = 'page views'; }
-              else if (lbl === 'Visitors') { metricName = 'visitors'; metricUnit = 'unique visitors'; }
-              else if (lbl === 'Users') { metricName = 'signups'; metricUnit = 'new users'; }
-              else if (lbl === 'Posts') { metricName = 'posts'; metricUnit = 'posts & replies'; }
-              break;
-            }
-          }
-        }
-      } catch (e) {}
+      if (metricName === 'Views') metricUnit = 'page views';
+      else if (metricName === 'Visitors') metricUnit = 'unique visitors';
+      else if (metricName === 'Users') metricUnit = 'new users';
+      else if (metricName === 'Posts') metricUnit = 'posts & replies';
       
       // Generate specific briefing
       var html = '<div style="font-weight:700;margin-bottom:6px;opacity:0.9;">What this shows</div>';
@@ -751,6 +744,12 @@
         width: 100% !important;
         box-sizing: border-box !important;
       }
+      /* Break out of parent padding to align flush left */
+      #countries-section.flush-fix {
+        margin-left: var(--parent-pad, 0) !important;
+        margin-right: var(--parent-pad, 0) !important;
+        width: calc(100% - 2 * var(--parent-pad, 0)) !important;
+      }
     `;
     document.head.appendChild(style);
   })();
@@ -774,6 +773,22 @@
     var section = document.createElement("div");
     section.id = "countries-section";
     section.style.cssText = "margin-top:10px;margin-left:0;margin-right:0;text-align:left;width:100%;padding:0;";
+    // Measure parent padding and counter it so boxes align flush left
+    setTimeout(function() {
+      var sec = document.getElementById("countries-section");
+      if (!sec || !sec.parentElement) return;
+      var parentStyle = window.getComputedStyle(sec.parentElement);
+      var padLeft = parseFloat(parentStyle.paddingLeft) || 0;
+      var padRight = parseFloat(parentStyle.paddingRight) || 0;
+      if (padLeft > 0 || padRight > 0) {
+        sec.style.setProperty("margin-left", (-padLeft) + "px", "important");
+        sec.style.setProperty("margin-right", (-padRight) + "px", "important");
+        sec.style.setProperty("width", "calc(100% + " + (padLeft + padRight) + "px)", "important");
+        // Also adjust the title to align with the new left edge
+        var title = sec.querySelector("div");
+        if (title) title.style.setProperty("padding-left", padLeft + "px", "important");
+      }
+    }, 100);
     section.innerHTML = '<div style="font-size:16px;font-weight:700;margin:0 0 4px 0;text-align:left;padding:0;">Countries</div>' +
       '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;padding:0;margin:0;">Loading...</div>';
     container.appendChild(section);
