@@ -1101,16 +1101,16 @@
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
     var h = '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
-    h += '<div style="font-weight:700;margin-bottom:10px;">' + esc(t.poll.question) + '</div>';
+    h += '<div style="font-weight:700;margin-bottom:10px;color:var(--ink);">' + esc(t.poll.question) + '</div>';
     t.poll.options.forEach(function (opt, i) {
       var pct = total > 0 ? Math.round((opt.votes || 0) / total * 100) : 0;
       var voted = myVote === i;
-      h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(255,255,255,.1)") + ';background:' + (voted ? "rgba(80,140,255,.12)" : "rgba(255,255,255,.03)") + ';color:#fff;cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
+      h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
       h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
       h += '<span style="position:relative;display:flex;justify-content:space-between;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="opacity:.7;">' + pct + '% (' + (opt.votes || 0) + ')</span></span>';
       h += '</button>';
     });
-    h += '<div style="font-size:12px;opacity:.6;margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
+    h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
     return h;
   }
 
