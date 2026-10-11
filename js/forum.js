@@ -361,6 +361,7 @@
   }
 
   function renderList() {
+    updateTopBtn();
     var html = '<div class="forum-anim">' + forumTopBar();
 
     // Category pills
@@ -469,6 +470,7 @@
   function paintThread() {
     var t = cache.thread;
     if (!t) return;
+    updateTopBtn();
     var freshOpen = paintedThreadId !== t.id;
     paintedThreadId = t.id;
     var html = forumTopBar() +
@@ -745,6 +747,31 @@
         }).catch(function () { host.remove(); });
       });
     });
+  }
+
+  var topBtnEl = null;
+  function ensureTopBtn() {
+    if (topBtnEl) return topBtnEl;
+    var panel = document.getElementById("forum");
+    if (!panel) return null;
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "forum-topbtn";
+    b.setAttribute("aria-label", "Back to top");
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
+    b.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    panel.appendChild(b);
+    topBtnEl = b;
+    window.addEventListener("scroll", updateTopBtn, { passive: true });
+    return b;
+  }
+  function updateTopBtn() {
+    var b = ensureTopBtn();
+    if (!b) return;
+    var show = view.name === "thread" && window.scrollY > 500;
+    b.classList.toggle("show", show);
   }
 
   function initReplyEditor() {
