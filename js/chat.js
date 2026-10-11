@@ -555,7 +555,7 @@
         } else if (f.type.indexOf("image/") === 0) {
           compressAndUpload(f);
         } else {
-          attachError("Only photos and videos.");
+          attachError("This type of file is not supported.");
         }
       });
       // Plus button opens native picker (images/videos only)
@@ -655,22 +655,29 @@
       el.controls = true;
       el.playsInline = true;
       el.preload = "metadata";
-    } else if (media.kind === "file") {
-      el = document.createElement("a");
-      el.href = CHAT_API + "/api/media/" + media.id;
-      el.target = "_blank";
-      el.rel = "noopener noreferrer";
-      el.className = "chat-file-link";
-      el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>' + esc(media.filename || "File") + "</span>";
+      el.className = "chat-media";
       return el;
-    } else {
+    } else if (media.kind === "image") {
       el = document.createElement("img");
       el.src = CHAT_API + "/api/media/" + media.id;
       el.loading = "lazy";
       el.alt = "";
+      el.className = "chat-media";
+      // If image fails to load (not actually an image), show unsupported message
+      el.onerror = function() {
+        var msg = document.createElement("div");
+        msg.className = "chat-unsupported";
+        msg.textContent = "This type of file is not supported.";
+        if (el.parentNode) el.parentNode.replaceChild(msg, el);
+      };
+      return el;
+    } else {
+      // Unsupported file type (including old "file" uploads)
+      el = document.createElement("div");
+      el.className = "chat-unsupported";
+      el.textContent = "This type of file is not supported.";
+      return el;
     }
-    el.className = "chat-media";
-    return el;
   }
 
   function embedNode(embed) {
