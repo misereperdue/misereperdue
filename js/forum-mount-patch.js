@@ -7,7 +7,7 @@
   setInterval(updateMount, 500);
   updateMount();
 
-  // Fix notification panel: left-align with top bar, 280px wide
+  // Fix notification panel: right-align with top bar, 280px wide
   function fixNotifPanel() {
     var panel = document.querySelector(".forum-notif-panel");
     if (!panel || panel._posFixed) return;
@@ -15,12 +15,11 @@
     if (!topbar) return;
     var r = topbar.getBoundingClientRect();
     panel.style.top = (r.bottom + 8) + "px";
-    panel.style.left = r.left + "px";
-    panel.style.right = "auto";
+    panel.style.left = "auto";
+    panel.style.right = (window.innerWidth - r.right) + "px";
     panel.style.width = "280px";
     panel._posFixed = true;
   }
-  // Watch for panel creation
   try {
     var obs = new MutationObserver(function() { fixNotifPanel(); });
     obs.observe(document.body, { childList: true, subtree: true });
