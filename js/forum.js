@@ -266,9 +266,16 @@
   function sigVisible() {
     try { return localStorage.getItem("mp_show_sigs") !== "0"; } catch (e) { return true; }
   }
+  var SIG_EMOJI_NET = { "\uD83D\uDC26": "x", "\uD83D\uDCF8": "instagram", "\uD83C\uDFB5": "tiktok", "\u25B6": "youtube" };
+  function upgradeSigSocial(html) {
+    return String(html || "").replace(/(<a href="[^"]*"[^>]*>)(\uD83D\uDC26|\uD83D\uDCF8|\uD83C\uDFB5|\u25B6)\s?/g, function (m, open, emo) {
+      var logo = (window.MPSocialLogos || {})[SIG_EMOJI_NET[emo]] || "";
+      return logo ? open + logo + " " : m;
+    });
+  }
   function signatureHTML(post, compact) {
     if (!post || !post.authorSignature || !sigVisible()) return "";
-    var clean = sanitizeSignature(post.authorSignature);
+    var clean = upgradeSigSocial(sanitizeSignature(post.authorSignature));
     if (!clean.replace(/<[^>]*>/g, "").trim() && clean.indexOf("<img") < 0 && clean.indexOf("<iframe") < 0) return "";
     return '<div class="forum-sig' + (compact ? " compact" : "") + '">' + clean + "</div>";
   }
