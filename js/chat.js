@@ -2450,7 +2450,6 @@
     var sigFallback = null;
     var sigSaveTimer = null;
     function embedLabel(src) {
-      if (/youtube/i.test(src)) return "\uD83C\uDFAC YouTube";
       if (/spotify/i.test(src)) return "\uD83C\uDFB5 Spotify";
       if (/soundcloud/i.test(src)) return "\uD83C\uDFB5 SoundCloud";
       if (/vimeo/i.test(src)) return "\uD83C\uDFAC Vimeo";
@@ -2476,9 +2475,7 @@
       raw = String(raw || "").trim();
       var m = raw.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) || raw.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i);
       var url = m ? m[1] : raw;
-      var yt = url.match(/(?:youtube\.com\/watch\?[^\s]*v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/i);
-      if (yt) return "https://www.youtube.com/embed/" + yt[1];
-      if (/youtube\.com\/embed\//i.test(url)) return url;
+      
       var sp = url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i);
       if (sp) return "https://open.spotify.com/embed/" + sp[1] + "/" + sp[2];
       if (/open\.spotify\.com\/embed\//i.test(url)) return url;
@@ -2551,12 +2548,12 @@
         embBtn.textContent = "\uFF0B Add embed";
         var embBar = document.createElement("div");
         embBar.className = "sig-embed-bar hidden";
-        embBar.innerHTML = '<input type="text" class="sig-embed-input" placeholder="Paste a link or embed code (YouTube, Spotify\u2026)"><button type="button" class="btn accent sig-embed-add">Add</button>';
+        embBar.innerHTML = '<input type="text" class="sig-embed-input" placeholder="Paste a link or embed code (Spotify, SoundCloud, Vimeo\u2026)"><button type="button" class="btn accent sig-embed-add">Add</button>';
         embBtn.addEventListener("click", function () { embBar.classList.toggle("hidden"); });
         embBar.querySelector(".sig-embed-add").addEventListener("click", function () {
           var inp = embBar.querySelector(".sig-embed-input");
           var src = extractEmbedSrc(inp.value);
-          if (!src) { sigStatus.textContent = "That embed isn't supported \u2014 try a YouTube, Spotify, SoundCloud or Vimeo link."; return; }
+          if (!src) { sigStatus.textContent = "That embed isn't supported \u2014 try a Spotify, SoundCloud or Vimeo link."; return; }
           if (sigEmbeds.length >= 2) { sigStatus.textContent = "Two embeds max."; return; }
           sigEmbeds.push({ src: src });
           inp.value = "";
