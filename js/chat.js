@@ -82,6 +82,7 @@
   function badgeHTML(badge) {
     if (badge === "100") return '<span class="chat-badge" title="100" aria-label="100 badge">\u{1F4AF}</span>';
     if (badge === "robot") return '<span class="chat-badge" title="Bot" aria-label="Bot badge">\u{1F916}</span>';
+    if (badge === "member") return '<span class="chat-badge chat-badge-member" title="Member" aria-label="Member badge">\u2B50</span>';
     if (badge === "heart") return '<span class="chat-badge" title="" aria-label="Heart badge"><span class="b-dark">\u{1F90D}</span><span class="b-light">\u{1F5A4}</span></span>';
     return sealHTML();
   }
@@ -582,7 +583,8 @@
         if (!f) return;
         var isVideo = f.type.indexOf("video/") === 0;
         var isGif = f.type === "image/gif";
-        if (f.size > 12 * 1024 * 1024) { attachError("That file is too big (12 MB max)."); return; }
+        var maxMB = (me && (me.member || me.owner)) ? 50 : 12;
+        if (f.size > maxMB * 1024 * 1024) { attachError("That file is too big (" + maxMB + " MB max)."); return; }
         if (isVideo || isGif) {
           var rd = new FileReader();
           rd.onload = function () { uploadAttach(rd.result, isVideo ? "video" : "image"); };
@@ -900,7 +902,8 @@
     dashNav.style.cssText = "display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
     var overviewBtn = document.createElement("button");
     var manageBtn = document.createElement("button");
-    [["Overview", overviewBtn], ["Manage", manageBtn]].forEach(function(pair) {
+    var forumBtn = document.createElement("button");
+    [["Overview", overviewBtn], ["Manage", manageBtn], ["Forum", forumBtn]].forEach(function(pair) {
       var btn = pair[1];
       btn.type = "button";
       btn.textContent = pair[0];
@@ -910,28 +913,37 @@
     overviewBtn.style.color = "var(--ink)";
     dashNav.appendChild(overviewBtn);
     dashNav.appendChild(manageBtn);
+    dashNav.appendChild(forumBtn);
     headRow.appendChild(dashNav);
     inner.appendChild(headRow);
 
     // Two page containers
     var overviewPage = document.createElement("div");
     var managePage = document.createElement("div");
+    var forumPage = document.createElement("div");
     managePage.style.display = "none";
+    forumPage.style.display = "none";
     inner.appendChild(overviewPage);
     inner.appendChild(managePage);
+    inner.appendChild(forumPage);
 
     function showDashPage(which) {
       var isOver = which === "overview";
+      var isMan = which === "manage";
+      var isFor = which === "forum";
       overviewPage.style.display = isOver ? "" : "none";
-      managePage.style.display = isOver ? "none" : "";
-      overviewBtn.style.background = isOver ? "var(--glass-regular-tint)" : "transparent";
-      overviewBtn.style.color = isOver ? "var(--ink)" : "var(--muted)";
-      manageBtn.style.background = isOver ? "transparent" : "var(--glass-regular-tint)";
-      manageBtn.style.color = isOver ? "var(--muted)" : "var(--ink)";
-      if (!isOver && !managePage.dataset.loaded) loadManagePage();
+      managePage.style.display = isMan ? "" : "none";
+      forumPage.style.display = isFor ? "" : "none";
+      [[overviewBtn, isOver], [manageBtn, isMan], [forumBtn, isFor]].forEach(function(p) {
+        p[0].style.background = p[1] ? "var(--glass-regular-tint)" : "transparent";
+        p[0].style.color = p[1] ? "var(--ink)" : "var(--muted)";
+      });
+      if (isMan && !managePage.dataset.loaded) loadManagePage();
+      if (isFor && !forumPage.dataset.loaded) loadForumPage();
     }
     overviewBtn.addEventListener("click", function() { showDashPage("overview"); });
     manageBtn.addEventListener("click", function() { showDashPage("manage"); });
+    forumBtn.addEventListener("click", function() { showDashPage("forum"); });
 
     // Stats row
     var statsRow = document.createElement("div");
@@ -1282,6 +1294,12 @@
           // Disable editing for self/grim (set after isSelf/isGrim are defined below via closure check)
           nmT.dataset.protected = "check";
           nm.appendChild(nmT);
+          if (u.member) {
+            var memTag = document.createElement("span");
+            memTag.style.cssText = "font-size:11px;color:#ffd60a;font-weight:700;";
+            memTag.textContent = " ⭐ MEMBER";
+            nm.appendChild(memTag);
+          }
           if (u.banned) {
             var banTag = document.createElement("span");
             banTag.style.cssText = "font-size:11px;color:#ff6b6b;font-weight:600;";
@@ -1336,6 +1354,25 @@
                   else { alert("Failed."); btn.disabled = false; }
                 }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
             });
+            // Member toggle
+            mkBtn(u.member ? "Unmember" : "Member", u.member ? "#8e8e93" : "#ffd60a", function(btn) {
+              var makeMember = !u.member;
+              var amount = null;
+              if (makeMember) {
+                var inp = prompt("Membership amount ($5-20):", "5");
+                if (inp === null) return;
+                amount = Math.max(5, Math.min(20, parseFloat(inp) || 5));
+              } else {
+                if (!confirm("Remove membership from " + u.username + "?")) return;
+              }
+              btn.disabled = true;
+              api("/api/user/" + encodeURIComponent(u.username) + "/member", {
+                method: "POST", body: { member: makeMember, amount: amount }
+              }).then(function(rr) {
+                  if (rr && rr.ok) { loadManagePageRefresh(); }
+                  else { alert("Failed."); btn.disabled = false; }
+                }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+            });
             // Delete
             mkBtn("Delete", "#ff453a", function(btn) {
               if (!confirm("DELETE " + u.username + " permanently? Their account will be gone.")) return;
@@ -1363,6 +1400,147 @@
         }
         // Make refresh available to buttons
         managePage._refresh = loadManagePageRefresh;
+
+        function loadForumPage() {
+          forumPage.dataset.loaded = "1";
+          forumPage.innerHTML = '<div style="text-align:center;opacity:.5;padding:20px;">Loading…</div>';
+
+          function refresh() {
+            delete forumPage.dataset.loaded;
+            loadForumPage();
+          }
+
+          Promise.all([
+            api("/api/forum/categories"),
+            api("/api/forum/threads")
+          ]).then(function (results) {
+            var cats = (results[0].ok && results[0].categories) || [];
+            var threads = (results[1].ok && results[1].threads) || [];
+            forumPage.innerHTML = "";
+
+            // Categories section
+            var catTitle = document.createElement("div");
+            catTitle.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;";
+            catTitle.textContent = "Categories";
+            forumPage.appendChild(catTitle);
+
+            var catList = document.createElement("div");
+            catList.style.cssText = "display:flex;flex-direction:column;gap:6px;margin-bottom:12px;";
+            cats.forEach(function (cat) {
+              var row = document.createElement("div");
+              row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
+              var nameInput = document.createElement("input");
+              nameInput.type = "text";
+              nameInput.value = cat.name;
+              nameInput.maxLength = 40;
+              nameInput.style.cssText = "flex:1;background:transparent;border:none;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
+              nameInput.addEventListener("change", function () {
+                var v = nameInput.value.trim();
+                if (!v || v === cat.name) { nameInput.value = cat.name; return; }
+                api("/api/forum/categories/" + encodeURIComponent(cat.id), {
+                  method: "PUT", body: { name: v }
+                }).then(function (r) { if (r.ok) refresh(); });
+              });
+              row.appendChild(nameInput);
+
+              var moBtn = document.createElement("button");
+              moBtn.type = "button";
+              moBtn.textContent = cat.membersOnly ? "⭐ Members" : "Public";
+              moBtn.title = "Toggle members-only";
+              moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (cat.membersOnly ? "rgba(255,200,50,.2)" : "transparent") + ";color:var(--ink);";
+              moBtn.addEventListener("click", function () {
+                api("/api/forum/categories/" + encodeURIComponent(cat.id), {
+                  method: "PUT", body: { membersOnly: !cat.membersOnly }
+                }).then(function (r) { if (r.ok) refresh(); });
+              });
+              row.appendChild(moBtn);
+
+              if (cat.id !== "general") {
+                var delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.textContent = "×";
+                delBtn.style.cssText = "font-size:16px;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 6px;";
+                delBtn.addEventListener("click", function () {
+                  if (!confirm("Delete category '" + cat.name + "'? Its threads move to General.")) return;
+                  api("/api/forum/categories/" + encodeURIComponent(cat.id), { method: "DELETE" })
+                    .then(function (r) { if (r.ok) refresh(); });
+                });
+                row.appendChild(delBtn);
+              }
+              catList.appendChild(row);
+            });
+            forumPage.appendChild(catList);
+
+            var newCatRow = document.createElement("div");
+            newCatRow.style.cssText = "display:flex;gap:8px;margin-bottom:20px;";
+            var newCatInput = document.createElement("input");
+            newCatInput.type = "text";
+            newCatInput.placeholder = "New category name";
+            newCatInput.maxLength = 40;
+            newCatInput.style.cssText = "flex:1;padding:8px 12px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);font-size:14px;";
+            var newCatBtn = document.createElement("button");
+            newCatBtn.type = "button";
+            newCatBtn.textContent = "Add";
+            newCatBtn.className = "btn accent";
+            newCatBtn.style.cssText = "padding:8px 16px;font-size:14px;";
+            newCatBtn.addEventListener("click", function () {
+              var v = newCatInput.value.trim();
+              if (!v) return;
+              newCatBtn.disabled = true;
+              api("/api/forum/categories", { method: "POST", body: { name: v } })
+                .then(function (r) { if (r.ok) refresh(); else { alert(r.error || "Failed"); newCatBtn.disabled = false; } });
+            });
+            newCatRow.appendChild(newCatInput);
+            newCatRow.appendChild(newCatBtn);
+            forumPage.appendChild(newCatRow);
+
+            var thTitle = document.createElement("div");
+            thTitle.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;";
+            thTitle.textContent = "Threads (" + threads.length + ")";
+            forumPage.appendChild(thTitle);
+
+            var thList = document.createElement("div");
+            thList.style.cssText = "display:flex;flex-direction:column;gap:6px;";
+            if (!threads.length) {
+              thList.innerHTML = '<div style="opacity:.5;font-size:13px;text-align:center;padding:16px;">No threads yet.</div>';
+            }
+            threads.forEach(function (t) {
+              var row = document.createElement("div");
+              row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
+              var info = document.createElement("div");
+              info.style.cssText = "flex:1;min-width:0;";
+              info.innerHTML = '<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+                (t.pinned ? "📌 " : "") + esc(t.title) + '</div>' +
+                '<div style="font-size:11px;opacity:.5;">' + esc(t.author) + " · " + esc(t.categoryName) + " · " + t.replies + " replies</div>";
+              row.appendChild(info);
+
+              var pinBtn = document.createElement("button");
+              pinBtn.type = "button";
+              pinBtn.textContent = t.pinned ? "Unpin" : "Pin";
+              pinBtn.style.cssText = "font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);background:transparent;color:var(--ink);cursor:pointer;";
+              pinBtn.addEventListener("click", function () {
+                api("/api/forum/thread/" + encodeURIComponent(t.id) + "/pin", { method: "POST" })
+                  .then(function (r) { if (r.ok) refresh(); });
+              });
+              row.appendChild(pinBtn);
+
+              var delBtn = document.createElement("button");
+              delBtn.type = "button";
+              delBtn.textContent = "Delete";
+              delBtn.style.cssText = "font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:none;background:rgba(255,60,60,.15);color:#ff6b6b;cursor:pointer;";
+              delBtn.addEventListener("click", function () {
+                if (!confirm("Delete thread '" + t.title + "' and all its replies?")) return;
+                api("/api/forum/thread/" + encodeURIComponent(t.id), { method: "DELETE" })
+                  .then(function (r) { if (r.ok) refresh(); });
+              });
+              row.appendChild(delBtn);
+              thList.appendChild(row);
+            });
+            forumPage.appendChild(thList);
+          }).catch(function () {
+            forumPage.innerHTML = '<div style="text-align:center;opacity:.5;padding:20px;">Couldn’t load forum data.</div>';
+          });
+        }
 
         if (!r.users.length) {
           managePage.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">No users yet.</div>';
