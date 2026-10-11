@@ -126,6 +126,14 @@ button, input, textarea { font-family: inherit; color: inherit; }
 .panel.on {
   display: block;
 }
+/* Page header slides down smoothly on view switch */
+.panel.on .chat-head {
+  animation: head-drop .32s cubic-bezier(.2,.7,.3,1);
+}
+@keyframes head-drop {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: none; }
+}
 .nav button {
   position: relative;
   z-index: 1;
