@@ -2119,3 +2119,9 @@ nav#nav.nav,
 [data-theme="light"] .nav-wrap .nav {
   background: rgba(255, 255, 255, 0.8) !important;
 }
+
+/* Notification panel slam animation (matches avatar menu) */
+.forum-notif-panel {
+  transform-origin: top right;
+  animation: menuPop .18s cubic-bezier(.2,.9,.3,1.2);
+}
