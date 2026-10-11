@@ -1732,3 +1732,17 @@ button.forum-glass-pill:active { transform: scale(.97); }
   margin-left: auto; background: none; border: none; font-size: 18px;
   color: var(--muted); cursor: pointer; line-height: 1; padding: 4px;
 }
+
+/* Forum spinner (show more replies) */
+.forum-spinner {
+  display: inline-block; width: 14px; height: 14px; vertical-align: -2px;
+  border: 2px solid var(--muted); border-top-color: transparent;
+  border-radius: 50%; animation: forumSpin .7s linear infinite;
+}
+@keyframes forumSpin { to { transform: rotate(360deg); } }
+
+/* Star giving */
+.forum-star-btn { color: var(--accent); }
+.forum-star-btn.given { background: rgba(255, 200, 40, .18); border-color: rgba(255, 200, 40, .5); color: #f5b301; opacity: 1; }
+.forum-star-btn:disabled { cursor: default; }
+.forum-star-count { font-size: 11px; font-weight: 700; color: #f5b301; padding: 5px 6px; }
