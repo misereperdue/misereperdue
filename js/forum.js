@@ -79,10 +79,10 @@
     var meBtn = root.querySelector("#forum-me");
     if (meBtn) meBtn.addEventListener("click", function (e) {
       e.stopPropagation();
-      // Open own profile via chat's me button
-      var chatMe = document.querySelector("#journal .chat-me");
-      if (chatMe) chatMe.click();
-      else if (meInfo && window.MPChat && window.MPChat.openUserSheet) {
+      var topbar = root.querySelector(".forum-topbar");
+      if (window.MPChat && window.MPChat.toggleMeMenu) {
+        window.MPChat.toggleMeMenu(topbar);
+      } else if (meInfo && window.MPChat && window.MPChat.openUserSheet) {
         window.MPChat.openUserSheet(meInfo.username);
       }
     });
@@ -106,6 +106,7 @@
     return '<div class="chat-head forum-topbar">' +
       '<div class="chat-title">Forum</div>' +
       '<div class="chat-head-right">' +
+      (token() ? '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>' : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
@@ -115,7 +116,6 @@
     var html = forumTopBar() +
       '<div class="forum-head">' +
       '<h2 class="forum-title">Threads</h2>' +
-      (token() ? '<button type="button" class="btn accent forum-new-btn" id="forum-new">New thread</button>' : "") +
       "</div>";
 
     // Category pills
@@ -189,8 +189,8 @@
           .then(function (r) { if (r.ok) { view.name = "list"; view.threadId = null; render(); } });
       });
     });
-    var nb = root.querySelector("#forum-new");
-    if (nb) nb.addEventListener("click", function () {
+    var nbTop = root.querySelector("#forum-new-top");
+    if (nbTop) nbTop.addEventListener("click", function () {
       view.name = "new";
       renderNew();
     });
