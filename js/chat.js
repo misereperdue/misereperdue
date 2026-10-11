@@ -2431,7 +2431,7 @@
     var sigEmbedsEl = mk("div", "sig-embeds", sigBubble);
     var sigStatus = mk("div", "chat-bio-count", sheet);
     var sigEmbeds = [], sigEditor = null, sigFallback = null, sigSaveTimer = null;
-    function socialGlyph(n) { return n === "x" ? "\uD83D\uDC26" : n === "instagram" ? "\uD83D\uDCF8" : n === "tiktok" ? "\uD83C\uDFB5" : "\u25B6"; }
+    function socialGlyph(n) { return (window.MPSocialLogos || {})[n] || ""; }
     function parseSocialUrl(raw) {
       var u = String(raw || "").trim(), m, network, user;
       if ((m = u.match(/^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,30})/i))) { network = "x"; user = m[1]; }
@@ -2444,14 +2444,15 @@
     }
     function embedLabel(e) {
       if (!e) return "\uD83D\uDD17 Embed";
-      if (e.kind === "social") return socialGlyph(e.network) + " " + e.handle;
+      if (e.kind === "social") return socialGlyph(e.network) + " " + esc(e.handle);
       var s = e.src || "";
       return /spotify/i.test(s) ? "\uD83C\uDFB5 Spotify" : /soundcloud/i.test(s) ? "\uD83C\uDFB5 SoundCloud" : /vimeo/i.test(s) ? "\uD83C\uDFAC Vimeo" : "\uD83D\uDD17 Embed";
     }
     function paintSigEmbeds() {
       sigEmbedsEl.innerHTML = "";
       sigEmbeds.forEach(function (e, i) {
-        var chip = mk("span", "sig-chip", sigEmbedsEl, embedLabel(e) + " ");
+        var chip = mk("span", "sig-chip", sigEmbedsEl);
+        chip.insertAdjacentHTML("afterbegin", embedLabel(e) + " ");
         var rm = mk("button", "sig-chip-x", chip, "\u00D7");
         rm.type = "button";
         rm.setAttribute("aria-label", "Remove embed");
