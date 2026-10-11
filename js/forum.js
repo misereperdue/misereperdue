@@ -171,6 +171,14 @@
 
   var replyEditor = null;
   var newEditor = null;
+  var editEditor = null;
+  var editThumbId = null;
+  function destroyEditEditor() { if (editEditor) { try { editEditor.destroy(); } catch (e) {} editEditor = null; } }
+  function plainToHTML(text) {
+    return String(text || "").split(/\n\s*\n/).map(function (para) {
+      return "<p>" + esc(para).replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
   var editorLibPromise = null;
   function loadEditorLib() {
     if (!editorLibPromise) {
@@ -368,7 +376,7 @@
     reader.onerror = function () { done(null); };
     reader.readAsDataURL(file);
   }
-  function createEditor(mount, placeholder) {
+  function createEditor(mount, placeholder, initialHTML) {
     return loadEditorLib().then(function (lib) {
       if (!lib) return null;
       var editor = new lib.Editor({
@@ -379,7 +387,7 @@
           lib.Link.configure({ openOnClick: false, autolink: true }),
           lib.Image.configure({ inline: false })
         ],
-        content: "",
+        content: initialHTML || "",
         editorProps: { attributes: { class: "forum-editor-input" } }
       });
       wireToolbar(editor, mount);
@@ -406,6 +414,7 @@
   }
 
   function renderList() {
+    destroyEditEditor();
     updateTopBtn();
     var html = '<div class="forum-anim">' + forumTopBar();
 
@@ -436,6 +445,7 @@
           '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + " \u00B7 \uD83D\uDCAC " + t.replies + "</span></span>" +
           "</span>" +
+          (t.excerpt ? '<span class="forum-thread-excerpt">' + esc(t.excerpt) + "</span>" : "") +
           (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
         if (isOwner) {
@@ -535,6 +545,7 @@
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
+          ((me && (isOwner || me.username.toLowerCase() === String(t.author).toLowerCase())) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") + "</div>" + "</article>";
 
       html += '<div class="forum-replies">';
@@ -720,6 +731,8 @@
             .then(function (r) { if (r.ok) backToList(); });
         });
       });
+      var editBtn = root.querySelector("#forum-edit-btn");
+      if (editBtn) editBtn.addEventListener("click", function () { renderEdit(); });
 
       var send = root.querySelector("#forum-send");
       if (send) send.addEventListener("click", function () {
@@ -868,7 +881,100 @@
 
   /* ---------- new thread ---------- */
 
+  function renderEdit() {
+    destroyEditEditor();
+    if (replyEditor) { try { replyEditor.destroy(); } catch (e) {} replyEditor = null; }
+    var t = cache.thread;
+    if (!t) { renderList(); return; }
+    view.name = "edit";
+    editThumbId = t.thumb || null;
+    var html = forumTopBar() +
+      '<div class="forum-head">' +
+      '<button type="button" class="forum-back forum-glass-pill" id="forum-edit-back">\u2190 Back</button>' +
+      '<h2 class="forum-title">Edit post</h2></div>';
+    html += '<div class="forum-form">' +
+      '<label class="chat-field"><span>Title</span>' +
+      '<input type="text" id="forum-edit-title" maxlength="120" value="' + esc(t.title) + '"></label>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
+      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
+      '<div class="forum-thumb-row">' +
+      '<span class="forum-thumb-preview" id="forum-ethumb-preview">' + (t.thumb ? '<img src="' + API + "/api/media/" + esc(t.thumb) + '" alt="">' : "") + '</span>' +
+      '<button type="button" class="forum-admin-btn" id="forum-ethumb-add">' + (t.thumb ? "Change thumbnail" : "Add thumbnail") + '</button>' +
+      '<button type="button" class="forum-admin-btn forum-admin-del' + (t.thumb ? "" : " hidden") + '" id="forum-ethumb-remove">Remove</button>' +
+      '<input type="file" id="forum-ethumb-input" accept="image/*" class="hidden">' +
+      "</div></div>" +
+      '<div class="forum-edit-actions">' +
+      '<button type="button" class="btn" id="forum-edit-cancel">Cancel</button>' +
+      '<button type="button" class="btn accent" id="forum-edit-save">Save changes</button></div></div>';
+    root.innerHTML = html;
+    window.scrollTo(0, 0);
+    if (window.MPScroll) MPScroll.pinTop(1500);
+    wireAvatars();
+    var rerender = function () { view.name = "thread"; renderThread(); };
+    root.querySelector("#forum-edit-back").addEventListener("click", rerender);
+    root.querySelector("#forum-edit-cancel").addEventListener("click", rerender);
+    var editMount = root.querySelector("#forum-edit-editor");
+    if (editMount) {
+      createEditor(editMount, "Edit your post\u2026", t.rich ? t.content : plainToHTML(t.content)).then(function (ed) {
+        if (ed) { editEditor = ed; return; }
+        var wrap = document.createElement("div");
+        wrap.innerHTML = '<textarea id="forum-edit-content" rows="6" maxlength="5000">' + esc(t.rich ? String(t.content).replace(/<[^>]*>/g, " ") : t.content) + "</textarea>";
+        editMount.replaceWith(wrap.firstChild);
+      });
+    }
+    var eInput = root.querySelector("#forum-ethumb-input");
+    var ePreview = root.querySelector("#forum-ethumb-preview");
+    var eAdd = root.querySelector("#forum-ethumb-add");
+    var eRemove = root.querySelector("#forum-ethumb-remove");
+    if (eAdd) eAdd.addEventListener("click", function () { if (eInput) eInput.click(); });
+    if (eRemove) eRemove.addEventListener("click", function () {
+      editThumbId = null;
+      if (ePreview) ePreview.innerHTML = "";
+      eRemove.classList.add("hidden");
+      if (eAdd) eAdd.textContent = "Add thumbnail";
+    });
+    if (eInput) eInput.addEventListener("change", function () {
+      var file = eInput.files && eInput.files[0];
+      if (!file) return;
+      if (eAdd) { eAdd.disabled = true; eAdd.textContent = "Uploading\u2026"; }
+      cropSquareDataUrl(file).then(function (dataUrl) {
+        return api("/api/media", { method: "POST", body: { dataUrl: dataUrl, kind: "image" } });
+      }).then(function (r) {
+        if (eAdd) { eAdd.disabled = false; eAdd.textContent = "Change thumbnail"; }
+        if (r && r.ok && r.id) {
+          editThumbId = r.id;
+          if (ePreview) ePreview.innerHTML = '<img src="' + API + "/api/media/" + r.id + '" alt="">';
+          if (eRemove) eRemove.classList.remove("hidden");
+        } else {
+          alert("Thumbnail upload failed");
+        }
+      }).catch(function () {
+        if (eAdd) { eAdd.disabled = false; eAdd.textContent = "Change thumbnail"; }
+        alert("Thumbnail upload failed");
+      });
+    });
+    root.querySelector("#forum-edit-save").addEventListener("click", function () {
+      var title = root.querySelector("#forum-edit-title").value.trim();
+      var content = "", rich = false;
+      if (editEditor) {
+        if (!editEditor.isEmpty) { content = editEditor.getHTML(); rich = true; }
+      } else {
+        var cta = root.querySelector("#forum-edit-content");
+        content = cta ? cta.value.trim() : "";
+      }
+      if (!title || !content) { alert("Title and content required"); return; }
+      api("/api/forum/thread/" + encodeURIComponent(t.id), {
+        method: "PUT", body: { title: title, content: content, rich: rich, thumb: editThumbId }
+      }).then(function (res) {
+        if (res.ok) { destroyEditEditor(); view.name = "thread"; renderThread(); }
+        else { alert(res.error || "Failed to save"); }
+      });
+    });
+  }
+
   function renderNew() {
+    destroyEditEditor();
     var html = forumTopBar() +
       '<div class="forum-head">' +
       '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button>' +
