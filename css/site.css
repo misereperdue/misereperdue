@@ -1852,3 +1852,28 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 /* Preview cards use normal text color, not link blue */
 .forum-post-body a.forum-linkcard { color: inherit; }
+
+/* Floating back-to-top button (thread view) */
+.forum-topbtn {
+  position: fixed;
+  right: 18px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  z-index: 40;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(18, 18, 26, 0.55);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec), 0 10px 26px rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.forum-topbtn svg { width: 21px; height: 21px; }
+.forum-topbtn.show { opacity: 1; transform: none; pointer-events: auto; }
+[data-theme="light"] .forum-topbtn { background: rgba(255, 255, 255, 0.55); }
