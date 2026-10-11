@@ -184,6 +184,34 @@
   setTimeout(replaceBell, 100);
   setInterval(replaceBell, 2000);
 
+  // Rename Forum to Globe everywhere
+  function renameForumToGlobe() {
+    // Update the title
+    document.querySelectorAll(".chat-title").forEach(function(el) {
+      if (el.textContent.trim() === "Forum") {
+        el.textContent = "Globe";
+      }
+    });
+    // Update any other Forum text (but not in code/attributes)
+    var walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+    var node;
+    while (node = walker.nextNode()) {
+      if (node.nodeValue && node.nodeValue.trim() === "Forum") {
+        // Don't replace in script/style tags
+        var parent = node.parentElement;
+        if (parent && (parent.tagName === "SCRIPT" || parent.tagName === "STYLE")) continue;
+        node.nodeValue = node.nodeValue.replace("Forum", "Globe");
+      }
+    }
+  }
+  setTimeout(renameForumToGlobe, 500);
+  setInterval(renameForumToGlobe, 2000);
+
 
 
 
