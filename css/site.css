@@ -1921,7 +1921,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-edit-actions .btn { flex: 1; }
 
 /* Pin bubble in the list bottom bar */
-.forum-pin-bubble { width: 30px; height: 30px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(255,255,255,.09); border: var(--glass-hairline); align-self: center; }
+.forum-pin-bubble { width: 30px; height: 30px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(255,255,255,.09); border: 1px solid rgba(255, 69, 58, .35); box-shadow: 0 0 12px rgba(255, 69, 58, .45); align-self: center; }
 
 /* Forum tags */
 .forum-tag { appearance: none; border: var(--glass-hairline); background: rgba(255,255,255,.07); color: var(--ink); border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; align-self: center; }
