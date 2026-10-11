@@ -705,6 +705,12 @@
         body.appendChild(host);
         var renderCard = function (embed) {
           if (!embed || !embed.title) { host.remove(); return; }
+          var linkText = (a.textContent || "").trim();
+          if (/^https?:\/\//i.test(linkText)) {
+            a.style.display = "none";
+            var p = a.closest("p");
+            if (p && !p.textContent.trim()) p.style.display = "none";
+          }
           var card = document.createElement("a");
           card.className = "forum-linkcard";
           card.href = embed.url || url;
