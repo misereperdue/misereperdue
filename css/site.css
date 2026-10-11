@@ -1655,3 +1655,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-avatar-btn:active { transform: scale(.95); }
 .forum-post-author .chat-badge { margin-left: 4px; vertical-align: -2px; }
 .forum-thread-meta .chat-badge { vertical-align: -2px; }
+
+/* Forum top bar new thread button */
+.forum-topbar-new { font-size: 13px; padding: 7px 14px; white-space: nowrap; }
+.chat-head-right { display: flex; align-items: center; gap: 8px; }
