@@ -2771,6 +2771,7 @@
   window.MPChat.toggleMeMenu = toggleMeMenu;
   window.MPChat.badgeHTML = badgeHTML;
   window.MPChat.avatarNode = avatarNode;
+  window.MPChat.badgeFor = badgeFor;
   window.MPChat.getMe = function() { return me; };
   window.MPChat.scrollToLatest = function () {
     var jp = document.getElementById("journal");
