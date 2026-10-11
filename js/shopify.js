@@ -45,7 +45,7 @@ var MPShopify = (function () {
         optValues[o.name][o.value] = true;
         chosen[o.name] = o.value;
       });
-      if (v.id) rawVariants.push({ id: v.id, opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable });
+      if (v.id) rawVariants.push({ id: v.id, opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable, price: v.price ? parseFloat(v.price.amount || "0") : null });
     });
     var optionName = null;
     for (var oi = 0; oi < optOrder.length; oi++) {
@@ -59,7 +59,7 @@ var MPShopify = (function () {
     if (!optionName && optOrder.length) optionName = optOrder[0];
     var sizes = optionName ? Object.keys(optValues[optionName]) : [];
     var variantList = rawVariants.map(function (rv) {
-      return { id: rv.id, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty };
+      return { id: rv.id, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty, price: rv.price };
     });
     var stockQty = 0, stockTracked = false;
     variantList.forEach(function (vv) { if (vv.qty != null) { stockTracked = true; stockQty += vv.qty; } });
@@ -77,6 +77,7 @@ var MPShopify = (function () {
       details: (n.description || "").slice(0, 400),
       sizes: sizes.length ? sizes : null,
       variantList: variantList,
+      priceBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.price != null) m[vv.size] = vv.price; return m; }, {}),
       stock: stockTracked ? stockQty : null,
       available: n.availableForSale !== false
     };
@@ -86,7 +87,7 @@ var MPShopify = (function () {
     var query = "{ products(first: 24) { edges { node { id title handle description " +
       "availableForSale priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable selectedOptions { name value } } } } } } } }";
+      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable price { amount currencyCode } selectedOptions { name value } } } } } } } }";
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
