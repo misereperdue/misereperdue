@@ -96,6 +96,19 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
+  // Fix chat scroll glitch: disable the opacity fade that causes message duplication
+  // The fade logic in chat.js sets opacity on scroll, which glitches on iOS
+  try {
+    var chatFix = document.createElement("style");
+    chatFix.textContent = [
+      // Disable the fade effect entirely - messages stay fully visible
+      ".msg[data-fade]{opacity:1!important;pointer-events:auto!important;}",
+      // Force proper compositing to prevent visual duplication
+      "#chat-msgs,.chat-msgs{transform:translateZ(0);-webkit-transform:translateZ(0);}"
+    ].join("");
+    document.head.appendChild(chatFix);
+  } catch (e) {}
+
   // Reserve space for async forum elements to prevent layout shift
   // Admin buttons (Pin/Delete) appear after /api/me resolves - reserve space now
   try {
