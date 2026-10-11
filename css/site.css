@@ -1573,9 +1573,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 
 /* Auth header */
 .chat-auth-head {
-  text-align: center;
+  text-align: left;
   margin-bottom: 18px;
-  padding: 0 8px;
+  padding: 0 4px;
 }
 .chat-auth-title {
   font-size: 17px;
