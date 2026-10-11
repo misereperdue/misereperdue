@@ -1134,11 +1134,39 @@
           head.appendChild(avW);
           var nm = document.createElement("div");
           nm.style.cssText = "flex:1;min-width:0;";
-          var nmT = document.createElement("div");
-          nmT.style.cssText = "font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-          nmT.textContent = u.username + (u.banned ? " (banned)" : "");
+          var nmT = document.createElement("input");
+          nmT.type = "text";
+          nmT.value = u.username;
+          nmT.spellcheck = false;
+          nmT.autocomplete = "off";
+          nmT.style.cssText = "font-size:14px;font-weight:700;background:transparent;border:none;outline:none;color:#fff;width:100%;padding:0;";
           if (u.banned) nmT.style.color = "#ff6b6b";
+          nmT.setAttribute("aria-label", "Username");
+          // Save on blur or Enter
+          var origName = u.username;
+          function saveName() {
+            var nn = nmT.value.trim();
+            if (!nn || nn.toLowerCase() === origName.toLowerCase()) { nmT.value = origName; return; }
+            if (!/^[a-z0-9_]{3,16}$/i.test(nn)) { alert("Username must be 3-16 chars (letters, numbers, _)"); nmT.value = origName; return; }
+            nmT.disabled = true;
+            api("/api/user/" + encodeURIComponent(origName) + "/rename", { method: "POST", body: { newUsername: nn } })
+              .then(function(rr) {
+                nmT.disabled = false;
+                if (rr && rr.ok) { origName = nn; nmT.value = nn; }
+                else { alert((rr && rr.error) || "Rename failed."); nmT.value = origName; }
+              }).catch(function() { nmT.disabled = false; nmT.value = origName; alert("Couldn't reach server."); });
+          }
+          nmT.addEventListener("blur", saveName);
+          nmT.addEventListener("keydown", function(e) { if (e.key === "Enter") nmT.blur(); });
+          // Disable editing for self/grim (set after isSelf/isGrim are defined below via closure check)
+          nmT.dataset.protected = "check";
           nm.appendChild(nmT);
+          if (u.banned) {
+            var banTag = document.createElement("span");
+            banTag.style.cssText = "font-size:11px;color:#ff6b6b;font-weight:600;";
+            banTag.textContent = " (banned)";
+            nm.appendChild(banTag);
+          }
           var pts = document.createElement("div");
           pts.style.cssText = "font-size:12px;opacity:.5;";
           pts.textContent = "★ " + (u.points || 0) + " · Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -1151,6 +1179,10 @@
           acts.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;";
           var isSelf = me && u.username.toLowerCase() === me.username.toLowerCase();
           var isGrim = u.username.toLowerCase() === "grim";
+          if ((isSelf || isGrim) && nmT.dataset.protected === "check") {
+            nmT.disabled = true;
+            nmT.style.opacity = ".8";
+          }
 
           function mkBtn(label, color, fn) {
             var b = document.createElement("button");
@@ -1163,21 +1195,8 @@
           }
 
           if (!isSelf && !isGrim) {
-            // Rename
-            mkBtn("Rename", "#fff", function(btn) {
-              var nn = prompt("New username for " + u.username + ":", u.username);
-              if (!nn || nn.trim().toLowerCase() === u.username.toLowerCase()) return;
-              nn = nn.trim();
-              if (!/^[a-z0-9_]{3,16}$/i.test(nn)) { alert("Username must be 3-16 chars (letters, numbers, _)"); return; }
-              btn.disabled = true;
-              api("/api/user/" + encodeURIComponent(u.username) + "/rename", { method: "POST", body: { newUsername: nn } })
-                .then(function(rr) {
-                  if (rr && rr.ok) { loadManagePageRefresh(); }
-                  else { alert((rr && rr.error) || "Rename failed."); btn.disabled = false; }
-                }).catch(function() { alert("Couldn't reach server."); btn.disabled = false; });
-            });
             // Clear messages
-            mkBtn("Clear msgs", "#ff9f0a", function(btn) {
+            mkBtn("Clear", "#ff9f0a", function(btn) {
               if (!confirm("Delete all messages from " + u.username + "?")) return;
               btn.disabled = true;
               api("/api/user/" + encodeURIComponent(u.username) + "/clear-messages", { method: "POST", body: {} })
