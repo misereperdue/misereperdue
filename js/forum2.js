@@ -354,6 +354,30 @@
       }
     });
   }
+  function convertFilePlaceholders(root) {
+    if (!root || !root.querySelectorAll) return;
+    // Find text nodes containing [mpfile:url|name] and replace with row HTML
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (tn) {
+      var txt = tn.textContent;
+      if (txt.indexOf("[mpfile:") < 0) return;
+      var div = document.createElement("div");
+      div.innerHTML = txt.replace(/\[mpfile:([^\]|]+)\|([^\]]+)\]/g, function (m, url, name) {
+        var safeUrl = url.replace(/"/g, "%22");
+        var safeName = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px 4px 10px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);">' +
+          '<span style="color:#fff;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + safeName + '</span>' +
+          '<a style="width:36px;height:36px;border-radius:50%;flex:none;background:rgba(140,160,255,.16);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;text-decoration:none;" href="' + safeUrl + '" download aria-label="Download">' +
+          '<svg viewBox="0 0 24 24" style="width:28px;height:28px;display:block;" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div>';
+      });
+      // Replace text node with the parsed nodes
+      var frag = document.createDocumentFragment();
+      while (div.firstChild) frag.appendChild(div.firstChild);
+      tn.parentNode.replaceChild(frag, tn);
+    });
+  }
   function enhanceFileLinks(root) {
     if (!root || !root.querySelectorAll) return;
     root.querySelectorAll('a[href*="/api/media/"]').forEach(function (a) {
@@ -660,10 +684,9 @@
         uploadEditorFile(file, function (res) {
           if (!res) return;
           var fname = (res.name || "File").replace(/\.[a-z0-9]+$/i, "") || "File";
-          editor.chain().focus().insertContent({
-            type: "fileRow",
-            attrs: { url: res.url, name: fname }
-          }).run();
+          // Insert as text placeholder - bodyHTML converts to pretty row at render time
+          // (bypasses TipTap HTML stripping)
+          editor.chain().focus().insertContent("[mpfile:" + res.url + "|" + fname + "]").run();
         });
       });
     }
@@ -939,7 +962,7 @@
 
     html += "</div>";
     root.innerHTML = html;
-    enhanceFileLinks(root);
+    convertFilePlaceholders(root); enhanceFileLinks(root);
 
     wireAvatars();
     // Content is painted; now pin to top (images loading later won't shift us)
@@ -1104,7 +1127,7 @@
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       applyLockGates(cache.thread);
-      enhanceFileLinks(root);
+      convertFilePlaceholders(root); enhanceFileLinks(root);
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
