@@ -48,6 +48,7 @@
     }
   } catch (e) {}
 
+
   try {
     var obs = new MutationObserver(function() {
       fixNotifPanel();
