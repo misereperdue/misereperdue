@@ -370,7 +370,7 @@
       dl.href = a.getAttribute("href");
       dl.setAttribute("download", "");
       dl.setAttribute("aria-label", "Download");
-      dl.innerHTML = '<span aria-hidden="true">\u2B07\uFE0F</span>';
+      dl.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>';
       wrap.appendChild(nm);
       wrap.appendChild(dl);
       a.replaceWith(wrap);
@@ -660,7 +660,7 @@
         uploadEditorFile(file, function (res) {
           if (!res) return;
           editor.chain().focus().insertContent(
-            '<div class="mp-file"><span class="mp-file-name">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><span aria-hidden="true">\u2B07\uFE0F</span></a></div><p></p>'
+            '<div class="mp-file"><span class="mp-file-name">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></a></div><p></p>'
           ).run();
         });
       });
