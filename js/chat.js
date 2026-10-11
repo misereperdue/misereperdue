@@ -215,8 +215,13 @@
                 gb.disabled = false;
                 if (r && r.ok && r.user) {
                   u = r.user;
-                  gRow.querySelectorAll(".chat-badge-opt").forEach(function (n) {
-                    n.classList.toggle("on", n === gb);
+                  var userBadges = u.badges || [];
+                  gRow.querySelectorAll(".chat-badge-opt").forEach(function (n, idx) {
+                    var b = ["100", "heart", "robot"][idx];
+                    var has = userBadges.indexOf(b) !== -1;
+                    n.classList.toggle("on", n === gb && has);
+                    n.classList.toggle("has", has);
+                    n.classList.toggle("not-has", !has);
                   });
                   var hw = bigHold.querySelector(".chat-avatar-wrap");
                   if (hw) {
