@@ -1688,12 +1688,12 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-back.forum-glass-pill { color: var(--accent); }
 .forum-author-pts { font-size: 12px; color: var(--muted); padding: 4px 10px; }
 
-/* Smooth forum content entrance (plays when content renders) */
-@keyframes forumViewIn {
+/* Panels fade in as one consistent motion on view switch */
+@keyframes panelIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.forum-anim { animation: forumViewIn .25s ease; }
+.panel.on { animation: panelIn .18s ease; }
 
 /* Nested replies (Threads-style) */
 .forum-nested { margin-left: 0; position: relative; }
