@@ -74,7 +74,7 @@ var MPShopify = (function () {
       currency: price.currencyCode || "CAD",
       images: images,
       image: images[0] || "",
-      details: (n.description || "").slice(0, 400),
+      details: (n.description || "").slice(0, 1000),
       sizes: sizes.length ? sizes : null,
       variantList: variantList,
       priceBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.price != null) m[vv.size] = vv.price; return m; }, {}),
