@@ -95,4 +95,44 @@
     obs.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
+
+  // Debounce MPForum.render to prevent rapid re-render glitching
+  // If render is called multiple times within 800ms, only the last one runs
+  try {
+    var renderTimer = null;
+    var origRender = null;
+    function wrapRender() {
+      if (window.MPForum && MPForum.render && !origRender) {
+        origRender = MPForum.render;
+        MPForum.render = function() {
+          var args = arguments;
+          var ctx = this;
+          if (renderTimer) clearTimeout(renderTimer);
+          renderTimer = setTimeout(function() {
+            renderTimer = null;
+            origRender.apply(ctx, args);
+          }, 800);
+        };
+        // Also debounce goHome which triggers render
+        var origGoHome = MPForum.goHome;
+        if (origGoHome) {
+          MPForum.goHome = function() {
+            var args = arguments;
+            var ctx = this;
+            if (renderTimer) clearTimeout(renderTimer);
+            renderTimer = setTimeout(function() {
+              renderTimer = null;
+              origGoHome.apply(ctx, args);
+            }, 800);
+          };
+        }
+      }
+    }
+    // Try immediately and on interval until MPForum exists
+    wrapRender();
+    var wrapInt = setInterval(function() {
+      wrapRender();
+      if (origRender) clearInterval(wrapInt);
+    }, 500);
+  } catch (e) {}
 })();
