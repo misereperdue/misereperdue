@@ -262,7 +262,7 @@
         h += "</article>";
         if (kids.length) {
           var visibleKids = expanded ? kids : kids.slice(0, 1);
-          h += '<div class="forum-children">';
+          h += '<div class="forum-thread-tail"><div class="forum-children">';
           visibleKids.forEach(function (k) { h += replyHTML(k, depth + 1); });
           h += "</div>";
           if (!expanded && kids.length > 1) {
@@ -270,6 +270,7 @@
           } else if (expanded) {
             h += '<button type="button" class="forum-show-replies" data-hidereplies="' + esc(r.id) + '">Hide replies</button>';
           }
+          h += "</div>";
         }
         return h;
       }
