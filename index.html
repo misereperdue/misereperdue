@@ -37,7 +37,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=209">
+  <link rel="stylesheet" href="css/site.css?v=210">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -124,7 +124,7 @@
   </script>
   <script src="js/shop.js?v=27"></script>
   <script src="js/chat.js?v=89"></script>
-  <script src="js/forum.js?v=16"></script>
+  <script src="js/forum.js?v=17"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -199,9 +199,8 @@
       if (reading) {
         window.scrollTo(0, 0);
       } else if (view === "journal") {
-        if (viewScroll.journal !== undefined) {
-          window.scrollTo(0, viewScroll.journal);
-        } else if (window.MPChat && MPChat.scrollToLatest) {
+        // Chat always opens at the newest message
+        if (window.MPChat && MPChat.scrollToLatest) {
           MPChat.scrollToLatest();
         } else {
           window.scrollTo(0, document.documentElement.scrollHeight);
