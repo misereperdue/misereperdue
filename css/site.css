@@ -2043,3 +2043,6 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-ai-status { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
 /* File attachments in posts */
 .forum-post-body a[href*="/api/media/"] { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 12px; border: var(--glass-hairline); background: rgba(255,255,255,.07); font-size: 13px; font-weight: 600; text-decoration: none; margin: 4px 0; }
+
+/* Social link chips in signatures */
+.forum-sig div > a[href^="http"] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.08); border: var(--glass-hairline); font-size: 12px; font-weight: 700; text-decoration: none; margin: 2px 6px 2px 0; }
