@@ -1464,6 +1464,7 @@
           var pts = document.createElement("div");
           pts.style.cssText = "font-size:12px;opacity:.5;";
           pts.textContent = "★ " + (u.points || 0) + " · Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+          if (u.member) pts.textContent += " · ★ Member" + (u.memberAmount ? " $" + u.memberAmount : "");
           nm.appendChild(pts);
           head.appendChild(nm);
           card.appendChild(head);
@@ -1511,22 +1512,26 @@
             });
             // Member toggle
             mkBtn(u.member ? "Unmember" : "Member", u.member ? "#8e8e93" : "#ffd60a", function(btn) {
-              var makeMember = !u.member;
-              var amount = null;
-              if (makeMember) {
-                var inp = prompt("Membership amount ($5-20):", "5");
-                if (inp === null) return;
-                amount = Math.max(5, Math.min(20, parseFloat(inp) || 5));
-              } else {
+              if (u.member) {
                 if (!confirm("Remove membership from " + u.username + "?")) return;
+                btn.disabled = true;
+                api("/api/user/" + encodeURIComponent(u.username) + "/member", {
+                  method: "POST", body: { member: false, amount: null }
+                }).then(function(rr) {
+                    if (rr && rr.ok) { loadManagePageRefresh(); }
+                    else { alert("Failed."); btn.disabled = false; }
+                  }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+                return;
               }
-              btn.disabled = true;
-              api("/api/user/" + encodeURIComponent(u.username) + "/member", {
-                method: "POST", body: { member: makeMember, amount: amount }
-              }).then(function(rr) {
-                  if (rr && rr.ok) { loadManagePageRefresh(); }
-                  else { alert("Failed."); btn.disabled = false; }
-                }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+              memberAmountDialog(u.username, function(amount) {
+                btn.disabled = true;
+                api("/api/user/" + encodeURIComponent(u.username) + "/member", {
+                  method: "POST", body: { member: true, amount: amount }
+                }).then(function(rr) {
+                    if (rr && rr.ok) { loadManagePageRefresh(); }
+                    else { alert("Failed."); btn.disabled = false; }
+                  }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+              });
             });
             // Delete
             mkBtn("Delete", "#ff453a", function(btn) {
@@ -1548,6 +1553,51 @@
           card.appendChild(acts);
           managePage.appendChild(card);
         });
+
+        function memberAmountDialog(username, onPick) {
+          var back = document.createElement("div");
+          back.className = "mp-dialog-back";
+          var box = document.createElement("div");
+          box.className = "mp-dialog";
+          var title = document.createElement("div");
+          title.className = "mp-dialog-title";
+          title.textContent = "Membership for " + username;
+          box.appendChild(title);
+          var segs = document.createElement("div");
+          segs.className = "member-segs";
+          var picked = 5;
+          [5, 10, 15, 20].forEach(function(a, i) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.textContent = "$" + a;
+            if (i === 0) b.className = "on";
+            b.addEventListener("click", function() {
+              picked = a;
+              segs.querySelectorAll("button").forEach(function(x) { x.classList.remove("on"); });
+              b.classList.add("on");
+            });
+            segs.appendChild(b);
+          });
+          box.appendChild(segs);
+          var row = document.createElement("div");
+          row.className = "mp-dialog-actions";
+          var cancel = document.createElement("button");
+          cancel.type = "button";
+          cancel.className = "mp-dialog-cancel";
+          cancel.textContent = "Cancel";
+          cancel.addEventListener("click", function() { back.remove(); });
+          var grant = document.createElement("button");
+          grant.type = "button";
+          grant.className = "mp-dialog-grant";
+          grant.textContent = "Grant";
+          grant.addEventListener("click", function() { back.remove(); onPick(picked); });
+          row.appendChild(cancel);
+          row.appendChild(grant);
+          box.appendChild(row);
+          back.appendChild(box);
+          back.addEventListener("click", function(e) { if (e.target === back) back.remove(); });
+          document.body.appendChild(back);
+        }
 
         function loadManagePageRefresh() {
           delete managePage.dataset.loaded;
