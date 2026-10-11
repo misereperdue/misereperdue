@@ -1901,7 +1901,7 @@
     meMenu = null;
     document.removeEventListener("click", closeMeMenu);
   }
-  function toggleMeMenu() {
+  function toggleMeMenu(anchorEl) {
     if (meMenu) { closeMeMenu(); return; }
     closeMeMenu();
     meMenu = document.createElement("div");
@@ -1946,8 +1946,8 @@
     meMenu.appendChild(out);
 
     document.body.appendChild(meMenu);
-    // Position under the chat top bar, aligned to its right edge
-    var head = root.querySelector(".chat-head");
+    // Position under the given anchor (or chat top bar), aligned to its right edge
+    var head = anchorEl || root.querySelector(".chat-head");
     if (head) {
       var rect = head.getBoundingClientRect();
       meMenu.style.top = (rect.bottom + 8) + "px";
@@ -2456,6 +2456,7 @@
   // Expose for forum.js
   window.MPChat = window.MPChat || {};
   window.MPChat.openUserSheet = openUserSheet;
+  window.MPChat.toggleMeMenu = toggleMeMenu;
   window.MPChat.badgeHTML = badgeHTML;
   window.MPChat.avatarNode = avatarNode;
   window.MPChat.getMe = function() { return me; };
