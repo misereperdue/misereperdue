@@ -869,11 +869,49 @@
     inner.className = "msg-popup-inner dashboard-sheet";
     inner.style.maxWidth = "min(520px, 94vw)";
 
-    // Title
+    // Title + nav tabs
+    var headRow = document.createElement("div");
+    headRow.style.cssText = "display:flex;align-items:center;gap:12px;margin-bottom:16px;";
     var title = document.createElement("h3");
-    title.style.cssText = "margin:0 0 16px;font-size:20px;font-weight:700;";
+    title.style.cssText = "margin:0;font-size:20px;font-weight:700;";
     title.textContent = "Dashboard";
-    inner.appendChild(title);
+    headRow.appendChild(title);
+    var dashNav = document.createElement("div");
+    dashNav.style.cssText = "display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:10px;padding:3px;";
+    var overviewBtn = document.createElement("button");
+    var manageBtn = document.createElement("button");
+    [["Overview", overviewBtn], ["Manage", manageBtn]].forEach(function(pair) {
+      var btn = pair[1];
+      btn.type = "button";
+      btn.textContent = pair[0];
+      btn.style.cssText = "padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:rgba(255,255,255,.6);";
+    });
+    overviewBtn.style.background = "rgba(255,255,255,.12)";
+    overviewBtn.style.color = "#fff";
+    dashNav.appendChild(overviewBtn);
+    dashNav.appendChild(manageBtn);
+    headRow.appendChild(dashNav);
+    inner.appendChild(headRow);
+
+    // Two page containers
+    var overviewPage = document.createElement("div");
+    var managePage = document.createElement("div");
+    managePage.style.display = "none";
+    inner.appendChild(overviewPage);
+    inner.appendChild(managePage);
+
+    function showDashPage(which) {
+      var isOver = which === "overview";
+      overviewPage.style.display = isOver ? "" : "none";
+      managePage.style.display = isOver ? "none" : "";
+      overviewBtn.style.background = isOver ? "rgba(255,255,255,.12)" : "transparent";
+      overviewBtn.style.color = isOver ? "#fff" : "rgba(255,255,255,.6)";
+      manageBtn.style.background = isOver ? "transparent" : "rgba(255,255,255,.12)";
+      manageBtn.style.color = isOver ? "rgba(255,255,255,.6)" : "#fff";
+      if (!isOver && !managePage.dataset.loaded) loadManagePage();
+    }
+    overviewBtn.addEventListener("click", function() { showDashPage("overview"); });
+    manageBtn.addEventListener("click", function() { showDashPage("manage"); });
 
     // Stats row
     var statsRow = document.createElement("div");
@@ -890,13 +928,13 @@
         '<div style="font-size:12px;opacity:.6;margin-top:2px;">' + m.label + '</div>';
       statsRow.appendChild(cell);
     });
-    inner.appendChild(statsRow);
+    overviewPage.appendChild(statsRow);
 
     // Graph section
     var graphTitle = document.createElement("div");
     graphTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
     graphTitle.textContent = "Activity — Last 30 Days";
-    inner.appendChild(graphTitle);
+    overviewPage.appendChild(graphTitle);
 
     // Metric toggle
     var toggleRow = document.createElement("div");
@@ -919,12 +957,12 @@
       metricBtns[metric] = btn;
       toggleRow.appendChild(btn);
     });
-    inner.appendChild(toggleRow);
+    overviewPage.appendChild(toggleRow);
 
     // SVG graph container
     var graphWrap = document.createElement("div");
     graphWrap.style.cssText = "position:relative;height:160px;margin-bottom:20px;background:rgba(255,255,255,.03);border-radius:14px;padding:12px;overflow:hidden;";
-    inner.appendChild(graphWrap);
+    overviewPage.appendChild(graphWrap);
 
     function drawGraph() {
       graphWrap.innerHTML = "";
@@ -970,11 +1008,11 @@
     var usersTitle = document.createElement("div");
     usersTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
     usersTitle.textContent = "Newest Users";
-    inner.appendChild(usersTitle);
+    overviewPage.appendChild(usersTitle);
     var usersWrap = document.createElement("div");
     usersWrap.style.cssText = "margin-bottom:20px;";
     usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Loading...</div>';
-    inner.appendChild(usersWrap);
+    overviewPage.appendChild(usersWrap);
     api("/api/users/recent").then(function(r) {
       if (!r || !r.ok || !r.users) {
         usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>';
@@ -1066,7 +1104,133 @@
       });
     });
     btnRow.appendChild(clearBtn);
-    inner.appendChild(btnRow);
+    overviewPage.appendChild(btnRow);
+
+    // ===== Manage page =====
+    function loadManagePage() {
+      managePage.dataset.loaded = "1";
+      managePage.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Loading users...</div>';
+      api("/api/users").then(function(r) {
+        if (!r || !r.ok || !r.users) {
+          managePage.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Could not load users.</div>';
+          return;
+        }
+        managePage.innerHTML = "";
+        var listTitle = document.createElement("div");
+        listTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
+        listTitle.textContent = "All Users (" + r.users.length + ")";
+        managePage.appendChild(listTitle);
+
+        r.users.forEach(function(u) {
+          var card = document.createElement("div");
+          card.style.cssText = "background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-bottom:10px;";
+
+          // Header: avatar + name + points
+          var head = document.createElement("div");
+          head.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:10px;";
+          var avW = document.createElement("div");
+          avW.style.cssText = "width:36px;height:36px;flex:none;";
+          avW.appendChild(avatarNode(u.username, u.avatar, "sm", u.hasAvatarImg ? u.avatarV : undefined));
+          head.appendChild(avW);
+          var nm = document.createElement("div");
+          nm.style.cssText = "flex:1;min-width:0;";
+          var nmT = document.createElement("div");
+          nmT.style.cssText = "font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+          nmT.textContent = u.username + (u.banned ? " (banned)" : "");
+          if (u.banned) nmT.style.color = "#ff6b6b";
+          nm.appendChild(nmT);
+          var pts = document.createElement("div");
+          pts.style.cssText = "font-size:12px;opacity:.5;";
+          pts.textContent = "★ " + (u.points || 0) + " · Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+          nm.appendChild(pts);
+          head.appendChild(nm);
+          card.appendChild(head);
+
+          // Actions grid
+          var acts = document.createElement("div");
+          acts.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;";
+          var isSelf = me && u.username.toLowerCase() === me.username.toLowerCase();
+          var isGrim = u.username.toLowerCase() === "grim";
+
+          function mkBtn(label, color, fn) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.textContent = label;
+            b.style.cssText = "flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:" + color + ";font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;";
+            b.addEventListener("click", function() { fn(b); });
+            acts.appendChild(b);
+            return b;
+          }
+
+          if (!isSelf && !isGrim) {
+            // Rename
+            mkBtn("Rename", "#fff", function(btn) {
+              var nn = prompt("New username for " + u.username + ":", u.username);
+              if (!nn || nn.trim().toLowerCase() === u.username.toLowerCase()) return;
+              nn = nn.trim();
+              if (!/^[a-z0-9_]{3,16}$/i.test(nn)) { alert("Username must be 3-16 chars (letters, numbers, _)"); return; }
+              btn.disabled = true;
+              api("/api/user/" + encodeURIComponent(u.username) + "/rename", { method: "POST", body: { newUsername: nn } })
+                .then(function(rr) {
+                  if (rr && rr.ok) { loadManagePageRefresh(); }
+                  else { alert((rr && rr.error) || "Rename failed."); btn.disabled = false; }
+                }).catch(function() { alert("Couldn't reach server."); btn.disabled = false; });
+            });
+            // Clear messages
+            mkBtn("Clear msgs", "#ff9f0a", function(btn) {
+              if (!confirm("Delete all messages from " + u.username + "?")) return;
+              btn.disabled = true;
+              api("/api/user/" + encodeURIComponent(u.username) + "/clear-messages", { method: "POST", body: {} })
+                .then(function(rr) {
+                  btn.disabled = false;
+                  alert(rr && rr.ok ? ("Deleted " + (rr.removed || 0) + " messages.") : "Failed.");
+                }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+            });
+            // Ban/Unban
+            mkBtn(u.banned ? "Unban" : "Ban", u.banned ? "#34c759" : "#ff6b6b", function(btn) {
+              if (!u.banned && !confirm("Ban " + u.username + "?")) return;
+              btn.disabled = true;
+              api("/api/ban", { method: "POST", body: { username: u.username, banned: !u.banned } })
+                .then(function(rr) {
+                  if (rr && rr.ok) { loadManagePageRefresh(); }
+                  else { alert("Failed."); btn.disabled = false; }
+                }).catch(function() { btn.disabled = false; alert("Couldn't reach server."); });
+            });
+            // Delete
+            mkBtn("Delete", "#ff453a", function(btn) {
+              if (!confirm("DELETE " + u.username + " permanently? Their account will be gone.")) return;
+              if (!confirm("Are you sure? This cannot be undone.")) return;
+              btn.disabled = true;
+              api("/api/user/" + encodeURIComponent(u.username), { method: "DELETE" })
+                .then(function(rr) {
+                  if (rr && rr.ok) { loadManagePageRefresh(); }
+                  else { alert((rr && rr.error) || "Delete failed."); btn.disabled = false; }
+                }).catch(function() { alert("Couldn't reach server."); btn.disabled = false; });
+            });
+          } else {
+            var note = document.createElement("div");
+            note.style.cssText = "font-size:12px;opacity:.4;font-style:italic;";
+            note.textContent = isSelf ? "This is you." : "Protected account.";
+            acts.appendChild(note);
+          }
+          card.appendChild(acts);
+          managePage.appendChild(card);
+        });
+
+        function loadManagePageRefresh() {
+          delete managePage.dataset.loaded;
+          loadManagePage();
+        }
+        // Make refresh available to buttons
+        managePage._refresh = loadManagePageRefresh;
+
+        if (!r.users.length) {
+          managePage.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">No users yet.</div>';
+        }
+      }).catch(function() {
+        managePage.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Could not load users.</div>';
+      });
+    }
 
     // Close button
     var closeBtn = document.createElement("button");
