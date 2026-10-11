@@ -583,5 +583,23 @@
 })();
 </script>
 
+
+<script>
+// VISIBLE DIAGNOSTIC: Show what's broken when Dashboard is tapped
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest ? e.target.closest('button') : null;
+  if (btn && btn.textContent && btn.textContent.indexOf('Dashboard') !== -1) {
+    setTimeout(function() {
+      // If dashboard didn't open after 1 second, show diagnostic
+      if (!document.getElementById('msg-popup') || !document.querySelector('.dashboard-sheet')) {
+        var msg = 'Dashboard failed to open.\n\n';
+        msg += 'MPChat: ' + (typeof window.MPChat) + '\n';
+        msg += 'openAnalytics: ' + (typeof window.openAnalytics);
+        alert(msg + '\n\nTake a screenshot and send it.');
+      }
+    }, 1500);
+  }
+}, true);
+</script>
 </body>
 </html>
