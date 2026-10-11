@@ -278,7 +278,7 @@ var MPShop = (function () {
     if (memberAmounts) {
       sizes = '<div class="member-slider">' +
         '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
-        '<div class="member-scale"><span>' + esc(MP.money(p.priceBySize[memberAmounts[0]])) + '</span><span>' + esc(MP.money(p.priceBySize[memberAmounts[memberAmounts.length - 1]])) + "</span></div>" +
+        '<div class="member-scale"><span>' + esc(MP.money((p.priceBySize || {})[memberAmounts[0]] != null ? p.priceBySize[memberAmounts[0]] : parseFloat(memberAmounts[0]))) + '</span><span>' + esc(MP.money((p.priceBySize || {})[memberAmounts[memberAmounts.length - 1]] != null ? p.priceBySize[memberAmounts[memberAmounts.length - 1]] : parseFloat(memberAmounts[memberAmounts.length - 1]))) + "</span></div>" +
         "</div>";
     } else if (p.sizes && p.sizes.length) {
       sizes = (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
@@ -315,7 +315,7 @@ var MPShop = (function () {
       var priceEl = view.querySelector(".price");
       if (range) range.addEventListener("input", function () {
         size = memberAmounts[parseInt(range.value, 10) || 0];
-        if (priceEl && p.priceBySize[size] != null) priceEl.textContent = MP.money(p.priceBySize[size]);
+        if (priceEl) priceEl.textContent = MP.money((p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size));
         refreshAction();
       });
     }
