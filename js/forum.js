@@ -245,7 +245,7 @@
       });
       function replyHTML(r, depth) {
         var kids = childMap[r.id] || [];
-        var kidsVisible = view.showNested[r.id];
+        var expanded = !!view.showNested[r.id];
         var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
@@ -253,14 +253,17 @@
           (token() ? '<button type="button" class="forum-reply-btn" data-replyto="' + esc(r.id) + '" data-replyname="' + esc(r.author) + '">Reply</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
           '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div>";
-        if (kids.length && !kidsVisible) {
-          h += '<button type="button" class="forum-show-replies" data-showreplies="' + esc(r.id) + '">Show replies (' + kids.length + ")</button>";
-        }
         h += "</article>";
-        if (kids.length && kidsVisible) {
+        if (kids.length) {
+          var visibleKids = expanded ? kids : kids.slice(0, 1);
           h += '<div class="forum-children">';
-          kids.forEach(function (k) { h += replyHTML(k, depth + 1); });
+          visibleKids.forEach(function (k) { h += replyHTML(k, depth + 1); });
           h += "</div>";
+          if (!expanded && kids.length > 1) {
+            h += '<button type="button" class="forum-show-replies" data-showreplies="' + esc(r.id) + '">Show more replies (' + (kids.length - 1) + " more)</button>";
+          } else if (expanded) {
+            h += '<button type="button" class="forum-show-replies" data-hidereplies="' + esc(r.id) + '">Hide replies</button>';
+          }
         }
         return h;
       }
@@ -293,6 +296,12 @@
       root.querySelectorAll("[data-showreplies]").forEach(function (b) {
         b.addEventListener("click", function () {
           view.showNested[b.getAttribute("data-showreplies")] = true;
+          renderThread();
+        });
+      });
+      root.querySelectorAll("[data-hidereplies]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          view.showNested[b.getAttribute("data-hidereplies")] = false;
           renderThread();
         });
       });
