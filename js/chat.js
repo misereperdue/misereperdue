@@ -1344,8 +1344,8 @@
           var moBtn = document.createElement("button");
           moBtn.type = "button";
           var visState = cat.ownerOnly ? "private" : (cat.membersOnly ? "members" : "public");
-          moBtn.textContent = visState === "private" ? "\uD83D\uDD12 Private" : (visState === "members" ? "\u2B50 Members" : "Public");
-          moBtn.title = "Visibility: Public \u2192 Private (only you) \u2192 Members \u2192 Public";
+          moBtn.textContent = visState === "private" ? "\uD83D\uDD12 Private" : (visState === "members" ? "\u2B50 VIPs" : "Public");
+          moBtn.title = "Visibility: Public \u2192 Private (only you) \u2192 VIPs \u2192 Public";
           moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (visState === "private" ? "rgba(120,140,255,.25)" : (visState === "members" ? "rgba(255,200,50,.2)" : "transparent")) + ";color:var(--ink);";
           moBtn.addEventListener("click", function () {
             var next = visState === "public" ? { ownerOnly: true, membersOnly: false }
@@ -1405,7 +1405,7 @@
           forumPage.appendChild(paTitle);
           var paNote = document.createElement("div");
           paNote.style.cssText = "font-size:12px;opacity:.55;margin-bottom:10px;";
-          paNote.textContent = "Pick a user and a private category, then set whether they can access it. Members always have access to the \uD83D\uDCB5 category.";
+          paNote.textContent = "Pick a user and a private category, then set whether they can access it. VIPs always have access to the \uD83D\uDCB5 category.";
           forumPage.appendChild(paNote);
           var paRow = document.createElement("div");
           paRow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;";
@@ -1534,7 +1534,7 @@
           if (u.member) {
             var memTag = document.createElement("span");
             memTag.style.cssText = "font-size:11px;color:#ffd60a;font-weight:700;";
-            memTag.textContent = " ⭐ Member";
+            memTag.textContent = " ⭐ VIP";
             nm.appendChild(memTag);
           }
           if (u.banned) {
@@ -1594,7 +1594,7 @@
             // Member toggle
             mkBtn(u.member ? "Unmember" : "Member", u.member ? "#8e8e93" : "#ffd60a", function(btn) {
               if (u.member) {
-                if (!confirm("Remove membership from " + u.username + "?")) return;
+                if (!confirm("Remove VIP status from " + u.username + "?")) return;
                 btn.disabled = true;
                 api("/api/user/" + encodeURIComponent(u.username) + "/member", {
                   method: "POST", body: { member: false, amount: null }
@@ -1642,7 +1642,7 @@
           box.className = "mp-dialog";
           var title = document.createElement("div");
           title.className = "mp-dialog-title";
-          title.textContent = "Membership for " + username;
+          title.textContent = "VIP status for " + username;
           box.appendChild(title);
           var segs = document.createElement("div");
           segs.className = "member-segs";
