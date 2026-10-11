@@ -273,6 +273,18 @@
     window.addEventListener("beforeunload", function () {
       try { window.scrollTo(0, 0); } catch (e) {}
     });
+    // If Safari restored to bottom anyway, correct when page becomes visible.
+    // Only for non-chat views, and only if user hasn't scrolled.
+    var visUserScrolled = false;
+    window.addEventListener("touchmove", function() { visUserScrolled = true; }, { once: true, passive: true });
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState !== "visible") return;
+      if (visUserScrolled) return;
+      if (current.type === "journal") return;
+      if (window.scrollY > 100) {
+        window.scrollTo(0, 0);
+      }
+    });
     function show(view, id) {
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
