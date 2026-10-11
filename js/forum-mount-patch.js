@@ -490,19 +490,6 @@
   })();
 
 
-  // Remove duplicate patch countries section (keep native dashboard one)
-  (function() {
-    function removePatchCountries() {
-      try {
-        var sec = document.getElementById('countries-section');
-        if (sec) sec.remove();
-      } catch (e) {}
-    }
-    setInterval(removePatchCountries, 2000);
-    setTimeout(removePatchCountries, 1000);
-  })();
-
-
   // Activity nav sliding pill
   (function() {
     function setup() {
@@ -693,41 +680,6 @@
   })();
 
 
-  // Pill styling removed - using native dashboard styles
-
-  // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
-  function enhancePostsGraph() {
-    // Check if Posts tab is active (look for the active pill position or button state)
-    var postsBtn = document.querySelector('button[aria-label="Posts"]');
-    if (!postsBtn) return;
-    
-    // Find the graph SVG
-    var svg = document.querySelector('svg[width]');
-    if (!svg || svg.getAttribute("data-stacked")) return;
-    
-    // Check if this is the Posts graph by looking at the summary text
-    var summary = document.querySelector('div[style*="text-align:center"]');
-    if (!summary || summary.textContent.indexOf("total") === -1) return;
-    
-    // Get the stats data from the dashboard (stored globally or fetch)
-    // For now, we'll watch for the data in the page
-    // This is a simplified version - the full implementation needs the stats data
-    
-    // Mark as processed to avoid re-processing
-    svg.setAttribute("data-stacked", "1");
-  }
-  
-  // Watch for graph updates
-  try {
-    new MutationObserver(function() {
-      // Only enhance if Posts tab appears to be active
-      var activeBtn = document.querySelector('button[aria-label="Posts"]');
-      if (activeBtn && activeBtn.style.background.indexOf("0,122,255") !== -1) {
-        setTimeout(enhancePostsGraph, 100);
-      }
-    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
-  } catch (e) {}
-
 
   // Global dashboard spacing CSS - enforces consistent section gaps
   (function() {
@@ -774,116 +726,6 @@
     document.head.appendChild(style);
   })();
 
-  // Add Countries section below Newest Users
-  function addCountriesSection() {
-    // Find Newest Users section
-    var headers = document.querySelectorAll("div");
-    var newestHeader = null;
-    headers.forEach(function(h) {
-      if (h.textContent.trim() === "Newest Users" && h.children.length === 0) {
-        newestHeader = h;
-      }
-    });
-    if (!newestHeader) return;
-    
-    var container = newestHeader.parentElement;
-    if (!container || document.getElementById("countries-section")) return;
-    
-    // Create section (left-aligned, tight spacing)
-    var section = document.createElement("div");
-    section.id = "countries-section";
-    section.style.cssText = "margin-top:10px;margin-left:0;margin-right:0;text-align:left;width:100%;padding:0;";
-    // Measure parent padding and counter it so boxes align flush left
-    setTimeout(function() {
-      var sec = document.getElementById("countries-section");
-      if (!sec || !sec.parentElement) return;
-      var parentStyle = window.getComputedStyle(sec.parentElement);
-      var padLeft = parseFloat(parentStyle.paddingLeft) || 0;
-      var padRight = parseFloat(parentStyle.paddingRight) || 0;
-      if (padLeft > 0 || padRight > 0) {
-        sec.style.setProperty("margin-left", (-padLeft) + "px", "important");
-        sec.style.setProperty("margin-right", (-padRight) + "px", "important");
-        sec.style.setProperty("width", "calc(100% + " + (padLeft + padRight) + "px)", "important");
-        // Also adjust the title to align with the new left edge
-        var title = sec.querySelector("div");
-        if (title) title.style.setProperty("padding-left", padLeft + "px", "important");
-      }
-    }, 100);
-    section.innerHTML = '<div style="font-size:16px;font-weight:700;margin:0 0 4px 0;text-align:left;padding:0;">Countries</div>' +
-      '<div id="countries-list" style="font-size:13px;opacity:0.7;text-align:left;padding:0;margin:0;">Loading...</div>';
-    container.appendChild(section);
-    
-    // Fetch and display using direct fetch with the stored token
-    try {
-      var chatToken = null;
-      try { chatToken = localStorage.getItem("chat_token"); } catch (e) {}
-      if (chatToken) {
-        fetch("https://misery-chat.freeglory416.workers.dev/api/analytics/stats", {
-          headers: { "Authorization": "Bearer " + chatToken, "Content-Type": "application/json" }
-        }).then(function(r) { return r.json(); }).then(function(data) {
-          var list = document.getElementById("countries-list");
-          if (!list) return;
-          if (!data || !data.ok || !data.stats || !data.stats.days) {
-            list.textContent = "No country data yet.";
-            return;
-          }
-          // Aggregate countries across all days
-          var totals = {};
-          data.stats.days.forEach(function(day) {
-            var countries = day.countries || {};
-            Object.keys(countries).forEach(function(c) {
-              totals[c] = (totals[c] || 0) + countries[c];
-            });
-          });
-          // Sort by count
-          var sorted = Object.keys(totals).sort(function(a, b) { return totals[b] - totals[a]; });
-          if (!sorted.length) {
-            list.textContent = "No country data yet.";
-            return;
-          }
-          // Country code to full name and flag
-          var countryInfo = {
-            "US": ["United States", "\uD83C\uDDFA\uD83C\uDDF8"],
-            "CA": ["Canada", "\uD83C\uDDE8\uD83C\uDDE6"],
-            "GB": ["United Kingdom", "\uD83C\uDDEC\uD83C\uDDE7"],
-            "AU": ["Australia", "\uD83C\uDDE6\uD83C\uDDFA"],
-            "DE": ["Germany", "\uD83C\uDDE9\uD83C\uDDEA"],
-            "FR": ["France", "\uD83C\uDDEB\uD83C\uDDF7"],
-            "IT": ["Italy", "\uD83C\uDDEE\uD83C\uDDF9"],
-            "ES": ["Spain", "\uD83C\uDDEA\uD83C\uDDF8"],
-            "NL": ["Netherlands", "\uD83C\uDDF3\uD83C\uDDF1"],
-            "BR": ["Brazil", "\uD83C\uDDE7\uD83C\uDDF7"],
-            "IN": ["India", "\uD83C\uDDEE\uD83C\uDDF3"],
-            "JP": ["Japan", "\uD83C\uDDEF\uD83C\uDDF5"],
-            "KR": ["South Korea", "\uD83C\uDDF0\uD83C\uDDF7"],
-            "CN": ["China", "\uD83C\uDDE8\uD83C\uDDF3"],
-            "MX": ["Mexico", "\uD83C\uDDF2\uD83C\uDDFD"],
-            "Unknown": ["Unknown", "\uD83C\uDF10"]
-          };
-          list.style.opacity = "1";
-          list.innerHTML = sorted.slice(0, 10).map(function(c) {
-            var info = countryInfo[c] || [c, "\uD83C\uDF10"];
-            return '<div style="display:flex;justify-content:space-between;align-items:center;' +
-              'padding:10px 14px;margin:0 0 6px 0;border-radius:12px;' +
-              'background:rgba(127,127,127,0.12);border:1px solid rgba(255,255,255,0.12);' +
-              'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);width:100%;box-sizing:border-box;">' +
-              '<span style="font-weight:600;">' + info[1] + ' ' + info[0] + '</span>' +
-              '<span style="opacity:0.7;font-weight:700;">' + totals[c] + '</span></div>';
-          }).join("");
-        }).catch(function() {
-          var list = document.getElementById("countries-list");
-          if (list) list.textContent = "No country data yet.";
-        });
-      } else {
-        var list2 = document.getElementById("countries-list");
-        if (list2) list2.textContent = "No country data yet.";
-      }
-    } catch (e) {}
-  }
-  setTimeout(addCountriesSection, 1000);
-  setInterval(function() {
-    if (!document.getElementById("countries-section")) addCountriesSection();
-  }, 2000);
   // Also watch for dashboard re-renders
   try {
     new MutationObserver(function() {
