@@ -354,6 +354,28 @@
       }
     });
   }
+  function enhanceFileLinks(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll('a[href*="/api/media/"]').forEach(function (a) {
+      if (a.classList.contains("mp-file-dl") || a.closest(".mp-file")) return;
+      var txt = (a.textContent || "").replace(/\uD83D\uDCCE\s*/, "").trim();
+      var name = txt.replace(/\s*\u00B7\s*[\d.]+\s*(KB|MB|GB)\s*$/i, "").replace(/\.[a-z0-9]+$/i, "").trim() || txt;
+      var wrap = document.createElement("div");
+      wrap.className = "mp-file";
+      var nm = document.createElement("span");
+      nm.className = "mp-file-name";
+      nm.textContent = name;
+      var dl = document.createElement("a");
+      dl.className = "mp-file-dl";
+      dl.href = a.getAttribute("href");
+      dl.setAttribute("download", "");
+      dl.setAttribute("aria-label", "Download");
+      dl.innerHTML = '<span aria-hidden="true">\u2B07\uFE0F</span>';
+      wrap.appendChild(nm);
+      wrap.appendChild(dl);
+      a.replaceWith(wrap);
+    });
+  }
   function bodyHTML(item) {
     if (item.rich) return sanitizeHTML(item.content);
     return esc(item.content || "").replace(/\n/g, "<br>");
@@ -638,7 +660,7 @@
         uploadEditorFile(file, function (res) {
           if (!res) return;
           editor.chain().focus().insertContent(
-            '<p><a href="' + res.url.replace(/"/g, "%22") + '" download>' + "\uD83D\uDCCE " + esc(res.name) + " \u00B7 " + fmtSize(res.size) + "</a></p><p></p>"
+            '<div class="mp-file"><span class="mp-file-name">' + esc(res.name.replace(/\.[a-z0-9]+$/i, "")) + '</span><a class="mp-file-dl" href="' + res.url.replace(/"/g, "%22") + '" download aria-label="Download"><span aria-hidden="true">\u2B07\uFE0F</span></a></div><p></p>'
           ).run();
         });
       });
@@ -869,6 +891,7 @@
 
     html += "</div>";
     root.innerHTML = html;
+    enhanceFileLinks(root);
 
     wireAvatars();
     root.querySelectorAll(".forum-cat").forEach(function (b) {
@@ -1031,6 +1054,7 @@
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       applyLockGates(cache.thread);
+      enhanceFileLinks(root);
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
