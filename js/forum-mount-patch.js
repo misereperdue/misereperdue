@@ -282,30 +282,28 @@
     });
   }
   setTimeout(replaceMetricIcons, 500);
-  // Add visible labels to activity metric tabs (Messages -> Posts)
-  function labelMetricTabs() {
-    var labels = { "Views": "Views", "Visitors": "Visitors", "Messages": "Posts", "New Users": "New Users" };
-    // Also update the aria-label
+  // Remove metric labels (titles) - icons only
+  function removeMetricLabels() {
+    document.querySelectorAll(".metric-label").forEach(function(el) { el.remove(); });
+    document.querySelectorAll('button[aria-label]').forEach(function(btn) {
+      var label = btn.getAttribute("aria-label");
+      if (["Views", "Visitors", "Messages", "Posts", "New Users", "Users"].indexOf(label) !== -1) {
+        btn.style.flexDirection = "";
+        btn.style.gap = "";
+      }
+    });
+    // Rename Messages -> Posts, New Users -> Users (aria only, no visible text)
     document.querySelectorAll('button[aria-label="Messages"]').forEach(function(btn) {
       btn.setAttribute("aria-label", "Posts");
       btn.setAttribute("title", "Posts");
     });
-    document.querySelectorAll("button[aria-label]").forEach(function(btn) {
-      var label = btn.getAttribute("aria-label");
-      if (labels[label] && !btn.querySelector(".metric-label")) {
-        var span = document.createElement("span");
-        span.className = "metric-label";
-        span.textContent = labels[label];
-        span.style.cssText = "font-size:10px;font-weight:600;margin-top:2px;opacity:0.7;";
-        // Make button vertical layout
-        btn.style.flexDirection = "column";
-        btn.style.gap = "2px";
-        btn.appendChild(span);
-      }
+    document.querySelectorAll('button[aria-label="New Users"]').forEach(function(btn) {
+      btn.setAttribute("aria-label", "Users");
+      btn.setAttribute("title", "Users");
     });
   }
-  setTimeout(labelMetricTabs, 1000);
-  setInterval(labelMetricTabs, 2000);
+  setTimeout(removeMetricLabels, 500);
+  setInterval(removeMetricLabels, 2000);
 
   // Reorder tabs: Views, Visitors, Users, Posts (move Posts to end, rename New Users)
   function reorderMetricTabs() {
@@ -343,6 +341,83 @@
   }
   setTimeout(reorderMetricTabs, 1500);
   setInterval(reorderMetricTabs, 3000);
+
+  // Liquid glass sliding pill for dashboard nav and activity tabs
+  function initSlidingPills() {
+    // Dashboard nav (top: chat, globe, gear)
+    var dashNav = document.querySelector('.dashboard-nav, [class*="dash"] nav, div[style*="display:flex"] > button[aria-label="Chat"]');
+    // More reliable: find the container of the 3 dashboard tab buttons
+    var chatBtn = document.querySelector('button[aria-label="Chat"]');
+    if (chatBtn && chatBtn.parentElement && !chatBtn.parentElement.getAttribute("data-pill")) {
+      var navContainer = chatBtn.parentElement;
+      setupSlidingPill(navContainer, 'button[aria-label="Chat"], button[aria-label="Forum"], button[aria-label="Globe"], button[aria-label="Manage"]');
+    }
+    
+    // Activity metric tabs
+    var viewsBtn = document.querySelector('button[aria-label="Views"]');
+    if (viewsBtn && viewsBtn.parentElement && !viewsBtn.parentElement.getAttribute("data-pill")) {
+      var metricContainer = viewsBtn.parentElement;
+      setupSlidingPill(metricContainer, 'button[aria-label="Views"], button[aria-label="Visitors"], button[aria-label="Users"], button[aria-label="Posts"]');
+    }
+  }
+  
+  function setupSlidingPill(container, selector) {
+    if (!container) return;
+    container.setAttribute("data-pill", "1");
+    container.style.position = "relative";
+    container.style.background = "rgba(127,127,127,0.12)";
+    container.style.backdropFilter = "blur(20px) saturate(180%)";
+    container.style.webkitBackdropFilter = "blur(20px) saturate(180%)";
+    container.style.borderRadius = "20px";
+    container.style.padding = "4px";
+    container.style.border = "1px solid rgba(255,255,255,0.15)";
+    
+    // Create the sliding pill
+    var pill = document.createElement("div");
+    pill.className = "sliding-pill";
+    pill.style.cssText = "position:absolute;top:4px;bottom:4px;border-radius:16px;" +
+      "background:rgba(255,255,255,0.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);" +
+      "border:1px solid rgba(255,255,255,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.15);" +
+      "transition:left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);" +
+      "pointer-events:none;z-index:0;";
+    container.insertBefore(pill, container.firstChild);
+    
+    var buttons = Array.prototype.slice.call(container.querySelectorAll(selector));
+    buttons.forEach(function(btn) {
+      btn.style.position = "relative";
+      btn.style.zIndex = "1";
+      btn.style.background = "transparent";
+      btn.style.border = "none";
+      btn.style.borderRadius = "16px";
+    });
+    
+    function movePill() {
+      var active = buttons.find(function(b) {
+        return b.style.background.indexOf("0,122,255") !== -1 || 
+               b.getAttribute("data-active") === "1" ||
+               b.classList.contains("active");
+      }) || buttons[0];
+      
+      if (active) {
+        pill.style.left = active.offsetLeft + "px";
+        pill.style.width = active.offsetWidth + "px";
+      }
+    }
+    
+    // Watch for active changes
+    buttons.forEach(function(btn) {
+      btn.addEventListener("click", function() { setTimeout(movePill, 50); });
+    });
+    
+    setTimeout(movePill, 100);
+    // Re-position on resize
+    window.addEventListener("resize", movePill);
+  }
+  
+  setTimeout(initSlidingPills, 2000);
+  setInterval(function() {
+    if (!document.querySelector('[data-pill]')) initSlidingPills();
+  }, 5000);
 
   // Add Countries section below Newest Users
   function addCountriesSection() {
