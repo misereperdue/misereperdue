@@ -63,9 +63,9 @@
     title.textContent = "Dashboard";
     headRow.appendChild(title);
     var topNav = document.createElement("div");
-    topNav.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.18);border-radius:14px;padding:3px;";
+    topNav.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
     var topSlider = document.createElement("span");
-    topSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(33.333% - 3px);border-radius:11px;background:#3a3a3e;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;";
+    topSlider.style.cssText = "position:absolute;top:3px;bottom:3px;border-radius:11px;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);pointer-events:none;left:3px;width:calc(33.333% - 3px);";
     topNav.appendChild(topSlider);
     var chatDashBtn = document.createElement("button");
     var forumDashBtn = document.createElement("button");
@@ -152,9 +152,9 @@
 
     // Metric toggle (pill container with slider)
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "position:relative;display:flex;gap:4px;margin-bottom:12px;background:rgba(120,120,128,0.18);border-radius:14px;padding:3px;";
+    toggleRow.style.cssText = "position:relative;display:flex;gap:4px;margin-bottom:12px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
     var actSlider = document.createElement("div");
-    actSlider.style.cssText = "position:absolute;top:3px;bottom:3px;left:3px;width:calc(25% - 3px);border-radius:11px;background:#3a3a3e;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);pointer-events:none;";
+    actSlider.style.cssText = "position:absolute;top:3px;bottom:3px;border-radius:11px;background:rgba(255,255,255,0.18);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);pointer-events:none;left:3px;width:calc(25% - 3px);";
     toggleRow.appendChild(actSlider);
     var currentMetric = "views";
     var metricBtns = {};
