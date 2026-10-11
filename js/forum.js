@@ -62,6 +62,20 @@
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
+  function avatarHTMLSmall(author) {
+    var name = author.author || "?";
+    var inner = "";
+    if (author.hasAvatarImg) {
+      inner = '<img src="' + API + "/api/avatarimg/" +
+        encodeURIComponent(name) + "?v=" + (author.avatarV || 0) + '" alt="">';
+    } else {
+      inner = esc(author.authorAvatar || "\uD83D\uDE00");
+    }
+    var badge = badgeFor(author.authorBadge);
+    return '<span class="forum-avatar-wrap forum-avatar-sm"><span class="forum-avatar' + (author.hasAvatarImg ? "" : " forum-avatar-emoji") + '">' + inner + "</span>" +
+      (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
+  }
+
   function badgeFor(badgeId) {
     if (!badgeId || !window.MPChat || !window.MPChat.badgeHTML) return "";
     // Hide robot badge for non-grim (same rule as chat)
@@ -289,6 +303,37 @@
       editor.commands.focus();
     }
   }
+  var newThumbId = null;
+  function cropSquareDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      if (file.type === "image/gif") {
+        var fr = new FileReader();
+        fr.onload = function () { resolve(fr.result); };
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+        return;
+      }
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var side = Math.min(img.naturalWidth, img.naturalHeight, 900);
+          var canvas = document.createElement("canvas");
+          canvas.width = side; canvas.height = side;
+          var ctx = canvas.getContext("2d");
+          var sx = (img.naturalWidth - Math.min(img.naturalWidth, img.naturalHeight)) / 2;
+          var sy = (img.naturalHeight - Math.min(img.naturalWidth, img.naturalHeight)) / 2;
+          var src = Math.min(img.naturalWidth, img.naturalHeight);
+          ctx.drawImage(img, sx, sy, src, src, 0, 0, side, side);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } catch (e) { reject(e); }
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
   function uploadEditorImage(file, done) {
     function send(dataUrl) {
       api("/api/media", { method: "POST", body: { dataUrl: dataUrl, kind: "image" } })
@@ -384,14 +429,15 @@
       html += '<div class="forum-threads">';
       threads.forEach(function (t) {
         html += '<div class="forum-thread-row">' +
-          '<button type="button" class="forum-thread" data-id="' + esc(t.id) + '">' +
+          '<button type="button" class="forum-thread' + (t.thumb ? " has-thumb" : "") + '" data-id="' + esc(t.id) + '">' +
           (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
-          (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + "</span>" +
+          '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
+          (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + (t.thumb ? " \u00B7 \uD83D\uDCAC " + t.replies : "") + "</span></span>" +
           "</span>" +
-          '<span class="forum-thread-count">' + t.replies + "</span>" +
+          (t.thumb ? "" : '<span class="forum-thread-count">' + t.replies + "</span>") +
+          (t.thumb ? '<img class="forum-thread-thumb" src="' + API + "/api/media/" + esc(t.thumb) + '" alt="" loading="lazy">' : "") +
           "</button>";
         if (isOwner) {
           html += '<div class="forum-admin">' +
@@ -488,8 +534,9 @@
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
-        ((token() || isOwner) ? '<div class="forum-admin forum-admin-thread">' + starBtn(t, null) +
-          (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button>' : "") + "</div>" : "") + "</article>";
+        '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
+          '<button type="button" class="forum-admin-btn" id="forum-copy-link">\uD83D\uDD17 Copy link</button>' +
+          (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button>' : "") + "</div>" + "</article>";
 
       html += '<div class="forum-replies">';
       var allReplies = t.replies || [];
@@ -546,6 +593,19 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      var copyBtn = root.querySelector("#forum-copy-link");
+      if (copyBtn) copyBtn.addEventListener("click", function () {
+        var link = API + "/t/" + t.id;
+        var done = function () {
+          copyBtn.textContent = "\u2713 Link copied";
+          setTimeout(function () { copyBtn.innerHTML = "\uD83D\uDD17 Copy link"; }, 1800);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(link).then(done).catch(function () { window.prompt("Copy this link:", link); });
+        } else {
+          window.prompt("Copy this link:", link);
+        }
+      });
       if (freshOpen) {
         window.scrollTo(0, 0);
         if (window.MPScroll) MPScroll.pinTop(2000);
@@ -826,6 +886,13 @@
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
       '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
+      '<div class="forum-thumb-row">' +
+      '<span class="forum-thumb-preview" id="forum-thumb-preview"></span>' +
+      '<button type="button" class="forum-admin-btn" id="forum-thumb-add">Add thumbnail</button>' +
+      '<button type="button" class="forum-admin-btn forum-admin-del hidden" id="forum-thumb-remove">Remove</button>' +
+      '<input type="file" id="forum-thumb-input" accept="image/*" class="hidden">' +
+      "</div></div>" +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
@@ -845,6 +912,39 @@
         newMount.replaceWith(wrap.firstChild);
       });
     }
+    // Thumbnail picker: square-crop, upload immediately, keep the media id
+    newThumbId = null;
+    var thumbInput = root.querySelector("#forum-thumb-input");
+    var thumbPreview = root.querySelector("#forum-thumb-preview");
+    var thumbAdd = root.querySelector("#forum-thumb-add");
+    var thumbRemove = root.querySelector("#forum-thumb-remove");
+    if (thumbAdd) thumbAdd.addEventListener("click", function () { if (thumbInput) thumbInput.click(); });
+    if (thumbRemove) thumbRemove.addEventListener("click", function () {
+      newThumbId = null;
+      if (thumbPreview) thumbPreview.innerHTML = "";
+      thumbRemove.classList.add("hidden");
+      if (thumbAdd) thumbAdd.textContent = "Add thumbnail";
+    });
+    if (thumbInput) thumbInput.addEventListener("change", function () {
+      var file = thumbInput.files && thumbInput.files[0];
+      if (!file) return;
+      if (thumbAdd) { thumbAdd.disabled = true; thumbAdd.textContent = "Uploading\u2026"; }
+      cropSquareDataUrl(file).then(function (dataUrl) {
+        return api("/api/media", { method: "POST", body: { dataUrl: dataUrl, kind: "image" } });
+      }).then(function (r) {
+        if (thumbAdd) { thumbAdd.disabled = false; thumbAdd.textContent = "Change thumbnail"; }
+        if (r && r.ok && r.id) {
+          newThumbId = r.id;
+          if (thumbPreview) thumbPreview.innerHTML = '<img src="' + API + "/api/media/" + r.id + '" alt="">';
+          if (thumbRemove) thumbRemove.classList.remove("hidden");
+        } else {
+          alert("Thumbnail upload failed");
+        }
+      }).catch(function () {
+        if (thumbAdd) { thumbAdd.disabled = false; thumbAdd.textContent = "Add thumbnail"; }
+        alert("Thumbnail upload failed");
+      });
+    });
     root.querySelector("#forum-post").addEventListener("click", function () {
       var title = root.querySelector("#forum-title").value.trim();
       var content = "", rich = false;
@@ -857,7 +957,7 @@
       var cat = root.querySelector("#forum-cat-sel").value;
       if (!title || !content) { alert("Title and content required"); return; }
       api("/api/forum/threads", {
-        method: "POST", body: { title: title, content: content, category: cat, rich: rich }
+        method: "POST", body: { title: title, content: content, category: cat, rich: rich, thumb: newThumbId || undefined }
       }).then(function (res) {
         if (res.ok && res.thread) {
           view.name = "thread";
@@ -922,5 +1022,12 @@
     render();
   }
 
-  window.MPForum = { render: render, goHome: goHome };
+  function openThread(id) {
+    if (!id) return;
+    view.name = "thread";
+    view.threadId = id;
+    render();
+  }
+
+  window.MPForum = { render: render, goHome: goHome, openThread: openThread };
 })();
