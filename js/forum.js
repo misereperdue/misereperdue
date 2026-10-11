@@ -7,7 +7,7 @@
   var TOKEN_KEY = "chat_token";
 
   var root = null;
-  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {} };
+  var view = { name: "list", category: "", threadId: null, replyTo: null, showNested: {}, scrollTop: false };
   var cache = { categories: [], threads: [], thread: null };
 
   function token() {
@@ -217,6 +217,8 @@
         var act = btn.getAttribute("data-act");
         if (act === "link") { toggleLinkBar(editor, mountEl); return; }
         if (act === "image") {
+          var lb = mountEl.querySelector(".forum-linkbar");
+          if (lb) lb.classList.add("hidden");
           var fi = mountEl.querySelector(".forum-file-input");
           if (fi) fi.click();
           return;
@@ -243,8 +245,11 @@
         if (!url) return;
         if (!/^https?:\/\//i.test(url)) url = "https://" + url;
         var sel = editor.state.selection;
-        if (sel.empty) {
-          editor.chain().focus().insertContent('<a href="' + url.replace(/"/g, "%22") + '">' + esc(url) + "</a>").run();
+        var isNodeSel = !!sel.node;
+        if (sel.empty || isNodeSel) {
+          // No text selected (or media selected): drop the link in as its own
+          // text link so links and media can live in the same post.
+          editor.chain().focus().insertContent('<a href="' + url.replace(/"/g, "%22") + '">' + esc(url) + "</a><p></p>").run();
         } else {
           editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
         }
@@ -411,6 +416,7 @@
       b.addEventListener("click", function () {
         view.name = "thread";
         view.threadId = b.getAttribute("data-id");
+        view.scrollTop = true;
         renderThread();
       });
     });
@@ -463,6 +469,8 @@
   function paintThread() {
     var t = cache.thread;
     if (!t) return;
+    var wantTop = view.scrollTop;
+    view.scrollTop = false;
     var html = forumTopBar() +
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
@@ -532,7 +540,9 @@
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      if (wantTop) window.scrollTo(0, 0);
       initReplyEditor();
+      attachLinkPreviews();
       function focusComposer() {
         var box = root.querySelector(".forum-replybox");
         if (box) box.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -672,6 +682,61 @@
       });
   }
 
+  var previewCache = {};
+  function attachLinkPreviews() {
+    if (!token()) return;
+    var bodies = root.querySelectorAll(".forum-post-body");
+    var seen = {};
+    bodies.forEach(function (body) {
+      var links = body.querySelectorAll('a[href^="http"]');
+      links.forEach(function (a) {
+        var url = a.getAttribute("href");
+        if (!url || seen[url]) return;
+        // Skip links that wrap an image or point at uploaded media
+        if (a.querySelector("img")) return;
+        if (url.indexOf("/api/media/") !== -1) return;
+        seen[url] = true;
+        if (body.querySelector('.forum-linkcard[href="' + CSS.escape(url) + '"]')) return;
+        var host = document.createElement("div");
+        body.appendChild(host);
+        var renderCard = function (embed) {
+          if (!embed || !embed.title) { host.remove(); return; }
+          var card = document.createElement("a");
+          card.className = "forum-linkcard";
+          card.href = embed.url || url;
+          card.target = "_blank";
+          card.rel = "noopener noreferrer";
+          if (embed.thumb) {
+            var im = document.createElement("img");
+            im.src = embed.thumb;
+            im.loading = "lazy";
+            im.alt = "";
+            im.referrerPolicy = "no-referrer";
+            card.appendChild(im);
+          }
+          var tx = document.createElement("span");
+          tx.className = "forum-linkcard-tx";
+          var t = document.createElement("span");
+          t.className = "forum-linkcard-t";
+          t.textContent = embed.title;
+          var p = document.createElement("span");
+          p.className = "forum-linkcard-p";
+          p.textContent = embed.provider || "";
+          tx.appendChild(t);
+          tx.appendChild(p);
+          card.appendChild(tx);
+          host.replaceWith(card);
+        };
+        if (previewCache[url]) { renderCard(previewCache[url]); return; }
+        api("/api/unfurl?url=" + encodeURIComponent(url)).then(function (r) {
+          var embed = r && r.ok ? r.embed : null;
+          previewCache[url] = embed;
+          renderCard(embed);
+        }).catch(function () { host.remove(); });
+      });
+    });
+  }
+
   function initReplyEditor() {
     var mount = root.querySelector("#forum-reply-editor");
     if (!mount) { replyEditor = null; return; }
@@ -696,6 +761,7 @@
     view.threadId = null;
     view.replyTo = null;
     view.showNested = {};
+    window.scrollTo(0, 0);
     render();
   }
 
@@ -780,6 +846,11 @@
         }
       }).catch(function () {});
     }
+    // Paint instantly from cache so the top bar swaps in the same frame
+    // as the view switch; fresh data repaints when it lands.
+    if (cache.threads.length || cache.categories.length) {
+      if (view.name === "list") renderList();
+    }
     api("/api/forum/categories").then(function (res) {
       cache.categories = (res.ok && res.categories) || [];
       return api("/api/forum/threads");
@@ -789,7 +860,7 @@
       else if (view.name === "new") renderNew();
       else renderList();
     }).catch(function () {
-      root.innerHTML = '<div class="forum-empty">Couldn\u2019t load the forum.</div>';
+      if (!cache.threads.length) root.innerHTML = '<div class="forum-empty">Couldn\u2019t load the forum.</div>';
     });
   }
 
