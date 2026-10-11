@@ -1529,3 +1529,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-badge-opt.has {
   opacity: 1;
 }
+
+/* + tile for custom avatar upload */
+.chat-emoji-plus {
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--ink);
+  opacity: .7;
+}
+.chat-emoji-plus.on {
+  opacity: 1;
+}
