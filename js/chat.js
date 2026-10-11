@@ -162,6 +162,12 @@
       nm.className = "chat-user-name";
       nm.textContent = u.username;
       sheet.appendChild(nm);
+      if (u.numId) {
+        var idEl = document.createElement("div");
+        idEl.className = "chat-user-joined";
+        idEl.textContent = "#" + u.numId;
+        sheet.appendChild(idEl);
+      }
       var pts = document.createElement("div");
       pts.className = "chat-sheet-points";
       pts.innerHTML = '<span aria-hidden="true">\u2605</span> <span>' + esc(u.points || 0) + "</span> points";
