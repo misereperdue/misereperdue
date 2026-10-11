@@ -158,14 +158,13 @@
       var panel = document.createElement("div");
       panel.className = "forum-notif-panel";
       try {
-        var bellEl = document.getElementById("forum-bell");
         var topbarEl = document.querySelector(".forum-topbar");
-        if (bellEl && topbarEl) {
-          var bellRect = bellEl.getBoundingClientRect();
+        if (topbarEl) {
           var topbarRect = topbarEl.getBoundingClientRect();
           panel.style.top = (topbarRect.bottom + 8) + "px";
-          panel.style.right = Math.max(8, window.innerWidth - bellRect.right - 20) + "px";
-          panel.style.left = "auto";
+          panel.style.left = topbarRect.left + "px";
+          panel.style.right = "auto";
+          panel.style.width = Math.min(340, topbarRect.width) + "px";
         }
       } catch (e) {}
       var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:var(--ink);font-size:18px;cursor:pointer;">×</button></div>';
@@ -216,6 +215,29 @@
           panel.remove();
         }
       });
+      // Watch for chat profile dropdown and close notifications if it appears
+      try {
+        var obs = new MutationObserver(function (mutations) {
+          var notifPanel = document.querySelector(".forum-notif-panel");
+          if (!notifPanel) return;
+          for (var i = 0; i < mutations.length; i++) {
+            var added = mutations[i].addedNodes;
+            for (var j = 0; j < added.length; j++) {
+              var n = added[j];
+              if (n.nodeType === 1) {
+                var cls = n.className || "";
+                var html = n.outerHTML || "";
+                // Chat dropdown indicators
+                if (/chat.*menu|me.*menu|profile.*dropdown|user.*sheet/i.test(cls + " " + html.slice(0, 500))) {
+                  notifPanel.remove();
+                  return;
+                }
+              }
+            }
+          }
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+      } catch (e) {}
     }
   }
 
