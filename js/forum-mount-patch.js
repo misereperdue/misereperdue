@@ -110,48 +110,45 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
-  // Site-wide Untitled UI duotone effect
-  // Adds a filled layer (25% opacity) behind every stroke icon for the duotone look
-  function applyDuotone(svg) {
-    if (!svg || svg.getAttribute("data-duo")) return;
-    // Only process stroke-based icons (not already filled)
-    var fill = svg.getAttribute("fill");
-    if (fill && fill !== "none") return;
-    
-    svg.setAttribute("data-duo", "1");
-    var paths = svg.querySelectorAll("path, circle, rect");
-    paths.forEach(function(p) {
-      // Skip if already has a duotone fill sibling
-      if (p.previousElementSibling && p.previousElementSibling.getAttribute("data-duo-fill")) return;
-      var d = p.getAttribute("d");
-      var cx = p.getAttribute("cx");
-      // Clone for fill layer
-      var fillEl = p.cloneNode();
-      fillEl.setAttribute("fill", "currentColor");
-      fillEl.setAttribute("opacity", "0.22");
-      fillEl.setAttribute("stroke", "none");
-      fillEl.setAttribute("data-duo-fill", "1");
-      // Remove stroke attributes from fill
-      fillEl.removeAttribute("stroke-width");
-      fillEl.removeAttribute("stroke-linecap");
-      fillEl.removeAttribute("stroke-linejoin");
-      p.parentNode.insertBefore(fillEl, p);
+  // Site-wide solid icons
+  // Converts stroke-based icons to solid fill
+  function applySolid(svg) {
+    if (!svg || svg.getAttribute("data-solid")) return;
+    svg.setAttribute("data-solid", "1");
+    // Set fill to currentColor, remove stroke
+    svg.setAttribute("fill", "currentColor");
+    svg.removeAttribute("stroke");
+    var els = svg.querySelectorAll("path, circle, rect");
+    els.forEach(function(el) {
+      // Skip duotone fill layers from previous version
+      if (el.getAttribute("data-duo-fill")) {
+        el.remove();
+        return;
+      }
+      el.setAttribute("fill", "currentColor");
+      el.removeAttribute("stroke");
+      el.removeAttribute("stroke-width");
+      el.removeAttribute("stroke-linecap");
+      el.removeAttribute("stroke-linejoin");
+      el.removeAttribute("opacity");
     });
+    // Remove any duotone fill layers at svg level
+    svg.querySelectorAll("[data-duo-fill]").forEach(function(el) { el.remove(); });
+    svg.removeAttribute("data-duo");
   }
   
-  function scanDuotone() {
-    document.querySelectorAll("svg:not([data-duo])").forEach(applyDuotone);
+  function scanSolid() {
+    document.querySelectorAll("svg:not([data-solid])").forEach(applySolid);
   }
-  // Initial scan + watch for new icons
-  setTimeout(scanDuotone, 500);
-  setInterval(scanDuotone, 1500);
+  setTimeout(scanSolid, 500);
+  setInterval(scanSolid, 1500);
   try {
     new MutationObserver(function(muts) {
       muts.forEach(function(m) {
         m.addedNodes.forEach(function(n) {
           if (n.nodeType === 1) {
-            if (n.tagName === "SVG") applyDuotone(n);
-            n.querySelectorAll && n.querySelectorAll("svg:not([data-duo])").forEach(applyDuotone);
+            if (n.tagName === "SVG") applySolid(n);
+            n.querySelectorAll && n.querySelectorAll("svg:not([data-solid])").forEach(applySolid);
           }
         });
       });
