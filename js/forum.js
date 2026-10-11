@@ -47,12 +47,45 @@
   function avatarHTML(author) {
     // author: { author, authorAvatar, hasAvatarImg, avatarV }
     var name = author.author || "?";
+    var inner = "";
     if (author.hasAvatarImg) {
-      return '<span class="forum-avatar"><img src="' + API + "/api/avatarimg/" +
-        encodeURIComponent(name) + "?v=" + (author.avatarV || 0) + '" alt=""></span>';
+      inner = '<img src="' + API + "/api/avatarimg/" +
+        encodeURIComponent(name) + "?v=" + (author.avatarV || 0) + '" alt="">';
+    } else {
+      var e = author.authorAvatar || "\uD83D\uDE00";
+      inner = esc(e);
     }
-    var e = author.authorAvatar || "\uD83D\uDE00";
-    return '<span class="forum-avatar forum-avatar-emoji">' + esc(e) + "</span>";
+    var cls = author.hasAvatarImg ? "forum-avatar" : "forum-avatar forum-avatar-emoji";
+    return '<button type="button" class="' + cls + ' forum-avatar-btn" data-username="' + esc(name) + '">' + inner + "</button>";
+  }
+
+  function badgeFor(badgeId) {
+    if (!badgeId || !window.MPChat || !window.MPChat.badgeHTML) return "";
+    // Hide robot badge for non-grim (same rule as chat)
+    if (badgeId === "robot") return "";
+    return window.MPChat.badgeHTML(badgeId);
+  }
+
+  function wireAvatars() {
+    root.querySelectorAll(".forum-avatar-btn").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var uname = b.getAttribute("data-username");
+        if (uname && window.MPChat && window.MPChat.openUserSheet) {
+          window.MPChat.openUserSheet(uname);
+        }
+      });
+    });
+    var meBtn = root.querySelector("#forum-me");
+    if (meBtn) meBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      // Open own profile via chat's me button
+      var chatMe = document.querySelector("#journal .chat-me");
+      if (chatMe) chatMe.click();
+      else if (meInfo && window.MPChat && window.MPChat.openUserSheet) {
+        window.MPChat.openUserSheet(meInfo.username);
+      }
+    });
   }
 
   function memberBadgeHTML() {
@@ -61,9 +94,27 @@
 
   /* ---------- list view ---------- */
 
+  var meInfo = null;
+
+  function forumTopBar() {
+    var pts = meInfo ? (meInfo.points || 0) : 0;
+    var avHtml = "";
+    if (meInfo && window.MPChat && window.MPChat.avatarNode) {
+      var node = window.MPChat.avatarNode(meInfo.username, meInfo.avatar, "sm", meInfo.avatarV || 0);
+      avHtml = node.outerHTML;
+    }
+    return '<div class="chat-head forum-topbar">' +
+      '<div class="chat-title">Forum</div>' +
+      '<div class="chat-head-right">' +
+      '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
+      (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
+      "</div></div>";
+  }
+
   function renderList() {
-    var html = '<div class="forum-head">' +
-      '<h2 class="forum-title">Forum</h2>' +
+    var html = forumTopBar() +
+      '<div class="forum-head">' +
+      '<h2 class="forum-title">Threads</h2>' +
       (token() ? '<button type="button" class="btn accent forum-new-btn" id="forum-new">New thread</button>' : "") +
       "</div>";
 
@@ -91,7 +142,7 @@
           (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + esc(t.author) + " \u00B7 " + esc(t.categoryName) +
+          '<span class="forum-thread-meta">' + esc(t.author) + badgeFor(t.authorBadge) ? " " + badgeFor(t.authorBadge) : "" + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + "</span>" +
           "</span>" +
           '<span class="forum-thread-count">' + t.replies + "</span>" +
@@ -109,6 +160,7 @@
 
     root.innerHTML = html;
 
+    wireAvatars();
     root.querySelectorAll(".forum-cat").forEach(function (b) {
       b.addEventListener("click", function () {
         view.category = b.getAttribute("data-cat");
@@ -168,7 +220,7 @@
 
       html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
-        '<span class="forum-post-author">' + esc(t.author) + "</span>" +
+        '<span class="forum-post-author">' + esc(t.author) + badgeFor(t.authorBadge) + "</span>" +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div>" +
@@ -178,7 +230,7 @@
       (t.replies || []).forEach(function (r) {
         html += '<article class="forum-post">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
-          '<span class="forum-post-author">' + esc(r.author) + "</span>" +
+          '<span class="forum-post-author">' + esc(r.author) + badgeFor(r.authorBadge) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span>" +
           (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
           '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div></article>";
@@ -194,6 +246,7 @@
       }
 
       root.innerHTML = html;
+      wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       root.querySelectorAll("[data-delreply]").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -286,10 +339,15 @@
   function render() {
     root = document.getElementById("forum-root");
     if (!root) return;
-    // Check owner status
+    // Check owner status + user info
     if (token()) {
       api("/api/me").then(function (r) {
-        isOwner = !!(r && r.user && r.user.owner);
+        if (r && r.user) {
+          meInfo = r.user;
+          isOwner = !!r.user.owner;
+          var pn = document.getElementById("forum-points");
+          if (pn) pn.textContent = meInfo.points || 0;
+        }
       }).catch(function () {});
     }
     api("/api/forum/categories").then(function (res) {
