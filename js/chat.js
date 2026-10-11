@@ -1452,7 +1452,7 @@
           if (u.member) {
             var memTag = document.createElement("span");
             memTag.style.cssText = "font-size:11px;color:#ffd60a;font-weight:700;";
-            memTag.textContent = " ⭐ MEMBER";
+            memTag.textContent = " ⭐ Member";
             nm.appendChild(memTag);
           }
           if (u.banned) {
@@ -1464,7 +1464,6 @@
           var pts = document.createElement("div");
           pts.style.cssText = "font-size:12px;opacity:.5;";
           pts.textContent = "★ " + (u.points || 0) + " · Joined " + new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-          if (u.member) pts.textContent += " · ★ Member" + (u.memberAmount ? " $" + u.memberAmount : "");
           nm.appendChild(pts);
           head.appendChild(nm);
           card.appendChild(head);
