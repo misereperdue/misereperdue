@@ -1029,7 +1029,7 @@
       messages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
       newUsers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'
     };
-    ["views", "visitors", "messages", "newUsers"].forEach(function(metric) {
+    ["views", "visitors", "newUsers", "messages"].forEach(function(metric) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.innerHTML = metricIcons[metric];
@@ -1073,7 +1073,7 @@
       var padB = 22, padT = 8;
       var chartH = H - padB - padT;
       var data = stats.days.slice().reverse(); // oldest to newest
-      var values = data.map(function(d) { return d[currentMetric] || 0; });
+      var isPostsMetric = (currentMetric === "messages"); var values = data.map(function(d) { if (isPostsMetric) return (d.forumPosts || 0) + (d.forumReplies || 0); return d[currentMetric] || 0; });
       var max = Math.max.apply(null, values.concat([1]));
       var total = values.reduce(function(a, b) { return a + b; }, 0);
       var avg = (total / data.length).toFixed(1);
@@ -1129,7 +1129,7 @@
         var y = padT + chartH - h;
         var isPeak = i === peakIdx && max > 0;
 
-        var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        if (isPostsMetric && v > 0) { var p = d.forumPosts || 0, r = d.forumReplies || 0, ph = (p / v) * h, rh = h - ph, NS = "http://www.w3.org/2000/svg"; var rp = document.createElementNS(NS, "rect"); rp.setAttribute("x", x); rp.setAttribute("y", y + rh); rp.setAttribute("width", bw); rp.setAttribute("height", ph); rp.setAttribute("rx", Math.min(4, bw / 2)); rp.setAttribute("fill", "#1d4ed8"); svg.appendChild(rp); if (r > 0) { var rr = document.createElementNS(NS, "rect"); rr.setAttribute("x", x); rr.setAttribute("y", y); rr.setAttribute("width", bw); rr.setAttribute("height", rh); rr.setAttribute("rx", Math.min(4, bw / 2)); rr.setAttribute("fill", "#60a5fa"); svg.appendChild(rr); } } else { var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         rect.setAttribute("x", x);
         rect.setAttribute("y", y);
         rect.setAttribute("width", bw);
@@ -1163,7 +1163,7 @@
         var titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
         titleEl.textContent = d.date + ": " + v + " " + mLabel.toLowerCase();
         rect.appendChild(titleEl);
-        svg.appendChild(rect);
+        svg.appendChild(rect); } // end else (non-stacked)
 
         // Date labels every 5 days
         if (i % 5 === 0 || i === data.length - 1) {
