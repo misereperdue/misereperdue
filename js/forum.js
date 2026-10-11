@@ -545,7 +545,7 @@
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
-          ((me && (isOwner || me.username.toLowerCase() === String(t.author).toLowerCase())) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
+          ((me && (isOwner || me.username.toLowerCase() === String(t.author).toLowerCase()) && cache.threads.length && ("excerpt" in cache.threads[0])) ? '<button type="button" class="forum-admin-btn" id="forum-edit-btn">Edit</button>' : "") +
           (isOwner ? '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' : "") + "</div>" + "</article>";
 
       html += '<div class="forum-replies">';
