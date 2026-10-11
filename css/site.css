@@ -1919,3 +1919,6 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-thread-excerpt { font-size: 13px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .forum-edit-actions { display: flex; gap: 8px; }
 .forum-edit-actions .btn { flex: 1; }
+
+/* Pin bubble in the list bottom bar */
+.forum-pin-bubble { width: 30px; height: 30px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(255,255,255,.09); border: var(--glass-hairline); align-self: center; }
