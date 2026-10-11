@@ -21,7 +21,7 @@
   }
   var AVATAR_EMOJIS = ["\uD83D\uDE00", "\uD83D\uDE0E", "\uD83D\uDD25", "\uD83D\uDC80",
     "\uD83C\uDF19", "\u2B50", "\uD83C\uDFAD", "\uD83D\uDC7B",
-    "\uD83D\uDC3A", "\uD83E\uDD81", "\uD83C\uDF0A", "\u26A1", "\uD83C\uDF52", "\uD83D\uDC8E"];
+    "\uD83D\uDC3A", "\uD83E\uDD81", "\uD83C\uDF0A", "\u26A1", "\uD83C\uDF52"];
 
   var root = null;
   var me = null;
@@ -1592,17 +1592,19 @@
       });
       grid.appendChild(b);
     });
-    sheet.appendChild(grid);
-
-    var upBtn = document.createElement("button");
-    upBtn.type = "button";
-    upBtn.className = "btn chat-upload";
-    upBtn.textContent = "Upload photo";
+    // + tile to upload custom avatar photo
     var fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "image/*";
     fileInput.style.display = "none";
-    upBtn.addEventListener("click", function () { fileInput.click(); });
+    var plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.className = "chat-emoji chat-emoji-plus" + (me.hasAvatarImg ? " on" : "");
+    plusBtn.textContent = "+";
+    plusBtn.setAttribute("aria-label", "Upload avatar photo");
+    plusBtn.addEventListener("click", function () { fileInput.click(); });
+    grid.appendChild(plusBtn);
+    sheet.appendChild(grid);
     fileInput.addEventListener("change", function () {
       var f = fileInput.files && fileInput.files[0];
       if (!f) return;
@@ -1619,10 +1621,10 @@
         var dataUrl = c.toDataURL("image/jpeg", 0.85);
         errBox.textContent = "";
         upMsg.textContent = "";
-        upBtn.disabled = true;
+        plusBtn.disabled = true;
         api("/api/avatar", { method: "POST", body: { image: dataUrl } })
           .then(function (r) {
-            upBtn.disabled = false;
+            plusBtn.disabled = false;
             if (r && r.ok) {
               me.hasAvatarImg = true;
               me.avatarV = r.avatarV;
@@ -1640,12 +1642,13 @@
               }
               upMsg.textContent = "Photo updated.";
               grid.querySelectorAll(".chat-emoji").forEach(function (n) { n.classList.remove("on"); });
+              if (plusBtn) plusBtn.classList.add("on");
             } else {
               errBox.textContent = (r && r.error) || "Couldn't upload.";
             }
           })
           .catch(function () {
-            upBtn.disabled = false;
+            plusBtn.disabled = false;
             errBox.textContent = "Couldn't reach the chat server.";
           });
       };
@@ -1653,7 +1656,6 @@
       im.src = url;
       fileInput.value = "";
     });
-    sheet.appendChild(upBtn);
     var upMsg = document.createElement("div");
     upMsg.className = "chat-upload-msg";
     sheet.appendChild(upMsg);
