@@ -115,7 +115,7 @@
 
   /* ---------- rich text ---------- */
 
-  var RICH_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1 };
+  var RICH_ALLOWED = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, S: 1, STRIKE: 1, CODE: 1, PRE: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, A: 1, H3: 1, H4: 1, IMG: 1 };
   function sanitizeHTML(html) {
     try {
       var doc = new DOMParser().parseFromString(String(html || ""), "text/html");
@@ -130,7 +130,19 @@
             child.remove();
             return;
           }
+          var keepHref = null, keepSrc = null;
+          if (child.tagName === "A") {
+            var href = child.getAttribute("href") || "";
+            if (/^https?:\/\//i.test(href)) keepHref = href;
+          }
+          if (child.tagName === "IMG") {
+            var src = child.getAttribute("src") || "";
+            if (/^https?:\/\//i.test(src)) keepSrc = src;
+          }
           Array.prototype.slice.call(child.attributes).forEach(function (a) { child.removeAttribute(a.name); });
+          if (keepHref) { child.setAttribute("href", keepHref); child.setAttribute("target", "_blank"); child.setAttribute("rel", "noopener noreferrer"); }
+          if (keepSrc) { child.setAttribute("src", keepSrc); child.setAttribute("loading", "lazy"); }
+          if (child.tagName === "IMG" && !keepSrc) { child.remove(); return; }
           walk(child);
         });
       })(doc.body);
@@ -148,11 +160,13 @@
   function loadEditorLib() {
     if (!editorLibPromise) {
       editorLibPromise = Promise.all([
-        import("https://cdn.jsdelivr.net/npm/@tiptap/core@2/+esm"),
-        import("https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2/+esm"),
-        import("https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2/+esm")
+        import("https://esm.sh/@tiptap/core@2.11.5"),
+        import("https://esm.sh/@tiptap/starter-kit@2.11.5"),
+        import("https://esm.sh/@tiptap/extension-placeholder@2.11.5"),
+        import("https://esm.sh/@tiptap/extension-link@2.11.5"),
+        import("https://esm.sh/@tiptap/extension-image@2.11.5")
       ]).then(function (mods) {
-        return { Editor: mods[0].Editor, StarterKit: mods[1].default, Placeholder: mods[2].default };
+        return { Editor: mods[0].Editor, StarterKit: mods[1].default, Placeholder: mods[2].default, Link: mods[3].default, Image: mods[4].default };
       }).catch(function () { return null; });
     }
     return editorLibPromise;
@@ -166,14 +180,19 @@
     { act: "h3", label: "H", cls: "" },
     { act: "bullet", label: "\u2022\u2261", cls: "" },
     { act: "ordered", label: "1.\u2261", cls: "" },
-    { act: "quote", label: "\u201D", cls: "" }
+    { act: "quote", label: "\u201D", cls: "" },
+    { act: "link", label: "\uD83D\uDD17", cls: "" },
+    { act: "image", label: "\uD83D\uDCF7", cls: "" }
   ];
   function toolbarHTML() {
     var h = '<div class="forum-toolbar">';
     TOOLBAR.forEach(function (b) {
       h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '">' + b.label + "</button>";
     });
-    return h + "</div>";
+    h += "</div>";
+    h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
+    h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
+    return h;
   }
   function refreshToolbar(editor, bar) {
     if (!editor || !bar) return;
@@ -183,6 +202,7 @@
       var on = false;
       try {
         if (act === "h3") on = editor.isActive("heading", { level: 3 });
+        else if (act === "link") on = editor.isActive("link");
         else if (map[act]) on = editor.isActive(map[act]);
       } catch (e) {}
       btn.classList.toggle("on", !!on);
@@ -195,6 +215,12 @@
       btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
       btn.addEventListener("click", function () {
         var act = btn.getAttribute("data-act");
+        if (act === "link") { toggleLinkBar(editor, mountEl); return; }
+        if (act === "image") {
+          var fi = mountEl.querySelector(".forum-file-input");
+          if (fi) fi.click();
+          return;
+        }
         var ch = editor.chain().focus();
         if (act === "bold") ch.toggleBold().run();
         else if (act === "italic") ch.toggleItalic().run();
@@ -209,6 +235,87 @@
     });
     editor.on("selectionUpdate", function () { refreshToolbar(editor, bar); });
     editor.on("update", function () { refreshToolbar(editor, bar); });
+    var linkBar = mountEl.querySelector(".forum-linkbar");
+    if (linkBar) {
+      var linkInput = linkBar.querySelector(".forum-link-input");
+      linkBar.querySelector(".forum-link-apply").addEventListener("click", function () {
+        var url = (linkInput.value || "").trim();
+        if (!url) return;
+        if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+        var sel = editor.state.selection;
+        if (sel.empty) {
+          editor.chain().focus().insertContent('<a href="' + url.replace(/"/g, "%22") + '">' + esc(url) + "</a>").run();
+        } else {
+          editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+        }
+        linkBar.classList.add("hidden");
+        linkInput.value = "";
+      });
+      linkBar.querySelector(".forum-link-remove").addEventListener("click", function () {
+        editor.chain().focus().extendMarkRange("link").unsetLink().run();
+        linkBar.classList.add("hidden");
+      });
+    }
+    var fileInput = mountEl.querySelector(".forum-file-input");
+    if (fileInput) {
+      fileInput.addEventListener("change", function () {
+        var file = fileInput.files && fileInput.files[0];
+        fileInput.value = "";
+        if (!file) return;
+        uploadEditorImage(file, function (url) {
+          if (url) editor.chain().focus().setImage({ src: url }).run();
+        });
+      });
+    }
+  }
+  function toggleLinkBar(editor, mountEl) {
+    var bar = mountEl.querySelector(".forum-linkbar");
+    if (!bar) return;
+    var opening = bar.classList.contains("hidden");
+    bar.classList.toggle("hidden", !opening);
+    if (opening) {
+      var input = bar.querySelector(".forum-link-input");
+      var existing = "";
+      try { existing = editor.getAttributes("link").href || ""; } catch (e) {}
+      input.value = existing;
+      setTimeout(function () { input.focus(); }, 50);
+    } else {
+      editor.commands.focus();
+    }
+  }
+  function uploadEditorImage(file, done) {
+    function send(dataUrl) {
+      api("/api/media", { method: "POST", body: { dataUrl: dataUrl, kind: "image" } })
+        .then(function (r) {
+          if (r && r.ok && r.id) done(API + "/api/media/" + r.id);
+          else { alert((r && r.error) || "Upload failed"); done(null); }
+        })
+        .catch(function () { alert("Upload failed"); done(null); });
+    }
+    var isGif = file.type === "image/gif";
+    var reader = new FileReader();
+    reader.onload = function () {
+      var dataUrl = String(reader.result || "");
+      // GIFs go up as-is to keep the animation (backend enforces size caps)
+      if (isGif) { send(dataUrl); return; }
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 1600;
+          var scale = Math.min(1, max / Math.max(img.width, img.height));
+          if (scale >= 1 && file.type === "image/jpeg") { send(dataUrl); return; }
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(img.width * scale);
+          cv.height = Math.round(img.height * scale);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          send(cv.toDataURL("image/jpeg", 0.85));
+        } catch (e) { send(dataUrl); }
+      };
+      img.onerror = function () { send(dataUrl); };
+      img.src = dataUrl;
+    };
+    reader.onerror = function () { done(null); };
+    reader.readAsDataURL(file);
   }
   function createEditor(mount, placeholder) {
     return loadEditorLib().then(function (lib) {
@@ -217,7 +324,9 @@
         element: mount.querySelector(".forum-editor-mount"),
         extensions: [
           lib.StarterKit.configure({ heading: { levels: [3] } }),
-          lib.Placeholder.configure({ placeholder: placeholder })
+          lib.Placeholder.configure({ placeholder: placeholder }),
+          lib.Link.configure({ openOnClick: false, autolink: true }),
+          lib.Image.configure({ inline: false })
         ],
         content: "",
         editorProps: { attributes: { class: "forum-editor-input" } }
@@ -330,7 +439,7 @@
   /* ---------- thread view ---------- */
 
   function renderThread() {
-    root.innerHTML = '<div class="forum-loading">Loading\u2026</div>';
+    root.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin"></span></div>';
     api("/api/forum/thread/" + encodeURIComponent(view.threadId)).then(function (res) {
       if (!res.ok || !res.thread) {
         root.innerHTML = '<div class="forum-empty">Thread not found.</div>';
@@ -361,6 +470,7 @@
       html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
         '<span class="forum-post-author">' + authorLine(t) + "</span>" +
+        (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
