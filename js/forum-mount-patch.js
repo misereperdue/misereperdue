@@ -345,6 +345,63 @@
 
 
 
+
+  // Bulletproof activity slider - every step wrapped, cannot break dashboard
+  (function() {
+    function trySetup() {
+      try {
+        var viewsBtn = document.querySelector('button[aria-label="Views"]');
+        if (!viewsBtn) return;
+        if (document.getElementById('bp-slider')) return;
+        
+        var container = viewsBtn.parentElement;
+        if (!container) return;
+        
+        var btns = [];
+        try {
+          ["Views","Visitors","Users","Posts"].forEach(function(l) {
+            var b = container.querySelector('button[aria-label="' + l + '"]');
+            if (b) btns.push(b);
+          });
+        } catch (e) { return; }
+        if (btns.length !== 4) return;
+        
+        try {
+          container.style.position = 'relative';
+          var slider = document.createElement('div');
+          slider.id = 'bp-slider';
+          slider.style.position = 'absolute';
+          slider.style.top = '3px';
+          slider.style.bottom = '3px';
+          slider.style.left = '3px';
+          slider.style.width = 'calc(25% - 3px)';
+          slider.style.borderRadius = '11px';
+          slider.style.background = 'rgba(255,255,255,0.22)';
+          slider.style.transition = 'transform 0.3s ease';
+          slider.style.pointerEvents = 'none';
+          container.insertBefore(slider, container.firstChild);
+        } catch (e) { return; }
+        
+        try {
+          btns.forEach(function(btn, idx) {
+            btn.addEventListener('click', function() {
+              try {
+                var sl = document.getElementById('bp-slider');
+                if (sl) sl.style.transform = 'translateX(' + (idx * 100) + '%)';
+              } catch (e) {}
+            });
+          });
+        } catch (e) {}
+      } catch (e) {}
+    }
+    
+    try {
+      setInterval(function() {
+        try { trySetup(); } catch (e) {}
+      }, 3000);
+    } catch (e) {}
+  })();
+
   // Assistant briefing under the graph
   (function() {
     function addBriefing() {
