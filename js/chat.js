@@ -943,11 +943,19 @@
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Messages", newUsers: "New Users" };
+    var metricIcons = {
+      views: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      visitors: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      messages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      newUsers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'
+    };
     ["views", "visitors", "messages", "newUsers"].forEach(function(metric) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = metricLabels[metric];
-      btn.style.cssText = "flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:" +
+      btn.innerHTML = metricIcons[metric];
+      btn.title = metricLabels[metric];
+      btn.setAttribute("aria-label", metricLabels[metric]);
+      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:" +
         (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:#fff;font-size:13px;font-weight:600;cursor:pointer;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
