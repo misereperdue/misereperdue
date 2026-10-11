@@ -1304,15 +1304,27 @@
           nameInput.type = "text";
           nameInput.value = cat.name;
           nameInput.maxLength = 40;
-          nameInput.style.cssText = "flex:1;background:transparent;border:none;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
+          nameInput.title = "Tap to rename";
+          nameInput.style.cssText = "flex:1;min-width:0;background:rgba(128,128,128,.08);border:1px dashed rgba(140,160,255,.45);border-radius:8px;padding:5px 9px;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
+          nameInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") { e.preventDefault(); nameInput.blur(); }
+          });
           nameInput.addEventListener("change", function () {
             var v = nameInput.value.trim();
             if (!v || v === cat.name) { nameInput.value = cat.name; return; }
             api("/api/forum/categories/" + encodeURIComponent(cat.id), {
               method: "PUT", body: { name: v }
-            }).then(function (r) { if (r.ok) refresh(); });
+            }).then(function (r) {
+              if (r.ok) refresh();
+              else { alert(r.error || "Rename failed"); nameInput.value = cat.name; }
+            });
           });
           row.appendChild(nameInput);
+          var editHint = document.createElement("span");
+          editHint.textContent = "\u270E";
+          editHint.style.cssText = "font-size:12px;opacity:.55;flex:none;";
+          editHint.title = "Rename";
+          row.appendChild(editHint);
 
           var moBtn = document.createElement("button");
           moBtn.type = "button";
