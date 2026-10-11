@@ -16,19 +16,6 @@
 var MPShop = (function () {
   "use strict";
 
-  var PLACEHOLDER = {
-    id: "sample-001",
-    name: "Sample 001",
-    price: null,
-    priceLabel: "Coming soon",
-    images: ["images/tee.jpg"],
-    image: "images/tee.jpg",
-    details: "First sample. Cut, cloth and price still being locked.",
-    sizes: null,
-    available: false,
-    placeholder: true
-  };
-
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -86,7 +73,7 @@ var MPShop = (function () {
         SHOP_DIAG = "showing cached products";
         return cached;
       }
-      return [PLACEHOLDER];
+      return [];
     }).catch(function (e) {
       if (!tried) return shopifyList(true);
       var cached = cachedProducts();
@@ -96,14 +83,14 @@ var MPShop = (function () {
         return cached;
       }
       SHOP_DIAG = "store unreachable (" + (e && e.message ? e.message : "network") + ")";
-      return [PLACEHOLDER];
+      return [];
     });
   }
 
   function products() {
     if (window.MPShopify && MPShopify.configured()) { SHOP_DIAG = ""; return shopifyList(false); }
     SHOP_DIAG = window.MPShopify ? "store not configured" : "store module failed to load";
-    return Promise.resolve([PLACEHOLDER]);
+    return Promise.resolve([]);
   }
 
   function stockPill(p) {
@@ -133,16 +120,31 @@ var MPShop = (function () {
   function renderShop() {
     var grid = document.getElementById("shop-grid");
     if (!grid) return;
-    grid.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin" role="status" aria-label="Loading products"></span></div>';
-    products().then(function (list) {
+    function paint(list) {
+      if (!list || !list.length) {
+        grid.innerHTML = '<p class="meta" style="font-size:15px">Nothing in the shop yet.</p>' +
+          (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + "</p>" : "");
+        return;
+      }
       grid.innerHTML = list.map(cardHTML).join("") +
-        (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + " — showing preview.</p>" : "");
+        (SHOP_DIAG ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + esc(SHOP_DIAG) + "</p>" : "");
       grid.querySelectorAll("[data-product]").forEach(function (el) {
         el.onclick = function () { openProduct(el.dataset.product); };
         el.onkeydown = function (e) {
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProduct(el.dataset.product); }
         };
       });
+    }
+    var cached = cachedProducts();
+    if (cached) {
+      cached.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
+      paint(cached);
+    } else {
+      grid.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin" role="status" aria-label="Loading products"></span></div>';
+    }
+    products().then(function (list) {
+      if (list && list.length) paint(list);
+      else if (!cached) paint(list);
     });
   }
 
@@ -243,7 +245,14 @@ var MPShop = (function () {
      carousel; no images at all shows the emoji placeholder tile. */
 
   function openProduct(id) {
-    var p = MP.PRODUCTS[id] || PLACEHOLDER;
+    var p = MP.PRODUCTS[id];
+    if (!p) {
+      products().then(function () {
+        if (MP.PRODUCTS[id]) openProduct(id);
+        else if (window.MPNav) MPNav.show("shop");
+      });
+      return;
+    }
     var imgs = (p.images || []).filter(Boolean);
     var view = document.getElementById("postview");
     var sizes = p.sizes && p.sizes.length
@@ -436,7 +445,6 @@ var MPShop = (function () {
     renderShop: renderShop,
     openProduct: openProduct,
     renderCartPanel: renderCartPanel,
-    updateCartBadge: updateCartBadge,
-    PLACEHOLDER: PLACEHOLDER
+    updateCartBadge: updateCartBadge
   };
 })();
