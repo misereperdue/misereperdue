@@ -1520,3 +1520,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-style: italic;
   max-width: 240px;
 }
+
+/* Admin badge grant view: distinguish owned vs not owned */
+.chat-badge-opt.not-has {
+  opacity: .3;
+  filter: grayscale(1);
+}
+.chat-badge-opt.has {
+  opacity: 1;
+}
