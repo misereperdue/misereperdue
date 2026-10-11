@@ -206,16 +206,18 @@
         return;
       }
       if (res.locked) {
-        root.innerHTML = '<div class="forum-head">' +
+        root.innerHTML = forumTopBar() + '<div class="forum-head">' +
           '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>' +
           '<div class="forum-locked"><div class="forum-locked-icon">\u2B50</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
           '<div class="forum-locked-sub">Members only. Become a member to read this thread.</div></div>';
+        wireAvatars();
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
       }
       var t = res.thread;
-      var html = '<div class="forum-head">' +
+      var html = forumTopBar() +
+        '<div class="forum-head">' +
         '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>';
 
       html += '<article class="forum-post forum-op">' +
