@@ -511,8 +511,10 @@
     function setup() {
       try {
         var viewsBtn = document.querySelector('button[aria-label="Views"]');
-        if (!viewsBtn || document.getElementById('act-slider')) return;
+        if (!viewsBtn) return;
         var container = viewsBtn.parentElement;
+        // Remove any existing sliders (prevents duplicates on re-render)
+        container.querySelectorAll('#act-slider').forEach(function(el) { el.remove(); });
         if (!container) return;
         var labels = ["Views","Visitors","Users","Posts"];
         var btns = [];
