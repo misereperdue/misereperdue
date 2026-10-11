@@ -152,7 +152,9 @@
 
     // Metric toggle
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;";
+    toggleRow.style.cssText = "position:relative;display:flex;gap:4px;margin-bottom:12px;background:var(--glass-clear-tint);border-radius:12px;padding:3px;border:var(--glass-hairline);";
+    var metricSlider = document.createElement("span");
+    metricSlider.style.cssText = "position:absolute;top:3px;left:3px;bottom:3px;width:calc(25% - 4px);border-radius:9px;background:var(--glass-regular-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.3,1.3,.4,1);pointer-events:none;";
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" };
@@ -168,18 +170,25 @@
       btn.innerHTML = metricIcons[metric];
       btn.title = metricLabels[metric];
       btn.setAttribute("aria-label", metricLabels[metric]);
-      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:var(--glass-hairline);background:" +
-        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;";
+      btn.style.cssText = "position:relative;z-index:1;flex:1;padding:10px 8px;border:none;border-radius:9px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .25s ease;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
+        var idx = ["views", "visitors", "newUsers", "messages"].indexOf(metric);
+        metricSlider.style.transform = "translateX(" + (idx * 100) + "%)";
         Object.keys(metricBtns).forEach(function(k) {
-          metricBtns[k].style.background = k === metric ? "rgba(0,122,255,.25)" : "transparent";
+          metricBtns[k].style.color = k === metric ? "var(--ink)" : "var(--muted)";
         });
+        // Update global tracker for briefing
+        if (window._activeMetric !== undefined) {
+          var labels = {views:"Views", visitors:"Visitors", newUsers:"Users", messages:"Posts"};
+          window._activeMetric = labels[metric];
+        }
         drawGraph();
       });
       metricBtns[metric] = btn;
       toggleRow.appendChild(btn);
     });
+    toggleRow.insertBefore(metricSlider, toggleRow.firstChild);
     overviewPage.appendChild(toggleRow);
 
     // SVG graph container
