@@ -318,7 +318,7 @@
       '<div class="chat-auth">' +
       '<div class="chat-auth-head">' +
       '<div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div>' +
-      '<div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-shop">View our webstore instead.</a></div>' +
+      '<div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div>' +
       "</div>" +
       '<div class="chat-card">' +
       '<div class="chat-tabs">' +
@@ -371,6 +371,12 @@
       });
     });
     // Shop link - switch to webstore view
+    var forumLink = root.querySelector(".chat-auth-forum");
+    if (forumLink) forumLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      var forumBtn = document.querySelector('[data-view="forum"]');
+      if (forumBtn) forumBtn.click();
+    });
     var shopLink = root.querySelector(".chat-auth-shop");
     if (shopLink) shopLink.addEventListener("click", function(e) {
       e.preventDefault();
