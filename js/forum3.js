@@ -1414,13 +1414,15 @@
       if (send) send.addEventListener("click", function () {
         var content = "", rich = false;
         if (replyEditor) {
-          if (replyEditor.isEmpty) return;
-          content = appendPostEmbeds(replyEditor.getHTML(), mount._postEmbeds);
+          if (replyEditor.isEmpty) { alert("Editor is empty (debug: isEmpty=true)"); return; }
+          try {
+            content = appendPostEmbeds(replyEditor.getHTML(), mount._postEmbeds);
+          } catch (e) { alert("Failed to get content: " + e.message); return; }
           rich = true;
         } else {
           var ta = root.querySelector("#forum-reply");
           content = ta ? ta.value.trim() : "";
-          if (!content) return;
+          if (!content) { alert("No content (debug: replyEditor=null, textarea empty)"); return; }
         }
         send.disabled = true;
         var origText = send.innerHTML;
