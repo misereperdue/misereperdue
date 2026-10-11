@@ -126,6 +126,15 @@
     return esc(item.author) + pts;
   }
 
+  function wireBell() {
+    updateBellBadge();
+    var bell = document.getElementById("forum-bell");
+    if (bell && !bell._wired) {
+      bell._wired = true;
+      bell.addEventListener("click", function (e) { e.stopPropagation(); showNotifications(); });
+    }
+  }
+
   function wireAvatars() {
     root.querySelectorAll(".forum-avatar-btn").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -359,8 +368,16 @@
       }
     });
   }
+  // Convert @username to clickable mention links
+  function linkMentions(html) {
+    if (!html) return html;
+    return String(html).replace(/(^|\s)@([A-Za-z0-9_]{3,16})/g, function (m, pre, uname) {
+      return pre + '<a href="#" class="forum-mention" data-user="' + uname.toLowerCase() + '" style="color:#6ea8ff;font-weight:600;text-decoration:none;">@' + uname + '</a>';
+    });
+  }
+
   function bodyHTML(item) {
-    if (item.rich) return sanitizeHTML(item.content);
+    if (item.rich) return linkMentions(sanitizeHTML(item.content));
     return esc(item.content || "").replace(/\n/g, "<br>");
   }
 
@@ -738,6 +755,78 @@
       }
     });
   }
+  var mentionUserCache = null;
+  function getMentionUsers() {
+    if (mentionUserCache) return Promise.resolve(mentionUserCache);
+    return api("/api/users").then(function (r) {
+      if (r && r.ok && r.users) {
+        mentionUserCache = r.users.map(function (u) { return u.username; }).filter(Boolean);
+        return mentionUserCache;
+      }
+      return [];
+    }).catch(function () { return []; });
+  }
+
+  function wireMentionAutocomplete(editor, mount) {
+    var dropdown = null;
+    function hideDropdown() {
+      if (dropdown) { dropdown.remove(); dropdown = null; }
+    }
+    editor.on("update", function () {
+      var sel = editor.state.selection;
+      var textBefore = "";
+      try {
+        var pos = sel.$head.pos;
+        var start = Math.max(0, pos - 20);
+        textBefore = editor.state.doc.textBetween(start, pos, " ");
+      } catch (e) { hideDropdown(); return; }
+      var m = textBefore.match(/@([A-Za-z0-9_]{0,16})$/);
+      if (!m) { hideDropdown(); return; }
+      var query = m[1].toLowerCase();
+      getMentionUsers().then(function (users) {
+        var matches = users.filter(function (u) {
+          return u.toLowerCase().indexOf(query) === 0 && u.toLowerCase() !== query;
+        }).slice(0, 5);
+        if (!matches.length) { hideDropdown(); return; }
+        hideDropdown();
+        dropdown = document.createElement("div");
+        dropdown.className = "forum-mention-dropdown";
+        dropdown.style.cssText = "position:absolute;z-index:1000;background:rgba(20,25,45,.98);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:4px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4);";
+        matches.forEach(function (uname) {
+          var item = document.createElement("button");
+          item.type = "button";
+          item.textContent = "@" + uname;
+          item.style.cssText = "display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:none;color:#fff;border-radius:6px;cursor:pointer;font-size:14px;";
+          item.addEventListener("click", function () {
+            // Replace @query with @username
+            var tr = editor.state.tr;
+            var endPos = sel.$head.pos;
+            var startPos = endPos - query.length - 1;
+            tr.delete(startPos, endPos);
+            tr.insertText("@" + uname + " ");
+            editor.view.dispatch(tr);
+            editor.view.focus();
+            hideDropdown();
+          });
+          item.addEventListener("mouseenter", function () { item.style.background = "rgba(80,140,255,.2)"; });
+          item.addEventListener("mouseleave", function () { item.style.background = "none"; });
+          dropdown.appendChild(item);
+        });
+        // Position near cursor
+        var coords = editor.view.coordsAtPos(sel.$head.pos);
+        var mountRect = mount.getBoundingClientRect();
+        dropdown.style.left = (coords.left - mountRect.left) + "px";
+        dropdown.style.top = (coords.bottom - mountRect.top + 4) + "px";
+        mount.style.position = "relative";
+        mount.appendChild(dropdown);
+      });
+    });
+    // Hide on click outside
+    document.addEventListener("click", function (e) {
+      if (dropdown && !dropdown.contains(e.target)) hideDropdown();
+    });
+  }
+
   function createEditor(mount, placeholder, initialHTML) {
     return loadEditorLib().then(function (lib) {
       if (!lib) return null;
@@ -753,6 +842,7 @@
         editorProps: { attributes: { class: "forum-editor-input" } }
       });
       wireToolbar(editor, mount);
+      wireMentionAutocomplete(editor, mount);
       return editor;
     });
   }
@@ -797,6 +887,9 @@
         : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
       (!token() ? '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>' : "") +
       '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" +
+      (token() ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications" style="position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;">' +
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>' +
+        '<span id="forum-bell-badge" class="hidden" style="position:absolute;top:-4px;right:-4px;background:#ff4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;"></span></button>' : "") +
       (token() ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' + avHtml + "</button>" : "") +
       "</div></div>";
   }
@@ -859,7 +952,7 @@
     root.innerHTML = html;
     
 
-    wireAvatars();
+    wireAvatars(); wireBell();
     // Content is painted; now pin to top (images loading later won't shift us)
     if (view.name === "list") window.scrollTo(0, 0);
     root.querySelectorAll(".forum-cat").forEach(function (b) {
@@ -935,13 +1028,31 @@
           '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
           '<div class="forum-locked-sub">' + lockMsg + "</div></div></div>";
-        wireAvatars();
+        wireAvatars(); wireBell();
         root.querySelector("#forum-back").addEventListener("click", backToList);
         return;
       }
       cache.thread = res.thread;
       paintThread();
     });
+  }
+
+  function pollHTML(t) {
+    if (!t.poll || !t.poll.options || !t.poll.options.length) return "";
+    var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
+    var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
+    var h = '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
+    h += '<div style="font-weight:700;margin-bottom:10px;">' + esc(t.poll.question) + '</div>';
+    t.poll.options.forEach(function (opt, i) {
+      var pct = total > 0 ? Math.round((opt.votes || 0) / total * 100) : 0;
+      var voted = myVote === i;
+      h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(255,255,255,.1)") + ';background:' + (voted ? "rgba(80,140,255,.12)" : "rgba(255,255,255,.03)") + ';color:#fff;cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
+      h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
+      h += '<span style="position:relative;display:flex;justify-content:space-between;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="opacity:.7;">' + pct + '% (' + (opt.votes || 0) + ')</span></span>';
+      h += '</button>';
+    });
+    h += '<div style="font-size:12px;opacity:.6;margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
+    return h;
   }
 
   function paintThread() {
@@ -962,6 +1073,7 @@
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
         ((t.tags && t.tags.length) ? '<div class="forum-post-tags">' + tagsPillsHTML(t, 3) + "</div>" : "") +
         '<div class="forum-post-body">' + bodyHTML(t) + "</div>" +
+        pollHTML(t) +
         signatureHTML(t, false) +
         '<div class="forum-admin forum-admin-thread">' + (token() ? starBtn(t, null) : "") +
           '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">\uD83D\uDD17</button>' +
@@ -1022,8 +1134,29 @@
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
       applyLockGates(cache.thread);
-      
-      wireAvatars();
+      // Poll voting
+      root.querySelectorAll(".forum-poll-opt").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (!token()) return;
+          var pollDiv = btn.closest(".forum-poll");
+          var tid = pollDiv ? pollDiv.getAttribute("data-thread") : null;
+          var idx = parseInt(btn.getAttribute("data-idx"), 10);
+          if (!tid || isNaN(idx)) return;
+          btn.disabled = true;
+          api("/api/forum/thread/" + encodeURIComponent(tid) + "/poll/vote", {
+            method: "POST", body: { option: idx }
+          }).then(function (res) {
+            if (res.ok && res.poll) {
+              cache.thread.poll = res.poll;
+              paintThread();
+            } else {
+              alert(res.error || "Vote failed");
+              btn.disabled = false;
+            }
+          }).catch(function () { btn.disabled = false; });
+        });
+      });
+      wireAvatars(); wireBell();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
       if (copyBtn) copyBtn.addEventListener("click", function () {
@@ -1415,7 +1548,7 @@
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(1500);
-    wireAvatars();
+    wireAvatars(); wireBell();
     wireTagEditor("forum-edit", editTagState);
     var rerender = function () { view.name = "thread"; renderThread(); };
     root.querySelector("#forum-edit-back").addEventListener("click", rerender);
@@ -1508,12 +1641,19 @@
       '<button type="button" class="forum-admin-btn forum-admin-del hidden" id="forum-thumb-remove">Remove</button>' +
       '<input type="file" id="forum-thumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Poll <span class="forum-optional">(optional)</span></span>' +
+      '<button type="button" class="forum-admin-btn" id="forum-poll-toggle">Add poll</button>' +
+      '<div id="forum-poll-form" class="hidden" style="margin-top:10px;">' +
+      '<input type="text" id="forum-poll-q" maxlength="200" placeholder="Poll question" style="width:100%;margin-bottom:8px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;">' +
+      '<div id="forum-poll-opts"></div>' +
+      '<button type="button" class="forum-admin-btn" id="forum-poll-add-opt">+ Add option</button>' +
+      "</div></div>" +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
     window.scrollTo(0, 0);
     if (window.MPScroll) MPScroll.pinTop(2000);
-    wireAvatars();
+    wireAvatars(); wireBell();
     var nbTop2 = root.querySelector("#forum-new-top");
     if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("#forum-back").addEventListener("click", backToList);
@@ -1563,6 +1703,30 @@
         alert("Thumbnail upload failed");
       });
     });
+    // Poll form handlers
+    var pollToggle = root.querySelector("#forum-poll-toggle");
+    var pollForm = root.querySelector("#forum-poll-form");
+    var pollOpts = root.querySelector("#forum-poll-opts");
+    function addPollOpt(val) {
+      if (pollOpts.children.length >= 6) return;
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.maxLength = 80;
+      inp.placeholder = "Option " + (pollOpts.children.length + 1);
+      inp.value = val || "";
+      inp.style.cssText = "width:100%;margin-bottom:6px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;";
+      pollOpts.appendChild(inp);
+    }
+    if (pollToggle) pollToggle.addEventListener("click", function () {
+      pollForm.classList.toggle("hidden");
+      if (!pollForm.classList.contains("hidden") && pollOpts.children.length === 0) {
+        addPollOpt(); addPollOpt();
+      }
+      pollToggle.textContent = pollForm.classList.contains("hidden") ? "Add poll" : "Remove poll";
+    });
+    var pollAddOpt = root.querySelector("#forum-poll-add-opt");
+    if (pollAddOpt) pollAddOpt.addEventListener("click", function () { addPollOpt(); });
+
     root.querySelector("#forum-post").addEventListener("click", function () {
       var title = root.querySelector("#forum-title").value.trim();
       var content = "", rich = false;
@@ -1574,8 +1738,20 @@
       }
       var cat = root.querySelector("#forum-cat-sel").value;
       if (!title || !content) { alert("Title and content required"); return; }
+      // Collect poll data
+      var pollData = null;
+      var pq = root.querySelector("#forum-poll-q");
+      if (pq && !root.querySelector("#forum-poll-form").classList.contains("hidden")) {
+        var q = pq.value.trim();
+        var opts = [];
+        pollOpts.querySelectorAll("input").forEach(function (inp) {
+          var v = inp.value.trim();
+          if (v) opts.push(v);
+        });
+        if (q && opts.length >= 2) pollData = { question: q, options: opts };
+      }
       api("/api/forum/threads", {
-        method: "POST", body: { title: title, content: content, category: cat, rich: rich, thumb: newThumbId || undefined, tags: newTagState.tags }
+        method: "POST", body: { title: title, content: content, category: cat, rich: rich, thumb: newThumbId || undefined, tags: newTagState.tags, poll: pollData }
       }).then(function (res) {
         if (res.ok && res.thread) {
           view.name = "thread";
@@ -1640,12 +1816,20 @@
     view.threadId = null;
     view.replyTo = null;
     paintedThreadId = null;
-    // Scroll to top immediately, on next frame, and after content settles
-    window.scrollTo(0, 0);
+    function toTop() {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      var p = document.getElementById("forum");
+      if (p) p.scrollTop = 0;
+      var r = document.getElementById("forum-root");
+      if (r) r.scrollTop = 0;
+    }
+    toTop();
     render();
-    requestAnimationFrame(function () { window.scrollTo(0, 0); });
-    setTimeout(function () { window.scrollTo(0, 0); }, 100);
-    setTimeout(function () { window.scrollTo(0, 0); }, 500);
+    requestAnimationFrame(toTop);
+    setTimeout(toTop, 100);
+    setTimeout(toTop, 500);
   }
 
   function openThread(id) {
