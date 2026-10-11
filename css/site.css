@@ -1660,10 +1660,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-topbar-new { font-size: 13px; padding: 7px 14px; white-space: nowrap; }
 .chat-head-right { display: flex; align-items: center; gap: 8px; }
 
-/* Forum top bar entrance animation */
-@keyframes forumBarIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.forum-topbar { animation: forumBarIn .35s cubic-bezier(.2,.9,.3,1); }
 
+
+
+/* Forum author points */
+.forum-author-pts { font-size: 12px; color: var(--muted); font-weight: 600; }
+.forum-thread-meta .forum-author-pts { font-size: 11px; }
