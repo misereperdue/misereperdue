@@ -152,7 +152,7 @@
 
     // Metric toggle
     var toggleRow = document.createElement("div");
-    toggleRow.style.cssText = "position:relative;display:flex;gap:8px;margin-bottom:12px;";
+    toggleRow.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
     var currentMetric = "views";
     var metricBtns = {};
     var metricLabels = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" };
