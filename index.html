@@ -205,14 +205,46 @@
       requestAnimationFrame(step);
     }
     window.MPScroll = { pinTop: pinTop };
+    function assertScroll() {
+      if (current.type === "journal") {
+        // Chat belongs at the newest message; MPChat may still be booting,
+        // so retry until it can scroll, then hold the bottom briefly.
+        var tries = 0;
+        var iv = setInterval(function () {
+          if (window.MPChat && MPChat.scrollToLatest) {
+            clearInterval(iv);
+            MPChat.scrollToLatest();
+            var until = Date.now() + 2500;
+            var hold = setInterval(function () {
+              if (Date.now() > until) { clearInterval(hold); return; }
+              if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
+            }, 250);
+          } else if (++tries > 40) {
+            clearInterval(iv);
+            window.scrollTo(0, document.documentElement.scrollHeight);
+          }
+        }, 250);
+      } else {
+        pinTop(2500);
+      }
+    }
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
-      if (!e.persisted) return;
+      if (!e.persisted) {
+        // Fresh load / refresh: Safari often restores the old scroll position
+        // late, after our scripts run. Re-assert once things settle.
+        setTimeout(assertScroll, 60);
+        return;
+      }
       if (current.type === "journal") {
         if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       } else {
         pinTop(1500);
       }
+    });
+    // Full load: catches Safari restoring scroll after async content paints
+    window.addEventListener("load", function () {
+      setTimeout(assertScroll, 60);
     });
     function show(view, id) {
       // Save scroll position before leaving the current view
