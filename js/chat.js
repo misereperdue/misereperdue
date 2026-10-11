@@ -608,17 +608,25 @@
     api("/api/messages?limit=200").then(function (r) {
       if (r && r.badges) userBadges = r.badges;
       if (r && r.messages) r.messages.forEach(addMessage);
-      scrollBottom(true);
+      scrollToLatest();
       scheduleFade();
-      // Re-scroll after images load (layout shifts)
-      setTimeout(function() { window.scrollTo(0, document.documentElement.scrollHeight); }, 800);
-      setTimeout(function() { window.scrollTo(0, document.documentElement.scrollHeight); }, 2000);
     }).catch(function () {});
     connect();
     if (!window.__chatFadeHook) {
       window.__chatFadeHook = true;
       window.addEventListener("scroll", scheduleFade, { passive: true });
       window.addEventListener("resize", scheduleFade);
+      // Media loading inside the message list grows the page; stay pinned
+      // to the newest message while the pin window is active.
+      document.addEventListener("load", function (e) {
+        var t = e.target;
+        if (Date.now() <= latestPinUntil && t && (t.tagName === "IMG" || t.tagName === "VIDEO")) {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+        }
+      }, true);
+      // Any manual scroll ends the pin early
+      window.addEventListener("touchmove", function () { latestPinUntil = 0; }, { passive: true });
+      window.addEventListener("wheel", function () { latestPinUntil = 0; }, { passive: true });
     }
     scheduleFade();
   }
@@ -628,6 +636,18 @@
   function nearBottom() {
     var h = document.documentElement;
     return h.scrollHeight - window.scrollY - window.innerHeight < 200;
+  }
+
+  var latestPinUntil = 0;
+  function scrollToLatest() {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    latestPinUntil = Date.now() + 5000;
+    [300, 900, 1800].forEach(function (ms) {
+      setTimeout(function () {
+        if (Date.now() <= latestPinUntil) window.scrollTo(0, document.documentElement.scrollHeight);
+      }, ms);
+    });
+    scheduleFade();
   }
 
   function scrollBottom(force) {
@@ -2460,4 +2480,9 @@
   window.MPChat.badgeHTML = badgeHTML;
   window.MPChat.avatarNode = avatarNode;
   window.MPChat.getMe = function() { return me; };
+  window.MPChat.scrollToLatest = function () {
+    var jp = document.getElementById("journal");
+    if (jp && !jp.classList.contains("on")) return;
+    scrollToLatest();
+  };
 })();
