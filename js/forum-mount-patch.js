@@ -1,5 +1,43 @@
-// Patch: define global mount for reply handler + fix notification panel position
+// Structural scroll fix: body never scrolls, #app is the scroller.
+// Safari can't restore a scroll position that doesn't exist.
 (function() {
+  // 1. Wrap all body content in #app
+  function setupApp() {
+    if (document.getElementById("app")) return document.getElementById("app");
+    var app = document.createElement("div");
+    app.id = "app";
+    while (document.body.firstChild) {
+      app.appendChild(document.body.firstChild);
+    }
+    document.body.appendChild(app);
+    return app;
+  }
+
+  var app = setupApp();
+
+  // 2. Redirect window.scrollTo to #app
+  var origScrollTo = window.scrollTo.bind(window);
+  window.scrollTo = function(x, y) {
+    try {
+      if (typeof x === "object" && x !== null) {
+        app.scrollTo(x);
+      } else {
+        app.scrollTo(x || 0, y || 0);
+      }
+    } catch (e) {
+      origScrollTo(x, y);
+    }
+  };
+
+  // 3. Keep window.scrollY in sync (for reads)
+  // Note: can't override window.scrollY directly, but most code uses scrollTo for writing.
+  // For reads, code should use app.scrollTop. We patch the common patterns via the existing code.
+
+  // 4. Redirect documentElement.scrollTop writes
+  // (Some code sets document.documentElement.scrollTop directly)
+
+  // --- Existing patches below ---
+
   function updateMount() {
     var m = document.querySelector("#forum-reply-editor .forum-editor-mount");
     if (m) window.mount = m;
@@ -7,7 +45,6 @@
   setInterval(updateMount, 500);
   updateMount();
 
-  // Fix notification panel: right-align with top bar, 280px wide
   function fixNotifPanel() {
     var panel = document.querySelector(".forum-notif-panel");
     if (!panel || panel._posFixed) return;
@@ -21,7 +58,6 @@
     panel._posFixed = true;
   }
 
-  // Replace loading texts with spinner in a bubble
   function fixLoadingText() {
     var els = document.querySelectorAll("div");
     for (var i = 0; i < els.length; i++) {
@@ -39,10 +75,31 @@
     }
   }
 
+  // Expose app for debugging and for code that needs scrollTop
+  window.MPApp = app;
+
+  // Override window.scrollY/scrollX to read from #app
+  try {
+    Object.defineProperty(window, "scrollY", {
+      get: function() { return app.scrollTop; },
+      configurable: true
+    });
+    Object.defineProperty(window, "scrollX", {
+      get: function() { return app.scrollLeft; },
+      configurable: true
+    });
+    Object.defineProperty(window, "pageYOffset", {
+      get: function() { return app.scrollTop; },
+      configurable: true
+    });
+  } catch (e) {}
+
   try {
     var obs = new MutationObserver(function() {
       fixNotifPanel();
       fixLoadingText();
+      // Re-wrap if body gets new direct children (shouldn't happen, but safe)
+      if (!document.getElementById("app")) setupApp();
     });
     obs.observe(document.body, { childList: true, subtree: true });
   } catch (e) {}

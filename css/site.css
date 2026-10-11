@@ -2082,3 +2082,12 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .mp-loading-bubble { display: inline-block; padding: 12px 20px; background: var(--glass-clear-tint); border: var(--glass-hairline); border-radius: 20px; }
 .mp-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(127,127,127,.3); border-top-color: var(--ink); border-radius: 50%; animation: mp-spin 0.7s linear infinite; vertical-align: middle; }
 @keyframes mp-spin { to { transform: rotate(360deg); } }
+
+/* Prevent iOS autofill from scrolling the auth page */
+.chat-auth { position: relative; }
+body:has(.chat-auth) { overflow: hidden; }
+body:has(.chat-auth) .chat-auth { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* Structural scroll fix: body never scrolls, #app is the scroller */
+html, body { overflow: hidden; height: 100%; margin: 0; }
+#app { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
