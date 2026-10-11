@@ -822,6 +822,11 @@
     if (meInfo && window.MPChat && window.MPChat.avatarNode) {
       var node = window.MPChat.avatarNode(meInfo.username, meInfo.avatar, "sm", meInfo.avatarV || 0);
       avHtml = node.outerHTML;
+      // Add active badge like the chat header does
+      if (window.MPChat && window.MPChat.badgeFor) {
+        var b = window.MPChat.badgeFor(meInfo);
+        if (b) avHtml = avHtml.replace(/<\/span>$/, b + "</span>");
+      }
     }
     return '<div class="chat-head forum-topbar">' +
       '<div class="chat-title">Forum</div>' +
@@ -894,6 +899,8 @@
     enhanceFileLinks(root);
 
     wireAvatars();
+    // Content is painted; now pin to top (images loading later won't shift us)
+    if (view.name === "list") window.scrollTo(0, 0);
     root.querySelectorAll(".forum-cat").forEach(function (b) {
       b.addEventListener("click", function () {
         view.tag = "";
