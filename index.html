@@ -40,7 +40,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=253">
+  <link rel="stylesheet" href="css/site.css?v=254">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -128,7 +128,7 @@
   <script src="js/shop.js?v=39"></script>
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=104"></script>
-  <script src="js/forum.js?v=51"></script>
+  <script src="js/forum.js?v=52"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -249,18 +249,6 @@
     window.addEventListener("load", function () {
       setTimeout(assertScroll, 60);
     });
-    function fadePanel() {
-      var p = document.querySelector(".panel.on");
-      if (p && p.animate) {
-        try {
-          p.animate(
-            [{ opacity: 0, transform: "translateY(10px)" },
-             { opacity: 1, transform: "translateY(0)" }],
-            { duration: 250, easing: "cubic-bezier(.2,.7,.3,1)" }
-          );
-        } catch (e) {}
-      }
-    }
     function show(view, id) {
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
@@ -269,11 +257,12 @@
       var reading = view === "post" || view === "product";
       // Restore default site hero when not viewing a post with custom header
       if (view !== "post") restoreHero();
-      document.getElementById("journal").classList.toggle("on", view === "journal");
-      document.getElementById("shop").classList.toggle("on", view === "shop");
-      document.getElementById("cart").classList.toggle("on", view === "cart");
-      document.getElementById("forum").classList.toggle("on", view === "forum");
-      document.getElementById("postview").classList.toggle("on", reading);
+      // Bulletproof panel switching: inline display bypasses any CSS issues
+      document.getElementById("journal").style.display = view === "journal" ? "" : "none";
+      document.getElementById("shop").style.display = view === "shop" ? "" : "none";
+      document.getElementById("cart").style.display = view === "cart" ? "" : "none";
+      document.getElementById("forum").style.display = view === "forum" ? "" : "none";
+      document.getElementById("postview").style.display = reading ? "" : "none";
       nav.classList.toggle("shop", view === "shop");
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
@@ -302,16 +291,8 @@
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
       if (view === "forum" && window.MPForum) {
-        // Defer heavy thread-list render so the panel switch paints first,
-        // then fade in once content is ready
-        requestAnimationFrame(function () {
-          if (MPForum.goHome) MPForum.goHome();
-          else MPForum.render();
-          fadePanel();
-        });
-      } else {
-        // For other views, fade in on the next frame
-        requestAnimationFrame(fadePanel);
+        if (MPForum.goHome) MPForum.goHome();
+        else MPForum.render();
       }
       refreshSeg();
       refreshPostBtn();

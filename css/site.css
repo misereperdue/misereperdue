@@ -2008,7 +2008,8 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .mp-file-dl { width: 34px; height: 34px; border-radius: 50%; flex: none;
   background: rgba(140,160,255,.16); border: var(--glass-hairline);
   display: flex; align-items: center; justify-content: center;
-  text-decoration: none; font-size: 16px; }
+  text-decoration: none; color: #fff; }
+.mp-file-dl svg { display: block; }
 .mp-file-dl:active { transform: scale(.92); }
 .forum-editor-input .mp-locked { margin: 8px 0; }
 .sig-social-row { display: flex; gap: 8px; overflow-x: auto; margin: 6px 0 2px; padding-bottom: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
