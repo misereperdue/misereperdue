@@ -110,41 +110,6 @@
   } catch (e) {}
   setInterval(function() { fixNotifPanel(); fixLoadingText(); }, 500);
 
-  // Reserve space for async forum elements to prevent layout shift
-  // Admin buttons (Pin/Delete) appear after /api/me resolves - reserve space now
-  try {
-    var layoutStyle = document.createElement("style");
-    layoutStyle.textContent = [
-      ".forum-admin{min-height:34px;}",
-      ".forum-thread-row{min-height:80px;}",
-      // Prevent avatar pop-in shift
-      ".forum-thread-meta img,.forum-thread-meta .avatar{width:24px;height:24px;min-width:24px;min-height:24px;}"
-    ].join("");
-    document.head.appendChild(layoutStyle);
-  } catch (e) {}
-
-  // Dedupe concurrent forum API requests to prevent race-condition re-renders
-  // If two /api/forum/threads requests are in-flight, they share the same promise
-  try {
-    var origFetch = window.fetch;
-    var inflight = {};
-    window.fetch = function(url, opts) {
-      var urlStr = String(url || "");
-      // Only dedupe GET requests to forum threads/categories
-      if ((!opts || !opts.method || opts.method === "GET") &&
-          (urlStr.indexOf("/api/forum/threads") !== -1 || urlStr.indexOf("/api/forum/categories") !== -1)) {
-        if (inflight[urlStr]) {
-          return inflight[urlStr];
-        }
-        var p = origFetch.apply(this, arguments);
-        inflight[urlStr] = p;
-        var cleanup = function() { delete inflight[urlStr]; };
-        p.then(cleanup, cleanup);
-        return p;
-      }
-      return origFetch.apply(this, arguments);
-    };
-  } catch (e) {}
 
 
 })();
