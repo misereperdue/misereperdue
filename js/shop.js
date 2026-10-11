@@ -328,7 +328,7 @@ var MPShop = (function () {
         if (priceEl) priceEl.textContent = MP.money(amt);
         if (valEl) valEl.textContent = MP.money(amt);
         var pct = memberAmounts.length > 1 ? (idx / (memberAmounts.length - 1)) * 100 : 0;
-        range.style.background = "linear-gradient(90deg, #2f7cf6 " + pct + "%, rgba(255,255,255,.14) " + pct + "%)";
+        range.style.backgroundImage = "linear-gradient(90deg, #2f7cf6 " + pct + "%, rgba(255,255,255,.14) " + pct + "%)";
       }
       if (range) { range.addEventListener("input", function () { paintSlider(); refreshAction(); }); paintSlider(); }
     }
@@ -449,7 +449,9 @@ var MPShop = (function () {
     }
     var total = 0;
     box.innerHTML = cart.map(function (i) {
-      total += i.price * i.qty;
+      var prod = MP.PRODUCTS[i.id];
+      var unit = (prod && prod.priceBySize && i.size && prod.priceBySize[i.size] != null) ? prod.priceBySize[i.size] : i.price;
+      total += unit * i.qty;
       var sizeMeta = (i.size && i.size !== "one") ? '<div class="meta">' + esc(i.size) + "</div>" : "";
       return '<div class="line">' +
         imgHTML(i, true) +
@@ -457,7 +459,7 @@ var MPShop = (function () {
         '<div class="qty"><button type="button" data-dec="' + esc(i.key) + '" aria-label="Decrease">−</button>' +
         "<span>" + i.qty + '</span>' +
         '<button type="button" data-inc="' + esc(i.key) + '" aria-label="Increase">+</button></div></div>' +
-        "<div><div>" + MP.money(i.price * i.qty) + '</div><button type="button" class="del" data-del="' + esc(i.key) + '">Remove</button></div>' +
+        "<div><div>" + MP.money(unit * i.qty) + '</div><button type="button" class="del" data-del="' + esc(i.key) + '">Remove</button></div>' +
         "</div>";
     }).join("");
     if (totalEl) renderTotals(total);
