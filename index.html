@@ -259,8 +259,10 @@
     window.addEventListener("load", function () {
       setTimeout(assertScroll, 60);
     });
-    // Prevent Safari from saving/restoring a scrolled position:
-    // reset to top when the page is being hidden/unloaded.
+    // Disable bfcache entirely: Safari's scroll restoration is tied to it.
+    // With bfcache off, every load is fresh and starts at top.
+    window.addEventListener("unload", function () {});
+    // Also reset scroll on hide/unload as a backup.
     window.addEventListener("pagehide", function () {
       try { window.scrollTo(0, 0); } catch (e) {}
     });
