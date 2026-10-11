@@ -2452,4 +2452,11 @@
   } else {
     init();
   }
+
+  // Expose for forum.js
+  window.MPChat = window.MPChat || {};
+  window.MPChat.openUserSheet = openUserSheet;
+  window.MPChat.badgeHTML = badgeHTML;
+  window.MPChat.avatarNode = avatarNode;
+  window.MPChat.getMe = function() { return me; };
 })();
