@@ -204,7 +204,8 @@
         ["100", "heart", "robot"].forEach(function (bid) {
           var gb = document.createElement("button");
           gb.type = "button";
-          gb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "");
+          var hasBadge = u.badges && u.badges.indexOf(bid) !== -1;
+          gb.className = "chat-badge-opt" + ((u.activeBadge || null) === bid ? " on" : "") + (hasBadge ? " has" : " not-has");
           gb.innerHTML = badgeHTML(bid);
           gb.setAttribute("aria-label", "Give " + bid + " badge to " + u.username);
           gb.addEventListener("click", function () {
