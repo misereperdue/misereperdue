@@ -282,6 +282,25 @@
     });
   }
   setTimeout(replaceMetricIcons, 500);
+  // Add visible labels to activity metric tabs
+  function labelMetricTabs() {
+    var labels = { "Views": "Views", "Visitors": "Visitors", "Messages": "Messages", "New Users": "New Users" };
+    document.querySelectorAll("button[aria-label]").forEach(function(btn) {
+      var label = btn.getAttribute("aria-label");
+      if (labels[label] && !btn.querySelector(".metric-label")) {
+        var span = document.createElement("span");
+        span.className = "metric-label";
+        span.textContent = labels[label];
+        span.style.cssText = "font-size:10px;font-weight:600;margin-top:2px;opacity:0.7;";
+        // Make button vertical layout
+        btn.style.flexDirection = "column";
+        btn.style.gap = "2px";
+        btn.appendChild(span);
+      }
+    });
+  }
+  setTimeout(labelMetricTabs, 1000);
+  setInterval(labelMetricTabs, 2000);
   // Watch for metric re-renders
   try {
     new MutationObserver(function() { replaceMetricIcons(); })
