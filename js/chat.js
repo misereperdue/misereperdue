@@ -877,17 +877,17 @@
     title.textContent = "Dashboard";
     headRow.appendChild(title);
     var dashNav = document.createElement("div");
-    dashNav.style.cssText = "display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:10px;padding:3px;";
+    dashNav.style.cssText = "display:flex;gap:4px;background:var(--glass-clear-tint);border-radius:10px;padding:3px;border:var(--glass-hairline);";
     var overviewBtn = document.createElement("button");
     var manageBtn = document.createElement("button");
     [["Overview", overviewBtn], ["Manage", manageBtn]].forEach(function(pair) {
       var btn = pair[1];
       btn.type = "button";
       btn.textContent = pair[0];
-      btn.style.cssText = "padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:rgba(255,255,255,.6);";
+      btn.style.cssText = "padding:6px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);";
     });
-    overviewBtn.style.background = "rgba(255,255,255,.12)";
-    overviewBtn.style.color = "#fff";
+    overviewBtn.style.background = "var(--glass-regular-tint)";
+    overviewBtn.style.color = "var(--ink)";
     dashNav.appendChild(overviewBtn);
     dashNav.appendChild(manageBtn);
     headRow.appendChild(dashNav);
@@ -904,10 +904,10 @@
       var isOver = which === "overview";
       overviewPage.style.display = isOver ? "" : "none";
       managePage.style.display = isOver ? "none" : "";
-      overviewBtn.style.background = isOver ? "rgba(255,255,255,.12)" : "transparent";
-      overviewBtn.style.color = isOver ? "#fff" : "rgba(255,255,255,.6)";
-      manageBtn.style.background = isOver ? "transparent" : "rgba(255,255,255,.12)";
-      manageBtn.style.color = isOver ? "rgba(255,255,255,.6)" : "#fff";
+      overviewBtn.style.background = isOver ? "var(--glass-regular-tint)" : "transparent";
+      overviewBtn.style.color = isOver ? "var(--ink)" : "var(--muted)";
+      manageBtn.style.background = isOver ? "transparent" : "var(--glass-regular-tint)";
+      manageBtn.style.color = isOver ? "var(--muted)" : "var(--ink)";
       if (!isOver && !managePage.dataset.loaded) loadManagePage();
     }
     overviewBtn.addEventListener("click", function() { showDashPage("overview"); });
@@ -955,8 +955,8 @@
       btn.innerHTML = metricIcons[metric];
       btn.title = metricLabels[metric];
       btn.setAttribute("aria-label", metricLabels[metric]);
-      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:" +
-        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:#fff;font-size:13px;font-weight:600;cursor:pointer;";
+      btn.style.cssText = "flex:1;padding:10px 8px;border-radius:10px;border:var(--glass-hairline);background:" +
+        (metric === currentMetric ? "rgba(0,122,255,.25)" : "transparent") + ";color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
         Object.keys(metricBtns).forEach(function(k) {
@@ -971,7 +971,7 @@
 
     // SVG graph container
     var graphWrap = document.createElement("div");
-    graphWrap.style.cssText = "position:relative;height:160px;margin-bottom:20px;background:rgba(255,255,255,.03);border-radius:14px;padding:12px;overflow:hidden;";
+    graphWrap.style.cssText = "position:relative;height:170px;margin-bottom:20px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;overflow:hidden;";
     overviewPage.appendChild(graphWrap);
 
     // Summary line under graph (inserted after usersTitle is created below)
@@ -1009,6 +1009,7 @@
       svg.setAttribute("height", H);
       svg.style.display = "block";
       svg.style.overflow = "visible";
+      svg.style.color = "var(--ink)";
 
       // Defs: gradient
       var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -1031,7 +1032,8 @@
         var ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
         ln.setAttribute("x1", 0); ln.setAttribute("x2", W);
         ln.setAttribute("y1", y); ln.setAttribute("y2", y);
-        ln.setAttribute("stroke", "rgba(255,255,255,.07)");
+        ln.setAttribute("stroke", "currentColor");
+        ln.style.opacity = ".12";
         ln.setAttribute("stroke-dasharray", "3,4");
         svg.appendChild(ln);
       });
@@ -1090,7 +1092,8 @@
           dt.setAttribute("y", H - 6);
           dt.setAttribute("text-anchor", "middle");
           dt.setAttribute("font-size", "9");
-          dt.setAttribute("fill", "rgba(255,255,255,.35)");
+          dt.setAttribute("fill", "currentColor");
+          dt.style.opacity = ".45";
           dt.textContent = d.date.slice(5).replace("-", "/");
           svg.appendChild(dt);
         }
@@ -1119,7 +1122,7 @@
       usersWrap.innerHTML = "";
       r.users.forEach(function(u) {
         var row = document.createElement("div");
-        row.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);";
+        row.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;border-top:var(--glass-hairline);";
         // Avatar
         var avWrap = document.createElement("div");
         avWrap.style.cssText = "width:36px;height:36px;flex:none;";
@@ -1221,7 +1224,7 @@
 
         r.users.forEach(function(u) {
           var card = document.createElement("div");
-          card.style.cssText = "background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-bottom:10px;";
+          card.style.cssText = "background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;margin-bottom:10px;";
 
           // Header: avatar + name + points
           var head = document.createElement("div");
@@ -1237,7 +1240,7 @@
           nmT.value = u.username;
           nmT.spellcheck = false;
           nmT.autocomplete = "off";
-          nmT.style.cssText = "font-size:14px;font-weight:700;background:transparent;border:none;outline:none;color:#fff;width:100%;padding:0;";
+          nmT.style.cssText = "font-size:14px;font-weight:700;background:transparent;border:none;outline:none;color:var(--ink);width:100%;padding:0;";
           if (u.banned) nmT.style.color = "#ff6b6b";
           nmT.setAttribute("aria-label", "Username");
           // Save on blur or Enter
@@ -1286,7 +1289,7 @@
             var b = document.createElement("button");
             b.type = "button";
             b.textContent = label;
-            b.style.cssText = "flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:" + color + ";font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;";
+            b.style.cssText = "flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:" + color + ";font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;";
             b.addEventListener("click", function() { fn(b); });
             acts.appendChild(b);
             return b;
