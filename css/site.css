@@ -2125,3 +2125,11 @@ nav#nav.nav,
   transform-origin: top right;
   animation: menuPop .18s cubic-bezier(.2,.9,.3,1.2);
 }
+
+/* Bell button slam effect (matches avatar) */
+.forum-bell {
+  transition: transform .15s cubic-bezier(.2,.9,.3,1.2);
+}
+.forum-bell:active {
+  transform: scale(.88);
+}
