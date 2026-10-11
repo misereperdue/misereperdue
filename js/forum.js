@@ -458,7 +458,7 @@
           ? "Private. Only the owner can view this thread."
           : "Members only. Become a member to read this thread.";
         root.innerHTML = '<div class="forum-anim">' + forumTopBar() + '<div class="forum-head">' +
-          '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button></div>' +
+          '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>' +
           '<div class="forum-locked"><div class="forum-locked-icon">' + lockIcon + '</div>' +
           '<div class="forum-locked-title">' + esc(res.thread.title) + "</div>" +
           '<div class="forum-locked-sub">' + lockMsg + "</div></div></div>";
@@ -810,8 +810,9 @@
   /* ---------- new thread ---------- */
 
   function renderNew() {
-    var html = '<div class="forum-head">' +
-      '<button type="button" class="forum-back" id="forum-back">\u2190 Back</button>' +
+    var html = forumTopBar() +
+      '<div class="forum-head">' +
+      '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button>' +
       '<h2 class="forum-title">New thread</h2></div>';
 
     html += '<div class="forum-form">' +
@@ -823,11 +824,14 @@
     html += "</select></label>" +
       '<label class="chat-field"><span>Title</span>' +
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
-      '<label class="chat-field"><span>Content</span></label>' +
+      '<span class="forum-content-label">Content</span>' +
       '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div>' +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
+    wireAvatars();
+    var nbTop2 = root.querySelector("#forum-new-top");
+    if (nbTop2) nbTop2.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
     root.querySelector("#forum-back").addEventListener("click", backToList);
     var newMount = root.querySelector("#forum-new-editor");
     if (newMount) {
