@@ -127,7 +127,7 @@ var MPShop = (function () {
     return '<div role="button" tabindex="0" class="product-card" data-product="' + esc(p.id) + '">' +
       '<div class="tile-wrap">' + imgHTML(p) + "</div>" +
       '<div class="product-meta"><strong>' + esc(p.name) + "</strong>" +
-      '<span class="meta">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon")) + "</span></div>" +
+      '<span class="meta">' + esc(priceLabelFor(p)) + "</span></div>" +
       (p.available === false ? '<span class="tag">Coming soon</span>' : "") +
       "</div>";
   }
@@ -258,6 +258,16 @@ var MPShop = (function () {
   /* ---------- Product gallery ----------
      Driven solely by the product's Shopify images: photos in a swipeable
      carousel; no images at all shows the emoji placeholder tile. */
+
+  function priceLabelFor(p) {
+    if (p.priceBySize) {
+      var vals = Object.keys(p.priceBySize).map(function (k) { return p.priceBySize[k]; })
+        .filter(function (v, i, a) { return v != null && a.indexOf(v) === i; })
+        .sort(function (a, b) { return a - b; });
+      if (vals.length > 1) return "$" + vals[0] + "-$" + vals[vals.length - 1] + " CAD";
+    }
+    return p.priceLabel || (p.price != null ? MP.money(p.price) : "Coming soon");
+  }
 
   function detailsHTML(details) {
     if (!details) return "";
