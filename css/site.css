@@ -2113,11 +2113,9 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* Force top nav opaque - higher specificity */
 nav#nav.nav,
 .nav-wrap .nav {
-  background: rgba(7, 15, 41, 0.65) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  transform: translateZ(0);
-  will-change: backdrop-filter;
+  background: #0a1230 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
 }
 [data-theme="light"] nav#nav.nav,
 [data-theme="light"] .nav-wrap .nav {
