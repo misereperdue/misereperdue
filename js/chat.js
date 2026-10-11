@@ -2423,21 +2423,24 @@
     // ===== Forum signature =====
     var sigTitle = document.createElement("div");
     sigTitle.className = "chat-pw-title";
-    sigTitle.textContent = "Forum signature";
+    sigTitle.textContent = "Signature";
     sheet.appendChild(sigTitle);
     var sigIsMember = !!(me.member || me.owner);
     var sigNote = document.createElement("div");
-    sigNote.style.cssText = "font-size:12px;opacity:.55;margin:-2px 0 8px;";
+    sigNote.style.cssText = "font-size:12px;opacity:.55;margin:2px 0 8px;";
     sigNote.textContent = sigIsMember
       ? "Shows under your forum posts. You can add photos and embeds."
       : "Shows under your forum posts. Members can also add photos and embeds.";
     sheet.appendChild(sigNote);
+    var sigBubble = document.createElement("div");
+    sigBubble.className = "sig-bubble";
     var sigMount = document.createElement("div");
     sigMount.className = "sig-mount";
-    sheet.appendChild(sigMount);
+    sigBubble.appendChild(sigMount);
     var sigEmbedsEl = document.createElement("div");
     sigEmbedsEl.className = "sig-embeds";
-    sheet.appendChild(sigEmbedsEl);
+    sigBubble.appendChild(sigEmbedsEl);
+    sheet.appendChild(sigBubble);
     var sigStatus = document.createElement("div");
     sigStatus.className = "chat-bio-count";
     sheet.appendChild(sigStatus);
@@ -2561,17 +2564,17 @@
           paintSigEmbeds();
           saveSignature();
         });
-        sheet.insertBefore(embBtn, sigStatus);
-        sheet.insertBefore(embBar, sigStatus);
+        sigBubble.appendChild(embBtn);
+        sigBubble.appendChild(embBar);
       }
     })();
 
     // Show/hide signatures viewer preference
     var sigPrefRow = document.createElement("div");
-    sigPrefRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;";
+    sigPrefRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px;";
     var sigPrefLab = document.createElement("span");
     sigPrefLab.style.cssText = "font-size:13px;opacity:.75;";
-    sigPrefLab.textContent = "Show signatures in the forum";
+    sigPrefLab.textContent = "Show signatures";
     var sigPrefBtn = document.createElement("button");
     sigPrefBtn.type = "button";
     sigPrefBtn.className = "btn";
