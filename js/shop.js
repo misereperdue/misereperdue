@@ -259,6 +259,13 @@ var MPShop = (function () {
      Driven solely by the product's Shopify images: photos in a swipeable
      carousel; no images at all shows the emoji placeholder tile. */
 
+  function detailsHTML(details) {
+    if (!details) return "";
+    return String(details).split(/\n{2,}/).map(function (para) {
+      return '<p class="meta">' + esc(para).replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+
   function openProduct(id) {
     var p = MP.PRODUCTS[id];
     if (!p) {
@@ -277,8 +284,9 @@ var MPShop = (function () {
     var sizes;
     if (memberAmounts) {
       sizes = '<div class="member-slider">' +
+        '<div class="member-top"><span>Amount</span><span class="member-val" id="member-val"></span></div>' +
         '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
-        '<div class="member-scale"><span>' + esc(MP.money((p.priceBySize || {})[memberAmounts[0]] != null ? p.priceBySize[memberAmounts[0]] : parseFloat(memberAmounts[0]))) + '</span><span>' + esc(MP.money((p.priceBySize || {})[memberAmounts[memberAmounts.length - 1]] != null ? p.priceBySize[memberAmounts[memberAmounts.length - 1]] : parseFloat(memberAmounts[memberAmounts.length - 1]))) + "</span></div>" +
+        '<div class="member-ticks">' + memberAmounts.map(function (a) { return "<span>$" + esc(a) + "</span>"; }).join("") + "</div>" +
         "</div>";
     } else if (p.sizes && p.sizes.length) {
       sizes = (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
@@ -295,8 +303,7 @@ var MPShop = (function () {
         '<div class="price">' + esc(p.priceLabel || (p.price != null ? MP.money(p.price) : "")) + "</div>" +
         '<button type="button" class="share-btn" aria-label="Share product"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 7l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Share</button>' +
         sizes + '<div id="bag-action"></div>' +
-        (isMembership(p) ? '<p class="meta">\u2B50 Star badge + access to member-only forum categories. Sign in to your Mis\u00E8re Perdue account before checkout so the membership activates on the right account. $20 members also get an exclusive card mailed later this year.</p>' : "") +
-        (p.details ? '<p class="meta">' + esc(p.details) + "</p>" : "") +
+        detailsHTML(p.details) +
       "</article>";
     initCarousel(view);
     var size = p.sizes && p.sizes.length ? p.sizes[0] : "one";
@@ -313,11 +320,17 @@ var MPShop = (function () {
       size = memberAmounts[0];
       var range = view.querySelector("#member-range");
       var priceEl = view.querySelector(".price");
-      if (range) range.addEventListener("input", function () {
-        size = memberAmounts[parseInt(range.value, 10) || 0];
-        if (priceEl) priceEl.textContent = MP.money((p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size));
-        refreshAction();
-      });
+      var valEl = view.querySelector("#member-val");
+      function paintSlider() {
+        var idx = parseInt(range.value, 10) || 0;
+        size = memberAmounts[idx];
+        var amt = (p.priceBySize || {})[size] != null ? p.priceBySize[size] : parseFloat(size);
+        if (priceEl) priceEl.textContent = MP.money(amt);
+        if (valEl) valEl.textContent = MP.money(amt);
+        var pct = memberAmounts.length > 1 ? (idx / (memberAmounts.length - 1)) * 100 : 0;
+        range.style.background = "linear-gradient(90deg, #2f7cf6 " + pct + "%, rgba(255,255,255,.14) " + pct + "%)";
+      }
+      if (range) { range.addEventListener("input", function () { paintSlider(); refreshAction(); }); paintSlider(); }
     }
     refreshAction();
     var shBtn = view.querySelector('.share-btn');
