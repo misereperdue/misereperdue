@@ -1914,3 +1914,8 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 /* Action bars never wrap their labels */
 .forum-admin-btn, .forum-star-count { white-space: nowrap; }
+
+/* List preview: up to 3 lines of the post text */
+.forum-thread-excerpt { font-size: 13px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.forum-edit-actions { display: flex; gap: 8px; }
+.forum-edit-actions .btn { flex: 1; }
