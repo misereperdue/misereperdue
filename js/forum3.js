@@ -144,9 +144,8 @@
 
   function closeAllForumDropdowns() {
     document.querySelectorAll(".forum-notif-panel").forEach(function (p) { p.remove(); });
-    if (window.MPChat && window.MPChat.closeDropdowns) {
-      try { window.MPChat.closeDropdowns(); } catch (e) {}
-    }
+    // Close chat profile menu (class chat-me-menu)
+    document.querySelectorAll(".chat-me-menu").forEach(function (m) { m.remove(); });
   }
 
   function showNotifications() {
@@ -158,13 +157,15 @@
       var panel = document.createElement("div");
       panel.className = "forum-notif-panel";
       try {
+        var bellEl = document.getElementById("forum-bell");
         var topbarEl = document.querySelector(".forum-topbar");
-        if (topbarEl) {
+        if (bellEl && topbarEl) {
+          var bellRect = bellEl.getBoundingClientRect();
           var topbarRect = topbarEl.getBoundingClientRect();
           panel.style.top = (topbarRect.bottom + 8) + "px";
-          panel.style.left = topbarRect.left + "px";
-          panel.style.right = "auto";
-          panel.style.width = Math.min(340, topbarRect.width) + "px";
+          panel.style.width = "280px";
+          panel.style.left = "auto";
+          panel.style.right = Math.max(8, window.innerWidth - bellRect.right) + "px";
         }
       } catch (e) {}
       var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:var(--ink);font-size:18px;cursor:pointer;">×</button></div>';
