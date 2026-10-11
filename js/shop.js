@@ -46,6 +46,7 @@ var MPShop = (function () {
     var n = String(name || "").toLowerCase();
     if (n.indexOf("jersey") !== -1) return "👕";
     if (n.indexOf("mask") !== -1 || n.indexOf("sleeping") !== -1) return "🥽";
+    if (n.indexOf("membership") !== -1) return "⭐";
     return null;
   }
 
@@ -269,12 +270,24 @@ var MPShop = (function () {
     }
     var imgs = (p.images || []).filter(Boolean);
     var view = document.getElementById("postview");
-    var sizes = p.sizes && p.sizes.length
-      ? (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
+    var memberAmounts = null;
+    if (isMembership(p) && p.sizes && p.sizes.length > 1) {
+      memberAmounts = p.sizes.slice().sort(function (a, b) { return parseFloat(a) - parseFloat(b); });
+    }
+    var sizes;
+    if (memberAmounts) {
+      sizes = '<div class="member-slider">' +
+        '<input type="range" id="member-range" min="0" max="' + (memberAmounts.length - 1) + '" step="1" value="0" aria-label="Membership amount">' +
+        '<div class="member-scale"><span>' + esc(MP.money(p.priceBySize[memberAmounts[0]])) + '</span><span>' + esc(MP.money(p.priceBySize[memberAmounts[memberAmounts.length - 1]])) + "</span></div>" +
+        "</div>";
+    } else if (p.sizes && p.sizes.length) {
+      sizes = (p.optionName && !/size/i.test(p.optionName) ? '<div class="option-label">' + esc(p.optionName) + "</div>" : "") +
         '<div class="sizes">' + p.sizes.map(function (s, i) {
           return '<button type="button" data-size="' + esc(s) + '"' + (i === 0 ? ' class="on"' : "") + ">" + esc(s) + "</button>";
-        }).join("") + "</div>"
-      : '<div style="height:12px"></div>';
+        }).join("") + "</div>";
+    } else {
+      sizes = '<div style="height:12px"></div>';
+    }
     view.innerHTML =
       '<article class="article-card">' +
         carouselHTML(imgs, p.name) +
@@ -296,6 +309,16 @@ var MPShop = (function () {
         refreshAction();
       };
     });
+    if (memberAmounts) {
+      size = memberAmounts[0];
+      var range = view.querySelector("#member-range");
+      var priceEl = view.querySelector(".price");
+      if (range) range.addEventListener("input", function () {
+        size = memberAmounts[parseInt(range.value, 10) || 0];
+        if (priceEl && p.priceBySize[size] != null) priceEl.textContent = MP.money(p.priceBySize[size]);
+        refreshAction();
+      });
+    }
     refreshAction();
     var shBtn = view.querySelector('.share-btn');
     if (shBtn) shBtn.onclick = function() { shareProduct(p); };
