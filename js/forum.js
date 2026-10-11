@@ -173,7 +173,18 @@
             child.remove();
             return;
           }
-          var keepHref = null, keepSrc = null, keepFrame = null, keepPath = null;
+          var keepHref = null, keepSrc = null, keepFrame = null, keepPath = null, keepLock = null;
+          if (child.tagName === "DIV") {
+            var dcls = (child.getAttribute("class") || "").split(/\s+/);
+            if (dcls.indexOf("mp-locked") !== -1) {
+              var lm = child.getAttribute("data-mode");
+              if (lm === "reply" || lm === "member") {
+                keepLock = { mode: lm };
+                var la = child.getAttribute("data-author") || "";
+                if (/^[A-Za-z0-9_]{3,16}$/.test(la)) keepLock.author = la;
+              }
+            }
+          }
           if (child.tagName === "A") {
             var href = child.getAttribute("href") || "";
             if (/^https?:\/\//i.test(href)) keepHref = href;
@@ -195,6 +206,11 @@
             if (!keepPath) { child.remove(); return; }
             child.setAttribute("d", keepPath);
             child.setAttribute("fill", "currentColor");
+          }
+          if (keepLock) {
+            child.setAttribute("class", "mp-locked");
+            child.setAttribute("data-mode", keepLock.mode);
+            if (keepLock.author) child.setAttribute("data-author", keepLock.author);
           }
           if (child.tagName === "IFRAME") {
             if (!keepFrame) { child.remove(); return; }
@@ -304,6 +320,28 @@
     return '<div class="forum-sig' + (compact ? " compact" : "") + '">' + clean + "</div>";
   }
 
+  function applyLockGates(thread) {
+    if (!thread || !root) return;
+    var viewer = "";
+    try { viewer = meInfo ? String(meInfo.username).toLowerCase() : ""; } catch (e) {}
+    var isMem = !!(meInfo && (meInfo.member || isOwner));
+    var replied = {};
+    (thread.replies || []).forEach(function (r) {
+      if (r.author) replied[String(r.author).toLowerCase()] = 1;
+    });
+    root.querySelectorAll(".mp-locked").forEach(function (el) {
+      var mode = el.getAttribute("data-mode") || "reply";
+      var author = (el.getAttribute("data-author") || "").toLowerCase();
+      var canSee = isOwner || (viewer && viewer === author) ||
+        (mode === "member" ? isMem : (viewer && !!replied[viewer]));
+      if (!canSee) {
+        el.setAttribute("data-gated", "1");
+        el.innerHTML = '<div class="mp-locked-note"><span aria-hidden="true">\uD83D\uDD12</span><span>' +
+          esc(mode === "member" ? "Members-only content" : "Hidden content \u2014 reply to unlock") +
+          "</span></div>";
+      }
+    });
+  }
   function bodyHTML(item) {
     if (item.rich) return sanitizeHTML(item.content);
     return esc(item.content || "").replace(/\n/g, "<br>");
@@ -329,7 +367,7 @@
         import("https://esm.sh/@tiptap/extension-link@2.11.5"),
         import("https://esm.sh/@tiptap/extension-image@2.11.5")
       ]).then(function (mods) {
-        return { Editor: mods[0].Editor, StarterKit: mods[1].default, Placeholder: mods[2].default, Link: mods[3].default, Image: mods[4].default };
+        return { Editor: mods[0].Editor, Node: mods[0].Node, StarterKit: mods[1].default, Placeholder: mods[2].default, Link: mods[3].default, Image: mods[4].default };
       }).catch(function () { return null; });
     }
     return editorLibPromise;
@@ -343,7 +381,8 @@
     { act: "h3", label: "H", cls: "" },
     { act: "bullet", label: "\u2022\u2261", cls: "" },
     { act: "ordered", label: "1.\u2261", cls: "" },
-    { act: "quote", label: "\u201D", cls: "" }
+    { act: "quote", label: "\u201D", cls: "" },
+    { act: "lock", label: "\uD83D\uDD12", cls: "" }
   ];
   var MEDIA_BTNS = [
     { act: "image", label: "\uD83D\uDCF7", member: false, title: "Upload media" },
@@ -355,7 +394,8 @@
     opts = opts || {};
     var h = '<div class="forum-toolbar">';
     TOOLBAR.forEach(function (b) {
-      h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '">' + b.label + "</button>";
+      if (b.act === "lock" && !opts.lock) return;
+      h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '"' + (b.act === "lock" ? ' title="Hide content"' : "") + '>' + b.label + "</button>";
     });
     MEDIA_BTNS.forEach(function (b) {
       if (b.act === "embed" && !opts.embed) return;
@@ -363,11 +403,46 @@
       h += '<button type="button" class="forum-tb" data-act="' + b.act + '" title="' + b.title + '">' + b.label + "</button>";
     });
     h += "</div>";
+    if (opts.lock) h += '<div class="forum-lockbar hidden"><span class="forum-lockbar-label">Hidden for:</span><button type="button" data-lockmode="reply">\uD83D\uDCAC Repliers</button><button type="button" data-lockmode="member">\u2B50 Members</button><button type="button" class="forum-lock-cancel" aria-label="Cancel">\u00D7</button></div>';
     h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
     if (opts.embed) h += '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">\u00D7</button></div>';
     h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
     if (opts.member) h += '<input type="file" class="forum-doc-input hidden">';
     return h;
+  }
+  function toggleLockBar(mountEl) {
+    ["linkbar", "embedbar"].forEach(function (c) {
+      var el = mountEl.querySelector(".forum-" + c);
+      if (el) el.classList.add("hidden");
+    });
+    var lb = mountEl.querySelector(".forum-lockbar");
+    if (lb) lb.classList.toggle("hidden");
+  }
+  function lockSelection(editor, mode) {
+    var txt = "";
+    try { var sel = window.getSelection(); if (sel) txt = sel.toString(); } catch (e) {}
+    txt = txt.replace(/\s+$/, "");
+    var author = "";
+    try { author = (meInfo && meInfo.username) || ""; } catch (e) {}
+    var inner = txt ? "<p>" + esc(txt).replace(/\n/g, "<br>") + "</p>" : "<p>Hidden content\u2026</p>";
+    try {
+      editor.chain().focus().deleteSelection().insertContent(
+        '<div class="mp-locked" data-mode="' + mode + '" data-author="' + esc(author) + '">' + inner + "</div><p></p>"
+      ).run();
+    } catch (e) {}
+  }
+  function wireLockBar(editor, mountEl) {
+    var lb = mountEl.querySelector(".forum-lockbar");
+    if (!lb || !editor) return;
+    lb.querySelectorAll("[data-lockmode]").forEach(function (btn) {
+      btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+      btn.addEventListener("click", function () {
+        lockSelection(editor, btn.getAttribute("data-lockmode"));
+        lb.classList.add("hidden");
+      });
+    });
+    var cx = lb.querySelector(".forum-lock-cancel");
+    if (cx) cx.addEventListener("click", function () { lb.classList.add("hidden"); });
   }
   function fmtSize(bytes) {
     bytes = Number(bytes) || 0;
@@ -477,6 +552,7 @@
       btn.addEventListener("mousedown", function (e) { e.preventDefault(); });
       btn.addEventListener("click", function () {
         var act = btn.getAttribute("data-act");
+        if (act === "lock") { toggleLockBar(mountEl); return; }
         if (act === "link") { toggleLinkBar(editor, mountEl); return; }
         if (act === "file") {
           var lb4 = mountEl.querySelector(".forum-linkbar");
@@ -555,6 +631,7 @@
         });
       });
     }
+    wireLockBar(editor, mountEl);
     var fileInput = mountEl.querySelector(".forum-file-input");
     if (fileInput) {
       fileInput.addEventListener("change", function () {
@@ -647,6 +724,25 @@
     reader.onerror = function () { done(null); };
     reader.readAsDataURL(file);
   }
+  function lockedBlockNode(Node) {
+    return Node.create({
+      name: "lockedBlock",
+      group: "block",
+      content: "block+",
+      defining: true,
+      addAttributes: function () {
+        return {
+          mode: { default: "reply", parseHTML: function (el) { return el.getAttribute("data-mode") || "reply"; } },
+          author: { default: "", parseHTML: function (el) { return el.getAttribute("data-author") || ""; } }
+        };
+      },
+      parseHTML: function () { return [{ tag: "div.mp-locked" }]; },
+      renderHTML: function (ctx) {
+        var a = ctx.HTMLAttributes;
+        return ["div", { class: "mp-locked", "data-mode": a.mode, "data-author": a.author }, 0];
+      }
+    });
+  }
   function createEditor(mount, placeholder, initialHTML) {
     return loadEditorLib().then(function (lib) {
       if (!lib) return null;
@@ -656,7 +752,8 @@
           lib.StarterKit.configure({ heading: { levels: [3] } }),
           lib.Placeholder.configure({ placeholder: placeholder }),
           lib.Link.configure({ openOnClick: false, autolink: true }),
-          lib.Image.configure({ inline: false })
+          lib.Image.configure({ inline: false }),
+          lockedBlockNode(lib.Node)
         ],
         content: initialHTML || "",
         editorProps: { attributes: { class: "forum-editor-input" } }
@@ -915,13 +1012,14 @@
         var rtName = view.replyTo ? view.replyTo.name : null;
         html += '<div class="forum-replybox">' +
           (rtName ? '<div class="forum-replying-to">Replying to <b>' + esc(rtName) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button></div>' : "") +
-          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div>' +
+          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML({ embed: true, member: canPostEmbed(), lock: true }) + '<div class="forum-editor-mount"></div></div>' +
           '<button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else {
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
       }
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
+      applyLockGates(cache.thread);
       wireAvatars();
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var copyBtn = root.querySelector("#forum-copy-link");
@@ -1300,7 +1398,7 @@
       '<input type="text" id="forum-edit-title" maxlength="120" value="' + esc(t.title) + '"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML({ embed: true, member: canPostEmbed(), lock: true }) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-ethumb-preview">' + (t.thumb ? '<img src="' + API + "/api/media/" + esc(t.thumb) + '" alt="">' : "") + '</span>' +
@@ -1399,7 +1497,7 @@
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML({ embed: true, member: canPostEmbed(), lock: true }) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-thumb-preview"></span>' +
