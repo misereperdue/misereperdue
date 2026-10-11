@@ -1307,34 +1307,41 @@
           nameInput.title = "Tap to rename";
           nameInput.style.cssText = "flex:1;min-width:0;background:rgba(128,128,128,.08);border:1px dashed rgba(140,160,255,.45);border-radius:8px;padding:5px 9px;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
           nameInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") { e.preventDefault(); nameInput.blur(); }
+            if (e.key === "Enter") { e.preventDefault(); clearTimeout(saveTimer); saveName(); nameInput.blur(); }
           });
-          nameInput.addEventListener("change", function () {
+          // Save as you type (debounced) — blur/change events are too easy
+          // to lose on iOS when the sheet closes.
+          var saveTimer = null;
+          function saveName() {
             var v = nameInput.value.trim();
-            if (!v || v === cat.name) { nameInput.value = cat.name; return; }
+            if (!v || v === cat.name) return;
             api("/api/forum/categories/" + encodeURIComponent(cat.id), {
               method: "PUT", body: { name: v }
             }).then(function (r) {
-              if (r.ok) refresh();
-              else { alert(r.error || "Rename failed"); nameInput.value = cat.name; }
+              if (r.ok) { cat.name = v; }
+              else { alert(r.error || "Rename failed"); }
             });
+          }
+          nameInput.addEventListener("input", function () {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveName, 700);
           });
+          nameInput.addEventListener("blur", function () { clearTimeout(saveTimer); saveName(); });
           row.appendChild(nameInput);
-          var editHint = document.createElement("span");
-          editHint.textContent = "\u270E";
-          editHint.style.cssText = "font-size:12px;opacity:.55;flex:none;";
-          editHint.title = "Rename";
-          row.appendChild(editHint);
 
           var moBtn = document.createElement("button");
           moBtn.type = "button";
-          moBtn.textContent = cat.membersOnly ? "⭐ Members" : "Public";
-          moBtn.title = "Toggle members-only";
-          moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (cat.membersOnly ? "rgba(255,200,50,.2)" : "transparent") + ";color:var(--ink);";
+          var visState = cat.ownerOnly ? "private" : (cat.membersOnly ? "members" : "public");
+          moBtn.textContent = visState === "private" ? "\uD83D\uDD12 Private" : (visState === "members" ? "\u2B50 Members" : "Public");
+          moBtn.title = "Visibility: Public \u2192 Private (only you) \u2192 Members \u2192 Public";
+          moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (visState === "private" ? "rgba(120,140,255,.25)" : (visState === "members" ? "rgba(255,200,50,.2)" : "transparent")) + ";color:var(--ink);";
           moBtn.addEventListener("click", function () {
+            var next = visState === "public" ? { ownerOnly: true, membersOnly: false }
+              : visState === "private" ? { ownerOnly: false, membersOnly: true }
+              : { ownerOnly: false, membersOnly: false };
             api("/api/forum/categories/" + encodeURIComponent(cat.id), {
-              method: "PUT", body: { membersOnly: !cat.membersOnly }
-            }).then(function (r) { if (r.ok) refresh(); });
+              method: "PUT", body: next
+            }).then(function (r) { if (r.ok) refresh(); else alert(r.error || "Failed"); });
           });
           row.appendChild(moBtn);
 
