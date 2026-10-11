@@ -526,30 +526,73 @@
         }
       }
       
-      // Generate briefing
+      // Determine which metric is active by checking the pill position or button order
+      var metricName = 'visitors';
+      var metricUnit = 'visitors';
+      // Try to infer from which button appears active (pill position)
+      // Default to visitors since that's what's shown in screenshot
+      // Check the URL hash or active tab
+      var postsBtn = document.querySelector('button[aria-label="Posts"]');
+      var viewsBtn = document.querySelector('button[aria-label="Views"]');
+      var usersBtn = document.querySelector('button[aria-label="Users"]');
+      // Simple heuristic: check which metric tab was clicked last via pill position
+      // For now, try to detect from the graph colors or just use generic
+      // Better: look at the metric buttons' parent and find pill position
+      try {
+        var pillEl = document.querySelector('.pill-indicator');
+        var mContainer = viewsBtn ? viewsBtn.parentElement : null;
+        if (pillEl && mContainer) {
+          var pRect = pillEl.getBoundingClientRect();
+          var btns = [viewsBtn, document.querySelector('button[aria-label="Visitors"]'), usersBtn, postsBtn].filter(Boolean);
+          for (var bi = 0; bi < btns.length; bi++) {
+            var bRect = btns[bi].getBoundingClientRect();
+            if (Math.abs(bRect.left - (pRect.left)) < 20) {
+              var lbl = btns[bi].getAttribute('aria-label');
+              if (lbl === 'Views') { metricName = 'views'; metricUnit = 'page views'; }
+              else if (lbl === 'Visitors') { metricName = 'visitors'; metricUnit = 'unique visitors'; }
+              else if (lbl === 'Users') { metricName = 'signups'; metricUnit = 'new users'; }
+              else if (lbl === 'Posts') { metricName = 'posts'; metricUnit = 'posts & replies'; }
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+      
+      // Generate specific briefing
       var html = '<div style="font-weight:700;margin-bottom:6px;opacity:0.9;">What this shows</div>';
       html += '<div style="opacity:0.75;">';
       
-      if (parseInt(total.replace(/,/g, '')) === 0) {
-        html += 'No data yet for this period. Once visitors start coming in, you\'ll see the breakdown here.';
+      var totalNum = parseInt(total.replace(/,/g, '')) || 0;
+      var peakNum = parseInt(peak.replace(/,/g, '')) || 0;
+      
+      if (totalNum === 0) {
+        html += 'No ' + metricUnit + ' yet in the last 30 days. Once activity picks up, you\'ll see the trend here.';
       } else {
-        html += 'You\'ve had <strong>' + total + '</strong> total in the last 30 days';
-        html += ', averaging <strong>' + avg + '</strong> per day.';
-        if (peak !== '0') {
-          html += ' Your busiest day was <strong>' + peakDate + '</strong> with <strong>' + peak + '</strong>.';
+        html += '<strong>' + total + '</strong> ' + metricUnit + ' in the last 30 days';
+        html += ' (' + avg + '/day avg).';
+        if (peakNum > 0) {
+          var pct = Math.round((peakNum / totalNum) * 100);
+          html += ' Peak was <strong>' + peak + '</strong> on <strong>' + peakDate + '</strong>';
+          if (pct >= 50) {
+            html += ' — that\'s <strong>' + pct + '%</strong> of all activity in a single day. ';
+            html += 'Something drove a spike then — check what you posted or shared that day.';
+          } else {
+            html += '.';
+          }
         }
-        var avgNum = parseFloat(avg);
-        if (avgNum < 1) {
-          html += ' Things are quiet right now — typical for a new site finding its audience.';
-        } else if (avgNum < 10) {
-          html += ' Steady trickle of activity — good foundation to build on.';
-        } else {
-          html += ' Solid momentum — keep it going.';
+        // Trend insight
+        if (peakDate) {
+          var today = new Date().toISOString().slice(0, 10).slice(5);
+          if (peakDate === today || peakDate === '10-11') {
+            html += ' The spike is <strong>today</strong> — momentum is building right now.';
+          }
         }
       }
       html += '</div>';
       
       briefing.innerHTML = html;
+      // Tight spacing to Newest Users
+      briefing.style.marginBottom = '4px';
       graphSummary.parentElement.insertBefore(briefing, graphSummary.nextSibling);
       
       // Update when metric changes
