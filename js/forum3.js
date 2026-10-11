@@ -1642,7 +1642,7 @@
       '<div class="forum-field-wrap"><span class="forum-content-label">Poll <span class="forum-optional">(optional)</span></span>' +
       '<button type="button" class="forum-admin-btn" id="forum-poll-toggle">Add poll</button>' +
       '<div id="forum-poll-form" class="hidden" style="margin-top:10px;">' +
-      '<input type="text" id="forum-poll-q" maxlength="200" placeholder="Poll question" style="width:100%;margin-bottom:8px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;">' +
+      '<input type="text" id="forum-poll-q" maxlength="200" placeholder="Poll question" class="forum-poll-input">' +
       '<div id="forum-poll-opts"></div>' +
       '<button type="button" class="forum-admin-btn" id="forum-poll-add-opt">+ Add option</button>' +
       "</div></div>" +
@@ -1712,7 +1712,7 @@
       inp.maxLength = 80;
       inp.placeholder = "Option " + (pollOpts.children.length + 1);
       inp.value = val || "";
-      inp.style.cssText = "width:100%;margin-bottom:6px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;";
+      inp.className = "forum-poll-input";
       pollOpts.appendChild(inp);
     }
     if (pollToggle) pollToggle.addEventListener("click", function () {
