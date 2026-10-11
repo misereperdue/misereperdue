@@ -630,49 +630,6 @@
   })();
 
 
-  // Make Posts graph purple instead of blue
-  (function() {
-    function makePurple() {
-      // Find the Posts graph bars (they have the specific blue fills)
-      var svg = document.querySelector('svg[width]');
-      if (!svg) return;
-      // Check if Posts tab is active
-      var postsBtn = document.querySelector('button[aria-label="Posts"]');
-      if (!postsBtn) return;
-      // Find rects with blue fills and change to purple
-      var rects = svg.querySelectorAll('rect');
-      rects.forEach(function(r) {
-        var fill = r.getAttribute('fill') || '';
-        if (fill === '#1d4ed8') {
-          r.setAttribute('fill', '#7c3aed'); // darker purple for posts
-        } else if (fill === '#60a5fa') {
-          r.setAttribute('fill', '#a78bfa'); // lighter purple for replies
-        } else if (fill.indexOf('barGrad-messages') !== -1) {
-          // Also handle the gradient case - replace with purple gradient
-          // Find the gradient and update its stops
-          var gradId = fill.match(/url\(#([^)]+)\)/);
-          if (gradId) {
-            var grad = document.getElementById(gradId[1]);
-            if (grad) {
-              var stops = grad.querySelectorAll('stop');
-              if (stops.length >= 2) {
-                stops[0].setAttribute('stop-color', '#7c3aed');
-                stops[1].setAttribute('stop-color', '#a78bfa');
-              }
-            }
-          }
-        }
-      });
-    }
-    // Watch for graph updates
-    try {
-      new MutationObserver(function() {
-        setTimeout(makePurple, 100);
-      }).observe(document.body, { childList: true, subtree: true });
-    } catch (e) {}
-    setInterval(makePurple, 2000);
-  })();
-
   // Pill styling removed - using native dashboard styles
 
   // Stacked bars for Posts graph (posts = darker blue, replies = lighter blue)
