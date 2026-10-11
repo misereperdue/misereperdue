@@ -212,11 +212,12 @@
       return !!document.querySelector(".chat-auth");
     }
     function assertScroll() {
-      if (isAuthView()) {
-        // Auth page: single scroll to top after layout settles
-        setTimeout(function() { window.scrollTo(0, 0); }, 800);
-        return;
-      }
+      // Check view type inside timeout since content renders async
+      setTimeout(function() {
+        if (isAuthView()) { window.scrollTo(0, 0); return; }
+        if (current.type === "journal") return; // Chat handles its own scroll
+        if (window.scrollY > 100) window.scrollTo(0, 0);
+      }, 800);
       if (current.type === "journal") {
         // Chat belongs at the newest message; MPChat may still be booting,
         // so retry until it can scroll, then hold the bottom briefly.
@@ -235,23 +236,8 @@
             window.scrollTo(0, document.documentElement.scrollHeight);
           }
         }, 250);
-      } else {
-        // Non-chat views: pin to top. Safari restores scroll VERY late,
-        // so do a single correction after everything settles (1.5s).
-        // Stop if the user has manually scrolled.
-        var userScrolled2 = false;
-        var onUserScroll2 = function() { userScrolled2 = true; };
-        window.addEventListener("touchmove", onUserScroll2, { once: true, passive: true });
-        window.addEventListener("wheel", onUserScroll2, { once: true, passive: true });
-        setTimeout(function() {
-          if (userScrolled2) return;
-          if (window.scrollY > 100) {
-            window.scrollTo(0, 0);
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-          }
-        }, 1500);
       }
+      // Non-chat handled by the timeout above.
     }
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
