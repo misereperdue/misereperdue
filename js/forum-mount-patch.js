@@ -184,33 +184,30 @@
   setTimeout(replaceBell, 100);
   setInterval(replaceBell, 2000);
 
-  // Rename Forum to Globe everywhere
+  // Rename Forum to Globe everywhere (immediate, no flash)
   function renameForumToGlobe() {
-    // Update the title
     document.querySelectorAll(".chat-title").forEach(function(el) {
       if (el.textContent.trim() === "Forum") {
         el.textContent = "Globe";
       }
     });
-    // Update any other Forum text (but not in code/attributes)
-    var walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-      null,
-      false
-    );
-    var node;
-    while (node = walker.nextNode()) {
-      if (node.nodeValue && node.nodeValue.trim() === "Forum") {
-        // Don't replace in script/style tags
-        var parent = node.parentElement;
-        if (parent && (parent.tagName === "SCRIPT" || parent.tagName === "STYLE")) continue;
-        node.nodeValue = node.nodeValue.replace("Forum", "Globe");
-      }
-    }
   }
-  setTimeout(renameForumToGlobe, 500);
-  setInterval(renameForumToGlobe, 2000);
+  // Watch for title being added (catches it before paint)
+  try {
+    new MutationObserver(function(muts) {
+      var found = false;
+      muts.forEach(function(m) {
+        m.addedNodes.forEach(function(n) {
+          if (n.nodeType === 1) {
+            if (n.classList && n.classList.contains("chat-title")) found = true;
+            else if (n.querySelector && n.querySelector(".chat-title")) found = true;
+          }
+        });
+      });
+      if (found) renameForumToGlobe();
+    }).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+  setTimeout(renameForumToGlobe, 100);
 
   // Replace dashboard tab icons with Phosphor fill
   var DASH_CHAT = "<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86Zm-16.25,1.47L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>";

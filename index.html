@@ -128,7 +128,7 @@
   <script src="js/shop.js?v=40"></script>
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=105"></script>
-  <script src="js/forum3.js?v=999"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1025"></script>
+  <script src="js/forum3.js?v=999"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1026"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -343,7 +343,7 @@
       var hash = "#";
       if (view === "shop") hash = "#shop";
       else if (view === "cart") hash = "#cart";
-      else if (view === "forum") hash = "#forum";
+      else if (view === "forum") hash = "#global";
       else if (view === "post" && id) hash = "#post/" + id;
       else if (view === "product" && id) hash = "#product/" + id;
       else if (reading) hash = "#post";
@@ -506,7 +506,7 @@
       }
       if (h === "#shop") { show("shop"); return true; }
       if (h === "#cart") { show("cart"); return true; }
-      if (h === "#forum") { show("forum"); return true; }
+      if (h === "#global" || h === "#forum") { show("forum"); return true; }
       if (h === "#journal" || h === "#") { show("journal"); return true; }
       return false;
     }
