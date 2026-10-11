@@ -2096,7 +2096,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-topbar,
 .forum-notif-panel,
 .chat-me-menu {
-  background: rgba(18, 18, 26, 0.75) !important;
+  background: rgba(7, 15, 41, 0.65) !important;
   -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   border: var(--glass-hairline) !important;
@@ -2113,7 +2113,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* Force top nav opaque - higher specificity */
 nav#nav.nav,
 .nav-wrap .nav {
-  background: rgba(18, 18, 26, 0.75) !important;
+  background: rgba(7, 15, 41, 0.65) !important;
   -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   transform: translateZ(0);
