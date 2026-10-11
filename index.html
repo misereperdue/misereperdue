@@ -265,6 +265,14 @@
     window.addEventListener("load", function () {
       setTimeout(assertScroll, 60);
     });
+    // Prevent Safari from saving/restoring a scrolled position:
+    // reset to top when the page is being hidden/unloaded.
+    window.addEventListener("pagehide", function () {
+      try { window.scrollTo(0, 0); } catch (e) {}
+    });
+    window.addEventListener("beforeunload", function () {
+      try { window.scrollTo(0, 0); } catch (e) {}
+    });
     function show(view, id) {
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
