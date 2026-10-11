@@ -67,7 +67,7 @@ var MPShop = (function () {
   var SHOP_DIAG = "";
   function cachedProducts() {
     try {
-      var c = localStorage.getItem("mp_products_cache");
+      var c = localStorage.getItem("mp_products_cache_v2");
       if (c) { var list = JSON.parse(c); if (list && list.length) return list; }
     } catch (e) {}
     return null;
@@ -77,7 +77,7 @@ var MPShop = (function () {
     return MPShopify.fetchProducts().then(function (list) {
       if (list && list.length) {
         list.forEach(function (p) { MP.PRODUCTS[p.id] = p; });
-        try { localStorage.setItem("mp_products_cache", JSON.stringify(list)); } catch (e) {}
+        try { localStorage.setItem("mp_products_cache_v2", JSON.stringify(list)); } catch (e) {}
         return list;
       }
       // Empty list: retry once, then use cache, then placeholder
