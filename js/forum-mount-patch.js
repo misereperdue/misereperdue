@@ -21,18 +21,20 @@
     panel._posFixed = true;
   }
 
-  // Replace "Loading users..." with spinner in a bubble
+  // Replace loading texts with spinner in a bubble
   function fixLoadingText() {
     var els = document.querySelectorAll("div");
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (el._spinnerFixed) continue;
-      if (el.textContent === "Loading users..." && el.children.length === 0) {
+      var txt = el.textContent;
+      if ((txt === "Loading users..." || txt === "Loading..." || txt === "Loading…") && el.children.length === 0) {
         el._spinnerFixed = true;
         el.innerHTML = '<div class="mp-loading-bubble"><span class="mp-spinner"></span></div>';
         el.style.textAlign = "center";
         el.style.padding = "20px";
         el.style.opacity = "1";
+        el.style.fontSize = "";
       }
     }
   }
