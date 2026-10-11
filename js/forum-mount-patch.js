@@ -343,23 +343,64 @@
   setInterval(reorderMetricTabs, 3000);
 
   // Liquid glass sliding pill for dashboard nav and activity tabs
+  // IMPORTANT: Only target elements INSIDE the dashboard modal, never the main site navbar
   function initSlidingPills() {
-    // Dashboard nav (top: chat, globe, gear)
-    var dashNav = document.querySelector('.dashboard-nav, [class*="dash"] nav, div[style*="display:flex"] > button[aria-label="Chat"]');
-    // More reliable: find the container of the 3 dashboard tab buttons
-    var chatBtn = document.querySelector('button[aria-label="Chat"]');
+    // Find the dashboard modal/container (it contains "Dashboard" text)
+    var dashboard = null;
+    document.querySelectorAll("div").forEach(function(d) {
+      if (d.textContent.trim().indexOf("Dashboard") === 0 && d.children.length > 3) {
+        // Likely the dashboard container - verify it has the tab buttons
+        if (d.querySelector('button[aria-label="Chat"]') && d.querySelector('button[aria-label="Views"]')) {
+          dashboard = d;
+        }
+      }
+    });
+    if (!dashboard) return;
+    
+    // Dashboard nav (the 3 tabs: Chat, Globe, Manage) - ONLY inside dashboard
+    var chatBtn = dashboard.querySelector('button[aria-label="Chat"]');
     if (chatBtn && chatBtn.parentElement && !chatBtn.parentElement.getAttribute("data-pill")) {
+      // Make sure this is NOT the main navbar (main navbar is not inside dashboard)
       var navContainer = chatBtn.parentElement;
       setupSlidingPill(navContainer, 'button[aria-label="Chat"], button[aria-label="Forum"], button[aria-label="Globe"], button[aria-label="Manage"]');
     }
     
-    // Activity metric tabs
-    var viewsBtn = document.querySelector('button[aria-label="Views"]');
+    // Activity metric tabs - ONLY inside dashboard
+    var viewsBtn = dashboard.querySelector('button[aria-label="Views"]');
     if (viewsBtn && viewsBtn.parentElement && !viewsBtn.parentElement.getAttribute("data-pill")) {
       var metricContainer = viewsBtn.parentElement;
       setupSlidingPill(metricContainer, 'button[aria-label="Views"], button[aria-label="Visitors"], button[aria-label="Users"], button[aria-label="Posts"]');
     }
   }
+  
+  // Remove any pill effects from the main site navbar (cleanup)
+  function cleanupMainNav() {
+    // Main navbar is NOT inside dashboard - remove data-pill and restore
+    document.querySelectorAll("nav [data-pill], body > div [data-pill]").forEach(function(el) {
+      // Check if this is inside the dashboard
+      var inDashboard = false;
+      var p = el;
+      while (p) {
+        if (p.textContent && p.textContent.trim().indexOf("Dashboard") === 0) { inDashboard = true; break; }
+        p = p.parentElement;
+      }
+      if (!inDashboard) {
+        el.removeAttribute("data-pill");
+        var pill = el.querySelector(".sliding-pill");
+        if (pill) pill.remove();
+        // Restore original styles
+        el.style.position = "";
+        el.style.background = "";
+        el.style.backdropFilter = "";
+        el.style.webkitBackdropFilter = "";
+        el.style.borderRadius = "";
+        el.style.padding = "";
+        el.style.border = "";
+      }
+    });
+  }
+  setTimeout(cleanupMainNav, 1000);
+  setInterval(cleanupMainNav, 3000);
   
   function setupSlidingPill(container, selector) {
     if (!container) return;
