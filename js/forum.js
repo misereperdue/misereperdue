@@ -86,7 +86,8 @@
     } else {
       html += '<div class="forum-threads">';
       threads.forEach(function (t) {
-        html += '<button type="button" class="forum-thread" data-id="' + esc(t.id) + '">' +
+        html += '<div class="forum-thread-row">' +
+          '<button type="button" class="forum-thread" data-id="' + esc(t.id) + '">' +
           (t.pinned ? '<span class="forum-pin">\uD83D\uDCCC</span>' : "") +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
@@ -95,6 +96,13 @@
           "</span>" +
           '<span class="forum-thread-count">' + t.replies + "</span>" +
           "</button>";
+        if (isOwner) {
+          html += '<div class="forum-admin">' +
+            '<button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + "</button>" +
+            '<button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete</button>' +
+            "</div>";
+        }
+        html += "</div>";
       });
       html += "</div>";
     }
@@ -112,6 +120,21 @@
         view.name = "thread";
         view.threadId = b.getAttribute("data-id");
         renderThread();
+      });
+    });
+    root.querySelectorAll("[data-pin]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        api("/api/forum/thread/" + encodeURIComponent(b.getAttribute("data-pin")) + "/pin", { method: "POST" })
+          .then(function (r) { if (r.ok) render(); });
+      });
+    });
+    root.querySelectorAll("[data-del]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (!confirm("Delete this thread and all its replies?")) return;
+        api("/api/forum/thread/" + encodeURIComponent(b.getAttribute("data-del")), { method: "DELETE" })
+          .then(function (r) { if (r.ok) { view.name = "list"; view.threadId = null; render(); } });
       });
     });
     var nb = root.querySelector("#forum-new");
@@ -148,14 +171,16 @@
         '<span class="forum-post-author">' + esc(t.author) + "</span>" +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
-        '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div></article>";
+        '<div class="forum-post-body">' + esc(t.content).replace(/\n/g, "<br>") + "</div>" +
+        (isOwner ? '<div class="forum-admin forum-admin-thread"><button type="button" class="forum-admin-btn" data-pin="' + esc(t.id) + '">' + (t.pinned ? "Unpin" : "Pin") + '</button><button type="button" class="forum-admin-btn forum-admin-del" data-del="' + esc(t.id) + '">Delete thread</button></div>' : "") + "</article>";
 
       html += '<div class="forum-replies">';
       (t.replies || []).forEach(function (r) {
         html += '<article class="forum-post">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + esc(r.author) + "</span>" +
-          '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
+          '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span>" +
+          (isOwner ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' + esc(r.id) + '">Delete</button>' : "") + "</div>" +
           '<div class="forum-post-body">' + esc(r.content).replace(/\n/g, "<br>") + "</div></article>";
       });
       html += "</div>";
@@ -170,6 +195,26 @@
 
       root.innerHTML = html;
       root.querySelector("#forum-back").addEventListener("click", backToList);
+      root.querySelectorAll("[data-delreply]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          if (!confirm("Delete this reply?")) return;
+          api("/api/forum/thread/" + encodeURIComponent(view.threadId) + "/replies/" + encodeURIComponent(b.getAttribute("data-delreply")), { method: "DELETE" })
+            .then(function (r) { if (r.ok) renderThread(); });
+        });
+      });
+      root.querySelectorAll("[data-pin]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          api("/api/forum/thread/" + encodeURIComponent(b.getAttribute("data-pin")) + "/pin", { method: "POST" })
+            .then(function (r) { if (r.ok) renderThread(); });
+        });
+      });
+      root.querySelectorAll("[data-del]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          if (!confirm("Delete this thread and all its replies?")) return;
+          api("/api/forum/thread/" + encodeURIComponent(b.getAttribute("data-del")), { method: "DELETE" })
+            .then(function (r) { if (r.ok) backToList(); });
+        });
+      });
 
       var send = root.querySelector("#forum-send");
       if (send) send.addEventListener("click", function () {
@@ -236,9 +281,17 @@
 
   /* ---------- entry ---------- */
 
+  var isOwner = false;
+
   function render() {
     root = document.getElementById("forum-root");
     if (!root) return;
+    // Check owner status
+    if (token()) {
+      api("/api/me").then(function (r) {
+        isOwner = !!(r && r.user && r.user.owner);
+      }).catch(function () {});
+    }
     api("/api/forum/categories").then(function (res) {
       cache.categories = (res.ok && res.categories) || [];
       return api("/api/forum/threads");
