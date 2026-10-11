@@ -115,9 +115,12 @@
   function applySolid(svg) {
     if (!svg || svg.getAttribute("data-solid")) return;
     svg.setAttribute("data-solid", "1");
-    // Set fill to currentColor, remove stroke
+    // Set fill to currentColor, remove all stroke attributes
     svg.setAttribute("fill", "currentColor");
     svg.removeAttribute("stroke");
+    svg.removeAttribute("stroke-width");
+    svg.removeAttribute("stroke-linecap");
+    svg.removeAttribute("stroke-linejoin");
     var els = svg.querySelectorAll("path, circle, rect");
     els.forEach(function(el) {
       // Skip duotone fill layers from previous version
