@@ -517,7 +517,9 @@
         container.insertBefore(slider, container.firstChild);
         
         btns.forEach(function(b) {
-          b.style.background = 'transparent';
+          b.style.setProperty('background', 'transparent', 'important');
+          b.style.setProperty('background-color', 'transparent', 'important');
+          b.style.setProperty('box-shadow', 'none', 'important');
           b.style.border = 'none';
           b.style.position = 'relative';
           b.style.zIndex = '1';
@@ -539,15 +541,6 @@
     setInterval(function() { try { setup(); } catch (e) {} }, 2500);
   })();
 
-
-  // Remove patch countries duplicates (keep native)
-  setInterval(function() {
-    try {
-      document.querySelectorAll('#countries-section').forEach(function(sec) {
-        if (sec.querySelector('#countries-list')) sec.remove();
-      });
-    } catch (e) {}
-  }, 1500);
 
   // Assistant briefing under the graph
   (function() {
