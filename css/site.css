@@ -1432,9 +1432,9 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   margin-top: 10px;
   padding: 8px 16px;
   border-radius: 999px;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.15);
-  color: #fff;
+  background: var(--glass-clear-tint);
+  border: var(--glass-hairline);
+  color: var(--ink);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -2086,23 +2086,24 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 
 
-.forum-loader {
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #0a0a1a 50%, #16213e 75%, #0a0a1a 100%);
-  background-size: 400% 400%;
-  animation: forum-load-pulse 2s ease-in-out infinite;
-  z-index: 10;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.4s ease;
+
+/* Unified opaque blur - matches user dropdown menu */
+.nav,
+.chat-head,
+.forum-head,
+.forum-topbar,
+.forum-notif-panel,
+.chat-me-menu {
+  background: rgba(18, 18, 26, 0.75) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  border: var(--glass-hairline) !important;
 }
-.forum-loader.hidden { opacity: 0; }
-@keyframes forum-load-pulse {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-#forum { position: relative; }
-[data-theme="light"] .forum-loader {
-  background: linear-gradient(135deg, #f0f0f5 0%, #e0e0ec 25%, #f0f0f5 50%, #d8d8e8 75%, #f0f0f5 100%);
-  background-size: 400% 400%;
+[data-theme="light"] .nav,
+[data-theme="light"] .chat-head,
+[data-theme="light"] .forum-head,
+[data-theme="light"] .forum-topbar,
+[data-theme="light"] .forum-notif-panel,
+[data-theme="light"] .chat-me-menu {
+  background: rgba(255, 255, 255, 0.7) !important;
 }
