@@ -1030,6 +1030,7 @@
     html += '<div class="forum-form">' +
       '<label class="chat-field"><span>Title</span>' +
       '<input type="text" id="forum-edit-title" maxlength="120" value="' + esc(t.title) + '"></label>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
       '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
@@ -1039,7 +1040,6 @@
       '<button type="button" class="forum-admin-btn forum-admin-del' + (t.thumb ? "" : " hidden") + '" id="forum-ethumb-remove">Remove</button>' +
       '<input type="file" id="forum-ethumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
-      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-edit-actions">' +
       '<button type="button" class="btn" id="forum-edit-cancel">Cancel</button>' +
       '<button type="button" class="btn accent" id="forum-edit-save">Save changes</button></div></div>';
@@ -1126,6 +1126,7 @@
     html += "</select></label>" +
       '<label class="chat-field"><span>Title</span>' +
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
       '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML() + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
@@ -1135,7 +1136,6 @@
       '<button type="button" class="forum-admin-btn forum-admin-del hidden" id="forum-thumb-remove">Remove</button>' +
       '<input type="file" id="forum-thumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
-      '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<button type="button" class="btn accent" id="forum-post">Post thread</button></div>';
 
     root.innerHTML = html;
