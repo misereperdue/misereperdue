@@ -349,7 +349,7 @@
       if (!canSee) {
         el.setAttribute("data-gated", "1");
         el.innerHTML = '<div class="mp-locked-note"><span aria-hidden="true">\uD83D\uDD12</span><span>' +
-          esc(mode === "member" ? "Members-only content" : "Hidden content \u2014 reply to unlock") +
+          esc(mode === "member" ? "This hidden content is only available to VIPs" : "This hidden content becomes available once you reply to this thread") +
           "</span></div>";
       }
     });
