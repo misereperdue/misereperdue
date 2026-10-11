@@ -490,6 +490,22 @@
   })();
 
 
+
+  // Force activity nav buttons transparent (kill native blue background)
+  (function() {
+    var style = document.createElement('style');
+    style.id = 'act-nav-override';
+    style.textContent = `
+      button[aria-label="Views"], button[aria-label="Visitors"],
+      button[aria-label="Users"], button[aria-label="Posts"] {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
   // Activity nav sliding pill
   (function() {
     function setup() {
