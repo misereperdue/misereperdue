@@ -302,9 +302,13 @@
     { act: "h3", label: "H", cls: "" },
     { act: "bullet", label: "\u2022\u2261", cls: "" },
     { act: "ordered", label: "1.\u2261", cls: "" },
-    { act: "quote", label: "\u201D", cls: "" },
-    { act: "link", label: "\uD83D\uDD17", cls: "" },
-    { act: "image", label: "\uD83D\uDCF7", cls: "" }
+    { act: "quote", label: "\u201D", cls: "" }
+  ];
+  var MEDIA_BTNS = [
+    { act: "image", label: "\uD83D\uDCF7", member: false, title: "Upload media" },
+    { act: "file", label: "\uD83D\uDCCE", member: true, title: "Attach a file" },
+    { act: "link", label: "\uD83D\uDD17", member: false, title: "Attach URL" },
+    { act: "embed", label: "\uD83D\uDCFA", member: true, title: "Media embed" }
   ];
   function toolbarHTML(opts) {
     opts = opts || {};
@@ -312,15 +316,16 @@
     TOOLBAR.forEach(function (b) {
       h += '<button type="button" class="forum-tb ' + b.cls + '" data-act="' + b.act + '">' + b.label + "</button>";
     });
-    if (opts.embed) h += '<button type="button" class="forum-tb forum-tb-embed" data-act="embed" title="Embed YouTube video">\u25B6</button>';
-    if (opts.ai) h += '<button type="button" class="forum-tb forum-tb-ai" data-act="ai" title="AI writing help">\u2728</button>';
-    if (opts.file) h += '<button type="button" class="forum-tb forum-tb-file" data-act="file" title="Attach a file (members, up to 50MB)">\uD83D\uDCCE</button>';
+    MEDIA_BTNS.forEach(function (b) {
+      if (b.act === "embed" && !opts.embed) return;
+      if (b.member && !opts.member) return;
+      h += '<button type="button" class="forum-tb" data-act="' + b.act + '" title="' + b.title + '">' + b.label + "</button>";
+    });
     h += "</div>";
     h += '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://\u2026"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>';
     if (opts.embed) h += '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">\u00D7</button></div>';
-    if (opts.ai) h += '<div class="forum-aibar hidden"><div class="forum-ai-chips"><button type="button" data-aiq="Continue writing">Continue</button><button type="button" data-aiq="Make this shorter">Shorten</button><button type="button" data-aiq="Fix spelling and grammar">Fix</button></div><div class="forum-ai-row"><input type="text" class="forum-ai-input" placeholder="Ask AI\u2026"><button type="button" class="forum-ai-go">\u2728 Go</button></div><div class="forum-ai-status"></div></div>';
     h += '<input type="file" class="forum-file-input hidden" accept="image/*">';
-    if (opts.file) h += '<input type="file" class="forum-doc-input hidden">';
+    if (opts.member) h += '<input type="file" class="forum-doc-input hidden">';
     return h;
   }
   function fmtSize(bytes) {
@@ -432,19 +437,6 @@
       btn.addEventListener("click", function () {
         var act = btn.getAttribute("data-act");
         if (act === "link") { toggleLinkBar(editor, mountEl); return; }
-        if (act === "ai") {
-          var lb3 = mountEl.querySelector(".forum-linkbar");
-          if (lb3) lb3.classList.add("hidden");
-          var eb3 = mountEl.querySelector(".forum-embedbar");
-          if (eb3) eb3.classList.add("hidden");
-          var ab = mountEl.querySelector(".forum-aibar");
-          if (ab) {
-            var opening = ab.classList.contains("hidden");
-            ab.classList.toggle("hidden", !opening);
-            if (opening) { var ain = ab.querySelector(".forum-ai-input"); if (ain) setTimeout(function () { ain.focus(); }, 50); }
-          }
-          return;
-        }
         if (act === "file") {
           var lb4 = mountEl.querySelector(".forum-linkbar");
           if (lb4) lb4.classList.add("hidden");
@@ -506,49 +498,6 @@
       linkBar.querySelector(".forum-link-remove").addEventListener("click", function () {
         editor.chain().focus().extendMarkRange("link").unsetLink().run();
         linkBar.classList.add("hidden");
-      });
-    }
-    var aiBar = mountEl.querySelector(".forum-aibar");
-    if (aiBar && editor) {
-      var aiInput = aiBar.querySelector(".forum-ai-input");
-      var aiGo = aiBar.querySelector(".forum-ai-go");
-      var aiStatus = aiBar.querySelector(".forum-ai-status");
-      aiBar.querySelectorAll("[data-aiq]").forEach(function (chip) {
-        chip.addEventListener("mousedown", function (e) { e.preventDefault(); });
-        chip.addEventListener("click", function () { aiInput.value = chip.getAttribute("data-aiq"); aiInput.focus(); });
-      });
-      aiGo.addEventListener("click", function () {
-        var instruction = (aiInput.value || "").trim();
-        var ctx = "";
-        try {
-          var sel = editor.state.selection;
-          if (sel && !sel.empty) ctx = editor.state.doc.textBetween(sel.from, sel.to, " ").slice(0, 4000);
-        } catch (e) {}
-        if (!ctx) { try { ctx = editor.getText().slice(0, 4000); } catch (e) {} }
-        if (!instruction && !ctx.trim()) { aiStatus.textContent = "Write something first, or type an instruction."; return; }
-        aiGo.disabled = true;
-        aiGo.textContent = "\u2728\u2026";
-        aiStatus.textContent = "";
-        api("/api/ai/generate", { method: "POST", body: { instruction: instruction, context: ctx } })
-          .then(function (r) {
-            aiGo.disabled = false;
-            aiGo.textContent = "\u2728 Go";
-            if (r && r.ok && r.text) {
-              var paras = String(r.text).split(/\n\s*\n/).map(function (p) {
-                return "<p>" + esc(p).replace(/\n/g, "<br>") + "</p>";
-              }).join("");
-              editor.chain().focus().insertContent(paras + "<p></p>").run();
-              aiBar.classList.add("hidden");
-              aiInput.value = "";
-            } else {
-              aiStatus.textContent = (r && r.error) || "AI failed, try again.";
-            }
-          })
-          .catch(function () {
-            aiGo.disabled = false;
-            aiGo.textContent = "\u2728 Go";
-            aiStatus.textContent = "Couldn't reach the server.";
-          });
       });
     }
     var docInput = mountEl.querySelector(".forum-doc-input");
@@ -681,7 +630,7 @@
     // opts: { html, member, placeholder } -> Promise<Editor|null>
     mount: function (container, opts) {
       opts = opts || {};
-      container.innerHTML = toolbarHTML({ ai: !!opts.member, file: !!opts.member }) + '<div class="forum-editor-mount"></div>';
+      container.innerHTML = toolbarHTML({ member: !!opts.member }) + '<div class="forum-editor-mount"></div>';
       if (!opts.member) {
         var ib = container.querySelector('[data-act="image"]');
         if (ib) ib.remove();
@@ -918,7 +867,7 @@
         var rtName = view.replyTo ? view.replyTo.name : null;
         html += '<div class="forum-replybox">' +
           (rtName ? '<div class="forum-replying-to">Replying to <b>' + esc(rtName) + '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">\u00D7</button></div>' : "") +
-          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML({ embed: canPostEmbed(), ai: canPostEmbed(), file: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div>' +
+          '<div class="forum-editor" id="forum-reply-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div>' +
           '<button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else {
         html += '<div class="forum-signin">Sign in to join the discussion.</div>';
@@ -1302,7 +1251,7 @@
       '<input type="text" id="forum-edit-title" maxlength="120" value="' + esc(t.title) + '"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-edit") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML({ embed: canPostEmbed(), ai: canPostEmbed(), file: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-edit-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-ethumb-preview">' + (t.thumb ? '<img src="' + API + "/api/media/" + esc(t.thumb) + '" alt="">' : "") + '</span>' +
@@ -1401,7 +1350,7 @@
       '<input type="text" id="forum-title" maxlength="120" placeholder="What\u2019s this about?"></label>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Tags <span class="forum-optional">(optional, max 5)</span></span>' + tagEditorHTML("forum-new") + "</div>" +
       '<div class="forum-field-wrap"><span class="forum-content-label">Content</span>' +
-      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML({ embed: canPostEmbed(), ai: canPostEmbed(), file: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
+      '<div class="forum-editor" id="forum-new-editor">' + toolbarHTML({ embed: true, member: canPostEmbed() }) + '<div class="forum-editor-mount"></div></div></div>' +
       '<div class="forum-field-wrap"><span class="forum-content-label">Thumbnail <span class="forum-optional">(optional)</span></span>' +
       '<div class="forum-thumb-row">' +
       '<span class="forum-thumb-preview" id="forum-thumb-preview"></span>' +
