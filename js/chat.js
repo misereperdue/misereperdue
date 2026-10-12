@@ -1496,6 +1496,38 @@
 
     var bigWrap = avatarNode(me.username, me.avatar, "lg", myImgV());
     var mb0 = badgeFor(me); if (mb0) bigWrap.insertAdjacentHTML("beforeend", mb0);
+    // Tapping avatar shows expanded version
+    bigWrap.classList.add("chat-avatar-click");
+    bigWrap.setAttribute("role", "button");
+    bigWrap.setAttribute("tabindex", "0");
+    bigWrap.setAttribute("aria-label", "View larger avatar");
+    var showExpandedMe = function(e) {
+      if (e) e.stopPropagation();
+      var overlay = document.createElement("div");
+      overlay.className = "avatar-expand-overlay";
+      var hasImg = me.hasAvatarImg;
+      if (hasImg) {
+        var im = document.createElement("img");
+        im.className = "avatar-expand-img";
+        im.src = API + "/api/avatarimg/" + encodeURIComponent(me.username) + "?v=" + myImgV() + "&size=512";
+        im.alt = me.username + "'s avatar";
+        overlay.appendChild(im);
+      } else {
+        var em = document.createElement("div");
+        em.className = "avatar-expand-img";
+        em.style.fontSize = "120px";
+        em.style.display = "flex";
+        em.style.alignItems = "center";
+        em.style.justifyContent = "center";
+        em.textContent = me.avatar || "\uD83D\uDE00";
+        overlay.appendChild(em);
+      }
+      var close = function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+      overlay.addEventListener("click", close);
+      document.body.appendChild(overlay);
+    };
+    bigWrap.addEventListener("click", showExpandedMe);
+    bigWrap.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showExpandedMe(e); } });
     var bigHold = document.createElement("div");
     bigHold.className = "chat-sheet-big";
     bigHold.appendChild(bigWrap);
