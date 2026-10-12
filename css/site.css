@@ -2081,6 +2081,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .mp-dialog-grant { border: none; background: #2f7cf6; color: #fff; }
 
 .forum-cat-lock { width: 12px; height: 12px; vertical-align: -1px; flex: none; }
+.forum-cat-locked { opacity: .55; cursor: default; }
 
 /* Forum signatures */
 .forum-sig { border-top: 1px solid rgba(140,160,255,.14); margin-top: 12px; padding-top: 10px; font-size: 12.5px; line-height: 1.55; opacity: .88; word-wrap: break-word; }
