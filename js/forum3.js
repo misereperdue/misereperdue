@@ -157,15 +157,13 @@
       var panel = document.createElement("div");
       panel.className = "forum-notif-panel";
       try {
-        var bellEl = document.getElementById("forum-bell");
         var topbarEl = document.querySelector(".forum-topbar");
-        if (bellEl && topbarEl) {
-          var bellRect = bellEl.getBoundingClientRect();
+        if (topbarEl) {
           var topbarRect = topbarEl.getBoundingClientRect();
           panel.style.top = (topbarRect.bottom + 8) + "px";
           panel.style.width = "280px";
-          panel.style.left = "auto";
-          panel.style.right = Math.max(8, window.innerWidth - bellRect.right) + "px";
+          panel.style.left = topbarRect.left + "px";
+          panel.style.right = "auto";
         }
       } catch (e) {}
       var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="background:none;border:none;color:var(--ink);font-size:18px;cursor:pointer;">×</button></div>';
@@ -984,7 +982,7 @@
         if (b) avHtml = avHtml.replace(/<\/span>$/, b + "</span>");
       }
     }
-    return '<div class="chat-head forum-topbar">' +
+    return '<div class="chat-head forum-topbar glassbar">' +
       '<div class="chat-title">Forum</div>' +
       '<div class="chat-head-right">' +
       (token() && view.name !== "new" ? (view.name === "thread"
@@ -1415,15 +1413,16 @@
       if (send) send.addEventListener("click", function () {
         var content = "", rich = false;
         if (replyEditor) {
-          if (replyEditor.isEmpty) { alert("Editor is empty (debug: isEmpty=true)"); return; }
+          if (replyEditor.isEmpty) return;
           try {
-            content = appendPostEmbeds(replyEditor.getHTML(), mount._postEmbeds);
+            var replyMount = root.querySelector("#forum-reply-editor .forum-editor-mount");
+            content = appendPostEmbeds(replyEditor.getHTML(), replyMount ? replyMount._postEmbeds : []);
           } catch (e) { alert("Failed to get content: " + e.message); return; }
           rich = true;
         } else {
           var ta = root.querySelector("#forum-reply");
           content = ta ? ta.value.trim() : "";
-          if (!content) { alert("No content (debug: replyEditor=null, textarea empty)"); return; }
+          if (!content) return;
         }
         send.disabled = true;
         var origText = send.innerHTML;
