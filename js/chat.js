@@ -2159,6 +2159,10 @@
   // Expose for forum.js
   window.MPChat = window.MPChat || {};
   window.MPChat.openUserSheet = openUserSheet;
+  // Fallback: listen for custom event from forum
+  document.addEventListener("mp-open-user-sheet", function(e) {
+    if (e.detail && e.detail.username) openUserSheet(e.detail.username);
+  });
   window.MPChat.toggleMeMenu = toggleMeMenu;
   window.MPChat.badgeHTML = badgeHTML;
   window.MPChat.avatarNode = avatarNode;
