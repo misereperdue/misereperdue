@@ -212,7 +212,7 @@
         var overlay = document.createElement("div");
         overlay.className = "avatar-expand-overlay";
         var imgSrc = u.hasAvatarImg
-          ? API + "/api/avatarimg/" + encodeURIComponent(u.username) + "?v=" + (u.avatarV || 0) + "&size=512"
+          ? CHAT_API + "/api/avatarimg/" + encodeURIComponent(u.username) + "?v=" + (u.avatarV || 0) + "&size=512"
           : null;
         if (imgSrc) {
           var im = document.createElement("img");
@@ -1509,7 +1509,7 @@
       if (hasImg) {
         var im = document.createElement("img");
         im.className = "avatar-expand-img";
-        im.src = API + "/api/avatarimg/" + encodeURIComponent(me.username) + "?v=" + myImgV() + "&size=512";
+        im.src = CHAT_API + "/api/avatarimg/" + encodeURIComponent(me.username) + "?v=" + myImgV() + "&size=512";
         im.alt = me.username + "'s avatar";
         overlay.appendChild(im);
       } else {
