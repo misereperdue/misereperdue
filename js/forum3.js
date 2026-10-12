@@ -131,15 +131,17 @@
       var wrap = document.createElement("div");
       wrap.className = "owner-meteor-wrap";
       wrap.setAttribute("aria-hidden", "true");
-      // 12 meteors with random positions/timing (EasyUI Meteors port)
-      for (var j = 0; j < 12; j++) {
+      // 20 meteors for continuous stream (EasyUI Meteors port)
+      for (var j = 0; j < 20; j++) {
         var m = document.createElement("span");
         m.className = "owner-meteor-item";
         // Start from top area, distributed horizontally
-        m.style.top = (Math.random() * 40) + "px";
+        m.style.top = (Math.random() * 30) + "px";
         m.style.left = (Math.random() * 100) + "%";
-        m.style.animationDelay = (0.2 + Math.random() * 1.0).toFixed(2) + "s";
-        m.style.animationDuration = (2 + Math.floor(Math.random() * 6)) + "s";
+        // Evenly staggered delays for continuous flow (0-4s spread)
+        m.style.animationDelay = ((j / 20) * 4 + Math.random() * 0.5).toFixed(2) + "s";
+        // Shorter durations (3-5s) so they cycle continuously
+        m.style.animationDuration = (3 + Math.random() * 2).toFixed(2) + "s";
         var tail = document.createElement("span");
         tail.className = "owner-meteor-tail";
         m.appendChild(tail);
