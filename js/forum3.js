@@ -1695,6 +1695,14 @@
       '<button type="button" class="forum-admin-btn forum-admin-del' + (t.thumb ? "" : " hidden") + '" id="forum-ethumb-remove">Remove</button>' +
       '<input type="file" id="forum-ethumb-input" accept="image/*" class="hidden">' +
       "</div></div>" +
+      '<div class="forum-field-wrap"><span class="forum-content-label">Poll <span class="forum-optional">(optional)</span></span>' +
+      '<button type="button" class="forum-admin-btn" id="forum-epoll-toggle">' + (t.poll ? "Edit poll" : "Add poll") + '</button>' +
+      '<button type="button" class="forum-admin-btn forum-admin-del' + (t.poll ? "" : " hidden") + '" id="forum-epoll-remove">Remove poll</button>' +
+      '<div id="forum-epoll-form" class="hidden" style="margin-top:10px;">' +
+      '<input type="text" id="forum-epoll-q" maxlength="200" placeholder="Poll question" class="forum-poll-input" value="' + esc(t.poll ? t.poll.question : "") + '">' +
+      '<div id="forum-epoll-opts"></div>' +
+      '<button type="button" class="forum-admin-btn" id="forum-epoll-add-opt">+ Add option</button>' +
+      "</div></div>" +
       '<div class="forum-edit-actions">' +
       '<button type="button" class="btn" id="forum-edit-cancel">Cancel</button>' +
       '<button type="button" class="btn accent" id="forum-edit-save">Save changes</button></div></div>';
@@ -1749,6 +1757,38 @@
         alert("Thumbnail upload failed");
       });
     });
+    // Poll editing in edit form
+    var epollForm = root.querySelector("#forum-epoll-form");
+    var epollOpts = root.querySelector("#forum-epoll-opts");
+    var epollToggle = root.querySelector("#forum-epoll-toggle");
+    var epollRemove = root.querySelector("#forum-epoll-remove");
+    var epollRemoved = false;
+    function addEPollOpt(val) {
+      var div = document.createElement("div");
+      div.style.cssText = "display:flex;gap:8px;margin-bottom:8px;";
+      div.innerHTML = '<input type="text" maxlength="80" placeholder="Option" class="forum-poll-input" style="flex:1;" value="' + esc(val || "") + '">' +
+        '<button type="button" class="forum-admin-btn forum-admin-del">×</button>';
+      div.querySelector("button").addEventListener("click", function () { div.remove(); });
+      epollOpts.appendChild(div);
+    }
+    // Pre-fill existing poll options
+    if (t.poll && t.poll.options) {
+      t.poll.options.forEach(function (o) { addEPollOpt(o.text); });
+    }
+    if (epollToggle) epollToggle.addEventListener("click", function () {
+      epollForm.classList.toggle("hidden");
+      epollToggle.textContent = epollForm.classList.contains("hidden") ? (t.poll ? "Edit poll" : "Add poll") : "Hide poll";
+    });
+    var epollAddOpt = root.querySelector("#forum-epoll-add-opt");
+    if (epollAddOpt) epollAddOpt.addEventListener("click", function () { addEPollOpt(""); });
+    if (epollRemove) epollRemove.addEventListener("click", function () {
+      if (confirm("Remove this poll? Votes will be lost.")) {
+        epollRemoved = true;
+        epollForm.classList.add("hidden");
+        epollRemove.classList.add("hidden");
+        epollToggle.textContent = "Add poll";
+      }
+    });
     root.querySelector("#forum-edit-save").addEventListener("click", function () {
       var title = root.querySelector("#forum-edit-title").value.trim();
       var content = "", rich = false;
@@ -1759,8 +1799,29 @@
         content = cta ? cta.value.trim() : "";
       }
       if (!title || !content) { alert("Title and content required"); return; }
+      // Collect poll data for edit
+      var pollData = undefined;
+      if (epollRemoved) {
+        pollData = null;
+      } else if (epollForm && !epollForm.classList.contains("hidden")) {
+        var pq = root.querySelector("#forum-epoll-q");
+        var q = pq ? pq.value.trim() : "";
+        var opts = [];
+        epollOpts.querySelectorAll("input").forEach(function (inp) {
+          var v = inp.value.trim();
+          if (v) opts.push(v);
+        });
+        if (q && opts.length >= 2) {
+          pollData = { question: q, options: opts };
+        } else if (q || opts.length > 0) {
+          alert("Poll needs a question and at least 2 options");
+          return;
+        }
+      }
+      var putBody = { title: title, content: content, rich: rich, thumb: editThumbId, tags: editTagState.tags };
+      if (pollData !== undefined) putBody.poll = pollData;
       api("/api/forum/thread/" + encodeURIComponent(t.id), {
-        method: "PUT", body: { title: title, content: content, rich: rich, thumb: editThumbId, tags: editTagState.tags }
+        method: "PUT", body: putBody
       }).then(function (res) {
         if (res.ok) { destroyEditEditor(); view.name = "thread"; renderThread(); }
         else { alert(res.error || "Failed to save"); }
