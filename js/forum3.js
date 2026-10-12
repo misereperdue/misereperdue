@@ -1173,7 +1173,7 @@
     t.poll.options.forEach(function (opt, i) {
       var pct = total > 0 ? Math.round((opt.votes || 0) / total * 100) : 0;
       var voted = myVote === i;
-      h += '<button type="button" class="forum-poll-opt' + (voted ? " voted" : "") + '" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
+      h += '<button type="button" class="forum-poll-opt' + (voted ? " voted" : "") + '" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(255,255,255,.12)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
       if (voted) {
         h += '<span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span>';
       }
@@ -1298,7 +1298,7 @@
           }
           if (!btn.classList.contains("voted")) {
             btn.classList.add("voted");
-            btn.style.border = "1px solid rgba(80,140,255,.6)";
+            btn.style.border = "1px solid rgba(255,255,255,.12)";
             btn.style.background = "rgba(80,140,255,.15)";
             var beamWrap = document.createElement("span");
             beamWrap.className = "easyui-neon-beam-wrap";
