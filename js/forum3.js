@@ -115,10 +115,21 @@
       (function(pill) {
         if (pill.dataset.wired) return;
         pill.dataset.wired = "1";
-        pill.addEventListener("click", function(e) {
-          e.stopPropagation();
+        var go = function(e) {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
           var un = pill.getAttribute("data-username");
-          if (un && window.MPChat && window.MPChat.openUserSheet) window.MPChat.openUserSheet(un);
+          if (!un) return;
+          // Try MPChat first, fallback to custom event
+          if (window.MPChat && window.MPChat.openUserSheet) {
+            window.MPChat.openUserSheet(un);
+          } else {
+            var evt = new CustomEvent("mp-open-user-sheet", { detail: { username: un } });
+            document.dispatchEvent(evt);
+          }
+        };
+        pill.addEventListener("click", go);
+        pill.addEventListener("keydown", function(e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); }
         });
       })(pills[i]);
     }
@@ -1206,6 +1217,8 @@
       '.forum-poll-opt .easyui-neon-beam{position:absolute;inset:-200%;' +
       'background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,transparent 280deg,rgba(255,255,255,.9) 340deg,transparent 360deg);' +
       'animation:easyui-neon-rotate 3s linear infinite;}' +
+      '[data-theme="light"] .forum-poll-opt .easyui-neon-beam{' +
+      'background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,transparent 280deg,rgba(0,122,255,.9) 340deg,transparent 360deg);}' +
       '.forum-poll-opt .poll-opt-content{position:relative;z-index:1;}' +
       '@keyframes beamIn{0%{opacity:0}100%{opacity:1}}' +
       '@keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.02)}100%{transform:scale(1)}}' +
