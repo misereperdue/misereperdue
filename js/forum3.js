@@ -1967,7 +1967,7 @@
     view.name = "thread";
     view.threadId = id;
     try { history.replaceState(null, "", "#globe/" + encodeURIComponent(id)); } catch (e) {}
-    render();
+    renderThread();
   }
 
   window.MPForum = { render: render, goHome: goHome, openThread: openThread };
