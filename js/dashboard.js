@@ -444,7 +444,7 @@
         Object.keys(c).forEach(function(k) { agg[k] = (agg[k] || 0) + (c[k] || 0); });
       });
       var rows = Object.keys(agg).map(function(k) { return { code: k, n: agg[k] }; })
-        .sort(function(a, b) { return b.n - a.n; }).slice(0, 8);
+        .sort(function(a, b) { return b.n - a.n; }).slice(0, 5);
       if (!rows.length) {
         countriesWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:8px;">No visitor data yet.</div>';
         return;
