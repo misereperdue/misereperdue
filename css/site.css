@@ -2149,9 +2149,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
    Navbar, chat top bar, forum top bar, and dropdown menus all share this
    single class so they look identical. Layout/positioning stays on each
    element's own class (.nav, .chat-head, ...); everything visual lives here. */
-.glassbar,
-.forum-notif-panel,
-.chat-me-menu {
+.glassbar {
   background-color: #0a1230;
   background-image: none;
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -2164,11 +2162,25 @@ button.forum-glass-pill:active { transform: scale(.97); }
     0 12px 32px rgba(0, 0, 0, 0.32),
     0 2px 8px rgba(0, 0, 0, 0.22);
 }
-/* (Top bars intentionally share the glassbar base above with no override —
-   navbar, top bars and menus are one identical bright glass component.) */
-[data-theme="light"] .glassbar,
-[data-theme="light"] .forum-notif-panel,
-[data-theme="light"] .chat-me-menu {
+/* Dropdown menus keep the Liquid Glass treatment (translucent + blurred),
+   while the bars themselves stay solid. */
+.forum-notif-panel,
+.chat-me-menu {
+  background-color: rgba(11, 18, 44, 0.78);
+  background-image: none;
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+    0 12px 32px rgba(0, 0, 0, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+/* Bars stay solid (navy in dark, white in light); dropdown menus below keep
+   the translucent Liquid Glass treatment. */
+[data-theme="light"] .glassbar {
   background-color: #ffffff;
   background-image: none;
   border: 1px solid rgba(255, 255, 255, 0.70);
@@ -2177,9 +2189,16 @@ button.forum-glass-pill:active { transform: scale(.97); }
     0 12px 32px rgba(13, 25, 70, 0.16),
     0 2px 8px rgba(13, 25, 70, 0.10);
 }
-/* dropdown menus keep a slightly tighter radius than the bars */
-.forum-notif-panel,
-.chat-me-menu { border-radius: 18px; }
+[data-theme="light"] .forum-notif-panel,
+[data-theme="light"] .chat-me-menu {
+  background-color: rgba(255, 255, 255, 0.70);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 12px 32px rgba(13, 25, 70, 0.16),
+    0 2px 8px rgba(13, 25, 70, 0.10);
+}
 
 /* Notification panel slam animation (matches avatar menu) */
 .forum-notif-panel {
