@@ -121,6 +121,11 @@
     return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
   }
 
+  function isOwnerOrVip(author, authorBadge) {
+    if (!author) return false;
+    if (author.toLowerCase() === "dc") return true;
+    return authorBadge === "member";
+  }
   function authorLine(item) {
     var pts = (item.authorPoints !== undefined && item.authorPoints !== null)
       ? ' <span class="forum-glass-pill forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
@@ -1207,7 +1212,7 @@
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
-      html += '<article class="forum-post forum-op">' +
+      html += '<article class="forum-post forum-op' + (isOwnerOrVip(t.author, t.authorBadge) ? " owner-vip-sparkles" : "") + '">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
         '<span class="forum-post-author">' + authorLine(t) + "</span>" +
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
@@ -1235,7 +1240,7 @@
       function replyHTML(r, depth) {
         var kids = childMap[r.id] || [];
         var expanded = !!view.showNested[r.id];
-        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
+        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + (isOwnerOrVip(r.author, r.authorBadge) ? " owner-vip-sparkles" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
