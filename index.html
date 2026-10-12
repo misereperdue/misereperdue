@@ -129,7 +129,7 @@
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=109"></script>
   <script src="js/dashboard.js?v=10"></script>
-  <script src="js/forum3.js?v=1001"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1067"></script>
+  <script src="js/forum3.js?v=1002"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1067"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -348,7 +348,7 @@
       else if (view === "post" && id) hash = "#post/" + id;
       else if (view === "product" && id) hash = "#product/" + id;
       else if (reading) hash = "#post";
-      var keepThreadLink = view === "forum" && /^#thread\//.test(location.hash || "");
+      var keepThreadLink = view === "forum" && /^#(thread|globe)\//.test(location.hash || "");
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     window.MPNav = {
@@ -467,7 +467,7 @@
     function routeFromHash() {
       var h = location.hash || "#";
       var m;
-      if ((m = h.match(/^#thread\/(.+)$/))) {
+      if ((m = h.match(/^#globe\/(.+)$/)) || (m = h.match(/^#thread\/(.+)$/))) {
         var tid = decodeURIComponent(m[1]);
         show("forum");
         var tryThread = function () {
