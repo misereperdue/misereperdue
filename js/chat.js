@@ -117,6 +117,14 @@
   function isOwnerUser(username) {
     return username && username.toLowerCase() === "dc";
   }
+  function isVipUser(username) {
+    if (!username) return false;
+    var b = userBadges[username];
+    return b === "member";
+  }
+  function hasSparkles(username) {
+    return isOwnerUser(username) || isVipUser(username);
+  }
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
@@ -874,7 +882,7 @@
     var stick = nearBottom();
 
     var row = document.createElement("div");
-    row.className = "chat-msg" + (me && m.user === me.username ? " mine" : "") + (isOwnerUser(m.user) ? " owner-msg" : "");
+    row.className = "chat-msg" + (me && m.user === me.username ? " mine" : "") + (hasSparkles(m.user) ? " owner-msg" : "");
     row.setAttribute("data-id", m.id);
     row.setAttribute("data-user", m.user || "");
     // Cache avatar for typing indicator
@@ -903,7 +911,7 @@
       if (eb0) bubble.appendChild(eb0);
       var fb0 = faviconBadge(m.embed);
       if (fb0) bubble.appendChild(fb0);
-      if (isOwnerUser(m.user)) {
+      if (hasSparkles(m.user)) {
         var ex = document.createElement("span");
         ex.className = "owner-sparkles-extra";
         ex.setAttribute("aria-hidden", "true");
@@ -946,7 +954,7 @@
       if (eb2) b2.appendChild(eb2);
       var fb2 = faviconBadge(m.embed);
       if (fb2) b2.appendChild(fb2);
-      if (isOwnerUser(m.user)) {
+      if (hasSparkles(m.user)) {
         var ex2 = document.createElement("span");
         ex2.className = "owner-sparkles-extra";
         ex2.setAttribute("aria-hidden", "true");
