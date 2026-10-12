@@ -539,6 +539,65 @@
         loadForumPage();
       }
 
+      // Touch-friendly drag-to-reorder for category rows (HTML5 DnD doesn't
+      // work on iOS, so this uses Pointer Events on the grip handle).
+      function enableCatDragReorder(catList) {
+        Array.prototype.forEach.call(catList.children, function (row) {
+          var grip = row.querySelector(".cat-grip");
+          if (!grip) return;
+          var drag = null;
+          grip.addEventListener("pointerdown", function (e) {
+            e.preventDefault();
+            try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+            drag = { startY: e.clientY };
+            row.style.transition = "none";
+            row.style.position = "relative";
+            row.style.zIndex = "50";
+            row.style.boxShadow = "0 12px 28px rgba(0,0,0,.4)";
+            grip.style.cursor = "grabbing";
+          });
+          grip.addEventListener("pointermove", function (e) {
+            if (!drag) return;
+            e.preventDefault();
+            var dy = e.clientY - drag.startY;
+            row.style.transform = "translateY(" + dy + "px)";
+            var all = Array.prototype.slice.call(catList.children);
+            var fromIdx = all.indexOf(row);
+            var mid = row.offsetTop + dy + row.offsetHeight / 2;
+            for (var i = 0; i < all.length; i++) {
+              if (i === fromIdx) continue;
+              var o = all[i];
+              var oMid = o.offsetTop + o.offsetHeight / 2;
+              if ((i < fromIdx && mid < oMid) || (i > fromIdx && mid > oMid)) {
+                var oldTop = row.offsetTop;
+                if (i < fromIdx) catList.insertBefore(row, o);
+                else catList.insertBefore(row, o.nextSibling);
+                // Keep the row visually under the finger after the DOM move
+                drag.startY += (row.offsetTop - oldTop);
+                break;
+              }
+            }
+          });
+          function endDrag() {
+            if (!drag) return;
+            drag = null;
+            row.style.transform = "";
+            row.style.transition = "";
+            row.style.position = "";
+            row.style.zIndex = "";
+            row.style.boxShadow = "";
+            grip.style.cursor = "grab";
+            var order = Array.prototype.map.call(catList.children, function (r) {
+              return r.getAttribute("data-cat-id");
+            });
+            api("/api/forum/categories/reorder", { method: "POST", body: { order: order } })
+              .then(function (r) { if (!r.ok) alert(r.error || "Reorder failed"); });
+          }
+          grip.addEventListener("pointerup", endDrag);
+          grip.addEventListener("pointercancel", endDrag);
+        });
+      }
+
       api("/api/forum/categories").then(function (res) {
         var cats = (res.ok && res.categories) || [];
         forumPage.innerHTML = "";
@@ -553,7 +612,14 @@
         catList.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-bottom:12px;";
         cats.forEach(function (cat) {
           var row = document.createElement("div");
+          row.setAttribute("data-cat-id", cat.id);
           row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 12px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
+          var grip = document.createElement("div");
+          grip.className = "cat-grip";
+          grip.title = "Drag to reorder";
+          grip.innerHTML = '<svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor"><circle cx="2.5" cy="2.5" r="1.4"/><circle cx="7.5" cy="2.5" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13.5" r="1.4"/><circle cx="7.5" cy="13.5" r="1.4"/></svg>';
+          grip.style.cssText = "flex:none;display:flex;align-items:center;justify-content:center;width:28px;height:32px;cursor:grab;touch-action:none;opacity:.45;color:var(--ink);-webkit-user-select:none;user-select:none;";
+          row.appendChild(grip);
           var nameInput = document.createElement("input");
           nameInput.type = "text";
           nameInput.value = cat.name;
@@ -613,6 +679,7 @@
           }
           catList.appendChild(row);
         });
+        enableCatDragReorder(catList);
         forumPage.appendChild(catList);
 
         var newCatRow = document.createElement("div");
