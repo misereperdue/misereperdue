@@ -123,12 +123,22 @@
 
   function injectForumSparkleExtras(root) {
     var posts = (root || document).querySelectorAll(".forum-post.owner-vip-sparkles");
+    var positions = [
+      { top: "-5px", left: "25%" }, { top: "-5px", left: "75%" },
+      { top: "30%", right: "-5px" }, { top: "70%", right: "-5px" },
+      { bottom: "-5px", left: "25%" }, { bottom: "-5px", left: "75%" },
+      { top: "30%", left: "-5px" }, { top: "70%", left: "-5px" }
+    ];
     for (var i = 0; i < posts.length; i++) {
-      if (!posts[i].querySelector(".owner-sparkles-extra")) {
-        var ex = document.createElement("span");
-        ex.className = "owner-sparkles-extra";
-        ex.setAttribute("aria-hidden", "true");
-        posts[i].appendChild(ex);
+      if (posts[i].querySelector(".owner-sparkle-star")) continue;
+      for (var j = 0; j < positions.length; j++) {
+        var star = document.createElement("span");
+        star.className = "owner-sparkle-star";
+        star.setAttribute("aria-hidden", "true");
+        var pos = positions[j];
+        for (var k in pos) star.style[k] = pos[k];
+        star.style.animationDelay = (j * 0.22) + "s";
+        posts[i].appendChild(star);
       }
     }
   }
