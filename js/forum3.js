@@ -135,8 +135,9 @@
       for (var j = 0; j < 12; j++) {
         var m = document.createElement("span");
         m.className = "owner-meteor-item";
-        m.style.top = "0px";
-        m.style.left = (Math.floor(Math.random() * 600) - 100) + "px";
+        // Start from top area, distributed horizontally
+        m.style.top = (Math.random() * 40) + "px";
+        m.style.left = (Math.random() * 100) + "%";
         m.style.animationDelay = (0.2 + Math.random() * 1.0).toFixed(2) + "s";
         m.style.animationDuration = (2 + Math.floor(Math.random() * 6)) + "s";
         var tail = document.createElement("span");
