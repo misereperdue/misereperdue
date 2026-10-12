@@ -633,10 +633,7 @@
       document.addEventListener("load", function (e) {
         var t = e.target;
         if (Date.now() <= latestPinUntil && t && (t.tagName === "IMG" || t.tagName === "VIDEO")) {
-          var fp = document.getElementById("forum");
-          if (fp && fp.classList.contains("on")) return;
-          var sp = document.getElementById("shop");
-          if (sp && sp.classList.contains("on")) return;
+          if (!chatViewActive()) return;
           window.scrollTo(0, document.documentElement.scrollHeight);
         }
       }, true);
@@ -655,18 +652,22 @@
   }
 
   var latestPinUntil = 0;
+  function chatViewActive() {
+    var forumPanel = document.getElementById("forum");
+    if (forumPanel && forumPanel.classList.contains("on")) return false;
+    var shopPanel = document.getElementById("shop");
+    if (shopPanel && shopPanel.classList.contains("on")) return false;
+    return true;
+  }
   function scrollToLatest() {
     // Only auto-scroll when the chat view is actually visible — otherwise
     // this yanks forum/shop pages to the bottom on load.
-    var forumPanel = document.getElementById("forum");
-    if (forumPanel && forumPanel.classList.contains("on")) return;
-    var shopPanel = document.getElementById("shop");
-    if (shopPanel && shopPanel.classList.contains("on")) return;
+    if (!chatViewActive()) return;
     window.scrollTo(0, document.documentElement.scrollHeight);
     latestPinUntil = Date.now() + 5000;
     [300, 900, 1800].forEach(function (ms) {
       setTimeout(function () {
-        if (Date.now() <= latestPinUntil) window.scrollTo(0, document.documentElement.scrollHeight);
+        if (Date.now() <= latestPinUntil && chatViewActive()) window.scrollTo(0, document.documentElement.scrollHeight);
       }, ms);
     });
     scheduleFade();
