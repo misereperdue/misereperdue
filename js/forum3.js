@@ -1152,25 +1152,28 @@
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
     var h = '<style>' +
-      '@keyframes pollPress{0%{transform:scale(1)}35%{transform:scale(.965)}70%{transform:scale(1.015)}100%{transform:scale(1)}}' +
-      '@keyframes pollFill{0%{transform:scaleY(0)}55%{transform:scaleY(1.04)}75%{transform:scaleY(.98)}100%{transform:scaleY(1)}}' +
-      '@keyframes pollDeselect{from{opacity:1}to{opacity:.35}}' +
-      '.forum-poll-opt.selecting{animation:pollPress .45s cubic-bezier(.34,1.4,.64,1);}' +
-      '.forum-poll-opt.selecting::before{content:"";position:absolute;left:0;right:0;bottom:0;height:100%;border-radius:10px;' +
-      'background:linear-gradient(180deg,rgba(110,170,255,.95) 0%,rgba(65,115,230,.95) 100%);' +
-      'transform-origin:bottom;transform:scaleY(0);animation:pollFill .55s cubic-bezier(.34,1.2,.64,1) .05s forwards;pointer-events:none;}' +
-      '.forum-poll-opt.selecting::after{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;' +
-      'box-shadow:inset 0 2px 3px rgba(255,255,255,.5),inset 0 -4px 8px rgba(20,40,90,.25);}' +
-      '.forum-poll-opt.deselecting{animation:pollDeselect .4s ease-out forwards;}' +
+      '@keyframes easyui-neon-rotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}' +
+      '@media (prefers-reduced-motion: reduce){.forum-poll-opt .easyui-neon-beam{animation:none!important;opacity:.4!important}}' +
+      '.forum-poll-opt{isolation:isolate;}' +
+      '.forum-poll-opt .easyui-neon-beam-wrap{position:absolute;inset:-200%;pointer-events:none;overflow:hidden;}' +
+      '.forum-poll-opt .easyui-neon-beam{position:absolute;inset:0;' +
+      'background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,transparent 280deg,rgba(255,255,255,.85) 340deg,transparent 360deg);' +
+      'animation:easyui-neon-rotate 3s linear infinite;}' +
+      '.forum-poll-opt .poll-opt-inner-bg{position:absolute;inset:2px;border-radius:8px;pointer-events:none;}' +
+      '.forum-poll-opt .poll-opt-content{position:relative;z-index:1;}' +
       '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
     h += '<div style="font-weight:700;margin-bottom:10px;color:var(--ink);">' + esc(t.poll.question) + '</div>';
     t.poll.options.forEach(function (opt, i) {
       var pct = total > 0 ? Math.round((opt.votes || 0) / total * 100) : 0;
       var voted = myVote === i;
-      h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
-      h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
-      h += '<span style="position:relative;display:flex;justify-content:space-between;align-items:center;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="display:flex;align-items:center;gap:4px;">';
+      h += '<button type="button" class="forum-poll-opt' + (voted ? " voted" : "") + '" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "transparent" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
+      if (voted) {
+        h += '<span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span>';
+        h += '<span class="poll-opt-inner-bg" style="background:rgba(80,140,255,.15);"></span>';
+      }
+      h += '<span style="position:absolute;left:' + (voted ? "2px" : "0") + ';top:' + (voted ? "2px" : "0") + ';bottom:' + (voted ? "2px" : "0") + ';width:calc(' + pct + '% - ' + (voted ? "4px" : "0px") + ');background:rgba(80,140,255,.18);' + (voted ? "border-radius:6px;" : "") + '"></span>';
+      h += '<span class="poll-opt-content" style="display:flex;justify-content:space-between;align-items:center;">';
       // Voter avatars: show for the option the user voted for
       if (voted && t.voterAvatars && t.voterAvatars[i]) {
         h += '<span style="display:flex;">';
@@ -1277,14 +1280,6 @@
           var tid = pollDiv ? pollDiv.getAttribute("data-thread") : null;
           var idx = parseInt(btn.getAttribute("data-idx"), 10);
           if (!tid || isNaN(idx)) return;
-          // Beautiful selection animation; animate deselection of previous pick
-          var prevVoted = pollDiv.querySelector('.forum-poll-opt[data-idx="' + (cache.thread.poll.voters && meInfo ? cache.thread.poll.voters[meInfo.username.toLowerCase()] : -1) + '"]');
-          if (prevVoted && prevVoted !== btn) {
-            prevVoted.classList.add("deselecting");
-            setTimeout(function () { prevVoted.classList.remove("deselecting"); }, 450);
-          }
-          btn.classList.add("selecting");
-          setTimeout(function () { btn.classList.remove("selecting"); }, 650);
           btn.disabled = true;
           api("/api/forum/thread/" + encodeURIComponent(tid) + "/poll/vote", {
             method: "POST", body: { option: idx }
