@@ -206,8 +206,9 @@
           badge.classList.add("hidden");
         }
       }
-      // EasyUI-style shake when new notifications arrive
-      if (bellPrevUnread >= 0 && unread > bellPrevUnread && bell && bell.animate) {
+      // EasyUI-style shake when there are unread notifications:
+      // fires on first load with pending unreads, and whenever the count grows
+      if (unread > 0 && bell && bell.animate && (bellPrevUnread < 0 || unread > bellPrevUnread)) {
         try {
           bell.animate(
             [{ transform: "rotate(0deg)" }, { transform: "rotate(-12deg)" }, { transform: "rotate(10deg)" },
