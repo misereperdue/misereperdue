@@ -2111,7 +2111,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-thread-pill-badge { display: inline-flex; align-items: center; flex: none; margin-left: 2px; }
 .forum-author-pill-btn { cursor: pointer; font-family: inherit; color: inherit; }
 .forum-author-pill-btn:hover { filter: brightness(1.1); }
-.forum-post-head .forum-author-pts { margin-left: 2px; flex: none; }
+.forum-post-head .forum-author-pts { margin-left: 2px; flex: none; min-height: 28px; display: inline-flex; align-items: center; }
 /* Expanded avatar modal */
 .avatar-expand-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
 .avatar-expand-overlay[hidden] { display: none; }
