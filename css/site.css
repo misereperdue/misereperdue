@@ -1131,14 +1131,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   background: linear-gradient(135deg, rgba(120,120,140,.5), rgba(60,60,70,.5));
 }
 .chat-avatar-img.sm { width: 32px; height: 32px; }
-/* Owner sparkles — lightweight CSS adaptation of EasyUI SparklesCore for avatars */
+/* Owner sparkles on message bubbles — lightweight CSS adaptation of EasyUI SparklesCore */
 @keyframes owner-sparkle-twinkle {
   0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
   50% { opacity: 1; transform: scale(1) rotate(90deg); }
 }
-.chat-avatar-wrap.owner-sparkles { position: relative; }
-.chat-avatar-wrap.owner-sparkles::before,
-.chat-avatar-wrap.owner-sparkles::after {
+.chat-msg.owner-msg .chat-bubble { position: relative; }
+.chat-msg.owner-msg .chat-bubble::before,
+.chat-msg.owner-msg .chat-bubble::after {
   content: "\2726";
   position: absolute;
   font-size: 10px;
@@ -1148,13 +1148,12 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-/* Clean EasyUI sparkles only — no duplicates */
-.chat-avatar-wrap.owner-sparkles::before { top: -5px; right: -3px; animation-delay: 0s; }
-.chat-avatar-wrap.owner-sparkles::after { bottom: -3px; left: -5px; font-size: 8px; animation-delay: .9s; }
-/* Extra sparkles (2 more via inner span) */
-.owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
-.owner-sparkles-extra::before,
-.owner-sparkles-extra::after {
+.chat-msg.owner-msg .chat-bubble::before { top: -6px; right: 8px; animation-delay: 0s; }
+.chat-msg.owner-msg .chat-bubble::after { bottom: -4px; left: 10px; font-size: 8px; animation-delay: .9s; }
+/* Extra sparkles */
+.chat-msg.owner-msg .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
+.chat-msg.owner-msg .owner-sparkles-extra::before,
+.chat-msg.owner-msg .owner-sparkles-extra::after {
   content: "\2726";
   position: absolute;
   font-size: 7px;
@@ -1163,18 +1162,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 2.2s ease-in-out infinite;
   z-index: 2;
 }
-.owner-sparkles-extra::before { top: 2px; left: -6px; animation-delay: .45s; }
-.owner-sparkles-extra::after { top: -2px; left: 8px; font-size: 9px; animation-delay: 1.35s; }
-[data-theme="light"] .owner-sparkles-extra::before,
-[data-theme="light"] .owner-sparkles-extra::after {
+.chat-msg.owner-msg .owner-sparkles-extra::before { top: -4px; left: 30%; animation-delay: .45s; }
+.chat-msg.owner-msg .owner-sparkles-extra::after { bottom: -6px; right: 25%; font-size: 9px; animation-delay: 1.35s; }
+[data-theme="light"] .chat-msg.owner-msg .chat-bubble::before,
+[data-theme="light"] .chat-msg.owner-msg .chat-bubble::after,
+[data-theme="light"] .chat-msg.owner-msg .owner-sparkles-extra::before,
+[data-theme="light"] .chat-msg.owner-msg .owner-sparkles-extra::after {
   color: #000000;
   text-shadow: 0 0 6px rgba(0,0,0,.3);
-}
-/* Black sparkles in light mode */
-[data-theme="light"] .chat-avatar-wrap.owner-sparkles::before,
-[data-theme="light"] .chat-avatar-wrap.owner-sparkles::after {
-  color: #000000;
-  text-shadow: 0 0 8px rgba(0,0,0,.3), 0 0 4px rgba(0,0,0,.2);
 }
 
 .chat-avatar-img.lg { width: 64px; height: 64px; }
