@@ -1415,14 +1415,14 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
    The generic .msg-popup backdrop is a light 5px blur that leaves the site
    recognizable behind it; the dashboard gets a heavy frost instead. */
 .msg-popup:has(.dashboard-sheet) {
-  background: rgba(3, 6, 18, 0.45);
+  background: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   inset: 0;
   padding: 16px;
 }
 [data-theme="light"] .msg-popup:has(.dashboard-sheet) {
-  background: rgba(255, 255, 255, 0.4);
+  background: transparent;
 }
 .dashboard-sheet {
   border-radius: 24px;
