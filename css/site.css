@@ -2093,6 +2093,17 @@ button.forum-glass-pill:active { transform: scale(.97); }
 /* Thread list: poster avatar + thumbnail */
 .forum-thread-meta { display: flex; align-items: center; gap: 7px; }
 .forum-thread-meta-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.forum-thread-author-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  background: var(--glass-clear-tint);
+  border: var(--glass-hairline);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.forum-thread-author-pill .forum-avatar { width: 20px; height: 20px; }
+.forum-thread-author-name { font-size: 12px; font-weight: 600; white-space: nowrap; }
 .forum-avatar-sm .forum-avatar { width: 22px; height: 22px; font-size: 12px; }
 .forum-avatar-sm .forum-avatar-emoji { font-size: 12px; }
 .forum-avatar-sm .forum-avatar-badge { right: -2px; bottom: -1px; }
