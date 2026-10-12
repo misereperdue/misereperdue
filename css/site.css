@@ -1739,32 +1739,59 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
     inset 0 2px 6px rgba(0, 30, 120, 0.4),
     0 1px 3px rgba(36, 86, 216, 0.35);
 }
-/* shine that orbits the button's edge */
-@property --beam-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
+/* EasyUI NeonEdge beam — ported from easyui-lib/src/components/ui/NeonEdgeButton.tsx */
+@keyframes easyui-neon-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
-.forum-topbar-new { position: relative; }
-.forum-topbar-new::before {
-  content: "";
+@media (prefers-reduced-motion: reduce) {
+  .forum-topbar-new .easyui-neon-beam { animation: none !important; opacity: 0.4 !important; }
+}
+.forum-topbar-new {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  /* outer neon glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 4px rgba(0, 30, 120, 0.35),
+    0 4px 10px rgba(36, 86, 216, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 0 24px -10px rgba(255, 255, 255, 0.4);
+}
+.forum-topbar-new .easyui-neon-beam-wrap {
+  position: absolute;
+  inset: -200%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.forum-topbar-new .easyui-neon-beam {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(from var(--beam-angle),
+  background: conic-gradient(from 0deg at 50% 50%,
     transparent 0deg,
-    rgba(255, 255, 255, 0.95) 45deg,
-    transparent 90deg,
+    transparent 280deg,
+    rgba(255, 255, 255, 0.85) 340deg,
     transparent 360deg);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  animation: beam-orbit 2.6s linear infinite;
+  animation: easyui-neon-rotate 3s linear infinite;
 }
-@keyframes beam-orbit { to { --beam-angle: 360deg; } }
+.forum-topbar-new .easyui-neon-label {
+  position: relative;
+  z-index: 2;
+}
+/* Inner surface covers the rotating beam, leaving only the 2px edge visible */
+.forum-topbar-new::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #6aa5ff 0%, #3b7bf6 45%, #2456d8 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 4px rgba(0, 30, 120, 0.35);
+  pointer-events: none;
+  z-index: 1;
+}
 .forum-topbar .chat-title { flex: none; margin-right: 4px; }
 .forum-topbar .chat-head-right { gap: 6px; flex: none; }
 .forum-topbar .chat-points { flex: none; font-size: 13px; padding: 6px 10px; }
