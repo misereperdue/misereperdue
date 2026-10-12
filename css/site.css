@@ -1151,6 +1151,25 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 /* Clean EasyUI sparkles only — no duplicates */
 .chat-avatar-wrap.owner-sparkles::before { top: -5px; right: -3px; animation-delay: 0s; }
 .chat-avatar-wrap.owner-sparkles::after { bottom: -3px; left: -5px; font-size: 8px; animation-delay: .9s; }
+/* Extra sparkles (2 more via inner span) */
+.owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
+.owner-sparkles-extra::before,
+.owner-sparkles-extra::after {
+  content: "\2726";
+  position: absolute;
+  font-size: 7px;
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255,255,255,.9);
+  animation: owner-sparkle-twinkle 2.2s ease-in-out infinite;
+  z-index: 2;
+}
+.owner-sparkles-extra::before { top: 2px; left: -6px; animation-delay: .45s; }
+.owner-sparkles-extra::after { top: -2px; left: 8px; font-size: 9px; animation-delay: 1.35s; }
+[data-theme="light"] .owner-sparkles-extra::before,
+[data-theme="light"] .owner-sparkles-extra::after {
+  color: #000000;
+  text-shadow: 0 0 6px rgba(0,0,0,.3);
+}
 /* Black sparkles in light mode */
 [data-theme="light"] .chat-avatar-wrap.owner-sparkles::before,
 [data-theme="light"] .chat-avatar-wrap.owner-sparkles::after {
