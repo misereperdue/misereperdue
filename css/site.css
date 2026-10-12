@@ -86,12 +86,20 @@ button, input, textarea { font-family: inherit; color: inherit; }
   position: fixed;
   z-index: 30;
   top: calc(env(safe-area-inset-top, 0px) + 22px);
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   view-transition-name: pill;
-  pointer-events: none;
+  background: rgba(7, 15, 41, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 4px;
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  pointer-events: auto;
 }
 .nav {
   pointer-events: auto;
@@ -2126,11 +2134,8 @@ nav#nav.nav,
 }
 
 
-/* Navbar blur (v264 style that worked) */
 .nav-wrap .nav {
-  background: rgba(7, 15, 41, 0.55);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
