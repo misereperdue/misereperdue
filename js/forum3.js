@@ -1152,13 +1152,19 @@
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
     var h = '<style>' +
-      '@keyframes pollEdgeGleam{to{transform:rotate(360deg)}}' +
+      '@keyframes pollAurora{to{transform:rotate(360deg)}}' +
+      '@keyframes pollAuroraRev{to{transform:rotate(-360deg)}}' +
       '@keyframes pollDeselect{from{opacity:1}to{opacity:.4}}' +
       '.forum-poll-opt.selecting::before{content:"";position:absolute;inset:-2px;border-radius:12px;padding:2px;' +
-      'background:conic-gradient(from 0deg,transparent 0deg,rgba(140,190,255,.95) 35deg,rgba(255,255,255,.9) 55deg,transparent 90deg);' +
+      'background:conic-gradient(from 0deg,#00d4ff,#7b2ff7,#ff2fb3,#00d4ff);' +
       '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
       'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;' +
-      'animation:pollEdgeGleam 1.1s linear infinite;pointer-events:none;}' +
+      'animation:pollAurora 2.5s linear infinite;pointer-events:none;filter:saturate(1.4);}' +
+      '.forum-poll-opt.selecting::after{content:"";position:absolute;inset:-2px;border-radius:12px;padding:2px;' +
+      'background:conic-gradient(from 180deg,#00d4ff,#7b2ff7,#ff2fb3,#00d4ff);' +
+      '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
+      'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;' +
+      'animation:pollAuroraRev 3s linear infinite;pointer-events:none;filter:blur(6px);opacity:.7;}' +
       '.forum-poll-opt.deselecting{animation:pollDeselect .4s ease-out forwards;}' +
       '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
