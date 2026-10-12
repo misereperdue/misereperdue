@@ -1884,6 +1884,68 @@
     newLab.appendChild(newInput);
     sheet.appendChild(newLab);
 
+    // Password strength meter (shows when typing)
+    var pwStrength = document.createElement("div");
+    pwStrength.className = "pwd-strength";
+    pwStrength.hidden = true;
+    pwStrength.innerHTML = '<div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-level"></div>';
+    sheet.appendChild(pwStrength);
+    var pwBars = pwStrength.querySelectorAll('.pwd-bars span');
+    var pwLevel = pwStrength.querySelector('.pwd-level');
+    var pwLabels = ['Weak', 'Fair', 'Good', 'Strong'];
+    var pwColors = ['#FF7A7A', '#F59E0B', '#38BDF8', '#6EE7B7'];
+    function getPwStrength(pass) {
+      if (!pass) return 0;
+      var score = 0;
+      if (pass.length >= 8) score += 1;
+      if (/[A-Z]/.test(pass)) score += 1;
+      if (/[0-9]/.test(pass)) score += 1;
+      if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+      return score;
+    }
+    function updatePwStrength() {
+      var val = newInput.value;
+      if (!val) { pwStrength.hidden = true; return; }
+      pwStrength.hidden = false;
+      var st = getPwStrength(val);
+      for (var i = 0; i < pwBars.length; i++) {
+        pwBars[i].style.background = i < st ? pwColors[st - 1] : "";
+      }
+      pwLevel.textContent = pwLabels[st - 1] || 'Weak';
+      pwLevel.style.color = st > 0 ? pwColors[st - 1] : "";
+      updatePwMatch();
+    }
+    newInput.addEventListener('input', updatePwStrength);
+
+    // Confirm password field with match indicator
+    var confLab = document.createElement("label");
+    confLab.className = "chat-field";
+    var confT = document.createElement("span");
+    confT.textContent = "Confirm new password";
+    confLab.appendChild(confT);
+    var confInput = document.createElement("input");
+    confInput.type = "password";
+    confInput.autocomplete = "new-password";
+    confLab.appendChild(confInput);
+    sheet.appendChild(confLab);
+    var pwMatch = document.createElement("div");
+    pwMatch.className = "pwd-match";
+    pwMatch.hidden = true;
+    sheet.appendChild(pwMatch);
+    function updatePwMatch() {
+      var nv = newInput.value, cv = confInput.value;
+      if (!cv) { pwMatch.hidden = true; return; }
+      pwMatch.hidden = false;
+      if (nv === cv) {
+        pwMatch.textContent = "\u2713 Passwords match";
+        pwMatch.style.color = "#6EE7B7";
+      } else {
+        pwMatch.textContent = "\u2717 Passwords do not match";
+        pwMatch.style.color = "#FF7A7A";
+      }
+    }
+    confInput.addEventListener('input', updatePwMatch);
+
     var pwBtn = document.createElement("button");
     pwBtn.type = "button";
     pwBtn.className = "btn chat-pw";
@@ -1892,6 +1954,10 @@
       errBox.textContent = "";
       if (!curInput.value || newInput.value.length < 4) {
         errBox.textContent = "Enter your current password and a new one (min 4).";
+        return;
+      }
+      if (newInput.value !== confInput.value) {
+        errBox.textContent = "New passwords do not match.";
         return;
       }
       pwBtn.disabled = true;
