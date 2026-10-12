@@ -2144,7 +2144,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-notif-panel,
 .chat-me-menu {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 42%, rgba(2, 6, 23, 0.10)),
+    var(--glassbar-sheen, linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 42%, rgba(2, 6, 23, 0.10))),
     var(--glassbar-fill, rgba(11, 18, 44, 0.78));
   -webkit-backdrop-filter: blur(24px) saturate(170%);
   backdrop-filter: blur(24px) saturate(170%);
@@ -2156,10 +2156,18 @@ button.forum-glass-pill:active { transform: scale(.97); }
     0 12px 32px rgba(0, 0, 0, 0.32),
     0 2px 8px rgba(0, 0, 0, 0.22);
 }
-/* Top bars share the glassbar component; the fill is lifted slightly so the
-   bar reads at the same tone as the navbar whether or not the backdrop
-   blur engages behind it. */
-.chat-head { --glassbar-fill: rgba(30, 38, 72, 0.78); }
+/* Top bars share the glassbar component. The navbar sits over bright header
+   artwork while top bars sit over dark content — so the top bar bakes a
+   bright blurred luminosity into its own glass, reading the same as the
+   navbar with or without artwork behind it. */
+.chat-head {
+  --glassbar-fill: rgba(30, 38, 72, 0.78);
+  --glassbar-sheen: linear-gradient(180deg,
+    rgba(205, 212, 235, 0.30) 0%,
+    rgba(180, 188, 220, 0.12) 40%,
+    rgba(140, 150, 190, 0.04) 70%,
+    rgba(2, 6, 23, 0.08) 100%);
+}
 [data-theme="light"] .glassbar,
 [data-theme="light"] .forum-notif-panel,
 [data-theme="light"] .chat-me-menu {
