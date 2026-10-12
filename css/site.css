@@ -1415,18 +1415,19 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
    The generic .msg-popup backdrop is a light 5px blur that leaves the site
    recognizable behind it; the dashboard gets a heavy frost instead. */
 .msg-popup:has(.dashboard-sheet) {
-  background: rgba(3, 6, 18, 0.6);
-  -webkit-backdrop-filter: blur(28px) saturate(130%);
-  backdrop-filter: blur(28px) saturate(130%);
+  background: rgba(3, 6, 18, 0.35);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  backdrop-filter: blur(20px) saturate(140%);
   padding: 16px;
 }
 [data-theme="light"] .msg-popup:has(.dashboard-sheet) {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.4);
 }
 .dashboard-sheet {
   border-radius: 24px;
-  padding: 24px 20px;
-  max-height: 84vh;
+  padding: 20px 18px;
+  max-width: min(440px, 88vw);
+  max-height: 72vh;
   background: rgba(13, 19, 40, 0.88);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   backdrop-filter: blur(28px) saturate(160%);
