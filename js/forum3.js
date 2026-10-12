@@ -1332,6 +1332,7 @@
       }
 
       root.innerHTML = '<div class="forum-anim">' + html + "</div>";
+      wireAuthorPills(root);
       applyLockGates(cache.thread);
       // Poll voting
       root.querySelectorAll(".forum-poll-opt").forEach(function (btn) {
