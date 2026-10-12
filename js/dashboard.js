@@ -69,9 +69,15 @@
     // Online users live badge (EasyUI style)
     var onlineBadge = document.createElement("span");
     onlineBadge.className = "easyui-live-badge dashboard-online-badge";
-    var onlineCount = (typeof window.MPOnlineCount === "number") ? window.MPOnlineCount : 0;
-    onlineBadge.innerHTML = '<span class="live-dot"></span><span class="live-num">' + onlineCount + '</span>';
+    onlineBadge.innerHTML = '<span class="live-dot"></span><span class="live-num">\u2026</span>';
     titleWrap.appendChild(onlineBadge);
+    // Fill in the live count when available (chat WebSocket sets window.MPOnlineCount)
+    (function fillOnlineBadge(tries) {
+      var c = (typeof window.MPOnlineCount === "number") ? window.MPOnlineCount : null;
+      var numEl = onlineBadge.querySelector(".live-num");
+      if (c !== null && numEl) { numEl.textContent = c; }
+      else if (tries < 10 && numEl) { setTimeout(function() { fillOnlineBadge(tries + 1); }, 500); }
+    })(0);
     titleRow.appendChild(titleWrap);
     var dashCloseX = document.createElement("button");
     dashCloseX.type = "button";
@@ -112,10 +118,12 @@
 
     var forumSection = document.createElement("div");
     forumSection.style.display = "none";
+    forumSection.style.minHeight = "300px";
     inner.appendChild(forumSection);
 
     var manageSection = document.createElement("div");
     manageSection.style.display = "none";
+    manageSection.style.minHeight = "300px";
     inner.appendChild(manageSection);
 
     // Page containers
