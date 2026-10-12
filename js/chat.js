@@ -133,9 +133,10 @@
     for (var r = 0; r < old.length; r++) old[r].remove();
     count = count || 8;
     for (var i = 0; i < count; i++) {
-      var star = document.createElement("span");
+      var star = document.createElement("div");
       star.className = "owner-sparkle-star";
       star.setAttribute("aria-hidden", "true");
+      star.textContent = "\u2726";
       // Random side: 0=top, 1=right, 2=bottom, 3=left
       var side = Math.floor(Math.random() * 4);
       var along = 10 + Math.random() * 80; // 10% to 90% along the side
@@ -143,9 +144,8 @@
       else if (side === 1) { star.style.right = "-5px"; star.style.top = along + "%"; }
       else if (side === 2) { star.style.bottom = "-5px"; star.style.left = along + "%"; }
       else { star.style.left = "-5px"; star.style.top = along + "%"; }
-      // Random size 7-12px
-      var sz = 7 + Math.random() * 5;
-      star.style.width = sz + "px"; star.style.height = sz + "px";
+      // Random size 7-12px via font-size
+      star.style.fontSize = (7 + Math.random() * 5) + "px";
       star.style.animationDelay = (Math.random() * 1.8) + "s";
       star.style.animationDuration = (1.5 + Math.random()) + "s";
       el.appendChild(star);
