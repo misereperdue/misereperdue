@@ -1593,7 +1593,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .forum-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .forum-title { font-size: 22px; font-weight: 700; margin: 0; }
 .forum-back { background: none; border: 0; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; padding: 4px 0; }
-.forum-cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.forum-cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%); }
 .forum-cat {
   flex: 0 0 auto;
   border: 1px solid rgba(255,255,255,0.14);
