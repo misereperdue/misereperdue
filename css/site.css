@@ -1411,6 +1411,40 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   font-weight: 500;
 }
 
+/* Dashboard sheet: upgraded tray + proper frosted backdrop.
+   The generic .msg-popup backdrop is a light 5px blur that leaves the site
+   recognizable behind it; the dashboard gets a heavy frost instead. */
+.msg-popup:has(.dashboard-sheet) {
+  background: rgba(3, 6, 18, 0.6);
+  -webkit-backdrop-filter: blur(28px) saturate(130%);
+  backdrop-filter: blur(28px) saturate(130%);
+  padding: 16px;
+}
+[data-theme="light"] .msg-popup:has(.dashboard-sheet) {
+  background: rgba(255, 255, 255, 0.55);
+}
+.dashboard-sheet {
+  border-radius: 24px;
+  padding: 24px 20px;
+  max-height: 84vh;
+  background: rgba(13, 19, 40, 0.88);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+[data-theme="light"] .dashboard-sheet {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 64px rgba(13, 25, 70, 0.2),
+    0 4px 16px rgba(13, 25, 70, 0.12);
+}
+
 .share-btn {
   display: inline-flex;
   align-items: center;
