@@ -1162,6 +1162,11 @@
       'background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,transparent 280deg,rgba(255,255,255,.9) 340deg,transparent 360deg);' +
       'animation:easyui-neon-rotate 3s linear infinite;}' +
       '.forum-poll-opt .poll-opt-content{position:relative;z-index:1;}' +
+      '@keyframes beamIn{0%{opacity:0}100%{opacity:1}}' +
+      '@keyframes optPop{0%{transform:scale(1)}40%{transform:scale(1.02)}100%{transform:scale(1)}}' +
+      '.forum-poll-opt.voted .easyui-neon-beam-wrap{animation:beamIn .45s ease-out;}' +
+      '.forum-poll-opt.voted{animation:optPop .35s cubic-bezier(.34,1.3,.64,1);}' +
+      '.forum-poll-opt{transition:border-color .3s ease,background-color .3s ease;}' +
       '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
     h += '<div style="font-weight:700;margin-bottom:10px;color:var(--ink);">' + esc(t.poll.question) + '</div>';
@@ -1173,7 +1178,7 @@
         h += '<span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span>';
       }
       h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
-      h += '<span class="poll-opt-content" style="display:flex;justify-content:space-between;align-items:center;">';
+      h += '<span class="poll-opt-content" style="display:flex;justify-content:space-between;align-items:center;"><span>' + esc(opt.text) + (voted ? " \u2713" : "") + '</span><span style="display:flex;align-items:center;gap:4px;">';
       // Voter avatars: show for the option the user voted for
       if (voted && t.voterAvatars && t.voterAvatars[i]) {
         h += '<span style="display:flex;">';
@@ -1280,6 +1285,29 @@
           var tid = pollDiv ? pollDiv.getAttribute("data-thread") : null;
           var idx = parseInt(btn.getAttribute("data-idx"), 10);
           if (!tid || isNaN(idx)) return;
+          // Seamless switch: optimistically move the voted state with animation
+          var prevVoted = pollDiv.querySelector(".forum-poll-opt.voted");
+          if (prevVoted && prevVoted !== btn) {
+            prevVoted.classList.remove("voted");
+            prevVoted.style.border = "1px solid rgba(127,127,127,.25)";
+            prevVoted.style.background = "rgba(127,127,127,.06)";
+            var prevBeam = prevVoted.querySelector(".easyui-neon-beam-wrap");
+            if (prevBeam) prevBeam.remove();
+            var prevCheck = prevVoted.querySelector(".poll-opt-content > span:first-child");
+            if (prevCheck) prevCheck.textContent = prevCheck.textContent.replace(" \u2713", "");
+          }
+          if (!btn.classList.contains("voted")) {
+            btn.classList.add("voted");
+            btn.style.border = "1px solid rgba(80,140,255,.6)";
+            btn.style.background = "rgba(80,140,255,.15)";
+            var beamWrap = document.createElement("span");
+            beamWrap.className = "easyui-neon-beam-wrap";
+            beamWrap.setAttribute("aria-hidden", "true");
+            beamWrap.innerHTML = '<span class="easyui-neon-beam"></span>';
+            btn.insertBefore(beamWrap, btn.firstChild);
+            var newCheck = btn.querySelector(".poll-opt-content > span:first-child");
+            if (newCheck && newCheck.textContent.indexOf("\u2713") === -1) newCheck.textContent += " \u2713";
+          }
           btn.disabled = true;
           api("/api/forum/thread/" + encodeURIComponent(tid) + "/poll/vote", {
             method: "POST", body: { option: idx }
