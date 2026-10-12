@@ -1065,6 +1065,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .easyui-live-badge .live-num {
   font-variant-numeric: tabular-nums;
 }
+.easyui-live-badge[hidden] { display: none !important; }
 .chat-typing { padding: 6px 16px; }
 .chat-typing[hidden] { display: none; }
 .chat-typing-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
