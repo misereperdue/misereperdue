@@ -1151,7 +1151,14 @@
     if (!t.poll || !t.poll.options || !t.poll.options.length) return "";
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
-    var h = '<style>@keyframes pollSelectFill{from{transform:scaleY(0)}to{transform:scaleY(1)}}.forum-poll-opt.selecting::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(80,140,255,.35);transform-origin:bottom;animation:pollSelectFill .5s ease-out forwards;pointer-events:none;border-radius:10px;}</style>';
+    var h = '<style>' +
+      '@keyframes pollShimmer{0%{transform:translateX(-100%) skewX(-20deg);opacity:0}20%{opacity:1}100%{transform:translateX(200%) skewX(-20deg);opacity:0}}' +
+      '@keyframes pollPulse{0%{box-shadow:0 0 0 0 rgba(80,140,255,.5)}70%{box-shadow:0 0 0 10px rgba(80,140,255,0)}100%{box-shadow:0 0 0 0 rgba(80,140,255,0)}}' +
+      '@keyframes pollDeselect{from{opacity:1}to{opacity:.4}}' +
+      '.forum-poll-opt.selecting{animation:pollPulse .6s ease-out;}' +
+      '.forum-poll-opt.selecting::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:pollShimmer .6s ease-out forwards;pointer-events:none;}' +
+      '.forum-poll-opt.deselecting{animation:pollDeselect .4s ease-out forwards;}' +
+      '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
     h += '<div style="font-weight:700;margin-bottom:10px;color:var(--ink);">' + esc(t.poll.question) + '</div>';
     t.poll.options.forEach(function (opt, i) {
@@ -1167,7 +1174,7 @@
           var vInner = v.hasAvatarImg
             ? '<img src="' + API + "/api/avatarimg/" + encodeURIComponent(v.username) + "?v=" + (v.avatarV || 0) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
             : esc(v.avatar || "😀");
-          h += '<span title="' + esc(v.username) + '" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:rgba(127,127,127,.2);border:2px solid var(--bg);' + (vi > 0 ? "margin-left:-8px;" : "") + '">' + vInner + '</span>';
+          h += '<span title="' + esc(v.username) + '" class="poll-voter-avatar" data-username="' + esc(v.username) + '" data-emoji="' + (v.hasAvatarImg ? "" : esc(v.avatar || "")) + '" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:rgba(127,127,127,.2);' + (vi > 0 ? "margin-left:-8px;" : "") + '">' + vInner + '</span>';
         });
         h += '</span>';
       }
@@ -1266,9 +1273,14 @@
           var tid = pollDiv ? pollDiv.getAttribute("data-thread") : null;
           var idx = parseInt(btn.getAttribute("data-idx"), 10);
           if (!tid || isNaN(idx)) return;
-          // Bottom-to-top fill animation on selection
+          // Beautiful selection animation; animate deselection of previous pick
+          var prevVoted = pollDiv.querySelector('.forum-poll-opt[data-idx="' + (cache.thread.poll.voters && meInfo ? cache.thread.poll.voters[meInfo.username.toLowerCase()] : -1) + '"]');
+          if (prevVoted && prevVoted !== btn) {
+            prevVoted.classList.add("deselecting");
+            setTimeout(function () { prevVoted.classList.remove("deselecting"); }, 450);
+          }
           btn.classList.add("selecting");
-          setTimeout(function () { btn.classList.remove("selecting"); }, 600);
+          setTimeout(function () { btn.classList.remove("selecting"); }, 650);
           btn.disabled = true;
           api("/api/forum/thread/" + encodeURIComponent(tid) + "/poll/vote", {
             method: "POST", body: { option: idx }
@@ -1285,6 +1297,59 @@
         });
       });
       wireAvatars(); try { wireBell(); } catch (e) {}
+      // Apply dominant-color glow to poll voter avatars
+      try {
+        root.querySelectorAll(".poll-voter-avatar").forEach(function (el) {
+          var emoji = el.getAttribute("data-emoji");
+          var imgEl = el.querySelector("img");
+          function applyGlow(color) {
+            el.style.boxShadow = "0 0 10px 2px " + color;
+          }
+          function sampleCanvas(canvas) {
+            try {
+              var ctx = canvas.getContext("2d");
+              var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+              var r = 0, g = 0, b = 0, n = 0;
+              for (var i = 0; i < data.length; i += 16) {
+                var a = data[i + 3];
+                if (a < 128) continue;
+                var pr = data[i], pg = data[i+1], pb = data[i+2];
+                var mx = Math.max(pr, pg, pb), mn = Math.min(pr, pg, pb);
+                if (mx - mn < 30) continue;
+                r += pr; g += pg; b += pb; n++;
+              }
+              if (n > 0) {
+                r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+                applyGlow("rgba(" + r + "," + g + "," + b + ",.7)");
+              } else {
+                applyGlow("rgba(80,140,255,.5)");
+              }
+            } catch (e) { applyGlow("rgba(80,140,255,.5)"); }
+          }
+          if (imgEl) {
+            var doSample = function () {
+              var c2 = document.createElement("canvas");
+              c2.width = 24; c2.height = 24;
+              try {
+                c2.getContext("2d").drawImage(imgEl, 0, 0, 24, 24);
+                sampleCanvas(c2);
+              } catch (e) { applyGlow("rgba(80,140,255,.5)"); }
+            };
+            if (imgEl.complete && imgEl.naturalWidth) doSample();
+            else imgEl.addEventListener("load", doSample);
+          } else if (emoji) {
+            var c4 = document.createElement("canvas");
+            c4.width = 32; c4.height = 32;
+            var cx = c4.getContext("2d");
+            cx.font = "24px sans-serif";
+            cx.textAlign = "center"; cx.textBaseline = "middle";
+            cx.fillText(emoji, 16, 18);
+            sampleCanvas(c4);
+          } else {
+            applyGlow("rgba(80,140,255,.5)");
+          }
+        });
+      } catch (e) {}
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var opReplyBtn = root.querySelector("#forum-reply-op");
       if (opReplyBtn) opReplyBtn.addEventListener("click", function () {
