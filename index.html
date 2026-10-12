@@ -226,9 +226,21 @@
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
       if (!e.persisted) {
-        // Fresh load / refresh: Safari often restores the old scroll position
-        // late, after our scripts run. Re-assert once things settle.
-        setTimeout(assertScroll, 60);
+        // Fresh load / refresh: iOS Safari restores scroll late and async.
+        // Pin non-chat views to top at multiple delays.
+        if (current.type !== "journal") {
+          [60, 200, 500, 1000].forEach(function (ms) {
+            setTimeout(function () {
+              if (current.type !== "journal") {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+              }
+            }, ms);
+          });
+        } else {
+          setTimeout(assertScroll, 60);
+        }
         return;
       }
       if (current.type === "journal") {
@@ -241,7 +253,23 @@
     });
     // Full load: catches Safari restoring scroll after async content paints
     window.addEventListener("load", function () {
-      setTimeout(assertScroll, 60);
+      // iOS Safari restores scroll asynchronously and late, ignoring
+      // scrollRestoration="manual". Pin to top multiple times at increasing
+      // delays. All target position 0, so no jitter — just a firm pin.
+      // Chat is excluded (it goes to bottom via assertScroll).
+      if (current.type !== "journal") {
+        [60, 200, 500, 1000].forEach(function (ms) {
+          setTimeout(function () {
+            if (current.type !== "journal") {
+              window.scrollTo(0, 0);
+              document.documentElement.scrollTop = 0;
+              document.body.scrollTop = 0;
+            }
+          }, ms);
+        });
+      } else {
+        setTimeout(assertScroll, 60);
+      }
     });
     // Disable bfcache entirely: Safari's scroll restoration is tied to it.
     // With bfcache off, every load is fresh and starts at top.
