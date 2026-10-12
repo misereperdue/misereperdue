@@ -86,7 +86,7 @@
       inner = esc(e);
     }
     var cls = author.hasAvatarImg ? "forum-avatar" : "forum-avatar forum-avatar-emoji";
-    var badge = badgeFor(author.authorBadge);
+    var badge = badgeFor(author.authorBadge, name);
     return '<span class="forum-avatar-wrap"><button type="button" class="' + cls + ' forum-avatar-btn" data-username="' + esc(name) + '">' + inner + "</button>" +
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
@@ -100,15 +100,17 @@
     } else {
       inner = esc(author.authorAvatar || "\uD83D\uDE00");
     }
-    var badge = badgeFor(author.authorBadge);
+    var badge = badgeFor(author.authorBadge, name);
     return '<span class="forum-avatar-wrap forum-avatar-sm"><span class="forum-avatar' + (author.hasAvatarImg ? "" : " forum-avatar-emoji") + '">' + inner + "</span>" +
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
-  function badgeFor(badgeId) {
+  function badgeFor(badgeId, username) {
     if (!badgeId || !window.MPChat || !window.MPChat.badgeHTML) return "";
-    // Hide robot badge for non-grim (same rule as chat)
-    if (badgeId === "robot") return "";
+    // Robot badge is grim-only: show for grim, hide for others
+    if (badgeId === "robot") {
+      if (!username || username.toLowerCase() !== "grim") return "";
+    }
     return window.MPChat.badgeHTML(badgeId);
   }
 
