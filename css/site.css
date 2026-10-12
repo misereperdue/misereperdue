@@ -93,6 +93,7 @@ button, input, textarea { font-family: inherit; color: inherit; }
   pointer-events: none;
   view-transition-name: pill;
 }
+/* layout only — the glass surface comes from .glassbar (one shared component) */
 .nav {
   pointer-events: auto;
   position: relative;
@@ -100,14 +101,6 @@ button, input, textarea { font-family: inherit; color: inherit; }
   display: flex;
   gap: 2px;
   padding: 4px;
-  border-radius: 999px;
-  background: rgba(18, 18, 26, 0.6);
-  border: var(--glass-hairline);
-  box-shadow:
-    var(--glass-spec),
-    0 8px 24px rgba(0, 0, 0, 0.22);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
 }
 .nav a {
   position: relative;
@@ -270,14 +263,6 @@ body { padding-top: calc(140px + env(safe-area-inset-top, 0px)); }
 }
 [data-theme="light"] .hero-fade {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 16%, rgba(255, 255, 255, 0) 50%, #fff 100%);
-}
-[data-theme="light"] .nav {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(7, 15, 41, 0.16);
-}
-[data-theme="light"] .chat-head {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(7, 15, 41, 0.16);
 }
 [data-theme="light"] .nav button,
 [data-theme="light"] .nav a { color: #070f29; }
@@ -1006,7 +991,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-submit { width: 100%; }
 .chat-hint { margin-top: 12px; font-size: 12px; color: var(--muted); text-align: center; }
 
-/* header */
+/* header — layout/position only; the glass surface comes from .glassbar */
 .chat-head {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 82px);
@@ -1017,12 +1002,6 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   display: flex; align-items: center; justify-content: space-between;
   margin: 0;
   padding: 10px 16px 12px;
-  background: rgba(18, 18, 26, 0.6);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
-  border: var(--glass-hairline);
-  border-radius: 20px;
-  box-shadow: var(--glass-spec), 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 .chat-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .chat-online { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; vertical-align: middle; }
@@ -2106,29 +2085,41 @@ button.forum-glass-pill:active { transform: scale(.97); }
 
 
 
-/* Unified opaque blur - matches user dropdown menu */
-.chat-head,
-.forum-head,
-.forum-topbar,
+/* ============ GLASSBAR: the one floating-surface component ============
+   Navbar, chat top bar, forum top bar, and dropdown menus all share this
+   single class so they look identical. Layout/positioning stays on each
+   element's own class (.nav, .chat-head, ...); everything visual lives here. */
+.glassbar,
 .forum-notif-panel,
 .chat-me-menu {
-  background: #0a1230 !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  border: var(--glass-hairline) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 42%, rgba(2, 6, 23, 0.10)),
+    rgba(11, 18, 44, 0.78);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+    0 12px 32px rgba(0, 0, 0, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.22);
 }
-[data-theme="light"] .nav,
-[data-theme="light"] .chat-head,
-[data-theme="light"] .forum-head,
-[data-theme="light"] .forum-topbar,
+[data-theme="light"] .glassbar,
 [data-theme="light"] .forum-notif-panel,
 [data-theme="light"] .chat-me-menu {
-  background: rgba(255, 255, 255, 0.7) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.60), rgba(255, 255, 255, 0.22) 45%, rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 12px 32px rgba(13, 25, 70, 0.16),
+    0 2px 8px rgba(13, 25, 70, 0.10);
 }
-
-/* Force top nav opaque - higher specificity */
-nav#nav.nav,
-
+/* dropdown menus keep a slightly tighter radius than the bars */
+.forum-notif-panel,
+.chat-me-menu { border-radius: 18px; }
 
 /* Notification panel slam animation (matches avatar menu) */
 .forum-notif-panel {
@@ -2144,25 +2135,3 @@ nav#nav.nav,
   transform: scale(.88);
 }
 
-
-
-/* Header aligns with navbar as a visual set */
-.forum-head,
-.chat-head {
-  max-width: 520px;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  margin-top: 10px !important;
-}
-
-/* Navbar and top bar: identical Liquid Glass pills */
-.nav,
-.forum-head,
-.chat-head {
-  background: rgba(13, 21, 48, 0.85) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
-  backdrop-filter: blur(24px) saturate(160%) !important;
-  border: 1px solid rgba(255,255,255,0.14) !important;
-  border-radius: 22px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12) !important;
-}
