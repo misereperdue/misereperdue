@@ -1148,27 +1148,16 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-/* 6 sparkles total via pseudo-elements + box-shadow duplicates */
-.chat-avatar-wrap.owner-sparkles::before {
-  top: -5px; right: -3px; animation-delay: 0s;
-  box-shadow: -28px 8px 0 -2px rgba(255,255,255,.9), -14px 22px 0 -3px rgba(255,255,255,.7);
-}
-.chat-avatar-wrap.owner-sparkles::after {
-  bottom: -3px; left: -5px; font-size: 8px; animation-delay: .9s;
-  box-shadow: 26px -6px 0 -2px rgba(255,255,255,.9), 12px -20px 0 -3px rgba(255,255,255,.7);
-}
+/* Clean EasyUI sparkles only — no duplicates */
+.chat-avatar-wrap.owner-sparkles::before { top: -5px; right: -3px; animation-delay: 0s; }
+.chat-avatar-wrap.owner-sparkles::after { bottom: -3px; left: -5px; font-size: 8px; animation-delay: .9s; }
 /* Black sparkles in light mode */
 [data-theme="light"] .chat-avatar-wrap.owner-sparkles::before,
 [data-theme="light"] .chat-avatar-wrap.owner-sparkles::after {
   color: #000000;
   text-shadow: 0 0 8px rgba(0,0,0,.3), 0 0 4px rgba(0,0,0,.2);
 }
-[data-theme="light"] .chat-avatar-wrap.owner-sparkles::before {
-  box-shadow: -28px 8px 0 -2px rgba(0,0,0,.8), -14px 22px 0 -3px rgba(0,0,0,.6);
-}
-[data-theme="light"] .chat-avatar-wrap.owner-sparkles::after {
-  box-shadow: 26px -6px 0 -2px rgba(0,0,0,.8), 12px -20px 0 -3px rgba(0,0,0,.6);
-}
+
 .chat-avatar-img.lg { width: 64px; height: 64px; }
 .chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite; }
 .chat-verified .seal { transform-box: fill-box; transform-origin: center; animation: sealSpin 5s ease-in-out infinite; }
