@@ -60,10 +60,20 @@
     headRow.style.cssText = "display:flex;flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px;";
     var titleRow = document.createElement("div");
     titleRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;";
+    var titleWrap = document.createElement("div");
+    titleWrap.style.cssText = "display:flex;align-items:center;gap:10px;";
     var title = document.createElement("h3");
     title.style.cssText = "margin:0;font-size:20px;font-weight:700;";
     title.textContent = "Dashboard";
-    titleRow.appendChild(title);
+    titleWrap.appendChild(title);
+    // Online users live badge (EasyUI style)
+    var onlineBadge = document.createElement("span");
+    onlineBadge.className = "easyui-live-badge dashboard-online-badge";
+    var onlineCount = (typeof window.MPOnlineCount === "number") ? window.MPOnlineCount : 0;
+    onlineBadge.hidden = !(onlineCount > 0);
+    onlineBadge.innerHTML = '<span class="live-dot"></span><span class="live-num">' + onlineCount + '</span>';
+    titleWrap.appendChild(onlineBadge);
+    titleRow.appendChild(titleWrap);
     var dashCloseX = document.createElement("button");
     dashCloseX.type = "button";
     dashCloseX.setAttribute("aria-label", "Close dashboard");
