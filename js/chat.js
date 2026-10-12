@@ -202,6 +202,43 @@
       bigHold.className = "chat-sheet-big";
       var bigWrap = avatarNode(u.username, u.avatar, "lg", u.hasAvatarImg ? u.avatarV : undefined);
       var ub = badgeFor(u); if (ub) bigWrap.insertAdjacentHTML("beforeend", ub);
+      // Tapping avatar shows expanded version
+      bigWrap.classList.add("chat-avatar-click");
+      bigWrap.setAttribute("role", "button");
+      bigWrap.setAttribute("tabindex", "0");
+      bigWrap.setAttribute("aria-label", "View larger avatar");
+      var showExpanded = function(e) {
+        if (e) e.stopPropagation();
+        var overlay = document.createElement("div");
+        overlay.className = "avatar-expand-overlay";
+        var imgSrc = u.hasAvatarImg
+          ? API + "/api/avatarimg/" + encodeURIComponent(u.username) + "?v=" + (u.avatarV || 0) + "&size=512"
+          : null;
+        if (imgSrc) {
+          var im = document.createElement("img");
+          im.className = "avatar-expand-img";
+          im.src = imgSrc;
+          im.alt = u.username + "'s avatar";
+          overlay.appendChild(im);
+        } else {
+          var em = document.createElement("div");
+          em.className = "avatar-expand-img";
+          em.style.fontSize = "120px";
+          em.style.display = "flex";
+          em.style.alignItems = "center";
+          em.style.justifyContent = "center";
+          em.textContent = u.avatar || "\uD83D\uDE00";
+          overlay.appendChild(em);
+        }
+        var close = function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+        overlay.addEventListener("click", close);
+        overlay.addEventListener("keydown", function(ev) { if (ev.key === "Escape") close(); });
+        overlay.setAttribute("tabindex", "0");
+        document.body.appendChild(overlay);
+        overlay.focus();
+      };
+      bigWrap.addEventListener("click", showExpanded);
+      bigWrap.addEventListener("keydown", function(e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showExpanded(e); } });
       bigHold.appendChild(bigWrap);
       sheet.appendChild(bigHold);
       var nm = document.createElement("div");
