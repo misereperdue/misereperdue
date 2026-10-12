@@ -2133,10 +2133,12 @@ nav#nav.nav,
   margin-top: 8px !important;
 }
 
-/* Navbar and top bar share the same style */
+/* Navbar and top bar share the same style + blur */
 .nav,
 .forum-head,
 .chat-head {
-  background: #0a1230 !important;
+  background: rgba(10, 18, 48, 0.7) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
   border: 1px solid rgba(255,255,255,0.12) !important;
 }
