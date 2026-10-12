@@ -91,6 +91,23 @@
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
+  function authorPillHTML(author) {
+    var b = badgeFor(author.authorBadge, author.author);
+    // Full-size avatar without badge on avatar, badge beside name
+    var name = author.author || "?";
+    var inner = "";
+    if (author.hasAvatarImg) {
+      inner = '<img src="' + API + "/api/avatarimg/" +
+        encodeURIComponent(name) + "?v=" + (author.avatarV || 0) + '" alt="">';
+    } else {
+      inner = esc(author.authorAvatar || "\uD83D\uDE00");
+    }
+    var cls = author.hasAvatarImg ? "forum-avatar" : "forum-avatar forum-avatar-emoji";
+    var avatar = '<span class="forum-avatar-wrap"><span class="' + cls + '">' + inner + "</span></span>";
+    return '<span class="forum-thread-author-pill">' + avatar +
+      '<span class="forum-thread-author-name">' + esc(name) + "</span>" +
+      (b ? '<span class="forum-thread-pill-badge">' + b + "</span>" : "") + "</span>";
+  }
   function avatarHTMLSmallNoBadge(author) {
     var name = author.author || "?";
     var inner = "";
@@ -1220,8 +1237,7 @@
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
       html += '<article class="forum-post forum-op">' +
-        '<div class="forum-post-head">' + avatarHTML(t) +
-        '<span class="forum-post-author">' + authorLine(t) + "</span>" +
+        '<div class="forum-post-head">' + authorPillHTML(t) +
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
@@ -1248,8 +1264,7 @@
         var kids = childMap[r.id] || [];
         var expanded = !!view.showNested[r.id];
         var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
-          '<div class="forum-post-head">' + avatarHTML(r) +
-          '<span class="forum-post-author">' + authorLine(r) + "</span>" +
+          '<div class="forum-post-head">' + authorPillHTML(r) +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
           '<div class="forum-post-body">' + bodyHTML(r) + "</div>" +
           ((token() || isOwner)
