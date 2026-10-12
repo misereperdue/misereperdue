@@ -988,6 +988,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 /* Password strength meter — EasyUI SignUp style */
 .pwd-strength { margin: 10px 0 16px; }
 .pwd-strength[hidden] { display: none; }
+.pwd-match { font-size: 13px; margin: 6px 0 12px; font-weight: 600; }
+.pwd-match[hidden] { display: none; }
 .pwd-bars { display: flex; gap: 4px; height: 4px; margin-bottom: 6px; }
 .pwd-bars span { flex: 1; border-radius: 999px; background: rgba(127,127,127,.25); transition: background .2s ease; }
 .pwd-labels { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-family: ui-monospace, monospace; opacity: .7; }
