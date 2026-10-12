@@ -121,35 +121,6 @@
     return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
   }
 
-  function isOwnerPost(author) {
-    return author && author.toLowerCase() === "dc";
-  }
-  function injectOwnerMeteors(root) {
-    var posts = (root || document).querySelectorAll(".forum-post.owner-meteors");
-    for (var i = 0; i < posts.length; i++) {
-      if (posts[i].querySelector(".owner-meteor-wrap")) continue;
-      var wrap = document.createElement("div");
-      wrap.className = "owner-meteor-wrap";
-      wrap.setAttribute("aria-hidden", "true");
-      // 20 meteors for continuous stream (EasyUI Meteors port)
-      for (var j = 0; j < 20; j++) {
-        var m = document.createElement("span");
-        m.className = "owner-meteor-item";
-        // Start from top area, distributed horizontally
-        m.style.top = (Math.random() * 30) + "px";
-        m.style.left = (Math.random() * 100) + "%";
-        // Evenly staggered delays for continuous flow (0-4s spread)
-        m.style.animationDelay = ((j / 20) * 4 + Math.random() * 0.5).toFixed(2) + "s";
-        // Shorter durations (3-5s) so they cycle continuously
-        m.style.animationDuration = (3 + Math.random() * 2).toFixed(2) + "s";
-        var tail = document.createElement("span");
-        tail.className = "owner-meteor-tail";
-        m.appendChild(tail);
-        wrap.appendChild(m);
-      }
-      posts[i].insertBefore(wrap, posts[i].firstChild);
-    }
-  }
   function authorLine(item) {
     var pts = (item.authorPoints !== undefined && item.authorPoints !== null)
       ? ' <span class="forum-glass-pill forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
@@ -1090,7 +1061,6 @@
 
     html += "</div>";
     root.innerHTML = html;
-    injectOwnerMeteors(root);
 
     wireAvatars(); try { wireBell(); } catch (e) {}
     // Content is painted; now pin to top (images loading later won't shift us)
@@ -1236,7 +1206,7 @@
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
-      html += '<article class="forum-post forum-op' + (isOwnerPost(t.author) ? " owner-meteors" : "") + '">' +
+      html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
         '<span class="forum-post-author">' + authorLine(t) + "</span>" +
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
@@ -1264,7 +1234,7 @@
       function replyHTML(r, depth) {
         var kids = childMap[r.id] || [];
         var expanded = !!view.showNested[r.id];
-        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + (isOwnerPost(r.author) ? " owner-meteors" : "") + '">' +
+        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
