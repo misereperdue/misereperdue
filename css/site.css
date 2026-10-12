@@ -1131,72 +1131,32 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   background: linear-gradient(135deg, rgba(120,120,140,.5), rgba(60,60,70,.5));
 }
 .chat-avatar-img.sm { width: 32px; height: 32px; }
-/* Owner sparkles on message bubbles — lightweight CSS adaptation of EasyUI SparklesCore */
+/* Owner sparkles — CSS-drawn 4-point stars (reliable on iOS, no font dependency) */
 @keyframes owner-sparkle-twinkle {
-  0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(90deg); }
+  0%, 100% { opacity: 0; transform: scale(.3); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.owner-sparkle-star {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #ffffff;
+  clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+  -webkit-clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+  filter: drop-shadow(0 0 3px rgba(255,255,255,.9));
+  pointer-events: none;
+  animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
+  z-index: 2;
+}
+[data-theme="light"] .owner-sparkle-star {
+  background: #000000;
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.4));
 }
 .chat-msg.owner-msg .chat-bubble { position: relative; }
-.chat-msg.owner-msg .chat-bubble::before,
-.chat-msg.owner-msg .chat-bubble::after {
-  content: "\2726";
-  position: absolute;
-  font-size: 10px;
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(255,255,255,.9), 0 0 4px rgba(255,255,255,.6);
-  pointer-events: none;
-  animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
-  z-index: 2;
-}
-.chat-msg.owner-msg .chat-bubble::before { top: -5px; left: 30%; animation-delay: 0s; }
-.chat-msg.owner-msg .chat-bubble::after { top: 40%; right: -5px; font-size: 8px; animation-delay: .9s; }
 /* Extra sparkles */
-.chat-msg.owner-msg .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
-.chat-msg.owner-msg .owner-sparkles-extra::before,
-.chat-msg.owner-msg .owner-sparkles-extra::after {
-  content: "\2726";
-  position: absolute;
-  font-size: 7px;
-  color: #ffffff;
-  text-shadow: 0 0 6px rgba(255,255,255,.9);
-  animation: owner-sparkle-twinkle 2.2s ease-in-out infinite;
-  z-index: 2;
-}
-.chat-msg.owner-msg .owner-sparkles-extra::before { bottom: -5px; right: 30%; animation-delay: .45s; }
-.chat-msg.owner-msg .owner-sparkles-extra::after { top: 40%; left: -5px; font-size: 9px; animation-delay: 1.35s; }
-/* Forum post/reply sparkles for owner + VIP — on the border perimeter */
+
+/* Forum post/reply sparkles for owner + VIP */
 .forum-post.owner-vip-sparkles { position: relative; }
-.forum-post.owner-vip-sparkles::before,
-.forum-post.owner-vip-sparkles::after,
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::before,
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::after {
-  content: "\2726";
-  position: absolute;
-  font-size: 9px;
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(255,255,255,.9);
-  pointer-events: none;
-  animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
-  z-index: 2;
-}
-.forum-post.owner-vip-sparkles::before { top: -5px; left: 25%; animation-delay: 0s; }
-.forum-post.owner-vip-sparkles::after { top: 45%; right: -5px; font-size: 7px; animation-delay: .9s; }
-.forum-post.owner-vip-sparkles .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::before { bottom: -5px; right: 25%; animation-delay: .45s; }
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::after { top: 45%; left: -5px; font-size: 7px; animation-delay: 1.35s; }
-[data-theme="light"] .forum-post.owner-vip-sparkles::before,
-[data-theme="light"] .forum-post.owner-vip-sparkles::after,
-[data-theme="light"] .forum-post.owner-vip-sparkles .owner-sparkles-extra::before,
-[data-theme="light"] .forum-post.owner-vip-sparkles .owner-sparkles-extra::after {
-  color: #000000; text-shadow: 0 0 6px rgba(0,0,0,.3);
-}
-[data-theme="light"] .chat-msg.owner-msg .chat-bubble::before,
-[data-theme="light"] .chat-msg.owner-msg .chat-bubble::after,
-[data-theme="light"] .chat-msg.owner-msg .owner-sparkles-extra::before,
-[data-theme="light"] .chat-msg.owner-msg .owner-sparkles-extra::after {
-  color: #000000;
-  text-shadow: 0 0 6px rgba(0,0,0,.3);
-}
+
 
 .chat-avatar-img.lg { width: 64px; height: 64px; }
 .chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite; }
