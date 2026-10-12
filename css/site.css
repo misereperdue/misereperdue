@@ -1142,14 +1142,21 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   content: "\2726";
   position: absolute;
   font-size: 10px;
-  color: #ffd60a;
-  text-shadow: 0 0 6px rgba(255,214,10,.8);
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255,255,255,.9), 0 0 4px rgba(255,255,255,.6);
   pointer-events: none;
-  animation: owner-sparkle-twinkle 2s ease-in-out infinite;
+  animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-.chat-avatar-wrap.owner-sparkles::before { top: -4px; right: -2px; animation-delay: 0s; }
-.chat-avatar-wrap.owner-sparkles::after { bottom: -2px; left: -4px; font-size: 8px; animation-delay: 1s; }
+/* 6 sparkles total via pseudo-elements + box-shadow duplicates */
+.chat-avatar-wrap.owner-sparkles::before {
+  top: -5px; right: -3px; animation-delay: 0s;
+  box-shadow: -28px 8px 0 -2px rgba(255,255,255,.9), -14px 22px 0 -3px rgba(255,255,255,.7);
+}
+.chat-avatar-wrap.owner-sparkles::after {
+  bottom: -3px; left: -5px; font-size: 8px; animation-delay: .9s;
+  box-shadow: 26px -6px 0 -2px rgba(255,255,255,.9), 12px -20px 0 -3px rgba(255,255,255,.7);
+}
 .chat-avatar-img.lg { width: 64px; height: 64px; }
 .chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite; }
 .chat-verified .seal { transform-box: fill-box; transform-origin: center; animation: sealSpin 5s ease-in-out infinite; }
