@@ -1138,9 +1138,10 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 /* EasyUI Meteors port — for owner's forum posts/replies */
 @keyframes easyui-meteor-streak {
-  0% { transform: rotate(215deg) translateX(0); opacity: 1; }
+  0% { transform: rotate(215deg) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
   70% { opacity: 1; }
-  100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
+  100% { transform: rotate(215deg) translateX(-300px); opacity: 0; }
 }
 .owner-meteor-wrap {
   position: absolute; inset: 0;
