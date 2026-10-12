@@ -1158,7 +1158,19 @@
       var voted = myVote === i;
       h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
       h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
-      h += '<span style="position:relative;display:flex;justify-content:space-between;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="opacity:.7;">' + pct + '% (' + (opt.votes || 0) + ')</span></span>';
+      h += '<span style="position:relative;display:flex;justify-content:space-between;align-items:center;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="display:flex;align-items:center;gap:8px;">';
+      // Voter avatars: show for the option the user voted for
+      if (voted && t.voterAvatars && t.voterAvatars[i]) {
+        h += '<span style="display:flex;">';
+        t.voterAvatars[i].forEach(function (v, vi) {
+          var vInner = v.hasAvatarImg
+            ? '<img src="' + API + "/api/avatarimg/" + encodeURIComponent(v.username) + "?v=" + (v.avatarV || 0) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+            : esc(v.avatar || "😀");
+          h += '<span title="' + esc(v.username) + '" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:rgba(127,127,127,.2);border:2px solid var(--bg);' + (vi > 0 ? "margin-left:-8px;" : "") + '">' + vInner + '</span>';
+        });
+        h += '</span>';
+      }
+      h += '<span style="opacity:.7;">' + pct + '% (' + (opt.votes || 0) + ')</span></span></span>';
       h += '</button>';
     });
     h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
@@ -1259,6 +1271,7 @@
           }).then(function (res) {
             if (res.ok && res.poll) {
               cache.thread.poll = res.poll;
+              if (res.voterAvatars) cache.thread.voterAvatars = res.voterAvatars;
               paintThread();
             } else {
               alert(res.error || "Vote failed");
