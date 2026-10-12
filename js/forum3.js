@@ -1166,7 +1166,7 @@
       var voted = myVote === i;
       h += '<button type="button" class="forum-poll-opt" data-idx="' + i + '" ' + (!token() ? "disabled" : "") + ' style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;border-radius:10px;border:1px solid ' + (voted ? "rgba(80,140,255,.6)" : "rgba(127,127,127,.25)") + ';background:' + (voted ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)") + ';color:var(--ink);cursor:' + (token() ? "pointer" : "default") + ';position:relative;overflow:hidden;">';
       h += '<span style="position:absolute;left:0;top:0;bottom:0;width:' + pct + '%;background:rgba(80,140,255,.18);"></span>';
-      h += '<span style="position:relative;display:flex;justify-content:space-between;align-items:center;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="display:flex;align-items:center;gap:8px;">';
+      h += '<span style="position:relative;display:flex;justify-content:space-between;align-items:center;"><span>' + esc(opt.text) + (voted ? " ✓" : "") + '</span><span style="display:flex;align-items:center;gap:4px;">';
       // Voter avatars: show for the option the user voted for
       if (voted && t.voterAvatars && t.voterAvatars[i]) {
         h += '<span style="display:flex;">';
@@ -1174,11 +1174,11 @@
           var vInner = v.hasAvatarImg
             ? '<img src="' + API + "/api/avatarimg/" + encodeURIComponent(v.username) + "?v=" + (v.avatarV || 0) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
             : esc(v.avatar || "😀");
-          h += '<span title="' + esc(v.username) + '" class="poll-voter-avatar" data-username="' + esc(v.username) + '" data-emoji="' + (v.hasAvatarImg ? "" : esc(v.avatar || "")) + '" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:rgba(127,127,127,.2);' + (vi > 0 ? "margin-left:-8px;" : "") + '">' + vInner + '</span>';
+          h += '<span title="' + esc(v.username) + '" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:14px;background:rgba(127,127,127,.2);border:2px solid var(--bg);' + (vi > 0 ? "margin-left:-8px;" : "") + '">' + vInner + '</span>';
         });
         h += '</span>';
       }
-      h += '<span style="opacity:.7;margin-left:16px;">' + pct + '%</span></span></span>';
+      h += '<span style="opacity:.7;margin-left:4px;">' + pct + '%</span></span></span>';
       h += '</button>';
     });
     h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
@@ -1297,59 +1297,6 @@
         });
       });
       wireAvatars(); try { wireBell(); } catch (e) {}
-      // Apply dominant-color glow to poll voter avatars
-      try {
-        root.querySelectorAll(".poll-voter-avatar").forEach(function (el) {
-          var emoji = el.getAttribute("data-emoji");
-          var imgEl = el.querySelector("img");
-          function applyGlow(color) {
-            el.style.boxShadow = "0 0 10px 2px " + color;
-          }
-          function sampleCanvas(canvas) {
-            try {
-              var ctx = canvas.getContext("2d");
-              var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-              var r = 0, g = 0, b = 0, n = 0;
-              for (var i = 0; i < data.length; i += 16) {
-                var a = data[i + 3];
-                if (a < 128) continue;
-                var pr = data[i], pg = data[i+1], pb = data[i+2];
-                var mx = Math.max(pr, pg, pb), mn = Math.min(pr, pg, pb);
-                if (mx - mn < 30) continue;
-                r += pr; g += pg; b += pb; n++;
-              }
-              if (n > 0) {
-                r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
-                applyGlow("rgba(" + r + "," + g + "," + b + ",.7)");
-              } else {
-                applyGlow("rgba(80,140,255,.5)");
-              }
-            } catch (e) { applyGlow("rgba(80,140,255,.5)"); }
-          }
-          if (imgEl) {
-            var doSample = function () {
-              var c2 = document.createElement("canvas");
-              c2.width = 24; c2.height = 24;
-              try {
-                c2.getContext("2d").drawImage(imgEl, 0, 0, 24, 24);
-                sampleCanvas(c2);
-              } catch (e) { applyGlow("rgba(80,140,255,.5)"); }
-            };
-            if (imgEl.complete && imgEl.naturalWidth) doSample();
-            else imgEl.addEventListener("load", doSample);
-          } else if (emoji) {
-            var c4 = document.createElement("canvas");
-            c4.width = 32; c4.height = 32;
-            var cx = c4.getContext("2d");
-            cx.font = "24px sans-serif";
-            cx.textAlign = "center"; cx.textBaseline = "middle";
-            cx.fillText(emoji, 16, 18);
-            sampleCanvas(c4);
-          } else {
-            applyGlow("rgba(80,140,255,.5)");
-          }
-        });
-      } catch (e) {}
       root.querySelector("#forum-back").addEventListener("click", backToList);
       var opReplyBtn = root.querySelector("#forum-reply-op");
       if (opReplyBtn) opReplyBtn.addEventListener("click", function () {
