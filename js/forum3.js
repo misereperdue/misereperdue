@@ -1934,6 +1934,7 @@
     view.threadId = null;
     view.replyTo = null;
     paintedThreadId = null;
+    try { history.replaceState(null, "", "#globe"); } catch (e) {}
     function toTop() {
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
@@ -1954,6 +1955,7 @@
     if (!id) return;
     view.name = "thread";
     view.threadId = id;
+    try { history.replaceState(null, "", "#thread/" + encodeURIComponent(id)); } catch (e) {}
     render();
   }
 
