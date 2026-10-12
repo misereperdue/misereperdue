@@ -2157,13 +2157,14 @@ button.forum-glass-pill:active { transform: scale(.97); }
     0 2px 8px rgba(0, 0, 0, 0.22);
 }
 /* Top bars share the glassbar component. The navbar sits over bright header
-   artwork while top bars sit over dark content — so the top bar carries its
-   own bright glass tone (explicit longhand: Safari was unreliable with the
-   gradient inside the shorthand), reading as the same luminous glass as
-   the navbar with or without artwork behind it. */
+   artwork while top bars sit over dark content — so the top bar carries a
+   bright glass tone to read with the same luminosity as the navbar.
+   NOTE: gradient layers would not visibly render here in Safari, so this is
+   a flat luminous fill (proven to apply); the specular highlight, border
+   and shadow still give it the glass depth. */
 .chat-head {
-  background-color: rgba(64, 72, 114, 0.80);
-  background-image: linear-gradient(180deg, rgba(220, 226, 245, 0.42) 0%, rgba(195, 202, 232, 0.20) 35%, rgba(160, 170, 205, 0.07) 65%, rgba(2, 6, 23, 0.05) 100%);
+  background-color: rgba(120, 128, 175, 0.90);
+  background-image: none;
 }
 [data-theme="light"] .glassbar,
 [data-theme="light"] .forum-notif-panel,
