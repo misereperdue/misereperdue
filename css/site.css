@@ -1609,7 +1609,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   color: #fff;
   background: rgba(0,122,255,0.35);
   border-color: rgba(0,122,255,0.5);
-  box-shadow: 0 0 12px rgba(0,122,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 0 6px rgba(0,122,255,0.15), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .forum-threads { display: flex; flex-direction: column; gap: 8px; }
 .forum-thread { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; border: var(--glass-hairline); background: var(--glass-clear-tint); border-radius: 14px; padding: 12px 14px; cursor: pointer; color: var(--ink); }
@@ -1666,6 +1666,26 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 /* Forum top bar new thread button */
 .forum-topbar-signin { padding: 8px 16px; font-size: 13px; }
 .forum-topbar-new { font-size: 13px; padding: 7px 12px; white-space: nowrap; flex: none; }
+/* 3D push-button for New thread / New reply in the top bar */
+.forum-topbar-new {
+  background: linear-gradient(180deg, #6aa5ff 0%, #3b7bf6 45%, #2456d8 100%);
+  border: 1px solid rgba(140, 180, 255, 0.55);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 20, 80, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 4px rgba(0, 30, 120, 0.35),
+    0 4px 10px rgba(36, 86, 216, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.forum-topbar-new:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 2px 6px rgba(0, 30, 120, 0.4),
+    0 1px 3px rgba(36, 86, 216, 0.35);
+}
 .forum-topbar .chat-title { flex: none; margin-right: 4px; }
 .forum-topbar .chat-head-right { gap: 6px; flex: none; }
 .forum-topbar .chat-points { flex: none; font-size: 13px; padding: 6px 10px; }
@@ -2094,7 +2114,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .chat-me-menu {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 42%, rgba(2, 6, 23, 0.10)),
-    rgba(11, 18, 44, 0.78);
+    var(--glassbar-fill, rgba(11, 18, 44, 0.78));
   -webkit-backdrop-filter: blur(24px) saturate(170%);
   backdrop-filter: blur(24px) saturate(170%);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -2105,6 +2125,10 @@ button.forum-glass-pill:active { transform: scale(.97); }
     0 12px 32px rgba(0, 0, 0, 0.32),
     0 2px 8px rgba(0, 0, 0, 0.22);
 }
+/* Top bars sit over dark page content while the navbar sits over the bright
+   hero — same component, but the top bar gets a lighter fill so both bars
+   read at exactly the same tone. */
+.chat-head { --glassbar-fill: rgba(58, 66, 106, 0.70); }
 [data-theme="light"] .glassbar,
 [data-theme="light"] .forum-notif-panel,
 [data-theme="light"] .chat-me-menu {
