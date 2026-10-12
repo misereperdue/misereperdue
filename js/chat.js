@@ -125,6 +125,25 @@
   function hasSparkles(username) {
     return isOwnerUser(username) || isVipUser(username);
   }
+  /* Inject 8 CSS star sparkles around the border perimeter */
+  function addBorderSparkles(el) {
+    if (!el || el.querySelector(".owner-sparkle-star")) return;
+    var positions = [
+      { top: "-5px", left: "25%" }, { top: "-5px", left: "75%" },
+      { top: "30%", right: "-5px" }, { top: "70%", right: "-5px" },
+      { bottom: "-5px", left: "25%" }, { bottom: "-5px", left: "75%" },
+      { top: "30%", left: "-5px" }, { top: "70%", left: "-5px" }
+    ];
+    for (var i = 0; i < positions.length; i++) {
+      var star = document.createElement("span");
+      star.className = "owner-sparkle-star";
+      star.setAttribute("aria-hidden", "true");
+      var pos = positions[i];
+      for (var k in pos) star.style[k] = pos[k];
+      star.style.animationDelay = (i * 0.22) + "s";
+      el.appendChild(star);
+    }
+  }
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
@@ -911,12 +930,7 @@
       if (eb0) bubble.appendChild(eb0);
       var fb0 = faviconBadge(m.embed);
       if (fb0) bubble.appendChild(fb0);
-      if (hasSparkles(m.user)) {
-        var ex = document.createElement("span");
-        ex.className = "owner-sparkles-extra";
-        ex.setAttribute("aria-hidden", "true");
-        bubble.appendChild(ex);
-      }
+      if (hasSparkles(m.user)) addBorderSparkles(bubble);
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
       var mb1 = msgBadge(m); if (mb1) myWrap.insertAdjacentHTML("beforeend", mb1);
@@ -954,12 +968,7 @@
       if (eb2) b2.appendChild(eb2);
       var fb2 = faviconBadge(m.embed);
       if (fb2) b2.appendChild(fb2);
-      if (hasSparkles(m.user)) {
-        var ex2 = document.createElement("span");
-        ex2.className = "owner-sparkles-extra";
-        ex2.setAttribute("aria-hidden", "true");
-        b2.appendChild(ex2);
-      }
+      if (hasSparkles(m.user)) addBorderSparkles(b2);
       main.appendChild(b2);
       row.appendChild(main);
     }
