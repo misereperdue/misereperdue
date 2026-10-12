@@ -1007,8 +1007,14 @@
     html += '<div class="forum-cats">';
     html += '<button type="button" class="forum-cat' + (view.category === "" ? " on" : "") + '" data-cat="">All</button>';
     cache.categories.forEach(function (c) {
-      html += '<button type="button" class="forum-cat' + (view.category === c.id ? " on" : "") + '" data-cat="' + esc(c.id) + '">' +
-        esc(c.name) + (c.membersOnly ? " \u2B50" : "") + (c.ownerOnly ? ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.8-1.3"/></svg>' : "") + "</button>";
+      var lockSvg = "";
+      if (c.ownerOnly) {
+        lockSvg = c.locked
+          ? ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>'
+          : ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.8-1.3"/></svg>';
+      }
+      html += '<button type="button" class="forum-cat' + (view.category === c.id ? " on" : "") + (c.locked ? " forum-cat-locked" : "") + '" data-cat="' + esc(c.id) + '"' + (c.locked ? ' data-locked="1"' : "") + '>' +
+        esc(c.name) + (c.membersOnly ? " \u2B50" : "") + lockSvg + "</button>";
     });
     html += "</div>";
 
@@ -1061,6 +1067,7 @@
     if (view.name === "list") window.scrollTo(0, 0);
     root.querySelectorAll(".forum-cat").forEach(function (b) {
       b.addEventListener("click", function () {
+        if (b.getAttribute("data-locked")) return;
         view.tag = "";
         view.category = b.getAttribute("data-cat");
         renderList();
@@ -1743,6 +1750,7 @@
     html += '<div class="forum-form">' +
       '<label class="chat-field"><span>Category</span><select id="forum-cat-sel">';
     cache.categories.forEach(function (c) {
+      if (c.locked) return;
       html += '<option value="' + esc(c.id) + '"' + (view.category === c.id ? " selected" : "") + ">" +
         esc(c.name) + (c.membersOnly ? " \u2B50" : "") + "</option>";
     });
