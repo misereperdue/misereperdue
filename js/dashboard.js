@@ -78,7 +78,7 @@
       btn.type = "button";
       btn.innerHTML = pair[0];
       btn.setAttribute("aria-label", pair[2]);
-      btn.style.cssText = "position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:6px 18px;border:none;border-radius:7px;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
+      btn.style.cssText = "position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px;border:none;border-radius:7px;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
     });
     chatDashBtn.style.color = "var(--ink)";
     topNav.appendChild(chatDashBtn);
@@ -127,7 +127,7 @@
 
     // Stats row
     var statsRow = document.createElement("div");
-    statsRow.style.cssText = "display:flex;gap:12px;margin-bottom:20px;";
+    statsRow.style.cssText = "display:flex;gap:12px;margin-bottom:16px;";
     var totalPosts = stats.days.reduce(function(a, d) { return a + (d.forumPosts || 0) + (d.forumReplies || 0); }, 0);
     var metrics = [
       { label: "Views", value: stats.totalViews },
@@ -139,7 +139,7 @@
       var cell = document.createElement("div");
       cell.style.cssText = "flex:1;text-align:center;";
       cell.innerHTML = '<div style="font-size:24px;font-weight:700;">' + m.value + '</div>' +
-        '<div style="font-size:12px;opacity:.6;margin-top:2px;">' + m.label + '</div>';
+        '<div style="font-size:12px;opacity:.6;margin-top:4px;">' + m.label + '</div>';
       statsRow.appendChild(cell);
     });
     overviewPage.appendChild(statsRow);
@@ -172,7 +172,7 @@
       btn.innerHTML = metricIcons[metric];
       btn.title = metricLabels[metric];
       btn.setAttribute("aria-label", metricLabels[metric]);
-      btn.style.cssText = "flex:1;padding:10px 8px;border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;";
+      btn.style.cssText = "flex:1;padding:8px;border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;";
       btn.addEventListener("click", function() {
         currentMetric = metric;
         var idx = metricOrder.indexOf(metric);
@@ -186,7 +186,7 @@
 
     // SVG graph container
     var graphWrap = document.createElement("div");
-    graphWrap.style.cssText = "position:relative;height:170px;margin-bottom:20px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;overflow:hidden;";
+    graphWrap.style.cssText = "position:relative;height:170px;margin-bottom:16px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;overflow:hidden;";
     overviewPage.appendChild(graphWrap);
 
     // Legend for the two-shade Posts graph (darker = posts, lighter = replies)
@@ -376,7 +376,7 @@
     usersTitle.textContent = "Newest Users";
     overviewPage.appendChild(usersTitle);
     var usersWrap = document.createElement("div");
-    usersWrap.style.cssText = "margin-bottom:20px;";
+    usersWrap.style.cssText = "margin-bottom:16px;";
     usersWrap.innerHTML = '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Loading...</div>';
     overviewPage.appendChild(usersWrap);
     overviewPage.insertBefore(graphSummary, usersTitle);
@@ -426,7 +426,7 @@
     countriesTitle.textContent = "Countries";
     overviewPage.appendChild(countriesTitle);
     var countriesWrap = document.createElement("div");
-    countriesWrap.style.cssText = "margin-bottom:20px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:10px 14px;";
+    countriesWrap.style.cssText = "margin-bottom:16px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px 16px;";
     (function renderCountries() {
       var agg = {};
       (stats.days || []).forEach(function(d) {
@@ -442,7 +442,7 @@
       var maxN = rows[0].n;
       rows.forEach(function(r) {
         var row = document.createElement("div");
-        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 0;";
+        row.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;";
         var flag = document.createElement("span");
         flag.style.cssText = "font-size:18px;line-height:1;";
         flag.textContent = flagEmoji(r.code);
@@ -468,7 +468,7 @@
 
     // Action buttons
     var btnRow = document.createElement("div");
-    btnRow.style.cssText = "display:flex;gap:10px;margin-bottom:12px;";
+    btnRow.style.cssText = "display:flex;gap:12px;margin-bottom:12px;";
 
     // Pause/Resume button
     var pauseBtn = document.createElement("button");
@@ -540,16 +540,16 @@
         forumPage.appendChild(catTitle);
 
         var catList = document.createElement("div");
-        catList.style.cssText = "display:flex;flex-direction:column;gap:6px;margin-bottom:12px;";
+        catList.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-bottom:12px;";
         cats.forEach(function (cat) {
           var row = document.createElement("div");
-          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
+          row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 12px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);";
           var nameInput = document.createElement("input");
           nameInput.type = "text";
           nameInput.value = cat.name;
           nameInput.maxLength = 40;
           nameInput.title = "Tap to rename";
-          nameInput.style.cssText = "flex:1;min-width:0;background:rgba(128,128,128,.08);border:1px dashed rgba(140,160,255,.45);border-radius:8px;padding:5px 9px;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
+          nameInput.style.cssText = "flex:1;min-width:0;background:rgba(128,128,128,.08);border:1px dashed rgba(140,160,255,.45);border-radius:8px;padding:8px 12px;color:var(--ink);font-size:14px;font-weight:600;outline:none;";
           nameInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter") { e.preventDefault(); clearTimeout(saveTimer); saveName(); nameInput.blur(); }
           });
@@ -578,7 +578,7 @@
           var visState = cat.ownerOnly ? "private" : (cat.membersOnly ? "members" : "public");
           moBtn.textContent = visState === "private" ? "\uD83D\uDD12 Private" : (visState === "members" ? "\u2B50 VIPs" : "Public");
           moBtn.title = "Visibility: Public \u2192 Private (only you) \u2192 VIPs \u2192 Public";
-          moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (visState === "private" ? "rgba(120,140,255,.25)" : (visState === "members" ? "rgba(255,200,50,.2)" : "transparent")) + ";color:var(--ink);";
+          moBtn.style.cssText = "font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" + (visState === "private" ? "rgba(120,140,255,.25)" : (visState === "members" ? "rgba(255,200,50,.2)" : "transparent")) + ";color:var(--ink);";
           moBtn.addEventListener("click", function () {
             var next = visState === "public" ? { ownerOnly: true, membersOnly: false }
               : visState === "private" ? { ownerOnly: false, membersOnly: true }
@@ -593,7 +593,7 @@
             var delBtn = document.createElement("button");
             delBtn.type = "button";
             delBtn.textContent = "×";
-            delBtn.style.cssText = "font-size:16px;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 6px;";
+            delBtn.style.cssText = "font-size:16px;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;";
             delBtn.addEventListener("click", function () {
               if (!confirm("Delete category '" + cat.name + "'? Its threads move to General.")) return;
               api("/api/forum/categories/" + encodeURIComponent(cat.id), { method: "DELETE" })
@@ -606,7 +606,7 @@
         forumPage.appendChild(catList);
 
         var newCatRow = document.createElement("div");
-        newCatRow.style.cssText = "display:flex;gap:8px;margin-bottom:20px;";
+        newCatRow.style.cssText = "display:flex;gap:8px;margin-bottom:16px;";
         var newCatInput = document.createElement("input");
         newCatInput.type = "text";
         newCatInput.placeholder = "New category name";
@@ -636,7 +636,7 @@
           paTitle.textContent = "Private access";
           forumPage.appendChild(paTitle);
           var paNote = document.createElement("div");
-          paNote.style.cssText = "font-size:12px;opacity:.55;margin-bottom:10px;";
+          paNote.style.cssText = "font-size:12px;opacity:.55;margin-bottom:12px;";
           paNote.textContent = "Pick a user and a private category, then set whether they can access it. VIPs always have access to the \uD83D\uDCB5 category.";
           forumPage.appendChild(paNote);
           var paRow = document.createElement("div");
