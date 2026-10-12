@@ -114,9 +114,12 @@
     if (mb) wrap.insertAdjacentHTML("beforeend", mb);
   }
 
+  function isOwnerUser(username) {
+    return username && username.toLowerCase() === "dc";
+  }
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
-    wrap.className = "chat-avatar-wrap";
+    wrap.className = "chat-avatar-wrap" + (isOwnerUser(username) ? " owner-sparkles" : "");
     if (imgV !== undefined && imgV !== null) {
       var im = document.createElement("img");
       im.className = "chat-avatar-img" + (size ? " " + size : "");
@@ -874,6 +877,15 @@
     row.className = "chat-msg" + (me && m.user === me.username ? " mine" : "");
     row.setAttribute("data-id", m.id);
     row.setAttribute("data-user", m.user || "");
+    // Cache avatar for typing indicator
+    if (m.user) {
+      userAvatarMap[m.user.toLowerCase()] = {
+        avatar: m.avatar,
+        hasImg: !!(m.av !== undefined || (m.user === (me && me.username) && myImgV() !== undefined)),
+        imgV: (m.av !== undefined ? m.av : (m.user === (me && me.username) ? myImgV() : undefined)),
+        username: m.user
+      };
+    }
 
     if (row.classList.contains("mine")) {
       var bubble = document.createElement("div");
@@ -1027,6 +1039,7 @@
 
   var typingUsers = {};
   var typingTimer = null;
+  var userAvatarMap = {}; // username -> {avatar, hasImg, imgV} for typing indicator
 
   function setOnline(n) {
     window.MPOnlineCount = n;
@@ -1081,13 +1094,22 @@
     el.hidden = false;
     var html = "";
     users.forEach(function (username) {
-      // Find avatar for this user (from recent messages or default)
+      // Find avatar for this user (from cache, DOM, or default 😎)
       var av = "\u{1F60E}";
-      var rows = root.querySelectorAll('.chat-msg[data-user="' + username + '"] .chat-avatar');
-      if (rows.length) {
-        var img = rows[0].querySelector("img");
-        if (img) av = '<img src="' + img.src + '" alt="">';
-        else av = esc(rows[0].textContent.trim() || av);
+      var cached = userAvatarMap[username.toLowerCase()];
+      if (cached) {
+        if (cached.hasImg && cached.imgV !== undefined) {
+          av = '<img src="' + avatarImgURL(cached.username, cached.imgV) + '" alt="">';
+        } else if (cached.avatar) {
+          av = esc(cached.avatar);
+        }
+      } else {
+        var rows = root.querySelectorAll('.chat-msg[data-user="' + username + '"] .chat-avatar');
+        if (rows.length) {
+          var img = rows[0].querySelector("img");
+          if (img) av = '<img src="' + img.src + '" alt="">';
+          else av = esc(rows[0].textContent.trim() || av);
+        }
       }
       html += '<div class="chat-typing-row">' +
         '<div class="chat-typing-avatar">' + av + '</div>' +
