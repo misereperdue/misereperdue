@@ -125,25 +125,41 @@
   function hasSparkles(username) {
     return isOwnerUser(username) || isVipUser(username);
   }
-  /* Inject 8 CSS star sparkles around the border perimeter */
-  function addBorderSparkles(el) {
-    if (!el || el.querySelector(".owner-sparkle-star")) return;
-    var positions = [
-      { top: "-5px", left: "25%" }, { top: "-5px", left: "75%" },
-      { top: "30%", right: "-5px" }, { top: "70%", right: "-5px" },
-      { bottom: "-5px", left: "25%" }, { bottom: "-5px", left: "75%" },
-      { top: "30%", left: "-5px" }, { top: "70%", left: "-5px" }
-    ];
-    for (var i = 0; i < positions.length; i++) {
+  /* Inject CSS star sparkles at random positions along the border */
+  function addBorderSparkles(el, count) {
+    if (!el) return;
+    // Remove old stars first (for re-randomization)
+    var old = el.querySelectorAll(".owner-sparkle-star");
+    for (var r = 0; r < old.length; r++) old[r].remove();
+    count = count || 8;
+    for (var i = 0; i < count; i++) {
       var star = document.createElement("span");
       star.className = "owner-sparkle-star";
       star.setAttribute("aria-hidden", "true");
-      var pos = positions[i];
-      for (var k in pos) star.style[k] = pos[k];
-      star.style.animationDelay = (i * 0.22) + "s";
+      // Random side: 0=top, 1=right, 2=bottom, 3=left
+      var side = Math.floor(Math.random() * 4);
+      var along = 10 + Math.random() * 80; // 10% to 90% along the side
+      if (side === 0) { star.style.top = "-5px"; star.style.left = along + "%"; }
+      else if (side === 1) { star.style.right = "-5px"; star.style.top = along + "%"; }
+      else if (side === 2) { star.style.bottom = "-5px"; star.style.left = along + "%"; }
+      else { star.style.left = "-5px"; star.style.top = along + "%"; }
+      // Random size 7-12px
+      var sz = 7 + Math.random() * 5;
+      star.style.width = sz + "px"; star.style.height = sz + "px";
+      star.style.animationDelay = (Math.random() * 1.8) + "s";
+      star.style.animationDuration = (1.5 + Math.random()) + "s";
       el.appendChild(star);
     }
   }
+  /* Sweep: add sparkles to all existing owner/VIP bubbles (for old messages) */
+  function sweepBorderSparkles() {
+    var bubbles = document.querySelectorAll(".chat-msg.owner-msg .chat-bubble");
+    for (var i = 0; i < bubbles.length; i++) {
+      if (!bubbles[i].querySelector(".owner-sparkle-star")) addBorderSparkles(bubbles[i]);
+    }
+  }
+  // Run sweep periodically to catch newly rendered messages
+  setInterval(sweepBorderSparkles, 2000);
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
     wrap.className = "chat-avatar-wrap";
