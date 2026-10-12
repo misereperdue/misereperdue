@@ -123,21 +123,22 @@
 
   function injectForumSparkleExtras(root) {
     var posts = (root || document).querySelectorAll(".forum-post.owner-vip-sparkles");
-    var positions = [
-      { top: "-5px", left: "25%" }, { top: "-5px", left: "75%" },
-      { top: "30%", right: "-5px" }, { top: "70%", right: "-5px" },
-      { bottom: "-5px", left: "25%" }, { bottom: "-5px", left: "75%" },
-      { top: "30%", left: "-5px" }, { top: "70%", left: "-5px" }
-    ];
     for (var i = 0; i < posts.length; i++) {
       if (posts[i].querySelector(".owner-sparkle-star")) continue;
-      for (var j = 0; j < positions.length; j++) {
+      for (var j = 0; j < 8; j++) {
         var star = document.createElement("span");
         star.className = "owner-sparkle-star";
         star.setAttribute("aria-hidden", "true");
-        var pos = positions[j];
-        for (var k in pos) star.style[k] = pos[k];
-        star.style.animationDelay = (j * 0.22) + "s";
+        var side = Math.floor(Math.random() * 4);
+        var along = 10 + Math.random() * 80;
+        if (side === 0) { star.style.top = "-5px"; star.style.left = along + "%"; }
+        else if (side === 1) { star.style.right = "-5px"; star.style.top = along + "%"; }
+        else if (side === 2) { star.style.bottom = "-5px"; star.style.left = along + "%"; }
+        else { star.style.left = "-5px"; star.style.top = along + "%"; }
+        var sz = 7 + Math.random() * 5;
+        star.style.width = sz + "px"; star.style.height = sz + "px";
+        star.style.animationDelay = (Math.random() * 1.8) + "s";
+        star.style.animationDuration = (1.5 + Math.random()) + "s";
         posts[i].appendChild(star);
       }
     }
