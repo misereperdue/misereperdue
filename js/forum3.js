@@ -1270,7 +1270,7 @@
       });
       var copyBtn = root.querySelector("#forum-copy-link");
       if (copyBtn) copyBtn.addEventListener("click", function () {
-        var link = API + "/t/" + t.id;
+        var link = location.origin + "/#globe/" + t.id;
         var done = function () {
           copyBtn.textContent = "\u2713";
           setTimeout(function () { copyBtn.innerHTML = "\uD83D\uDD17"; }, 1800);
@@ -1955,7 +1955,7 @@
     if (!id) return;
     view.name = "thread";
     view.threadId = id;
-    try { history.replaceState(null, "", "#thread/" + encodeURIComponent(id)); } catch (e) {}
+    try { history.replaceState(null, "", "#globe/" + encodeURIComponent(id)); } catch (e) {}
     render();
   }
 
