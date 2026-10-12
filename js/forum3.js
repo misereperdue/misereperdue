@@ -1151,7 +1151,8 @@
     if (!t.poll || !t.poll.options || !t.poll.options.length) return "";
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
-    var h = '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
+    var h = '<style>@keyframes pollSelectFill{from{transform:scaleY(0)}to{transform:scaleY(1)}}.forum-poll-opt.selecting::after{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(80,140,255,.35);transform-origin:bottom;animation:pollSelectFill .5s ease-out forwards;pointer-events:none;border-radius:10px;}</style>';
+    h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
     h += '<div style="font-weight:700;margin-bottom:10px;color:var(--ink);">' + esc(t.poll.question) + '</div>';
     t.poll.options.forEach(function (opt, i) {
       var pct = total > 0 ? Math.round((opt.votes || 0) / total * 100) : 0;
@@ -1170,7 +1171,7 @@
         });
         h += '</span>';
       }
-      h += '<span style="opacity:.7;">' + pct + '% (' + (opt.votes || 0) + ')</span></span></span>';
+      h += '<span style="opacity:.7;margin-left:16px;">' + pct + '%</span></span></span>';
       h += '</button>';
     });
     h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + total + ' vote' + (total === 1 ? "" : "s") + (token() ? "" : " · Sign in to vote") + '</div></div>';
@@ -1265,6 +1266,9 @@
           var tid = pollDiv ? pollDiv.getAttribute("data-thread") : null;
           var idx = parseInt(btn.getAttribute("data-idx"), 10);
           if (!tid || isNaN(idx)) return;
+          // Bottom-to-top fill animation on selection
+          btn.classList.add("selecting");
+          setTimeout(function () { btn.classList.remove("selecting"); }, 600);
           btn.disabled = true;
           api("/api/forum/thread/" + encodeURIComponent(tid) + "/poll/vote", {
             method: "POST", body: { option: idx }
