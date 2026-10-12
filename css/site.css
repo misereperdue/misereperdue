@@ -2125,9 +2125,12 @@ nav#nav.nav,
   transform: scale(.88);
 }
 
-/* Navbar matches top bar blur/opacity */
-.nav {
-  background: rgba(7, 15, 41, 0.55) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
+
+/* Navbar blur (v264 style that worked) */
+.nav-wrap .nav {
+  background: rgba(7, 15, 41, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
 }
