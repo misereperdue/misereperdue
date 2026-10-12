@@ -230,11 +230,11 @@ button, input, textarea { font-family: inherit; color: inherit; }
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1;
-  height: calc(150px + env(safe-area-inset-top, 0px));
+  height: calc(140px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: var(--bg);
 }
-body { padding-top: calc(150px + env(safe-area-inset-top, 0px)); }
+body { padding-top: calc(140px + env(safe-area-inset-top, 0px)); }
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
@@ -2093,7 +2093,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-topbar,
 .forum-notif-panel,
 .chat-me-menu {
-  background: rgba(7, 15, 41, 0.55) !important;
+  background: #0a1230 !important;
   -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   border: var(--glass-hairline) !important;
@@ -2126,17 +2126,17 @@ nav#nav.nav,
 }
 
 
-.nav-wrap .nav {
-  background: rgba(7, 15, 41, 0.55);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  pointer-events: auto;
-}
 
 /* Nav spacing fix: push content down to clear navbar */
 .forum-topbar,
 .chat-head {
   margin-top: 8px !important;
+}
+
+/* Navbar and top bar share the same style */
+.nav,
+.forum-head,
+.chat-head {
+  background: #0a1230 !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
 }
