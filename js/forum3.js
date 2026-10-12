@@ -1092,9 +1092,7 @@
     });
     root.querySelectorAll(".forum-thread").forEach(function (b) {
       b.addEventListener("click", function () {
-        view.name = "thread";
-        view.threadId = b.getAttribute("data-id");
-        renderThread();
+        openThread(b.getAttribute("data-id"));
       });
     });
     root.querySelectorAll("[data-pin]").forEach(function (b) {
