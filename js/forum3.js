@@ -91,6 +91,17 @@
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
+  function avatarHTMLSmallNoBadge(author) {
+    var name = author.author || "?";
+    var inner = "";
+    if (author.hasAvatarImg) {
+      inner = '<img src="' + API + "/api/avatarimg/" +
+        encodeURIComponent(name) + "?v=" + (author.avatarV || 0) + '" alt="">';
+    } else {
+      inner = esc(author.authorAvatar || "\uD83D\uDE00");
+    }
+    return '<span class="forum-avatar-wrap forum-avatar-sm"><span class="forum-avatar' + (author.hasAvatarImg ? "" : " forum-avatar-emoji") + '">' + inner + "</span></span>";
+  }
   function avatarHTMLSmall(author) {
     var name = author.author || "?";
     var inner = "";
@@ -1041,7 +1052,7 @@
           '<button type="button" class="forum-thread' + (t.thumb ? " has-thumb" : "") + '" data-id="' + esc(t.id) + '">' +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + '<span class="forum-thread-author-pill">' + avatarHTMLSmall(t) + '<span class="forum-thread-author-name">' + authorLine(t) + "</span></span>" + '<span class="forum-thread-meta-text">' + " \u00B7 " + esc(t.categoryName) +
+          '<span class="forum-thread-meta">' + (function(){ var b = badgeFor(t.authorBadge, t.author); return '<span class="forum-thread-author-pill">' + avatarHTMLSmallNoBadge(t) + '<span class="forum-thread-author-name">' + authorLine(t) + "</span>" + (b ? '<span class="forum-thread-pill-badge">' + b + "</span>" : "") + "</span>"; })() + '<span class="forum-thread-meta-text">' + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + " \u00B7 \uD83D\uDCAC " + t.replies + "</span></span>" +
           (t.excerpt ? '<span class="forum-thread-excerpt">' + esc(t.excerpt) + "</span>" : "") +
           "</span>" +
