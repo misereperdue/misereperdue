@@ -91,9 +91,8 @@
       (badge ? '<span class="forum-avatar-badge">' + badge + "</span>" : "") + "</span>";
   }
 
-  function authorPillHTML(author) {
+  function authorPillHTML(author, showStars) {
     var b = badgeFor(author.authorBadge, author.author);
-    // Full-size avatar without badge on avatar, badge beside name
     var name = author.author || "?";
     var inner = "";
     if (author.hasAvatarImg) {
@@ -104,9 +103,25 @@
     }
     var cls = author.hasAvatarImg ? "forum-avatar" : "forum-avatar forum-avatar-emoji";
     var avatar = '<span class="forum-avatar-wrap"><span class="' + cls + '">' + inner + "</span></span>";
-    return '<span class="forum-thread-author-pill">' + avatar +
+    var stars = (showStars && author.authorPoints !== undefined && author.authorPoints !== null)
+      ? '<span class="forum-glass-pill forum-author-pts">\u2605 ' + author.authorPoints + "</span>" : "";
+    return '<button type="button" class="forum-thread-author-pill forum-author-pill-btn" data-username="' + esc(name) + '">' + avatar +
       '<span class="forum-thread-author-name">' + esc(name) + "</span>" +
-      (b ? '<span class="forum-thread-pill-badge">' + b + "</span>" : "") + "</span>";
+      (b ? '<span class="forum-thread-pill-badge">' + b + "</span>" : "") + "</button>" + stars;
+  }
+  function wireAuthorPills(root) {
+    var pills = (root || document).querySelectorAll(".forum-author-pill-btn[data-username]");
+    for (var i = 0; i < pills.length; i++) {
+      (function(pill) {
+        if (pill.dataset.wired) return;
+        pill.dataset.wired = "1";
+        pill.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var un = pill.getAttribute("data-username");
+          if (un && window.MPChat && window.MPChat.openUserSheet) window.MPChat.openUserSheet(un);
+        });
+      })(pills[i]);
+    }
   }
   function avatarHTMLSmallNoBadge(author) {
     var name = author.author || "?";
@@ -1091,6 +1106,7 @@
 
     html += "</div>";
     root.innerHTML = html;
+    wireAuthorPills(root);
 
     wireAvatars(); try { wireBell(); } catch (e) {}
     // Content is painted; now pin to top (images loading later won't shift us)
@@ -1237,7 +1253,7 @@
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
       html += '<article class="forum-post forum-op">' +
-        '<div class="forum-post-head">' + authorPillHTML(t) +
+        '<div class="forum-post-head">' + authorPillHTML(t, true) +
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
         '<span class="forum-post-time">' + timeAgo(t.createdAt) + "</span></div>" +
         '<h3 class="forum-post-title">' + esc(t.title) + "</h3>" +
@@ -1264,7 +1280,7 @@
         var kids = childMap[r.id] || [];
         var expanded = !!view.showNested[r.id];
         var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
-          '<div class="forum-post-head">' + authorPillHTML(r) +
+          '<div class="forum-post-head">' + authorPillHTML(r, true) +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
           '<div class="forum-post-body">' + bodyHTML(r) + "</div>" +
           ((token() || isOwner)
