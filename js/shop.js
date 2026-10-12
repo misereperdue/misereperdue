@@ -16,7 +16,7 @@
 var MPShop = (function () {
   "use strict";
 
-  var CHAT_API = "https://misery-chat.freeglory416.workers.dev";
+  var CHAT_API = "https://api.misereperdue.com";
   function isMembership(p) {
     return !!p && (p.handle === "membership" || /membership/i.test(p.name || ""));
   }
