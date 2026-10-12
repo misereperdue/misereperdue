@@ -231,18 +231,18 @@ body { padding-top: calc(140px + env(safe-area-inset-top, 0px)); }
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 40%, #000 75%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, transparent 40%, #000 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 42%, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 42%, #000 68%, transparent 100%);
 }
 .hero video.sharp {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
 .hero-fade {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent 0%, transparent 82%, var(--bg) 100%);
+  background: linear-gradient(to bottom, transparent 0%, transparent 36%, var(--bg) 78%);
 }
 .hero::after {
   content: "";
