@@ -2146,13 +2146,16 @@ nav#nav.nav,
 
 
 
-/* Nav spacing fix: push content down to clear navbar */
-.forum-topbar,
+/* Header aligns with navbar as a visual set */
+.forum-head,
 .chat-head {
-  margin-top: 8px !important;
+  max-width: 520px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 10px !important;
 }
 
-/* Navbar and top bar: identical Liquid Glass opaque blur */
+/* Navbar and top bar: identical Liquid Glass pills */
 .nav,
 .forum-head,
 .chat-head {
@@ -2160,5 +2163,6 @@ nav#nav.nav,
   -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
   backdrop-filter: blur(24px) saturate(160%) !important;
   border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 22px !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12) !important;
 }
