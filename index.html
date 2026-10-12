@@ -129,7 +129,7 @@
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=109"></script>
   <script src="js/dashboard.js?v=11"></script>
-  <script src="js/forum3.js?v=1006"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1067"></script>
+  <script src="js/forum3.js?v=1007"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1068"></script>
   <script>
     var nav = document.getElementById("nav");
     var posts = [];
@@ -213,43 +213,15 @@
       return !!document.querySelector(".chat-auth");
     }
     function assertScroll() {
-      // For non-chat views: watch for 3s and correct if Safari restores late.
-      // Stop if user interacts.
+      // Single-shot scroll positioning. No polling intervals — those caused
+      // the jitter by fighting image/font loads. Set once per lifecycle event.
       if (current.type === "journal") {
-        // Chat handles its own scroll below; still do the auth check
+        if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       } else {
-        var watchUserScrolled = false;
-        var markScroll = function() { watchUserScrolled = true; };
-        window.addEventListener("touchmove", markScroll, { once: true, passive: true });
-        window.addEventListener("wheel", markScroll, { once: true, passive: true });
-        var watchTries = 0;
-        var watchIv = setInterval(function() {
-          if (watchUserScrolled) { clearInterval(watchIv); return; }
-          if (isAuthView()) { window.scrollTo(0, 0); }
-          else if (window.scrollY > 100) { window.scrollTo(0, 0); }
-          if (++watchTries > 30) clearInterval(watchIv); // 3 seconds
-        }, 100);
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
       }
-      if (current.type === "journal") {
-        // Chat belongs at the newest message; MPChat may still be booting,
-        // so retry until it can scroll, then hold the bottom briefly.
-        var tries = 0;
-        var iv = setInterval(function () {
-          if (window.MPChat && MPChat.scrollToLatest) {
-            clearInterval(iv);
-            MPChat.scrollToLatest();
-            var until = Date.now() + 2500;
-            var hold = setInterval(function () {
-              if (Date.now() > until) { clearInterval(hold); return; }
-              if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
-            }, 250);
-          } else if (++tries > 40) {
-            clearInterval(iv);
-            window.scrollTo(0, document.documentElement.scrollHeight);
-          }
-        }, 250);
-      }
-      // Non-chat handled by the timeout above.
     }
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
