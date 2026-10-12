@@ -1148,8 +1148,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-.chat-msg.owner-msg .chat-bubble::before { top: -6px; right: 8px; animation-delay: 0s; }
-.chat-msg.owner-msg .chat-bubble::after { bottom: -4px; left: 10px; font-size: 8px; animation-delay: .9s; }
+.chat-msg.owner-msg .chat-bubble::before { top: -5px; left: 30%; animation-delay: 0s; }
+.chat-msg.owner-msg .chat-bubble::after { top: 40%; right: -5px; font-size: 8px; animation-delay: .9s; }
 /* Extra sparkles */
 .chat-msg.owner-msg .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
 .chat-msg.owner-msg .owner-sparkles-extra::before,
@@ -1162,8 +1162,8 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 2.2s ease-in-out infinite;
   z-index: 2;
 }
-.chat-msg.owner-msg .owner-sparkles-extra::before { top: -4px; left: 30%; animation-delay: .45s; }
-.chat-msg.owner-msg .owner-sparkles-extra::after { bottom: -6px; right: 25%; font-size: 9px; animation-delay: 1.35s; }
+.chat-msg.owner-msg .owner-sparkles-extra::before { bottom: -5px; right: 30%; animation-delay: .45s; }
+.chat-msg.owner-msg .owner-sparkles-extra::after { top: 40%; left: -5px; font-size: 9px; animation-delay: 1.35s; }
 /* Forum post/reply sparkles for owner + VIP — on the border perimeter */
 .forum-post.owner-vip-sparkles { position: relative; }
 .forum-post.owner-vip-sparkles::before,
@@ -1179,11 +1179,11 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-.forum-post.owner-vip-sparkles::before { top: -5px; left: 20%; animation-delay: 0s; }
-.forum-post.owner-vip-sparkles::after { top: -5px; right: 20%; font-size: 7px; animation-delay: .9s; }
+.forum-post.owner-vip-sparkles::before { top: -5px; left: 25%; animation-delay: 0s; }
+.forum-post.owner-vip-sparkles::after { top: 45%; right: -5px; font-size: 7px; animation-delay: .9s; }
 .forum-post.owner-vip-sparkles .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::before { bottom: -5px; left: 25%; animation-delay: .45s; }
-.forum-post.owner-vip-sparkles .owner-sparkles-extra::after { bottom: -5px; right: 25%; font-size: 7px; animation-delay: 1.35s; }
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::before { bottom: -5px; right: 25%; animation-delay: .45s; }
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::after { top: 45%; left: -5px; font-size: 7px; animation-delay: 1.35s; }
 [data-theme="light"] .forum-post.owner-vip-sparkles::before,
 [data-theme="light"] .forum-post.owner-vip-sparkles::after,
 [data-theme="light"] .forum-post.owner-vip-sparkles .owner-sparkles-extra::before,
