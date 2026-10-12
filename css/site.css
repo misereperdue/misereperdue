@@ -2109,6 +2109,16 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-thread-author-pill .forum-avatar-badge { right: -3px; bottom: -2px; }
 .forum-thread-author-name { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1; display: inline-block; }
 .forum-thread-pill-badge { display: inline-flex; align-items: center; flex: none; margin-left: 2px; }
+/* Smaller author pill in threads list (globe page) */
+.forum-thread-row .forum-thread-author-pill {
+  padding: 2px 8px 2px 3px;
+  gap: 5px;
+  min-height: 22px;
+}
+.forum-thread-row .forum-thread-author-pill .forum-avatar { width: 16px; height: 16px; }
+.forum-thread-row .forum-thread-author-name { font-size: 11px; }
+.forum-thread-row .forum-thread-pill-badge .chat-badge,
+.forum-thread-row .forum-thread-pill-badge .chat-verified { width: 12px; height: 12px; font-size: 10px; line-height: 12px; }
 .forum-author-pill-btn { cursor: pointer; font-family: inherit; color: inherit; }
 .forum-author-pill-btn:hover { filter: brightness(1.1); }
 .forum-post-head .forum-author-pts { margin-left: 2px; flex: none; min-height: 28px; display: inline-flex; align-items: center; }
