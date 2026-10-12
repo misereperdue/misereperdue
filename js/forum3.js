@@ -1155,7 +1155,7 @@
       '@keyframes easyui-neon-rotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}' +
       '@media (prefers-reduced-motion: reduce){.forum-poll-opt .easyui-neon-beam{animation:none!important;opacity:.4!important}}' +
       '.forum-poll-opt{isolation:isolate;}' +
-      '.forum-poll-opt .easyui-neon-beam-wrap{position:absolute;inset:0;padding:2px;border-radius:10px;pointer-events:none;overflow:hidden;' +
+      '.forum-poll-opt .easyui-neon-beam-wrap{position:absolute;inset:0;padding:1px;border-radius:10px;pointer-events:none;overflow:hidden;' +
       '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
       'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;}' +
       '.forum-poll-opt .easyui-neon-beam{position:absolute;inset:-200%;' +
