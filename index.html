@@ -295,8 +295,11 @@
         window.scrollTo(0, 0);
         
       } else if (view === "journal") {
-        // Chat always opens at the newest message
-        if (window.MPChat && MPChat.scrollToLatest) {
+        // Chat is the only view that remembers scroll position on navigation.
+        // Fresh loads (no saved position) go to the latest message.
+        if (viewScroll["journal"] !== undefined) {
+          window.scrollTo(0, viewScroll["journal"]);
+        } else if (window.MPChat && MPChat.scrollToLatest) {
           MPChat.scrollToLatest();
         } else {
           window.scrollTo(0, document.documentElement.scrollHeight);
