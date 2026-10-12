@@ -1152,11 +1152,13 @@
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
     var h = '<style>' +
-      '@keyframes pollShimmer{0%{transform:translateX(-100%) skewX(-20deg);opacity:0}20%{opacity:1}100%{transform:translateX(200%) skewX(-20deg);opacity:0}}' +
-      '@keyframes pollPulse{0%{box-shadow:0 0 0 0 rgba(80,140,255,.5)}70%{box-shadow:0 0 0 10px rgba(80,140,255,0)}100%{box-shadow:0 0 0 0 rgba(80,140,255,0)}}' +
+      '@keyframes pollEdgeGleam{to{transform:rotate(360deg)}}' +
       '@keyframes pollDeselect{from{opacity:1}to{opacity:.4}}' +
-      '.forum-poll-opt.selecting{animation:pollPulse .6s ease-out;}' +
-      '.forum-poll-opt.selecting::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:pollShimmer .6s ease-out forwards;pointer-events:none;}' +
+      '.forum-poll-opt.selecting::before{content:"";position:absolute;inset:-2px;border-radius:12px;padding:2px;' +
+      'background:conic-gradient(from 0deg,transparent 0deg,rgba(140,190,255,.95) 35deg,rgba(255,255,255,.9) 55deg,transparent 90deg);' +
+      '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
+      'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;' +
+      'animation:pollEdgeGleam 1.1s linear infinite;pointer-events:none;}' +
       '.forum-poll-opt.deselecting{animation:pollDeselect .4s ease-out forwards;}' +
       '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
