@@ -2139,3 +2139,9 @@ nav#nav.nav,
   border: none !important;
   box-shadow: none !important;
 }
+
+/* Nav spacing fix: push content down to clear navbar */
+.forum-topbar,
+.chat-head {
+  margin-top: 8px !important;
+}
