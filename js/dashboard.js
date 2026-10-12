@@ -70,7 +70,6 @@
     var onlineBadge = document.createElement("span");
     onlineBadge.className = "easyui-live-badge dashboard-online-badge";
     var onlineCount = (typeof window.MPOnlineCount === "number") ? window.MPOnlineCount : 0;
-    onlineBadge.hidden = !(onlineCount > 0);
     onlineBadge.innerHTML = '<span class="live-dot"></span><span class="live-num">' + onlineCount + '</span>';
     titleWrap.appendChild(onlineBadge);
     titleRow.appendChild(titleWrap);
