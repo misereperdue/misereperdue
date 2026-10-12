@@ -230,11 +230,11 @@ button, input, textarea { font-family: inherit; color: inherit; }
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1;
-  height: calc(140px + env(safe-area-inset-top, 0px));
+  height: calc(210px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: var(--bg);
 }
-body { padding-top: calc(140px + env(safe-area-inset-top, 0px)); }
+body { padding-top: calc(210px + env(safe-area-inset-top, 0px)); }
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
