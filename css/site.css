@@ -2094,19 +2094,20 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .forum-thread-meta { display: flex; align-items: center; gap: 7px; }
 .forum-thread-meta-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .forum-thread-author-pill {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 4px 12px 4px 5px;
   border-radius: 999px;
   background: var(--glass-clear-tint);
   border: var(--glass-hairline);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  line-height: 1;
+  min-height: 28px;
+  box-sizing: border-box;
 }
-.forum-thread-author-pill .forum-avatar-wrap { display: inline-flex; flex: none; }
-.forum-thread-author-pill .forum-avatar { width: 20px; height: 20px; flex: none; }
+.forum-thread-author-pill .forum-avatar-wrap { display: inline-flex; align-items: center; flex: none; margin: 0; }
+.forum-thread-author-pill .forum-avatar { width: 20px; height: 20px; flex: none; display: block; }
 .forum-thread-author-pill .forum-avatar-badge { right: -3px; bottom: -2px; }
-.forum-thread-author-name { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 20px; }
+.forum-thread-author-name { font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1; display: inline-block; }
 .forum-avatar-sm .forum-avatar { width: 22px; height: 22px; font-size: 12px; }
 .forum-avatar-sm .forum-avatar-emoji { font-size: 12px; }
 .forum-avatar-sm .forum-avatar-badge { right: -2px; bottom: -1px; }
