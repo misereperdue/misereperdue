@@ -8,6 +8,7 @@
 
   var root = null;
   var view = { name: "list", category: "", tag: "", threadId: null, replyTo: null, showNested: {} };
+  var lastPaintedView = "", lastPaintedId = "";
   var tagExpand = {};
   var allTagsCache = null;
   function normTagClient(s) {
@@ -1915,7 +1916,8 @@
     // Paint instantly from cache so the top bar swaps in the same frame
     // as the view switch; fresh data repaints when it lands.
     if (cache.threads.length || cache.categories.length) {
-      if (view.name === "list") renderList();
+      if (view.name === "list") { renderList(); lastPaintedView = "list"; lastPaintedId = ""; }
+      else if (view.name === "thread" && view.threadId) { renderThread(); lastPaintedView = "thread"; lastPaintedId = view.threadId; }
     }
     api("/api/forum/categories").then(function (res) {
       cache.categories = (res.ok && res.categories) || [];
@@ -1923,10 +1925,13 @@
     }).then(function (res) {
       var fresh = (res.ok && res.threads) || [];
       // Skip re-render if data is unchanged (avoids visual glitch)
-      var same = fresh.length === cache.threads.length &&
+      var sameData = fresh.length === cache.threads.length &&
         fresh.every(function (t, i) { return t.id === cache.threads[i].id && t.updatedAt === cache.threads[i].updatedAt; });
+      var sameView = lastPaintedView === view.name && lastPaintedId === (view.threadId || "");
       cache.threads = fresh;
-      if (same) return;
+      if (sameData && sameView) return;
+      lastPaintedView = view.name;
+      lastPaintedId = view.threadId || "";
       if (view.name === "thread" && view.threadId) renderThread();
       else if (view.name === "new") renderNew();
       else renderList();
