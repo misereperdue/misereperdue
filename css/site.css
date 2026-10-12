@@ -1118,7 +1118,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
   display: grid; place-items: center;
   font-size: 17px;
   background: linear-gradient(135deg, rgba(120,120,140,.5), rgba(60,60,70,.5));
-  border: 0.5px solid rgba(255,255,255,.3);
+  border: 1.5px solid rgba(255,255,255,.35);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
   color: #fff; font-weight: 700; overflow: hidden; flex: none;
 }
@@ -1126,11 +1126,30 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-avatar.lg { width: 64px; height: 64px; font-size: 32px; }
 .chat-avatar-img {
   width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none;
-  border: 0.5px solid rgba(255,255,255,.3);
+  border: 1.5px solid rgba(255,255,255,.35);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
   background: linear-gradient(135deg, rgba(120,120,140,.5), rgba(60,60,70,.5));
 }
 .chat-avatar-img.sm { width: 32px; height: 32px; }
+/* Owner sparkles — lightweight CSS adaptation of EasyUI SparklesCore for avatars */
+@keyframes owner-sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(90deg); }
+}
+.chat-avatar-wrap.owner-sparkles { position: relative; }
+.chat-avatar-wrap.owner-sparkles::before,
+.chat-avatar-wrap.owner-sparkles::after {
+  content: "\2726";
+  position: absolute;
+  font-size: 10px;
+  color: #ffd60a;
+  text-shadow: 0 0 6px rgba(255,214,10,.8);
+  pointer-events: none;
+  animation: owner-sparkle-twinkle 2s ease-in-out infinite;
+  z-index: 2;
+}
+.chat-avatar-wrap.owner-sparkles::before { top: -4px; right: -2px; animation-delay: 0s; }
+.chat-avatar-wrap.owner-sparkles::after { bottom: -2px; left: -4px; font-size: 8px; animation-delay: 1s; }
 .chat-avatar-img.lg { width: 64px; height: 64px; }
 .chat-verified { position: absolute; left: -4px; bottom: -4px; width: 15px; height: 15px; animation: sealShine 2.8s ease-in-out infinite; }
 .chat-verified .seal { transform-box: fill-box; transform-origin: center; animation: sealSpin 5s ease-in-out infinite; }
