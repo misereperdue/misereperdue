@@ -219,7 +219,7 @@ var MPShop = (function () {
     if (p.available === false) return '<span class="pill-soon">Coming soon</span>';
     var q = bagQty(p.id, size);
     if (!q) {
-      return '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span>' + MPComments.checkSVG() + "</button>";
+      return '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>' + "</button>";
     }
     return '<div class="in-bag"><span class="in-bag-label">In your bag</span>' +
       '<div class="bag-stepper"><button type="button" data-step="-1" aria-label="Remove one">−</button>' +
