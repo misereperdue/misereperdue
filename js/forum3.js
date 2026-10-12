@@ -987,8 +987,8 @@
       '<div class="chat-title">Forum</div>' +
       '<div class="chat-head-right">' +
       (token() && view.name !== "new" ? (view.name === "thread"
-        ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top">New reply</button>'
-        : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top">New thread</button>') : "") +
+        ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top"><span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span><span class="easyui-neon-label">New reply</span></button>'
+        : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top"><span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span><span class="easyui-neon-label">New thread</span></button>') : "") +
       (!token() ? '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>' : "") +
       (token() ? '<span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">\u2605</span> <span class="chat-points-num" id="forum-points">' + pts + "</span></span>" : "") +
 
@@ -1152,19 +1152,15 @@
     var total = t.poll.options.reduce(function (sum, o) { return sum + (o.votes || 0); }, 0);
     var myVote = meInfo && t.poll.voters ? t.poll.voters[meInfo.username.toLowerCase()] : undefined;
     var h = '<style>' +
-      '@keyframes pollAurora{to{transform:rotate(360deg)}}' +
-      '@keyframes pollAuroraRev{to{transform:rotate(-360deg)}}' +
-      '@keyframes pollDeselect{from{opacity:1}to{opacity:.4}}' +
-      '.forum-poll-opt.selecting::before{content:"";position:absolute;inset:-2px;border-radius:12px;padding:2px;' +
-      'background:conic-gradient(from 0deg,#00d4ff,#7b2ff7,#ff2fb3,#00d4ff);' +
-      '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
-      'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;' +
-      'animation:pollAurora 2.5s linear infinite;pointer-events:none;filter:saturate(1.4);}' +
-      '.forum-poll-opt.selecting::after{content:"";position:absolute;inset:-2px;border-radius:12px;padding:2px;' +
-      'background:conic-gradient(from 180deg,#00d4ff,#7b2ff7,#ff2fb3,#00d4ff);' +
-      '-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;' +
-      'mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;' +
-      'animation:pollAuroraRev 3s linear infinite;pointer-events:none;filter:blur(6px);opacity:.7;}' +
+      '@keyframes pollPress{0%{transform:scale(1)}35%{transform:scale(.965)}70%{transform:scale(1.015)}100%{transform:scale(1)}}' +
+      '@keyframes pollFill{0%{transform:scaleY(0)}55%{transform:scaleY(1.04)}75%{transform:scaleY(.98)}100%{transform:scaleY(1)}}' +
+      '@keyframes pollDeselect{from{opacity:1}to{opacity:.35}}' +
+      '.forum-poll-opt.selecting{animation:pollPress .45s cubic-bezier(.34,1.4,.64,1);}' +
+      '.forum-poll-opt.selecting::before{content:"";position:absolute;left:0;right:0;bottom:0;height:100%;border-radius:10px;' +
+      'background:linear-gradient(180deg,rgba(110,170,255,.95) 0%,rgba(65,115,230,.95) 100%);' +
+      'transform-origin:bottom;transform:scaleY(0);animation:pollFill .55s cubic-bezier(.34,1.2,.64,1) .05s forwards;pointer-events:none;}' +
+      '.forum-poll-opt.selecting::after{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;' +
+      'box-shadow:inset 0 2px 3px rgba(255,255,255,.5),inset 0 -4px 8px rgba(20,40,90,.25);}' +
       '.forum-poll-opt.deselecting{animation:pollDeselect .4s ease-out forwards;}' +
       '</style>';
     h += '<div class="forum-poll" data-thread="' + esc(t.id) + '" style="margin:12px 0;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">';
