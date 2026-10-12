@@ -1164,23 +1164,32 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 }
 .chat-msg.owner-msg .owner-sparkles-extra::before { top: -4px; left: 30%; animation-delay: .45s; }
 .chat-msg.owner-msg .owner-sparkles-extra::after { bottom: -6px; right: 25%; font-size: 9px; animation-delay: 1.35s; }
-/* Forum post/reply sparkles for owner + VIP */
+/* Forum post/reply sparkles for owner + VIP — on the border perimeter */
 .forum-post.owner-vip-sparkles { position: relative; }
 .forum-post.owner-vip-sparkles::before,
-.forum-post.owner-vip-sparkles::after {
+.forum-post.owner-vip-sparkles::after,
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::before,
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::after {
   content: "\2726";
   position: absolute;
-  font-size: 10px;
+  font-size: 9px;
   color: #ffffff;
   text-shadow: 0 0 8px rgba(255,255,255,.9);
   pointer-events: none;
   animation: owner-sparkle-twinkle 1.8s ease-in-out infinite;
   z-index: 2;
 }
-.forum-post.owner-vip-sparkles::before { top: 8px; right: 12px; animation-delay: 0s; }
-.forum-post.owner-vip-sparkles::after { bottom: 8px; right: 20px; font-size: 8px; animation-delay: .9s; }
+.forum-post.owner-vip-sparkles::before { top: -5px; left: 20%; animation-delay: 0s; }
+.forum-post.owner-vip-sparkles::after { top: -5px; right: 20%; font-size: 7px; animation-delay: .9s; }
+.forum-post.owner-vip-sparkles .owner-sparkles-extra { position: absolute; inset: 0; pointer-events: none; }
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::before { bottom: -5px; left: 25%; animation-delay: .45s; }
+.forum-post.owner-vip-sparkles .owner-sparkles-extra::after { bottom: -5px; right: 25%; font-size: 7px; animation-delay: 1.35s; }
 [data-theme="light"] .forum-post.owner-vip-sparkles::before,
-[data-theme="light"] .forum-post.owner-vip-sparkles::after { color: #000000; text-shadow: 0 0 6px rgba(0,0,0,.3); }
+[data-theme="light"] .forum-post.owner-vip-sparkles::after,
+[data-theme="light"] .forum-post.owner-vip-sparkles .owner-sparkles-extra::before,
+[data-theme="light"] .forum-post.owner-vip-sparkles .owner-sparkles-extra::after {
+  color: #000000; text-shadow: 0 0 6px rgba(0,0,0,.3);
+}
 [data-theme="light"] .chat-msg.owner-msg .chat-bubble::before,
 [data-theme="light"] .chat-msg.owner-msg .chat-bubble::after,
 [data-theme="light"] .chat-msg.owner-msg .owner-sparkles-extra::before,
