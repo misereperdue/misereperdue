@@ -1686,6 +1686,32 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
     inset 0 2px 6px rgba(0, 30, 120, 0.4),
     0 1px 3px rgba(36, 86, 216, 0.35);
 }
+/* shine that orbits the button's edge */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.forum-topbar-new { position: relative; }
+.forum-topbar-new::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--beam-angle),
+    transparent 0deg,
+    rgba(255, 255, 255, 0.95) 45deg,
+    transparent 90deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: beam-orbit 2.6s linear infinite;
+}
+@keyframes beam-orbit { to { --beam-angle: 360deg; } }
 .forum-topbar .chat-title { flex: none; margin-right: 4px; }
 .forum-topbar .chat-head-right { gap: 6px; flex: none; }
 .forum-topbar .chat-points { flex: none; font-size: 13px; padding: 6px 10px; }
