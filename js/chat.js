@@ -330,6 +330,10 @@
       '<input type="text" name="username" maxlength="16" autocomplete="username" autocapitalize="none" spellcheck="false"></label>' +
       '<label class="chat-field"><span>Password</span>' +
       '<input type="password" name="password" maxlength="72" autocomplete="current-password"></label>' +
+      '<div class="pwd-strength" hidden>' +
+      '<div class="pwd-bars"><span></span><span></span><span></span><span></span></div>' +
+      '<div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div>' +
+      '</div>' +
       '<label class="chat-field chat-secret hidden"><span>Owner secret</span>' +
       '<input type="password" name="secret" autocomplete="off"></label>' +
       '<div class="chat-err" role="alert"></div>' +
@@ -341,6 +345,40 @@
     var errBox = root.querySelector(".chat-err");
     var userInput = root.querySelector('input[name="username"]');
     var passInput = root.querySelector('input[name="password"]');
+    var pwdStrength = root.querySelector('.pwd-strength');
+    var pwdBars = pwdStrength ? pwdStrength.querySelectorAll('.pwd-bars span') : [];
+    var pwdLevel = pwdStrength ? pwdStrength.querySelector('.pwd-level') : null;
+    var strengthLabels = ['Weak', 'Fair', 'Good', 'Strong'];
+    var strengthColors = ['#FF7A7A', '#F59E0B', '#38BDF8', '#6EE7B7'];
+    function getPasswordStrength(pass) {
+      if (!pass) return 0;
+      var score = 0;
+      if (pass.length >= 8) score += 1;
+      if (/[A-Z]/.test(pass)) score += 1;
+      if (/[0-9]/.test(pass)) score += 1;
+      if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+      return score;
+    }
+    function updatePwdStrength() {
+      if (!pwdStrength) return;
+      var isReg = mode === "register";
+      var val = passInput.value;
+      if (!isReg || !val) { pwdStrength.hidden = true; return; }
+      pwdStrength.hidden = false;
+      var st = getPasswordStrength(val);
+      for (var i = 0; i < pwdBars.length; i++) {
+        if (i < st) {
+          pwdBars[i].style.background = strengthColors[st - 1];
+        } else {
+          pwdBars[i].style.background = "";
+        }
+      }
+      if (pwdLevel) {
+        pwdLevel.textContent = strengthLabels[st - 1] || 'Weak';
+        pwdLevel.style.color = st > 0 ? strengthColors[st - 1] : "";
+      }
+    }
+    passInput.addEventListener('input', updatePwdStrength);
     var secretWrap = root.querySelector(".chat-secret");
     var secretInput = root.querySelector('input[name="secret"]');
     var submit = root.querySelector(".chat-submit");
@@ -368,6 +406,7 @@
         submit.textContent = isReg ? "Sign up" : "Sign in";
         setErr("");
         syncSecret();
+        updatePwdStrength();
       });
     });
     // Shop link - switch to webstore view
