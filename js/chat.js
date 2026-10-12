@@ -653,6 +653,10 @@
 
   var latestPinUntil = 0;
   function chatViewActive() {
+    // Hash check first: bulletproof, doesn't depend on DOM timing.
+    var h = window.location.hash || "";
+    if (h.indexOf("#globe") === 0 || h.indexOf("#global") === 0 || h.indexOf("#forum") === 0 ||
+        h.indexOf("#shop") === 0 || h.indexOf("#cart") === 0) return false;
     var forumPanel = document.getElementById("forum");
     if (forumPanel && forumPanel.classList.contains("on")) return false;
     var shopPanel = document.getElementById("shop");
