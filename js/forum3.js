@@ -121,33 +121,6 @@
     return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
   }
 
-  function injectForumSparkleExtras(root) {
-    var posts = (root || document).querySelectorAll(".forum-post.owner-vip-sparkles");
-    for (var i = 0; i < posts.length; i++) {
-      if (posts[i].querySelector(".owner-sparkle-star")) continue;
-      for (var j = 0; j < 8; j++) {
-        var star = document.createElement("div");
-        star.className = "owner-sparkle-star";
-        star.setAttribute("aria-hidden", "true");
-        star.textContent = "\u2726";
-        var side = Math.floor(Math.random() * 4);
-        var along = 10 + Math.random() * 80;
-        if (side === 0) { star.style.top = "-5px"; star.style.left = along + "%"; }
-        else if (side === 1) { star.style.right = "-5px"; star.style.top = along + "%"; }
-        else if (side === 2) { star.style.bottom = "-5px"; star.style.left = along + "%"; }
-        else { star.style.left = "-5px"; star.style.top = along + "%"; }
-        star.style.fontSize = (7 + Math.random() * 5) + "px";
-        star.style.animationDelay = (Math.random() * 1.8) + "s";
-        star.style.animationDuration = (1.5 + Math.random()) + "s";
-        posts[i].appendChild(star);
-      }
-    }
-  }
-  function isOwnerOrVip(author, authorBadge) {
-    if (!author) return false;
-    if (author.toLowerCase() === "dc") return true;
-    return authorBadge === "member";
-  }
   function authorLine(item) {
     var pts = (item.authorPoints !== undefined && item.authorPoints !== null)
       ? ' <span class="forum-glass-pill forum-author-pts">\u2605 ' + item.authorPoints + "</span>" : "";
@@ -1088,7 +1061,6 @@
 
     html += "</div>";
     root.innerHTML = html;
-    injectForumSparkleExtras(root);
 
     wireAvatars(); try { wireBell(); } catch (e) {}
     // Content is painted; now pin to top (images loading later won't shift us)
@@ -1234,7 +1206,7 @@
         '<div class="forum-head">' +
         '<button type="button" class="forum-back forum-glass-pill" id="forum-back">\u2190 Back</button></div>';
 
-      html += '<article class="forum-post forum-op' + (isOwnerOrVip(t.author, t.authorBadge) ? " owner-vip-sparkles" : "") + '">' +
+      html += '<article class="forum-post forum-op">' +
         '<div class="forum-post-head">' + avatarHTML(t) +
         '<span class="forum-post-author">' + authorLine(t) + "</span>" +
         (t.pinned ? '<span class="forum-pin-ico" title="Pinned">\uD83D\uDCCC</span>' : "") +
@@ -1262,7 +1234,7 @@
       function replyHTML(r, depth) {
         var kids = childMap[r.id] || [];
         var expanded = !!view.showNested[r.id];
-        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + (isOwnerOrVip(r.author, r.authorBadge) ? " owner-vip-sparkles" : "") + '">' +
+        var h = '<article class="forum-post' + (depth > 0 ? " forum-nested" : "") + '">' +
           '<div class="forum-post-head">' + avatarHTML(r) +
           '<span class="forum-post-author">' + authorLine(r) + "</span>" +
           '<span class="forum-post-time">' + timeAgo(r.createdAt) + "</span></div>" +
