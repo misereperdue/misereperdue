@@ -1039,7 +1039,7 @@
           '<button type="button" class="forum-thread' + (t.thumb ? " has-thumb" : "") + '" data-id="' + esc(t.id) + '">' +
           '<span class="forum-thread-main">' +
           '<span class="forum-thread-title">' + esc(t.title) + "</span>" +
-          '<span class="forum-thread-meta">' + avatarHTMLSmall(t) + '<span class="forum-thread-meta-text">' + authorLine(t) + " \u00B7 " + esc(t.categoryName) +
+          '<span class="forum-thread-meta">' + '<span class="forum-thread-author-pill">' + avatarHTMLSmall(t) + '<span class="forum-thread-author-name">' + authorLine(t) + "</span></span>" + '<span class="forum-thread-meta-text">' + " \u00B7 " + esc(t.categoryName) +
           (t.membersOnly ? " \u2B50" : "") + " \u00B7 " + timeAgo(t.lastActivity) + " \u00B7 \uD83D\uDCAC " + t.replies + "</span></span>" +
           (t.excerpt ? '<span class="forum-thread-excerpt">' + esc(t.excerpt) + "</span>" : "") +
           "</span>" +
