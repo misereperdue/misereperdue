@@ -2143,7 +2143,7 @@ button.forum-glass-pill:active { transform: scale(.97); }
 .glassbar,
 .forum-notif-panel,
 .chat-me-menu {
-  background-color: rgba(120, 128, 175, 0.90);
+  background-color: #0a1230;
   background-image: none;
   -webkit-backdrop-filter: blur(24px) saturate(170%);
   backdrop-filter: blur(24px) saturate(170%);
