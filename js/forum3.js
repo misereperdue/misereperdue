@@ -1946,20 +1946,13 @@
     view.replyTo = null;
     paintedThreadId = null;
     try { history.replaceState(null, "", "#globe"); } catch (e) {}
-    function toTop() {
+    render();
+    // Single scroll-to-top after render — no repeated timers.
+    requestAnimationFrame(function () {
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      var p = document.getElementById("forum");
-      if (p) p.scrollTop = 0;
-      var r = document.getElementById("forum-root");
-      if (r) r.scrollTop = 0;
-    }
-    toTop();
-    render();
-    requestAnimationFrame(toTop);
-    setTimeout(toTop, 100);
-    setTimeout(toTop, 500);
+    });
   }
 
   function openThread(id) {
