@@ -57,11 +57,21 @@
 
     // Title + top-level Chat/Forum selector
     var headRow = document.createElement("div");
-    headRow.style.cssText = "display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:16px;";
+    headRow.style.cssText = "display:flex;flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px;";
+    var titleRow = document.createElement("div");
+    titleRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;";
     var title = document.createElement("h3");
     title.style.cssText = "margin:0;font-size:20px;font-weight:700;";
     title.textContent = "Dashboard";
-    headRow.appendChild(title);
+    titleRow.appendChild(title);
+    var dashCloseX = document.createElement("button");
+    dashCloseX.type = "button";
+    dashCloseX.setAttribute("aria-label", "Close dashboard");
+    dashCloseX.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    dashCloseX.style.cssText = "width:32px;height:32px;flex:none;border-radius:999px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.08);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;";
+    dashCloseX.addEventListener("click", function() { closeMsgPopup(); });
+    titleRow.appendChild(dashCloseX);
+    headRow.appendChild(titleRow);
     var topNav = document.createElement("div");
     topNav.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
     var topSlider = document.createElement("span");
