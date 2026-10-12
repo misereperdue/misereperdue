@@ -183,19 +183,41 @@
     return esc(item.author) + pts;
   }
 
+  var bellPrevUnread = -1; // -1 = not yet initialized (no shake on first load)
   function updateBellBadge() {
     if (!token()) return;
     api("/api/notifications").then(function (r) {
       if (!r || !r.ok) return;
       var badge = document.getElementById("forum-bell-badge");
+      var bell = document.getElementById("forum-bell");
+      var unread = r.unread || 0;
       if (badge) {
-        if (r.unread > 0) {
-          badge.textContent = r.unread > 9 ? "9+" : r.unread;
+        if (unread > 0) {
+          var label = unread > 99 ? "99+" : String(unread);
+          if (badge.textContent !== label) {
+            badge.textContent = label;
+            // EasyUI-style pop-in (WAAPI — reliable on iOS)
+            if (badge.animate) {
+              try { badge.animate([{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 350, easing: "cubic-bezier(.2,.9,.3,1.4)" }); } catch (e) {}
+            }
+          }
           badge.classList.remove("hidden");
         } else {
           badge.classList.add("hidden");
         }
       }
+      // EasyUI-style shake when new notifications arrive
+      if (bellPrevUnread >= 0 && unread > bellPrevUnread && bell && bell.animate) {
+        try {
+          bell.animate(
+            [{ transform: "rotate(0deg)" }, { transform: "rotate(-12deg)" }, { transform: "rotate(10deg)" },
+             { transform: "rotate(-8deg)" }, { transform: "rotate(6deg)" }, { transform: "rotate(-2deg)" },
+             { transform: "rotate(0deg)" }],
+            { duration: 500, easing: "ease-in-out" }
+          );
+        } catch (e) {}
+      }
+      bellPrevUnread = unread;
     }).catch(function () {});
   }
 
@@ -228,8 +250,15 @@
         h += '<div style="text-align:center;color:var(--muted);padding:20px;">No notifications</div>';
       } else {
         r.notifications.forEach(function (n) {
+          var nbg = n.read ? "rgba(127,127,127,.06)" : "rgba(80,140,255,.1)";
+          if (n.type === "vip") {
+            h += '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' + nbg + ';">';
+            h += '<div style="font-size:14px;color:var(--ink);">⭐ <strong>You\'ve been upgraded to VIP</strong></div>';
+            h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + timeAgo(n.ts) + '</div></div>';
+            return;
+          }
           var msg = n.type === "mention" ? "mentioned you" : (n.type === "reply" ? "replied" : "notified you");
-          h += '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' + (n.read ? "rgba(127,127,127,.06)" : "rgba(80,140,255,.1)") + ';">';
+          h += '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' + nbg + ';">';
           h += '<div style="font-size:14px;color:var(--ink);"><strong>@' + esc(n.from) + '</strong> ' + msg + ' in <a href="#" data-thread="' + esc(n.threadId) + '" class="forum-notif-link" style="color:#6ea8ff;">' + esc(n.threadTitle || "a thread") + '</a></div>';
           h += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + timeAgo(n.ts) + '</div></div>';
         });
