@@ -1013,6 +1013,58 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-online-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; display: inline-block; animation: chat-pulse 2s ease-in-out infinite; }
 @keyframes chat-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.25); } }
 .chat-online-num { font-size: 14px; font-weight: 600; opacity: 0.7; }
+/* EasyUI Live Badge — ported from easyui-lib/src/components/ui/badge.tsx (dot+pulse) */
+@keyframes easyui-live-ping {
+  0% { transform: scale(1); opacity: .6; }
+  75%, 100% { transform: scale(2.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .easyui-live-badge .live-dot::before { animation: none !important; opacity: .4 !important; }
+}
+.easyui-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(52, 199, 89, .12);
+  color: #1f9d4d;
+  border: 1px solid transparent;
+  vertical-align: middle;
+}
+[data-theme="dark"] .easyui-live-badge {
+  background: rgba(52, 199, 89, .1);
+  color: #4ade80;
+}
+.easyui-live-badge .live-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  flex: none;
+}
+.easyui-live-badge .live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #34c759;
+  animation: easyui-live-ping 1.5s cubic-bezier(0, 0, .2, 1) infinite;
+}
+.easyui-live-badge .live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #34c759;
+}
+.easyui-live-badge .live-num {
+  font-variant-numeric: tabular-nums;
+}
 .chat-typing { padding: 6px 16px; }
 .chat-typing[hidden] { display: none; }
 .chat-typing-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
