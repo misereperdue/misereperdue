@@ -119,7 +119,14 @@
   }
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
-    wrap.className = "chat-avatar-wrap" + (isOwnerUser(username) ? " owner-sparkles" : "");
+    var isOwner = isOwnerUser(username);
+    wrap.className = "chat-avatar-wrap" + (isOwner ? " owner-sparkles" : "");
+    if (isOwner) {
+      var extra = document.createElement("span");
+      extra.className = "owner-sparkles-extra";
+      extra.setAttribute("aria-hidden", "true");
+      wrap.appendChild(extra);
+    }
     if (imgV !== undefined && imgV !== null) {
       var im = document.createElement("img");
       im.className = "chat-avatar-img" + (size ? " " + size : "");
