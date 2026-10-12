@@ -119,14 +119,7 @@
   }
   function avatarNode(username, avatar, size, imgV) {
     var wrap = document.createElement("span");
-    var isOwner = isOwnerUser(username);
-    wrap.className = "chat-avatar-wrap" + (isOwner ? " owner-sparkles" : "");
-    if (isOwner) {
-      var extra = document.createElement("span");
-      extra.className = "owner-sparkles-extra";
-      extra.setAttribute("aria-hidden", "true");
-      wrap.appendChild(extra);
-    }
+    wrap.className = "chat-avatar-wrap";
     if (imgV !== undefined && imgV !== null) {
       var im = document.createElement("img");
       im.className = "chat-avatar-img" + (size ? " " + size : "");
@@ -881,7 +874,7 @@
     var stick = nearBottom();
 
     var row = document.createElement("div");
-    row.className = "chat-msg" + (me && m.user === me.username ? " mine" : "");
+    row.className = "chat-msg" + (me && m.user === me.username ? " mine" : "") + (isOwnerUser(m.user) ? " owner-msg" : "");
     row.setAttribute("data-id", m.id);
     row.setAttribute("data-user", m.user || "");
     // Cache avatar for typing indicator
@@ -910,6 +903,12 @@
       if (eb0) bubble.appendChild(eb0);
       var fb0 = faviconBadge(m.embed);
       if (fb0) bubble.appendChild(fb0);
+      if (isOwnerUser(m.user)) {
+        var ex = document.createElement("span");
+        ex.className = "owner-sparkles-extra";
+        ex.setAttribute("aria-hidden", "true");
+        bubble.appendChild(ex);
+      }
       row.appendChild(bubble);
       var myWrap = avatarNode(m.user, m.avatar, "sm", (m.av !== undefined ? m.av : myImgV()));
       var mb1 = msgBadge(m); if (mb1) myWrap.insertAdjacentHTML("beforeend", mb1);
@@ -947,6 +946,12 @@
       if (eb2) b2.appendChild(eb2);
       var fb2 = faviconBadge(m.embed);
       if (fb2) b2.appendChild(fb2);
+      if (isOwnerUser(m.user)) {
+        var ex2 = document.createElement("span");
+        ex2.className = "owner-sparkles-extra";
+        ex2.setAttribute("aria-hidden", "true");
+        b2.appendChild(ex2);
+      }
       main.appendChild(b2);
       row.appendChild(main);
     }
