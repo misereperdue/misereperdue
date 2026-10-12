@@ -1175,15 +1175,15 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 [data-theme="dark"] .chat-verified .seal { fill: #fff; }
 [data-theme="dark"] .chat-verified .vcheck { stroke: #000; }
 
-/* badges — sit where the verified seal sits */
+/* badges — sit where the verified seal sits (offset +1px to compensate emoji glyph padding) */
 .chat-badge {
-  position: absolute; left: -3px; bottom: -3px;
+  position: absolute; left: -5px; bottom: -5px;
   width: 13px; height: 13px;
   font-size: 11px; line-height: 13px; text-align: center;
   filter: drop-shadow(0 0 2px rgba(0,0,0,.35));
   pointer-events: none;
 }
-.chat-msg:not(.mine) .chat-badge { left: auto; right: -4px; }
+.chat-msg:not(.mine) .chat-badge { left: auto; right: -5px; }
 .chat-badge .b-light { display: none; }
 [data-theme="light"] .chat-badge .b-dark { display: none; }
 [data-theme="light"] .chat-badge .b-light { display: inline; }
