@@ -1150,8 +1150,7 @@ body { display: flex; flex-direction: column; min-height: 100dvh; }
 .chat-msg.owner-msg .chat-bubble { position: relative; }
 /* Extra sparkles */
 
-/* Forum post/reply sparkles for owner + VIP */
-.forum-post.owner-vip-sparkles { position: relative; }
+
 
 
 .chat-avatar-img.lg { width: 64px; height: 64px; }
