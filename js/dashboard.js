@@ -171,11 +171,76 @@
     });
     overviewPage.appendChild(statsRow);
 
-    // Graph section
-    var graphTitle = document.createElement("div");
-    graphTitle.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;";
-    graphTitle.textContent = "Activity — Last 30 Days";
-    overviewPage.appendChild(graphTitle);
+    // Graph section — time range pill dropdown
+    var timeRanges = [
+      { id: "24h", label: "Last 24 hours", days: 1 },
+      { id: "7d", label: "Last 7 days", days: 7 },
+      { id: "30d", label: "Last 30 days", days: 30 },
+      { id: "12m", label: "Last 12 months", days: 365 },
+      { id: "all", label: "All time", days: 0 }
+    ];
+    var currentRange = timeRanges[2]; // default: Last 30 days
+    var graphTitleRow = document.createElement("div");
+    graphTitleRow.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px;";
+    var graphTitleLabel = document.createElement("div");
+    graphTitleLabel.style.cssText = "font-size:14px;font-weight:600;opacity:.8;";
+    graphTitleLabel.textContent = "Activity \u2014";
+    graphTitleRow.appendChild(graphTitleLabel);
+    // 3D glass pill dropdown
+    var rangePill = document.createElement("button");
+    rangePill.type = "button";
+    rangePill.style.cssText = "position:relative;display:inline-flex;align-items:center;gap:6px;" +
+      "padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;" +
+      "background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.06) 50%,rgba(0,0,0,.08) 100%);" +
+      "border:1px solid rgba(255,255,255,.22);" +
+      "box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.25);" +
+      "backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);";
+    rangePill.innerHTML = '<span class="range-label">' + currentRange.label + '</span>' +
+      '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+    graphTitleRow.appendChild(rangePill);
+    // Dropdown menu
+    var rangeMenu = document.createElement("div");
+    rangeMenu.style.cssText = "position:absolute;z-index:50;min-width:160px;margin-top:6px;border-radius:14px;padding:6px;" +
+      "background:rgba(20,24,44,.92);border:1px solid rgba(255,255,255,.14);" +
+      "box-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);" +
+      "backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);display:none;";
+    timeRanges.forEach(function(r) {
+      var opt = document.createElement("button");
+      opt.type = "button";
+      opt.textContent = r.label;
+      opt.style.cssText = "display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;" +
+        "color:var(--ink);font-size:13px;font-weight:500;border-radius:9px;cursor:pointer;";
+      if (r.id === currentRange.id) { opt.style.background = "rgba(255,255,255,.12)"; opt.style.fontWeight = "700"; }
+      opt.addEventListener("click", function() {
+        currentRange = r;
+        rangePill.querySelector(".range-label").textContent = r.label;
+        rangeMenu.style.display = "none";
+        // Update selected state
+        Array.prototype.forEach.call(rangeMenu.children, function(c) {
+          c.style.background = "transparent"; c.style.fontWeight = "500";
+        });
+        opt.style.background = "rgba(255,255,255,.12)"; opt.style.fontWeight = "700";
+        drawGraph();
+      });
+      opt.addEventListener("mouseenter", function() { if (r.id !== currentRange.id) opt.style.background = "rgba(255,255,255,.06)"; });
+      opt.addEventListener("mouseleave", function() { if (r.id !== currentRange.id) opt.style.background = "transparent"; });
+      rangeMenu.appendChild(opt);
+    });
+    // Wrap pill + menu for positioning
+    var rangeWrap = document.createElement("div");
+    rangeWrap.style.cssText = "position:relative;display:inline-block;";
+    rangeWrap.appendChild(rangePill);
+    rangeWrap.appendChild(rangeMenu);
+    graphTitleRow.appendChild(rangeWrap);
+    // Toggle menu
+    rangePill.addEventListener("click", function(e) {
+      e.stopPropagation();
+      rangeMenu.style.display = (rangeMenu.style.display === "none" || !rangeMenu.style.display) ? "block" : "none";
+    });
+    document.addEventListener("click", function(e) {
+      if (!rangeWrap.contains(e.target)) rangeMenu.style.display = "none";
+    });
+    overviewPage.appendChild(graphTitleRow);
 
     // Metric toggle (pill container with slider)
     var toggleRow = document.createElement("div");
@@ -241,7 +306,28 @@
       var H = 150;
       var padB = 22, padT = 8;
       var chartH = H - padB - padT;
-      var data = stats.days.slice().reverse(); // oldest to newest
+      // Filter by time range
+      var allDays = stats.days.slice().reverse(); // oldest to newest
+      var data;
+      if (currentRange.days === 0) {
+        data = allDays; // All time: everything we have
+      } else if (currentRange.days >= 365) {
+        // Last 12 months: aggregate by month (we only have ~30 days, so this shows partial)
+        var byMonth = {};
+        allDays.forEach(function(d) {
+          var mk = d.date.slice(0, 7); // YYYY-MM
+          if (!byMonth[mk]) byMonth[mk] = { date: mk, views: 0, visitors: 0, messages: 0, newUsers: 0, forumPosts: 0, forumReplies: 0 };
+          byMonth[mk].views += d.views || 0;
+          byMonth[mk].visitors += d.visitors || 0;
+          byMonth[mk].messages += d.messages || 0;
+          byMonth[mk].newUsers += d.newUsers || 0;
+          byMonth[mk].forumPosts += d.forumPosts || 0;
+          byMonth[mk].forumReplies += d.forumReplies || 0;
+        });
+        data = Object.keys(byMonth).sort().map(function(k) { return byMonth[k]; });
+      } else {
+        data = allDays.slice(-currentRange.days);
+      }
       var isPostsMetric = (currentMetric === "messages");
       var values = data.map(function(d) {
         if (isPostsMetric) return (d.forumPosts || 0) + (d.forumReplies || 0);
