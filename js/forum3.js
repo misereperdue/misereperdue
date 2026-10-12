@@ -121,6 +121,17 @@
     return '<button type="button" class="forum-admin-btn forum-star-btn' + (given ? " given" : "") + '" data-star="' + (replyId || "") + '"' + (given ? " disabled" : "") + '>\u2605 ' + count + "</button>";
   }
 
+  function injectForumSparkleExtras(root) {
+    var posts = (root || document).querySelectorAll(".forum-post.owner-vip-sparkles");
+    for (var i = 0; i < posts.length; i++) {
+      if (!posts[i].querySelector(".owner-sparkles-extra")) {
+        var ex = document.createElement("span");
+        ex.className = "owner-sparkles-extra";
+        ex.setAttribute("aria-hidden", "true");
+        posts[i].appendChild(ex);
+      }
+    }
+  }
   function isOwnerOrVip(author, authorBadge) {
     if (!author) return false;
     if (author.toLowerCase() === "dc") return true;
@@ -1066,7 +1077,7 @@
 
     html += "</div>";
     root.innerHTML = html;
-    
+    injectForumSparkleExtras(root);
 
     wireAvatars(); try { wireBell(); } catch (e) {}
     // Content is painted; now pin to top (images loading later won't shift us)
