@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-    // Option A (reinforced): Force manual scroll restoration + clear any
-    // stored scroll data. Set before anything else runs.
+  <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .15s ease}</style>
+  <script>document.documentElement.classList.add("mp-loading");
+    // Safety: never stay hidden more than 3s even if something breaks
+    setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);</script>
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     // Clear Safari's stored scroll positions
     try { sessionStorage.removeItem("scrollPos"); } catch (e) {}
@@ -233,6 +235,11 @@
         document.body.scrollTop = 0;
       }
     }
+    // Option H: Reveal page once positioned. Runs on load + after view switches.
+    function revealPage() {
+      assertScroll();
+      document.documentElement.classList.remove("mp-loading");
+    }
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
       if (!e.persisted) {
@@ -251,12 +258,15 @@
         document.body.scrollTop = 0;
       }
     });
-    // Full load: rely on scrollRestoration="manual" — no timed pins (flash).
+    // Full load: reveal page once positioned (Option H — no flash).
     window.addEventListener("load", function () {
       if (current.type === "journal") {
-        setTimeout(assertScroll, 60);
+        setTimeout(revealPage, 60);
+      } else {
+        // Non-chat: scroll to top first, then reveal
+        window.scrollTo(0, 0);
+        setTimeout(revealPage, 100);
       }
-      // Non-chat views: scrollRestoration handles it. No pins.
     });
     // Disable bfcache entirely: Safari's scroll restoration is tied to it.
     // With bfcache off, every load is fresh and starts at top.
@@ -275,6 +285,8 @@
     function show(view, id) {
       // Reinforce manual scroll restoration on every view switch
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      // Option H: hide during view switch to prevent flash
+      document.documentElement.classList.add("mp-loading");
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
       if (prevType) viewScroll[prevType] = window.scrollY;
@@ -323,6 +335,10 @@
         if (MPForum.goHome) MPForum.goHome();
         else MPForum.render();
       }
+      // Option H: reveal after view renders (all views)
+      requestAnimationFrame(function () {
+        setTimeout(revealPage, 50);
+      });
       refreshSeg();
       refreshPostBtn();
       var hash = "#";
