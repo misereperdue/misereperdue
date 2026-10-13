@@ -202,6 +202,19 @@
       requestAnimationFrame(step);
     }
     window.MPScroll = { pinTop: pinTop };
+    // Scroll lock (Option C): prevent ANY scrolling while page loads.
+    // Safari restores scroll to bottom during async content load; if scrolling
+    // is disabled, it can't. Lock immediately, unlock after content settles.
+    function lockScroll() {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    }
+    function unlockScroll() {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+    // Lock now (script runs before content renders)
+    if (current.type !== "journal") lockScroll();
     function isAuthView() {
       return !!document.querySelector(".chat-auth");
     }
@@ -260,6 +273,13 @@
             }
           }, ms);
         });
+        // Unlock scroll after the last pin (1.2s) — content has settled by then
+        setTimeout(function () {
+          if (current.type !== "journal") {
+            window.scrollTo(0, 0);
+            unlockScroll();
+          }
+        }, 1200);
       } else {
         setTimeout(assertScroll, 60);
       }
@@ -327,8 +347,14 @@
           window.scrollTo(0, document.documentElement.scrollHeight);
         }
       } else {
+        // Non-chat views: lock scroll during render, then unlock after settle.
+        // Prevents Safari from jumping to bottom while async content loads.
+        lockScroll();
         window.scrollTo(0, 0);
-        
+        setTimeout(function () {
+          window.scrollTo(0, 0);
+          unlockScroll();
+        }, 400);
       }
       if (view === "shop") MPShop.renderShop();
       if (view === "cart") MPShop.renderCartPanel();
