@@ -328,6 +328,8 @@
       nav.classList.toggle("shop", view === "shop");
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
+      // Crop hero fade on shop + auth views (header blocks content)
+      document.body.classList.toggle("crop-hero", view === "shop" || (view === "journal" && isAuthView()));
       nav.querySelectorAll("button").forEach(function (b) {
         var active = b.dataset.view === view ||
           (view === "product" && b.dataset.view === "shop");
