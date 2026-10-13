@@ -251,12 +251,20 @@
         }
         return;
       }
-      if (current.type === "journal") {
-        if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
-      } else {
+      // bfcache restore: Safari restores old scroll position. Re-hide,
+      // reset to top, then reveal. This is why it worked fresh but broke
+      // after browsing for a few minutes.
+      if (current.type !== "journal") {
+        document.documentElement.classList.add("mp-loading");
         window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+        setTimeout(function () {
+          window.scrollTo(0, 0);
+          document.documentElement.classList.remove("mp-loading");
+        }, 100);
+      } else {
+        if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       }
     });
     // Full load: reveal page once positioned (Option H — no flash).
