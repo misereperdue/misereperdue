@@ -286,8 +286,6 @@
     function show(view, id) {
       // Reinforce manual scroll restoration on every view switch
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-      // Option H: hide during view switch to prevent flash
-      document.documentElement.classList.add("mp-loading");
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
       if (prevType) viewScroll[prevType] = window.scrollY;
@@ -336,10 +334,6 @@
         if (MPForum.goHome) MPForum.goHome();
         else MPForum.render();
       }
-      // Option H: reveal after view renders (all views)
-      requestAnimationFrame(function () {
-        setTimeout(revealPage, 50);
-      });
       refreshSeg();
       refreshPostBtn();
       var hash = "#";
