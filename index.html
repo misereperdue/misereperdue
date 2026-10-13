@@ -6,6 +6,7 @@
   <script>document.documentElement.classList.add("mp-loading");
     // Safety: never stay hidden more than 3s even if something breaks
     setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);</script>
+  <script>
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     // Clear Safari's stored scroll positions
     try { sessionStorage.removeItem("scrollPos"); } catch (e) {}
