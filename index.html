@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>if ("scrollRestoration" in history) history.scrollRestoration = "manual";</script>
+  <script>
+    // Option A (reinforced): Force manual scroll restoration + clear any
+    // stored scroll data. Set before anything else runs.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    // Clear Safari's stored scroll positions
+    try { sessionStorage.removeItem("scrollPos"); } catch (e) {}
+    // Re-assert on every navigation — Safari can reset this
+    window.addEventListener("beforeunload", function () {
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    });
+    window.addEventListener("pageshow", function () {
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    });
+    // Also set on hash changes (SPA navigation)
+    window.addEventListener("hashchange", function () {
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    });
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -288,6 +305,8 @@
       }
     });
     function show(view, id) {
+      // Reinforce manual scroll restoration on every view switch
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       // Save scroll position before leaving the current view
       var prevType = current.type === "product" ? "shop" : current.type;
       if (prevType) viewScroll[prevType] = window.scrollY;
