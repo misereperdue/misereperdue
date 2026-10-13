@@ -153,6 +153,13 @@
   <script>
     var nav = document.getElementById("nav");
     var current = { type: "journal", id: "" };
+    // Apply crop-hero on initial load too (show() doesn't run on fresh load)
+    function applyCropHero() {
+      var isAuth = typeof isAuthView === "function" && isAuthView();
+      var isShop = current.type === "shop";
+      document.body.classList.toggle("crop-hero", isShop || (current.type === "journal" && isAuth));
+      document.body.classList.toggle("crop-hero-auth", current.type === "journal" && isAuth);
+    }
 
     function esc(s) {
       return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -284,6 +291,7 @@
     });
     // Full load: reveal page once positioned (Option H — no flash).
     window.addEventListener("load", function () {
+      applyCropHero();
       if (current.type === "journal" && !isAuthView()) {
         setTimeout(revealPage, 60);
       } else {
@@ -329,7 +337,7 @@
       nav.classList.toggle("cart", view === "cart");
       nav.classList.toggle("reading", reading);
       // Crop hero fade on shop + auth views (header blocks content)
-      document.body.classList.toggle("crop-hero", view === "shop" || (view === "journal" && isAuthView()));
+      applyCropHero();
       nav.querySelectorAll("button").forEach(function (b) {
         var active = b.dataset.view === view ||
           (view === "product" && b.dataset.view === "shop");
