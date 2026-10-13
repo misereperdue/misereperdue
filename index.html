@@ -242,6 +242,20 @@
       assertScroll();
       document.documentElement.classList.remove("mp-loading");
     }
+    // While hidden (mp-loading), Safari may restore scroll async AFTER our
+    // reveal timing. Hold scroll at 0 until reveal — invisible since hidden.
+    function holdScrollAtTop() {
+      if (!document.documentElement.classList.contains("mp-loading")) return;
+      if (current.type === "journal" && !isAuthView()) return;
+      if (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+      requestAnimationFrame(holdScrollAtTop);
+    }
+    // Start holding immediately
+    requestAnimationFrame(holdScrollAtTop);
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
       if (!e.persisted) {
@@ -273,9 +287,11 @@
       if (current.type === "journal" && !isAuthView()) {
         setTimeout(revealPage, 60);
       } else {
-        // Non-chat + auth: scroll to top first, then reveal
+        // Non-chat + auth: scroll to top first, then reveal.
+        // Wait 500ms to let Safari's async restoration fire (and be held
+        // at 0 by holdScrollAtTop) before revealing.
         window.scrollTo(0, 0);
-        setTimeout(revealPage, 100);
+        setTimeout(revealPage, 500);
       }
     });
     // Disable bfcache entirely: Safari's scroll restoration is tied to it.
