@@ -23,7 +23,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Misère Perdue">
     <meta name="twitter:description" content="The world of dc. Community chat, exclusive drops, and the Paradis clothing brand.">
-    <title>Misère Perdue — MISERY | Official Site</title>
+    <title>MISERY | Sign in</title>
   <meta name="description" content="Misère Perdue (MISERY) — the official site of dc, aka misereperdue. Community chat, Paradis clothing drops, and the Swaggz universe. Toronto.">
   <link rel="canonical" href="https://misereperdue.com/">
   <meta name="robots" content="index, follow">
@@ -124,7 +124,7 @@
   <script src="js/cart.js?v=1"></script>
   <script src="js/shop.js?v=43"></script>
   <script src="js/social-logos.js?v=2"></script>
-  <script src="js/chat.js?v=156"></script>
+  <script src="js/chat.js?v=157"></script>
   <script src="js/dashboard-v2.js?v=19"></script>
   <script src="js/forum3.js?v=1048"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-api-cache.js?v=2"></script><script src="js/forum-mount-patch.js?v=1071"></script>
   <script>
@@ -290,6 +290,7 @@
       if (prevType) viewScroll[prevType] = window.scrollY;
       current = { type: view, id: id || "" };
       var reading = view === "product";
+      refreshTitle();
       // Restore default site hero when not viewing a product with custom header
       if (view !== "product") restoreHero();
       // Panel switching via class (CSS handles display)
@@ -342,10 +343,30 @@
       var keepThreadLink = view === "forum" && /^#(thread|globe)\//.test(location.hash || "");
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
+    function refreshTitle() {
+      // Dynamic page title: MISERY | <View>
+      var t = "MISERY | ";
+      var v = current.type;
+      if (v === "journal") {
+        t += document.querySelector(".chat-auth") ? "Sign in" : "Chat";
+      } else if (v === "forum") {
+        t += "Forum";
+      } else if (v === "shop") {
+        t += "Shop";
+      } else if (v === "product") {
+        t += "Product";
+      } else if (v === "cart") {
+        t += "Bag";
+      } else {
+        t += "Chat";
+      }
+      document.title = t;
+    }
     window.MPNav = {
       show: show,
       refreshSeg: refreshSeg,
       refreshPostBtn: refreshPostBtn,
+      refreshTitle: refreshTitle,
       showProduct: function (id) { show("product", id); },
       reopen: function () {
         if (current.type === "product" && current.id) MPShop.openProduct(current.id);
