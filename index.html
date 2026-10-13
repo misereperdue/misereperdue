@@ -42,7 +42,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=369">
+  <link rel="stylesheet" href="css/site.css?v=370">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview
@@ -351,10 +351,8 @@
         t += document.querySelector(".chat-auth") ? "Sign in" : "Chat";
       } else if (v === "forum") {
         t += "Forum";
-      } else if (v === "shop") {
+      } else if (v === "shop" || v === "product") {
         t += "Shop";
-      } else if (v === "product") {
-        t += "Product";
       } else if (v === "cart") {
         t += "Bag";
       } else {
