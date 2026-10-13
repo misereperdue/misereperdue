@@ -159,6 +159,7 @@
       var isShop = current.type === "shop";
       document.body.classList.toggle("crop-hero", isShop || (current.type === "journal" && isAuth));
       document.body.classList.toggle("crop-hero-auth", current.type === "journal" && isAuth);
+      document.body.classList.toggle("crop-hero-shop", isShop);
     }
 
     function esc(s) {
