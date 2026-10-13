@@ -236,19 +236,9 @@
     // bfcache restore (back/forward, tab restore): re-assert position
     window.addEventListener("pageshow", function (e) {
       if (!e.persisted) {
-        // Fresh load / refresh: iOS Safari restores scroll late and async.
-        // Pin non-chat views to top at multiple delays.
-        if (current.type !== "journal") {
-          [60, 200, 500, 1000].forEach(function (ms) {
-            setTimeout(function () {
-              if (current.type !== "journal") {
-                window.scrollTo(0, 0);
-                document.documentElement.scrollTop = 0;
-                document.body.scrollTop = 0;
-              }
-            }, ms);
-          });
-        } else {
+        // Fresh load: rely on scrollRestoration="manual" — no timed pins
+        // (they caused the flash). Chat goes to bottom, others stay at top.
+        if (current.type === "journal") {
           setTimeout(assertScroll, 60);
         }
         return;
@@ -261,25 +251,12 @@
         document.body.scrollTop = 0;
       }
     });
-    // Full load: catches Safari restoring scroll after async content paints
+    // Full load: rely on scrollRestoration="manual" — no timed pins (flash).
     window.addEventListener("load", function () {
-      // iOS Safari restores scroll asynchronously and late, ignoring
-      // scrollRestoration="manual". Pin to top multiple times at increasing
-      // delays. All target position 0, so no jitter — just a firm pin.
-      // Chat is excluded (it goes to bottom via assertScroll).
-      if (current.type !== "journal") {
-        [60, 200, 500, 1000].forEach(function (ms) {
-          setTimeout(function () {
-            if (current.type !== "journal") {
-              window.scrollTo(0, 0);
-              document.documentElement.scrollTop = 0;
-              document.body.scrollTop = 0;
-            }
-          }, ms);
-        });
-      } else {
+      if (current.type === "journal") {
         setTimeout(assertScroll, 60);
       }
+      // Non-chat views: scrollRestoration handles it. No pins.
     });
     // Disable bfcache entirely: Safari's scroll restoration is tied to it.
     // With bfcache off, every load is fresh and starts at top.
@@ -293,17 +270,8 @@
     });
     // If Safari restored to bottom anyway, correct when page becomes visible.
     // Only for non-chat views, and only if user hasn't scrolled.
-    var visUserScrolled = false;
-    window.addEventListener("touchmove", function() { visUserScrolled = true; }, { once: true, passive: true });
-    document.addEventListener("visibilitychange", function() {
-      if (document.visibilityState !== "visible") return;
-      if (visUserScrolled) return;
-      if (isAuthView()) return;
-      if (current.type === "journal") return;
-      if (window.scrollY > 100) {
-        window.scrollTo(0, 0);
-      }
-    });
+    // Removed: visibilitychange scroll correction (was another flash source).
+    // Relying purely on scrollRestoration="manual" now.
     function show(view, id) {
       // Reinforce manual scroll restoration on every view switch
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
