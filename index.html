@@ -228,7 +228,8 @@
     function assertScroll() {
       // Single-shot scroll positioning. No polling intervals — those caused
       // the jitter by fighting image/font loads. Set once per lifecycle event.
-      if (current.type === "journal") {
+      // Auth view is inside the journal panel but should be at TOP, not bottom.
+      if (current.type === "journal" && !isAuthView()) {
         if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       } else {
         window.scrollTo(0, 0);
@@ -246,7 +247,7 @@
       if (!e.persisted) {
         // Fresh load: rely on scrollRestoration="manual" — no timed pins
         // (they caused the flash). Chat goes to bottom, others stay at top.
-        if (current.type === "journal") {
+        if (current.type === "journal" && !isAuthView()) {
           setTimeout(assertScroll, 60);
         }
         return;
@@ -254,7 +255,7 @@
       // bfcache restore: Safari restores old scroll position. Re-hide,
       // reset to top, then reveal. This is why it worked fresh but broke
       // after browsing for a few minutes.
-      if (current.type !== "journal") {
+      if (current.type !== "journal" || isAuthView()) {
         document.documentElement.classList.add("mp-loading");
         window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
@@ -269,10 +270,10 @@
     });
     // Full load: reveal page once positioned (Option H — no flash).
     window.addEventListener("load", function () {
-      if (current.type === "journal") {
+      if (current.type === "journal" && !isAuthView()) {
         setTimeout(revealPage, 60);
       } else {
-        // Non-chat: scroll to top first, then reveal
+        // Non-chat + auth: scroll to top first, then reveal
         window.scrollTo(0, 0);
         setTimeout(revealPage, 100);
       }
@@ -322,9 +323,10 @@
       if (reading) {
         window.scrollTo(0, 0);
         
-      } else if (view === "journal") {
+      } else if (view === "journal" && !isAuthView()) {
         // Chat is the only view that remembers scroll position on navigation.
         // Fresh loads (no saved position) go to the latest message.
+        // Auth view stays at top even though it's in the journal panel.
         if (viewScroll["journal"] !== undefined) {
           window.scrollTo(0, viewScroll["journal"]);
         } else if (window.MPChat && MPChat.scrollToLatest) {
