@@ -375,6 +375,10 @@
     // Removed: visibilitychange scroll correction (was another flash source).
     // Relying purely on scrollRestoration="manual" now.
     function show(view, id) {
+      // Close the notification tray on view switch: it lives in document.body
+      // (not inside a view panel), so a stale one survives tab switches and
+      // the bell's toggle then closes it instead of opening a fresh tray.
+      document.querySelectorAll(".forum-notif-panel").forEach(function (p) { p.remove(); });
       // Reinforce manual scroll restoration on every view switch
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       // Save scroll position before leaving the current view
