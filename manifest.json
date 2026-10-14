@@ -1,1 +1,66 @@
-{"background_color":"#0a1230","description":"Misère Perdue — community, forum, and shop","display":"standalone","icons":[{"sizes":"192x192","src":"/img/icon-192.png","type":"image/png"},{"purpose":"any","sizes":"512x512","src":"/img/icon-512.png","type":"image/png"},{"purpose":"maskable","sizes":"512x512","src":"/img/icon-512.png","type":"image/png"}],"name":"Misère Perdue","short_name":"Misery","start_url":"/","theme_color":"#0a1230"}
+{
+  "background_color": "#0a1230",
+  "description": "Mis\u00e8re Perdue \u2014 community, forum, and shop",
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "192x192",
+      "src": "/img/icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "/img/icon-512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "/img/icon-512.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "Mis\u00e8re Perdue",
+  "short_name": "Misery",
+  "start_url": "/",
+  "theme_color": "#0a1230",
+  "shortcuts": [
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "url": "/#journal",
+      "icons": [
+        {
+          "src": "/img/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Globe",
+      "short_name": "Globe",
+      "url": "/#globe",
+      "icons": [
+        {
+          "src": "/img/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Shop",
+      "short_name": "Shop",
+      "url": "/#shop",
+      "icons": [
+        {
+          "src": "/img/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v3";
+var CACHE = "mp-shell-v4";
 var SHELL = [
   "/",
   "/index.html",
@@ -23,6 +23,13 @@ var SHELL = [
   "/img/icon-192.png",
   "/img/icon-512.png",
   "/img/favicon.png",
+  "/img/splash-1290x2796.png",
+  "/img/splash-1179x2556.png",
+  "/img/splash-1170x2532.png",
+  "/img/splash-1284x2778.png",
+  "/img/splash-750x1334.png",
+  "/img/splash-1125x2436.png",
+  "/img/splash-1242x2688.png",
   "/video/header.jpg"
 ];
 
