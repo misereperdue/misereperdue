@@ -180,7 +180,7 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/chat.js?v=223"></script>
+  <script src="js/chat.js?v=224"></script>
   <script>
     // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
     // chat is up. Sequential, in the original dependency order. Each module
@@ -460,6 +460,9 @@
         window.scrollTo(0, 0);
         
       }
+      // Switching back to chat: catch up any messages missed while on
+      // another view (WS gaps don't self-heal until a fetch runs).
+      if (view === "journal" && window.MPChat && MPChat.catchUp) MPChat.catchUp();
       if (view === "shop" && window.MPShop) MPShop.renderShop();
       if (view === "cart" && window.MPShop) MPShop.renderCartPanel();
       if (view === "forum" && window.MPForum) {
