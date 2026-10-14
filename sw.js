@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v1";
+var CACHE = "mp-shell-v2";
 var SHELL = [
   "/",
   "/index.html",
@@ -52,17 +52,20 @@ self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
-  // HTML: network first, fall back to cache (fresh content, offline-safe)
+  // HTML: cache-first for instant app-shell loads, update in background.
+  // The shell (HTML) changes rarely; API data always stays fresh (never cached).
   if (e.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")) {
     e.respondWith(
-      fetch(e.request).then(function (res) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
-        return res;
-      }).catch(function () {
-        return caches.match(e.request).then(function (cached) {
-          return cached || caches.match("/index.html");
-        });
+      caches.match(e.request).then(function (cached) {
+        var network = fetch(e.request).then(function (res) {
+          if (res.ok) {
+            var copy = res.clone();
+            caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
+          }
+          return res;
+        }).catch(function () { return cached; });
+        // Serve cached shell instantly if available, else wait for network
+        return cached || network;
       })
     );
     return;
