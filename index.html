@@ -6,7 +6,12 @@
   <script>document.documentElement.classList.add("mp-loading");
     // Pull-to-refresh splash: if the last navigation was a pull-refresh,
     // show the splash (M on navy) until the page is positioned — no white flash.
-    try { document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
+    try {
+      // Splash (navy fade) is web-app-only. In Safari, no splash — the page
+      // just loads. Standalone = Home Screen web app.
+      var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone;
+      if (isStandalone) document.documentElement.classList.add("mp-show-splash");
+    } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
     setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
     setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 4000);</script>
@@ -155,7 +160,7 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/chat.js?v=209"></script>
+  <script src="js/chat.js?v=210"></script>
   <script>
     // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
     // chat is up. Sequential, in the original dependency order. Each module
