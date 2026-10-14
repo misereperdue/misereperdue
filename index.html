@@ -385,15 +385,12 @@
       // Dynamic page title — main page is just "Misère Perdue", others get "Misère Perdue | <View>"
       // Also updates OG/Twitter meta for link previews
       var v = current.type;
-      var isAuth = document.querySelector(".chat-auth");
       var t;
-      if (v === "journal" && !isAuth) {
+      if (v === "journal") {
         t = "Misère Perdue";
       } else {
         t = "Misère Perdue | ";
-        if (v === "journal") {
-          t += "Sign in";
-        } else if (v === "forum") {
+        if (v === "forum") {
           var thread = window.MPForum && window.MPForum.getCurrentThread ? window.MPForum.getCurrentThread() : null;
           t += thread && thread.title ? thread.title : "Globe";
         } else if (v === "shop" || v === "product") {
