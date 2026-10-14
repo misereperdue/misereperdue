@@ -456,12 +456,10 @@
         window.scrollTo(0, 0);
         
       } else if (view === "journal" && !isAuthView()) {
-        // Chat is the only view that remembers scroll position on navigation.
-        // Fresh loads (no saved position) go to the latest message.
+        // Chat always lands on the latest message when switching back —
+        // restoring the saved scroll put it up at old messages.
         // Auth view stays at top even though it's in the journal panel.
-        if (viewScroll["journal"] !== undefined) {
-          window.scrollTo(0, viewScroll["journal"]);
-        } else if (window.MPChat && MPChat.scrollToLatest) {
+        if (window.MPChat && MPChat.scrollToLatest) {
           MPChat.scrollToLatest();
         } else {
           window.scrollTo(0, document.documentElement.scrollHeight);
