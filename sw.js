@@ -158,9 +158,12 @@ self.addEventListener("push", function (e) {
         data: { url: (d && d.url) || "/" },
         tag: "mp"
       };
-      // Subtitle = sender; iOS renders it as "from <sender>" under the title.
-      if (d && d.subtitle) notifOpts.subtitle = d.subtitle;
-      return self.registration.showNotification((d && d.title) || "Misery", notifOpts);
+      // Title is always "Misery". Subtitle = sender (iOS renders "from <sender>").
+      // New server returns d.subtitle; old server returns the sender as d.title —
+      // accept either so the layout is right even before the server restarts.
+      var sender = (d && d.subtitle) || ((d && d.title && d.title !== "Misery") ? d.title : null);
+      if (sender) notifOpts.subtitle = sender;
+      return self.registration.showNotification("Misery", notifOpts);
     }).catch(function () {
       return self.registration.showNotification("Misery", {
         body: "You have a new notification",
