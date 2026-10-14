@@ -158,12 +158,12 @@ self.addEventListener("push", function (e) {
         data: { url: (d && d.url) || "/" },
         tag: "mp"
       };
-      // Title is always "Misery". Subtitle = sender (iOS renders "from <sender>").
-      // New server returns d.subtitle; old server returns the sender as d.title —
-      // accept either so the layout is right even before the server restarts.
+      // iOS ignores the subtitle option for web push and always shows
+      // "from <app name>" on that line. So the sender goes in the TITLE
+      // (first line) — the only line we control besides the body.
+      // Server returns the sender as d.subtitle (new) or d.title (old).
       var sender = (d && d.subtitle) || ((d && d.title && d.title !== "Misery") ? d.title : null);
-      if (sender) notifOpts.subtitle = sender;
-      return self.registration.showNotification("Misery", notifOpts);
+      return self.registration.showNotification(sender || "Misery", notifOpts);
     }).catch(function () {
       return self.registration.showNotification("Misery", {
         body: "You have a new notification",
