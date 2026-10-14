@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .15s ease}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .15s ease}#mp-splash{display:none;position:fixed;inset:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%}html.mp-show-splash #mp-splash{display:flex}</style>
   <script>document.documentElement.classList.add("mp-loading");
+    // Pull-to-refresh splash: if the last navigation was a pull-refresh,
+    // show the splash (M on navy) until the page is positioned — no white flash.
+    try { if (sessionStorage.getItem("mp-refreshing") === "1") document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
-    setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);</script>
+    setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
+    setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 4000);</script>
   <script>
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     // Clear Safari's stored scroll positions
@@ -88,6 +92,7 @@
   </script>
 </head>
 <body class="home">
+  <div id="mp-splash"><img src="img/favicon.png" alt=""></div>
   <header class="hero">
     <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header.jpg">
       <source src="video/header-ping.mp4" type="video/mp4">
@@ -150,7 +155,7 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/chat.js?v=190"></script>
+  <script src="js/chat.js?v=191"></script>
   <script>
     // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
     // chat is up. Sequential, in the original dependency order. Each module
@@ -296,6 +301,8 @@
     function revealPage() {
       assertScroll();
       document.documentElement.classList.remove("mp-loading");
+      document.documentElement.classList.remove("mp-show-splash");
+      try { sessionStorage.removeItem("mp-refreshing"); } catch (e) {}
     }
     // While hidden (mp-loading), Safari may restore scroll async AFTER our
     // reveal timing. Hold scroll at 0 until reveal — invisible since hidden.
