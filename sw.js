@@ -91,3 +91,29 @@ self.addEventListener("fetch", function (e) {
     })
   );
 });
+
+// ---------- Push notifications ----------
+self.addEventListener("push", function (e) {
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (_) {}
+  var title = data.title || "Mis\u00e8re Perdue";
+  var options = {
+    body: data.body || "",
+    icon: "/img/icon-192.png",
+    badge: "/img/icon-192.png",
+    data: { url: data.url || "/" },
+    tag: data.tag || "mp"
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener("notificationclick", function (e) {
+  e.notification.close();
+  var url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if ("focus" in c) { c.navigate(url); c.focus(); return; }
+    }
+    if (clients.openWindow) return clients.openWindow(url);
+  }));
+});
