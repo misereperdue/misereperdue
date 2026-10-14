@@ -16,6 +16,7 @@
       var shown = false;
       try { shown = sessionStorage.getItem("mp-splash-shown") === "1"; } catch (e) {}
       if (!shown || isRefresh) {
+        window.__splashStart = Date.now();
         document.documentElement.classList.add("mp-show-splash");
         try { sessionStorage.setItem("mp-splash-shown", "1"); } catch (e) {}
       }
@@ -312,6 +313,14 @@
     }
     // Option H: Reveal page once positioned. Runs on load + after view switches.
     function revealPage() {
+      // Minimum splash time: if the splash is up and hasn't been visible
+      // for at least 900ms, wait. Fast devices removed it 60ms after
+      // load — a flicker, not a splash — so other phones never saw it.
+      if (document.documentElement.classList.contains("mp-show-splash") &&
+          window.__splashStart && Date.now() - window.__splashStart < 900) {
+        setTimeout(revealPage, 900 - (Date.now() - window.__splashStart));
+        return;
+      }
       assertScroll();
       // Simultaneous reveal: splash background + content crossfade (0.5s).
       // The logo fades out fast (0.15s, CSS) so it never ghosts over the
