@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .15s ease}#mp-splash{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%;animation:mp-splash-glow 2s ease-in-out infinite}@keyframes mp-splash-glow{0%,100%{filter:drop-shadow(0 0 8px rgba(120,180,255,.35))}50%{filter:drop-shadow(0 0 30px rgba(120,180,255,.9))}}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{display:flex}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .15s ease}#mp-splash{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{display:flex}</style>
   <script>document.documentElement.classList.add("mp-loading");
     // Pull-to-refresh splash: if the last navigation was a pull-refresh,
     // show the splash (M on navy) until the page is positioned — no white flash.
-    try { document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
+    try { if (sessionStorage.getItem("mp-refreshing") === "1") document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
     setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
     setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 4000);</script>
