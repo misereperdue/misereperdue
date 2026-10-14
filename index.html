@@ -328,11 +328,15 @@
     // Option H: Reveal page once positioned. Runs on load + after view switches.
     var revealWaitMs = 0;
     function revealPage() {
-      // Chat view: wait for the first message batch (bounded 2s) so the
-      // page fades in with messages already rendered + scrolled to the
-      // bottom. Revealing before the batch lands = empty chat fading in,
-      // then a glide to the bottom as messages arrive (the jump).
-      if (current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 2000) {
+      // Chat view + splash showing: wait for the first message batch
+      // (bounded 2s) so the page fades in with messages already rendered
+      // + scrolled to the bottom. Revealing before the batch lands =
+      // empty chat fading in, then a glide to the bottom (the jump).
+      // No splash (plain refresh): DON'T wait — the wait would hold the
+      // page hidden behind the navy page bg (looks like a stuck splash)
+      // for up to 2s. Reveal on load instead; messages glide in after.
+      if (current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 2000 &&
+          document.documentElement.classList.contains("mp-show-splash")) {
         revealWaitMs += 100;
         setTimeout(revealPage, 100);
         return;
