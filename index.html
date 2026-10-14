@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
   <script>document.documentElement.classList.add("mp-loading");
     // Pull-to-refresh splash: if the last navigation was a pull-refresh,
     // show the splash (M on navy) until the page is positioned — no white flash.
@@ -300,14 +300,11 @@
     // Option H: Reveal page once positioned. Runs on load + after view switches.
     function revealPage() {
       assertScroll();
-      // Sequence the fades: splash out FIRST, content in AFTER (400ms).
-      // Removing both at once crossfaded them, ghosting the M logo over
-      // the content. At 400ms the splash is at ~20% (nearly gone) when
-      // the content starts fading in, so they never visibly overlap.
+      // Simultaneous reveal: splash background + content crossfade (0.5s).
+      // The logo fades out fast (0.15s, CSS) so it never ghosts over the
+      // content. Sequencing (400ms delay) left a blank gap; this doesn't.
+      document.documentElement.classList.remove("mp-loading");
       document.documentElement.classList.remove("mp-show-splash");
-      setTimeout(function () {
-        document.documentElement.classList.remove("mp-loading");
-      }, 400);
       try { sessionStorage.removeItem("mp-refreshing"); } catch (e) {}
     }
     // While hidden (mp-loading), Safari may restore scroll async AFTER our
