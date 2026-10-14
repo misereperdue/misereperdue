@@ -382,25 +382,8 @@
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     function refreshTitle() {
-      // Dynamic page title — main page is just "Misère Perdue", others get "Misère Perdue | <View>"
-      // Also updates OG/Twitter meta for link previews
-      var v = current.type;
-      var t;
-      if (v === "journal") {
-        t = "Misère Perdue";
-      } else {
-        t = "Misère Perdue | ";
-        if (v === "forum") {
-          var thread = window.MPForum && window.MPForum.getCurrentThread ? window.MPForum.getCurrentThread() : null;
-          t += thread && thread.title ? thread.title : "Globe";
-        } else if (v === "shop" || v === "product") {
-          t += "Shop";
-        } else if (v === "cart") {
-          t += "Bag";
-        } else {
-          t += "Chat";
-        }
-      }
+      // Title is always just "Misère Perdue" on every page
+      var t = "Misère Perdue";
       document.title = t;
       var ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute("content", t);
