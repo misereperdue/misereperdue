@@ -64,6 +64,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Misery">
+  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }); }</script>
   <link rel="preconnect" href="https://api.misereperdue.com">
   <link rel="preconnect" href="https://shop.misereperdue.com">
   <link rel="dns-prefetch" href="https://ipapi.co">
@@ -87,10 +88,10 @@
 </head>
 <body class="home">
   <header class="hero">
-    <video class="sharp" autoplay muted loop playsinline preload="auto" poster="video/header.jpg">
+    <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header.jpg">
       <source src="video/header-ping.mp4" type="video/mp4">
     </video>
-    <video class="soft" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <video class="soft" autoplay muted loop playsinline preload="none" aria-hidden="true">
       <source src="video/header-ping.mp4" type="video/mp4">
     </video>
     <div class="hero-fade"></div>
