@@ -323,30 +323,9 @@
       }
     }
     // Option H: Reveal page once positioned. Runs on load + after view switches.
-    var revealWaitMs = 0;
+    // No artificial waits: no splash floor, no message-batch wait.
+    // The splash shows for exactly the load time (however fast that is).
     function revealPage() {
-      // Pull-to-refresh reload: speed wins. Skip the message-batch wait
-      // entirely and use a 300ms splash (just enough to cover the reload
-      // glitch). Waiting for messages on every refresh is what made the
-      // splash linger. First load keeps the full wait (no-jump launch).
-      var isPullRefresh = false;
-      try { isPullRefresh = sessionStorage.getItem("mp-refreshing") === "1"; } catch (e) {}
-      // Chat view + splash showing + first load: wait for the first
-      // message batch (bounded 400ms) so the page fades in with messages
-      // already rendered + scrolled to the bottom.
-      if (!isPullRefresh && current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 400 &&
-          document.documentElement.classList.contains("mp-show-splash")) {
-        revealWaitMs += 100;
-        setTimeout(revealPage, 100);
-        return;
-      }
-      // Minimum splash time: 300ms (was 600ms first load — speed wins).
-      var splashMin = 300;
-      if (document.documentElement.classList.contains("mp-show-splash") &&
-          window.__splashStart && Date.now() - window.__splashStart < splashMin) {
-        setTimeout(revealPage, splashMin - (Date.now() - window.__splashStart));
-        return;
-      }
       assertScroll();
       // Simultaneous reveal: splash background + content crossfade (0.5s).
       // The logo fades out fast (0.15s, CSS) so it never ghosts over the
