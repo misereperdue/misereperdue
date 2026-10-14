@@ -47,7 +47,7 @@
     <meta name="twitter:title" content="Misère Perdue">
     <meta name="twitter:description" content="No Messages[English.]">
     <meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
-    <title>MISERY | Sign in</title>
+    <title>Misère Perdue</title>
   <meta name="description" content="Misère Perdue (MISERY) — the official site of dc, aka misereperdue. Community chat, Paradis clothing drops, and the Swaggz universe. Toronto.">
   <link rel="canonical" href="https://misereperdue.com/">
   <meta name="robots" content="index, follow">
@@ -382,20 +382,27 @@
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     function refreshTitle() {
-      // Dynamic page title: MISERY | <View> — also updates OG/Twitter meta for link previews
-      var t = "MISERY | ";
+      // Dynamic page title — main page is just "Misère Perdue", others get "Misère Perdue | <View>"
+      // Also updates OG/Twitter meta for link previews
       var v = current.type;
-      if (v === "journal") {
-        t += document.querySelector(".chat-auth") ? "Sign in" : "Chat";
-      } else if (v === "forum") {
-        var thread = window.MPForum && window.MPForum.getCurrentThread ? window.MPForum.getCurrentThread() : null;
-        t += thread && thread.title ? thread.title : "Globe";
-      } else if (v === "shop" || v === "product") {
-        t += "Shop";
-      } else if (v === "cart") {
-        t += "Bag";
+      var isAuth = document.querySelector(".chat-auth");
+      var t;
+      if (v === "journal" && !isAuth) {
+        t = "Misère Perdue";
       } else {
-        t += "Chat";
+        t = "Misère Perdue | ";
+        if (v === "journal") {
+          t += "Sign in";
+        } else if (v === "forum") {
+          var thread = window.MPForum && window.MPForum.getCurrentThread ? window.MPForum.getCurrentThread() : null;
+          t += thread && thread.title ? thread.title : "Globe";
+        } else if (v === "shop" || v === "product") {
+          t += "Shop";
+        } else if (v === "cart") {
+          t += "Bag";
+        } else {
+          t += "Chat";
+        }
       }
       document.title = t;
       var ogTitle = document.querySelector('meta[property="og:title"]');
