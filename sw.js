@@ -141,23 +141,21 @@ self.addEventListener("push", function (e) {
   // Bare push (no payload): fetch the latest unread notification and show
   // it with title "Misery" + a relevant body. Title is always "Misery".
   if (!e.data) {
-    e.waitUntil(mpLoadToken().then(function (tok) {
-      var _h = {};
-      if (tok) _h["Authorization"] = "Bearer " + tok;
-      return fetch("/api/notifications", { credentials: "include", headers: _h });
+    e.waitUntil(self.registration.pushManager.getSubscription().then(function (sub) {
+      var ep = (sub && sub.endpoint) || "";
+      return fetch("https://api.misereperdue.com/api/push/latest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: ep })
+      });
     }).then(function (r) {
       return r.json();
     }).then(function (d) {
-      var list = (d && d.notifications) || [];
-      var latest = null;
-      for (var i = 0; i < list.length; i++) {
-        if (!list[i].read && !list[i].historical) { latest = list[i]; break; }
-      }
-      return self.registration.showNotification("Misery", {
-        body: mpNotifBody(latest),
+      return self.registration.showNotification((d && d.title) || "Misery", {
+        body: (d && d.body) || "You have a new notification",
         icon: "/img/icon-192.png",
         badge: "/img/icon-192.png",
-        data: { url: mpNotifUrl(latest) },
+        data: { url: (d && d.url) || "/" },
         tag: "mp"
       });
     }).catch(function () {
