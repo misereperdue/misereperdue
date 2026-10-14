@@ -112,16 +112,40 @@ function mpNotifUrl(n) {
   return "/#journal";
 }
 var mpAuthToken = null;
+// Persist the token in Cache Storage so the SW has it even when the app
+// is closed (in-memory only would be lost when the SW restarts).
+function mpSaveToken(t) {
+  mpAuthToken = t || null;
+  try {
+    caches.open("mp-auth").then(function (cache) {
+      if (t) return cache.put("/mp-token", new Response(t));
+      return cache.delete("/mp-token");
+    }).catch(function () {});
+  } catch (e) {}
+}
+function mpLoadToken() {
+  if (mpAuthToken) return Promise.resolve(mpAuthToken);
+  try {
+    return caches.open("mp-auth").then(function (cache) {
+      return cache.match("/mp-token");
+    }).then(function (res) {
+      if (!res) return null;
+      return res.text().then(function (t) { mpAuthToken = t || null; return mpAuthToken; });
+    }).catch(function () { return null; });
+  } catch (e) { return Promise.resolve(null); }
+}
 self.addEventListener("message", function (e) {
-  if (e.data && e.data.type === "mp-auth") mpAuthToken = e.data.token || null;
+  if (e.data && e.data.type === "mp-auth") mpSaveToken(e.data.token);
 });
 self.addEventListener("push", function (e) {
   // Bare push (no payload): fetch the latest unread notification and show
   // it with title "Misery" + a relevant body. Title is always "Misery".
   if (!e.data) {
-    var _h = {};
-    if (mpAuthToken) _h["Authorization"] = "Bearer " + mpAuthToken;
-    e.waitUntil(fetch("/api/notifications", { credentials: "include", headers: _h }).then(function (r) {
+    e.waitUntil(mpLoadToken().then(function (tok) {
+      var _h = {};
+      if (tok) _h["Authorization"] = "Bearer " + tok;
+      return fetch("/api/notifications", { credentials: "include", headers: _h });
+    }).then(function (r) {
       return r.json();
     }).then(function (d) {
       var list = (d && d.notifications) || [];
