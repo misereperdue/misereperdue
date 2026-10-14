@@ -4,13 +4,21 @@
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
   <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:min(28vw,180px);height:auto;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
   <script>
-    // Pull-to-refresh splash: if the last navigation was a pull-refresh,
-    // show the splash (M on navy) until the page is positioned — no white flash.
+    // Splash (M on navy) shows on first load of a session on EVERY
+    // device (web app + Safari) — that's the branded launch screen.
+    // It does NOT show on refreshes within the same session (no navy
+    // flash on reload), EXCEPT after a pull-to-refresh (mp-refreshing),
+    // where it covers the reload glitch. Pull-to-refresh itself stays
+    // web-app-only (Safari keeps its native pull-to-refresh).
     try {
-      // Splash (navy fade) is web-app-only. In Safari, no splash — the page
-      // just loads. Standalone = Home Screen web app.
-      var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone;
-      if (isStandalone) document.documentElement.classList.add("mp-show-splash");
+      var isRefresh = false;
+      try { isRefresh = sessionStorage.getItem("mp-refreshing") === "1"; } catch (e) {}
+      var shown = false;
+      try { shown = sessionStorage.getItem("mp-splash-shown") === "1"; } catch (e) {}
+      if (!shown || isRefresh) {
+        document.documentElement.classList.add("mp-show-splash");
+        try { sessionStorage.setItem("mp-splash-shown", "1"); } catch (e) {}
+      }
     } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
     setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
