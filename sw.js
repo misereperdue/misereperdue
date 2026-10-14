@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v5";
+var CACHE = "mp-shell-v6";
 var SHELL = [
   "/",
   "/index.html",
