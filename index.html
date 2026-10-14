@@ -16,6 +16,18 @@
       var shown = false;
       try { shown = sessionStorage.getItem("mp-splash-shown") === "1"; } catch (e) {}
       if (!shown || isRefresh) {
+        // Build the splash NOW (head-parse time) so it appears instantly
+        // — no black gap while the body downloads/parses. position:fixed
+        // works from <html>, no <body> needed yet.
+        if (!document.getElementById("mp-splash")) {
+          var sp = document.createElement("div");
+          sp.id = "mp-splash";
+          var im = document.createElement("img");
+          im.src = "img/favicon.png";
+          im.alt = "";
+          sp.appendChild(im);
+          document.documentElement.appendChild(sp);
+        }
         window.__splashStart = Date.now();
         document.documentElement.classList.add("mp-show-splash");
         try { sessionStorage.setItem("mp-splash-shown", "1"); } catch (e) {}
@@ -106,7 +118,6 @@
   </script>
 </head>
 <body class="home">
-  <div id="mp-splash"><img src="img/favicon.png" alt=""></div>
   <header class="hero">
     <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header.jpg">
       <source src="video/header-ping.mp4" type="video/mp4">
