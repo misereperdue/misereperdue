@@ -97,6 +97,12 @@ self.addEventListener("push", function (e) {
   var data = {};
   try { data = e.data ? e.data.json() : {}; } catch (_) {}
   var title = data.title || "Mis\u00e8re Perdue";
+  try {
+    if ("setAppBadge" in navigator) {
+      if (typeof data.badge === "number" && data.badge > 0) navigator.setAppBadge(data.badge);
+      else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
+    }
+  } catch (e) {}
   var options = {
     body: data.body || "",
     icon: "/img/icon-192.png",
