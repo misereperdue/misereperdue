@@ -149,7 +149,7 @@
   <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=172"></script>
   <script src="js/dashboard-v2.js?v=26"></script>
-  <script src="js/forum3.js?v=1069"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-mount-patch.js?v=1071"></script>
+  <script src="js/forum3.js?v=1070"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-mount-patch.js?v=1071"></script>
   <script>
     var nav = document.getElementById("nav");
     var current = { type: "journal", id: "" };
@@ -382,13 +382,14 @@
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     function refreshTitle() {
-      // Dynamic page title: MISERY | <View>
+      // Dynamic page title: MISERY | <View> — also updates OG/Twitter meta for link previews
       var t = "MISERY | ";
       var v = current.type;
       if (v === "journal") {
         t += document.querySelector(".chat-auth") ? "Sign in" : "Chat";
       } else if (v === "forum") {
-        t += "Globe";
+        var thread = window.MPForum && window.MPForum.getCurrentThread ? window.MPForum.getCurrentThread() : null;
+        t += thread && thread.title ? thread.title : "Globe";
       } else if (v === "shop" || v === "product") {
         t += "Shop";
       } else if (v === "cart") {
@@ -397,6 +398,10 @@
         t += "Chat";
       }
       document.title = t;
+      var ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute("content", t);
+      var twTitle = document.querySelector('meta[name="twitter:title"]');
+      if (twTitle) twTitle.setAttribute("content", t);
     }
     window.MPNav = {
       show: show,
