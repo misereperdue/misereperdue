@@ -151,13 +151,16 @@ self.addEventListener("push", function (e) {
     }).then(function (r) {
       return r.json();
     }).then(function (d) {
-      return self.registration.showNotification((d && d.title) || "Misery", {
+      var notifOpts = {
         body: (d && d.body) || "You have a new notification",
         icon: "/img/icon-192.png",
         badge: "/img/icon-192.png",
         data: { url: (d && d.url) || "/" },
         tag: "mp"
-      });
+      };
+      // Subtitle = sender; iOS renders it as "from <sender>" under the title.
+      if (d && d.subtitle) notifOpts.subtitle = d.subtitle;
+      return self.registration.showNotification((d && d.title) || "Misery", notifOpts);
     }).catch(function () {
       return self.registration.showNotification("Misery", {
         body: "You have a new notification",
