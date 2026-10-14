@@ -93,23 +93,67 @@ self.addEventListener("fetch", function (e) {
 });
 
 // ---------- Push notifications ----------
+function mpNotifBody(n) {
+  if (!n) return "You have a new notification";
+  if (n.type === "mention") {
+    if (n.kind === "chat") return "@" + n.from + " mentioned you in Chat";
+    return "@" + n.from + " mentioned you in \"" + (n.threadTitle || "") + "\"";
+  }
+  if (n.type === "reply") return n.from + " replied in \"" + (n.threadTitle || "") + "\"";
+  if (n.type === "vip") return "You've been upgraded to VIP";
+  return "You have a new notification";
+}
+function mpNotifUrl(n) {
+  if (!n) return "/";
+  if ((n.type === "mention" || n.type === "reply") && n.threadId) return "/#globe/" + n.threadId;
+  return "/#journal";
+}
 self.addEventListener("push", function (e) {
+  // Bare push (no payload): fetch the latest unread notification and show
+  // it with title "Misery" + a relevant body. Title is always "Misery".
+  if (!e.data) {
+    e.waitUntil(fetch("/api/notifications", { credentials: "include" }).then(function (r) {
+      return r.json();
+    }).then(function (d) {
+      var list = (d && d.notifications) || [];
+      var latest = null;
+      for (var i = 0; i < list.length; i++) {
+        if (!list[i].read && !list[i].historical) { latest = list[i]; break; }
+      }
+      return self.registration.showNotification("Misery", {
+        body: mpNotifBody(latest),
+        icon: "/img/icon-192.png",
+        badge: "/img/icon-192.png",
+        data: { url: mpNotifUrl(latest) },
+        tag: "mp"
+      });
+    }).catch(function () {
+      return self.registration.showNotification("Misery", {
+        body: "You have a new notification",
+        icon: "/img/icon-192.png",
+        badge: "/img/icon-192.png",
+        data: { url: "/" },
+        tag: "mp"
+      });
+    }));
+    return;
+  }
   var data = {};
-  try { data = e.data ? e.data.json() : {}; } catch (_) {}
-  var title = data.title || "Mis\u00e8re Perdue";
+  try { data = e.data.json(); } catch (_) {}
+  // Encrypted path: title is always "Misery"; body comes from the payload.
+  var title = "Misery";
   try {
     if ("setAppBadge" in navigator) {
       if (typeof data.badge === "number" && data.badge > 0) navigator.setAppBadge(data.badge);
       else if (typeof data.badge === "number" && data.badge === 0 && "clearAppBadge" in navigator) navigator.clearAppBadge();
-      // Bare push (no badge field): leave the badge alone (don't clear it).
     }
   } catch (e) {}
   var options = {
-    body: data.body || "",
+    body: data.body || (data.notification && data.notification.body) || "",
     icon: "/img/icon-192.png",
     badge: "/img/icon-192.png",
-    data: { url: data.url || "/" },
-    tag: data.tag || "mp"
+    data: { url: data.url || (data.notification && data.notification.navigate) || "/" },
+    tag: data.tag || (data.notification && data.notification.tag) || "mp"
   };
   e.waitUntil(self.registration.showNotification(title, options));
 });
