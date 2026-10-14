@@ -111,11 +111,17 @@ function mpNotifUrl(n) {
   if ((n.type === "mention" || n.type === "reply") && n.threadId) return "/#globe/" + n.threadId;
   return "/#journal";
 }
+var mpAuthToken = null;
+self.addEventListener("message", function (e) {
+  if (e.data && e.data.type === "mp-auth") mpAuthToken = e.data.token || null;
+});
 self.addEventListener("push", function (e) {
   // Bare push (no payload): fetch the latest unread notification and show
   // it with title "Misery" + a relevant body. Title is always "Misery".
   if (!e.data) {
-    e.waitUntil(fetch("/api/notifications", { credentials: "include" }).then(function (r) {
+    var _h = {};
+    if (mpAuthToken) _h["Authorization"] = "Bearer " + mpAuthToken;
+    e.waitUntil(fetch("/api/notifications", { credentials: "include", headers: _h }).then(function (r) {
       return r.json();
     }).then(function (d) {
       var list = (d && d.notifications) || [];
