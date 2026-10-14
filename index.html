@@ -328,25 +328,26 @@
     // Option H: Reveal page once positioned. Runs on load + after view switches.
     var revealWaitMs = 0;
     function revealPage() {
-      // Chat view + splash showing: wait for the first message batch
-      // (bounded 1.2s) so the page fades in with messages already rendered
-      // + scrolled to the bottom. Revealing before the batch lands =
-      // empty chat fading in, then a glide to the bottom (the jump).
-      // No splash (plain refresh): DON'T wait — the wait would hold the
-      // page hidden behind the navy page bg (looks like a stuck splash)
-      // for up to 2s. Reveal on load instead; messages glide in after.
-      if (current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 1200 &&
+      // Pull-to-refresh reload: speed wins. Skip the message-batch wait
+      // entirely and use a 300ms splash (just enough to cover the reload
+      // glitch). Waiting for messages on every refresh is what made the
+      // splash linger. First load keeps the full wait (no-jump launch).
+      var isPullRefresh = false;
+      try { isPullRefresh = sessionStorage.getItem("mp-refreshing") === "1"; } catch (e) {}
+      // Chat view + splash showing + first load: wait for the first
+      // message batch (bounded 1.2s) so the page fades in with messages
+      // already rendered + scrolled to the bottom.
+      if (!isPullRefresh && current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 1200 &&
           document.documentElement.classList.contains("mp-show-splash")) {
         revealWaitMs += 100;
         setTimeout(revealPage, 100);
         return;
       }
-      // Minimum splash time: if the splash is up and hasn't been visible
-      // for at least 600ms, wait. Fast devices removed it 60ms after
-      // load — a flicker, not a splash — so other phones never saw it.
+      // Minimum splash time: 600ms first load, 300ms pull-to-refresh.
+      var splashMin = isPullRefresh ? 300 : 600;
       if (document.documentElement.classList.contains("mp-show-splash") &&
-          window.__splashStart && Date.now() - window.__splashStart < 600) {
-        setTimeout(revealPage, 600 - (Date.now() - window.__splashStart));
+          window.__splashStart && Date.now() - window.__splashStart < splashMin) {
+        setTimeout(revealPage, splashMin - (Date.now() - window.__splashStart));
         return;
       }
       assertScroll();
