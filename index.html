@@ -142,7 +142,6 @@
       <p class="meta" id="checkout-err" style="margin-top:12px"></p>
     </section>
   </main>
-  <script src="js/shopify.js?v=12"></script>
   <script>
     // Haptic feedback (Android only - iOS Safari doesn't support web vibration)
     window.haptic = function(pattern) {
@@ -151,12 +150,53 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/cart.js?v=1"></script>
-  <script src="js/shop.js?v=48"></script>
-  <script src="js/social-logos.js?v=2"></script>
   <script src="js/chat.js?v=190"></script>
-  <script src="js/dashboard-v2.js?v=29"></script>
-  <script src="js/forum3.js?v=1072"></script><script src="js/uui-icons.js?v=1"></script><script src="js/ph-icons.js?v=1"></script><script src="js/forum-mount-patch.js?v=1071"></script>
+  <script>
+    // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
+    // chat is up. Sequential, in the original dependency order. Each module
+    // renders its view on arrival if the user is already looking at it.
+    (function () {
+      var QUEUE = [
+        "js/shopify.js?v=12",
+        "js/cart.js?v=1",
+        "js/shop.js?v=48",
+        "js/social-logos.js?v=2",
+        "js/dashboard-v2.js?v=29",
+        "js/forum3.js?v=1072",
+        "js/uui-icons.js?v=1",
+        "js/ph-icons.js?v=1",
+        "js/forum-mount-patch.js?v=1071"
+      ];
+      function afterLoad(src) {
+        try {
+          if (src.indexOf("forum3.js") >= 0 && window.MPForum) {
+            // Plain Globe view (not a deep-linked thread — routeFromHash polls for those)
+            var h = location.hash || "#";
+            if (h === "#globe" || h === "#global" || h === "#forum") {
+              if (MPForum.goHome) MPForum.goHome(); else MPForum.render();
+            }
+          }
+          if (src.indexOf("shop.js") >= 0 && window.MPShop) {
+            if (window.current && current.type === "shop" && MPShop.renderShop) MPShop.renderShop();
+            if (window.current && current.type === "cart" && MPShop.renderCartPanel) MPShop.renderCartPanel();
+          }
+        } catch (e) {}
+      }
+      function loadNext(i, retries) {
+        if (i >= QUEUE.length) return;
+        var s = document.createElement("script");
+        s.src = QUEUE[i];
+        s.async = false; // preserve order (scripts execute in insertion order)
+        s.onload = function () { afterLoad(QUEUE[i]); loadNext(i + 1, 0); };
+        s.onerror = function () {
+          if (retries < 1) setTimeout(function () { loadNext(i, retries + 1); }, 3000);
+          else loadNext(i + 1, 0); // skip a failed module; chat still works
+        };
+        document.head.appendChild(s);
+      }
+      loadNext(0, 0);
+    })();
+  </script>
   <script>
     var nav = document.getElementById("nav");
     var current = { type: "journal", id: "" };
@@ -375,8 +415,8 @@
         window.scrollTo(0, 0);
         
       }
-      if (view === "shop") MPShop.renderShop();
-      if (view === "cart") MPShop.renderCartPanel();
+      if (view === "shop" && window.MPShop) MPShop.renderShop();
+      if (view === "cart" && window.MPShop) MPShop.renderCartPanel();
       if (view === "forum" && window.MPForum) {
         if (MPForum.goHome) MPForum.goHome();
         else MPForum.render();
@@ -462,12 +502,13 @@
       if ((m = h.match(/^#product\/(.+)$/))) {
         var pid = decodeURIComponent(m[1]);
         var tryOpen = function () {
-          if (window.MPShop && MPShop.openProduct) MPShop.openProduct(pid);
+          if (window.MPShop && MPShop.openProduct) { MPShop.openProduct(pid); return true; }
+          return false;
         };
         tryOpen();
         // Retry once products load (Shopify fetch is async)
         var iv = setInterval(function () {
-          if (window.MP && MP.PRODUCTS && MP.PRODUCTS[pid]) { clearInterval(iv); tryOpen(); }
+          if (tryOpen()) { clearInterval(iv); }
         }, 500);
         setTimeout(function () { clearInterval(iv); }, 8000);
         return true;
