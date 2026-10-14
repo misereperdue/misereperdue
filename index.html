@@ -6,7 +6,7 @@
   <script>document.documentElement.classList.add("mp-loading");
     // Pull-to-refresh splash: if the last navigation was a pull-refresh,
     // show the splash (M on navy) until the page is positioned — no white flash.
-    try { if (sessionStorage.getItem("mp-refreshing") === "1") document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
+    try { document.documentElement.classList.add("mp-show-splash"); } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
     setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
     setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 4000);</script>
@@ -167,7 +167,7 @@
         "js/shop.js?v=48",
         "js/social-logos.js?v=2",
         "js/dashboard-v2.js?v=29",
-        "js/forum3.js?v=1081",
+        "js/forum3.js?v=1082",
         "js/uui-icons.js?v=1",
         "js/ph-icons.js?v=1",
         "js/forum-mount-patch.js?v=1072"
