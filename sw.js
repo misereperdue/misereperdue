@@ -100,7 +100,8 @@ self.addEventListener("push", function (e) {
   try {
     if ("setAppBadge" in navigator) {
       if (typeof data.badge === "number" && data.badge > 0) navigator.setAppBadge(data.badge);
-      else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
+      else if (typeof data.badge === "number" && data.badge === 0 && "clearAppBadge" in navigator) navigator.clearAppBadge();
+      // Bare push (no badge field): leave the badge alone (don't clear it).
     }
   } catch (e) {}
   var options = {
