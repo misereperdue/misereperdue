@@ -95,6 +95,9 @@ self.addEventListener("fetch", function (e) {
 // ---------- Push notifications ----------
 function mpNotifBody(n) {
   if (!n) return "You have a new notification";
+  // Body = "user: content" — the user is the from, the content is the
+  // message (chat) or reply (thread). Falls back to a summary if no preview.
+  if (n.preview) return n.from + ": " + n.preview;
   if (n.type === "mention") {
     if (n.kind === "chat") return "@" + n.from + " mentioned you in Chat";
     return "@" + n.from + " mentioned you in \"" + (n.threadTitle || "") + "\"";
