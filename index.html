@@ -329,24 +329,24 @@
     var revealWaitMs = 0;
     function revealPage() {
       // Chat view + splash showing: wait for the first message batch
-      // (bounded 2s) so the page fades in with messages already rendered
+      // (bounded 1.2s) so the page fades in with messages already rendered
       // + scrolled to the bottom. Revealing before the batch lands =
       // empty chat fading in, then a glide to the bottom (the jump).
       // No splash (plain refresh): DON'T wait — the wait would hold the
       // page hidden behind the navy page bg (looks like a stuck splash)
       // for up to 2s. Reveal on load instead; messages glide in after.
-      if (current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 2000 &&
+      if (current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 1200 &&
           document.documentElement.classList.contains("mp-show-splash")) {
         revealWaitMs += 100;
         setTimeout(revealPage, 100);
         return;
       }
       // Minimum splash time: if the splash is up and hasn't been visible
-      // for at least 900ms, wait. Fast devices removed it 60ms after
+      // for at least 600ms, wait. Fast devices removed it 60ms after
       // load — a flicker, not a splash — so other phones never saw it.
       if (document.documentElement.classList.contains("mp-show-splash") &&
-          window.__splashStart && Date.now() - window.__splashStart < 900) {
-        setTimeout(revealPage, 900 - (Date.now() - window.__splashStart));
+          window.__splashStart && Date.now() - window.__splashStart < 600) {
+        setTimeout(revealPage, 600 - (Date.now() - window.__splashStart));
         return;
       }
       assertScroll();
@@ -400,9 +400,13 @@
         if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest();
       }
     });
-    // Full load: reveal page once positioned (Option H — no flash).
-    window.addEventListener("load", function () {
-      applyCropHero();
+    // Reveal on DOMContentLoaded (HTML parsed), NOT window load — load
+    // waits for every image/video on the page, which made the splash
+    // linger. Images now have reserved boxes (no jump), so they can
+    // finish loading after the reveal. applyCropHero stays on load
+    // (it needs the hero video metadata).
+    window.addEventListener("load", function () { applyCropHero(); });
+    document.addEventListener("DOMContentLoaded", function () {
       if (current.type === "journal" && !isAuthView()) {
         setTimeout(revealPage, 60);
       } else {
