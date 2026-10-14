@@ -332,16 +332,16 @@
       var isPullRefresh = false;
       try { isPullRefresh = sessionStorage.getItem("mp-refreshing") === "1"; } catch (e) {}
       // Chat view + splash showing + first load: wait for the first
-      // message batch (bounded 1.2s) so the page fades in with messages
+      // message batch (bounded 400ms) so the page fades in with messages
       // already rendered + scrolled to the bottom.
-      if (!isPullRefresh && current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 1200 &&
+      if (!isPullRefresh && current.type === "journal" && !isAuthView() && !window.__chatMsgsLoaded && revealWaitMs < 400 &&
           document.documentElement.classList.contains("mp-show-splash")) {
         revealWaitMs += 100;
         setTimeout(revealPage, 100);
         return;
       }
-      // Minimum splash time: 600ms first load, 300ms pull-to-refresh.
-      var splashMin = isPullRefresh ? 300 : 600;
+      // Minimum splash time: 300ms (was 600ms first load — speed wins).
+      var splashMin = 300;
       if (document.documentElement.classList.contains("mp-show-splash") &&
           window.__splashStart && Date.now() - window.__splashStart < splashMin) {
         setTimeout(revealPage, splashMin - (Date.now() - window.__splashStart));
