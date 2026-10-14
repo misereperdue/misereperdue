@@ -252,13 +252,16 @@
     }
     // While hidden (mp-loading), Safari may restore scroll async AFTER our
     // reveal timing. Hold scroll at 0 until reveal — invisible since hidden.
+    // Keep the loop running even on chat view: the view may switch to
+    // Globe/Shop before load fires, and a dead loop can't catch that.
     function holdScrollAtTop() {
       if (!document.documentElement.classList.contains("mp-loading")) return;
-      if (current.type === "journal" && !isAuthView()) return;
-      if (window.scrollY > 0) {
-        window.scrollTo(0, 0);
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
+      if (!(current.type === "journal" && !isAuthView())) {
+        if (window.scrollY > 0) {
+          window.scrollTo(0, 0);
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        }
       }
       requestAnimationFrame(holdScrollAtTop);
     }
