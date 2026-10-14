@@ -199,6 +199,9 @@
       ];
       function afterLoad(src) {
         try {
+          if (src.indexOf("cart.js") >= 0 && window.MPNav) {
+            if (MPNav.refreshPostBtn) MPNav.refreshPostBtn();
+          }
           if (src.indexOf("forum3.js") >= 0 && window.MPForum) {
             // Plain Globe view (not a deep-linked thread — routeFromHash polls for those)
             var h = location.hash || "#";
@@ -273,6 +276,13 @@
       }
       // the sectioned bag replaces the regular cart tab on product pages
       if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
+      // Sync the cart count badge here too (not just in shop.js) — view
+      // switches otherwise showed the pill with the count still hidden.
+      var cartBadge = document.getElementById("cart-badge");
+      if (cartBadge) {
+        cartBadge.classList.toggle("hidden", bagMode || n === 0);
+        cartBadge.textContent = n > 99 ? "99+" : String(n);
+      }
     }
     var viewScroll = {};
     var pinState = { until: 0, enteredAt: 0, lastTouchAt: 0, running: false, observer: null };
