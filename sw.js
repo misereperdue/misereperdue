@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v9";
+var CACHE = "mp-shell-v10";
 var SHELL = [
   "/",
   "/index.html",
@@ -128,9 +128,13 @@ self.addEventListener("push", function (e) {
       // Home Screen app icon badge: bare pushes are the only path that runs
       // with the app closed, and the old code never set the badge here —
       // so mentions arrived with no number on the icon. Sync from pushLatest.
+      // Only act when the server actually sent a count: if the server is
+      // still running older code (no `unread` field), leave the badge alone
+      // instead of clearing it — clearing on a missing field wipes a badge
+      // the app itself had set.
       try {
-        if ("setAppBadge" in navigator) {
-          if (d && typeof d.unread === "number" && d.unread > 0) navigator.setAppBadge(d.unread);
+        if ("setAppBadge" in navigator && d && typeof d.unread === "number") {
+          if (d.unread > 0) navigator.setAppBadge(d.unread);
           else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
         }
       } catch (e) {}
