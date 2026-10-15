@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v6";
+var CACHE = "mp-shell-v7";
 var SHELL = [
   "/",
   "/index.html",
@@ -107,32 +107,8 @@ function mpNotifUrl(n) {
   if ((n.type === "mention" || n.type === "reply") && n.threadId) return "/#globe/" + n.threadId;
   return "/#journal";
 }
-var mpAuthToken = null;
-// Persist the token in Cache Storage so the SW has it even when the app
-// is closed (in-memory only would be lost when the SW restarts).
-function mpSaveToken(t) {
-  mpAuthToken = t || null;
-  try {
-    caches.open("mp-auth").then(function (cache) {
-      if (t) return cache.put("/mp-token", new Response(t));
-      return cache.delete("/mp-token");
-    }).catch(function () {});
-  } catch (e) {}
-}
-function mpLoadToken() {
-  if (mpAuthToken) return Promise.resolve(mpAuthToken);
-  try {
-    return caches.open("mp-auth").then(function (cache) {
-      return cache.match("/mp-token");
-    }).then(function (res) {
-      if (!res) return null;
-      return res.text().then(function (t) { mpAuthToken = t || null; return mpAuthToken; });
-    }).catch(function () { return null; });
-  } catch (e) { return Promise.resolve(null); }
-}
-self.addEventListener("message", function (e) {
-  if (e.data && e.data.type === "mp-auth") mpSaveToken(e.data.token);
-});
+// No auth token is ever stored in the SW. Bare-push content is fetched via
+// endpoint-auth (POST /api/push/latest with the subscription endpoint).
 self.addEventListener("push", function (e) {
   // Bare push (no payload): fetch the latest unread notification and show
   // it with title "Misery" + a relevant body. Title is always "Misery".
@@ -193,6 +169,9 @@ self.addEventListener("push", function (e) {
 self.addEventListener("notificationclick", function (e) {
   e.notification.close();
   var url = (e.notification.data && e.notification.data.url) || "/";
+  // Only same-origin relative URLs may be navigated to — never an
+  // absolute or protocol-relative URL from push data.
+  if (typeof url !== "string" || url.charAt(0) !== "/" || url.charAt(1) === "/") url = "/";
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (list) {
     for (var i = 0; i < list.length; i++) {
       var c = list[i];
