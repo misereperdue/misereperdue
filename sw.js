@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v7";
+var CACHE = "mp-shell-v8";
 var SHELL = [
   "/",
   "/index.html",
@@ -91,6 +91,8 @@ self.addEventListener("fetch", function (e) {
 // ---------- Push notifications ----------
 function mpNotifBody(n) {
   if (!n) return "You have a new notification";
+  // Milestones have no sender — body is the milestone text itself.
+  if (n.type === "milestone") return n.text || n.preview || "You hit a milestone";
   // Body = "user: content" — the user is the from, the content is the
   // message (chat) or reply (thread). Falls back to a summary if no preview.
   if (n.preview) return n.from + ": " + n.preview;
@@ -104,7 +106,7 @@ function mpNotifBody(n) {
 }
 function mpNotifUrl(n) {
   if (!n) return "/";
-  if ((n.type === "mention" || n.type === "reply") && n.threadId) return "/#globe/" + n.threadId;
+  if ((n.type === "mention" || n.type === "reply" || n.type === "milestone") && n.threadId) return "/#globe/" + n.threadId;
   return "/#journal";
 }
 // No auth token is ever stored in the SW. Bare-push content is fetched via
