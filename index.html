@@ -183,7 +183,7 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/chat.js?v=267"></script>
+  <script src="js/chat.js?v=268"></script>
   <script>
     // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
     // chat is up. Parallel via Promise.allSettled, except two ordering
@@ -479,7 +479,7 @@
       }
       // Switching back to chat: catch up any messages missed while on
       // another view (WS gaps don't self-heal until a fetch runs).
-      if (view === "journal" && window.MPChat && MPChat.catchUp) MPChat.catchUp();
+      if (view === "journal" && window.MPChat && MPChat.catchUp) { var _cu = MPChat.catchUp(); if (_cu && _cu.then) _cu.then(function () { if (window.MPChat && MPChat.scrollToLatest) MPChat.scrollToLatest(); }); }
       if (view === "shop" && window.MPShop) MPShop.renderShop();
       if (view === "cart" && window.MPShop) MPShop.renderCartPanel();
       if (view === "forum" && window.MPForum) {
