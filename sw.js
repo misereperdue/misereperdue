@@ -3,7 +3,7 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v12";
+var CACHE = "mp-shell-v13";
 var SHELL = [
   "/",
   "/index.html",
@@ -23,8 +23,6 @@ var SHELL = [
   "/img/icon-192.png",
   "/img/icon-512.png",
   "/img/favicon.png",
-  "/img/splash-icon-light.png",
-  "/img/splash-icon-dark.png",
   "/img/splash-1290x2796.png",
   "/img/splash-1179x2556.png",
   "/img/splash-1170x2532.png",
@@ -32,19 +30,6 @@ var SHELL = [
   "/img/splash-750x1334.png",
   "/img/splash-1125x2436.png",
   "/img/splash-1242x2688.png",
-  "/img/splash-1206x2622.png",
-  "/img/splash-1320x2868.png",
-  "/img/splash-1260x2736.png",
-  "/img/splash-light-1290x2796.png",
-  "/img/splash-light-1179x2556.png",
-  "/img/splash-light-1170x2532.png",
-  "/img/splash-light-1284x2778.png",
-  "/img/splash-light-750x1334.png",
-  "/img/splash-light-1125x2436.png",
-  "/img/splash-light-1242x2688.png",
-  "/img/splash-light-1206x2622.png",
-  "/img/splash-light-1320x2868.png",
-  "/img/splash-light-1260x2736.png",
   "/video/header.jpg"
 ];
 

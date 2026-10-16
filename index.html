@@ -2,7 +2,7 @@
 <html lang="en" class="mp-loading">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:28vw;height:28vw;max-width:180px;max-height:180px;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}@media (prefers-color-scheme: light){#mp-splash{background:#ffffff}html{background:#ffffff}html.mp-show-splash{background:#ffffff}html.mp-show-splash body{background:#ffffff}}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:28vw;height:28vw;max-width:180px;max-height:180px;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
   <script>
     // Splash (M on navy) shows on first load of a session, and on
     // pull-to-refresh reloads (covers the reload glitch). Plain
@@ -20,7 +20,7 @@
           var sp = document.createElement("div");
           sp.id = "mp-splash";
           var im = document.createElement("img");
-          im.src = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "img/splash-icon-light.png" : "img/splash-icon-dark.png";
+          im.src = "img/favicon.png";
           im.alt = "";
           sp.appendChild(im);
           document.documentElement.appendChild(sp);
@@ -84,26 +84,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Misery">
-  <link rel="apple-touch-startup-image" href="img/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="img/splash-light-1260x2736.png" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="img/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=11").catch(function () {}); }); }</script>
   <link rel="preconnect" href="https://api.misereperdue.com">
   <link rel="preconnect" href="https://shop.misereperdue.com">
