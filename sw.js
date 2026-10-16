@@ -111,6 +111,12 @@ function mpNotifUrl(n) {
 }
 // No auth token is ever stored in the SW. Bare-push content is fetched via
 // endpoint-auth (POST /api/push/latest with the subscription endpoint).
+// Push grouping + burst control: each shown notification id is recorded
+// so a redelivered/queued push never shows the same notification twice.
+// Grouping = one tag per notification (tag "mp-<id>"): notifications
+// stack grouped under the app instead of every push replacing the last
+// (the old shared tag "mp" collapsed everything to one).
+var shownPushIds = new Set();
 self.addEventListener("push", function (e) {
   // Bare push (no payload): fetch the latest unread notification and show
   // it with title "Misery" + a relevant body. Title is always "Misery".
@@ -138,12 +144,28 @@ self.addEventListener("push", function (e) {
           else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
         }
       } catch (e) {}
+      // Present/future only: a bare push can arrive long after its
+      // notification was created (APNs queue, SW restart, login burst).
+      // If the notification the server returned is older than 15 min,
+      // it's already in the tray — showing it now is a stale burst, not
+      // a live alert. Skip it silently. No ts (generic path) = nothing
+      // fresh to show, so skip that too.
+      var nts = (d && typeof d.ts === "number") ? d.ts : 0;
+      if (!nts || Date.now() - nts > 15 * 60 * 1000) return;
+      // Dedupe: the same notification can be delivered twice (APNs
+      // redelivery, queued pushes). Show each notification id once.
+      var nid = (d && d.id) || "";
+      if (nid) {
+        if (shownPushIds.has(nid)) return;
+        shownPushIds.add(nid);
+        if (shownPushIds.size > 200) shownPushIds.clear();
+      }
       var notifOpts = {
         body: (d && d.body) || "You have a new notification",
         icon: "/img/icon-192.png",
         badge: "/img/icon-192.png",
         data: { url: (d && d.url) || "/" },
-        tag: "mp"
+        tag: "mp-" + (nid || ("t" + Date.now()))
       };
       // iOS ignores the subtitle option for web push and always shows
       // "from <app name>" on that line. So the sender goes in the TITLE
