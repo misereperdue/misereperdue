@@ -2,7 +2,7 @@
 <html lang="en" class="mp-loading">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:28vw;height:28vw;max-width:180px;max-height:180px;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:0;left:0;right:0;bottom:0;height:100dvh;height:100vh;width:100vw;z-index:99999;background:#0a1230;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash img{width:28vw;height:28vw;max-width:180px;max-height:180px;border-radius:22%;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash img{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
   <script>
     // Splash (M on navy) shows on first load of a session, and on
     // pull-to-refresh reloads (covers the reload glitch). Plain
@@ -24,6 +24,9 @@
           im.alt = "";
           sp.appendChild(im);
           document.documentElement.appendChild(sp);
+          // Move into <body> once it exists: fixed inside <html>
+          // (iOS scroll container) can be offset by scroll on refresh.
+          (function moveSplash(){ if (document.body) { document.body.appendChild(sp); } else { document.addEventListener("DOMContentLoaded", moveSplash, { once: true }); } })();
         }
         window.__splashStart = Date.now();
         document.documentElement.classList.add("mp-show-splash");
