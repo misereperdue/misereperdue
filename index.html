@@ -217,7 +217,7 @@
         });
       }
       var jobs = [
-        "js/dashboard-v2.js?v=42",
+        "js/dashboard-v2.js?v=43",
         "js/social-logos.js?v=2",
         "js/ph-icons.js?v=1"
       ].map(function (src) { return loadOne(src, 0); });
@@ -227,7 +227,7 @@
         loadOne("js/cart.js?v=1", 0)
       ]).then(function () { return loadOne("js/shop.js?v=49", 0); }));
       // Forum chain: patch after forum3.js.
-      jobs.push(loadOne("js/forum3.js?v=1094", 0).then(function () { return loadOne(PATCH, 0); }));
+      jobs.push(loadOne("js/forum3.js?v=1095", 0).then(function () { return loadOne(PATCH, 0); }));
       if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);
     })();
   </script>
