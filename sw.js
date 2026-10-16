@@ -3,40 +3,46 @@
 // API calls are never cached — they always go to the network.
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
-var CACHE = "mp-shell-v13";
+/* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
+var SW_VERSION = 12;
+var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
   "/index.html",
-  "/manifest.json",
-  "/css/site.css",
-  "/js/theme.js",
-  "/js/shopify.js",
-  "/js/cart.js",
-  "/js/shop.js",
-  "/js/social-logos.js",
-  "/js/chat.js",
-  "/js/dashboard-v2.js",
-  "/js/forum3.js",
-  "/js/ph-icons.js",
-  "/js/forum-mount-patch.js",
-  "/img/apple-touch-icon.png",
+  "/manifest.json?v=1",
+  "/css/site.css?v=472",
+  "/js/theme.js?v=7",
+  "/js/shopify.js?v=12",
+  "/js/cart.js?v=1",
+  "/js/shop.js?v=49",
+  "/js/social-logos.js?v=2",
+  "/js/chat.js?v=259",
+  "/js/dashboard-v2.js?v=35",
+  "/js/forum3.js?v=1089",
+  "/js/ph-icons.js?v=1",
+  "/js/forum-mount-patch.js?v=1073",
+  "/img/apple-touch-icon.png?v=1",
   "/img/icon-192.png",
   "/img/icon-512.png",
-  "/img/favicon.png",
-  "/img/splash-1290x2796.png",
-  "/img/splash-1179x2556.png",
-  "/img/splash-1170x2532.png",
-  "/img/splash-1284x2778.png",
-  "/img/splash-750x1334.png",
-  "/img/splash-1125x2436.png",
-  "/img/splash-1242x2688.png",
+  "/img/favicon.png?v=4",
+  "/img/splash-1290x2796.png?v=1",
+  "/img/splash-1179x2556.png?v=1",
+  "/img/splash-1170x2532.png?v=1",
+  "/img/splash-1284x2778.png?v=1",
+  "/img/splash-750x1334.png?v=1",
+  "/img/splash-1125x2436.png?v=1",
+  "/img/splash-1242x2688.png?v=1",
+  "/img/splash-1206x2622.png?v=1",
+  "/img/splash-1320x2868.png?v=1",
+  "/img/splash-1260x2736.png?v=1",
   "/video/header.jpg"
 ];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE).then(function (cache) {
-      return cache.addAll(SHELL);
+      // P-H1: one failed entry must not fail the whole install.
+      return Promise.allSettled(SHELL.map(function (u) { return cache.add(u); }));
     }).then(function () { return self.skipWaiting(); })
   );
 });
@@ -69,6 +75,18 @@ self.addEventListener("fetch", function (e) {
         }
         return res;
       }).catch(function () { return caches.match(e.request); })
+    );
+    return;
+  }
+
+  // P-H1: versioned (?v=) assets are immutable — serve from cache only,
+  // never background-revalidate, never re-put. On a cache miss (e.g. a
+  // version bump the SW has not precached yet), fetch once without caching.
+  if (url.search.indexOf("v=") !== -1) {
+    e.respondWith(
+      caches.match(e.request).then(function (cached) {
+        return cached || fetch(e.request);
+      })
     );
     return;
   }

@@ -20,7 +20,7 @@
           var sp = document.createElement("div");
           sp.id = "mp-splash";
           var im = document.createElement("img");
-          im.src = "img/favicon.png";
+          im.src = "img/favicon.png?v=4";
           im.alt = "";
           sp.appendChild(im);
           document.documentElement.appendChild(sp);
@@ -31,8 +31,8 @@
       }
     } catch (e) {}
     // Safety: never stay hidden more than 3s even if something breaks
-    setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 3000);
-    setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 4000);</script>
+    setTimeout(function(){document.documentElement.classList.remove("mp-loading");}, 1500);
+    setTimeout(function(){document.documentElement.classList.remove("mp-show-splash");}, 1500);</script>
   <script>
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     // Clear Safari's stored scroll positions
@@ -49,10 +49,7 @@
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     });
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://api.misereperdue.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -79,49 +76,48 @@
   <link rel="canonical" href="https://misereperdue.com/">
   <meta name="robots" content="index, follow">
   <link rel="icon" href="img/favicon.png?v=4">
-  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png?v=1">
+  <link rel="manifest" href="/manifest.json?v=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Misery">
-  <link rel="apple-touch-startup-image" href="img/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=11").catch(function () {}); }); }</script>
+  <link rel="apple-touch-startup-image" href="img/splash-1290x2796.png?v=1" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1179x2556.png?v=1" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1170x2532.png?v=1" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1284x2778.png?v=1" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-750x1334.png?v=1" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1125x2436.png?v=1" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1242x2688.png?v=1" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png?v=1" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png?v=1" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png?v=1" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=12").catch(function () {}); }); }</script>
   <link rel="preconnect" href="https://api.misereperdue.com">
   <link rel="preconnect" href="https://shop.misereperdue.com">
   <link rel="dns-prefetch" href="https://ipapi.co">
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=472">
+  <link rel="stylesheet" href="css/site.css?v=473">
   <script src="js/theme.js?v=7"></script>
   <script>
-    // Analytics: track pageview
-    (function() {
+    // Analytics: track pageview via sendBeacon after load (no render blocking)
+    window.addEventListener("load", function () {
       try {
-        fetch("https://api.misereperdue.com/api/analytics", {
+        var payload = JSON.stringify({ type: "pageview", path: location.pathname });
+        if (navigator.sendBeacon) navigator.sendBeacon("https://api.misereperdue.com/api/analytics", new Blob([payload], { type: "application/json" }));
+        else fetch("https://api.misereperdue.com/api/analytics", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "pageview", path: location.pathname })
+          body: payload
         }).catch(function() {});
       } catch (e) {}
-    })();
+    });
   </script>
 </head>
 <body class="home">
   <header class="hero">
     <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header.jpg">
-      <source src="video/header-ping.mp4" type="video/mp4">
-    </video>
-    <video class="soft" autoplay muted loop playsinline preload="none" aria-hidden="true">
       <source src="video/header-ping.mp4" type="video/mp4">
     </video>
     <div class="hero-fade"></div>
@@ -179,23 +175,16 @@
       } catch (e) {}
     };
   </script>
-  <script src="js/chat.js?v=259"></script>
+  <script src="js/chat.js?v=260"></script>
   <script>
     // Lazy-load non-critical modules (shop, forum, dashboard, icons) after the
-    // chat is up. Sequential, in the original dependency order. Each module
-    // renders its view on arrival if the user is already looking at it.
+    // chat is up. Parallel via Promise.allSettled, except two ordering
+    // dependencies: shop.js needs MP (cart.js) + MPShopify (shopify.js) at
+    // render time, and forum-mount-patch rewrites forum3's icons, so it
+    // loads after forum3.js. Each module renders its view on arrival if
+    // the user is already looking at it.
     (function () {
-      var QUEUE = [
-        "js/shopify.js?v=12",
-        "js/cart.js?v=1",
-        "js/shop.js?v=49",
-        "js/social-logos.js?v=2",
-        "js/dashboard-v2.js?v=35",
-        "js/forum3.js?v=1089",
-        "js/uui-icons.js?v=1",
-        "js/ph-icons.js?v=1",
-        "js/forum-mount-patch.js?v=1073"
-      ];
+      var PATCH = "js/forum-mount-patch.js?v=1073";
       function afterLoad(src) {
         try {
           if (src.indexOf("cart.js") >= 0 && window.MPNav) {
@@ -214,19 +203,32 @@
           }
         } catch (e) {}
       }
-      function loadNext(i, retries) {
-        if (i >= QUEUE.length) return;
-        var s = document.createElement("script");
-        s.src = QUEUE[i];
-        s.async = false; // preserve order (scripts execute in insertion order)
-        s.onload = function () { afterLoad(QUEUE[i]); loadNext(i + 1, 0); };
-        s.onerror = function () {
-          if (retries < 1) setTimeout(function () { loadNext(i, retries + 1); }, 3000);
-          else loadNext(i + 1, 0); // skip a failed module; chat still works
-        };
-        document.head.appendChild(s);
+      function loadOne(src, retries) {
+        return new Promise(function (resolve) {
+          var s = document.createElement("script");
+          s.src = src;
+          s.async = true;
+          s.onload = function () { afterLoad(src); resolve(); };
+          s.onerror = function () {
+            if (retries < 1) setTimeout(function () { loadOne(src, retries + 1).then(resolve); }, 3000);
+            else resolve(); // skip a failed module; chat still works
+          };
+          document.head.appendChild(s);
+        });
       }
-      loadNext(0, 0);
+      var jobs = [
+        "js/dashboard-v2.js?v=36",
+        "js/social-logos.js?v=2",
+        "js/ph-icons.js?v=1"
+      ].map(function (src) { return loadOne(src, 0); });
+      // Shop chain: shop.js renders with MP + MPShopify.
+      jobs.push(Promise.all([
+        loadOne("js/shopify.js?v=12", 0),
+        loadOne("js/cart.js?v=1", 0)
+      ]).then(function () { return loadOne("js/shop.js?v=49", 0); }));
+      // Forum chain: patch after forum3.js.
+      jobs.push(loadOne("js/forum3.js?v=1090", 0).then(function () { return loadOne(PATCH, 0); }));
+      if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);
     })();
   </script>
   <script>

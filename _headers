@@ -4,3 +4,4 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.misereperdue.com wss://api.misereperdue.com; frame-src https://www.youtube.com https://open.spotify.com https://w.soundcloud.com https://player.vimeo.com; frame-ancestors 'none'
