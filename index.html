@@ -30,6 +30,21 @@
         }
         window.__splashStart = Date.now();
         document.documentElement.classList.add("mp-show-splash");
+        // Splash must cover everything regardless of scroll: pin to
+        // top + lock scroll while it shows, restore when it hides.
+        try {
+          window.__splashScrollY = window.scrollY || 0;
+          window.scrollTo(0, 0);
+          document.documentElement.style.overflow = "hidden";
+          var __mo = new MutationObserver(function () {
+            if (!document.documentElement.classList.contains("mp-show-splash")) {
+              __mo.disconnect();
+              document.documentElement.style.overflow = "";
+              window.scrollTo(0, window.__splashScrollY || 0);
+            }
+          });
+          __mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+        } catch (e) {}
         try { sessionStorage.setItem("mp-splash-shown", "1"); } catch (e) {}
       }
     } catch (e) {}
