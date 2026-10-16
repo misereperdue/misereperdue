@@ -148,10 +148,12 @@ self.addEventListener("push", function (e) {
       // notification was created (APNs queue, SW restart, login burst).
       // If the notification the server returned is older than 15 min,
       // it's already in the tray — showing it now is a stale burst, not
-      // a live alert. Skip it silently. No ts (generic path) = nothing
-      // fresh to show, so skip that too.
-      var nts = (d && typeof d.ts === "number") ? d.ts : 0;
-      if (!nts || Date.now() - nts > 15 * 60 * 1000) return;
+      // a live alert. Skip it silently. The server sends ts: 0 when it
+      // has nothing fresh (generic path). Backward-compatible: if the
+      // server sent no ts at all (older worker), show it (old behavior)
+      // instead of dropping everything during a deploy gap.
+      var nts = (d && typeof d.ts === "number") ? d.ts : -1;
+      if (nts !== -1 && (!nts || Date.now() - nts > 15 * 60 * 1000)) return;
       // Dedupe: the same notification can be delivered twice (APNs
       // redelivery, queued pushes). Show each notification id once.
       var nid = (d && d.id) || "";
