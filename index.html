@@ -98,7 +98,7 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=480">
+  <link rel="stylesheet" href="css/site.css?v=481">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview via sendBeacon after load (no render blocking)
@@ -227,7 +227,7 @@
         loadOne("js/cart.js?v=1", 0)
       ]).then(function () { return loadOne("js/shop.js?v=49", 0); }));
       // Forum chain: patch after forum3.js.
-      jobs.push(loadOne("js/forum3.js?v=1092", 0).then(function () { return loadOne(PATCH, 0); }));
+      jobs.push(loadOne("js/forum3.js?v=1093", 0).then(function () { return loadOne(PATCH, 0); }));
       if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);
     })();
   </script>
