@@ -9,7 +9,7 @@ var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
   "/index.html",
-  "/manifest.json?v=7",
+  "/webapp.json",
   "/css/site.css?v=508",
   "/js/theme.js?v=7",
   "/js/shopify.js?v=12",
