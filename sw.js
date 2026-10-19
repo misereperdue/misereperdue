@@ -4,12 +4,12 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 19;
+var SW_VERSION = 20;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
   "/index.html",
-  "/manifest.json?v=4",
+  "/manifest.json?v=5",
   "/css/site.css?v=508",
   "/js/theme.js?v=7",
   "/js/shopify.js?v=12",
@@ -21,10 +21,10 @@ var SHELL = [
   "/js/forum3.js?v=1096",
   "/js/ph-icons.js?v=1",
   "/js/forum-mount-patch.js?v=1073",
-  "/img/m-touch-icon.png",
-  "/img/m-icon-192.png",
-  "/img/m-icon-512.png",
-  "/img/app-icon.png?v=3",
+  "/img/apple-touch-icon.png",
+  "/img/icon-192.png",
+  "/img/icon-512.png",
+  "/img/app-icon.png",
   "/img/splash-1290x2796.png?v=1",
   "/img/splash-1179x2556.png?v=1",
   "/img/splash-1170x2532.png?v=1",
@@ -182,8 +182,8 @@ self.addEventListener("push", function (e) {
       }
       var notifOpts = {
         body: (d && d.body) || "You have a new notification",
-        icon: "/img/m-icon-192.png",
-        badge: "/img/m-icon-192.png",
+        icon: "/img/icon-192.png",
+        badge: "/img/icon-192.png",
         data: { url: (d && d.url) || "/" },
         tag: "mp-" + (nid || ("t" + Date.now()))
       };
@@ -196,8 +196,8 @@ self.addEventListener("push", function (e) {
     }).catch(function () {
       return self.registration.showNotification("Misery", {
         body: "You have a new notification",
-        icon: "/img/m-icon-192.png",
-        badge: "/img/m-icon-192.png",
+        icon: "/img/icon-192.png",
+        badge: "/img/icon-192.png",
         data: { url: "/" },
         tag: "mp"
       });
@@ -216,8 +216,8 @@ self.addEventListener("push", function (e) {
   } catch (e) {}
   var options = {
     body: data.body || (data.notification && data.notification.body) || "",
-    icon: "/img/m-icon-192.png",
-    badge: "/img/m-icon-192.png",
+    icon: "/img/icon-192.png",
+    badge: "/img/icon-192.png",
     data: { url: data.url || (data.notification && data.notification.navigate) || "/" },
     tag: data.tag || (data.notification && data.notification.tag) || "mp"
   };
