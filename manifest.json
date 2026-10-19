@@ -1,6 +1,6 @@
 {
   "background_color": "#0a1230",
-  "description": "Mis\u00e8re Perdue \u2014 community, forum, and shop",
+  "description": "Misère Perdue — community, forum, and shop",
   "display": "standalone",
   "icons": [
     {
@@ -21,7 +21,7 @@
       "type": "image/png"
     }
   ],
-  "name": "Mis\u00e8re Perdue",
+  "name": "Misère Perdue",
   "short_name": "Misery",
   "start_url": "/",
   "theme_color": "#0a1230",
@@ -72,5 +72,6 @@
       "text": "text",
       "url": "url"
     }
-  }
+  },
+  "id": "/"
 }
