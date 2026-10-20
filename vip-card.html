@@ -117,7 +117,7 @@ sweep.position.set(2.5, 1.2, 3.5);
 scene.add(sweep);
 
 // Backdrop that catches the card's real shadow (shadow follows the card's shape as it spins)
-const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.38 });
+const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.15 });
 const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), shadowMat);
 backdrop.position.z = -1.15;
 backdrop.receiveShadow = true;
@@ -138,6 +138,19 @@ function roundedRectShape(w, h, r) {
   s.quadraticCurveTo(x, y + h, x, y + h - r);
   s.lineTo(x, y + r);
   s.quadraticCurveTo(x, y, x + r, y);
+  // Lanyard slot punched through the card (pill-shaped, top center)
+  const sw = 0.15, sh = 0.042, sy = 1.30, sr = 0.042;
+  const hole = new THREE.Path();
+  hole.moveTo(-sw + sr, sy - sh);
+  hole.lineTo(sw - sr, sy - sh);
+  hole.quadraticCurveTo(sw, sy - sh, sw, sy - sh + sr);
+  hole.lineTo(sw, sy + sh - sr);
+  hole.quadraticCurveTo(sw, sy + sh, sw - sr, sy + sh);
+  hole.lineTo(-sw + sr, sy + sh);
+  hole.quadraticCurveTo(-sw, sy + sh, -sw, sy + sh - sr);
+  hole.lineTo(-sw, sy - sh + sr);
+  hole.quadraticCurveTo(-sw, sy - sh, -sw + sr, sy - sh);
+  s.holes.push(hole);
   return s;
 }
 
@@ -211,17 +224,22 @@ const lanyard = new THREE.Group();
 scene.add(lanyard);
 
 const strapCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3( 0.02, 0.00,  0.055),
-  new THREE.Vector3(-0.16, 0.38,  0.050),
-  new THREE.Vector3(-0.25, 0.85,  0.035),
-  new THREE.Vector3(-0.24, 1.18,  0.018),
-  new THREE.Vector3(-0.11, 1.38,  0.006),
-  new THREE.Vector3( 0.00, 1.43,  0.000),
-  new THREE.Vector3( 0.11, 1.38, -0.006),
-  new THREE.Vector3( 0.24, 1.18, -0.018),
-  new THREE.Vector3( 0.25, 0.85, -0.035),
-  new THREE.Vector3( 0.16, 0.38, -0.050),
-  new THREE.Vector3(-0.02, 0.00, -0.055)
+  new THREE.Vector3( 0.075, -0.15,  0.058),
+  new THREE.Vector3( 0.060, -0.04,  0.056),
+  new THREE.Vector3( 0.028,  0.03,  0.030),
+  new THREE.Vector3( 0.000,  0.05,  0.000),
+  new THREE.Vector3(-0.028,  0.03, -0.030),
+  new THREE.Vector3(-0.085,  0.22, -0.055),
+  new THREE.Vector3(-0.200,  0.78, -0.038),
+  new THREE.Vector3(-0.225,  1.14, -0.018),
+  new THREE.Vector3(-0.105,  1.35, -0.006),
+  new THREE.Vector3( 0.000,  1.41,  0.000),
+  new THREE.Vector3( 0.115,  1.35,  0.006),
+  new THREE.Vector3( 0.235,  1.13,  0.018),
+  new THREE.Vector3( 0.255,  0.78,  0.038),
+  new THREE.Vector3( 0.190,  0.40,  0.052),
+  new THREE.Vector3( 0.105,  0.13,  0.056),
+  new THREE.Vector3( 0.062,  0.045, 0.050)
 ]);
 const STRAP_N = 72, STRAP_HALF = 0.08;
 const strapGeo = new THREE.BufferGeometry();
@@ -411,7 +429,7 @@ toggle.addEventListener('click', () => {
   label.textContent = light ? 'Dark mode' : 'Light mode';
   key.intensity = light ? 1.9 : 1.6;
   renderer.toneMappingExposure = light ? 1.12 : 1.05;
-  shadowMat.opacity = light ? 0.22 : 0.38;
+  shadowMat.opacity = light ? 0.09 : 0.15;
 });
 </script>
 </body>
