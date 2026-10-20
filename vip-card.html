@@ -219,16 +219,16 @@ const backFace = faceMesh('img/vip-card-back.png?v=4', 'img/vip-card-back-rough.
 card.add(backFace);
 
 // Holographic foil barcode + caption, floating a hair off the back face
-const holoTex = loader.load('img/vip-card-holo.png');
+const holoTex = loader.load('img/vip-card-holo.png?v=2');
 holoTex.colorSpace = THREE.SRGBColorSpace;
 holoTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 const holo = new THREE.Mesh(
   new THREE.PlaneGeometry(1.411, 0.379),
   new THREE.MeshPhysicalMaterial({
     map: holoTex, transparent: true, alphaTest: 0.01, depthWrite: true,
-    roughness: 0.28, metalness: 0.1,
-    iridescence: 0.95, iridescenceIOR: 1.32, iridescenceThicknessRange: [120, 420],
-    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.25
+    roughness: 0.22, metalness: 0.25,
+    iridescence: 1.0, iridescenceIOR: 1.32, iridescenceThicknessRange: [100, 800],
+    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.4
   })
 );
 holo.position.set(0.0017, 0.996, 0.0025);
@@ -238,13 +238,9 @@ scene.add(card);
 /* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
 
 const strapCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-0.052, -0.048, -0.054),
-  new THREE.Vector3( 0.000, -0.062, -0.057),
-  new THREE.Vector3( 0.052, -0.048, -0.054),
-  new THREE.Vector3( 0.038, -0.006, -0.030),
-  new THREE.Vector3( 0.018,  0.002,  0.008),
-  new THREE.Vector3( 0.034,  0.018,  0.042),
-  new THREE.Vector3( 0.058,  0.105,  0.058),
+  new THREE.Vector3( 0.010,  0.000, -0.010),
+  new THREE.Vector3( 0.026,  0.014,  0.034),
+  new THREE.Vector3( 0.052,  0.100,  0.057),
   new THREE.Vector3( 0.072,  0.420,  0.045),
   new THREE.Vector3( 0.098,  0.720,  0.033),
   new THREE.Vector3( 0.112,  1.020,  0.023),
@@ -255,13 +251,10 @@ const strapCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3(-0.132,  1.320, -0.012),
   new THREE.Vector3(-0.102,  1.050, -0.023),
   new THREE.Vector3(-0.092,  0.750, -0.033),
-  new THREE.Vector3(-0.060,  0.450, -0.030),
-  new THREE.Vector3(-0.048,  0.280,  0.038),
-  new THREE.Vector3(-0.042,  0.130,  0.058),
-  new THREE.Vector3(-0.034,  0.018,  0.042),
-  new THREE.Vector3(-0.020,  0.000,  0.006),
-  new THREE.Vector3(-0.030, -0.004, -0.030),
-  new THREE.Vector3(-0.044, -0.026, -0.048)
+  new THREE.Vector3(-0.070,  0.420, -0.042),
+  new THREE.Vector3(-0.048,  0.150, -0.058),
+  new THREE.Vector3(-0.030,  0.030, -0.048),
+  new THREE.Vector3(-0.014,  0.004, -0.024)
 ], true);
 const STRAP_N = 96, STRAP_HALF = 0.085;
 const strapGeo = new THREE.BufferGeometry();
@@ -365,8 +358,8 @@ function buildStrap(dX, dY, dZ, twist, flare) {
     }
     px = _side.x; py = _side.y; pz = _side.z;
     _b0.crossVectors(_t, _side).normalize();
-    // Twist lives around the loop's arc only — the bridge and slot passes stay flat
-    const tw = THREE.MathUtils.smoothstep(u, 0.30, 0.45) * (1 - THREE.MathUtils.smoothstep(u, 0.62, 0.78));
+    // Twist lives around the loop's arc only — the slot pass stays flat
+    const tw = THREE.MathUtils.smoothstep(u, 0.18, 0.32) * (1 - THREE.MathUtils.smoothstep(u, 0.68, 0.82));
     const phi = (twist + 0.38) * tw;
     const c = Math.cos(phi), s = Math.sin(phi);
     const ex = _side.x * c + _b0.x * s;
