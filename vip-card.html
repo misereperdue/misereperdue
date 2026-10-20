@@ -89,7 +89,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.VSMShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 stage.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -101,15 +101,13 @@ const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerH
 camera.position.set(0, 0, 8.4);
 
 const key = new THREE.DirectionalLight(0xffffff, 1.6);
-key.position.set(4, 5, 6.5);
+key.position.set(3, 4, 7.5);
 key.castShadow = true;
-key.shadow.mapSize.set(1024, 1024);
+key.shadow.mapSize.set(2048, 2048);
 key.shadow.camera.left = -3.4; key.shadow.camera.right = 3.4;
-key.shadow.camera.top = 4.2; key.shadow.camera.bottom = -3.0;
+key.shadow.camera.top = 4.4; key.shadow.camera.bottom = -3.2;
 key.shadow.camera.near = 1; key.shadow.camera.far = 24;
-key.shadow.radius = 16;
-key.shadow.blurSamples = 18;
-key.shadow.bias = -0.0001;
+key.shadow.bias = -0.0002;
 scene.add(key);
 const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
 rim.position.set(-4, 2, -5);
@@ -119,9 +117,9 @@ sweep.position.set(2.5, 1.2, 3.5);
 scene.add(sweep);
 
 // Backdrop that catches the card's real shadow (shadow follows the card's shape as it spins)
-const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.34 });
+const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.38 });
 const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), shadowMat);
-backdrop.position.z = -1.7;
+backdrop.position.z = -1.15;
 backdrop.receiveShadow = true;
 scene.add(backdrop);
 
@@ -213,22 +211,29 @@ const lanyard = new THREE.Group();
 scene.add(lanyard);
 
 const strapCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3( 0.00, 0.00,  0.055),
-  new THREE.Vector3(-0.09, 0.42,  0.045),
-  new THREE.Vector3(-0.27, 0.88,  0.028),
-  new THREE.Vector3(-0.29, 1.22,  0.012),
-  new THREE.Vector3(-0.14, 1.40,  0.004),
-  new THREE.Vector3( 0.00, 1.44,  0.000),
-  new THREE.Vector3( 0.14, 1.40, -0.004),
-  new THREE.Vector3( 0.29, 1.22, -0.012),
-  new THREE.Vector3( 0.27, 0.88, -0.028),
-  new THREE.Vector3( 0.09, 0.42, -0.045),
-  new THREE.Vector3( 0.00, 0.00, -0.055)
+  new THREE.Vector3( 0.02, 0.00,  0.055),
+  new THREE.Vector3(-0.16, 0.38,  0.050),
+  new THREE.Vector3(-0.25, 0.85,  0.035),
+  new THREE.Vector3(-0.24, 1.18,  0.018),
+  new THREE.Vector3(-0.11, 1.38,  0.006),
+  new THREE.Vector3( 0.00, 1.43,  0.000),
+  new THREE.Vector3( 0.11, 1.38, -0.006),
+  new THREE.Vector3( 0.24, 1.18, -0.018),
+  new THREE.Vector3( 0.25, 0.85, -0.035),
+  new THREE.Vector3( 0.16, 0.38, -0.050),
+  new THREE.Vector3(-0.02, 0.00, -0.055)
 ]);
 const STRAP_N = 72, STRAP_HALF = 0.08;
 const strapGeo = new THREE.BufferGeometry();
 const strapPos = new Float32Array((STRAP_N + 1) * 2 * 3);
+const strapUV = new Float32Array((STRAP_N + 1) * 2 * 2);
 strapGeo.setAttribute('position', new THREE.BufferAttribute(strapPos, 3));
+strapGeo.setAttribute('uv', new THREE.BufferAttribute(strapUV, 2));
+for (let i = 0; i <= STRAP_N; i++) {
+  const u = i / STRAP_N;
+  strapUV[(i * 2) * 2] = 0;     strapUV[(i * 2) * 2 + 1] = u * 7;
+  strapUV[(i * 2 + 1) * 2] = 1; strapUV[(i * 2 + 1) * 2 + 1] = u * 7;
+}
 {
   const idx = [];
   for (let i = 0; i < STRAP_N; i++) {
@@ -237,10 +242,41 @@ strapGeo.setAttribute('position', new THREE.BufferAttribute(strapPos, 3));
   }
   strapGeo.setIndex(idx);
 }
+// Woven grosgrain fabric texture (fine ribs across the strap, darker selvedge edges)
+function makeStrapTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#aad4ea';
+  g.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 3) {
+    g.fillStyle = 'rgba(255,255,255,0.13)';
+    g.fillRect(0, y, 128, 1);
+    g.fillStyle = 'rgba(70,110,140,0.12)';
+    g.fillRect(0, y + 1, 128, 1);
+  }
+  const img = g.getImageData(0, 0, 128, 128);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 11;
+    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  g.fillStyle = 'rgba(88,128,164,0.4)';
+  g.fillRect(0, 0, 3, 128);
+  g.fillRect(125, 0, 3, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+const strapTex = makeStrapTexture();
 const strapMat = new THREE.MeshPhysicalMaterial({
-  color: 0xa9d3e8, roughness: 0.52, metalness: 0.0,
+  map: strapTex, bumpMap: strapTex, bumpScale: 0.12,
+  roughness: 0.58, metalness: 0.0,
   sheen: 0.7, sheenRoughness: 0.5, sheenColor: 0xe2f3ff,
-  side: THREE.DoubleSide, envMapIntensity: 0.55
+  side: THREE.DoubleSide, envMapIntensity: 0.5
 });
 const strap = new THREE.Mesh(strapGeo, strapMat);
 strap.castShadow = true;
@@ -250,10 +286,11 @@ lanyard.add(strap);
 
 const _p = new THREE.Vector3(), _t = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1),
       _n0 = new THREE.Vector3(), _b0 = new THREE.Vector3(), _side = new THREE.Vector3();
-function buildStrap(twist) {
+function buildStrap(twist, flare) {
   for (let i = 0; i <= STRAP_N; i++) {
     const u = i / STRAP_N;
     strapCurve.getPoint(u, _p);
+    _p.x *= (1 + flare);
     strapCurve.getTangent(u, _t);
     _n0.crossVectors(_t, _z).normalize();
     _b0.crossVectors(_t, _n0).normalize();
@@ -271,7 +308,7 @@ function buildStrap(twist) {
   strapGeo.attributes.position.needsUpdate = true;
   strapGeo.computeVertexNormals();
 }
-buildStrap(0);
+buildStrap(0, 0);
 
 // Lanyard spring state (lags the card, overshoots, sways)
 let lanY = -0.35, lanX = 0.10, lanZ = 0, lanVelY = 0, lanVelX = 0, lanVelZ = 0;
@@ -341,12 +378,16 @@ function animate() {
   _hole.set(0, HOLE_Y, 0);
   card.localToWorld(_hole);
   lanyard.position.copy(_hole);
-  lanVelY += (rotY - lanY) * 0.052; lanVelY *= 0.865; lanY += lanVelY;
-  lanVelX += (rotX - lanX) * 0.070; lanVelX *= 0.850; lanX += lanVelX;
-  const zTarget = THREE.MathUtils.clamp(-velY * 0.05, -0.3, 0.3);
+  lanVelY += (rotY - lanY) * 0.045; lanVelY *= 0.875; lanY += lanVelY;
+  lanVelX += (rotX - lanX) * 0.060; lanVelX *= 0.860; lanX += lanVelX;
+  const zTarget = THREE.MathUtils.clamp(-velY * 0.05, -0.3, 0.3) + Math.sin(t * 1.3) * 0.012;
   lanVelZ += (zTarget - lanZ) * 0.05; lanVelZ *= 0.90; lanZ += lanVelZ;
   lanyard.rotation.set(lanX, lanY, lanZ);
-  buildStrap(THREE.MathUtils.clamp((rotY - lanY) * 0.55, -1.0, 1.0));
+  const lag = rotY - lanY;
+  buildStrap(
+    THREE.MathUtils.clamp(lag * 0.8, -1.15, 1.15),
+    THREE.MathUtils.clamp(Math.abs(lag) * 0.10, 0, 0.22)
+  );
 
   // Light sweep follows the spin, like the reference's moving highlight
   sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
@@ -370,7 +411,7 @@ toggle.addEventListener('click', () => {
   label.textContent = light ? 'Dark mode' : 'Light mode';
   key.intensity = light ? 1.9 : 1.6;
   renderer.toneMappingExposure = light ? 1.12 : 1.05;
-  shadowMat.opacity = light ? 0.20 : 0.34;
+  shadowMat.opacity = light ? 0.22 : 0.38;
 });
 </script>
 </body>
