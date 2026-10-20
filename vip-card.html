@@ -139,7 +139,7 @@ function roundedRectShape(w, h, r) {
   s.lineTo(x, y + r);
   s.quadraticCurveTo(x, y, x + r, y);
   // Lanyard slot punched through the card (pill-shaped, top center)
-  const sw = 0.15, sh = 0.042, sy = 1.30, sr = 0.042;
+  const sw = 0.175, sh = 0.050, sy = 1.30, sr = 0.050;
   const hole = new THREE.Path();
   hole.moveTo(-sw + sr, sy - sh);
   hole.lineTo(sw - sr, sy - sh);
@@ -221,24 +221,28 @@ scene.add(card);
 /* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
 
 const strapCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3( 0.075, -0.15,  0.058),
-  new THREE.Vector3( 0.060, -0.04,  0.056),
-  new THREE.Vector3( 0.028,  0.03,  0.030),
-  new THREE.Vector3( 0.000,  0.05,  0.000),
-  new THREE.Vector3(-0.028,  0.03, -0.030),
-  new THREE.Vector3(-0.085,  0.22, -0.055),
-  new THREE.Vector3(-0.200,  0.78, -0.038),
-  new THREE.Vector3(-0.225,  1.14, -0.018),
-  new THREE.Vector3(-0.105,  1.35, -0.006),
-  new THREE.Vector3( 0.000,  1.41,  0.000),
-  new THREE.Vector3( 0.115,  1.35,  0.006),
-  new THREE.Vector3( 0.235,  1.13,  0.018),
-  new THREE.Vector3( 0.255,  0.78,  0.038),
-  new THREE.Vector3( 0.190,  0.40,  0.052),
-  new THREE.Vector3( 0.105,  0.13,  0.056),
-  new THREE.Vector3( 0.062,  0.045, 0.050)
+  new THREE.Vector3( 0.082, -0.170,  0.057),
+  new THREE.Vector3( 0.068, -0.060,  0.056),
+  new THREE.Vector3( 0.075, -0.006,  0.038),
+  new THREE.Vector3( 0.045,  0.000,  0.010),
+  new THREE.Vector3(-0.010, -0.002, -0.016),
+  new THREE.Vector3(-0.038,  0.006, -0.042),
+  new THREE.Vector3(-0.075,  0.140, -0.054),
+  new THREE.Vector3(-0.168,  0.550, -0.044),
+  new THREE.Vector3(-0.208,  0.950, -0.030),
+  new THREE.Vector3(-0.188,  1.220, -0.014),
+  new THREE.Vector3(-0.096,  1.345, -0.005),
+  new THREE.Vector3( 0.006,  1.375,  0.000),
+  new THREE.Vector3( 0.106,  1.340,  0.005),
+  new THREE.Vector3( 0.196,  1.200,  0.014),
+  new THREE.Vector3( 0.216,  0.920,  0.030),
+  new THREE.Vector3( 0.186,  0.520,  0.046),
+  new THREE.Vector3( 0.118,  0.200,  0.054),
+  new THREE.Vector3( 0.030,  0.030,  0.034),
+  new THREE.Vector3(-0.030,  0.002, -0.008),
+  new THREE.Vector3(-0.058,  0.010, -0.038)
 ]);
-const STRAP_N = 72, STRAP_HALF = 0.08;
+const STRAP_N = 72, STRAP_HALF = 0.085;
 const strapGeo = new THREE.BufferGeometry();
 const strapPos = new Float32Array((STRAP_N + 1) * 2 * 3);
 const strapUV = new Float32Array((STRAP_N + 1) * 2 * 2);
@@ -320,24 +324,38 @@ function buildStrap(dX, dY, dZ, twist, flare) {
       _centers[i].applyQuaternion(_q);
     }
   }
+  // Parallel-transport the ribbon's width direction along the (deformed) path,
+  // so the strap stays flat like a sheet of fabric — through the slot and
+  // around the loop — instead of rolling where the path bends toward camera.
+  let px = 1, py = 0, pz = 0;
   for (let i = 0; i <= STRAP_N; i++) {
     const u = i / STRAP_N;
     const p = _centers[i];
     const pn = _centers[Math.min(i + 1, STRAP_N)];
     const pp = _centers[Math.max(i - 1, 0)];
     _t.subVectors(pn, pp).normalize();
-    _n0.crossVectors(_t, _z).normalize();
-    _b0.crossVectors(_t, _n0).normalize();
-    const phi = twist * Math.sin(Math.PI * u);
+    if (i === 0) {
+      _side.crossVectors(_t, _z);
+      if (_side.lengthSq() < 1e-6) _side.set(1, 0, 0);
+      _side.normalize();
+    } else {
+      _side.set(px, py, pz);
+      _side.addScaledVector(_t, -_side.dot(_t)).normalize();
+    }
+    px = _side.x; py = _side.y; pz = _side.z;
+    _b0.crossVectors(_t, _side).normalize();
+    const phi = (twist + 0.38) * Math.sin(Math.PI * u);
     const c = Math.cos(phi), s = Math.sin(phi);
-    _side.copy(_n0).multiplyScalar(c).addScaledVector(_b0, s);
+    const ex = _side.x * c + _b0.x * s;
+    const ey = _side.y * c + _b0.y * s;
+    const ez = _side.z * c + _b0.z * s;
     const o = i * 6;
-    strapPos[o]     = p.x - _side.x * STRAP_HALF;
-    strapPos[o + 1] = p.y - _side.y * STRAP_HALF;
-    strapPos[o + 2] = p.z - _side.z * STRAP_HALF;
-    strapPos[o + 3] = p.x + _side.x * STRAP_HALF;
-    strapPos[o + 4] = p.y + _side.y * STRAP_HALF;
-    strapPos[o + 5] = p.z + _side.z * STRAP_HALF;
+    strapPos[o]     = p.x - ex * STRAP_HALF;
+    strapPos[o + 1] = p.y - ey * STRAP_HALF;
+    strapPos[o + 2] = p.z - ez * STRAP_HALF;
+    strapPos[o + 3] = p.x + ex * STRAP_HALF;
+    strapPos[o + 4] = p.y + ey * STRAP_HALF;
+    strapPos[o + 5] = p.z + ez * STRAP_HALF;
   }
   strapGeo.attributes.position.needsUpdate = true;
   strapGeo.computeVertexNormals();
