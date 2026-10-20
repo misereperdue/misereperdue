@@ -466,8 +466,8 @@ function animate() {
   _backN.set(0, 0, -1).applyEuler(card.rotation);
   _toKey.copy(key.position).sub(card.position).normalize();
   const shine = Math.pow(Math.max(0, _backN.dot(_toKey)), 1.5);
-  holoMat.emissive.setHSL((0.58 + rotY * 0.045) % 1, 0.65, 0.55);
-  holoMat.emissiveIntensity = 0.12 + 0.95 * shine;
+  holoMat.emissive.setHSL((0.58 + rotY * 0.16) % 1, 0.75, 0.55);
+  holoMat.emissiveIntensity = 0.25 + 0.95 * shine;
 
   renderer.render(scene, camera);
 }
