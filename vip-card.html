@@ -222,31 +222,21 @@ card.add(backFace);
 const holoTex = loader.load('img/vip-card-holo.png?v=2');
 holoTex.colorSpace = THREE.SRGBColorSpace;
 holoTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-const holo = new THREE.Mesh(
-  new THREE.PlaneGeometry(1.411, 0.379),
-  new THREE.MeshPhysicalMaterial({
+const holoMat = new THREE.MeshPhysicalMaterial({
     map: holoTex, transparent: true, alphaTest: 0.01, depthWrite: true,
     roughness: 0.22, metalness: 0.25,
     iridescence: 1.0, iridescenceIOR: 1.32, iridescenceThicknessRange: [100, 800],
-    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.4
-  })
+    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.4,
+    emissive: 0x000000, emissiveMap: holoTex, emissiveIntensity: 0.12
+  });
+const holo = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.411, 0.379),
+  holoMat
 );
 holo.position.set(0.0017, 0.996, 0.0025);
 holo.renderOrder = 1;
 backFace.add(holo);
 
-// Rainbow foil layer over the barcode: the gradient travels across the bars
-// as the card turns and flares when the back catches the key light
-const foilTex = loader.load('img/vip-card-foil.png');
-foilTex.wrapS = THREE.RepeatWrapping;
-foilTex.colorSpace = THREE.SRGBColorSpace;
-const foilMat = new THREE.MeshBasicMaterial({
-  map: foilTex, alphaMap: holoTex, transparent: true, opacity: 0.15, depthWrite: false
-});
-const foil = new THREE.Mesh(new THREE.PlaneGeometry(1.411, 0.379), foilMat);
-foil.position.set(0.0017, 0.996, 0.0035);
-foil.renderOrder = 2;
-backFace.add(foil);
 const _backN = new THREE.Vector3(), _toKey = new THREE.Vector3();
 scene.add(card);
 
@@ -471,12 +461,13 @@ function animate() {
   sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
   sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
 
-  // Foil barcode: rainbow slides with the spin, flares when the back faces the key light
+  // Holographic barcode: rainbow emission travels as the card spins and
+  // flares when the back catches the key light
   _backN.set(0, 0, -1).applyEuler(card.rotation);
   _toKey.copy(key.position).sub(card.position).normalize();
   const shine = Math.pow(Math.max(0, _backN.dot(_toKey)), 1.5);
-  foilMat.opacity = 0.10 + 0.55 * shine;
-  foilTex.offset.x = rotY * 0.06;
+  holoMat.emissive.setHSL((0.58 + rotY * 0.045) % 1, 0.65, 0.55);
+  holoMat.emissiveIntensity = 0.12 + 0.95 * shine;
 
   renderer.render(scene, camera);
 }
