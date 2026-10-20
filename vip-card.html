@@ -232,7 +232,22 @@ const holo = new THREE.Mesh(
   })
 );
 holo.position.set(0.0017, 0.996, 0.0025);
+holo.renderOrder = 1;
 backFace.add(holo);
+
+// Rainbow foil layer over the barcode: the gradient travels across the bars
+// as the card turns and flares when the back catches the key light
+const foilTex = loader.load('img/vip-card-foil.png');
+foilTex.wrapS = THREE.RepeatWrapping;
+foilTex.colorSpace = THREE.SRGBColorSpace;
+const foilMat = new THREE.MeshBasicMaterial({
+  map: foilTex, alphaMap: holoTex, transparent: true, opacity: 0.15, depthWrite: false
+});
+const foil = new THREE.Mesh(new THREE.PlaneGeometry(1.411, 0.379), foilMat);
+foil.position.set(0.0017, 0.996, 0.0035);
+foil.renderOrder = 2;
+backFace.add(foil);
+const _backN = new THREE.Vector3(), _toKey = new THREE.Vector3();
 scene.add(card);
 
 /* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
@@ -455,6 +470,13 @@ function animate() {
   // Light sweep follows the spin, like the reference's moving highlight
   sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
   sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
+
+  // Foil barcode: rainbow slides with the spin, flares when the back faces the key light
+  _backN.set(0, 0, -1).applyEuler(card.rotation);
+  _toKey.copy(key.position).sub(card.position).normalize();
+  const shine = Math.pow(Math.max(0, _backN.dot(_toKey)), 1.5);
+  foilMat.opacity = 0.10 + 0.55 * shine;
+  foilTex.offset.x = rotY * 0.06;
 
   renderer.render(scene, camera);
 }
