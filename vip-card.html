@@ -222,12 +222,13 @@ scene.add(card);
 
 const strapCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3( 0.082, -0.170,  0.057),
-  new THREE.Vector3( 0.068, -0.060,  0.056),
-  new THREE.Vector3( 0.075, -0.006,  0.038),
+  new THREE.Vector3( 0.068, -0.060,  0.058),
+  new THREE.Vector3( 0.075, -0.006,  0.044),
   new THREE.Vector3( 0.045,  0.000,  0.010),
   new THREE.Vector3(-0.010, -0.002, -0.016),
   new THREE.Vector3(-0.038,  0.006, -0.042),
-  new THREE.Vector3(-0.075,  0.140, -0.054),
+  new THREE.Vector3(-0.055,  0.070, -0.064),
+  new THREE.Vector3(-0.088,  0.170, -0.076),
   new THREE.Vector3(-0.168,  0.550, -0.044),
   new THREE.Vector3(-0.208,  0.950, -0.030),
   new THREE.Vector3(-0.188,  1.220, -0.014),
@@ -237,12 +238,13 @@ const strapCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3( 0.196,  1.200,  0.014),
   new THREE.Vector3( 0.216,  0.920,  0.030),
   new THREE.Vector3( 0.186,  0.520,  0.046),
-  new THREE.Vector3( 0.118,  0.200,  0.054),
-  new THREE.Vector3( 0.030,  0.030,  0.034),
+  new THREE.Vector3( 0.128,  0.230,  0.076),
+  new THREE.Vector3( 0.078,  0.105,  0.068),
+  new THREE.Vector3( 0.034,  0.025,  0.030),
   new THREE.Vector3(-0.030,  0.002, -0.008),
   new THREE.Vector3(-0.058,  0.010, -0.038)
 ]);
-const STRAP_N = 72, STRAP_HALF = 0.085;
+const STRAP_N = 96, STRAP_HALF = 0.085;
 const strapGeo = new THREE.BufferGeometry();
 const strapPos = new Float32Array((STRAP_N + 1) * 2 * 3);
 const strapUV = new Float32Array((STRAP_N + 1) * 2 * 2);
