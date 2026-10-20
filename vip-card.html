@@ -215,39 +215,53 @@ function faceMesh(url, roughUrl, bumpUrl, isBack) {
   return m;
 }
 card.add(faceMesh('img/vip-card-front.png', 'img/vip-card-front-rough.png?v=2', 'img/vip-card-front-bump.png?v=2', false));
-card.add(faceMesh('img/vip-card-back.png?v=3', 'img/vip-card-back-rough.png?v=3', 'img/vip-card-back-bump.png?v=3', true));
+const backFace = faceMesh('img/vip-card-back.png?v=4', 'img/vip-card-back-rough.png?v=4', 'img/vip-card-back-bump.png?v=4', true);
+card.add(backFace);
+
+// Holographic foil barcode + caption, floating a hair off the back face
+const holoTex = loader.load('img/vip-card-holo.png');
+holoTex.colorSpace = THREE.SRGBColorSpace;
+holoTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+const holo = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.411, 0.379),
+  new THREE.MeshPhysicalMaterial({
+    map: holoTex, transparent: true, alphaTest: 0.01, depthWrite: true,
+    roughness: 0.28, metalness: 0.1,
+    iridescence: 0.95, iridescenceIOR: 1.32, iridescenceThicknessRange: [120, 420],
+    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.25
+  })
+);
+holo.position.set(0.0017, 0.996, 0.0025);
+backFace.add(holo);
 scene.add(card);
 
 /* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
 
 const strapCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3( 0.055,  0.020,  0.040),
-  new THREE.Vector3( 0.058, -0.090,  0.053),
-  new THREE.Vector3( 0.052, -0.175,  0.055),
-  new THREE.Vector3( 0.030, -0.228,  0.058),
-  new THREE.Vector3( 0.002, -0.238,  0.062),
-  new THREE.Vector3(-0.026, -0.218,  0.064),
-  new THREE.Vector3(-0.034, -0.135,  0.063),
-  new THREE.Vector3(-0.038, -0.045,  0.058),
-  new THREE.Vector3(-0.034,  0.010,  0.044),
-  new THREE.Vector3(-0.020,  0.004,  0.018),
-  new THREE.Vector3(-0.006,  0.000, -0.006),
-  new THREE.Vector3( 0.004,  0.004, -0.028),
-  new THREE.Vector3(-0.002,  0.030, -0.052),
-  new THREE.Vector3(-0.026,  0.120, -0.064),
-  new THREE.Vector3(-0.052,  0.380, -0.046),
-  new THREE.Vector3(-0.092,  0.750, -0.033),
-  new THREE.Vector3(-0.102,  1.050, -0.023),
-  new THREE.Vector3(-0.132,  1.320, -0.012),
-  new THREE.Vector3(-0.082,  1.500, -0.005),
-  new THREE.Vector3( 0.000,  1.555,  0.000),
-  new THREE.Vector3( 0.082,  1.500,  0.005),
-  new THREE.Vector3( 0.138,  1.300,  0.012),
-  new THREE.Vector3( 0.112,  1.020,  0.023),
-  new THREE.Vector3( 0.098,  0.720,  0.033),
+  new THREE.Vector3(-0.052, -0.048, -0.054),
+  new THREE.Vector3( 0.000, -0.062, -0.057),
+  new THREE.Vector3( 0.052, -0.048, -0.054),
+  new THREE.Vector3( 0.038, -0.006, -0.030),
+  new THREE.Vector3( 0.018,  0.002,  0.008),
+  new THREE.Vector3( 0.034,  0.018,  0.042),
+  new THREE.Vector3( 0.058,  0.105,  0.058),
   new THREE.Vector3( 0.072,  0.420,  0.045),
-  new THREE.Vector3( 0.090,  0.150,  0.062),
-  new THREE.Vector3( 0.066,  0.045,  0.050)
+  new THREE.Vector3( 0.098,  0.720,  0.033),
+  new THREE.Vector3( 0.112,  1.020,  0.023),
+  new THREE.Vector3( 0.138,  1.300,  0.012),
+  new THREE.Vector3( 0.082,  1.500,  0.005),
+  new THREE.Vector3( 0.000,  1.555,  0.000),
+  new THREE.Vector3(-0.082,  1.500, -0.005),
+  new THREE.Vector3(-0.132,  1.320, -0.012),
+  new THREE.Vector3(-0.102,  1.050, -0.023),
+  new THREE.Vector3(-0.092,  0.750, -0.033),
+  new THREE.Vector3(-0.060,  0.450, -0.030),
+  new THREE.Vector3(-0.048,  0.280,  0.038),
+  new THREE.Vector3(-0.042,  0.130,  0.058),
+  new THREE.Vector3(-0.034,  0.018,  0.042),
+  new THREE.Vector3(-0.020,  0.000,  0.006),
+  new THREE.Vector3(-0.030, -0.004, -0.030),
+  new THREE.Vector3(-0.044, -0.026, -0.048)
 ], true);
 const STRAP_N = 96, STRAP_HALF = 0.085;
 const strapGeo = new THREE.BufferGeometry();
@@ -351,8 +365,8 @@ function buildStrap(dX, dY, dZ, twist, flare) {
     }
     px = _side.x; py = _side.y; pz = _side.z;
     _b0.crossVectors(_t, _side).normalize();
-    // Twist lives around the loop's apex only — the fold and the slot pass stay flat
-    const tw = THREE.MathUtils.smoothstep(u, 0.40, 0.55) * (1 - THREE.MathUtils.smoothstep(u, 0.78, 0.92));
+    // Twist lives around the loop's arc only — the bridge and slot passes stay flat
+    const tw = THREE.MathUtils.smoothstep(u, 0.30, 0.45) * (1 - THREE.MathUtils.smoothstep(u, 0.62, 0.78));
     const phi = (twist + 0.38) * tw;
     const c = Math.cos(phi), s = Math.sin(phi);
     const ex = _side.x * c + _b0.x * s;
