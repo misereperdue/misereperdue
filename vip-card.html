@@ -218,10 +218,7 @@ card.add(faceMesh('img/vip-card-front.png', 'img/vip-card-front-rough.png', 'img
 card.add(faceMesh('img/vip-card-back.png?v=3', 'img/vip-card-back-rough.png?v=2', 'img/vip-card-back-bump.png?v=2', true));
 scene.add(card);
 
-/* ---- Lanyard: ribbon loop through the card's slot, with lag/sway physics ---- */
-const HOLE_Y = 1.30;
-const lanyard = new THREE.Group();
-scene.add(lanyard);
+/* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
 
 const strapCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3( 0.075, -0.15,  0.058),
@@ -297,36 +294,55 @@ const strapMat = new THREE.MeshPhysicalMaterial({
   side: THREE.DoubleSide, envMapIntensity: 0.5
 });
 const strap = new THREE.Mesh(strapGeo, strapMat);
+strap.position.y = 1.30;
 strap.castShadow = true;
 strap.receiveShadow = true;
 strap.frustumCulled = false;
-lanyard.add(strap);
+card.add(strap);
 
 const _p = new THREE.Vector3(), _t = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1),
       _n0 = new THREE.Vector3(), _b0 = new THREE.Vector3(), _side = new THREE.Vector3();
-function buildStrap(twist, flare) {
+const _centers = [];
+for (let i = 0; i <= STRAP_N; i++) _centers.push(new THREE.Vector3());
+const _e = new THREE.Euler(), _q = new THREE.Quaternion();
+// The strap is built in card space: samples near the slot stay locked to the card
+// (so the threading never drifts), samples higher up rotate toward the lagged
+// loop angles — the strap bends just above the slot like real fabric.
+function buildStrap(dX, dY, dZ, twist, flare) {
   for (let i = 0; i <= STRAP_N; i++) {
     const u = i / STRAP_N;
-    strapCurve.getPoint(u, _p);
-    _p.x *= (1 + flare);
-    strapCurve.getTangent(u, _t);
+    strapCurve.getPoint(u, _centers[i]);
+    _centers[i].x *= (1 + flare);
+    const wgt = THREE.MathUtils.smoothstep(_centers[i].y, 0.18, 0.48);
+    if (wgt > 0) {
+      _e.set(dX * wgt, dY * wgt, dZ * wgt, 'YXZ');
+      _q.setFromEuler(_e);
+      _centers[i].applyQuaternion(_q);
+    }
+  }
+  for (let i = 0; i <= STRAP_N; i++) {
+    const u = i / STRAP_N;
+    const p = _centers[i];
+    const pn = _centers[Math.min(i + 1, STRAP_N)];
+    const pp = _centers[Math.max(i - 1, 0)];
+    _t.subVectors(pn, pp).normalize();
     _n0.crossVectors(_t, _z).normalize();
     _b0.crossVectors(_t, _n0).normalize();
     const phi = twist * Math.sin(Math.PI * u);
     const c = Math.cos(phi), s = Math.sin(phi);
     _side.copy(_n0).multiplyScalar(c).addScaledVector(_b0, s);
     const o = i * 6;
-    strapPos[o]     = _p.x - _side.x * STRAP_HALF;
-    strapPos[o + 1] = _p.y - _side.y * STRAP_HALF;
-    strapPos[o + 2] = _p.z - _side.z * STRAP_HALF;
-    strapPos[o + 3] = _p.x + _side.x * STRAP_HALF;
-    strapPos[o + 4] = _p.y + _side.y * STRAP_HALF;
-    strapPos[o + 5] = _p.z + _side.z * STRAP_HALF;
+    strapPos[o]     = p.x - _side.x * STRAP_HALF;
+    strapPos[o + 1] = p.y - _side.y * STRAP_HALF;
+    strapPos[o + 2] = p.z - _side.z * STRAP_HALF;
+    strapPos[o + 3] = p.x + _side.x * STRAP_HALF;
+    strapPos[o + 4] = p.y + _side.y * STRAP_HALF;
+    strapPos[o + 5] = p.z + _side.z * STRAP_HALF;
   }
   strapGeo.attributes.position.needsUpdate = true;
   strapGeo.computeVertexNormals();
 }
-buildStrap(0, 0);
+buildStrap(0, 0, 0, 0, 0);
 
 // Lanyard spring state (lags the card, overshoots, sways)
 let lanY = -0.35, lanX = 0.10, lanZ = 0, lanVelY = 0, lanVelX = 0, lanVelZ = 0;
@@ -368,7 +384,6 @@ function endDrag() {
 el.addEventListener('pointerup', endDrag);
 el.addEventListener('pointercancel', endDrag);
 
-const _hole = new THREE.Vector3();
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
@@ -391,20 +406,16 @@ function animate() {
   card.position.y = Math.sin(t * 1.15) * 0.035;
   card.rotation.z = Math.sin(t * 0.7) * 0.008;
 
-  // Lanyard: anchored at the card's slot, rotation trails the card on springs
-  card.updateMatrixWorld();
-  _hole.set(0, HOLE_Y, 0);
-  card.localToWorld(_hole);
-  lanyard.position.copy(_hole);
+  // Lanyard springs: the loop's angles trail the card's; the strap bends by the difference
   lanVelY += (rotY - lanY) * 0.045; lanVelY *= 0.875; lanY += lanVelY;
   lanVelX += (rotX - lanX) * 0.060; lanVelX *= 0.860; lanX += lanVelX;
   const zTarget = THREE.MathUtils.clamp(-velY * 0.05, -0.3, 0.3) + Math.sin(t * 1.3) * 0.012;
   lanVelZ += (zTarget - lanZ) * 0.05; lanVelZ *= 0.90; lanZ += lanVelZ;
-  lanyard.rotation.set(lanX, lanY, lanZ);
-  const lag = rotY - lanY;
+  const dY = lanY - rotY, dX = lanX - rotX;
   buildStrap(
-    THREE.MathUtils.clamp(lag * 0.8, -1.15, 1.15),
-    THREE.MathUtils.clamp(Math.abs(lag) * 0.10, 0, 0.22)
+    dX, dY, lanZ,
+    THREE.MathUtils.clamp(-dY * 0.8, -1.15, 1.15),
+    THREE.MathUtils.clamp(Math.abs(dY) * 0.10, 0, 0.22)
   );
 
   // Light sweep follows the spin, like the reference's moving highlight
