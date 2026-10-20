@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>VIP</title>
+<link rel="icon" href="/favicon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #0a1230;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .5s ease;
+  }
+  body.light { background: #e9ebf1; }
+  #stage { position: fixed; inset: 0; }
+  #stage::before {
+    content: ""; position: absolute; left: 50%; top: 54%;
+    width: min(78vw, 420px); height: 90px;
+    transform: translate(-50%, 0);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 65%);
+    filter: blur(6px);
+    pointer-events: none;
+    transition: opacity .5s ease;
+  }
+  body.light #stage::before { opacity: .45; }
+  canvas { display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #hint {
+    position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 28px);
+    text-align: center; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,.45); pointer-events: none;
+    transition: opacity .8s ease;
+  }
+  body.light #hint { color: rgba(10,18,48,.4); }
+  #hint.gone { opacity: 0; }
+  #modeToggle {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+    transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: rgba(255,255,255,.07);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    color: #fff; font-size: 14px; font-weight: 550; letter-spacing: .01em;
+    cursor: pointer; font-family: inherit;
+    transition: background .3s ease, color .3s ease, border-color .3s ease;
+  }
+  body.light #modeToggle {
+    background: rgba(255,255,255,.65); color: #0a1230;
+    border-color: rgba(10,18,48,.12);
+  }
+  #modeToggle .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ffd76a; box-shadow: 0 0 8px rgba(255,215,106,.8);
+  }
+  body.light #modeToggle .dot { background: #0a1230; box-shadow: none; }
+  #fallback {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  #fallback img { width: min(72vw, 320px); border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hint">Drag to spin</div>
+<button id="modeToggle" type="button"><span class="dot"></span><span id="modeLabel">Light mode</span></button>
+<div id="fallback"><img src="img/vip-card-front.png" alt="VIP card"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const stage = document.getElementById('stage');
+const hint = document.getElementById('hint');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (e) {
+  document.getElementById('fallback').style.display = 'flex';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 7.4);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(3, 4, 6);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
+rim.position.set(-4, 2, -5);
+scene.add(rim);
+const sweep = new THREE.PointLight(0xffffff, 12, 30);
+sweep.position.set(2.5, 1.2, 3.5);
+scene.add(sweep);
+
+/* ---- Card ---- */
+const W = 2.13, H = 3.0, R = 0.17, DEPTH = 0.055, BEVEL = 0.014;
+
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+
+const card = new THREE.Group();
+
+// Solid body (rim + edge catch light)
+const bodyGeo = new THREE.ExtrudeGeometry(roundedRectShape(W, H, R), {
+  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 3, curveSegments: 24
+});
+bodyGeo.translate(0, 0, -DEPTH / 2);
+const bodyMat = new THREE.MeshPhysicalMaterial({
+  color: 0xf2f3f5, roughness: 0.38, metalness: 0.0,
+  clearcoat: 0.7, clearcoatRoughness: 0.3, envMapIntensity: 0.7
+});
+card.add(new THREE.Mesh(bodyGeo, bodyMat));
+
+const loader = new THREE.TextureLoader();
+function faceTexture(url, flipX) {
+  const t = loader.load(url);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  if (flipX) {
+    t.wrapS = THREE.RepeatWrapping;
+    t.repeat.set(-1 / W, 1 / H);
+  } else {
+    t.repeat.set(1 / W, 1 / H);
+  }
+  t.offset.set(0.5, 0.5);
+  return t;
+}
+
+function faceMesh(url, isBack) {
+  const geo = new THREE.ShapeGeometry(roundedRectShape(W, H, R), 24);
+  const mat = new THREE.MeshPhysicalMaterial({
+    map: faceTexture(url, isBack),
+    roughness: 0.3, metalness: 0.0,
+    clearcoat: 1.0, clearcoatRoughness: 0.24,
+    envMapIntensity: 0.85
+  });
+  const m = new THREE.Mesh(geo, mat);
+  if (isBack) {
+    m.rotation.y = Math.PI;
+    m.position.z = -(DEPTH / 2 + BEVEL + 0.0012);
+  } else {
+    m.position.z = DEPTH / 2 + BEVEL + 0.0012;
+  }
+  return m;
+}
+card.add(faceMesh('img/vip-card-front.png', false));
+card.add(faceMesh('img/vip-card-back.png', true));
+scene.add(card);
+
+/* ---- Interaction: drag with inertia + spring settle ---- */
+const REST_X = 0.10;
+let rotX = REST_X, rotY = -0.35;
+let velX = 0, velY = 0;
+let dragging = false, lastX = 0, lastY = 0, lastT = 0;
+let lastInteract = performance.now();
+const el = renderer.domElement;
+
+el.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
+  velX = 0; velY = 0;
+  el.setPointerCapture(e.pointerId);
+  hint.classList.add('gone');
+  lastInteract = performance.now();
+});
+el.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const now = performance.now();
+  const dt = Math.max(1, now - lastT);
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  rotY += dx * 0.0085;
+  rotX += dy * 0.006;
+  rotX = Math.max(-1.15, Math.min(1.15, rotX));
+  velY = (dx * 0.0085) / dt * 16.7;
+  velX = (dy * 0.006) / dt * 16.7;
+  lastX = e.clientX; lastY = e.clientY; lastT = now;
+  lastInteract = now;
+});
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  lastInteract = performance.now();
+}
+el.addEventListener('pointerup', endDrag);
+el.addEventListener('pointercancel', endDrag);
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  if (!dragging) {
+    // Spin inertia
+    rotY += velY;
+    velY *= 0.955;
+    // Spring back to rest tilt — gives the wobble/settle from the reference
+    const acc = (REST_X - rotX) * 0.045;
+    velX = (velX + acc) * 0.90;
+    rotX += velX;
+    // Gentle idle rotation after a pause
+    if (performance.now() - lastInteract > 2600 && Math.abs(velY) < 0.002) {
+      rotY += 0.0035;
+    }
+  }
+  card.rotation.set(rotX, rotY, 0);
+  card.position.y = Math.sin(t * 1.15) * 0.035;
+  card.rotation.z = Math.sin(t * 0.7) * 0.008;
+
+  // Light sweep follows the spin, like the reference's moving highlight
+  sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
+  sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---- Light / dark toggle ---- */
+const toggle = document.getElementById('modeToggle');
+const label = document.getElementById('modeLabel');
+toggle.addEventListener('click', () => {
+  const light = document.body.classList.toggle('light');
+  label.textContent = light ? 'Dark mode' : 'Light mode';
+  key.intensity = light ? 1.9 : 1.6;
+  renderer.toneMappingExposure = light ? 1.12 : 1.05;
+});
+</script>
+</body>
+</html>
