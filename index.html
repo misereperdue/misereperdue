@@ -122,7 +122,8 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","name":"Misère Perdue","alternateName":"MISERY","url":"https://misereperdue.com/","publisher":{"@type":"Organization","name":"Misère Perdue","url":"https://misereperdue.com/"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=550">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <link rel="stylesheet" href="css/site.css?v=551">
   <script src="js/theme.js?v=7"></script>
   <script>
     // Analytics: track pageview via sendBeacon after load (no render blocking)
@@ -249,8 +250,9 @@
       // Shop chain: shop.js renders with MP + MPShopify.
       jobs.push(Promise.all([
         loadOne("js/shopify.js?v=12", 0),
-        loadOne("js/cart.js?v=1", 0)
-      ]).then(function () { return loadOne("js/shop.js?v=54", 0); }));
+        loadOne("js/cart.js?v=1", 0),
+        loadOne("js/vip3d.js?v=1", 0)
+      ]).then(function () { return loadOne("js/shop.js?v=55", 0); }));
       // Forum chain: patch after forum3.js.
       jobs.push(loadOne("js/forum3.js?v=1106", 0).then(function () { return loadOne(PATCH, 0); }));
       if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);

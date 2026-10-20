@@ -53,13 +53,7 @@
     align-items: center; justify-content: center; padding: 24px;
   }
   #fallback img { width: min(72vw, 320px); border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
-  /* Embed mode (shop product view): no page chrome, transparent backdrop,
-     vertical swipes still scroll the shop page */
-  html.embed body { background: transparent; }
-  html.embed #modeToggle, html.embed #hint { display: none; }
-  html.embed canvas { touch-action: pan-y; }
 </style>
-<script>if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');</script>
 <script type="importmap">
 {
   "imports": {
