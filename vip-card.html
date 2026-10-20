@@ -154,6 +154,16 @@ function faceTexture(url, flipX) {
   const t = loader.load(url);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  applyUV(t, flipX);
+  return t;
+}
+function dataTexture(url, flipX) {
+  const t = loader.load(url);
+  t.anisotropy = 4;
+  applyUV(t, flipX);
+  return t;
+}
+function applyUV(t, flipX) {
   if (flipX) {
     t.wrapS = THREE.RepeatWrapping;
     t.repeat.set(-1 / W, 1 / H);
@@ -161,14 +171,16 @@ function faceTexture(url, flipX) {
     t.repeat.set(1 / W, 1 / H);
   }
   t.offset.set(0.5, 0.5);
-  return t;
 }
 
-function faceMesh(url, isBack) {
+function faceMesh(url, roughUrl, bumpUrl, isBack) {
   const geo = new THREE.ShapeGeometry(roundedRectShape(W, H, R), 24);
   const mat = new THREE.MeshPhysicalMaterial({
     map: faceTexture(url, isBack),
-    roughness: 0.3, metalness: 0.0,
+    roughnessMap: dataTexture(roughUrl, isBack),
+    bumpMap: dataTexture(bumpUrl, isBack),
+    bumpScale: 0.6,
+    roughness: 1.0, metalness: 0.0,
     clearcoat: 1.0, clearcoatRoughness: 0.24,
     envMapIntensity: 0.85
   });
@@ -181,8 +193,8 @@ function faceMesh(url, isBack) {
   }
   return m;
 }
-card.add(faceMesh('img/vip-card-front.png', false));
-card.add(faceMesh('img/vip-card-back.png', true));
+card.add(faceMesh('img/vip-card-front.png', 'img/vip-card-front-rough.png', 'img/vip-card-front-bump.png', false));
+card.add(faceMesh('img/vip-card-back.png?v=2', 'img/vip-card-back-rough.png', 'img/vip-card-back-bump.png', true));
 scene.add(card);
 
 /* ---- Interaction: drag with inertia + spring settle ---- */
