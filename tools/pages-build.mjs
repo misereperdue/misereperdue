@@ -3,7 +3,7 @@
 // Pages project settings: build command `node tools/pages-build.mjs`, output dir `dist`.
 import { cpSync, rmSync, mkdirSync, readdirSync } from 'node:fs';
 const OUT = 'dist';
-const SKIP = new Set([OUT, '.git', '.github', '.gitignore', 'node_modules', 'src', 'docs', 'tools', 'worker',
+const SKIP = new Set([OUT, '.git', '.github', '.gitignore', 'node_modules', 'src', 'docs', 'tools', 'worker', 'functions',
   'package.json', 'package-lock.json', 'build-sitemap.py', 'CNAME', 'README.md', '.build-tmp', '.wrangler']);
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT);

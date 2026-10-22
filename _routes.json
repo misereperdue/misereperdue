@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "description": "Run functions/_middleware.js (CSP nonce) on HTML pages only; static assets skip it.",
+  "include": ["/*"],
+  "exclude": ["/js/*", "/css/*", "/img/*", "/images/*", "/video/*", "/vendor/*", "/sw.js", "/favicon.ico", "/favicon.png", "/icon.png", "/apple-touch-icon-fresh.png", "/webapp.json", "/manifest.json", "/robots.txt", "/sitemap.xml", "/llms.txt"]
+}

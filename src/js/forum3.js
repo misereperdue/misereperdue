@@ -1,5 +1,18 @@
 !(function () {
   "use strict";
+  // CSP: no inline onerror. Images with data-fallback swap to it once on error.
+  document.addEventListener(
+    "error",
+    function (ev) {
+      var x = ev.target;
+      if (x && "IMG" === x.tagName && x.getAttribute("data-fallback")) {
+        var f = x.getAttribute("data-fallback");
+        x.removeAttribute("data-fallback");
+        x.src = f;
+      }
+    },
+    !0,
+  );
   var e = "https://api.misereperdue.com",
     t = null,
     r = { name: "list", category: "", tag: "", threadId: null, replyTo: null, showNested: {} },
@@ -151,7 +164,7 @@
             encodeURIComponent(a) +
             "?v=" +
             (t.avatarV || 0) +
-            '" alt="" onerror="this.onerror=null;this.src=\'img/default-avatar.jpg\'">'
+            '" alt="" data-fallback="img/default-avatar.jpg">'
           : '<img src="img/default-avatar.jpg" alt="">') +
         "</span></span>",
       d =
@@ -1752,7 +1765,7 @@
                     encodeURIComponent(o) +
                     "?v=" +
                     (a.avatarV || 0) +
-                    '" alt="" onerror="this.onerror=null;this.src=\'img/default-avatar.jpg\'">'
+                    '" alt="" data-fallback="img/default-avatar.jpg">'
                   : '<img src="img/default-avatar.jpg" alt="">') +
                 '</span></span><span class="forum-thread-author-name">') +
               ((n =
@@ -2094,7 +2107,7 @@
                         encodeURIComponent(t.username) +
                         "?v=" +
                         (Number(t.avatarV) || 0) +
-                        '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.onerror=null;this.src=\'img/default-avatar.jpg\'">'
+                        '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" data-fallback="img/default-avatar.jpg">'
                       : w(t.avatar || "😀");
                     a +=
                       '<span title="' +

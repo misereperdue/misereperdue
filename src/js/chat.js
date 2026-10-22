@@ -1,5 +1,14 @@
 !(function () {
   "use strict";
+  // CSP: no inline handlers. Inputs rendered readonly (autofill guard) unlock on focus.
+  document.addEventListener(
+    "focusin",
+    function (ev) {
+      var x = ev.target;
+      x && x.hasAttribute && x.hasAttribute("data-ro-unlock") && x.removeAttribute("readonly");
+    },
+    !0,
+  );
   var e = "https://api.misereperdue.com",
     t = "Rkc1RmlJQWwtdFJTOVhudlczanc6MTpjaQ",
     n = "https://api.misereperdue.com/api/x/callback",
@@ -921,7 +930,7 @@
     (mt(),
       (s = null),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title">Chat</div><div class="chat-head-right"><button type="button" class="btn chat-topbar-signin" id="chat-signin-top">Sign in</button></div></div><div class="chat-auth"><div class="chat-auth-head"><div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div><div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div></div><div class="chat-card"><div class="chat-tabs" data-active="login"><span class="chat-tabs-slider"></span><button type="button" class="on" data-tab="login">Sign in</button><button type="button" data-tab="register">Sign up</button></div><label class="chat-field"><span>Username</span><input type="text" name="username" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" readonly onfocus="this.removeAttribute(\'readonly\')"></label><label class="chat-field"><span>Password</span><input type="password" name="password" maxlength="72" autocomplete="off" readonly onfocus="this.removeAttribute(\'readonly\')"></label><div class="pwd-strength" hidden><div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div></div><label class="chat-field chat-secret hidden"><span>Owner secret</span><input type="password" name="secret" autocomplete="off"></label><div class="chat-err" role="alert"></div><div class="cf-turnstile-wrap" hidden><div class="cf-turnstile" data-sitekey="0x4AAAAAAFV46HnTH3nPGGRk" data-theme="auto"></div></div><button type="button" class="btn accent chat-submit">Sign in</button><button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' +
+        '<div class="chat-head glassbar"><div class="chat-title">Chat</div><div class="chat-head-right"><button type="button" class="btn chat-topbar-signin" id="chat-signin-top">Sign in</button></div></div><div class="chat-auth"><div class="chat-auth-head"><div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div><div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div></div><div class="chat-card"><div class="chat-tabs" data-active="login"><span class="chat-tabs-slider"></span><button type="button" class="on" data-tab="login">Sign in</button><button type="button" data-tab="register">Sign up</button></div><label class="chat-field"><span>Username</span><input type="text" name="username" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" readonly data-ro-unlock></label><label class="chat-field"><span>Password</span><input type="password" name="password" maxlength="72" autocomplete="off" readonly data-ro-unlock></label><div class="pwd-strength" hidden><div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div></div><label class="chat-field chat-secret hidden"><span>Owner secret</span><input type="password" name="secret" autocomplete="off"></label><div class="chat-err" role="alert"></div><div class="cf-turnstile-wrap" hidden><div class="cf-turnstile" data-sitekey="0x4AAAAAAFV46HnTH3nPGGRk" data-theme="auto"></div></div><button type="button" class="btn accent chat-submit">Sign in</button><button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' +
         a +
         "</span>Continue with X</button></div></div>"));
     var e = "login",

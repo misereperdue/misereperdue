@@ -737,7 +737,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=2", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=3", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -755,7 +755,7 @@ var MPShop = (function () {
       if (a(i)) {
         var x = p.querySelector(".vip-3d-stage"),
           L = p.querySelector(".vip-3d-hint");
-        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=2", x)), L)) {
+        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=3", x)), L)) {
           var T = 0,
             z = function () {
               (T && clearTimeout(T),

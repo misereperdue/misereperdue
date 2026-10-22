@@ -37,7 +37,7 @@ function syntax(code, label, isModule) {
 const jsFiles = ['sw.js',
   ...fs.readdirSync(path.join(ROOT, 'js')).filter(f => f.endsWith('.js')).map(f => 'js/' + f),
   ...(fs.existsSync(path.join(ROOT, 'src/js')) ? fs.readdirSync(path.join(ROOT, 'src/js')).filter(f => f.endsWith('.js')).map(f => 'src/js/' + f) : [])];
-for (const f of jsFiles) syntax(fs.readFileSync(path.join(ROOT, f), 'utf8'), f, false);
+for (const f of jsFiles) syntax(fs.readFileSync(path.join(ROOT, f), 'utf8'), f, /-page\.js$/.test(f));
 
 // HTML pages
 const pages = [];
@@ -61,12 +61,15 @@ for (const page of pages) {
   const re = /<script(\s[^>]*)?>([\s\S]*?)<\/script>/gi; let m;
   while ((m = re.exec(html))) {
     const attrs = m[1] || '';
-    if (/\bsrc=/.test(attrs) || /type="(application\/ld\+json|importmap)"/.test(attrs)) {
+    if (/\bsrc=/.test(attrs) || /type="(application\/ld\+json|application\/json|importmap)"/.test(attrs)) {
       if (/application\/ld\+json/.test(attrs)) { try { JSON.parse(m[2]); } catch (e) { err(`${rel(page)}: invalid JSON-LD: ${e.message}`); } }
       continue;
     }
+    // The CSP has no 'unsafe-inline' for scripts: executable inline code would be blocked.
+    if (m[2].trim()) err(`${rel(page)}: inline <script> is blocked by the CSP; move it to a js/ file`);
     syntax(m[2], `${rel(page)} inline <script>`, /type="module"/.test(attrs));
   }
+  if (/\son[a-z]+\s*=\s*["']/i.test(html.replace(/<script[\s\S]*?<\/script>/gi, ''))) err(`${rel(page)}: inline event handler (on...=) is blocked by the CSP`);
   // 2. local refs
   const refRe = /\s(?:src|href)="([^"]+)"/g;
   while ((m = refRe.exec(html))) {
