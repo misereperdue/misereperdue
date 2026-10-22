@@ -1435,6 +1435,60 @@ textarea {
 #shop-grid .product-meta {
   margin-top: 8px;
 }
+/* Minimal Add to Home Screen row, directly under the Globe tile */
+#shop-grid .a2hs {
+  grid-column: 1/-1;
+  margin-top: -6px;
+}
+.a2hs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(169, 215, 245, 0.18);
+  border-radius: 999px;
+  background: rgba(169, 215, 245, 0.06);
+  color: rgba(214, 233, 248, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.a2hs[hidden] {
+  display: none;
+}
+.a2hs svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.a2hs:active {
+  transform: scale(0.98);
+}
+.a2hs.is-hint {
+  background: rgba(169, 215, 245, 0.12);
+}
+[data-theme="light"] .a2hs {
+  border-color: rgba(10, 18, 48, 0.14);
+  background: rgba(10, 18, 48, 0.04);
+  color: #0a1230;
+}
+[data-theme="light"] .a2hs.is-hint {
+  background: rgba(10, 18, 48, 0.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .a2hs {
+    transition: none;
+  }
+  .a2hs:active {
+    transform: none;
+  }
+}
 /* Misery Globe tile: a product-card that spans both grid columns. Same 22px
    tile and product-photo backdrop (#0c1230 dark / #d8d9dd light); the text
    block sits inside on the left, the canvas globe (with orbit) on the right. */

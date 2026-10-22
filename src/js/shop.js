@@ -375,6 +375,7 @@ var MPShop = (function () {
           ((b = n),
           (t.innerHTML =
             '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>' +
+            '<button type="button" class="a2hs" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8.5v7M8.5 12h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="a2hs-t">Add to Home Screen</span></button>' +
             e.map(g).join("") +
             (f
               ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
@@ -407,6 +408,7 @@ var MPShop = (function () {
                 }));
               mountGlobe(e.querySelector(".gp-canvas"));
             }
+            mountA2HS(t.querySelector(".a2hs"));
           })(t));
       } else
         t.innerHTML =
@@ -415,6 +417,39 @@ var MPShop = (function () {
             ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
             : "");
     }
+  }
+  // Minimal "Add to Home Screen" row under the Globe tile. Hidden once installed.
+  // Chrome/Android: uses the captured install prompt. iOS Safari: tap shows the Share hint.
+  var a2hsEvt = null;
+  window.addEventListener("beforeinstallprompt", function (ev) {
+    ev.preventDefault();
+    a2hsEvt = ev;
+  });
+  window.addEventListener("appinstalled", function () {
+    var b = document.querySelector(".a2hs");
+    if (b) b.hidden = true;
+  });
+  function mountA2HS(b) {
+    if (!b) return;
+    var installed =
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+      !!navigator.standalone;
+    if (installed) return;
+    b.hidden = false;
+    var txt = b.querySelector(".a2hs-t");
+    b.onclick = function () {
+      if (a2hsEvt) {
+        a2hsEvt.prompt();
+        a2hsEvt.userChoice &&
+          a2hsEvt.userChoice.then(function (r) {
+            if (r && r.outcome === "accepted") b.hidden = true;
+          });
+        a2hsEvt = null;
+        return;
+      }
+      var open = b.classList.toggle("is-hint");
+      txt.textContent = open ? "Tap Share, then \u201cAdd to Home Screen\u201d" : "Add to Home Screen";
+    };
   }
   function M(t, e) {
     if (!1 === t.available) return '<span class="pill-soon">Coming soon</span>';
