@@ -8,7 +8,8 @@
 // js/uui-icons.js, sw.js, *.html) are edited in place and never touched here.
 //
 //   npm run build            build everything in src/
-//   npm run build -- chat    build only src/js/chat.js
+//   npm run build -- chat    build only src/js/chat.js   (PREFER THIS: build only what you changed,
+//                            so untouched files stay byte-identical and need no ?v= bump)
 //   npm run verify           check every deployed file matches its source
 //
 // After a build that changes a file you MUST bump its ?v= pin in index.html

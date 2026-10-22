@@ -206,7 +206,7 @@ Muse's commits are titled "<what> per dc: <detail>; <pins bumped>". Keep that st
 
 1. **Branch**: `git switch -c grim/<short-name>` from fresh `main`. Never push straight to `main`.
 2. **Edit the readable source**: `src/js/*.js` or `src/css/site.css`; HTML, `sw.js` and readable JS in place.
-3. **Build**: `npm install` once, then `npm run build`. Only changed outputs are rewritten.
+3. **Build**: `npm install` once, then `npm run build -- <name>` for just the file(s) you changed (e.g. `npm run build -- shop site`). A full `npm run build` re-minifies every file with today's settings and changes bytes of untouched files.
 4. **Bump versions**: the `?v=` of every changed asset in `index.html` (and in `sw.js` SHELL), then `SW_VERSION` in `sw.js` and the matching `sw.js?v=` in `index.html`. HTML-only changes need no bump.
 5. **Check**: `npm run check && npm run verify`. These must pass; the warnings explain themselves.
 6. **Mock-render on phones first**: headless Chrome at 390×844 and 360×780 (touch, DPR 3), dark **and** light, then desktop. Use the screenshot script (`/workspace/tools/shoot.mjs` on the bot box; it can serve local files under the real domain so the API works). Compare against current production screenshots, and look at the splash, shop grid, auth tabs and forum.
