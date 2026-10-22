@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Mask</title>
+<link rel="icon" href="/favicon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #0a1230;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .5s ease;
+  }
+  body.light { background: #e9ebf1; }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #hint {
+    position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 28px);
+    text-align: center; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,.45); pointer-events: none;
+    transition: opacity .8s ease;
+  }
+  body.light #hint { color: rgba(10,18,48,.4); }
+  #hint.gone { opacity: 0; }
+  #modeToggle {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+    transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: rgba(255,255,255,.07);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    color: #fff; font-size: 14px; font-weight: 550; letter-spacing: .01em;
+    cursor: pointer; font-family: inherit;
+    transition: background .3s ease, color .3s ease, border-color .3s ease;
+  }
+  body.light #modeToggle {
+    background: rgba(255,255,255,.65); color: #0a1230;
+    border-color: rgba(10,18,48,.12);
+  }
+  #modeToggle .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ffd76a; box-shadow: 0 0 8px rgba(255,215,106,.8);
+  }
+  body.light #modeToggle .dot { background: #0a1230; box-shadow: none; }
+  #fallback {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  #fallback img { width: min(86vw, 420px); border-radius: 18px; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hint">Drag to spin</div>
+<button id="modeToggle" type="button"><span class="dot"></span><span id="modeLabel">Light mode</span></button>
+<div id="fallback"><img src="img/mask-front-light.jpg" alt="Sleep mask"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const stage = document.getElementById('stage');
+const hint = document.getElementById('hint');
+const params = new URLSearchParams(location.search);
+const STILL = params.has('still');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (e) {
+  document.getElementById('fallback').style.display = 'flex';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 8.8);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(1.5, 3, 9);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 6;
+key.shadow.camera.left = -4.6; key.shadow.camera.right = 4.6;
+key.shadow.camera.top = 3.6; key.shadow.camera.bottom = -3.6;
+key.shadow.camera.near = 1; key.shadow.camera.far = 24;
+key.shadow.bias = -0.0002;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
+rim.position.set(-4, 2, -5);
+scene.add(rim);
+const sweep = new THREE.PointLight(0xffffff, 12, 30);
+sweep.position.set(2.5, 1.2, 3.5);
+scene.add(sweep);
+
+// Backdrop that catches the mask's real shadow as it spins
+const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.11 });
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), shadowMat);
+backdrop.position.z = -2.35;
+backdrop.receiveShadow = true;
+scene.add(backdrop);
+
+/* ================= Mask body =================
+   Silhouette traced from the approved render. The body is a real solid:
+   an extrusion with a fat rounded bevel, bent so it wraps like a worn
+   mask (center forward, edges sweeping back), smooth-shaded so it
+   reads plush. Front and back are separate skinned faces over it. */
+
+const RAW_PTS = [[-1.7789, 0.0863], [-1.7568, -0.3229], [-1.6695, -0.6497], [-1.5382, -0.8185], [-1.3843, -0.9021], [-1.205, -0.9449], [-1.0213, -0.9541], [-0.8633, -0.9313], [-0.695, -0.8625], [-0.4804, -0.743], [-0.2784, -0.6203], [-0.163, -0.5488], [-0.1178, -0.5229], [-0.0891, -0.5138], [-0.0578, -0.5121], [-0.0236, -0.5136], [0.0114, -0.5163], [0.0418, -0.523], [0.0696, -0.5327], [0.0979, -0.5444], [0.126, -0.5589], [0.16, -0.5775], [0.2041, -0.603], [0.2504, -0.6328], [0.2917, -0.6606], [0.3373, -0.6909], [0.411, -0.7362], [0.534, -0.8046], [0.6897, -0.8804], [0.8384, -0.9331], [0.9857, -0.9496], [1.162, -0.9302], [1.353, -0.8728], [1.5203, -0.7826], [1.6432, -0.6799], [1.7211, -0.5878], [1.7654, -0.4743], [1.7861, -0.2467], [1.7854, 0.0616], [1.7631, 0.2879], [1.7124, 0.408], [1.6208, 0.5194], [1.4944, 0.6426], [1.3565, 0.7435], [1.2037, 0.8166], [0.9812, 0.8757], [0.6015, 0.923], [0.0563, 0.9475], [-0.4987, 0.941], [-0.9133, 0.9023], [-1.1989, 0.8293], [-1.4159, 0.7282], [-1.5731, 0.6214], [-1.6769, 0.5226], [-1.7459, 0.3801]];
+const spline = new THREE.SplineCurve(RAW_PTS.map(p => new THREE.Vector2(p[0], p[1])));
+const smoothPts = spline.getPoints(300);
+const shape = new THREE.Shape();
+shape.moveTo(smoothPts[0].x, smoothPts[0].y);
+for (let i = 1; i < smoothPts.length; i++) shape.lineTo(smoothPts[i].x, smoothPts[i].y);
+shape.closePath();
+
+// Face-wrap bend: pure z displacement, applied identically to every part
+function bendZ(x, y) {
+  const nx = x / 1.8, ny = y / 0.97;
+  return -0.34 * nx * nx - 0.13 * ny * ny;
+}
+function applyBend(geo) {
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setZ(i, pos.getZ(i) + bendZ(pos.getX(i), pos.getY(i)));
+  }
+  pos.needsUpdate = true;
+}
+// Analytic normals for the bent skins — the flat earcut triangulation would
+// otherwise shade with hard diagonal creases across the face.
+// bendZ derivatives: fx = -0.20988x, fy = -0.27633y
+// Subdivide a skin so its surface actually follows the bend instead of
+// spanning it with a few huge flat triangles (positions re-projected onto
+// the analytic bent surface, so subdivision is exact).
+function subdivideSkin(geo, rounds, zBase) {
+  let pos = geo.attributes.position.array;
+  let uv = geo.attributes.uv.array;
+  let idx = geo.getIndex().array;
+  for (let r = 0; r < rounds; r++) {
+    const midCache = new Map();
+    const newPos = Array.from(pos);
+    const newUv = Array.from(uv);
+    const mid = (a, b) => {
+      const k = a < b ? a + '_' + b : b + '_' + a;
+      if (midCache.has(k)) return midCache.get(k);
+      const i3 = a * 3, j3 = b * 3, i2 = a * 2, j2 = b * 2;
+      const mx = (pos[i3] + pos[j3]) / 2, my = (pos[i3 + 1] + pos[j3 + 1]) / 2;
+      newPos.push(mx, my, zBase + bendZ(mx, my));
+      newUv.push((uv[i2] + uv[j2]) / 2, (uv[i2 + 1] + uv[j2 + 1]) / 2);
+      const id = newPos.length / 3 - 1;
+      midCache.set(k, id);
+      return id;
+    };
+    const out = [];
+    for (let i = 0; i < idx.length; i += 3) {
+      const a = idx[i], b = idx[i + 1], c = idx[i + 2];
+      const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a);
+      out.push(a, ab, ca, ab, b, bc, ca, bc, c, ab, bc, ca);
+    }
+    pos = new Float32Array(newPos);
+    uv = new Float32Array(newUv);
+    idx = new (pos.length / 3 > 65535 ? Uint32Array : Uint16Array)(out);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setIndex(new THREE.BufferAttribute(idx, 1));
+}
+function setBendNormals(geo, back) {
+  const pos = geo.attributes.position;
+  const n = new Float32Array(pos.count * 3);
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    if (back) v.set(-0.20988 * x, -0.27633 * y, -1);
+    else v.set(0.20988 * x, 0.27633 * y, 1);
+    v.normalize();
+    n[i * 3] = v.x; n[i * 3 + 1] = v.y; n[i * 3 + 2] = v.z;
+  }
+  geo.setAttribute('normal', new THREE.BufferAttribute(n, 3));
+}
+
+const DEPTH = 0.17, BEVEL_T = 0.07;
+const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.155
+
+const group = new THREE.Group();
+
+// Body shell (edges + structure). Only the extruded walls + bevel are
+// kept: the flat caps are giant fan triangles whose bent chords bulge
+// straight past the face skins (the back "cap" reached z -0.47 at the
+// center and hid the back skin entirely). The skins are the real faces —
+// same construction as the VIP card's rim + face planes.
+let bodyGeo = new THREE.ExtrudeGeometry(shape, {
+  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL_T, bevelSize: 0.05,
+  bevelSegments: 5, steps: 1
+});
+bodyGeo.translate(0, 0, -DEPTH / 2);
+{
+  const sideGroup = (bodyGeo.groups || []).find(g => g.materialIndex === 1);
+  if (sideGroup) {
+    const rp = bodyGeo.attributes.position, rn = bodyGeo.attributes.normal, ru = bodyGeo.attributes.uv;
+    const s = sideGroup.start, c = sideGroup.count;
+    const shell = new THREE.BufferGeometry();
+    shell.setAttribute('position', new THREE.BufferAttribute(rp.array.slice(s * 3, (s + c) * 3), 3));
+    shell.setAttribute('normal', new THREE.BufferAttribute(rn.array.slice(s * 3, (s + c) * 3), 3));
+    if (ru) shell.setAttribute('uv', new THREE.BufferAttribute(ru.array.slice(s * 2, (s + c) * 2), 2));
+    bodyGeo = shell;
+  }
+}
+bodyGeo = mergeVertices(bodyGeo, 1e-4);
+applyBend(bodyGeo);
+bodyGeo.computeVertexNormals();
+const bodyMat = new THREE.MeshPhysicalMaterial({
+  color: 0x4a4d52, roughness: 0.6, metalness: 0.0,
+  sheen: 0.8, sheenRoughness: 0.5, sheenColor: 0xcfd8e2,
+  clearcoat: 0.15, clearcoatRoughness: 0.6, envMapIntensity: 0.5
+});
+const body = new THREE.Mesh(bodyGeo, bodyMat);
+body.castShadow = true;
+body.receiveShadow = true;
+group.add(body);
+
+/* ---- Face textures (canvas): shape coords x[-1.85,1.85] y[-1.0,1.0] ---- */
+const TEXW = 3.7, TEXH = 2.0, CW = 1024, CH = 552;
+const PX = x => (x + TEXW / 2) / TEXW * CW;
+const PY = y => (TEXH / 2 - y) / TEXH * CH;
+const PU = u => u / TEXW * CW; // units -> px
+
+function silkBase(g, top, mid, bot) {
+  const grad = g.createLinearGradient(0, 0, 0, CH);
+  grad.addColorStop(0, top);
+  grad.addColorStop(0.5, mid);
+  grad.addColorStop(1, bot);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, CW, CH);
+  // fine fabric noise
+  const img = g.getImageData(0, 0, CW, CH);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 9;
+    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  // soft sheen streaks
+  for (const [sx, w, a] of [[0.22, 0.5, 0.05], [0.62, 0.7, 0.04], [0.85, 0.35, 0.05]]) {
+    const sg = g.createLinearGradient(CW * (sx - w / 2), 0, CW * (sx + w / 2), 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, `rgba(255,255,255,${a})`);
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = sg;
+    g.fillRect(0, 0, CW, CH);
+  }
+}
+
+// Closed-eye stitch: a shallow U arc with lash ticks hanging below it.
+// Drawn identically into the colour canvas and the bump canvas.
+function drawEye(g, cx, cy, mode) {
+  const P0 = { x: cx - 0.47, y: cy + 0.095 };
+  const P1 = { x: cx, y: cy - 0.335 };
+  const P2 = { x: cx + 0.47, y: cy + 0.095 };
+  const at = t => ({
+    x: (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x,
+    y: (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
+  });
+  const tan = t => ({
+    x: 2 * (1 - t) * (P1.x - P0.x) + 2 * t * (P2.x - P1.x),
+    y: 2 * (1 - t) * (P1.y - P0.y) + 2 * t * (P2.y - P1.y)
+  });
+  g.lineCap = 'round';
+  const passes = mode === 'bump'
+    ? [{ style: '#ffffff', w: 8, dy: 0 }]
+    : [{ style: 'rgba(0,0,0,0.30)', w: 9, dy: 2.5 }, { style: '#f4f6f8', w: 8, dy: 0 }];
+  for (const pass of passes) {
+    g.strokeStyle = pass.style;
+    g.lineWidth = pass.w;
+    g.beginPath();
+    g.moveTo(PX(P0.x), PY(P0.y) + pass.dy);
+    g.quadraticCurveTo(PX(P1.x), PY(P1.y) + pass.dy, PX(P2.x), PY(P2.y) + pass.dy);
+    g.stroke();
+    // lash ticks
+    for (let i = 0; i < 7; i++) {
+      const t = 0.10 + i * 0.133;
+      const p = at(t), d = tan(t);
+      let nx = d.y, ny = -d.x; // curve normal
+      if (ny > 0) { nx = -nx; ny = -ny; } // point down (-y in shape space)
+      const len = Math.hypot(nx, ny); nx /= len; ny /= len;
+      const L = 0.115;
+      g.beginPath();
+      g.moveTo(PX(p.x), PY(p.y) + pass.dy);
+      g.lineTo(PX(p.x + nx * L), PY(p.y + ny * L) + pass.dy);
+      g.stroke();
+    }
+  }
+}
+
+function makeFrontTextures() {
+  const c = document.createElement('canvas'); c.width = CW; c.height = CH;
+  const g = c.getContext('2d');
+  silkBase(g, '#64666c', '#56585e', '#494b51');
+  drawEye(g, -0.92, -0.02, 'color');
+  drawEye(g, 0.885, -0.02, 'color');
+  const b = document.createElement('canvas'); b.width = CW; b.height = CH;
+  const bg2 = b.getContext('2d');
+  bg2.fillStyle = '#808080'; bg2.fillRect(0, 0, CW, CH);
+  drawEye(bg2, -0.92, -0.02, 'bump');
+  drawEye(bg2, 0.885, -0.02, 'bump');
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const bump = new THREE.CanvasTexture(b);
+  for (const t of [map, bump]) { t.repeat.set(1 / TEXW, 1 / TEXH); t.offset.set(0.5, 0.5); }
+  return { map, bump };
+}
+
+function makeBackTexture() {
+  const c = document.createElement('canvas'); c.width = CW; c.height = CH;
+  const g = c.getContext('2d');
+  silkBase(g, '#5c5e63', '#505257', '#45474c');
+  // center seam: a groove with a stitch row either side
+  const cxp = PX(0);
+  g.strokeStyle = 'rgba(0,0,0,0.5)';
+  g.lineWidth = 4;
+  g.beginPath(); g.moveTo(cxp, 6); g.lineTo(cxp, CH - 6); g.stroke();
+  g.strokeStyle = 'rgba(230,233,238,0.8)';
+  g.lineWidth = 3.5;
+  g.setLineDash([10, 8]);
+  for (const off of [-11, 11]) {
+    g.beginPath(); g.moveTo(cxp + off, 10); g.lineTo(cxp + off, CH - 10); g.stroke();
+  }
+  g.setLineDash([]);
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  map.repeat.set(1 / TEXW, 1 / TEXH); map.offset.set(0.5, 0.5);
+  return map;
+}
+
+const faceMatBase = {
+  roughness: 0.52, metalness: 0.0,
+  sheen: 0.85, sheenRoughness: 0.42, sheenColor: 0xe6edf5,
+  clearcoat: 0.22, clearcoatRoughness: 0.5, envMapIntensity: 0.45
+};
+
+// Front skin (scaled a hair inside the bevelled cap outline)
+{
+  const ft = makeFrontTextures();
+  const geo = new THREE.ShapeGeometry(shape, 4);
+  geo.scale(0.995, 0.993, 1);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setZ(i, FRONT_Z + 0.002 + bendZ(pos.getX(i), pos.getY(i)));
+  }
+  subdivideSkin(geo, 3, FRONT_Z + 0.002);
+  setBendNormals(geo, false);
+  const mat = new THREE.MeshPhysicalMaterial({
+    ...faceMatBase, map: ft.map, bumpMap: ft.bump, bumpScale: 0.6,
+    polygonOffset: true, polygonOffsetFactor: -2
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  group.add(m);
+}
+
+// Back skin: same skin flipped — vertices pushed to the back surface,
+// winding reversed so it faces outward from behind
+{
+  const geo = new THREE.ShapeGeometry(shape, 4);
+  geo.scale(0.995, 0.993, 1);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setZ(i, -FRONT_Z - 0.002 + bendZ(pos.getX(i), pos.getY(i)));
+  }
+  const idx = geo.getIndex().array;
+  for (let i = 0; i < idx.length; i += 3) { const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t; }
+  geo.getIndex().needsUpdate = true;
+  subdivideSkin(geo, 3, -FRONT_Z - 0.002);
+  setBendNormals(geo, true);
+  const mat = new THREE.MeshPhysicalMaterial({
+    ...faceMatBase, map: makeBackTexture(),
+    polygonOffset: true, polygonOffsetFactor: -2
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  group.add(m);
+}
+
+/* ---- Strap: a solid band with real thickness, looped behind the mask ---- */
+function makeStrapTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#585a5f';
+  g.fillRect(0, 0, 256, 256);
+  for (let x = 0; x < 256; x += 4) { // ribs across the strap (constant-u lines)
+    g.fillStyle = 'rgba(255,255,255,0.07)';
+    g.fillRect(x, 0, 1, 256);
+    g.fillStyle = 'rgba(20,22,26,0.09)';
+    g.fillRect(x + 2, 0, 1, 256);
+  }
+  const img = g.getImageData(0, 0, 256, 256);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 8;
+    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  g.fillStyle = 'rgba(30,32,36,0.35)'; // selvedge edges
+  g.fillRect(0, 0, 256, 5);
+  g.fillRect(0, 251, 256, 5);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+{
+  const path = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-1.84, -0.02, -0.30),
+    new THREE.Vector3(-2.08, -0.02, -0.55),
+    new THREE.Vector3(-2.06, -0.02, -1.05),
+    new THREE.Vector3(-1.50, -0.02, -1.50),
+    new THREE.Vector3( 0.00, -0.02, -1.66),
+    new THREE.Vector3( 1.50, -0.02, -1.50),
+    new THREE.Vector3( 2.06, -0.02, -1.05),
+    new THREE.Vector3( 2.08, -0.02, -0.55),
+    new THREE.Vector3( 1.84, -0.02, -0.30)
+  ]);
+  const N = 140, HW = 0.32, HT = 0.018; // half width 0.32 (0.64 band), half thickness
+  const stations = [];
+  let totalLen = 0;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N;
+    const p = path.getPoint(u);
+    const tan = path.getTangent(u);
+    const side = new THREE.Vector3(0, 1, 0); // path is planar (y const) so width stays vertical
+    const bin = new THREE.Vector3().crossVectors(tan, side).normalize();
+    if (i > 0) totalLen += p.distanceTo(stations[i - 1].p);
+    stations.push({ p, side, bin, len: totalLen });
+  }
+  // corners per station: 0:+S+B 1:+S-B 2:-S-B 3:-S+B
+  const verts = [], uvs = [], indices = [];
+  for (let i = 0; i <= N; i++) {
+    const s = stations[i];
+    const corners = [
+      s.p.clone().addScaledVector(s.side, HW).addScaledVector(s.bin, HT),
+      s.p.clone().addScaledVector(s.side, HW).addScaledVector(s.bin, -HT),
+      s.p.clone().addScaledVector(s.side, -HW).addScaledVector(s.bin, -HT),
+      s.p.clone().addScaledVector(s.side, -HW).addScaledVector(s.bin, HT)
+    ];
+    for (const c of corners) verts.push(c.x, c.y, c.z);
+    const u = s.len * 1.1;
+    uvs.push(u, 1, u, 1, u, 0, u, 0);
+  }
+  for (let i = 0; i < N; i++) {
+    const a = i * 4, b = (i + 1) * 4;
+    for (let f = 0; f < 4; f++) {
+      const f2 = (f + 1) % 4;
+      indices.push(a + f, b + f, a + f2, b + f, b + f2, a + f2);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  const tex = makeStrapTexture();
+  const mat = new THREE.MeshPhysicalMaterial({
+    map: tex, bumpMap: tex, bumpScale: 0.1,
+    roughness: 0.55, metalness: 0.0,
+    sheen: 0.9, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
+    envMapIntensity: 0.5
+  });
+  const strap = new THREE.Mesh(geo, mat);
+  strap.castShadow = true;
+  strap.receiveShadow = true;
+  group.add(strap);
+}
+
+scene.add(group);
+
+/* ---- Interaction: drag with inertia + spring settle (same feel as the VIP card) ---- */
+const REST_X = 0.08;
+let rotX = parseFloat(params.get('rx') ?? REST_X);
+let rotY = parseFloat(params.get('ry') ?? -0.5);
+let velX = 0, velY = 0;
+let dragging = false, lastX = 0, lastY = 0, lastT = 0;
+let lastInteract = performance.now();
+const el = renderer.domElement;
+
+el.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
+  velX = 0; velY = 0;
+  el.setPointerCapture(e.pointerId);
+  hint.classList.add('gone');
+  lastInteract = performance.now();
+});
+el.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const now = performance.now();
+  const dt = Math.max(1, now - lastT);
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  rotY += dx * 0.0085;
+  rotX += dy * 0.006;
+  rotX = Math.max(-1.15, Math.min(1.15, rotX));
+  velY = (dx * 0.0085) / dt * 16.7;
+  velX = (dy * 0.006) / dt * 16.7;
+  lastX = e.clientX; lastY = e.clientY; lastT = now;
+  lastInteract = now;
+});
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  lastInteract = performance.now();
+}
+el.addEventListener('pointerup', endDrag);
+el.addEventListener('pointercancel', endDrag);
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  if (!dragging && !STILL) {
+    rotY += velY;
+    velY *= 0.955;
+    const acc = (REST_X - rotX) * 0.045;
+    velX = (velX + acc) * 0.90;
+    rotX += velX;
+    if (performance.now() - lastInteract > 2600 && Math.abs(velY) < 0.002) {
+      rotY += 0.0035;
+    }
+  }
+  group.rotation.set(rotX, rotY, 0);
+  group.position.y = STILL ? 0 : Math.sin(t * 1.15) * 0.035;
+  group.rotation.z = STILL ? 0 : Math.sin(t * 0.7) * 0.008;
+
+  sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
+  sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---- Light / dark toggle ---- */
+const toggle = document.getElementById('modeToggle');
+const label = document.getElementById('modeLabel');
+toggle.addEventListener('click', () => {
+  const light = document.body.classList.toggle('light');
+  label.textContent = light ? 'Dark mode' : 'Light mode';
+  key.intensity = light ? 1.9 : 1.6;
+  renderer.toneMappingExposure = light ? 1.12 : 1.05;
+  shadowMat.opacity = light ? 0.05 : 0.11;
+});
+</script>
+</body>
+</html>
