@@ -1435,10 +1435,11 @@ textarea {
 #shop-grid .product-meta {
   margin-top: 8px;
 }
-/* Minimal Add to Home Screen row, directly under the Globe tile */
+/* "Get the App" row under the Globe tile: same plain backdrop, radius and
+   monospace caption as the product tiles (#0c1230 dark / #d8d9dd light). */
 #shop-grid .a2hs {
   grid-column: 1/-1;
-  margin-top: -6px;
+  margin-top: -4px;
 }
 .a2hs {
   display: flex;
@@ -1446,32 +1447,28 @@ textarea {
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 7px 14px;
-  border: 1px solid rgba(169, 215, 245, 0.18);
-  border-radius: 999px;
-  background: rgba(169, 215, 245, 0.06);
-  color: rgba(214, 233, 248, 0.85);
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 22px;
+  background: #0c1230;
+  color: #f5f5f7;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s ease, background 0.2s ease;
+  transition: transform 0.15s ease;
 }
 .a2hs[hidden] {
   display: none;
 }
 .a2hs-ico {
-  position: relative;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   flex: none;
-  border-radius: 7px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(169, 215, 245, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.25);
   animation: a2hs-bob 3.2s ease-in-out infinite;
 }
 .a2hs-ico img {
@@ -1479,68 +1476,21 @@ textarea {
   width: 100%;
   height: 100%;
 }
-/* glossy sheen sweeping across the icon */
-.a2hs-ico::after {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: linear-gradient(
-    115deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 60%
-  );
-  transform: translateX(-70%);
-  animation: a2hs-sheen 3.2s ease-in-out infinite;
-}
-.a2hs-arw {
-  width: 14px;
-  height: 14px;
-  flex: none;
-  opacity: 0.8;
-  animation: a2hs-nudge 1.6s ease-in-out infinite;
-}
 @keyframes a2hs-bob {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(-2px) rotate(-4deg); }
-}
-@keyframes a2hs-sheen {
-  0%, 55% { transform: translateX(-70%); }
-  85%, 100% { transform: translateX(70%); }
-}
-@keyframes a2hs-nudge {
-  0%, 100% { transform: translateY(-1px); opacity: 0.55; }
-  50% { transform: translateY(2px); opacity: 1; }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 .a2hs:active {
   transform: scale(0.98);
 }
-.a2hs.is-hint {
-  background: rgba(169, 215, 245, 0.12);
-}
 [data-theme="light"] .a2hs {
-  border-color: rgba(10, 18, 48, 0.14);
-  background: rgba(10, 18, 48, 0.04);
-  color: #0a1230;
-}
-[data-theme="light"] .a2hs-ico {
-  box-shadow:
-    0 0 0 1px rgba(10, 18, 48, 0.12),
-    0 4px 10px rgba(10, 18, 48, 0.18);
-}
-[data-theme="light"] .a2hs.is-hint {
-  background: rgba(10, 18, 48, 0.08);
+  background: #d8d9dd;
+  color: #0a0f29;
 }
 @media (prefers-reduced-motion: reduce) {
-  .a2hs-ico,
-  .a2hs-ico::after,
-  .a2hs-arw {
+  .a2hs,
+  .a2hs-ico {
     animation: none;
-  }
-  .a2hs-ico::after {
-    display: none;
-  }
-  .a2hs {
     transition: none;
   }
   .a2hs:active {
