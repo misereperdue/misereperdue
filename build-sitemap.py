@@ -318,7 +318,7 @@ def main():
                                  "text": rt[:500]})
             replies_html = "\n".join(parts)
 
-        crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
             {"@type": "ListItem", "position": 2, "name": "Misery Globe", "item": f"{SITE}/globe"},
             {"@type": "ListItem", "position": 3, "name": title, "item": f"{SITE}/t/{tid}"}]}
