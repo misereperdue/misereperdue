@@ -113,12 +113,12 @@ function fitCamera() {
 }
 fitCamera();
 
-// Soft, static, fabric light: one broad key (softbox/window), a whisper
-// of cool bounce from behind-left, a gentle frontal fill. Nothing moves
-// or sweeps — silk is modelled by the environment + sheen, and the photo
-// textures already carry their own soft shading.
-const key = new THREE.DirectionalLight(0xffffff, 0.95);
-key.position.set(2.5, 3.5, 7);
+// One natural light, like a window: a single warm-white key from the
+// upper left, a faint cool bounce from behind-right for edge separation,
+// and the room environment kept low so the light has a real direction
+// instead of washing in from everywhere at once.
+const key = new THREE.DirectionalLight(0xfff2e2, 1.0);
+key.position.set(-3.5, 4.5, 6.5);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
 key.shadow.radius = 10;
@@ -127,12 +127,9 @@ key.shadow.camera.top = 3.6; key.shadow.camera.bottom = -3.6;
 key.shadow.camera.near = 1; key.shadow.camera.far = 24;
 key.shadow.bias = -0.0002;
 scene.add(key);
-const rim = new THREE.DirectionalLight(0xdfe8ff, 0.5);
-rim.position.set(-4, 2, -5);
+const rim = new THREE.DirectionalLight(0xdfe8ff, 0.45);
+rim.position.set(4, 2, -5);
 scene.add(rim);
-const fill = new THREE.DirectionalLight(0xffffff, 0.22);
-fill.position.set(-3, 0.5, 6);
-scene.add(fill);
 
 // Backdrop that catches the mask's real shadow as it spins
 const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.11 });
@@ -224,6 +221,7 @@ const DEPTH = 0.18, BEVEL_T = 0.08;
 const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.17
 
 const group = new THREE.Group();
+let strapMesh = null;
 
 // Body shell (edges + structure). Only the extruded walls + bevel are
 // kept: the flat caps are giant fan triangles whose bent chords bulge
@@ -248,6 +246,20 @@ bodyGeo.translate(0, 0, -DEPTH / 2);
   }
 }
 bodyGeo = mergeVertices(bodyGeo, 1e-4);
+{
+  // A whisper of irregularity so the edge isn't a machined-perfect band —
+  // real padded fabric is never perfectly uniform around its edge.
+  const pos = bodyGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    const th = Math.atan2(y, x);
+    const n = Math.sin(th * 7 + 1.3) * 0.4 + Math.sin(th * 13 + 4.1) * 0.35 + Math.sin(th * 23 + 2.0) * 0.25;
+    const l = Math.hypot(x, y) || 1;
+    const d = n * 0.008;
+    pos.setX(i, x + (x / l) * d);
+    pos.setY(i, y + (y / l) * d);
+  }
+}
 applyBend(bodyGeo);
 bodyGeo.computeVertexNormals();
 // The rim (the mask's padded edge) wears the same silk as the faces — a
@@ -263,10 +275,10 @@ const rimBump = new THREE.TextureLoader().load('img/mask-3d-rim-bump.jpg');
 rimBump.wrapS = rimBump.wrapT = THREE.RepeatWrapping;
 rimBump.repeat.set(0.5, 2.9); rimBump.offset.set(0, -2.4);
 const bodyMat = new THREE.MeshPhysicalMaterial({
-  map: rimTex, bumpMap: rimBump, bumpScale: 0.2,
-  color: 0x92959a, roughness: 0.62, metalness: 0.0,
-  sheen: 0.8, sheenRoughness: 0.5, sheenColor: 0xcfd8e2,
-  clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.5
+  map: rimTex, bumpMap: rimBump, bumpScale: 0.35,
+  color: 0x92959a, roughness: 0.78, metalness: 0.0,
+  sheen: 1.0, sheenRoughness: 0.55, sheenColor: 0xcfd8e2,
+  clearcoat: 0.0, envMapIntensity: 0.3
 });
 const body = new THREE.Mesh(bodyGeo, bodyMat);
 body.castShadow = true;
@@ -302,7 +314,7 @@ strapTex.anisotropy = 4;
 const faceMatBase = {
   roughness: 0.62, metalness: 0.0,
   sheen: 0.75, sheenRoughness: 0.5, sheenColor: 0xe6edf5,
-  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.5
+  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.32
 };
 
 // Front skin (scaled a hair inside the bevelled cap outline)
@@ -412,12 +424,13 @@ const faceMatBase = {
     map: strapTex, bumpMap: strapTex, bumpScale: 0.15,
     roughness: 0.58, metalness: 0.0,
     sheen: 0.6, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
-    envMapIntensity: 0.5
+    envMapIntensity: 0.32
   });
   const strap = new THREE.Mesh(geo, mat);
   strap.castShadow = true;
   strap.receiveShadow = true;
   group.add(strap);
+  strapMesh = strap;
 }
 
 scene.add(group);
@@ -426,6 +439,11 @@ scene.add(group);
 const REST_X = 0.08;
 let rotX = parseFloat(params.get('rx') ?? REST_X);
 let rotY = parseFloat(params.get('ry') ?? -0.5);
+// Fabric motion state: the rendered rotation springs toward the target
+// rotation (the mask carries weight), and the strap follows the rendered
+// rotation on a slower spring so it trails and settles like cloth.
+let visX = rotX, visY = rotY, visVX = 0, visVY = 0;
+let strapLagX = rotX, strapLagY = rotY, strapVX = 0, strapVY = 0;
 let velX = 0, velY = 0;
 let dragging = false, lastX = 0, lastY = 0, lastT = 0;
 let lastInteract = performance.now();
@@ -475,7 +493,27 @@ function animate() {
       rotY += 0.0035;
     }
   }
-  group.rotation.set(rotX, rotY, 0);
+  if (STILL) {
+    visX = rotX; visY = rotY; visVX = 0; visVY = 0;
+    strapLagX = rotX; strapLagY = rotY; strapVX = 0; strapVY = 0;
+  } else {
+    visVX = (visVX + (rotX - visX) * 0.14) * 0.72;
+    visVY = (visVY + (rotY - visY) * 0.14) * 0.72;
+    visX += visVX; visY += visVY;
+    strapVX = (strapVX + (visX - strapLagX) * 0.10) * 0.78;
+    strapVY = (strapVY + (visY - strapLagY) * 0.10) * 0.78;
+    strapLagX += strapVX; strapLagY += strapVY;
+  }
+  group.rotation.set(visX, visY, 0);
+  if (strapMesh) {
+    // The strap is sewn at both ends — it can only trail a little before
+    // it would tear off the body, so the swing is kept small and clamped.
+    const clampLag = v => Math.max(-0.08, Math.min(0.08, v));
+    strapMesh.rotation.y = clampLag((visY - strapLagY) * 0.6);
+    strapMesh.rotation.x = clampLag((visX - strapLagX) * 0.6);
+  }
+  const spd = Math.min(0.5, Math.abs(visVX) + Math.abs(visVY));
+  group.scale.set(1 + spd * 0.05, 1 - spd * 0.035, 1);
   group.position.y = STILL ? 0 : Math.sin(t * 1.15) * 0.035;
   group.rotation.z = STILL ? 0 : Math.sin(t * 0.7) * 0.008;
 
@@ -494,7 +532,7 @@ const label = document.getElementById('modeLabel');
 toggle.addEventListener('click', () => {
   const light = document.body.classList.toggle('light');
   label.textContent = light ? 'Dark mode' : 'Light mode';
-  key.intensity = light ? 1.15 : 0.95;
+  key.intensity = light ? 1.2 : 1.0;
   renderer.toneMappingExposure = light ? 1.06 : 1.0;
   shadowMat.opacity = light ? 0.05 : 0.11;
 });
