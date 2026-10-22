@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 59;
+var SW_VERSION = 60;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
@@ -25,7 +25,8 @@ var SHELL = [
   "/img/icon-192.png",
   "/img/icon-512.png",
   "/img/app-icon.png",
-  "/img/splash-1290x2796.png?v=19", "/img/splash-art.png",
+  "/img/splash-1290x2796.png?v=19", "/img/splash-barcode.png",
+    "/img/splash-name.png",
   "/img/splash-1179x2556.png?v=19",
   "/img/splash-1170x2532.png?v=19",
   "/img/splash-1284x2778.png?v=19",
