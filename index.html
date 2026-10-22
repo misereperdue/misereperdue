@@ -116,7 +116,7 @@
   <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png?v=24" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png?v=24" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png?v=24" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=91").catch(function () {}); }); }</script>
+  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=92").catch(function () {}); }); }</script>
   <link rel="preconnect" href="https://api.misereperdue.com">
   <link rel="preconnect" href="https://shop.misereperdue.com">
   <link rel="dns-prefetch" href="https://ipapi.co">
@@ -144,9 +144,28 @@
 <body class="home">
 <h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Misère Perdue</h1>
   <header class="hero">
-    <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header.jpg">
-      <source src="video/header-ping.mp4" type="video/mp4">
+    <video class="sharp" autoplay muted loop playsinline preload="none" poster="video/header-poster.webp">
+      <source data-src="video/header-ping.mp4" type="video/mp4">
     </video>
+    <script>
+      // Fast first paint: the poster (first frame) paints immediately; the
+      // 880 KB loop only starts downloading once the page has loaded.
+      (function () {
+        var v = document.currentScript.previousElementSibling;
+        function go() {
+          var s = v && v.querySelector("source[data-src]");
+          if (!s) return;
+          s.src = s.getAttribute("data-src");
+          s.removeAttribute("data-src");
+          v.preload = "auto";
+          v.load();
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+        if (document.readyState === "complete") setTimeout(go, 0);
+        else window.addEventListener("load", function () { setTimeout(go, 0); }, { once: true });
+      })();
+    </script>
     <div class="hero-fade"></div>
   </header>
   <div class="nav-wrap">
@@ -251,10 +270,9 @@
       // Shop chain: shop.js renders with MP + MPShopify.
       jobs.push(Promise.all([
         loadOne("js/shopify.js?v=12", 0),
-        loadOne("js/cart.js?v=1", 0),
-        loadOne("js/vip3d.js?v=2", 0),
-        loadOne("js/mask3d.js?v=2", 0)
-      ]).then(function () { return loadOne("js/shop.js?v=75", 0); }));
+        loadOne("js/cart.js?v=1", 0)
+      ]).then(function () { return loadOne("js/shop.js?v=76", 0); }));
+      // vip3d.js / mask3d.js are loaded on demand by shop.js (lazy3d).
       // Forum chain: patch after forum3.js.
       jobs.push(loadOne("js/forum3.js?v=1106", 0).then(function () { return loadOne(PATCH, 0); }));
       if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);
@@ -620,12 +638,22 @@
     paypal: "images/pay-paypal.png.b64",
     visa: "images/pay-visa.png.b64"
   };
-  Object.keys(badges).forEach(function(k){
+  // Badges only show on the Bag panel: fetch them when it opens, or once
+  // the page is idle, instead of competing with the first paint.
+  var done = false;
+  function go(){ if (done) return; done = true; Object.keys(badges).forEach(load); }
+  if (location.hash === "#cart") go();
+  else {
+    window.addEventListener("hashchange", function(){ if (location.hash === "#cart") go(); });
+    document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest('[data-view="cart"]'); if (b) go(); }, true);
+    window.addEventListener("load", function(){ setTimeout(go, 4000); });
+  }
+  function load(k){
     fetch(badges[k]).then(function(r){ return r.text(); }).then(function(b){
       var el = document.querySelector('img[data-paybadge="' + k + '"]');
       if (el && b.trim()) el.src = "data:image/png;base64," + b.trim();
     }).catch(function(){});
-  });
+  }
 })();
 </script>
 

@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 91;
+var SW_VERSION = 92;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
@@ -14,7 +14,7 @@ var SHELL = [
   "/js/theme.js?v=7",
   "/js/shopify.js?v=12",
   "/js/cart.js?v=1",
-  "/js/shop.js?v=75",
+  "/js/shop.js?v=76",
   "/js/social-logos.js?v=2",
   "/js/chat.js?v=284",
   "/js/dashboard-v2.js?v=47",
@@ -34,7 +34,7 @@ var SHELL = [
   "/img/splash-1206x2622.png?v=24",
   "/img/splash-1320x2868.png?v=24",
   "/img/splash-1260x2736.png?v=24",
-  "/video/header.jpg"
+  "/video/header-poster.webp"
 ];
 
 self.addEventListener("install", function (e) {

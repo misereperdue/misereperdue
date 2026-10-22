@@ -11,6 +11,33 @@ var MPShop = (function () {
   "use strict";
   var t = null,
     e = null;
+  // Lazy 3D: the viewer script (and three.js inside it) loads only when a
+  // product with a 3D stage is opened. Returns a cleanup fn like mount().
+  function lazy3d(name, src, el) {
+    var dead = !1, inner = null;
+    function go() {
+      if (!dead && window[name]) inner = window[name].mount(el);
+    }
+    if (window[name]) go();
+    else {
+      var s = document.querySelector('script[data-lazy3d="' + name + '"]');
+      if (!s) {
+        s = document.createElement("script");
+        s.src = src;
+        s.async = !0;
+        s.setAttribute("data-lazy3d", name);
+        s.addEventListener("error", function () {
+          s.remove();
+        });
+        document.head.appendChild(s);
+      }
+      s.addEventListener("load", go);
+    }
+    return function () {
+      dead = !0;
+      inner && (inner(), (inner = null));
+    };
+  }
   function n(t) {
     return !!t && ("membership" === t.handle || /membership/i.test(t.name || ""));
   }
@@ -710,7 +737,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && (window.MPVip3D && (t = MPVip3D.mount(M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=2", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -728,7 +755,7 @@ var MPShop = (function () {
       if (a(i)) {
         var x = p.querySelector(".vip-3d-stage"),
           L = p.querySelector(".vip-3d-hint");
-        if (x && (window.MPMask3D && (e = MPMask3D.mount(x)), L)) {
+        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=2", x)), L)) {
           var T = 0,
             z = function () {
               (T && clearTimeout(T),
