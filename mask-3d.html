@@ -90,7 +90,7 @@ try {
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -113,22 +113,26 @@ function fitCamera() {
 }
 fitCamera();
 
-const key = new THREE.DirectionalLight(0xffffff, 1.35);
-key.position.set(1.5, 3, 9);
+// Soft, static, fabric light: one broad key (softbox/window), a whisper
+// of cool bounce from behind-left, a gentle frontal fill. Nothing moves
+// or sweeps — silk is modelled by the environment + sheen, and the photo
+// textures already carry their own soft shading.
+const key = new THREE.DirectionalLight(0xffffff, 0.95);
+key.position.set(2.5, 3.5, 7);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
-key.shadow.radius = 6;
+key.shadow.radius = 10;
 key.shadow.camera.left = -4.6; key.shadow.camera.right = 4.6;
 key.shadow.camera.top = 3.6; key.shadow.camera.bottom = -3.6;
 key.shadow.camera.near = 1; key.shadow.camera.far = 24;
 key.shadow.bias = -0.0002;
 scene.add(key);
-const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
+const rim = new THREE.DirectionalLight(0xdfe8ff, 0.5);
 rim.position.set(-4, 2, -5);
 scene.add(rim);
-const sweep = new THREE.PointLight(0xffffff, 8, 30);
-sweep.position.set(2.5, 1.2, 3.5);
-scene.add(sweep);
+const fill = new THREE.DirectionalLight(0xffffff, 0.22);
+fill.position.set(-3, 0.5, 6);
+scene.add(fill);
 
 // Backdrop that catches the mask's real shadow as it spins
 const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.11 });
@@ -216,8 +220,8 @@ function setBendNormals(geo, back) {
   geo.setAttribute('normal', new THREE.BufferAttribute(n, 3));
 }
 
-const DEPTH = 0.20, BEVEL_T = 0.11;
-const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.21
+const DEPTH = 0.18, BEVEL_T = 0.08;
+const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.17
 
 const group = new THREE.Group();
 
@@ -227,7 +231,7 @@ const group = new THREE.Group();
 // center and hid the back skin entirely). The skins are the real faces —
 // same construction as the VIP card's rim + face planes.
 let bodyGeo = new THREE.ExtrudeGeometry(shape, {
-  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL_T, bevelSize: 0.075,
+  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL_T, bevelSize: 0.06,
   bevelSegments: 8, steps: 1
 });
 bodyGeo.translate(0, 0, -DEPTH / 2);
@@ -253,16 +257,16 @@ bodyGeo.computeVertexNormals();
 const rimTex = new THREE.TextureLoader().load('img/mask-3d-rim.jpg');
 rimTex.wrapS = rimTex.wrapT = THREE.RepeatWrapping;
 rimTex.colorSpace = THREE.SRGBColorSpace;
-rimTex.repeat.set(0.5, 2.4); rimTex.offset.set(0, -1.9);
+rimTex.repeat.set(0.5, 2.9); rimTex.offset.set(0, -2.4);
 rimTex.anisotropy = 4;
 const rimBump = new THREE.TextureLoader().load('img/mask-3d-rim-bump.jpg');
 rimBump.wrapS = rimBump.wrapT = THREE.RepeatWrapping;
-rimBump.repeat.set(0.5, 2.4); rimBump.offset.set(0, -1.9);
+rimBump.repeat.set(0.5, 2.9); rimBump.offset.set(0, -2.4);
 const bodyMat = new THREE.MeshPhysicalMaterial({
   map: rimTex, bumpMap: rimBump, bumpScale: 0.2,
   color: 0x92959a, roughness: 0.62, metalness: 0.0,
   sheen: 0.8, sheenRoughness: 0.5, sheenColor: 0xcfd8e2,
-  clearcoat: 0.15, clearcoatRoughness: 0.6, envMapIntensity: 0.4
+  clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.5
 });
 const body = new THREE.Mesh(bodyGeo, bodyMat);
 body.castShadow = true;
@@ -296,9 +300,9 @@ strapTex.colorSpace = THREE.SRGBColorSpace;
 strapTex.anisotropy = 4;
 
 const faceMatBase = {
-  roughness: 0.58, metalness: 0.0,
-  sheen: 0.55, sheenRoughness: 0.45, sheenColor: 0xe6edf5,
-  clearcoat: 0.15, clearcoatRoughness: 0.5, envMapIntensity: 0.35
+  roughness: 0.62, metalness: 0.0,
+  sheen: 0.75, sheenRoughness: 0.5, sheenColor: 0xe6edf5,
+  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.5
 };
 
 // Front skin (scaled a hair inside the bevelled cap outline)
@@ -408,7 +412,7 @@ const faceMatBase = {
     map: strapTex, bumpMap: strapTex, bumpScale: 0.15,
     roughness: 0.58, metalness: 0.0,
     sheen: 0.6, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
-    envMapIntensity: 0.35
+    envMapIntensity: 0.5
   });
   const strap = new THREE.Mesh(geo, mat);
   strap.castShadow = true;
@@ -475,9 +479,6 @@ function animate() {
   group.position.y = STILL ? 0 : Math.sin(t * 1.15) * 0.035;
   group.rotation.z = STILL ? 0 : Math.sin(t * 0.7) * 0.008;
 
-  sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
-  sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
-
   renderer.render(scene, camera);
 }
 animate();
@@ -493,8 +494,8 @@ const label = document.getElementById('modeLabel');
 toggle.addEventListener('click', () => {
   const light = document.body.classList.toggle('light');
   label.textContent = light ? 'Dark mode' : 'Light mode';
-  key.intensity = light ? 1.65 : 1.35;
-  renderer.toneMappingExposure = light ? 1.12 : 1.05;
+  key.intensity = light ? 1.15 : 0.95;
+  renderer.toneMappingExposure = light ? 1.06 : 1.0;
   shadowMat.opacity = light ? 0.05 : 0.11;
 });
 </script>
