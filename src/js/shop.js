@@ -179,6 +179,200 @@ var MPShop = (function () {
       "</div>"
     );
   }
+
+  /* Misery Globe tile: a wireframe globe (meridians + parallels) drawn on a
+   * small canvas, rotating about a tilted axis. Front lines are crisp, back
+   * lines faint, so it reads as a sphere. Colour comes from the canvas's CSS
+   * `color` (navy on the light photo tile, ice blue on the dark one), so it
+   * follows the theme. One frame only under prefers-reduced-motion; pauses
+   * when off screen or the tab is hidden; stops itself when the grid is
+   * re-rendered (canvas detached). No dependencies. */
+  var globeStop = null;
+  function mountGlobe(cv) {
+    if (globeStop) (globeStop(), (globeStop = null));
+    if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext("2d");
+    if (!ctx) return;
+    var rm = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    var raf = 0,
+      visible = true,
+      running = true,
+      frame = 0,
+      colour = "",
+      W = 0,
+      H = 0,
+      dpr = 1;
+    var TILT = 0.38,
+      PERIOD = 24000,
+      t0 = performance.now();
+    function size() {
+      var r = cv.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      W = Math.max(1, Math.round(r.width));
+      H = Math.max(1, Math.round(r.height));
+      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+        cv.width = Math.round(W * dpr);
+        cv.height = Math.round(H * dpr);
+      }
+    }
+    function rgba(a) {
+      var m = colour.match(/\d+(\.\d+)?/g) || [10, 18, 48];
+      return "rgba(" + m[0] + "," + m[1] + "," + m[2] + "," + a + ")";
+    }
+    function draw(now) {
+      if (!cv.isConnected) return stop();
+      if (frame++ % 60 === 0) colour = getComputedStyle(cv).color;
+      size();
+      if (W < 8 || H < 8) {
+        // hidden panel (display:none): the IntersectionObserver kicks us when it's shown
+        raf = 0;
+        return;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      // Globe sits on the right; the text block (HTML) sits on the left.
+      var R = Math.min(H * 0.34, W * 0.19),
+        cx = W - R * 1.42,
+        cy = H / 2;
+      var orb = rm && rm.matches ? 2.2 : (((now - t0) % (PERIOD / 3)) / (PERIOD / 3)) * Math.PI * 2;
+      var OT = -0.32,
+        ORX = R * 1.3,
+        ORY = R * 0.3;
+      function orbitAt(a, out) {
+        var x = ORX * Math.cos(a),
+          y = ORY * Math.sin(a);
+        out[0] = cx + x * Math.cos(OT) - y * Math.sin(OT);
+        out[1] = cy + x * Math.sin(OT) + y * Math.cos(OT);
+      }
+      function orbit(front) {
+        var o = [0, 0];
+        ctx.beginPath();
+        for (var i = 0; i <= 64; i++) {
+          var a = (front ? 0 : Math.PI) + (i / 64) * Math.PI;
+          orbitAt(a, o);
+          i ? ctx.lineTo(o[0], o[1]) : ctx.moveTo(o[0], o[1]);
+        }
+        ctx.strokeStyle = rgba(front ? 0.55 : 0.16);
+        ctx.lineWidth = front ? 1.1 : 0.9;
+        ctx.stroke();
+        // satellite: in front when sin(a) > 0 (lower half of the ellipse faces the viewer)
+        if (Math.sin(orb) > 0 === front) {
+          orbitAt(orb, o);
+          ctx.beginPath();
+          ctx.arc(o[0], o[1], front ? 2.6 : 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = rgba(front ? 0.95 : 0.3);
+          ctx.fill();
+        }
+      }
+      // halo behind the globe
+      var halo = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 1.9);
+      halo.addColorStop(0, rgba(0.16));
+      halo.addColorStop(1, rgba(0));
+      ctx.fillStyle = halo;
+      ctx.fillRect(0, 0, W, H);
+      orbit(false);
+      var rot = rm && rm.matches ? 0.6 : (((now - t0) % PERIOD) / PERIOD) * Math.PI * 2;
+      var ct = Math.cos(TILT),
+        st = Math.sin(TILT);
+      // sphere body + soft rim light
+      var g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+      g.addColorStop(0, rgba(0.1));
+      g.addColorStop(1, rgba(0.02));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+      // project lat/lon (radians) -> screen, returns z (towards viewer)
+      function P(lat, lon, out) {
+        var x = Math.cos(lat) * Math.sin(lon + rot),
+          y = Math.sin(lat),
+          z = Math.cos(lat) * Math.cos(lon + rot);
+        var y2 = y * ct - z * st,
+          z2 = y * st + z * ct;
+        out[0] = cx + x * R;
+        out[1] = cy - y2 * R;
+        out[2] = z2;
+      }
+      var pt = [0, 0, 0];
+      function curve(fn, n, front, alpha, width) {
+        ctx.beginPath();
+        var pen = false;
+        for (var i = 0; i <= n; i++) {
+          fn(i / n, pt);
+          var on = front ? pt[2] >= 0 : pt[2] < 0;
+          if (on) pen ? ctx.lineTo(pt[0], pt[1]) : (ctx.moveTo(pt[0], pt[1]), (pen = true));
+          else pen = false;
+        }
+        ctx.strokeStyle = rgba(alpha);
+        ctx.lineWidth = width;
+        ctx.stroke();
+      }
+      var MER = 12,
+        PAR = [-60, -30, 0, 30, 60];
+      for (var pass = 0; pass < 2; pass++) {
+        var front = pass === 1;
+        for (var m = 0; m < MER; m++)
+          (function (lon) {
+            curve(
+              function (u, o) {
+                P(-Math.PI / 2 + u * Math.PI, lon, o);
+              },
+              72,
+              front,
+              front ? 0.7 : 0.14,
+              front ? 1.1 : 0.8,
+            );
+          })((m / MER) * Math.PI * 2);
+        for (var k = 0; k < PAR.length; k++)
+          (function (lat, eq) {
+            curve(
+              function (u, o) {
+                P(lat, u * Math.PI * 2, o);
+              },
+              120,
+              front,
+              front ? (eq ? 0.85 : 0.6) : 0.12,
+              front ? (eq ? 1.4 : 1) : 0.8,
+            );
+          })((PAR[k] * Math.PI) / 180, PAR[k] === 0);
+      }
+      // outline
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(0.8);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      orbit(true);
+      if (running && visible && !document.hidden && !(rm && rm.matches))
+        raf = requestAnimationFrame(draw);
+      else raf = 0;
+    }
+    function kick() {
+      if (!raf && running && visible && !document.hidden) raf = requestAnimationFrame(draw);
+    }
+    function onVis() {
+      document.hidden ? (cancelAnimationFrame(raf), (raf = 0)) : kick();
+    }
+    var io = window.IntersectionObserver
+      ? new IntersectionObserver(function (es) {
+          visible = es[0].isIntersecting;
+          visible ? kick() : (cancelAnimationFrame(raf), (raf = 0));
+        })
+      : null;
+    io && io.observe(cv);
+    document.addEventListener("visibilitychange", onVis);
+    rm && rm.addEventListener && rm.addEventListener("change", kick);
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      io && io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+      rm && rm.removeEventListener && rm.removeEventListener("change", kick);
+    }
+    globeStop = stop;
+    kick();
+  }
   function y(t) {
     var e = document.querySelector('[data-view="' + t + '"]');
     e && e.click();
@@ -209,7 +403,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="globe-promo" role="button" tabindex="0" aria-label="Misery Globe"><span class="gp-globe" aria-hidden="true"></span><span class="gp-top"><span class="gp-eyebrow">MISERY</span><span class="gp-title">Globe</span></span><span class="gp-row"><span class="gp-sub">The board</span><span class="gp-acct" role="button" tabindex="0">Get an account &rarr;</span></span></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>' +
             e.map(g).join("") +
             (f
               ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
@@ -240,6 +434,7 @@ var MPShop = (function () {
                   ("Enter" !== t.key && " " !== t.key) ||
                     (t.preventDefault(), t.stopPropagation(), y("journal"));
                 }));
+              mountGlobe(e.querySelector(".gp-canvas"));
             }
           })(t));
       } else
