@@ -1,3 +1,8 @@
+/* LEGACY — NOT DEPLOYED. Kept for history only.
+ * This was the original Oct 8 comments/blog backend (data stored in comments.json in the repo).
+ * It was replaced by the `misery-chat` Worker (Durable Object ChatRoom) at api.misereperdue.com.
+ * The live backend source is backed up in worker/misery-chat/ — edit that, not this file.
+ */
 /* MISERY backend — Cloudflare Worker.
  *
  * Handles: blog post CRUD (Markdown files in content/posts/), comments,

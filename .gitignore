@@ -1,1 +1,28 @@
+# Dependencies / build tooling
+node_modules
+package-lock.json.bak
+.npm/
+
+# Local build scratch (build.mjs writes only to js/ and css/)
+.build-tmp/
+
+# Wrangler / Cloudflare local state
+.wrangler/
+.dev.vars
+.env
+.env.*
+
+# Legacy hosting
 .netlify
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc

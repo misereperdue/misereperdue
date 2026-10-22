@@ -1,0 +1,46 @@
+# BACKUP of the live `misery-chat` Worker configuration, pulled read-only from the
+# Cloudflare API on 2026-10-22. It is NOT wired to any automatic deploy.
+#
+# DO NOT run `wrangler deploy` from here without the owner's go-ahead: the live
+# Worker was last uploaded via the API/dashboard (2026-10-21), and this file
+# must be re-checked against the dashboard before any deploy.
+#
+# Secrets are NOT stored here (names only). Set them with `wrangler secret put <NAME>`.
+
+name = "misery-chat"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "3dca77f16102d81d039ce4e56b63885a"   # account "misereperdue" (not a secret)
+workers_dev = true                                  # misery-chat.freeglory416.workers.dev
+
+# Custom domain (Workers Custom Domain, zone misereperdue.com).
+# DNS record api.misereperdue.com AAAA 100:: (proxied) is managed by this binding.
+routes = [
+  { pattern = "api.misereperdue.com", custom_domain = true }
+]
+
+# Durable Object: one global ChatRoom instance holds users, sessions, chat,
+# forum threads, notifications, push subscriptions, analytics, audit log.
+[[durable_objects.bindings]]
+name = "CHAT_ROOM"
+class_name = "ChatRoom"
+
+# The ChatRoom namespace is SQLite-backed (use_sqlite = true on Cloudflare).
+# The original migration tag is unknown; keep this block in sync with the
+# dashboard before any deploy, or Wrangler may try to re-create the class.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ChatRoom"]
+
+# No cron triggers, KV, D1, R2 or other bindings are configured on the live Worker.
+
+# Secrets configured on the live Worker (values live only in Cloudflare):
+#   AGENT_KEY               - key for automated/agent API calls (X-Agent-Key header)
+#   GROQ_API_KEY            - LLM API used by the chat bot features
+#   OWNER_SECRET            - owner-only admin actions (X-Owner-Secret header)
+#   SHOPIFY_WEBHOOK_SECRET  - verifies Shopify order webhooks (VIP upgrades)
+#   TURNSTILE_SECRET        - Cloudflare Turnstile server-side verification (sign-up / sign-in)
+#   VAPID_PRIVATE_KEY       - Web Push signing key
+#   VAPID_PUBLIC_KEY        - Web Push public key
+#   X_CLIENT_ID             - "Continue with X" OAuth 2.0 client
+#   X_CLIENT_SECRET         - "Continue with X" OAuth 2.0 client

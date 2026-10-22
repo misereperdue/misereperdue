@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
 """Generate static thread pages + sitemap.xml for Google indexing.
-Fetches public forum threads and writes t/<id>.html + sitemap.xml.
-Run via cron; only changed files are pushed.
+
+Fetches public forum threads from the live API and writes t/<id>.html plus
+sitemap.xml into THIS repo (the directory this script lives in), so it works
+from any checkout. Read-only against the API (GET only).
+
+URLs are clean (no .html): Cloudflare Pages serves /t/t29 from t/t29.html and
+308-redirects /t/t29.html -> /t/t29, so canonical/og:url/sitemap must use the
+clean form or Google sees a redirect for every entry.
+
+The sitemap also lists /, /shop and every static product page in p/*.html.
+
+Usage:  python3 build-sitemap.py            # regenerate t/*.html + sitemap.xml
+        python3 build-sitemap.py --dry-run  # print what would change
+Then review `git diff`, commit, and open a PR (see docs/SITE_GUIDE.md).
 """
 import json, re, html, urllib.request, os, sys
 from datetime import datetime, timezone
 
-WORKER = "https://misery-chat.freeglory416.workers.dev"
+WORKER = "https://api.misereperdue.com"  # misery-chat Worker (custom domain)
 SITE = "https://misereperdue.com"
-OUT = os.path.expanduser("~/workspace/site-study")
+OUT = os.path.dirname(os.path.abspath(__file__))  # repo root
+DRY = "--dry-run" in sys.argv
 
 def get(path):
     req = urllib.request.Request(WORKER + path, headers={"User-Agent": "misereperdue-sitemap/1.0"})
@@ -65,19 +78,19 @@ PAGE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mis&egrave;re Perdue</title>
+<title>{title} &middot; Mis&egrave;re Perdue</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{url}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Mis&egrave;re Perdue">
-<meta property="og:title" content="Mis&egrave;re Perdue">
+<meta property="og:title" content="{title} &middot; Mis&egrave;re Perdue">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="https://misereperdue.com/img/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="1200">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Mis&egrave;re Perdue">
+<meta name="twitter:title" content="{title} &middot; Mis&egrave;re Perdue">
 <meta name="twitter:description" content="{desc}">
 <meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
 <script type="application/ld+json">{jsonld}</script>
@@ -112,6 +125,27 @@ img{{max-width:100%;border-radius:8px}}
 </html>
 """
 
+def file_date(path):
+    """Last git commit date of a file (falls back to mtime)."""
+    try:
+        import subprocess
+        d = subprocess.run(["git", "-C", OUT, "log", "-1", "--format=%cs", "--", path],
+                           capture_output=True, text=True, timeout=10).stdout.strip()
+        if d:
+            return d
+    except Exception:
+        pass
+    return datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc).strftime("%Y-%m-%d")
+
+def write(path, content):
+    old = open(path, encoding="utf-8").read() if os.path.exists(path) else None
+    if old == content:
+        return
+    print(("would write " if DRY else "wrote ") + os.path.relpath(path, OUT), flush=True)
+    if not DRY:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+
 def main():
     data = get("/api/forum/threads")
     threads = [t for t in data.get("threads", [])
@@ -121,7 +155,12 @@ def main():
     tdir = os.path.join(OUT, "t")
     os.makedirs(tdir, exist_ok=True)
 
-    urls = [("https://misereperdue.com/", iso(None), "daily", "1.0")]
+    urls = [(f"{SITE}/", iso(None), "daily", "1.0"),
+            (f"{SITE}/shop", iso(None), "weekly", "0.9")]
+    pdir = os.path.join(OUT, "p")
+    for fn in sorted(os.listdir(pdir)) if os.path.isdir(pdir) else []:
+        if fn.endswith(".html"):
+            urls.append((f"{SITE}/p/{fn[:-5]}", file_date(os.path.join(pdir, fn)), "weekly", "0.8"))
     seen = set()
     for t in threads:
         tid = t["id"]
@@ -160,6 +199,7 @@ def main():
             "@context": "https://schema.org",
             "@type": "DiscussionForumPosting",
             "headline": title,
+            "url": f"{SITE}/t/{tid}",
             "author": {"@type": "Person", "name": author},
             "datePublished": iso(full.get("createdAt")),
             "articleBody": text[:2000],
@@ -168,13 +208,12 @@ def main():
 
         page = PAGE.format(
             title=html.escape(title), desc=html.escape(desc, quote=True),
-            url=f"{SITE}/t/{tid}.html", author=html.escape(author),
+            url=f"{SITE}/t/{tid}", author=html.escape(author),
             date=date_long(full.get("createdAt")), content=content,
             replies_html=replies_html,
-            live_url=f"{SITE}/#thread/{tid}", jsonld=jsonld)
-        with open(os.path.join(tdir, f"{tid}.html"), "w") as f:
-            f.write(page)
-        urls.append((f"{SITE}/t/{tid}.html",
+            live_url=f"{SITE}/#globe/{tid}", jsonld=jsonld)
+        write(os.path.join(tdir, f"{tid}.html"), page)
+        urls.append((f"{SITE}/t/{tid}",
                      iso(full.get("lastActivity") or full.get("createdAt")),
                      "weekly", "0.8"))
 
@@ -184,9 +223,8 @@ def main():
         sm.append(f"  <url>\n    <loc>{loc}</loc>\n    <lastmod>{lastmod}</lastmod>\n"
                   f"    <changefreq>{freq}</changefreq>\n    <priority>{pri}</priority>\n  </url>")
     sm.append("</urlset>")
-    with open(os.path.join(OUT, "sitemap.xml"), "w") as f:
-        f.write("\n".join(sm) + "\n")
-    print(f"wrote {len(urls)-1} thread pages + sitemap", flush=True)
+    write(os.path.join(OUT, "sitemap.xml"), "\n".join(sm) + "\n")
+    print(f"done: {len(seen)} thread pages, {len(urls)} sitemap URLs", flush=True)
 
 if __name__ == "__main__":
     main()

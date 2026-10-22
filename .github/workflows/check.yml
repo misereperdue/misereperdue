@@ -1,0 +1,25 @@
+# Sanity checks on pull requests. Builds and deploys NOTHING:
+# Cloudflare Pages still deploys straight from the repo on push.
+name: check
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install minifiers (pinned, same versions as package.json)
+        run: npm install --no-save --no-audit --no-fund terser@5.51.2 clean-css@5.3.3
+      - name: Site sanity (JS syntax, local links, sitemap, canonicals, SW pins)
+        run: node tools/check.mjs
+      - name: Minified files match src/ (npm run verify)
+        run: node tools/build.mjs --verify
+      - name: Python syntax (build-sitemap.py)
+        run: python3 -m py_compile build-sitemap.py

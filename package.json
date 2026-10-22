@@ -1,0 +1,16 @@
+{
+  "name": "misereperdue-site",
+  "private": true,
+  "description": "Misère Perdue (MISERY) site — static files served by Cloudflare Pages. Readable sources in src/, minified output in js/ and css/.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "verify": "node tools/build.mjs --verify",
+    "check": "node tools/check.mjs",
+    "sitemap": "python3 build-sitemap.py"
+  },
+  "devDependencies": {
+    "clean-css": "5.3.3",
+    "terser": "5.51.2"
+  }
+}
