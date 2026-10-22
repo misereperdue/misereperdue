@@ -328,6 +328,34 @@ function finishShell(geo) {
     }
     return out;
   };
+  // The face skins sit a hair inside the outline, which leaves a
+  // see-through slit along the seam line where the stitching should be.
+  // Each shell grows a flat flange inward under its skin, just below the
+  // skin's surface, so the slit is backed by fabric all the way around.
+  const flangeSoup = (sign) => {
+    const seen = new Map();
+    for (let i = 0; i < sp.count; i++) {
+      if (Math.abs(sp.getZ(i) - sign * FRONT_Z) > 1e-4) continue;
+      const x = sp.getX(i), y = sp.getY(i);
+      const k = x.toFixed(4) + '|' + y.toFixed(4);
+      if (!seen.has(k)) seen.set(k, { x, y });
+    }
+    const ring = [...seen.values()].sort((a, b) => Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x));
+    const z = sign * (FRONT_Z - 0.004);
+    const inner = ring.map(p => {
+      const l = Math.hypot(p.x, p.y) || 1;
+      return { x: p.x - (p.x / l) * 0.035, y: p.y - (p.y / l) * 0.035 };
+    });
+    const V = (p) => ({ x: p.x, y: p.y, z, nx: 0, ny: 0, nz: sign });
+    const out = [];
+    for (let i = 0; i < ring.length; i++) {
+      const a = ring[i], b = ring[(i + 1) % ring.length];
+      const ia = inner[i], ib = inner[(i + 1) % ring.length];
+      if (sign > 0) out.push(V(a), V(b), V(ib), V(a), V(ib), V(ia));
+      else out.push(V(a), V(ib), V(b), V(a), V(ia), V(ib));
+    }
+    return out;
+  };
   const buildPart = (soup, map, bump) => {
     const p = [], n = [], u = [];
     for (const v of soup) {
@@ -350,15 +378,16 @@ function finishShell(geo) {
       // The turned roll catches the room's bright reflections where the
       // flat faces don't — tone the shells down so the edge stays the
       // same dark fabric instead of reading as a pale trim piece.
-      color: 0xdedede, envMapIntensity: 0.35, sheen: 0.5
+      color: 0xdedede, envMapIntensity: 0.35, sheen: 0.5,
+      side: THREE.DoubleSide // safety net: no line of sight into the hollow body
     });
     const m = new THREE.Mesh(finishShell(g), mat);
     m.castShadow = true;
     m.receiveShadow = false; // self-shadow landed here as a hard patch (v3 lesson)
     group.add(m);
   };
-  buildPart(clip(true), frontTex, frontBump);
-  buildPart(clip(false), backTex, backBump);
+  buildPart(clip(true).concat(flangeSoup(1)), frontTex, frontBump);
+  buildPart(clip(false).concat(flangeSoup(-1)), backTex, backBump);
 }
 
 // Front skin (scaled a hair inside the bevelled cap outline)
