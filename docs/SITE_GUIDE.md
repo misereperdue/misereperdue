@@ -250,3 +250,11 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 - Titles ≤60 / descriptions ≤155. Product search titles live in `SEO_TITLE` in `tools/build-products.py`. `refreshTitle()` in `app.js` keeps the `<title>` from `index.html` for every view.
 - Cloudflare: www → apex 301 (Redirect Rule), Always Use HTTPS on, Crawler Hints (IndexNow) on. `*.pages.dev` sends `X-Robots-Tag: noindex`. `/mask-3d` and `/vip-card` are noindex.
 - Cache: `/js/*`, `/css/*`, `/vendor/*` are immutable for 1 year, so **always bump `?v=`** (or the versioned path) when one changes. Images and video are cached for 1 day.
+
+## 11. Share cards (2026-10-22)
+
+- `img/og/*.jpg` are 1200x630 Open Graph/Twitter cards (home, shop, globe, thread, product-<handle>), rendered with Playwright by `node tools/build-og.mjs` from existing artwork (splash eyes, glossy M, chrome ornaments, Shopify product photos). Keep each under 300KB.
+- `index.html` uses `img/og/home.jpg`. `tools/build-products.py` uses `img/og/product-<handle>.jpg` when the file exists (otherwise the Shopify photo) and `img/og/shop.jpg`. `build-sitemap.py` uses `img/og/thread.jpg` on /t/* and `img/og/globe.jpg` on /globe. All have og:image:width/height/alt and twitter:image:alt.
+- New product: run `node tools/build-og.mjs` (add the handle to it), then `python3 tools/build-products.py`. If you change a card image, rename it or add `?v=` (img/* is cached for one day).
+- Shop tab ends with a decorative closed-eyes mark (`#shop:has(.product-card)::after`, breathing animation, reduced-motion off). No footer: dc does not want text or links at the bottom.
+- 404.html is all monospace (ui-monospace stack), matching the Globe tile title and Sign up pill.

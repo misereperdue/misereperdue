@@ -90,15 +90,16 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="{page_title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta property="og:image" content="{og_image}">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="MISERY closed eyes logo">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{og_alt}">
+<meta name="twitter:image:alt" content="{og_alt}">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{page_title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta name="twitter:image" content="{og_image}">
 <script type="application/ld+json">{jsonld}</script>
 <style>
 body{{font-family:-apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 18px;line-height:1.65;color:#1a1a2e;background:#fff}}
@@ -173,15 +174,16 @@ STATIC_HEAD = """<!DOCTYPE html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta property="og:image" content="{og_image}">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="MISERY closed eyes logo">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{og_alt}">
+<meta name="twitter:image:alt" content="{og_alt}">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta name="twitter:image" content="{og_image}">
 <script type="application/ld+json">{jsonld}</script>
 <style>
 body{{font-family:-apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 18px;line-height:1.65;color:#1a1a2e;background:#fff}}
@@ -223,6 +225,7 @@ def globe_page(threads_out):
         + (f' &middot; {t[5]} repl{"y" if t[5] == 1 else "ies"}' if t[5] else "") + "</p>"
         f'<p>{html.escape(t[4])}</p></div>\n' for t in items)
     return (STATIC_HEAD.format(title=html.escape(title), desc=html.escape(desc), url=url,
+                               og_image=f"{SITE}/img/og/globe.jpg", og_alt="Misery Globe: wireframe globe line-art on navy",
                                jsonld=json.dumps(ld, ensure_ascii=False).replace("</", "<\\/"))
             + '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Misery Globe</nav>\n'
             + "<h1>Misery Globe</h1>\n"
@@ -339,7 +342,8 @@ def main():
         if len(pt) > 60: pt = f"{title} · Misery Globe"
         if len(pt) > 60: pt = title[:57].rstrip() + "…"
         page = PAGE.format(
-            page_title=html.escape(pt), title=html.escape(title), desc=html.escape(desc, quote=True),
+            page_title=html.escape(pt), title=html.escape(title),
+            og_image=f"{SITE}/img/og/thread.jpg", og_alt="Misery Globe thread: etched chrome ornaments on navy", desc=html.escape(desc, quote=True),
             url=f"{SITE}/t/{tid}", author=html.escape(author),
             date=date_long(full.get("createdAt")), content=content,
             replies_html=replies_html,
