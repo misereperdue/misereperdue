@@ -113,11 +113,11 @@ function fitCamera() {
 }
 fitCamera();
 
-// One natural light, like a window: a single warm-white key from the
-// upper left, a faint cool bounce from behind-right for edge separation,
-// and the room environment kept low so the light has a real direction
-// instead of washing in from everywhere at once.
-const key = new THREE.DirectionalLight(0xfff2e2, 1.0);
+// Fabric light is soft light: the room environment does most of the
+// work (big, diffuse, directionless — how cloth actually picks up
+// light), with one weak warm key just to give the form a direction
+// and cast the backdrop shadow, and a faint cool bounce behind.
+const key = new THREE.DirectionalLight(0xfff2e2, 0.5);
 key.position.set(-3.5, 4.5, 6.5);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
@@ -127,12 +127,12 @@ key.shadow.camera.top = 3.6; key.shadow.camera.bottom = -3.6;
 key.shadow.camera.near = 1; key.shadow.camera.far = 24;
 key.shadow.bias = -0.0002;
 scene.add(key);
-const rim = new THREE.DirectionalLight(0xdfe8ff, 0.45);
+const rim = new THREE.DirectionalLight(0xdfe8ff, 0.3);
 rim.position.set(4, 2, -5);
 scene.add(rim);
 
 // Backdrop that catches the mask's real shadow as it spins
-const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.11 });
+const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.08 });
 const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), shadowMat);
 backdrop.position.z = -2.35;
 backdrop.receiveShadow = true;
@@ -221,7 +221,6 @@ const DEPTH = 0.18, BEVEL_T = 0.08;
 const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.17
 
 const group = new THREE.Group();
-let strapMesh = null;
 
 // Body shell (edges + structure). Only the extruded walls + bevel are
 // kept: the flat caps are giant fan triangles whose bent chords bulge
@@ -245,47 +244,10 @@ bodyGeo.translate(0, 0, -DEPTH / 2);
     bodyGeo = shell;
   }
 }
-bodyGeo = mergeVertices(bodyGeo, 1e-4);
-{
-  // A whisper of irregularity so the edge isn't a machined-perfect band —
-  // real padded fabric is never perfectly uniform around its edge.
-  const pos = bodyGeo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i);
-    const th = Math.atan2(y, x);
-    const n = Math.sin(th * 7 + 1.3) * 0.4 + Math.sin(th * 13 + 4.1) * 0.35 + Math.sin(th * 23 + 2.0) * 0.25;
-    const l = Math.hypot(x, y) || 1;
-    const d = n * 0.008;
-    pos.setX(i, x + (x / l) * d);
-    pos.setY(i, y + (y / l) * d);
-  }
-}
-applyBend(bodyGeo);
-bodyGeo.computeVertexNormals();
-// The rim (the mask's padded edge) wears the same silk as the faces — a
-// strip of the real fabric with a center seam. Extrude side-wall UVs are
-// raw shape coords (u = contour position, v = 1 - z), so the repeat maps
-// one texture height across the body's thickness, equator at mid-texture.
-const rimTex = new THREE.TextureLoader().load('img/mask-3d-rim.jpg');
-rimTex.wrapS = rimTex.wrapT = THREE.RepeatWrapping;
-rimTex.colorSpace = THREE.SRGBColorSpace;
-rimTex.repeat.set(0.5, 2.9); rimTex.offset.set(0, -2.4);
-rimTex.anisotropy = 4;
-const rimBump = new THREE.TextureLoader().load('img/mask-3d-rim-bump.jpg');
-rimBump.wrapS = rimBump.wrapT = THREE.RepeatWrapping;
-rimBump.repeat.set(0.5, 2.9); rimBump.offset.set(0, -2.4);
-const bodyMat = new THREE.MeshPhysicalMaterial({
-  map: rimTex, bumpMap: rimBump, bumpScale: 0.35,
-  color: 0x92959a, roughness: 0.78, metalness: 0.0,
-  sheen: 1.0, sheenRoughness: 0.55, sheenColor: 0xcfd8e2,
-  clearcoat: 0.0, envMapIntensity: 0.3
-});
-const body = new THREE.Mesh(bodyGeo, bodyMat);
-body.castShadow = true;
-// The rim must not receive shadows: the skins + body self-shadow landed
-// on the side wall as a hard-edged rectangular patch at strap height.
-body.receiveShadow = false;
-group.add(body);
+// The shell is finished further down, once the face photos are loaded:
+// it is split into front/back shells wrapped in the photos themselves,
+// so the edge is the fabric continuing around — not a separate rim.
+const shellGeo = bodyGeo;
 
 /* ---- Face textures: the real mask photos, mapped in shape coords
    x[-1.85,1.85] y[-1.0,1.0]. The front is the approved grey render itself;
@@ -314,8 +276,90 @@ strapTex.anisotropy = 4;
 const faceMatBase = {
   roughness: 0.62, metalness: 0.0,
   sheen: 0.75, sheenRoughness: 0.5, sheenColor: 0xe6edf5,
-  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.32
+  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.65
 };
+
+/* ---- Edge shells: the face photos wrap around the sides, so the whole
+   mask is one continuous fabric — no rim band, no second material. Each
+   shell vertex samples the photo at the outline point it wraps from
+   (pulled back in by the bevel's expansion, so the equator samples the
+   silhouette edge itself), which is exactly where the face skins sample
+   it: the fabric flows over the edge without a seam. Front and back
+   shells are clipped at a clean plane just behind the equator. ---- */
+function finishShell(geo) {
+  geo = mergeVertices(geo, 1e-4);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    const th = Math.atan2(y, x);
+    const n = Math.sin(th * 7 + 1.3) * 0.4 + Math.sin(th * 13 + 4.1) * 0.35 + Math.sin(th * 23 + 2.0) * 0.25;
+    const l = Math.hypot(x, y) || 1;
+    const d = n * 0.008;
+    pos.setX(i, x + (x / l) * d);
+    pos.setY(i, y + (y / l) * d);
+  }
+  applyBend(geo);
+  geo.computeVertexNormals();
+  return geo;
+}
+{
+  const sp = shellGeo.attributes.position, sn = shellGeo.attributes.normal;
+  const ZC = -0.04; // front shell wraps to just behind the equator
+  const vOf = i => ({ x: sp.getX(i), y: sp.getY(i), z: sp.getZ(i), nx: sn.getX(i), ny: sn.getY(i), nz: sn.getZ(i) });
+  const clip = (keepFront) => {
+    const inside = z => keepFront ? z >= ZC : z < ZC;
+    const out = [];
+    for (let i = 0; i < sp.count; i += 3) {
+      const poly = [vOf(i), vOf(i + 1), vOf(i + 2)];
+      const res = [];
+      for (let k = 0; k < 3; k++) {
+        const a = poly[k], b = poly[(k + 1) % 3];
+        const ain = inside(a.z), bin = inside(b.z);
+        if (ain) res.push(a);
+        if (ain !== bin) {
+          const t = (ZC - a.z) / (b.z - a.z);
+          res.push({
+            x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: ZC,
+            nx: a.nx + (b.nx - a.nx) * t, ny: a.ny + (b.ny - a.ny) * t, nz: a.nz + (b.nz - a.nz) * t
+          });
+        }
+      }
+      for (let k = 1; k + 1 < res.length; k++) out.push(res[0], res[k], res[k + 1]);
+    }
+    return out;
+  };
+  const buildPart = (soup, map, bump) => {
+    const p = [], n = [], u = [];
+    for (const v of soup) {
+      p.push(v.x, v.y, v.z);
+      n.push(v.nx, v.ny, v.nz);
+      const l = Math.hypot(v.x, v.y) || 1;
+      // At the caps the sample sits on the outline (matching the skins);
+      // toward the roll's crest it reaches 0.10 deeper, past the photo's
+      // bright edge highlight, into the normal silk — otherwise the
+      // highlight concentrates into a pale cord around the whole roll.
+      const pull = 0.10 * Math.cos(Math.min(1, Math.abs(v.z) / FRONT_Z) * Math.PI / 2);
+      u.push(v.x - (v.x / l) * pull, v.y - (v.y / l) * pull);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(n, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(u, 2));
+    const mat = new THREE.MeshPhysicalMaterial({
+      ...faceMatBase, map, bumpMap: bump, bumpScale: 0.1,
+      // The turned roll catches the room's bright reflections where the
+      // flat faces don't — tone the shells down so the edge stays the
+      // same dark fabric instead of reading as a pale trim piece.
+      color: 0xdedede, envMapIntensity: 0.35, sheen: 0.5
+    });
+    const m = new THREE.Mesh(finishShell(g), mat);
+    m.castShadow = true;
+    m.receiveShadow = false; // self-shadow landed here as a hard patch (v3 lesson)
+    group.add(m);
+  };
+  buildPart(clip(true), frontTex, frontBump);
+  buildPart(clip(false), backTex, backBump);
+}
 
 // Front skin (scaled a hair inside the bevelled cap outline)
 {
@@ -424,13 +468,12 @@ const faceMatBase = {
     map: strapTex, bumpMap: strapTex, bumpScale: 0.15,
     roughness: 0.58, metalness: 0.0,
     sheen: 0.6, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
-    envMapIntensity: 0.32
+    envMapIntensity: 0.6
   });
   const strap = new THREE.Mesh(geo, mat);
   strap.castShadow = true;
   strap.receiveShadow = true;
   group.add(strap);
-  strapMesh = strap;
 }
 
 scene.add(group);
@@ -439,11 +482,10 @@ scene.add(group);
 const REST_X = 0.08;
 let rotX = parseFloat(params.get('rx') ?? REST_X);
 let rotY = parseFloat(params.get('ry') ?? -0.5);
-// Fabric motion state: the rendered rotation springs toward the target
-// rotation (the mask carries weight), and the strap follows the rendered
-// rotation on a slower spring so it trails and settles like cloth.
-let visX = rotX, visY = rotY, visVX = 0, visVY = 0;
-let strapLagX = rotX, strapLagY = rotY, strapVX = 0, strapVY = 0;
+// Rendered rotation: follows the drag target with a heavy, damped ease
+// (exponential follow — it can lag a touch but never springs, overshoots
+// or jellies; the mask moves like a soft object, one rigid piece).
+let visX = rotX, visY = rotY;
 let velX = 0, velY = 0;
 let dragging = false, lastX = 0, lastY = 0, lastT = 0;
 let lastInteract = performance.now();
@@ -493,29 +535,13 @@ function animate() {
       rotY += 0.0035;
     }
   }
-  if (STILL) {
-    visX = rotX; visY = rotY; visVX = 0; visVY = 0;
-    strapLagX = rotX; strapLagY = rotY; strapVX = 0; strapVY = 0;
-  } else {
-    visVX = (visVX + (rotX - visX) * 0.14) * 0.72;
-    visVY = (visVY + (rotY - visY) * 0.14) * 0.72;
-    visX += visVX; visY += visVY;
-    strapVX = (strapVX + (visX - strapLagX) * 0.10) * 0.78;
-    strapVY = (strapVY + (visY - strapLagY) * 0.10) * 0.78;
-    strapLagX += strapVX; strapLagY += strapVY;
+  if (STILL) { visX = rotX; visY = rotY; }
+  else {
+    visX += (rotX - visX) * 0.35;
+    visY += (rotY - visY) * 0.35;
   }
   group.rotation.set(visX, visY, 0);
-  if (strapMesh) {
-    // The strap is sewn at both ends — it can only trail a little before
-    // it would tear off the body, so the swing is kept small and clamped.
-    const clampLag = v => Math.max(-0.08, Math.min(0.08, v));
-    strapMesh.rotation.y = clampLag((visY - strapLagY) * 0.6);
-    strapMesh.rotation.x = clampLag((visX - strapLagX) * 0.6);
-  }
-  const spd = Math.min(0.5, Math.abs(visVX) + Math.abs(visVY));
-  group.scale.set(1 + spd * 0.05, 1 - spd * 0.035, 1);
-  group.position.y = STILL ? 0 : Math.sin(t * 1.15) * 0.035;
-  group.rotation.z = STILL ? 0 : Math.sin(t * 0.7) * 0.008;
+  group.position.y = STILL ? 0 : Math.sin(t * 1.15) * 0.02;
 
   renderer.render(scene, camera);
 }
@@ -532,9 +558,9 @@ const label = document.getElementById('modeLabel');
 toggle.addEventListener('click', () => {
   const light = document.body.classList.toggle('light');
   label.textContent = light ? 'Dark mode' : 'Light mode';
-  key.intensity = light ? 1.2 : 1.0;
+  key.intensity = light ? 0.65 : 0.5;
   renderer.toneMappingExposure = light ? 1.06 : 1.0;
-  shadowMat.opacity = light ? 0.05 : 0.11;
+  shadowMat.opacity = light ? 0.04 : 0.08;
 });
 </script>
 </body>
