@@ -1,0 +1,420 @@
+import * as THREE from '/vendor/three-0.160.0/build/three.module.js';
+import { RoomEnvironment } from '/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js';
+
+const stage = document.getElementById('stage');
+const hint = document.getElementById('hint');
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (e) {
+  document.getElementById('fallback').style.display = 'flex';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 9.4);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(1.5, 3, 9);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 6;
+key.shadow.camera.left = -3.4; key.shadow.camera.right = 3.4;
+key.shadow.camera.top = 4.4; key.shadow.camera.bottom = -3.2;
+key.shadow.camera.near = 1; key.shadow.camera.far = 24;
+key.shadow.bias = -0.0002;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
+rim.position.set(-4, 2, -5);
+scene.add(rim);
+const sweep = new THREE.PointLight(0xffffff, 12, 30);
+sweep.position.set(2.5, 1.2, 3.5);
+scene.add(sweep);
+
+// Backdrop that catches the card's real shadow (shadow follows the card's shape as it spins)
+const shadowMat = new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.11 });
+const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), shadowMat);
+backdrop.position.z = -1.15;
+backdrop.receiveShadow = true;
+scene.add(backdrop);
+
+/* ---- Card ---- */
+const W = 2.13, H = 3.0, R = 0.17, DEPTH = 0.055, BEVEL = 0.014;
+
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  // Lanyard slot punched through the card (pill-shaped, top center)
+  const sw = 0.175, sh = 0.050, sy = 1.30, sr = 0.050;
+  const hole = new THREE.Path();
+  hole.moveTo(-sw + sr, sy - sh);
+  hole.lineTo(sw - sr, sy - sh);
+  hole.quadraticCurveTo(sw, sy - sh, sw, sy - sh + sr);
+  hole.lineTo(sw, sy + sh - sr);
+  hole.quadraticCurveTo(sw, sy + sh, sw - sr, sy + sh);
+  hole.lineTo(-sw + sr, sy + sh);
+  hole.quadraticCurveTo(-sw, sy + sh, -sw, sy + sh - sr);
+  hole.lineTo(-sw, sy - sh + sr);
+  hole.quadraticCurveTo(-sw, sy - sh, -sw + sr, sy - sh);
+  s.holes.push(hole);
+  return s;
+}
+
+const card = new THREE.Group();
+
+// Solid body (rim + edge catch light)
+const bodyGeo = new THREE.ExtrudeGeometry(roundedRectShape(W, H, R), {
+  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 3, curveSegments: 24
+});
+bodyGeo.translate(0, 0, -DEPTH / 2);
+const bodyMat = new THREE.MeshPhysicalMaterial({
+  color: 0xf2f3f5, roughness: 0.38, metalness: 0.0,
+  clearcoat: 0.7, clearcoatRoughness: 0.3, envMapIntensity: 0.7
+});
+const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+bodyMesh.castShadow = true;
+bodyMesh.receiveShadow = true;
+card.add(bodyMesh);
+
+const loader = new THREE.TextureLoader();
+function faceTexture(url, flipX) {
+  const t = loader.load(url);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  applyUV(t, flipX);
+  return t;
+}
+function dataTexture(url, flipX) {
+  const t = loader.load(url);
+  t.anisotropy = 4;
+  applyUV(t, flipX);
+  return t;
+}
+function applyUV(t, flipX) {
+  if (flipX) {
+    t.wrapS = THREE.RepeatWrapping;
+    t.repeat.set(-1 / W, 1 / H);
+  } else {
+    t.repeat.set(1 / W, 1 / H);
+  }
+  t.offset.set(0.5, 0.5);
+}
+
+function faceMesh(url, roughUrl, bumpUrl, isBack) {
+  const geo = new THREE.ShapeGeometry(roundedRectShape(W, H, R), 24);
+  const mat = new THREE.MeshPhysicalMaterial({
+    map: faceTexture(url, false),
+    roughnessMap: dataTexture(roughUrl, false),
+    bumpMap: dataTexture(bumpUrl, false),
+    bumpScale: 0.6,
+    roughness: 1.0, metalness: 0.0,
+    clearcoat: 1.0, clearcoatRoughness: 0.24,
+    envMapIntensity: 0.85
+  });
+  const m = new THREE.Mesh(geo, mat);
+  if (isBack) {
+    m.rotation.y = Math.PI;
+    m.position.z = -(DEPTH / 2 + BEVEL + 0.0012);
+  } else {
+    m.position.z = DEPTH / 2 + BEVEL + 0.0012;
+  }
+  return m;
+}
+card.add(faceMesh('img/vip-card-front.png', 'img/vip-card-front-rough.png?v=2', 'img/vip-card-front-bump.png?v=2', false));
+const backFace = faceMesh('img/vip-card-back.png?v=4', 'img/vip-card-back-rough.png?v=4', 'img/vip-card-back-bump.png?v=4', true);
+card.add(backFace);
+
+// Holographic foil barcode + caption, floating a hair off the back face
+const holoTex = loader.load('img/vip-card-holo.png?v=2');
+holoTex.colorSpace = THREE.SRGBColorSpace;
+holoTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+const holoMat = new THREE.MeshPhysicalMaterial({
+    map: holoTex, transparent: true, alphaTest: 0.01, depthWrite: true,
+    roughness: 0.22, metalness: 0.25,
+    iridescence: 1.0, iridescenceIOR: 1.32, iridescenceThicknessRange: [100, 800],
+    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.4,
+    emissive: 0x000000, emissiveMap: holoTex, emissiveIntensity: 0.12
+  });
+const holo = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.411, 0.379),
+  holoMat
+);
+holo.position.set(0.0017, 0.996, 0.0025);
+holo.renderOrder = 1;
+backFace.add(holo);
+
+const _backN = new THREE.Vector3(), _toKey = new THREE.Vector3();
+scene.add(card);
+
+/* ---- Lanyard: strap threads the card's slot; locked at the slot, the loop above bends on springs ---- */
+
+const strapCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3( 0.010,  0.000, -0.010),
+  new THREE.Vector3( 0.026,  0.014,  0.034),
+  new THREE.Vector3( 0.052,  0.100,  0.057),
+  new THREE.Vector3( 0.072,  0.420,  0.045),
+  new THREE.Vector3( 0.098,  0.720,  0.033),
+  new THREE.Vector3( 0.112,  1.020,  0.023),
+  new THREE.Vector3( 0.138,  1.300,  0.012),
+  new THREE.Vector3( 0.082,  1.500,  0.005),
+  new THREE.Vector3( 0.000,  1.555,  0.000),
+  new THREE.Vector3(-0.082,  1.500, -0.005),
+  new THREE.Vector3(-0.132,  1.320, -0.012),
+  new THREE.Vector3(-0.102,  1.050, -0.023),
+  new THREE.Vector3(-0.092,  0.750, -0.033),
+  new THREE.Vector3(-0.070,  0.420, -0.042),
+  new THREE.Vector3(-0.048,  0.150, -0.058),
+  new THREE.Vector3(-0.030,  0.030, -0.048),
+  new THREE.Vector3(-0.014,  0.004, -0.024)
+], true);
+const STRAP_N = 96, STRAP_HALF = 0.085;
+const strapGeo = new THREE.BufferGeometry();
+const strapPos = new Float32Array((STRAP_N + 1) * 2 * 3);
+const strapUV = new Float32Array((STRAP_N + 1) * 2 * 2);
+strapGeo.setAttribute('position', new THREE.BufferAttribute(strapPos, 3));
+strapGeo.setAttribute('uv', new THREE.BufferAttribute(strapUV, 2));
+for (let i = 0; i <= STRAP_N; i++) {
+  const u = i / STRAP_N;
+  strapUV[(i * 2) * 2] = 0;     strapUV[(i * 2) * 2 + 1] = u * 7;
+  strapUV[(i * 2 + 1) * 2] = 1; strapUV[(i * 2 + 1) * 2 + 1] = u * 7;
+}
+{
+  const idx = [];
+  for (let i = 0; i < STRAP_N; i++) {
+    const a = i * 2, b = i * 2 + 1, c = i * 2 + 2, d = i * 2 + 3;
+    idx.push(a, b, c, b, d, c);
+  }
+  strapGeo.setIndex(idx);
+}
+// Woven grosgrain fabric texture (fine ribs across the strap, darker selvedge edges)
+function makeStrapTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#aad4ea';
+  g.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 3) {
+    g.fillStyle = 'rgba(255,255,255,0.13)';
+    g.fillRect(0, y, 128, 1);
+    g.fillStyle = 'rgba(70,110,140,0.12)';
+    g.fillRect(0, y + 1, 128, 1);
+  }
+  const img = g.getImageData(0, 0, 128, 128);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 11;
+    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  g.fillStyle = 'rgba(88,128,164,0.4)';
+  g.fillRect(0, 0, 3, 128);
+  g.fillRect(125, 0, 3, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+const strapTex = makeStrapTexture();
+const strapMat = new THREE.MeshPhysicalMaterial({
+  map: strapTex, bumpMap: strapTex, bumpScale: 0.12,
+  roughness: 0.58, metalness: 0.0,
+  sheen: 0.7, sheenRoughness: 0.5, sheenColor: 0xe2f3ff,
+  side: THREE.DoubleSide, envMapIntensity: 0.5
+});
+const strap = new THREE.Mesh(strapGeo, strapMat);
+strap.position.y = 1.30;
+strap.castShadow = true;
+strap.receiveShadow = true;
+strap.frustumCulled = false;
+card.add(strap);
+
+const _p = new THREE.Vector3(), _t = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1),
+      _n0 = new THREE.Vector3(), _b0 = new THREE.Vector3(), _side = new THREE.Vector3();
+const _centers = [];
+for (let i = 0; i <= STRAP_N; i++) _centers.push(new THREE.Vector3());
+const _e = new THREE.Euler(), _q = new THREE.Quaternion();
+// The strap is built in card space: samples near the slot stay locked to the card
+// (so the threading never drifts), samples higher up rotate toward the lagged
+// loop angles — the strap bends just above the slot like real fabric.
+function buildStrap(dX, dY, dZ, twist, flare) {
+  for (let i = 0; i <= STRAP_N; i++) {
+    const u = i / STRAP_N;
+    strapCurve.getPoint(u, _centers[i]);
+    _centers[i].x *= (1 + flare);
+    const wgt = THREE.MathUtils.smoothstep(_centers[i].y, 0.18, 0.48);
+    if (wgt > 0) {
+      _e.set(dX * wgt, dY * wgt, dZ * wgt, 'YXZ');
+      _q.setFromEuler(_e);
+      _centers[i].applyQuaternion(_q);
+    }
+  }
+  // Parallel-transport the ribbon's width direction along the (deformed) path,
+  // so the strap stays flat like a sheet of fabric — through the slot and
+  // around the loop — instead of rolling where the path bends toward camera.
+  let px = 1, py = 0, pz = 0;
+  for (let i = 0; i <= STRAP_N; i++) {
+    const u = i / STRAP_N;
+    const p = _centers[i];
+    const pn = _centers[Math.min(i + 1, STRAP_N)];
+    const pp = _centers[Math.max(i - 1, 0)];
+    _t.subVectors(pn, pp).normalize();
+    if (i === 0) {
+      _side.crossVectors(_t, _z);
+      if (_side.lengthSq() < 1e-6) _side.set(1, 0, 0);
+      _side.normalize();
+    } else {
+      _side.set(px, py, pz);
+      _side.addScaledVector(_t, -_side.dot(_t)).normalize();
+    }
+    px = _side.x; py = _side.y; pz = _side.z;
+    _b0.crossVectors(_t, _side).normalize();
+    // Twist lives around the loop's arc only — the slot pass stays flat
+    const tw = THREE.MathUtils.smoothstep(u, 0.18, 0.32) * (1 - THREE.MathUtils.smoothstep(u, 0.68, 0.82));
+    const phi = (twist + 0.38) * tw;
+    const c = Math.cos(phi), s = Math.sin(phi);
+    const ex = _side.x * c + _b0.x * s;
+    const ey = _side.y * c + _b0.y * s;
+    const ez = _side.z * c + _b0.z * s;
+    const o = i * 6;
+    strapPos[o]     = p.x - ex * STRAP_HALF;
+    strapPos[o + 1] = p.y - ey * STRAP_HALF;
+    strapPos[o + 2] = p.z - ez * STRAP_HALF;
+    strapPos[o + 3] = p.x + ex * STRAP_HALF;
+    strapPos[o + 4] = p.y + ey * STRAP_HALF;
+    strapPos[o + 5] = p.z + ez * STRAP_HALF;
+  }
+  strapGeo.attributes.position.needsUpdate = true;
+  strapGeo.computeVertexNormals();
+}
+buildStrap(0, 0, 0, 0, 0);
+
+// Lanyard spring state (lags the card, overshoots, sways)
+let lanY = -0.35, lanX = 0.10, lanZ = 0, lanVelY = 0, lanVelX = 0, lanVelZ = 0;
+
+/* ---- Interaction: drag with inertia + spring settle ---- */
+const REST_X = 0.10;
+let rotX = REST_X, rotY = -0.35;
+let velX = 0, velY = 0;
+let dragging = false, lastX = 0, lastY = 0, lastT = 0;
+let lastInteract = performance.now();
+const el = renderer.domElement;
+
+el.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
+  velX = 0; velY = 0;
+  el.setPointerCapture(e.pointerId);
+  hint.classList.add('gone');
+  lastInteract = performance.now();
+});
+el.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const now = performance.now();
+  const dt = Math.max(1, now - lastT);
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  rotY += dx * 0.0085;
+  rotX += dy * 0.006;
+  rotX = Math.max(-1.15, Math.min(1.15, rotX));
+  velY = (dx * 0.0085) / dt * 16.7;
+  velX = (dy * 0.006) / dt * 16.7;
+  lastX = e.clientX; lastY = e.clientY; lastT = now;
+  lastInteract = now;
+});
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  lastInteract = performance.now();
+}
+el.addEventListener('pointerup', endDrag);
+el.addEventListener('pointercancel', endDrag);
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  if (!dragging) {
+    // Spin inertia
+    rotY += velY;
+    velY *= 0.955;
+    // Spring back to rest tilt — gives the wobble/settle from the reference
+    const acc = (REST_X - rotX) * 0.045;
+    velX = (velX + acc) * 0.90;
+    rotX += velX;
+    // Gentle idle rotation after a pause
+    if (performance.now() - lastInteract > 2600 && Math.abs(velY) < 0.002) {
+      rotY += 0.0035;
+    }
+  }
+  card.rotation.set(rotX, rotY, 0);
+  card.position.y = Math.sin(t * 1.15) * 0.035;
+  card.rotation.z = Math.sin(t * 0.7) * 0.008;
+
+  // Lanyard springs: the loop's angles trail the card's; the strap bends by the difference
+  lanVelY += (rotY - lanY) * 0.045; lanVelY *= 0.875; lanY += lanVelY;
+  lanVelX += (rotX - lanX) * 0.060; lanVelX *= 0.860; lanX += lanVelX;
+  const zTarget = THREE.MathUtils.clamp(-velY * 0.05, -0.3, 0.3) + Math.sin(t * 1.3) * 0.012;
+  lanVelZ += (zTarget - lanZ) * 0.05; lanVelZ *= 0.90; lanZ += lanVelZ;
+  const dY = lanY - rotY, dX = lanX - rotX;
+  buildStrap(
+    dX, dY, lanZ,
+    THREE.MathUtils.clamp(-dY * 0.8, -1.15, 1.15),
+    THREE.MathUtils.clamp(Math.abs(dY) * 0.10, 0, 0.22)
+  );
+
+  // Light sweep follows the spin, like the reference's moving highlight
+  sweep.position.x = Math.sin(rotY) * 3.2 + 1.2;
+  sweep.position.y = Math.cos(rotX * 1.4) * 1.6 + 0.6;
+
+  // Holographic barcode: rainbow emission travels as the card spins and
+  // flares when the back catches the key light
+  _backN.set(0, 0, -1).applyEuler(card.rotation);
+  _toKey.copy(key.position).sub(card.position).normalize();
+  const shine = Math.pow(Math.max(0, _backN.dot(_toKey)), 1.5);
+  holoMat.emissive.setHSL((0.58 + rotY * 0.16) % 1, 0.75, 0.55);
+  holoMat.emissiveIntensity = 0.25 + 0.95 * shine;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---- Light / dark toggle ---- */
+const toggle = document.getElementById('modeToggle');
+const label = document.getElementById('modeLabel');
+toggle.addEventListener('click', () => {
+  const light = document.body.classList.toggle('light');
+  label.textContent = light ? 'Dark mode' : 'Light mode';
+  key.intensity = light ? 1.9 : 1.6;
+  renderer.toneMappingExposure = light ? 1.12 : 1.05;
+  shadowMat.opacity = light ? 0.05 : 0.11;
+});

@@ -11,9 +11,9 @@ var MPMask3D = (function () {
       }
       return (
         Promise.all([
-          import("three"),
-          import("three/addons/environments/RoomEnvironment.js"),
-          import("three/addons/utils/BufferGeometryUtils.js"),
+          import("/vendor/three-0.160.0/build/three.module.js"),
+          import("/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js"),
+          import("/vendor/three-0.160.0/examples/jsm/utils/BufferGeometryUtils.js"),
         ])
           .then(function (i) {
             if (!t)

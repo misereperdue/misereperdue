@@ -10,7 +10,7 @@ var MPVip3D = (function () {
         t || (e.innerHTML = '<img src="/img/vip-card-front.png" alt="VIP card">');
       }
       return (
-        Promise.all([import("three"), import("three/addons/environments/RoomEnvironment.js")])
+        Promise.all([import("/vendor/three-0.160.0/build/three.module.js"), import("/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js")])
           .then(function (i) {
             if (!t) {
               var s = i[0],
