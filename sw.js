@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 43;
+var SW_VERSION = 44;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
@@ -25,16 +25,16 @@ var SHELL = [
   "/img/icon-192.png",
   "/img/icon-512.png",
   "/img/app-icon.png",
-  "/img/splash-1290x2796.png?v=5",
-  "/img/splash-1179x2556.png?v=5",
-  "/img/splash-1170x2532.png?v=5",
-  "/img/splash-1284x2778.png?v=5",
-  "/img/splash-750x1334.png?v=5",
-  "/img/splash-1125x2436.png?v=5",
-  "/img/splash-1242x2688.png?v=5",
-  "/img/splash-1206x2622.png?v=5",
-  "/img/splash-1320x2868.png?v=5",
-  "/img/splash-1260x2736.png?v=5",
+  "/img/splash-1290x2796.png?v=6",
+  "/img/splash-1179x2556.png?v=6",
+  "/img/splash-1170x2532.png?v=6",
+  "/img/splash-1284x2778.png?v=6",
+  "/img/splash-750x1334.png?v=6",
+  "/img/splash-1125x2436.png?v=6",
+  "/img/splash-1242x2688.png?v=6",
+  "/img/splash-1206x2622.png?v=6",
+  "/img/splash-1320x2868.png?v=6",
+  "/img/splash-1260x2736.png?v=6",
   "/video/header.jpg"
 ];
 
