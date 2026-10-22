@@ -242,7 +242,9 @@ var MPShop = (function () {
       ctx.fillRect(0, 0, W, H);
       var rot = rm && rm.matches ? 0.6 : (((now - t0) % PERIOD) / PERIOD) * Math.PI * 2;
       var ct = Math.cos(TILT),
-        st = Math.sin(TILT);
+        st = Math.sin(TILT),
+        cr = Math.cos(-0.41),
+        sr = Math.sin(-0.41);
       // sphere body + soft rim light
       var g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
       g.addColorStop(0, rgba(0.1));
@@ -258,8 +260,9 @@ var MPShop = (function () {
           z = Math.cos(lat) * Math.cos(lon + rot);
         var y2 = y * ct - z * st,
           z2 = y * st + z * ct;
-        out[0] = cx + x * R;
-        out[1] = cy - y2 * R;
+        // axial tilt (~23.5deg, like Earth): roll the projected point in the screen plane
+        out[0] = cx + (x * cr - y2 * sr) * R;
+        out[1] = cy - (x * sr + y2 * cr) * R;
         out[2] = z2;
       }
       var pt = [0, 0, 0];
