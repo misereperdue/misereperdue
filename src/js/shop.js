@@ -230,47 +230,16 @@ var MPShop = (function () {
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      // Globe sits on the right; the text block (HTML) sits on the left.
-      var R = Math.min(H * 0.34, W * 0.19),
-        cx = W - R * 1.42,
-        cy = H / 2;
-      var orb = rm && rm.matches ? 2.2 : (((now - t0) % (PERIOD / 3)) / (PERIOD / 3)) * Math.PI * 2;
-      var OT = -0.32,
-        ORX = R * 1.3,
-        ORY = R * 0.3;
-      function orbitAt(a, out) {
-        var x = ORX * Math.cos(a),
-          y = ORY * Math.sin(a);
-        out[0] = cx + x * Math.cos(OT) - y * Math.sin(OT);
-        out[1] = cy + x * Math.sin(OT) + y * Math.cos(OT);
-      }
-      function orbit(front) {
-        var o = [0, 0];
-        ctx.beginPath();
-        for (var i = 0; i <= 64; i++) {
-          var a = (front ? 0 : Math.PI) + (i / 64) * Math.PI;
-          orbitAt(a, o);
-          i ? ctx.lineTo(o[0], o[1]) : ctx.moveTo(o[0], o[1]);
-        }
-        ctx.strokeStyle = rgba(front ? 0.55 : 0.16);
-        ctx.lineWidth = front ? 1.1 : 0.9;
-        ctx.stroke();
-        // satellite: in front when sin(a) > 0 (lower half of the ellipse faces the viewer)
-        if (Math.sin(orb) > 0 === front) {
-          orbitAt(orb, o);
-          ctx.beginPath();
-          ctx.arc(o[0], o[1], front ? 2.6 : 1.8, 0, Math.PI * 2);
-          ctx.fillStyle = rgba(front ? 0.95 : 0.3);
-          ctx.fill();
-        }
-      }
+      // Big, zoomed-in globe bleeding off the right/bottom edges; text overlays on the left.
+      var R = Math.max(H * 0.95, W * 0.36),
+        cx = W - R * 0.62,
+        cy = H * 0.78;
       // halo behind the globe
       var halo = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 1.9);
       halo.addColorStop(0, rgba(0.16));
       halo.addColorStop(1, rgba(0));
       ctx.fillStyle = halo;
       ctx.fillRect(0, 0, W, H);
-      orbit(false);
       var rot = rm && rm.matches ? 0.6 : (((now - t0) % PERIOD) / PERIOD) * Math.PI * 2;
       var ct = Math.cos(TILT),
         st = Math.sin(TILT);
@@ -342,7 +311,6 @@ var MPShop = (function () {
       ctx.strokeStyle = rgba(0.8);
       ctx.lineWidth = 1.4;
       ctx.stroke();
-      orbit(true);
       if (running && visible && !document.hidden && !(rm && rm.matches))
         raf = requestAnimationFrame(draw);
       else raf = 0;

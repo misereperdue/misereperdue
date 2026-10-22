@@ -1442,7 +1442,14 @@ textarea {
   grid-column: 1/-1;
 }
 #shop-grid .globe-promo .tile-wrap {
-  aspect-ratio: 16/9;
+  aspect-ratio: 5/2;
+}
+.gp-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--gp-bg) 0 34%, transparent 70%);
 }
 .gp-photo {
   --gp-bg: #0c1230;
@@ -1492,14 +1499,14 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  width: 52%;
-  padding: 16px 0 16px 18px;
+  gap: 6px;
+  width: 60%;
+  padding: 12px 0 12px 16px;
   min-width: 0;
 }
 .gp-title {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -1508,7 +1515,7 @@ textarea {
 }
 .gp-line {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1.4;
   color: var(--gp-sub);
@@ -1518,8 +1525,8 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
-  padding: 7px 12px 7px 14px;
+  margin-top: 2px;
+  padding: 6px 11px 6px 13px;
   border-radius: 999px;
   background: var(--gp-accent);
   color: var(--gp-cta-ink);
@@ -1540,14 +1547,14 @@ textarea {
 }
 @media (max-width: 370px) {
   .gp-title {
-    font-size: 17px;
+    font-size: 16px;
   }
   .gp-line {
-    font-size: 11px;
+    font-size: 10.5px;
   }
   .gp-text {
-    width: 53%;
-    padding-left: 16px;
+    width: 62%;
+    padding-left: 14px;
   }
 }
 .lg-spin {
