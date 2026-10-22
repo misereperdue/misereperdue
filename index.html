@@ -512,7 +512,7 @@
       if (view === "shop") hash = "#shop";
       else if (view === "cart") hash = "#cart";
       else if (view === "forum") hash = "#globe";
-      else if (view === "journal") hash = "#journal";
+      else if (view === "journal") hash = "#chat";
       else if (view === "product" && id) hash = "#product/" + id;
       var keepThreadLink = view === "forum" && /^#(thread|globe)\//.test(location.hash || "");
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
