@@ -1,45 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://misereperdue.com/</loc>
     <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
   </url>
   <url>
     <loc>https://misereperdue.com/shop</loc>
     <lastmod>2026-10-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://misereperdue.com/p/membership</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-22</lastmod>
+    <image:image><image:loc>https://cdn.shopify.com/s/files/1/0735/1589/2838/files/IMG-1597.png?v=1792287493</image:loc></image:image>
   </url>
   <url>
     <loc>https://misereperdue.com/p/misery-v_v-sleeping-mask</loc>
-    <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-22</lastmod>
+    <image:image><image:loc>https://cdn.shopify.com/s/files/1/0735/1589/2838/files/IMG_1654.png?v=1792639540</image:loc></image:image>
+    <image:image><image:loc>https://cdn.shopify.com/s/files/1/0735/1589/2838/files/IMG_1655.png?v=1792639539</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://misereperdue.com/globe</loc>
+    <lastmod>2026-10-22</lastmod>
   </url>
   <url>
     <loc>https://misereperdue.com/t/t29</loc>
     <lastmod>2026-10-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://misereperdue.com/t/t30</loc>
     <lastmod>2026-10-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://misereperdue.com/t/t20</loc>
     <lastmod>2026-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 </urlset>
