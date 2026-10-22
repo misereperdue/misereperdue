@@ -143,7 +143,7 @@ scene.add(backdrop);
    mask (center forward, edges sweeping back), smooth-shaded so it
    reads plush. Front and back are separate skinned faces over it. */
 
-const RAW_PTS = /*__MASK_PTS__*/[[-1.8, 0.3563], [-1.8, -0.5623], [-1.7054, -0.694], [-1.5163, -0.8561], [-1.415, -0.9135], [-1.2326, -0.9675], [-0.9591, -0.9642], [-0.8713, -0.9473], [-0.7565, -0.9068], [-0.4897, -0.7649], [-0.179, -0.5454], [-0.1351, -0.542], [-0.125, -0.5184], [-0.0912, -0.5083], [-0.0507, -0.5083], [-0.0405, -0.5218], [0.0304, -0.5049], [0.0371, -0.5251], [0.0642, -0.5353], [0.1081, -0.5353], [0.1182, -0.5657], [0.152, -0.569], [0.2026, -0.5961], [0.2567, -0.6433], [0.2972, -0.6568], [0.3141, -0.6839], [0.3985, -0.7244], [0.4728, -0.7818], [0.7396, -0.9135], [0.8409, -0.9473], [0.9456, -0.9642], [1.155, -0.954], [1.3745, -0.8899], [1.54, -0.7953], [1.675, -0.6636], [1.7325, -0.5826], [1.7764, -0.4947], [1.7966, -0.4812], [1.7966, 0.2989], [1.773, 0.3056], [1.7325, 0.3901], [1.6582, 0.4981], [1.4826, 0.6737], [1.3508, 0.7615], [1.2462, 0.8122], [1.0266, 0.8865], [0.7902, 0.927], [0.0439, 0.9743], [-0.645, 0.9507], [-0.9692, 0.9169], [-1.1989, 0.8595], [-1.4657, 0.721], [-1.6041, 0.6096], [-1.6784, 0.5319], [-1.7696, 0.4137]];
+const RAW_PTS = /*__MASK_PTS__*/[[-1.8, 0.3563], [-1.8247, 0.1265], [-1.835, -0.103], [-1.8247, -0.3325], [-1.8, -0.5623], [-1.7054, -0.694], [-1.5163, -0.8561], [-1.415, -0.9135], [-1.2326, -0.9675], [-0.9591, -0.9642], [-0.8713, -0.9473], [-0.7565, -0.9068], [-0.4897, -0.7649], [-0.179, -0.5454], [-0.1351, -0.542], [-0.125, -0.5184], [-0.0912, -0.5083], [-0.0507, -0.5083], [-0.0405, -0.5218], [0.0304, -0.5049], [0.0371, -0.5251], [0.0642, -0.5353], [0.1081, -0.5353], [0.1182, -0.5657], [0.152, -0.569], [0.2026, -0.5961], [0.2567, -0.6433], [0.2972, -0.6568], [0.3141, -0.6839], [0.3985, -0.7244], [0.4728, -0.7818], [0.7396, -0.9135], [0.8409, -0.9473], [0.9456, -0.9642], [1.155, -0.954], [1.3745, -0.8899], [1.54, -0.7953], [1.675, -0.6636], [1.7325, -0.5826], [1.7764, -0.4947], [1.7966, -0.4812], [1.8217, -0.286], [1.832, -0.091], [1.8217, 0.104], [1.7966, 0.2989], [1.773, 0.3056], [1.7325, 0.3901], [1.6582, 0.4981], [1.4826, 0.6737], [1.3508, 0.7615], [1.2462, 0.8122], [1.0266, 0.8865], [0.7902, 0.927], [0.0439, 0.9743], [-0.645, 0.9507], [-0.9692, 0.9169], [-1.1989, 0.8595], [-1.4657, 0.721], [-1.6041, 0.6096], [-1.6784, 0.5319], [-1.7696, 0.4137]];
 const spline = new THREE.SplineCurve(RAW_PTS.map(p => new THREE.Vector2(p[0], p[1])));
 const smoothPts = spline.getPoints(300);
 const shape = new THREE.Shape();
@@ -216,8 +216,8 @@ function setBendNormals(geo, back) {
   geo.setAttribute('normal', new THREE.BufferAttribute(n, 3));
 }
 
-const DEPTH = 0.17, BEVEL_T = 0.07;
-const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.155
+const DEPTH = 0.20, BEVEL_T = 0.11;
+const FRONT_Z = DEPTH / 2 + BEVEL_T; // 0.21
 
 const group = new THREE.Group();
 
@@ -227,8 +227,8 @@ const group = new THREE.Group();
 // center and hid the back skin entirely). The skins are the real faces —
 // same construction as the VIP card's rim + face planes.
 let bodyGeo = new THREE.ExtrudeGeometry(shape, {
-  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL_T, bevelSize: 0.05,
-  bevelSegments: 5, steps: 1
+  depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL_T, bevelSize: 0.075,
+  bevelSegments: 8, steps: 1
 });
 bodyGeo.translate(0, 0, -DEPTH / 2);
 {
@@ -246,14 +246,29 @@ bodyGeo.translate(0, 0, -DEPTH / 2);
 bodyGeo = mergeVertices(bodyGeo, 1e-4);
 applyBend(bodyGeo);
 bodyGeo.computeVertexNormals();
+// The rim (the mask's padded edge) wears the same silk as the faces — a
+// strip of the real fabric with a center seam. Extrude side-wall UVs are
+// raw shape coords (u = contour position, v = 1 - z), so the repeat maps
+// one texture height across the body's thickness, equator at mid-texture.
+const rimTex = new THREE.TextureLoader().load('img/mask-3d-rim.jpg');
+rimTex.wrapS = rimTex.wrapT = THREE.RepeatWrapping;
+rimTex.colorSpace = THREE.SRGBColorSpace;
+rimTex.repeat.set(0.5, 2.4); rimTex.offset.set(0, -1.9);
+rimTex.anisotropy = 4;
+const rimBump = new THREE.TextureLoader().load('img/mask-3d-rim-bump.jpg');
+rimBump.wrapS = rimBump.wrapT = THREE.RepeatWrapping;
+rimBump.repeat.set(0.5, 2.4); rimBump.offset.set(0, -1.9);
 const bodyMat = new THREE.MeshPhysicalMaterial({
-  color: 0x3c3e42, roughness: 0.6, metalness: 0.0,
+  map: rimTex, bumpMap: rimBump, bumpScale: 0.2,
+  color: 0x92959a, roughness: 0.62, metalness: 0.0,
   sheen: 0.8, sheenRoughness: 0.5, sheenColor: 0xcfd8e2,
   clearcoat: 0.15, clearcoatRoughness: 0.6, envMapIntensity: 0.4
 });
 const body = new THREE.Mesh(bodyGeo, bodyMat);
 body.castShadow = true;
-body.receiveShadow = true;
+// The rim must not receive shadows: the skins + body self-shadow landed
+// on the side wall as a hard-edged rectangular patch at strap height.
+body.receiveShadow = false;
 group.add(body);
 
 /* ---- Face textures: the real mask photos, mapped in shape coords
@@ -332,15 +347,15 @@ const faceMatBase = {
    Skinned with a patch of the real strap fabric from the photo. ---- */
 {
   const path = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-1.84, -0.02, -0.30),
-    new THREE.Vector3(-2.08, -0.02, -0.55),
+    new THREE.Vector3(-1.55, -0.02, -0.36),
+    new THREE.Vector3(-2.10, -0.02, -0.60),
     new THREE.Vector3(-2.06, -0.02, -1.05),
     new THREE.Vector3(-1.50, -0.02, -1.50),
     new THREE.Vector3( 0.00, -0.02, -1.66),
     new THREE.Vector3( 1.50, -0.02, -1.50),
     new THREE.Vector3( 2.06, -0.02, -1.05),
-    new THREE.Vector3( 2.08, -0.02, -0.55),
-    new THREE.Vector3( 1.84, -0.02, -0.30)
+    new THREE.Vector3( 2.10, -0.02, -0.60),
+    new THREE.Vector3( 1.55, -0.02, -0.36)
   ]);
   const N = 140, HW = 0.32, HT = 0.018; // half width 0.32 (0.64 band), half thickness
   const stations = [];
@@ -355,14 +370,23 @@ const faceMatBase = {
     stations.push({ p, side, bin, len: totalLen });
   }
   // corners per station: 0:+S+B 1:+S-B 2:-S-B 3:-S+B
+  // The band tapers toward both roots so it tucks into the mask's side
+  // seam — at full width its corners poked out of the rim (the body's
+  // edge chord is shorter than the band is wide near the silhouette).
+  const hwAt = (len) => {
+    const d = Math.min(len, totalLen - len) / (totalLen * 0.16);
+    const t = Math.max(0, Math.min(1, d));
+    return HW * (0.66 + 0.34 * (t * t * (3 - 2 * t)));
+  };
   const verts = [], uvs = [], indices = [];
   for (let i = 0; i <= N; i++) {
     const s = stations[i];
+    const hw = hwAt(s.len);
     const corners = [
-      s.p.clone().addScaledVector(s.side, HW).addScaledVector(s.bin, HT),
-      s.p.clone().addScaledVector(s.side, HW).addScaledVector(s.bin, -HT),
-      s.p.clone().addScaledVector(s.side, -HW).addScaledVector(s.bin, -HT),
-      s.p.clone().addScaledVector(s.side, -HW).addScaledVector(s.bin, HT)
+      s.p.clone().addScaledVector(s.side, hw).addScaledVector(s.bin, HT),
+      s.p.clone().addScaledVector(s.side, hw).addScaledVector(s.bin, -HT),
+      s.p.clone().addScaledVector(s.side, -hw).addScaledVector(s.bin, -HT),
+      s.p.clone().addScaledVector(s.side, -hw).addScaledVector(s.bin, HT)
     ];
     for (const c of corners) verts.push(c.x, c.y, c.z);
     const u = s.len * 0.8;
