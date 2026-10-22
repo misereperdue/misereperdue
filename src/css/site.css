@@ -1463,6 +1463,17 @@ textarea {
 .a2hs[hidden] {
   display: none;
 }
+.a2hs-t {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.a2hs.is-hint .a2hs-t {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
 .a2hs-ico {
   width: 24px;
   height: 24px;

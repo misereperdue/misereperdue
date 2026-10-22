@@ -4,13 +4,13 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 90;
+var SW_VERSION = 91;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
   "/index.html",
   "/webapp.json",
-  "/css/site.css?v=577",
+  "/css/site.css?v=578",
   "/js/theme.js?v=7",
   "/js/shopify.js?v=12",
   "/js/cart.js?v=1",
