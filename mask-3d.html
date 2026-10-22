@@ -113,12 +113,13 @@ function fitCamera() {
 }
 fitCamera();
 
-// Fabric light is soft light: the room environment does most of the
-// work (big, diffuse, directionless — how cloth actually picks up
-// light), with one weak warm key just to give the form a direction
-// and cast the backdrop shadow, and a faint cool bounce behind.
-const key = new THREE.DirectionalLight(0xfff2e2, 0.5);
-key.position.set(-3.5, 4.5, 6.5);
+// One parallel light does the modelling — a directional key raking in
+// from the upper left, low enough across the surface that relief
+// registers: the embroidery and seams shade with a lit side and a
+// shadow side instead of printing flat. The room environment is kept
+// low, as fill only, so the parallel light rules everywhere.
+const key = new THREE.DirectionalLight(0xfff2e2, 1.1);
+key.position.set(-5, 3.2, 5);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
 key.shadow.radius = 10;
@@ -276,7 +277,7 @@ strapTex.anisotropy = 4;
 const faceMatBase = {
   roughness: 0.62, metalness: 0.0,
   sheen: 0.75, sheenRoughness: 0.5, sheenColor: 0xe6edf5,
-  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.65
+  clearcoat: 0.05, clearcoatRoughness: 0.6, envMapIntensity: 0.4
 };
 
 /* ---- Edge shells: the face photos wrap around the sides, so the whole
@@ -401,7 +402,7 @@ function finishShell(geo) {
   subdivideSkin(geo, 3, FRONT_Z + 0.002);
   setBendNormals(geo, false);
   const mat = new THREE.MeshPhysicalMaterial({
-    ...faceMatBase, map: frontTex, bumpMap: frontBump, bumpScale: 0.35,
+    ...faceMatBase, map: frontTex, bumpMap: frontBump, bumpScale: 1.1,
     polygonOffset: true, polygonOffsetFactor: -2
   });
   const m = new THREE.Mesh(geo, mat);
@@ -424,7 +425,7 @@ function finishShell(geo) {
   subdivideSkin(geo, 3, -FRONT_Z - 0.002);
   setBendNormals(geo, true);
   const mat = new THREE.MeshPhysicalMaterial({
-    ...faceMatBase, map: backTex, bumpMap: backBump, bumpScale: 0.3,
+    ...faceMatBase, map: backTex, bumpMap: backBump, bumpScale: 0.5,
     polygonOffset: true, polygonOffsetFactor: -2
   });
   const m = new THREE.Mesh(geo, mat);
@@ -497,7 +498,7 @@ function finishShell(geo) {
     map: strapTex, bumpMap: strapTex, bumpScale: 0.15,
     roughness: 0.58, metalness: 0.0,
     sheen: 0.6, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
-    envMapIntensity: 0.6
+    envMapIntensity: 0.45
   });
   const strap = new THREE.Mesh(geo, mat);
   strap.castShadow = true;
@@ -587,7 +588,7 @@ const label = document.getElementById('modeLabel');
 toggle.addEventListener('click', () => {
   const light = document.body.classList.toggle('light');
   label.textContent = light ? 'Dark mode' : 'Light mode';
-  key.intensity = light ? 0.65 : 0.5;
+  key.intensity = light ? 1.35 : 1.1;
   renderer.toneMappingExposure = light ? 1.06 : 1.0;
   shadowMat.opacity = light ? 0.04 : 0.08;
 });
