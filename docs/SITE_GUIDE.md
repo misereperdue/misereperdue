@@ -242,3 +242,11 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 - **`functions/_middleware.js`** (Pages Function, HTML routes only via `_routes.json`) sets the CSP with a fresh per-request nonce. Cloudflare copies that nonce into its injected Bot Fight Mode script. Keep its CSP string in sync with `_headers` (the fallback).
 - **three.js 0.160.0 is self-hosted** in `vendor/three-0.160.0/` (exact jsDelivr files; addon imports rewritten to relative paths). No importmaps. jsDelivr is not in the CSP any more.
 - **Product pages**: `python3 tools/build-products.py` regenerates `p/<handle>.html` and `shop.html` from the Storefront API with Product JSON-LD. Re-run after any price/product change in Shopify, then commit.
+
+## 10. SEO (2026-10-22)
+
+- Crawlable static URLs: `/`, `/shop`, `/globe` (Misery Globe landing, generated), `/p/<handle>` (products), `/t/<id>` (public threads). The homepage footer (shown under the shop grid) links them with plain `<a href>`; in the app `data-spa` makes those links switch views instead of leaving.
+- One command refreshes everything: `python3 tools/build-products.py` (Shopify → `p/*`, `shop.html`) then runs `build-sitemap.py` (forum → `t/*`, `globe.html`, `sitemap.xml`). Run it after product changes or new public threads, then commit. Sitemap lastmod = last git commit of the page (threads: last activity), product images included, noindex pages excluded.
+- Titles ≤60 / descriptions ≤155. Product search titles live in `SEO_TITLE` in `tools/build-products.py`. `refreshTitle()` in `app.js` keeps the `<title>` from `index.html` for every view.
+- Cloudflare: www → apex 301 (Redirect Rule), Always Use HTTPS on, Crawler Hints (IndexNow) on. `*.pages.dev` sends `X-Robots-Tag: noindex`. `/mask-3d` and `/vip-card` are noindex.
+- Cache: `/js/*`, `/css/*`, `/vendor/*` are immutable for 1 year, so **always bump `?v=`** (or the versioned path) when one changes. Images and video are cached for 1 day.
