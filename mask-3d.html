@@ -102,9 +102,18 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 0, 8.8);
+// Fit the whole mask (strap loop included) inside the frame at any aspect —
+// on a portrait phone the fixed distance used to crop the strap ends hard.
+function fitCamera() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  const t = Math.tan(THREE.MathUtils.degToRad(19)); // half the 38° vertical fov
+  const dist = Math.max(1.35 / t, 2.28 / (t * camera.aspect)) * 1.03;
+  camera.position.set(0, 0, dist);
+  camera.updateProjectionMatrix();
+}
+fitCamera();
 
-const key = new THREE.DirectionalLight(0xffffff, 1.6);
+const key = new THREE.DirectionalLight(0xffffff, 1.35);
 key.position.set(1.5, 3, 9);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
@@ -117,7 +126,7 @@ scene.add(key);
 const rim = new THREE.DirectionalLight(0xbcd0ff, 0.9);
 rim.position.set(-4, 2, -5);
 scene.add(rim);
-const sweep = new THREE.PointLight(0xffffff, 12, 30);
+const sweep = new THREE.PointLight(0xffffff, 8, 30);
 sweep.position.set(2.5, 1.2, 3.5);
 scene.add(sweep);
 
@@ -134,7 +143,7 @@ scene.add(backdrop);
    mask (center forward, edges sweeping back), smooth-shaded so it
    reads plush. Front and back are separate skinned faces over it. */
 
-const RAW_PTS = [[-1.7789, 0.0863], [-1.7568, -0.3229], [-1.6695, -0.6497], [-1.5382, -0.8185], [-1.3843, -0.9021], [-1.205, -0.9449], [-1.0213, -0.9541], [-0.8633, -0.9313], [-0.695, -0.8625], [-0.4804, -0.743], [-0.2784, -0.6203], [-0.163, -0.5488], [-0.1178, -0.5229], [-0.0891, -0.5138], [-0.0578, -0.5121], [-0.0236, -0.5136], [0.0114, -0.5163], [0.0418, -0.523], [0.0696, -0.5327], [0.0979, -0.5444], [0.126, -0.5589], [0.16, -0.5775], [0.2041, -0.603], [0.2504, -0.6328], [0.2917, -0.6606], [0.3373, -0.6909], [0.411, -0.7362], [0.534, -0.8046], [0.6897, -0.8804], [0.8384, -0.9331], [0.9857, -0.9496], [1.162, -0.9302], [1.353, -0.8728], [1.5203, -0.7826], [1.6432, -0.6799], [1.7211, -0.5878], [1.7654, -0.4743], [1.7861, -0.2467], [1.7854, 0.0616], [1.7631, 0.2879], [1.7124, 0.408], [1.6208, 0.5194], [1.4944, 0.6426], [1.3565, 0.7435], [1.2037, 0.8166], [0.9812, 0.8757], [0.6015, 0.923], [0.0563, 0.9475], [-0.4987, 0.941], [-0.9133, 0.9023], [-1.1989, 0.8293], [-1.4159, 0.7282], [-1.5731, 0.6214], [-1.6769, 0.5226], [-1.7459, 0.3801]];
+const RAW_PTS = /*__MASK_PTS__*/[[-1.8, 0.3563], [-1.8, -0.5623], [-1.7054, -0.694], [-1.5163, -0.8561], [-1.415, -0.9135], [-1.2326, -0.9675], [-0.9591, -0.9642], [-0.8713, -0.9473], [-0.7565, -0.9068], [-0.4897, -0.7649], [-0.179, -0.5454], [-0.1351, -0.542], [-0.125, -0.5184], [-0.0912, -0.5083], [-0.0507, -0.5083], [-0.0405, -0.5218], [0.0304, -0.5049], [0.0371, -0.5251], [0.0642, -0.5353], [0.1081, -0.5353], [0.1182, -0.5657], [0.152, -0.569], [0.2026, -0.5961], [0.2567, -0.6433], [0.2972, -0.6568], [0.3141, -0.6839], [0.3985, -0.7244], [0.4728, -0.7818], [0.7396, -0.9135], [0.8409, -0.9473], [0.9456, -0.9642], [1.155, -0.954], [1.3745, -0.8899], [1.54, -0.7953], [1.675, -0.6636], [1.7325, -0.5826], [1.7764, -0.4947], [1.7966, -0.4812], [1.7966, 0.2989], [1.773, 0.3056], [1.7325, 0.3901], [1.6582, 0.4981], [1.4826, 0.6737], [1.3508, 0.7615], [1.2462, 0.8122], [1.0266, 0.8865], [0.7902, 0.927], [0.0439, 0.9743], [-0.645, 0.9507], [-0.9692, 0.9169], [-1.1989, 0.8595], [-1.4657, 0.721], [-1.6041, 0.6096], [-1.6784, 0.5319], [-1.7696, 0.4137]];
 const spline = new THREE.SplineCurve(RAW_PTS.map(p => new THREE.Vector2(p[0], p[1])));
 const smoothPts = spline.getPoints(300);
 const shape = new THREE.Shape();
@@ -238,138 +247,47 @@ bodyGeo = mergeVertices(bodyGeo, 1e-4);
 applyBend(bodyGeo);
 bodyGeo.computeVertexNormals();
 const bodyMat = new THREE.MeshPhysicalMaterial({
-  color: 0x4a4d52, roughness: 0.6, metalness: 0.0,
+  color: 0x3c3e42, roughness: 0.6, metalness: 0.0,
   sheen: 0.8, sheenRoughness: 0.5, sheenColor: 0xcfd8e2,
-  clearcoat: 0.15, clearcoatRoughness: 0.6, envMapIntensity: 0.5
+  clearcoat: 0.15, clearcoatRoughness: 0.6, envMapIntensity: 0.4
 });
 const body = new THREE.Mesh(bodyGeo, bodyMat);
 body.castShadow = true;
 body.receiveShadow = true;
 group.add(body);
 
-/* ---- Face textures (canvas): shape coords x[-1.85,1.85] y[-1.0,1.0] ---- */
-const TEXW = 3.7, TEXH = 2.0, CW = 1024, CH = 552;
-const PX = x => (x + TEXW / 2) / TEXW * CW;
-const PY = y => (TEXH / 2 - y) / TEXH * CH;
-const PU = u => u / TEXW * CW; // units -> px
-
-function silkBase(g, top, mid, bot) {
-  const grad = g.createLinearGradient(0, 0, 0, CH);
-  grad.addColorStop(0, top);
-  grad.addColorStop(0.5, mid);
-  grad.addColorStop(1, bot);
-  g.fillStyle = grad;
-  g.fillRect(0, 0, CW, CH);
-  // fine fabric noise
-  const img = g.getImageData(0, 0, CW, CH);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 9;
-    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
-  }
-  g.putImageData(img, 0, 0);
-  // soft sheen streaks
-  for (const [sx, w, a] of [[0.22, 0.5, 0.05], [0.62, 0.7, 0.04], [0.85, 0.35, 0.05]]) {
-    const sg = g.createLinearGradient(CW * (sx - w / 2), 0, CW * (sx + w / 2), 0);
-    sg.addColorStop(0, 'rgba(255,255,255,0)');
-    sg.addColorStop(0.5, `rgba(255,255,255,${a})`);
-    sg.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = sg;
-    g.fillRect(0, 0, CW, CH);
-  }
+/* ---- Face textures: the real mask photos, mapped in shape coords
+   x[-1.85,1.85] y[-1.0,1.0]. The front is the approved grey render itself;
+   the back is the real back panel with its strap band rebuilt as fabric
+   (the 3D strap covers that zone). Bump maps are the photos' own
+   luminance, so the embroidery and silk wrinkles carry real relief. ---- */
+const TEXW = 3.7, TEXH = 2.0;
+const texLoader = new THREE.TextureLoader();
+function photoTex(path, srgb) {
+  const t = texLoader.load(path);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.repeat.set(1 / TEXW, 1 / TEXH);
+  t.offset.set(0.5, 0.5);
+  return t;
 }
-
-// Closed-eye stitch: a shallow U arc with lash ticks hanging below it.
-// Drawn identically into the colour canvas and the bump canvas.
-function drawEye(g, cx, cy, mode) {
-  const P0 = { x: cx - 0.47, y: cy + 0.095 };
-  const P1 = { x: cx, y: cy - 0.335 };
-  const P2 = { x: cx + 0.47, y: cy + 0.095 };
-  const at = t => ({
-    x: (1 - t) * (1 - t) * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x,
-    y: (1 - t) * (1 - t) * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y
-  });
-  const tan = t => ({
-    x: 2 * (1 - t) * (P1.x - P0.x) + 2 * t * (P2.x - P1.x),
-    y: 2 * (1 - t) * (P1.y - P0.y) + 2 * t * (P2.y - P1.y)
-  });
-  g.lineCap = 'round';
-  const passes = mode === 'bump'
-    ? [{ style: '#ffffff', w: 8, dy: 0 }]
-    : [{ style: 'rgba(0,0,0,0.30)', w: 9, dy: 2.5 }, { style: '#f4f6f8', w: 8, dy: 0 }];
-  for (const pass of passes) {
-    g.strokeStyle = pass.style;
-    g.lineWidth = pass.w;
-    g.beginPath();
-    g.moveTo(PX(P0.x), PY(P0.y) + pass.dy);
-    g.quadraticCurveTo(PX(P1.x), PY(P1.y) + pass.dy, PX(P2.x), PY(P2.y) + pass.dy);
-    g.stroke();
-    // lash ticks
-    for (let i = 0; i < 7; i++) {
-      const t = 0.10 + i * 0.133;
-      const p = at(t), d = tan(t);
-      let nx = d.y, ny = -d.x; // curve normal
-      if (ny > 0) { nx = -nx; ny = -ny; } // point down (-y in shape space)
-      const len = Math.hypot(nx, ny); nx /= len; ny /= len;
-      const L = 0.115;
-      g.beginPath();
-      g.moveTo(PX(p.x), PY(p.y) + pass.dy);
-      g.lineTo(PX(p.x + nx * L), PY(p.y + ny * L) + pass.dy);
-      g.stroke();
-    }
-  }
-}
-
-function makeFrontTextures() {
-  const c = document.createElement('canvas'); c.width = CW; c.height = CH;
-  const g = c.getContext('2d');
-  silkBase(g, '#64666c', '#56585e', '#494b51');
-  drawEye(g, -0.92, -0.02, 'color');
-  drawEye(g, 0.885, -0.02, 'color');
-  const b = document.createElement('canvas'); b.width = CW; b.height = CH;
-  const bg2 = b.getContext('2d');
-  bg2.fillStyle = '#808080'; bg2.fillRect(0, 0, CW, CH);
-  drawEye(bg2, -0.92, -0.02, 'bump');
-  drawEye(bg2, 0.885, -0.02, 'bump');
-  const map = new THREE.CanvasTexture(c);
-  map.colorSpace = THREE.SRGBColorSpace;
-  map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const bump = new THREE.CanvasTexture(b);
-  for (const t of [map, bump]) { t.repeat.set(1 / TEXW, 1 / TEXH); t.offset.set(0.5, 0.5); }
-  return { map, bump };
-}
-
-function makeBackTexture() {
-  const c = document.createElement('canvas'); c.width = CW; c.height = CH;
-  const g = c.getContext('2d');
-  silkBase(g, '#5c5e63', '#505257', '#45474c');
-  // center seam: a groove with a stitch row either side
-  const cxp = PX(0);
-  g.strokeStyle = 'rgba(0,0,0,0.5)';
-  g.lineWidth = 4;
-  g.beginPath(); g.moveTo(cxp, 6); g.lineTo(cxp, CH - 6); g.stroke();
-  g.strokeStyle = 'rgba(230,233,238,0.8)';
-  g.lineWidth = 3.5;
-  g.setLineDash([10, 8]);
-  for (const off of [-11, 11]) {
-    g.beginPath(); g.moveTo(cxp + off, 10); g.lineTo(cxp + off, CH - 10); g.stroke();
-  }
-  g.setLineDash([]);
-  const map = new THREE.CanvasTexture(c);
-  map.colorSpace = THREE.SRGBColorSpace;
-  map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  map.repeat.set(1 / TEXW, 1 / TEXH); map.offset.set(0.5, 0.5);
-  return map;
-}
+const frontTex = photoTex('img/mask-3d-front.jpg', true);
+const frontBump = photoTex('img/mask-3d-front-bump.jpg', false);
+const backTex = photoTex('img/mask-3d-back.jpg', true);
+const backBump = photoTex('img/mask-3d-back-bump.jpg', false);
+const strapTex = texLoader.load('img/mask-3d-strap.jpg');
+strapTex.wrapS = strapTex.wrapT = THREE.MirroredRepeatWrapping;
+strapTex.colorSpace = THREE.SRGBColorSpace;
+strapTex.anisotropy = 4;
 
 const faceMatBase = {
-  roughness: 0.52, metalness: 0.0,
-  sheen: 0.85, sheenRoughness: 0.42, sheenColor: 0xe6edf5,
-  clearcoat: 0.22, clearcoatRoughness: 0.5, envMapIntensity: 0.45
+  roughness: 0.58, metalness: 0.0,
+  sheen: 0.55, sheenRoughness: 0.45, sheenColor: 0xe6edf5,
+  clearcoat: 0.15, clearcoatRoughness: 0.5, envMapIntensity: 0.35
 };
 
 // Front skin (scaled a hair inside the bevelled cap outline)
 {
-  const ft = makeFrontTextures();
   const geo = new THREE.ShapeGeometry(shape, 4);
   geo.scale(0.995, 0.993, 1);
   const pos = geo.attributes.position;
@@ -379,7 +297,7 @@ const faceMatBase = {
   subdivideSkin(geo, 3, FRONT_Z + 0.002);
   setBendNormals(geo, false);
   const mat = new THREE.MeshPhysicalMaterial({
-    ...faceMatBase, map: ft.map, bumpMap: ft.bump, bumpScale: 0.6,
+    ...faceMatBase, map: frontTex, bumpMap: frontBump, bumpScale: 0.35,
     polygonOffset: true, polygonOffsetFactor: -2
   });
   const m = new THREE.Mesh(geo, mat);
@@ -402,7 +320,7 @@ const faceMatBase = {
   subdivideSkin(geo, 3, -FRONT_Z - 0.002);
   setBendNormals(geo, true);
   const mat = new THREE.MeshPhysicalMaterial({
-    ...faceMatBase, map: makeBackTexture(),
+    ...faceMatBase, map: backTex, bumpMap: backBump, bumpScale: 0.3,
     polygonOffset: true, polygonOffsetFactor: -2
   });
   const m = new THREE.Mesh(geo, mat);
@@ -410,34 +328,8 @@ const faceMatBase = {
   group.add(m);
 }
 
-/* ---- Strap: a solid band with real thickness, looped behind the mask ---- */
-function makeStrapTexture() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-  const g = c.getContext('2d');
-  g.fillStyle = '#585a5f';
-  g.fillRect(0, 0, 256, 256);
-  for (let x = 0; x < 256; x += 4) { // ribs across the strap (constant-u lines)
-    g.fillStyle = 'rgba(255,255,255,0.07)';
-    g.fillRect(x, 0, 1, 256);
-    g.fillStyle = 'rgba(20,22,26,0.09)';
-    g.fillRect(x + 2, 0, 1, 256);
-  }
-  const img = g.getImageData(0, 0, 256, 256);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 8;
-    img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n;
-  }
-  g.putImageData(img, 0, 0);
-  g.fillStyle = 'rgba(30,32,36,0.35)'; // selvedge edges
-  g.fillRect(0, 0, 256, 5);
-  g.fillRect(0, 251, 256, 5);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
+/* ---- Strap: a solid band with real thickness, looped behind the mask.
+   Skinned with a patch of the real strap fabric from the photo. ---- */
 {
   const path = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-1.84, -0.02, -0.30),
@@ -473,7 +365,7 @@ function makeStrapTexture() {
       s.p.clone().addScaledVector(s.side, -HW).addScaledVector(s.bin, HT)
     ];
     for (const c of corners) verts.push(c.x, c.y, c.z);
-    const u = s.len * 1.1;
+    const u = s.len * 0.8;
     uvs.push(u, 1, u, 1, u, 0, u, 0);
   }
   for (let i = 0; i < N; i++) {
@@ -488,12 +380,11 @@ function makeStrapTexture() {
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geo.setIndex(indices);
   geo.computeVertexNormals();
-  const tex = makeStrapTexture();
   const mat = new THREE.MeshPhysicalMaterial({
-    map: tex, bumpMap: tex, bumpScale: 0.1,
-    roughness: 0.55, metalness: 0.0,
-    sheen: 0.9, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
-    envMapIntensity: 0.5
+    map: strapTex, bumpMap: strapTex, bumpScale: 0.15,
+    roughness: 0.58, metalness: 0.0,
+    sheen: 0.6, sheenRoughness: 0.45, sheenColor: 0xdde5ee,
+    envMapIntensity: 0.35
   });
   const strap = new THREE.Mesh(geo, mat);
   strap.castShadow = true;
@@ -568,9 +459,8 @@ function animate() {
 animate();
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  fitCamera();
 });
 
 /* ---- Light / dark toggle ---- */
@@ -579,7 +469,7 @@ const label = document.getElementById('modeLabel');
 toggle.addEventListener('click', () => {
   const light = document.body.classList.toggle('light');
   label.textContent = light ? 'Dark mode' : 'Light mode';
-  key.intensity = light ? 1.9 : 1.6;
+  key.intensity = light ? 1.65 : 1.35;
   renderer.toneMappingExposure = light ? 1.12 : 1.05;
   shadowMat.opacity = light ? 0.05 : 0.11;
 });
