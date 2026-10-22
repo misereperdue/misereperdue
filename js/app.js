@@ -318,8 +318,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     function refreshTitle() {
-      // Title is always just "Misère Perdue" on every page
-      var t = "Misère Perdue";
+      // One title for every view: the SEO title from index.html <title>.
+      var t = window.__mpTitle || (window.__mpTitle = document.title || "Misère Perdue");
       document.title = t;
       var ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute("content", t);
@@ -438,3 +438,13 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
 })();
 
 if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register(MP_PIN("sw.js")).catch(function () {}); }); }
+
+// Footer links are real URLs for crawlers (static pages); in the app they
+// switch views in place instead of leaving for the plain static page.
+document.addEventListener("click", function (e) {
+  var a = e.target.closest && e.target.closest("a[data-spa]");
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  location.hash = a.getAttribute("data-spa");
+  window.scrollTo(0, 0);
+});

@@ -6420,3 +6420,36 @@ button.forum-glass-pill:active {
     0 2px 10px rgba(0, 0, 0, 0.5),
     0 0 0 4px rgba(169, 215, 245, 0.3);
 }
+
+/* Site footer: plain crawlable links (SEO). Shown under the shop grid only. */
+.site-foot {
+  display: none;
+  margin: 28px auto 0;
+  padding: 0 20px calc(28px + env(safe-area-inset-bottom));
+  max-width: 760px;
+  text-align: center;
+  font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+body.crop-hero-shop .site-foot {
+  display: block;
+}
+.site-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  margin-bottom: 6px;
+}
+.site-foot a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.site-foot a:active {
+  color: var(--accent);
+}
+.site-foot p {
+  margin: 0;
+  opacity: 0.7;
+}
