@@ -6,6 +6,33 @@
   X-Content-Type-Options: nosniff
   Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://esm.sh https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.misereperdue.com wss://api.misereperdue.com https://shop.misereperdue.com https://cloudflareinsights.com https://esm.sh https://ipapi.co; frame-src https://challenges.cloudflare.com https://www.youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://w.soundcloud.com https://player.vimeo.com https://embed.music.apple.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
+# Versioned / immutable assets (?v= pins or versioned path). No "no-cache" here.
+/js/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+/css/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+/vendor/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
+# Images/video are not always pinned: cache a day, refresh in the background.
+/img/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/images/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/video/*
+  ! Cache-Control
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Keep the pages.dev copies (production alias + previews) out of search.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
+
 # Note: only the public site is deployed (tools/pages-build.mjs copies it into
 # dist/), so src/, docs/, tools/ and worker/ are not served at all.
 # HSTS is set at the Cloudflare zone (SSL/TLS > Edge Certificates), not here.
