@@ -144,28 +144,9 @@
 <body class="home">
 <h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Misère Perdue</h1>
   <header class="hero">
-    <video class="sharp" autoplay muted loop playsinline preload="none" poster="video/header-poster.webp">
-      <source data-src="video/header-ping.mp4" type="video/mp4">
+    <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header-poster.webp">
+      <source src="video/header-ping.mp4" type="video/mp4">
     </video>
-    <script>
-      // Fast first paint: the poster (first frame) paints immediately; the
-      // 880 KB loop only starts downloading once the page has loaded.
-      (function () {
-        var v = document.currentScript.previousElementSibling;
-        function go() {
-          var s = v && v.querySelector("source[data-src]");
-          if (!s) return;
-          s.src = s.getAttribute("data-src");
-          s.removeAttribute("data-src");
-          v.preload = "auto";
-          v.load();
-          var p = v.play();
-          if (p && p.catch) p.catch(function () {});
-        }
-        if (document.readyState === "complete") setTimeout(go, 0);
-        else window.addEventListener("load", function () { setTimeout(go, 0); }, { once: true });
-      })();
-    </script>
     <div class="hero-fade"></div>
   </header>
   <div class="nav-wrap">
