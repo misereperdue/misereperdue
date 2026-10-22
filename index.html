@@ -2,7 +2,7 @@
 <html lang="en" class="mp-loading">
 <head>
   <!-- Option H: Hide content until positioned. Prevents flash from bottom. -->
-  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:-100px;left:-100px;right:-100px;bottom:-100px;z-index:99999;background:radial-gradient(105% 72% at 50% 42%,#1b2a5e 0%,#0a1230 55%,#02040f 100%);align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}#mp-splash .mp-splash-text{width:185px;height:auto;transition:opacity .15s ease}html:not(.mp-show-splash) #mp-splash .mp-splash-text{opacity:0}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
+  <style>html.mp-loading body{opacity:0}html.mp-loading body{transition:none}body{transition:opacity .5s ease}#mp-splash{display:flex;position:fixed;top:-100px;left:-100px;right:-100px;bottom:-100px;z-index:99999;background:radial-gradient(105% 72% at 50% 42%,#1b2a5e 0%,#0a1230 55%,#02040f 100%);align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s}.mp-splash-art{display:flex;flex-direction:column;align-items:center;gap:12px;transition:opacity .15s ease}html:not(.mp-show-splash) .mp-splash-art{opacity:0}.mp-splash-barcode{width:148px;height:auto}.mp-splash-name{width:172px;height:auto}@keyframes mpScan{from{clip-path:inset(0 100% 0 0);opacity:.4}to{clip-path:inset(0 0 0 0);opacity:1}}@keyframes mpCarve{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@keyframes mpGlow{from{opacity:.55}to{opacity:1}}#mp-splash::before{content:'';position:absolute;inset:0;background:radial-gradient(60% 42% at 50% 44%,rgba(70,100,190,.28),rgba(70,100,190,0) 70%);pointer-events:none}html.mp-show-splash .mp-splash-barcode{animation:mpScan .7s cubic-bezier(.22,.8,.3,1) both}html.mp-show-splash .mp-splash-name{animation:mpCarve .55s ease .38s both}html.mp-show-splash #mp-splash::before{animation:mpGlow 1.4s ease both}@media (prefers-reduced-motion:reduce){html.mp-show-splash .mp-splash-barcode,html.mp-show-splash .mp-splash-name,html.mp-show-splash #mp-splash::before{animation:none}}html{background:#0a1230}html.mp-show-splash{background:#0a1230}html.mp-show-splash body{background:#0a1230}html.mp-show-splash #mp-splash{opacity:1;visibility:visible}</style>
   <script>
     // Splash (M on navy) shows on first load of a session, and on
     // pull-to-refresh reloads (covers the reload glitch). Plain
@@ -19,11 +19,19 @@
         if (!document.getElementById("mp-splash")) {
           var sp = document.createElement("div");
           sp.id = "mp-splash";
-          var tx = document.createElement("img");
-          tx.className = "mp-splash-text";
-          tx.src = "img/splash-art.png";
-          tx.alt = "MISÈRE PERDUE";
-          sp.appendChild(tx);
+          var wrap = document.createElement("div");
+          wrap.className = "mp-splash-art";
+          var bc = document.createElement("img");
+          bc.className = "mp-splash-barcode";
+          bc.src = "img/splash-barcode.png";
+          bc.alt = "";
+          var nm = document.createElement("img");
+          nm.className = "mp-splash-name";
+          nm.src = "img/splash-name.png";
+          nm.alt = "MISÈRE PERDUE";
+          wrap.appendChild(bc);
+          wrap.appendChild(nm);
+          sp.appendChild(wrap);
           document.documentElement.appendChild(sp);
           // Move into <body> once it exists: fixed inside <html>
           // (iOS scroll container) can be offset by scroll on refresh.
@@ -102,7 +110,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Misère Perdue","alternateName":["MISERY","misereperdue"],"url":"https://misereperdue.com/","logo":"https://misereperdue.com/img/og-image.jpg?v=2","description":"Misère Perdue (Misery) - Merchandise brand and creative community based in Toronto.","sameAs":["https://x.com/misereperdue"],"foundingLocation":{"@type":"Place","addressLocality":"Toronto","addressRegion":"Ontario","addressCountry":"CA"}}</script>
   <link rel="icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon-fresh.png">
-  <link rel="preload" as="image" href="img/splash-art.png">
+  <link rel="preload" as="image" href="img/splash-barcode.png">
   <link rel="manifest" href="/webapp.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -117,7 +125,7 @@
   <link rel="apple-touch-startup-image" href="img/splash-1206x2622.png?v=19" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="img/splash-1320x2868.png?v=19" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="img/splash-1260x2736.png?v=19" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=60").catch(function () {}); }); }</script>
+  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js?v=61").catch(function () {}); }); }</script>
   <link rel="preconnect" href="https://api.misereperdue.com">
   <link rel="preconnect" href="https://shop.misereperdue.com">
   <link rel="dns-prefetch" href="https://ipapi.co">
