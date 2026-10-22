@@ -1444,16 +1444,16 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 7px 14px;
   border: 1px solid rgba(169, 215, 245, 0.18);
   border-radius: 999px;
   background: rgba(169, 215, 245, 0.06);
   color: rgba(214, 233, 248, 0.85);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: 0.02em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -1462,10 +1462,55 @@ textarea {
 .a2hs[hidden] {
   display: none;
 }
-.a2hs svg {
-  width: 16px;
-  height: 16px;
+.a2hs-ico {
+  position: relative;
+  width: 26px;
+  height: 26px;
   flex: none;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(169, 215, 245, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: a2hs-bob 3.2s ease-in-out infinite;
+}
+.a2hs-ico img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* glossy sheen sweeping across the icon */
+.a2hs-ico::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 60%
+  );
+  transform: translateX(-70%);
+  animation: a2hs-sheen 3.2s ease-in-out infinite;
+}
+.a2hs-arw {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.8;
+  animation: a2hs-nudge 1.6s ease-in-out infinite;
+}
+@keyframes a2hs-bob {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-2px) rotate(-4deg); }
+}
+@keyframes a2hs-sheen {
+  0%, 55% { transform: translateX(-70%); }
+  85%, 100% { transform: translateX(70%); }
+}
+@keyframes a2hs-nudge {
+  0%, 100% { transform: translateY(-1px); opacity: 0.55; }
+  50% { transform: translateY(2px); opacity: 1; }
 }
 .a2hs:active {
   transform: scale(0.98);
@@ -1478,10 +1523,23 @@ textarea {
   background: rgba(10, 18, 48, 0.04);
   color: #0a1230;
 }
+[data-theme="light"] .a2hs-ico {
+  box-shadow:
+    0 0 0 1px rgba(10, 18, 48, 0.12),
+    0 4px 10px rgba(10, 18, 48, 0.18);
+}
 [data-theme="light"] .a2hs.is-hint {
   background: rgba(10, 18, 48, 0.08);
 }
 @media (prefers-reduced-motion: reduce) {
+  .a2hs-ico,
+  .a2hs-ico::after,
+  .a2hs-arw {
+    animation: none;
+  }
+  .a2hs-ico::after {
+    display: none;
+  }
   .a2hs {
     transition: none;
   }
