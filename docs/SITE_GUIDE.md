@@ -232,3 +232,13 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 - CSP is **enforced** (since 2026-10-22). Any new third-party script, iframe, API or embed must be added to the matching directive in `_headers`, or it will be blocked. Check with the console (`Refused to ...`) after every such change.
 - Zone: HSTS 1 year + includeSubDomains (no preload), CAA (letsencrypt, pki.goog, ssl.com, digicert, sectigo + iodef), DNSSEC on (Cloudflare Registrar).
 - Owner decisions still pending: HSTS preload, Bot Fight Mode.
+
+---
+
+## 9. Added 2026-10-22 (evening)
+
+- **No inline JavaScript anywhere.** CSP `script-src` has no `'unsafe-inline'`. The old inline blocks of `index.html` live in `js/boot-head.js` (splash, head), `js/beacon.js` (analytics + haptic) and `js/app.js` (module loader, router, pay badges, SW register). No `on...=` attributes either: chat inputs use `data-ro-unlock`, forum avatars use `data-fallback` (delegated listeners). `npm run check` fails on any inline script or handler.
+- **Module pins** are in `index.html` `<script type="application/json" id="mp-pins">` (read by `app.js` via `MP_PIN()`), including `/sw.js?v=`. Bump pins there (and in `sw.js`), not in `app.js`. Bump `app.js?v=` only when `app.js` itself changes.
+- **`functions/_middleware.js`** (Pages Function, HTML routes only via `_routes.json`) sets the CSP with a fresh per-request nonce. Cloudflare copies that nonce into its injected Bot Fight Mode script. Keep its CSP string in sync with `_headers` (the fallback).
+- **three.js 0.160.0 is self-hosted** in `vendor/three-0.160.0/` (exact jsDelivr files; addon imports rewritten to relative paths). No importmaps. jsDelivr is not in the CSP any more.
+- **Product pages**: `python3 tools/build-products.py` regenerates `p/<handle>.html` and `shop.html` from the Storefront API with Product JSON-LD. Re-run after any price/product change in Shopify, then commit.
