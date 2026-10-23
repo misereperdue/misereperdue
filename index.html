@@ -58,7 +58,9 @@
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebSite","@id":"https://misereperdue.com/#website","name":"Misère Perdue","alternateName":["MISERY","misereperdue"],"url":"https://misereperdue.com/","inLanguage":"en","publisher":{"@id":"https://misereperdue.com/#org"}}
   </script>
-  <link rel="stylesheet" href="css/site.css?v=632">
+  <link rel="preload" as="image" href="img/hero-pattern-dark.webp?v=1" type="image/webp" media="(prefers-color-scheme: dark)" fetchpriority="high">
+  <link rel="preload" as="image" href="img/hero-pattern-light.webp?v=1" type="image/webp" media="(prefers-color-scheme: light)" fetchpriority="high">
+  <link rel="stylesheet" href="css/site.css?v=633">
   <script src="js/theme.js?v=8"></script>
   <script src="js/beacon.js?v=1"></script>
 </head>
@@ -66,9 +68,7 @@
 <svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><filter id="lg-refract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="1" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <h1 style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Misère Perdue</h1>
   <header class="hero">
-    <video class="sharp" autoplay muted loop playsinline preload="metadata" poster="video/header-poster.webp">
-      <source src="video/header-ping.mp4" type="video/mp4">
-    </video>
+    <div class="hero-pattern" aria-hidden="true"></div>
     <div class="hero-fade"></div>
   </header>
   <div class="nav-wrap">
@@ -119,7 +119,7 @@
   <footer class="mp-end" aria-label="Misère Perdue"><p class="mp-end-tag">gotta be bad?</p><span class="mp-end-eyes" aria-hidden="true"></span><p class="mp-end-copy">MISÈRE PERDUE © 2026</p></footer>
   
   <script src="js/chat.js?v=315"></script>
-  <script type="application/json" id="mp-pins">{"js/forum-mount-patch.js": "js/forum-mount-patch.js?v=1073", "js/dashboard-v2.js": "js/dashboard-v2.js?v=53", "js/social-logos.js": "js/social-logos.js?v=2", "js/ph-icons.js": "js/ph-icons.js?v=1", "js/shopify.js": "js/shopify.js?v=12", "js/cart.js": "js/cart.js?v=2", "js/shop.js": "js/shop.js?v=90", "js/forum3.js": "js/forum3.js?v=1118", "sw.js": "/sw.js?v=175"}</script>
+  <script type="application/json" id="mp-pins">{"js/forum-mount-patch.js": "js/forum-mount-patch.js?v=1073", "js/dashboard-v2.js": "js/dashboard-v2.js?v=53", "js/social-logos.js": "js/social-logos.js?v=2", "js/ph-icons.js": "js/ph-icons.js?v=1", "js/shopify.js": "js/shopify.js?v=12", "js/cart.js": "js/cart.js?v=2", "js/shop.js": "js/shop.js?v=90", "js/forum3.js": "js/forum3.js?v=1118", "sw.js": "/sw.js?v=176"}</script>
   <script src="js/app.js?v=8"></script>
 
 

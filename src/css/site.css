@@ -356,6 +356,23 @@ body {
   );
   mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 82%);
 }
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  background: #f2f6fc url("../img/hero-pattern-light.webp?v=1") center 28% / cover
+    no-repeat;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 52%,
+    transparent 88%
+  );
+  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
+}
+[data-theme="dark"] .hero-pattern {
+  background-color: #081230;
+  background-image: url("../img/hero-pattern-dark.webp?v=1");
+}
 .hero-fade {
   position: absolute;
   inset: 0;
