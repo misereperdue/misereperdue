@@ -6725,6 +6725,25 @@ button.forum-glass-pill:active {
 @media (prefers-reduced-motion: reduce) {
   .mp-end-eyes, .mp-end-copy, .mp-end-tag { animation: none; }
 }
+/* Twemoji credit (CC BY 4.0, per dc): only where the Twemoji images are
+   actually drawn (js/emoji.js adds .mp-emoji-img; Apple devices keep native
+   emoji and never see it). Tiny, same ink as the copyright line. */
+.mp-end-credit {
+  display: none;
+  margin: 4px 0 0;
+  font: 400 8px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+  color: var(--accent);
+  opacity: .26;
+}
+.mp-emoji-img .mp-end-credit {
+  display: block;
+}
+.mp-end-credit a {
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+}
 
 /* Native share (product + Globe thread); hidden when navigator.share is missing. */
 .share-btn[hidden] {

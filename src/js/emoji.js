@@ -1,9 +1,9 @@
-/* Misère Perdue: Apple-style emoji everywhere (per dc).
+/* Misère Perdue: consistent emoji on every device (per dc).
  *
- * Every emoji in the page (chat, Globe posts and replies, names, bios,
- * badges, dashboard, shop, UI copy) is drawn from the self-hosted image
- * set in /emoji/<EMOJI_SET>/, so Android, Windows and Linux show the same
- * emoji as an iPhone.
+ * On non-Apple devices every emoji in the page (chat, Globe posts and
+ * replies, names, bios, badges, dashboard, shop, UI copy) is drawn from the
+ * self-hosted image set in /emoji/<EMOJI_SET>/ (Twemoji, CC BY 4.0, see
+ * docs/THIRD_PARTY.md), so Android, Windows and Linux all match.
  *
  * How: a MutationObserver finds text nodes that contain emoji and wraps
  * each emoji in <span class="mp-emo" data-k="<key>">😀</span>. The span
@@ -16,26 +16,25 @@
  * contenteditable editors, <title>, SVG/canvas, system notifications.
  * Opt out of a subtree with data-no-emoji.
  *
- * Apple devices (iPhone, iPad, Mac) already draw Apple emoji natively, so
- * with an Apple set this script does nothing there (same look, zero cost).
+ * Apple devices (iPhone, iPad, Mac) keep their native Apple emoji: this
+ * script does nothing there (zero cost), whatever the set.
  * localStorage.mp_emoji = "force" | "off" overrides that for testing.
  *
  * Switch image sets: build one with tools/build-emoji.py, then change
- * EMOJI_SET below (or set <html data-emoji-set="...">). Nothing else.
+ * EMOJI_SET / EXT below (or set <html data-emoji-set="...">). Nothing else.
  */
 (function () {
   "use strict";
-  var EMOJI_SET = "apple-16";
-  var EXT = ".webp";
-
+  var EMOJI_SET = "twemoji-17"; // jdecked/twemoji v17.0.3, SVG
   var set = document.documentElement.getAttribute("data-emoji-set") || EMOJI_SET;
+  var EXT = set.indexOf("twemoji") === 0 ? ".svg" : ".webp";
   var BASE = "/emoji/" + set + "/";
   var mode = "";
   try { mode = localStorage.getItem("mp_emoji") || ""; } catch (e) {}
   var appleDevice = /iPhone|iPad|iPod|Macintosh|Mac OS X/.test(navigator.userAgent);
   var api = { active: false, set: set, base: BASE, ext: EXT, parse: function () {}, url: url, key: key };
   window.MPEmoji = api;
-  if (mode === "off" || (appleDevice && mode !== "force" && set.indexOf("apple") === 0)) return;
+  if (mode === "off" || (appleDevice && mode !== "force")) return;
 
   var RE, EP, ONE;
   try {

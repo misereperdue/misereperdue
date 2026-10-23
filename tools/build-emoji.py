@@ -1,37 +1,60 @@
 #!/usr/bin/env python3
 """Build the self-hosted emoji image set used by js/emoji.js.
 
-    python3 tools/build-emoji.py <path-to-emoji-datasource-SET> <SET> <OUT_NAME>
+Current set (per dc, 2026-10-23): Twemoji, SVG, from the maintained
+jdecked/twemoji fork (graphics CC BY 4.0, attribution required):
 
-e.g. (Apple, current):
-    npm i --prefix /tmp/emo emoji-datasource-apple@16.0.0
-    python3 tools/build-emoji.py /tmp/emo/node_modules/emoji-datasource-apple apple apple-16
+    curl -sL https://codeload.github.com/jdecked/twemoji/tar.gz/refs/tags/v17.0.3 | tar xz -C /tmp
+    python3 tools/build-emoji.py --twemoji /tmp/twemoji-17.0.3/assets/svg twemoji-17
 
-Switching sets later (no code changes): build another set the same way, e.g.
-    npm i --prefix /tmp/emo emoji-datasource-twitter@16.0.0
-    python3 tools/build-emoji.py /tmp/emo/node_modules/emoji-datasource-twitter twitter twemoji-16
-then change EMOJI_SET at the top of src/js/emoji.js (or set
-<html data-emoji-set="twemoji-16">) and bump its pin.
+Twemoji names its files with the code points in lowercase hex, but keeps
+U+FE0F inside ZWJ sequences (1f3f3-fe0f-200d-1f308.svg) and drops it
+everywhere else (2764.svg). js/emoji.js drops every U+FE0F from its key, so
+the files are written with every "-fe0f" removed (no collisions in 17.0.3;
+the script stops if a future release introduces one).
 
-Output: emoji/<OUT_NAME>/<key>.webp, 64x64 WebP (q90, alpha).
+Other sets (emoji-datasource-*, 64x64 PNG -> WebP), e.g. Noto:
+    npm i --prefix /tmp/emo emoji-datasource-google@16.0.0
+    python3 tools/build-emoji.py /tmp/emo/node_modules/emoji-datasource-google google noto-16
+
+Then change EMOJI_SET (and EXT for the file type) at the top of
+src/js/emoji.js, build, bump the emoji.js?v= pins and the SW emoji cache.
+
+Output: emoji/<OUT_NAME>/<key>.<svg|webp>.
 <key> = the emoji's code points in lowercase hex without leading zeros,
 joined by "-", with every U+FE0F removed (js/emoji.js builds the same key),
 so fully-qualified and unqualified spellings share one file.
-Only emoji the set really has art for (has_img_<SET>) are written;
-anything missing falls back to the device's own emoji at runtime.
+Anything missing falls back to the device's own emoji at runtime.
 """
-import json, os, sys
-from PIL import Image
+import json, os, shutil, sys
 
-src, setname, outname = sys.argv[1], sys.argv[2], sys.argv[3]
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def key(unified):
+    return '-'.join(format(int(c, 16), 'x') for c in unified.split('-') if c.upper() != 'FE0F')
+
+if sys.argv[1] == '--twemoji':
+    src, outname = sys.argv[2], sys.argv[3]
+    out = os.path.join(root, 'emoji', outname)
+    os.makedirs(out, exist_ok=True)
+    seen = {}
+    for f in sorted(os.listdir(src)):
+        if not f.endswith('.svg'):
+            continue
+        k = key(f[:-4])
+        if k in seen:
+            sys.exit(f'collision: {f} and {seen[k]} both map to {k}')
+        seen[k] = f
+        shutil.copyfile(os.path.join(src, f), os.path.join(out, k + '.svg'))
+    print(f'{len(seen)} images in emoji/{outname}/')
+    sys.exit(0)
+
+from PIL import Image
+src, setname, outname = sys.argv[1], sys.argv[2], sys.argv[3]
 out = os.path.join(root, 'emoji', outname)
 os.makedirs(out, exist_ok=True)
 data = json.load(open(os.path.join(src, 'emoji.json'), encoding='utf8'))
 imgdir = os.path.join(src, 'img', setname, '64')
-
-def key(unified):
-    return '-'.join(format(int(c, 16), 'x') for c in unified.split('-') if c.upper() != 'FE0F')
 
 entries = []
 for e in data:

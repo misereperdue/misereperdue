@@ -272,19 +272,19 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 
 ---
 
-## 10. Added 2026-10-23: Apple emoji everywhere (`js/emoji.js`)
+## 10. Added 2026-10-23: consistent emoji (`js/emoji.js`, Twemoji on non-Apple devices)
 
 - `js/emoji.js` (source `src/js/emoji.js`, loaded with `defer` in `index.html` and in every
   static page `globe.html`, `shop.html`, `t/*.html`, `p/*.html` and their generators) wraps every
   emoji in visible text in `<span class="mp-emo" data-k="1f600">😀</span>`, drawn from
-  `/emoji/<EMOJI_SET>/<key>.webp`. The character stays in the span (hidden behind the image),
+  `/emoji/<EMOJI_SET>/<key>.svg` (Twemoji 17.0.3; was Apple art until dc switched for licensing). The character stays in the span (hidden behind the image),
   so `textContent`, copy/paste and screen readers are unchanged. It only splits text nodes;
   it never parses HTML.
 - Skipped: inputs, textareas, selects, `contenteditable` editors (TipTap), `<title>`, SVG,
   canvas (the Share profile card is canvas-drawn and unchanged), anything with `data-no-emoji`.
-- On iPhone/iPad/Mac it does nothing (native emoji are already Apple's). Test override:
+- On iPhone/iPad/Mac it does nothing (they keep native Apple emoji). Test override:
   `localStorage.mp_emoji = "force"` or `"off"`.
 - Unknown emoji (no file in the set) fall back to the native glyph automatically.
-- `sw.js` caches `/emoji/*` cache-first in its own `mp-emoji-v1` cache (capped at 800, kept
+- `sw.js` caches `/emoji/*` cache-first in its own `mp-emoji-v2` cache (capped at 800, kept
   across SW versions). `_routes.json` excludes `/emoji/*` from the Pages Function.
-- Licence and how to switch sets: `docs/THIRD_PARTY.md`.
+- Licence (CC BY 4.0, footer credit `.mp-end-credit`) and how to switch sets: `docs/THIRD_PARTY.md`.
