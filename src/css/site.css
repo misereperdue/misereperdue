@@ -8061,7 +8061,8 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 }
 /* refraction edge: Chromium only (SVG filter in backdrop-filter); WebKit keeps the CSS glass */
 @supports (-webkit-app-region: drag) and (backdrop-filter: url(#lg-refract)) {
-  .nav.glassbar {
+  .glassbar,
+  [data-theme="light"] .glassbar {
     backdrop-filter: url(#lg-refract) var(--lg-blur);
   }
 }
@@ -8078,9 +8079,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     background-color: var(--lg-solid);
     background-image: none;
     -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-  .nav.glassbar {
     backdrop-filter: none;
   }
 }
