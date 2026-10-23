@@ -1112,7 +1112,7 @@
                     ((s = e.user), ke());
                     e.recoveryCode
                       ? rcShowCode(e.recoveryCode, s.username, {
-                          eyebrow: "WELCOME TO MISÈRE PERDUE",
+                          eyebrow: "",
                         })
                       : (rcResetNotice(e.pwResetAt), rcMaybePrompt());
                   } else {
@@ -4139,21 +4139,20 @@
   function rcShowCode(code, user, o) {
     o = o || {};
     var b = rcLayer(
-        '<div class="rc-eyebrow">' +
-          rcEsc(o.eyebrow || "MISÈRE PERDUE · RECOVERY") +
-          '</div><h2 class="rc-title">' +
+        (o.eyebrow === ""
+          ? ""
+          : '<div class="rc-eyebrow">' + rcEsc(o.eyebrow || "MISÈRE PERDUE · RECOVERY") + "</div>") +
+          '<h2 class="rc-title">' +
           rcEsc(o.title || "Your recovery code") +
           '</h2><p class="rc-sub">' +
           rcEsc(
             o.sub ||
-              "If you ever forget your password, this code gets you back in. It's shown only once, so save it somewhere safe.",
+              "This code is the only way you can reset a lost password. Keep it safe.",
           ) +
           '</p><div class="rc-code" aria-label="Recovery code ' +
           rcEsc(code) +
           '">' +
           rcCodeHTML(code) +
-          '</div><div class="rc-user">@' +
-          rcEsc(user) +
           '</div><div class="rc-actions"><button type="button" class="btn rc-copy">Copy</button><button type="button" class="btn rc-save">Save as image</button></div><label class="rc-check"><input type="checkbox"><span>I saved my recovery code</span></label><button type="button" class="btn accent rc-continue" disabled>Continue</button>',
         "rc-showcode",
       ),
@@ -4436,7 +4435,7 @@
     var n = 0;
     (function w() {
       s && s.username
-        ? rcShowCode(code, s.username, { eyebrow: "WELCOME TO MISÈRE PERDUE" })
+        ? rcShowCode(code, s.username, { eyebrow: "" })
         : ++n < 40 && setTimeout(w, 150);
     })();
   }

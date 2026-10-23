@@ -6735,6 +6735,7 @@ html.rc-lock body {
 .rc-actions {
   display: flex;
   gap: 8px;
+  margin-top: 14px;
 }
 .rc-actions .btn {
   flex: 1;
