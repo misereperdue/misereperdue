@@ -2289,6 +2289,7 @@ body {
 }
 .btn.chat-xlink,
 .btn.chat-xunlink {
+  margin-left: auto;
   padding: 8px 16px;
   font-size: 14px;
   border-radius: 20px;

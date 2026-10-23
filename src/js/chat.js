@@ -3730,7 +3730,7 @@
                   var De = document.createElement("button");
                   ((De.type = "button"),
                     (De.className = "btn chat-xlink"),
-                    (De.textContent = "Connect X account"),
+                    (De.textContent = "Connect"),
                     De.addEventListener("click", function () {
                       ((De.disabled = !0),
                         (De.textContent = "Connecting..."),
@@ -3763,11 +3763,11 @@
                               location.href = a;
                             } else
                               ((De.disabled = !1),
-                                (De.textContent = "Connect X account"),
+                                (De.textContent = "Connect"),
                                 alert((e && e.error) || "Couldn't start X link."));
                           })
                           .catch(function () {
-                            ((De.disabled = !1), (De.textContent = "Connect X account"));
+                            ((De.disabled = !1), (De.textContent = "Connect"));
                           }));
                     }),
                     Be.appendChild(De));
