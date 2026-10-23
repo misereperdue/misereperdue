@@ -8509,3 +8509,228 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 .glassbar.chat-head {
   padding-inline: 22px 14px;
 }
+/* ===== Glass orb (per dc 2026-10-23, from his reference): soft milky capsule bars moulded
+   out of the surface (no hard border, wide faint lift shadow, faint backdrop blur so the
+   header clouds still show), the selected item is a frosted glass ORB with a bright
+   top-left specular, soft lens shading and a thin cool-blue rim with a faint blue glow;
+   icons are solid (flat grey inactive, near-black/white gradient active, a touch larger).
+   One set of --orb-* vars drives the navbar, top bars, segmented toggles, Globe chips,
+   quantity stepper, Share pill and top-bar Sign in pills. Sheets, bubbles, clouds untouched. ===== */
+:root,
+[data-theme="light"] {
+  --lg-blur: blur(20px) saturate(140%);
+  --lg-tint: rgba(243, 244, 247, 0.8);
+  --lg-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 45%);
+  --lg-rim: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 100%);
+  --lg-shadow:
+    inset 0 -1px 1px rgba(20, 28, 50, 0.04),
+    0 12px 34px rgba(20, 28, 50, 0.11),
+    0 3px 8px rgba(20, 28, 50, 0.06);
+  --lg-solid: rgba(243, 244, 247, 0.97);
+  --lg-icon: #808083;
+  --lg-icon-on: #2a2a2c;
+  --orb-fill:
+    radial-gradient(ellipse 46% 34% at 34% 20%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 72%),
+    linear-gradient(180deg, #f9f9fa 0%, #eaeaec 20%, #dcdde0 50%, #e0e1e4 76%, #f0f1f3 100%);
+  --orb-shadow:
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -4px 7px rgba(255, 255, 255, 0.55),
+    inset 0 -1px 2px rgba(40, 50, 70, 0.1),
+    0 0 0 1px rgba(122, 168, 228, 0.85),
+    0 0 6px 1px rgba(110, 165, 240, 0.26),
+    0 3px 10px rgba(110, 165, 240, 0.3),
+    0 6px 14px rgba(60, 90, 140, 0.12);
+  --orb-ink: #1f1f21;
+  --orb-chip: rgba(243, 244, 247, 0.82);
+  --orb-chip-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 4px 14px rgba(20, 28, 50, 0.09),
+    0 1px 3px rgba(20, 28, 50, 0.06);
+  --orb-chip-ink: #6e6e72;
+}
+[data-theme="dark"] {
+  --lg-blur: blur(20px) saturate(150%);
+  --lg-tint: rgba(22, 28, 50, 0.66);
+  --lg-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 45%);
+  --lg-rim: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 100%);
+  --lg-shadow:
+    inset 0 -1px 1px rgba(0, 0, 0, 0.25),
+    0 12px 34px rgba(0, 0, 0, 0.38),
+    0 3px 8px rgba(0, 0, 0, 0.22);
+  --lg-solid: rgba(22, 28, 50, 0.97);
+  --lg-icon: rgba(196, 204, 222, 0.66);
+  --lg-icon-on: #fff;
+  --orb-fill:
+    radial-gradient(ellipse 46% 34% at 34% 20%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.11) 26%, rgba(200, 215, 245, 0.07) 55%, rgba(200, 215, 245, 0.1) 80%, rgba(220, 232, 255, 0.17) 100%);
+  --orb-shadow:
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -4px 7px rgba(170, 205, 255, 0.12),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(140, 190, 255, 0.7),
+    0 0 9px 1px rgba(110, 170, 255, 0.36),
+    0 5px 14px rgba(0, 0, 0, 0.3);
+  --orb-ink: #fff;
+  --orb-chip: rgba(22, 28, 50, 0.62);
+  --orb-chip-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 14px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+  --orb-chip-ink: rgba(196, 204, 222, 0.78);
+}
+/* bars: the moulded capsule (shared .glassbar recipe: navbar + Chat/Globe top bars) */
+.glassbar,
+[data-theme="light"] .glassbar {
+  border-color: transparent;
+}
+@supports (-webkit-app-region: drag) and (backdrop-filter: url(#lg-refract)) {
+  .glassbar,
+  [data-theme="light"] .glassbar {
+    backdrop-filter: var(--lg-blur);
+  }
+}
+/* navbar: the selected tab is a round glass orb that fills the capsule's height */
+.nav button,
+.nav a {
+  height: 44px;
+}
+.nav {
+  padding: 3px 5px;
+  gap: 4px;
+}
+.seg,
+[data-theme="light"] .seg {
+  top: 0;
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--orb-fill);
+  box-shadow: var(--orb-shadow);
+}
+.nav .split,
+[data-theme="light"] .nav .split {
+  background: currentColor;
+  color: var(--lg-icon);
+  opacity: 0.35;
+}
+.nav svg,
+[data-theme="dark"] .nav svg,
+[data-theme="light"] .nav svg {
+  width: 23px;
+  height: 23px;
+}
+.nav svg {
+  transition: transform 0.35s cubic-bezier(0.34, 1.36, 0.5, 1);
+}
+.nav button.on svg {
+  transform: scale(1.14);
+  fill: url(#orb-ink);
+}
+[data-theme="dark"] .nav button.on svg {
+  fill: url(#orb-ink-dark);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav svg {
+    transition: none;
+  }
+}
+/* top-bar Sign in + Share + quantity stepper: small frosted orb pills with the blue rim */
+.chat-topbar-signin,
+.forum-topbar-signin,
+[data-theme="light"] .chat-topbar-signin,
+[data-theme="light"] .forum-topbar-signin,
+[data-theme="dark"] .chat-topbar-signin,
+[data-theme="dark"] .forum-topbar-signin,
+.share-btn,
+.qty button {
+  background: var(--orb-fill);
+  border: 0;
+  box-shadow: var(--orb-shadow);
+  color: var(--orb-ink);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.share-btn {
+  min-height: 36px;
+}
+.qty {
+  gap: 12px;
+}
+.qty button {
+  width: 32px;
+  height: 32px;
+  position: relative;
+}
+.qty button::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+/* segmented toggles (Chat Sign in / Sign up, member options): milky track, orb slider */
+.chat-tabs,
+[data-theme="light"] .chat-tabs {
+  background: var(--orb-chip);
+  border: 0;
+  box-shadow: var(--orb-chip-shadow);
+  overflow: visible;
+  padding: 3px;
+}
+.chat-tabs-slider,
+[data-theme="light"] .chat-tabs-slider {
+  background: var(--orb-fill);
+  box-shadow: var(--orb-shadow);
+}
+.chat-tabs button {
+  color: var(--orb-chip-ink);
+  min-height: 38px;
+}
+.chat-tabs button.on,
+[data-theme="light"] .chat-tabs button.on {
+  color: var(--orb-ink);
+}
+.member-segs button,
+[data-theme="light"] .member-segs button {
+  background: var(--orb-chip);
+  border: 0;
+  box-shadow: var(--orb-chip-shadow);
+  color: var(--orb-chip-ink);
+}
+.member-segs button.on,
+[data-theme="light"] .member-segs button.on,
+[data-theme="dark"] .member-segs button.on {
+  background: var(--orb-fill);
+  border: 0;
+  box-shadow: var(--orb-shadow);
+  color: var(--orb-ink);
+}
+/* Globe category chips: milky capsules, the selected one becomes the orb pill */
+.forum-cats {
+  padding-top: 4px;
+  padding-bottom: 12px;
+  padding-inline: 4px;
+  margin-inline: -4px;
+}
+.forum-cat,
+[data-theme="light"] .forum-cat {
+  background: var(--orb-chip);
+  border-color: transparent;
+  box-shadow: var(--orb-chip-shadow);
+  color: var(--orb-chip-ink);
+  min-height: 36px;
+}
+.forum-cat.on,
+[data-theme="light"] .forum-cat.on,
+[data-theme="dark"] .forum-cat.on {
+  background: var(--orb-fill);
+  border-color: transparent;
+  box-shadow: var(--orb-shadow);
+  color: var(--orb-ink);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .forum-cat,
+  .chat-tabs {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

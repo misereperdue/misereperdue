@@ -112,6 +112,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
         cartBadge.classList.toggle("hidden", bagMode || n === 0);
         cartBadge.textContent = n > 99 ? "99+" : String(n);
       }
+      // the cart tab may only just have appeared (fresh load on #cart): re-seat the orb on it
+      refreshSeg();
     }
     var viewScroll = {};
     var pinState = { until: 0, enteredAt: 0, lastTouchAt: 0, running: false, observer: null };
