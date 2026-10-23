@@ -637,7 +637,10 @@ var MPShop = (function () {
     if (e.getAttribute("data-auth") === (on ? "in" : "out")) return;
     e.setAttribute("data-auth", on ? "in" : "out");
     var l = e.querySelector(".gp-line"),
-      a = e.querySelector(".gp-acct");
+      a = e.querySelector(".gp-acct:not(.gp-sec)");
+    e.querySelectorAll(".gp-sec").forEach(function (b) {
+      b.hidden = !on;
+    });
     l &&
       (l.innerHTML = on
         ? "You\u2019re already signed up" + GP_CHECK
@@ -650,11 +653,14 @@ var MPShop = (function () {
         : "Misery Globe. Sign up to get access to exclusive deals and content",
     );
   }
-  // Signed in: go to the Globe and press its "New thread" button once it has
-  // rendered, pressing again if the Globe's own first render replaced it, until
-  // the composer is up (gives up after ~6 s).
-  function gpAct() {
+  // Signed in: Profile / Orders open the same sheets as the profile menu
+  // (chat.js exposes them). Post goes to the Globe and presses its "New thread"
+  // button once it has rendered, pressing again if the Globe's own first render
+  // replaced it, until the composer is up (gives up after ~6 s).
+  function gpAct(act) {
     if (!gpSignedIn()) return y("journal");
+    if ("profile" === act) return window.MPOpenProfile && window.MPOpenProfile();
+    if ("orders" === act) return window.MPOpenOrders && window.MPOpenOrders();
     y("forum");
     var n = 0;
     (function tap() {
@@ -694,7 +700,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="gp-acct gp-sec" data-act="profile" role="button" tabindex="0" hidden>Profile</span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
             e.map(g).join("") +
@@ -718,15 +724,18 @@ var MPShop = (function () {
                 (e.onkeydown = function (t) {
                   ("Enter" !== t.key && " " !== t.key) || (t.preventDefault(), y("forum"));
                 }));
-              var n = e.querySelector(".gp-acct");
-              n &&
+              e.querySelectorAll(".gp-acct").forEach(function (n) {
+                var go = function () {
+                  gpAct(n.getAttribute("data-act"));
+                };
                 ((n.onclick = function (t) {
-                  (t.stopPropagation(), gpAct());
+                  (t.stopPropagation(), go());
                 }),
-                (n.onkeydown = function (t) {
-                  ("Enter" !== t.key && " " !== t.key) ||
-                    (t.preventDefault(), t.stopPropagation(), gpAct());
-                }));
+                  (n.onkeydown = function (t) {
+                    ("Enter" !== t.key && " " !== t.key) ||
+                      (t.preventDefault(), t.stopPropagation(), go());
+                  }));
+              });
               gpAuth();
               mountGlobe(e.querySelector(".gp-canvas"));
             }

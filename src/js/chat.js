@@ -2854,6 +2854,939 @@
       (pt = null),
       document.removeEventListener("click", ht));
   }
+  /* Profile settings sheet (opened from the profile menu and, per dc, from the
+     shop Globe tile via window.MPOpenProfile). */
+  function mpProfileSheet(e) {
+    if (!s) return;
+    gt();
+    var r = document.createElement("div");
+    r.className = "chat-sheet-backdrop" + (e ? " backdrop-enter" : "");
+    var o = document.createElement("div");
+    o.className = "chat-sheet";
+    var i = document.createElement("div");
+    ((i.className = "chat-sheet-anim"),
+      o.setAttribute("role", "dialog"),
+      o.setAttribute("aria-label", "Profile"));
+    var l = document.createElement("button");
+    ((l.type = "button"),
+      (l.className = "chat-sheet-x"),
+      l.setAttribute("aria-label", "Close"),
+      (l.innerHTML =
+        '<svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>'),
+      (l.style.cssText =
+        "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
+      l.addEventListener("click", gt),
+      o.appendChild(l),
+      o.appendChild(z(s)));
+    var d = J(s.username, s.avatar, "lg", X()),
+      u = P(s);
+    u && d.insertAdjacentHTML("beforeend", u);
+    (d.classList.add("chat-avatar-click"),
+      d.setAttribute("role", "button"),
+      d.setAttribute("tabindex", "0"),
+      d.setAttribute("aria-label", "View larger avatar"));
+    var m = function (e) {
+      e && e.stopPropagation();
+      var t = document.createElement("div");
+      t.className = "avatar-options-overlay";
+      var n = document.createElement("div");
+      n.className = "avatar-options-menu";
+      var a = function () {
+          t.parentNode && t.parentNode.removeChild(t);
+        },
+        r = function (e, t) {
+          var r = document.createElement("button");
+          ((r.type = "button"),
+            (r.className = "avatar-options-btn"),
+            (r.textContent = e),
+            r.addEventListener("click", function (e) {
+              (e.stopPropagation(), a(), t());
+            }),
+            n.appendChild(r));
+        };
+      (r("Upload photo", function () {
+        v.click();
+      }),
+        s.hasAvatarImg &&
+          r("Remove photo", function () {
+            ((be.textContent = ""),
+              E("/api/profile", { method: "POST", body: { removeAvatar: !0 } })
+                .then(function (e) {
+                  e && e.ok && e.user
+                    ? ((s = rcKeep(e.user)), h(), (f.textContent = "Photo removed."))
+                    : (be.textContent = (e && e.error) || "Couldn't remove.");
+                })
+                .catch(function () {
+                  be.textContent = "Couldn't reach the chat server.";
+                }));
+          }),
+        r("Cancel", function () {}),
+        t.appendChild(n),
+        t.addEventListener("click", a),
+        document.body.appendChild(t));
+    };
+    (d.addEventListener("click", m),
+      d.addEventListener("keydown", function (e) {
+        ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), m(e));
+      }));
+    var p = document.createElement("div");
+    ((p.className = "chat-sheet-big"), p.appendChild(d), o.appendChild(p));
+    var h = function () {
+        var e = p.querySelector(".chat-avatar-wrap");
+        if (e) {
+          var t = J(s.username, s.avatar, "lg", X()),
+            n = P(s);
+          (n && t.insertAdjacentHTML("beforeend", n),
+            e.parentNode.replaceChild(t, e),
+            t.classList.add("chat-avatar-click"),
+            t.setAttribute("role", "button"),
+            t.setAttribute("tabindex", "0"),
+            t.setAttribute("aria-label", "Change avatar"),
+            t.addEventListener("click", m),
+            t.addEventListener("keydown", function (e) {
+              ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), m(e));
+            }));
+        }
+        var a = c.querySelector(".chat-me");
+        (a &&
+          ((a.innerHTML = ""),
+          a.appendChild(J(s.username, s.avatar, "sm", X())),
+          ne(a)),
+          c
+            .querySelectorAll(
+              '.chat-msg[data-user="' + CSS.escape(s.username) + '"] .chat-avatar-wrap',
+            )
+            .forEach(function (e) {
+              var t = J(s.username, s.avatar, "sm", X()),
+                n = _({ user: s.username });
+              (n && t.insertAdjacentHTML("beforeend", n),
+                ee(t, s.username),
+                e.parentNode.replaceChild(t, e));
+            }));
+      },
+      v = document.createElement("input");
+    ((v.type = "file"),
+      (v.accept = "image/*"),
+      (v.style.display = "none"),
+      v.addEventListener("change", function () {
+        var e = v.files && v.files[0];
+        if (e)
+          if (
+            ((v.value = ""),
+            ["image/jpeg", "image/png", "image/webp", "image/gif"].indexOf(e.type) < 0)
+          )
+            k("Choose a JPEG, PNG, WebP, or GIF image.");
+          else if (e.size > 10485760) k("That image is too big (10 MB max).");
+          else {
+            var t = function () {
+              var t = URL.createObjectURL(e),
+                n = new Image();
+              ((n.onload = function () {
+                var e = 256,
+                  a = document.createElement("canvas");
+                ((a.width = e), (a.height = e));
+                var r = a.getContext("2d"),
+                  o = Math.min(n.width, n.height);
+                (r.drawImage(
+                  n,
+                  (n.width - o) / 2,
+                  (n.height - o) / 2,
+                  o,
+                  o,
+                  0,
+                  0,
+                  e,
+                  e,
+                ),
+                  URL.revokeObjectURL(t));
+                var i = a.toDataURL("image/jpeg", 0.85);
+                ((be.textContent = ""),
+                  (f.textContent = "Uploading..."),
+                  E("/api/avatar", { method: "POST", body: { image: i } })
+                    .then(function (e) {
+                      e && e.ok
+                        ? ((s.hasAvatarImg = !0),
+                          (s.avatarV = e.avatarV),
+                          (window._myAvatarDataUrl = i),
+                          h(),
+                          (f.textContent = "Photo updated."))
+                        : (be.textContent = (e && e.error) || "Couldn't upload.");
+                    })
+                    .catch(function () {
+                      be.textContent = "Couldn't reach the chat server.";
+                    }));
+              }),
+                (n.onerror = function () {
+                  (URL.revokeObjectURL(t),
+                    (be.textContent = "Couldn't read that image."));
+                }),
+                (n.src = t));
+            };
+            if ("image/gif" === e.type) {
+              var n = new FileReader();
+              ((n.onload = function () {
+                for (
+                  var e = new Uint8Array(n.result || []), a = "", r = 0;
+                  r < 4 && r < e.length;
+                  r++
+                )
+                  a += String.fromCharCode(e[r]);
+                "GIF8" === a ? t() : k("That file isn't a real GIF.");
+              }),
+                (n.onerror = function () {
+                  k("Couldn't read that image.");
+                }),
+                n.readAsArrayBuffer(e.slice(0, 4)));
+            } else t();
+          }
+      }));
+    var f = document.createElement("div");
+    ((f.className = "chat-upload-msg"), o.appendChild(f), o.appendChild(v));
+    var g = document.createElement("label");
+    g.className = "chat-field";
+    var b = document.createElement("span");
+    ((b.textContent = "Username"), g.appendChild(b));
+    var y = document.createElement("input");
+    ((y.type = "text"),
+      (y.maxLength = 16),
+      (y.autocapitalize = "none"),
+      (y.spellcheck = !1),
+      (y.value = s.username),
+      g.appendChild(y),
+      o.appendChild(g));
+    var w = function () {
+      var e = y.value.trim();
+      if (e !== s.username) {
+        if (
+          ((be.textContent = ""),
+          !/^[a-zA-Z0-9_]{3,16}$/.test(e) && "l" !== e.toLowerCase())
+        )
+          return (
+            (be.textContent = "Username must be 3–16 characters: letters, numbers, _"),
+            void (y.value = s.username)
+          );
+        E("/api/profile", { method: "POST", body: { username: e } })
+          .then(function (e) {
+            if (e && e.ok && e.user) {
+              var t = s.username;
+              ((s = rcKeep(e.user)),
+                h(),
+                t !== s.username &&
+                  c.querySelectorAll(".chat-msg[data-user]").forEach(function (e) {
+                    if (e.getAttribute("data-user") === t) {
+                      (e.setAttribute("data-user", s.username),
+                        e.classList.add("mine"));
+                      var n = e.querySelector(".chat-msg-head strong");
+                      n && (n.textContent = s.username);
+                      var a = e.querySelector(".chat-avatar");
+                      a &&
+                        (a.textContent =
+                          s.avatar || s.username.charAt(0).toUpperCase());
+                    }
+                  }));
+            } else
+              ((be.textContent = (e && e.error) || "Couldn't save."),
+                (y.value = s.username));
+          })
+          .catch(function () {
+            ((be.textContent = "Couldn't reach the chat server."),
+              (y.value = s.username));
+          });
+      }
+    };
+    (y.addEventListener("change", w),
+      y.addEventListener("keydown", function (e) {
+        "Enter" === e.key && (e.preventDefault(), y.blur());
+      }));
+    var C = document.createElement("div");
+    ((C.className = "chat-sheet-points"),
+      (C.innerHTML =
+        '<span aria-hidden="true">★</span> <span>' +
+        x(s.points || 0) +
+        "</span> points"),
+      o.appendChild(C));
+    var L = s.badges || [];
+    if (L.length) {
+      var S = document.createElement("div");
+      ((S.className = "chat-pw-title"), (S.textContent = "Badges"), o.appendChild(S));
+      var T = document.createElement("div");
+      ((T.className = "chat-badge-row"),
+        L.map(function (e) {
+          return { id: e };
+        }).forEach(function (e) {
+          if (!s.owner || "verified" === e.id) {
+            var t = document.createElement("button");
+            ((t.type = "button"),
+              t.setAttribute("data-badge", e.id),
+              (t.className = "chat-badge-opt" + (N(s) === e.id ? " on" : "")),
+              (t.innerHTML = M(e.id)),
+              t.setAttribute("aria-label", "Show " + e.id + " badge"),
+              t.addEventListener("click", function () {
+                E("/api/badge", {
+                  method: "POST",
+                  body: { badge: N(s) === e.id ? null : e.id },
+                })
+                  .then(function (e) {
+                    if (e && e.ok && e.user) {
+                      var t = N((s = rcKeep(e.user)));
+                      T.querySelectorAll(".chat-badge-opt").forEach(function (e) {
+                        e.classList.toggle("on", e.getAttribute("data-badge") === t);
+                      });
+                      var n = p.querySelector(".chat-avatar-wrap");
+                      if (n) {
+                        var a = J(s.username, s.avatar, "lg", X()),
+                          r = P(s);
+                        (r && a.insertAdjacentHTML("beforeend", r),
+                          n.parentNode.replaceChild(a, n));
+                      }
+                      var o = c.querySelector(".chat-me");
+                      o &&
+                        ((o.innerHTML = ""),
+                        o.appendChild(J(s.username, s.avatar, "sm", X())),
+                        ne(o));
+                    }
+                  })
+                  .catch(function () {});
+              }),
+              T.appendChild(t));
+          }
+        }),
+        o.appendChild(T));
+    }
+    var A = document.createElement("div");
+    ((A.className = "chat-pw-title"), (A.textContent = "Bio"), o.appendChild(A));
+    var I = document.createElement("textarea");
+    ((I.className = "chat-bio"),
+      (I.maxLength = 250),
+      (I.rows = 3),
+      (I.placeholder = "Tell the chat a little about yourself…"),
+      (I.value = s.bio || ""),
+      o.appendChild(I));
+    var q = document.createElement("div");
+    ((q.className = "chat-bio-count"), o.appendChild(q));
+    var O = function () {
+      q.textContent = I.value.length + "/250";
+    };
+    (I.addEventListener("input", O), O());
+    var H = function () {
+      var e = I.value.trim().slice(0, 250);
+      e !== (s.bio || "") &&
+        E("/api/profile", { method: "POST", body: { bio: e } })
+          .then(function (e) {
+            e && e.ok && e.user
+              ? (s = rcKeep(e.user))
+              : (be.textContent = (e && e.error) || "Couldn't save bio.");
+          })
+          .catch(function () {
+            be.textContent = "Couldn't reach the chat server.";
+          });
+    };
+    I.addEventListener("blur", H);
+    var j = document.createElement("div");
+    ((j.className = "chat-pw-title"),
+      (j.textContent = "Notifications"),
+      o.appendChild(j));
+    var R = document.createElement("div"),
+      B = !1;
+    try {
+      B =
+        !(
+          !window.matchMedia || !window.matchMedia("(display-mode: standalone)").matches
+        ) || !!navigator.standalone;
+    } catch (e) {}
+    ((R.textContent = B
+      ? "Get notified for mentions, replies, and VIP upgrades."
+      : "Download the web app to enable push notifications."),
+      (R.style.cssText = "font-size:12px;opacity:.55;margin:2px 0 2px;"),
+      o.appendChild(R));
+    var U = (function (e, t) {
+        var n = document.createElement("div");
+        n.style.cssText =
+          "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;";
+        var a = document.createElement("span");
+        ((a.textContent = "Push notifications"), (a.style.cssText = "font-size:14px;"));
+        var r = document.createElement("button");
+        ((r.type = "button"),
+          r.setAttribute("aria-label", "Toggle push notifications"),
+          (r.style.cssText =
+            "position:relative;flex:none;width:46px;height:27px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;padding:0;"));
+        var o = document.createElement("span");
+        ((o.style.cssText =
+          "position:absolute;top:2px;width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left .2s;"),
+          r.appendChild(o));
+        var i = !!e,
+          c = function () {
+            ((r.style.background = i ? "#4ade80" : "rgba(255,255,255,0.25)"),
+              (o.style.left = i ? "21px" : "2px"));
+          };
+        return (
+          c(),
+          r.addEventListener("click", function () {
+            ((i = !i), c());
+            try {
+              t(i);
+            } catch (e) {}
+          }),
+          n.appendChild(a),
+          n.appendChild(r),
+          {
+            el: n,
+            set: function (e) {
+              ((i = !!e), c());
+            },
+          }
+        );
+      })(!1, function (e) {
+        e
+          ? ("Notification" in window
+              ? Notification.requestPermission()
+                  .then(function (e) {
+                    if ("granted" !== e) throw new Error("Permission denied");
+                    return navigator.serviceWorker.ready;
+                  })
+                  .then(function (e) {
+                    return e.pushManager.subscribe({
+                      userVisibleOnly: !0,
+                      applicationServerKey: xt(Ct),
+                    });
+                  })
+                  .then(function (e) {
+                    return E("/api/push/subscribe", {
+                      method: "POST",
+                      body: { subscription: e.toJSON() },
+                    }).then(function (e) {
+                      if (!e || !e.ok)
+                        throw new Error(
+                          (e && e.error) || "Couldn't save subscription.",
+                        );
+                    });
+                  })
+              : Promise.reject(new Error("Notifications not supported on this browser"))
+            ).catch(function (e) {
+              (U.set(!1),
+                (be.textContent =
+                  (e && e.message) || "Couldn't enable notifications."));
+            })
+          : kt().catch(function () {});
+      }),
+      D = !1;
+    try {
+      D =
+        !(
+          !window.matchMedia || !window.matchMedia("(display-mode: standalone)").matches
+        ) || !!navigator.standalone;
+    } catch (e) {}
+    D && o.appendChild(U.el);
+    var F = document.createElement("div");
+    ((F.style.cssText = "font-size:11px;opacity:.45;margin:2px 0 8px;"),
+      (F.textContent = "Push ID: —"),
+      D && o.appendChild(F));
+    function V(e, t, n, a) {
+      var r = document.createElement(e);
+      return (
+        t && (r.className = t),
+        null != a && (r.textContent = a),
+        n && n.appendChild(r),
+        r
+      );
+    }
+    (Et().then(function (e) {
+      if ((U.set(!!e), e))
+        try {
+          var t = e.toJSON(),
+            n =
+              (t.keys && t.keys.p256dh ? t.keys.p256dh : "") +
+              "|" +
+              (t.keys && t.keys.auth ? t.keys.auth : "");
+          window.crypto &&
+            crypto.subtle &&
+            crypto.subtle.digest &&
+            crypto.subtle
+              .digest("SHA-256", new TextEncoder().encode(n))
+              .then(function (e) {
+                var t = Array.from(new Uint8Array(e))
+                  .map(function (e) {
+                    return e.toString(16).padStart(2, "0");
+                  })
+                  .join("")
+                  .slice(0, 12);
+                F.textContent = "Push ID: " + t;
+              })
+              .catch(function () {});
+        } catch (e) {}
+    }),
+      V("div", "chat-pw-title", o, "Signature"));
+    var W = !(!s.member && !s.owner);
+    V(
+      "div",
+      null,
+      o,
+      W
+        ? "Shows under your forum posts. You can add photos and embeds."
+        : "Shows under your forum posts. Members can also add photos and embeds.",
+    ).style.cssText = "font-size:12px;opacity:.55;margin:2px 0 8px;";
+    var Z = V("div", "sig-bubble", o),
+      G = V("div", "sig-mount", Z),
+      Y = V("div", "sig-embeds", Z),
+      K = V("div", "chat-bio-count", o),
+      te = [],
+      ae = null,
+      re = null,
+      oe = null;
+    function ie(e) {
+      return (window.MPSocialLogos || {})[e] || "";
+    }
+    function ce(e) {
+      var t,
+        n,
+        a,
+        r = String(e || "").trim();
+      if (
+        (t = r.match(
+          /^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,30})/i,
+        ))
+      )
+        ((n = "x"), (a = t[1]));
+      else if (
+        (t = r.match(/^https?:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9_.]{1,30})/i))
+      )
+        ((n = "instagram"), (a = t[1]));
+      else if (
+        (t = r.match(/^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9_.]{1,30})/i))
+      )
+        ((n = "tiktok"), (a = "@" + t[1]));
+      else {
+        if (
+          !(t = r.match(
+            /^https?:\/\/(?:www\.)?youtube\.com\/((?:@|channel\/|c\/|user\/)[A-Za-z0-9_.\/-]{1,40})/i,
+          ))
+        )
+          return null;
+        ((n = "youtube"), (a = t[1]));
+      }
+      return {
+        kind: "social",
+        network: n,
+        handle: "x" === n || "instagram" === n ? "@" + a : a,
+        url:
+          {
+            x: "https://x.com",
+            instagram: "https://instagram.com",
+            tiktok: "https://tiktok.com",
+            youtube: "https://youtube.com",
+          }[n] +
+          "/" +
+          a,
+      };
+    }
+    function se(e) {
+      if (!e) return "🔗 Embed";
+      if ("social" === e.kind) return ie(e.network) + " " + x(e.handle);
+      var t = e.src || "";
+      return /spotify/i.test(t)
+        ? "🎵 Spotify"
+        : /soundcloud/i.test(t)
+          ? "🎵 SoundCloud"
+          : /vimeo/i.test(t)
+            ? "🎬 Vimeo"
+            : "🔗 Embed";
+    }
+    function le() {
+      ((Y.innerHTML = ""),
+        te.forEach(function (e, t) {
+          var n = V("span", "sig-chip", Y);
+          n.insertAdjacentHTML("afterbegin", se(e) + " ");
+          var a = V("button", "sig-chip-x", n, "×");
+          ((a.type = "button"),
+            a.setAttribute("aria-label", "Remove embed"),
+            a.addEventListener("click", function () {
+              (te.splice(t, 1), le(), pe());
+            }));
+        }));
+    }
+    function de(e) {
+      try {
+        var t = new URL(e);
+        return (
+          "https:" === t.protocol &&
+          ("open.spotify.com" === t.hostname
+            ? 0 === t.pathname.indexOf("/embed/")
+            : "player.vimeo.com" === t.hostname
+              ? 0 === t.pathname.indexOf("/video/")
+              : "w.soundcloud.com" === t.hostname
+                ? 0 === t.pathname.indexOf("/player/")
+                : ("www.youtube.com" === t.hostname ||
+                    "www.youtube-nocookie.com" === t.hostname) &&
+                  0 === t.pathname.indexOf("/embed/"))
+        );
+      } catch (e) {
+        return !1;
+      }
+    }
+    function ue(e) {
+      var t = ce(e);
+      if (t) return t;
+      var n = String(e || "").trim(),
+        a =
+          n.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) ||
+          n.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i),
+        r = function (e) {
+          return { kind: "iframe", src: e };
+        },
+        o = (n = a ? a[1] : n).match(
+          /open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i,
+        );
+      if (o) return r("https://open.spotify.com/embed/" + o[1] + "/" + o[2]);
+      var i = n.match(/vimeo\.com\/(\d+)/i);
+      if (i) return r("https://player.vimeo.com/video/" + i[1]);
+      if (de(n)) return r(n);
+      try {
+        var c = new URL(-1 === n.indexOf("://") ? "https://" + n : n);
+        if ("soundcloud.com" === c.hostname || c.hostname.endsWith(".soundcloud.com"))
+          return r("https://w.soundcloud.com/player/?url=" + encodeURIComponent(n));
+      } catch (e) {}
+      return null;
+    }
+    function me() {
+      var e = "";
+      return (
+        ae
+          ? (e = ae.getHTML())
+          : re &&
+            (e = re.value
+              .split(/\n\s*\n/)
+              .map(function (e) {
+                return "<p>" + x(e).replace(/\n/g, "<br>") + "</p>";
+              })
+              .join("")),
+        te.forEach(function (t) {
+          "social" === t.kind
+            ? (e +=
+                '<div class="sig-social"><a href="' +
+                String(t.url).replace(/"/g, "%22") +
+                '">' +
+                ie(t.network) +
+                " " +
+                x(t.handle) +
+                "</a></div>")
+            : t.src &&
+              de(t.src) &&
+              (e +=
+                '<div class="sig-embed"><iframe src="' +
+                t.src.replace(/"/g, "%22") +
+                '" allowfullscreen loading="lazy" sandbox="allow-scripts"></iframe></div>');
+        }),
+        "<p></p>" === e && (e = ""),
+        e
+      );
+    }
+    function pe() {
+      E("/api/profile", { method: "POST", body: { signature: me() } })
+        .then(function (e) {
+          e && e.ok && e.user
+            ? ((s = rcKeep(e.user)),
+              (K.textContent = "Saved ✓"),
+              setTimeout(function () {
+                "Saved ✓" === K.textContent && (K.textContent = "");
+              }, 2e3))
+            : (K.textContent = (e && e.error) || "Couldn't save signature.");
+        })
+        .catch(function () {
+          K.textContent = "Couldn't reach the server.";
+        });
+    }
+    function he() {
+      ((K.textContent = ""), clearTimeout(oe), (oe = setTimeout(pe, 1200)));
+    }
+    !(function () {
+      var e = s.signature || "";
+      try {
+        var t = new DOMParser().parseFromString(e, "text/html");
+        (t.querySelectorAll("iframe").forEach(function (e) {
+          var t = e.getAttribute("src") || "";
+          (t && de(t) && te.length < 2 && te.push({ kind: "iframe", src: t }),
+            ((e.closest && e.closest(".sig-embed")) || e).remove());
+        }),
+          t.querySelectorAll(".sig-social").forEach(function (e) {
+            var t = e.querySelector("a"),
+              n = ce((t && t.getAttribute("href")) || "");
+            (n && te.length < 2 && te.push(n), e.remove());
+          }),
+          (e = t.body.innerHTML));
+      } catch (e) {}
+      if ((le(), window.MPSigEditor)) {
+        if (window.__mpSigEd) {
+          try {
+            window.__mpSigEd.destroy();
+          } catch (e) {}
+          window.__mpSigEd = null;
+        }
+        window.MPSigEditor.mount(G, {
+          html: e,
+          member: W,
+          placeholder: "Your signature…",
+        }).then(function (t) {
+          ((ae = t),
+            (window.__mpSigEd = t),
+            t
+              ? t.on("update", he)
+              : (((re = V("textarea", "chat-bio", G)).rows = 3),
+                (re.value = e.replace(/<[^>]*>/g, "")),
+                re.addEventListener("blur", pe)));
+        });
+      }
+      if (W) {
+        var n = V("button", "btn sig-embed-btn", Z, "＋ Add embed");
+        n.type = "button";
+        var a = V("div", "sig-embed-bar hidden", Z);
+        ((a.innerHTML =
+          '<input type="text" class="sig-embed-input" placeholder="Paste a music link or a social profile link…"><button type="button" class="btn accent sig-embed-add">Add</button>'),
+          n.addEventListener("click", function () {
+            a.classList.toggle("hidden");
+          }),
+          a.querySelector(".sig-embed-add").addEventListener("click", function () {
+            var e = a.querySelector(".sig-embed-input"),
+              t = ue(e.value);
+            t
+              ? te.length >= 2
+                ? (K.textContent = "Two embeds max.")
+                : (te.push(t), (e.value = ""), a.classList.add("hidden"), le(), pe())
+              : (K.textContent =
+                  "That embed isn't supported — try a Spotify, SoundCloud, Vimeo or social profile link.");
+          }));
+      }
+    })();
+    var ve = V("div", null, o);
+    ((ve.style.cssText =
+      "display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px;"),
+      (V("span", null, ve, "Show signatures").style.cssText =
+        "font-size:13px;opacity:.75;"));
+    var fe = V("button", "btn", ve, "On");
+    function ge() {
+      var e = !0;
+      try {
+        e = "0" !== localStorage.getItem("mp_show_sigs");
+      } catch (e) {}
+      fe.textContent = e ? "On" : "Off";
+    }
+    ((fe.type = "button"),
+      fe.addEventListener("click", function () {
+        try {
+          var e = "0" !== localStorage.getItem("mp_show_sigs");
+          localStorage.setItem("mp_show_sigs", e ? "0" : "1");
+        } catch (e) {}
+        ge();
+      }),
+      ge());
+    var be = document.createElement("div");
+    ((be.className = "chat-err"), be.setAttribute("role", "alert"), o.appendChild(be));
+    var ye = document.createElement("div");
+    ((ye.className = "chat-pw-title"),
+      (ye.textContent = "Change password"),
+      o.appendChild(ye));
+    var we = document.createElement("label");
+    we.className = "chat-field";
+    var Ce = document.createElement("span");
+    ((Ce.textContent = "Current password"), we.appendChild(Ce));
+    var xe = document.createElement("input");
+    ((xe.type = "password"),
+      (xe.autocomplete = "current-password"),
+      we.appendChild(xe),
+      o.appendChild(we));
+    var Ee = document.createElement("label");
+    Ee.className = "chat-field";
+    var ke = document.createElement("span");
+    ((ke.textContent = "New password"), Ee.appendChild(ke));
+    var Le = document.createElement("input");
+    ((Le.type = "password"),
+      (Le.autocomplete = "new-password"),
+      Ee.appendChild(Le),
+      o.appendChild(Ee));
+    var Se = document.createElement("div");
+    ((Se.className = "pwd-strength"),
+      (Se.hidden = !0),
+      (Se.innerHTML =
+        '<div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-level"></div>'),
+      o.appendChild(Se));
+    var Me = Se.querySelectorAll(".pwd-bars span"),
+      Te = Se.querySelector(".pwd-level"),
+      Ae = ["Weak", "Fair", "Good", "Strong"],
+      Ne = ["#FF7A7A", "#F59E0B", "#38BDF8", "#6EE7B7"];
+    function Pe(e) {
+      if (!e) return 0;
+      var t = 0;
+      return (
+        e.length >= 8 && (t += 1),
+        /[A-Z]/.test(e) && (t += 1),
+        /[0-9]/.test(e) && (t += 1),
+        /[^A-Za-z0-9]/.test(e) && (t += 1),
+        t
+      );
+    }
+    function Ie() {
+      var e = Le.value;
+      if (e) {
+        Se.hidden = !1;
+        for (var t = Pe(e), n = 0; n < Me.length; n++)
+          Me[n].style.background = n < t ? Ne[t - 1] : "";
+        ((Te.textContent = Ae[t - 1] || "Weak"),
+          (Te.style.color = t > 0 ? Ne[t - 1] : ""),
+          je());
+      } else Se.hidden = !0;
+    }
+    Le.addEventListener("input", Ie);
+    var qe = document.createElement("label");
+    qe.className = "chat-field";
+    var Oe = document.createElement("span");
+    ((Oe.textContent = "Confirm new password"), qe.appendChild(Oe));
+    var _e = document.createElement("input");
+    ((_e.type = "password"),
+      (_e.autocomplete = "new-password"),
+      qe.appendChild(_e),
+      o.appendChild(qe));
+    var He = document.createElement("div");
+    function je() {
+      var e = Le.value,
+        t = _e.value;
+      t
+        ? ((He.hidden = !1),
+          e === t
+            ? ((He.textContent = "✓ Passwords match"), (He.style.color = "#6EE7B7"))
+            : ((He.textContent = "✗ Passwords do not match"),
+              (He.style.color = "#FF7A7A")))
+        : (He.hidden = !0);
+    }
+    ((He.className = "pwd-match"),
+      (He.hidden = !0),
+      o.appendChild(He),
+      _e.addEventListener("input", je));
+    var Re = document.createElement("button");
+    ((Re.type = "button"),
+      (Re.className = "btn chat-pw"),
+      (Re.textContent = "Change password"),
+      Re.addEventListener("click", function () {
+        ((be.textContent = ""),
+          !xe.value || Le.value.length < 4
+            ? (be.textContent = "Enter your current password and a new one (min 4).")
+            : Le.value === _e.value
+              ? ((Re.disabled = !0),
+                E("/api/password", {
+                  method: "POST",
+                  body: { current: xe.value, new: Le.value },
+                })
+                  .then(function (e) {
+                    ((Re.disabled = !1),
+                      e && e.ok
+                        ? ((xe.value = ""),
+                          (Le.value = ""),
+                          (_e.value = ""),
+                          (be.textContent = "Password changed."))
+                        : (be.textContent = (e && e.error) || "Couldn't change it."));
+                  })
+                  .catch(function () {
+                    ((Re.disabled = !1),
+                      (be.textContent = "Couldn't reach the chat server."));
+                  }))
+              : (be.textContent = "New passwords do not match."));
+      }),
+      o.appendChild(Re));
+    var Be = document.createElement("div");
+    if (((Be.style.marginTop = "18px"), (Be.className = "chat-xbox"), s.xUsername)) {
+      Be.innerHTML =
+        '<span class="chat-xlogo">' +
+        a +
+        '</span><span class="chat-xhandle">@' +
+        x(s.xUsername) +
+        '</span><span class="chat-xstatus">Connected</span>';
+      var Ue = document.createElement("button");
+      ((Ue.type = "button"),
+        (Ue.className = "btn chat-xunlink"),
+        (Ue.textContent = "Unlink"),
+        Ue.addEventListener("click", function () {
+          k("Unlink your X account?", {
+            okText: "Unlink",
+            cancelText: "Cancel",
+            onOk: function () {
+              ((Ue.disabled = !0),
+                E("/api/x/unlink", { method: "POST", body: {} })
+                  .then(function (e) {
+                    e && e.ok
+                      ? ((s.xUsername = null), location.reload())
+                      : ((Ue.disabled = !1), k("Couldn't unlink."));
+                  })
+                  .catch(function () {
+                    Ue.disabled = !1;
+                  }));
+            },
+          });
+        }),
+        Be.appendChild(Ue));
+    } else {
+      Be.innerHTML =
+        '<span class="chat-xlogo">' +
+        a +
+        '</span><span class="chat-xstatus dim">Not connected</span>';
+      var De = document.createElement("button");
+      ((De.type = "button"),
+        (De.className = "btn chat-xlink"),
+        (De.textContent = "Connect"),
+        De.addEventListener("click", function () {
+          ((De.disabled = !0),
+            (De.textContent = "Connecting..."),
+            E("/api/x/link-start", { method: "POST", body: {} })
+              .then(function (e) {
+                if (e && e.ok && e.linkToken) {
+                  try {
+                    sessionStorage.setItem("x_link_token", e.linkToken);
+                  } catch (e) {}
+                  try {
+                    localStorage.setItem("x_link_token", e.linkToken);
+                  } catch (e) {}
+                  try {
+                    localStorage.setItem("x_link_pending", String(Date.now()));
+                  } catch (e) {}
+                  var a =
+                    "https://x.com/i/oauth2/authorize?response_type=code&client_id=" +
+                    encodeURIComponent(t) +
+                    "&redirect_uri=" +
+                    encodeURIComponent(n) +
+                    "&scope=" +
+                    encodeURIComponent("users.read tweet.read") +
+                    "&state=" +
+                    encodeURIComponent("link-" + e.linkToken) +
+                    (e.codeChallenge
+                      ? "&code_challenge=" +
+                        encodeURIComponent(e.codeChallenge) +
+                        "&code_challenge_method=S256"
+                      : "");
+                  location.href = a;
+                } else
+                  ((De.disabled = !1),
+                    (De.textContent = "Connect"),
+                    alert((e && e.error) || "Couldn't start X link."));
+              })
+              .catch(function () {
+                ((De.disabled = !1), (De.textContent = "Connect"));
+              }));
+        }),
+        Be.appendChild(De));
+    }
+    o.appendChild(Be);
+    o.appendChild(rcSettingsRow());
+    var ze = document.createElement("button");
+    ((ze.type = "button"),
+      (ze.className = "chat-logout"),
+      (ze.textContent = "Sign out"),
+      ze.addEventListener("click", ft),
+      o.appendChild(ze),
+      $(i, o),
+      r.addEventListener("click", function (e) {
+        e.target === r && gt();
+      }),
+      document.body.appendChild(r),
+      document.body.appendChild(i),
+      e && Q(o));
+  }
   function vt(e) {
     if (pt) ht();
     else {
@@ -2868,936 +3801,7 @@
           (e.stopPropagation(),
             ht(),
             setTimeout(function () {
-              !(function (e) {
-                gt();
-                var r = document.createElement("div");
-                r.className = "chat-sheet-backdrop" + (e ? " backdrop-enter" : "");
-                var o = document.createElement("div");
-                o.className = "chat-sheet";
-                var i = document.createElement("div");
-                ((i.className = "chat-sheet-anim"),
-                  o.setAttribute("role", "dialog"),
-                  o.setAttribute("aria-label", "Profile"));
-                var l = document.createElement("button");
-                ((l.type = "button"),
-                  (l.className = "chat-sheet-x"),
-                  l.setAttribute("aria-label", "Close"),
-                  (l.innerHTML =
-                    '<svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>'),
-                  (l.style.cssText =
-                    "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
-                  l.addEventListener("click", gt),
-                  o.appendChild(l),
-                  o.appendChild(z(s)));
-                var d = J(s.username, s.avatar, "lg", X()),
-                  u = P(s);
-                u && d.insertAdjacentHTML("beforeend", u);
-                (d.classList.add("chat-avatar-click"),
-                  d.setAttribute("role", "button"),
-                  d.setAttribute("tabindex", "0"),
-                  d.setAttribute("aria-label", "View larger avatar"));
-                var m = function (e) {
-                  e && e.stopPropagation();
-                  var t = document.createElement("div");
-                  t.className = "avatar-options-overlay";
-                  var n = document.createElement("div");
-                  n.className = "avatar-options-menu";
-                  var a = function () {
-                      t.parentNode && t.parentNode.removeChild(t);
-                    },
-                    r = function (e, t) {
-                      var r = document.createElement("button");
-                      ((r.type = "button"),
-                        (r.className = "avatar-options-btn"),
-                        (r.textContent = e),
-                        r.addEventListener("click", function (e) {
-                          (e.stopPropagation(), a(), t());
-                        }),
-                        n.appendChild(r));
-                    };
-                  (r("Upload photo", function () {
-                    v.click();
-                  }),
-                    s.hasAvatarImg &&
-                      r("Remove photo", function () {
-                        ((be.textContent = ""),
-                          E("/api/profile", { method: "POST", body: { removeAvatar: !0 } })
-                            .then(function (e) {
-                              e && e.ok && e.user
-                                ? ((s = rcKeep(e.user)), h(), (f.textContent = "Photo removed."))
-                                : (be.textContent = (e && e.error) || "Couldn't remove.");
-                            })
-                            .catch(function () {
-                              be.textContent = "Couldn't reach the chat server.";
-                            }));
-                      }),
-                    r("Cancel", function () {}),
-                    t.appendChild(n),
-                    t.addEventListener("click", a),
-                    document.body.appendChild(t));
-                };
-                (d.addEventListener("click", m),
-                  d.addEventListener("keydown", function (e) {
-                    ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), m(e));
-                  }));
-                var p = document.createElement("div");
-                ((p.className = "chat-sheet-big"), p.appendChild(d), o.appendChild(p));
-                var h = function () {
-                    var e = p.querySelector(".chat-avatar-wrap");
-                    if (e) {
-                      var t = J(s.username, s.avatar, "lg", X()),
-                        n = P(s);
-                      (n && t.insertAdjacentHTML("beforeend", n),
-                        e.parentNode.replaceChild(t, e),
-                        t.classList.add("chat-avatar-click"),
-                        t.setAttribute("role", "button"),
-                        t.setAttribute("tabindex", "0"),
-                        t.setAttribute("aria-label", "Change avatar"),
-                        t.addEventListener("click", m),
-                        t.addEventListener("keydown", function (e) {
-                          ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), m(e));
-                        }));
-                    }
-                    var a = c.querySelector(".chat-me");
-                    (a &&
-                      ((a.innerHTML = ""),
-                      a.appendChild(J(s.username, s.avatar, "sm", X())),
-                      ne(a)),
-                      c
-                        .querySelectorAll(
-                          '.chat-msg[data-user="' + CSS.escape(s.username) + '"] .chat-avatar-wrap',
-                        )
-                        .forEach(function (e) {
-                          var t = J(s.username, s.avatar, "sm", X()),
-                            n = _({ user: s.username });
-                          (n && t.insertAdjacentHTML("beforeend", n),
-                            ee(t, s.username),
-                            e.parentNode.replaceChild(t, e));
-                        }));
-                  },
-                  v = document.createElement("input");
-                ((v.type = "file"),
-                  (v.accept = "image/*"),
-                  (v.style.display = "none"),
-                  v.addEventListener("change", function () {
-                    var e = v.files && v.files[0];
-                    if (e)
-                      if (
-                        ((v.value = ""),
-                        ["image/jpeg", "image/png", "image/webp", "image/gif"].indexOf(e.type) < 0)
-                      )
-                        k("Choose a JPEG, PNG, WebP, or GIF image.");
-                      else if (e.size > 10485760) k("That image is too big (10 MB max).");
-                      else {
-                        var t = function () {
-                          var t = URL.createObjectURL(e),
-                            n = new Image();
-                          ((n.onload = function () {
-                            var e = 256,
-                              a = document.createElement("canvas");
-                            ((a.width = e), (a.height = e));
-                            var r = a.getContext("2d"),
-                              o = Math.min(n.width, n.height);
-                            (r.drawImage(
-                              n,
-                              (n.width - o) / 2,
-                              (n.height - o) / 2,
-                              o,
-                              o,
-                              0,
-                              0,
-                              e,
-                              e,
-                            ),
-                              URL.revokeObjectURL(t));
-                            var i = a.toDataURL("image/jpeg", 0.85);
-                            ((be.textContent = ""),
-                              (f.textContent = "Uploading..."),
-                              E("/api/avatar", { method: "POST", body: { image: i } })
-                                .then(function (e) {
-                                  e && e.ok
-                                    ? ((s.hasAvatarImg = !0),
-                                      (s.avatarV = e.avatarV),
-                                      (window._myAvatarDataUrl = i),
-                                      h(),
-                                      (f.textContent = "Photo updated."))
-                                    : (be.textContent = (e && e.error) || "Couldn't upload.");
-                                })
-                                .catch(function () {
-                                  be.textContent = "Couldn't reach the chat server.";
-                                }));
-                          }),
-                            (n.onerror = function () {
-                              (URL.revokeObjectURL(t),
-                                (be.textContent = "Couldn't read that image."));
-                            }),
-                            (n.src = t));
-                        };
-                        if ("image/gif" === e.type) {
-                          var n = new FileReader();
-                          ((n.onload = function () {
-                            for (
-                              var e = new Uint8Array(n.result || []), a = "", r = 0;
-                              r < 4 && r < e.length;
-                              r++
-                            )
-                              a += String.fromCharCode(e[r]);
-                            "GIF8" === a ? t() : k("That file isn't a real GIF.");
-                          }),
-                            (n.onerror = function () {
-                              k("Couldn't read that image.");
-                            }),
-                            n.readAsArrayBuffer(e.slice(0, 4)));
-                        } else t();
-                      }
-                  }));
-                var f = document.createElement("div");
-                ((f.className = "chat-upload-msg"), o.appendChild(f), o.appendChild(v));
-                var g = document.createElement("label");
-                g.className = "chat-field";
-                var b = document.createElement("span");
-                ((b.textContent = "Username"), g.appendChild(b));
-                var y = document.createElement("input");
-                ((y.type = "text"),
-                  (y.maxLength = 16),
-                  (y.autocapitalize = "none"),
-                  (y.spellcheck = !1),
-                  (y.value = s.username),
-                  g.appendChild(y),
-                  o.appendChild(g));
-                var w = function () {
-                  var e = y.value.trim();
-                  if (e !== s.username) {
-                    if (
-                      ((be.textContent = ""),
-                      !/^[a-zA-Z0-9_]{3,16}$/.test(e) && "l" !== e.toLowerCase())
-                    )
-                      return (
-                        (be.textContent = "Username must be 3–16 characters: letters, numbers, _"),
-                        void (y.value = s.username)
-                      );
-                    E("/api/profile", { method: "POST", body: { username: e } })
-                      .then(function (e) {
-                        if (e && e.ok && e.user) {
-                          var t = s.username;
-                          ((s = rcKeep(e.user)),
-                            h(),
-                            t !== s.username &&
-                              c.querySelectorAll(".chat-msg[data-user]").forEach(function (e) {
-                                if (e.getAttribute("data-user") === t) {
-                                  (e.setAttribute("data-user", s.username),
-                                    e.classList.add("mine"));
-                                  var n = e.querySelector(".chat-msg-head strong");
-                                  n && (n.textContent = s.username);
-                                  var a = e.querySelector(".chat-avatar");
-                                  a &&
-                                    (a.textContent =
-                                      s.avatar || s.username.charAt(0).toUpperCase());
-                                }
-                              }));
-                        } else
-                          ((be.textContent = (e && e.error) || "Couldn't save."),
-                            (y.value = s.username));
-                      })
-                      .catch(function () {
-                        ((be.textContent = "Couldn't reach the chat server."),
-                          (y.value = s.username));
-                      });
-                  }
-                };
-                (y.addEventListener("change", w),
-                  y.addEventListener("keydown", function (e) {
-                    "Enter" === e.key && (e.preventDefault(), y.blur());
-                  }));
-                var C = document.createElement("div");
-                ((C.className = "chat-sheet-points"),
-                  (C.innerHTML =
-                    '<span aria-hidden="true">★</span> <span>' +
-                    x(s.points || 0) +
-                    "</span> points"),
-                  o.appendChild(C));
-                var L = s.badges || [];
-                if (L.length) {
-                  var S = document.createElement("div");
-                  ((S.className = "chat-pw-title"), (S.textContent = "Badges"), o.appendChild(S));
-                  var T = document.createElement("div");
-                  ((T.className = "chat-badge-row"),
-                    L.map(function (e) {
-                      return { id: e };
-                    }).forEach(function (e) {
-                      if (!s.owner || "verified" === e.id) {
-                        var t = document.createElement("button");
-                        ((t.type = "button"),
-                          t.setAttribute("data-badge", e.id),
-                          (t.className = "chat-badge-opt" + (N(s) === e.id ? " on" : "")),
-                          (t.innerHTML = M(e.id)),
-                          t.setAttribute("aria-label", "Show " + e.id + " badge"),
-                          t.addEventListener("click", function () {
-                            E("/api/badge", {
-                              method: "POST",
-                              body: { badge: N(s) === e.id ? null : e.id },
-                            })
-                              .then(function (e) {
-                                if (e && e.ok && e.user) {
-                                  var t = N((s = rcKeep(e.user)));
-                                  T.querySelectorAll(".chat-badge-opt").forEach(function (e) {
-                                    e.classList.toggle("on", e.getAttribute("data-badge") === t);
-                                  });
-                                  var n = p.querySelector(".chat-avatar-wrap");
-                                  if (n) {
-                                    var a = J(s.username, s.avatar, "lg", X()),
-                                      r = P(s);
-                                    (r && a.insertAdjacentHTML("beforeend", r),
-                                      n.parentNode.replaceChild(a, n));
-                                  }
-                                  var o = c.querySelector(".chat-me");
-                                  o &&
-                                    ((o.innerHTML = ""),
-                                    o.appendChild(J(s.username, s.avatar, "sm", X())),
-                                    ne(o));
-                                }
-                              })
-                              .catch(function () {});
-                          }),
-                          T.appendChild(t));
-                      }
-                    }),
-                    o.appendChild(T));
-                }
-                var A = document.createElement("div");
-                ((A.className = "chat-pw-title"), (A.textContent = "Bio"), o.appendChild(A));
-                var I = document.createElement("textarea");
-                ((I.className = "chat-bio"),
-                  (I.maxLength = 250),
-                  (I.rows = 3),
-                  (I.placeholder = "Tell the chat a little about yourself…"),
-                  (I.value = s.bio || ""),
-                  o.appendChild(I));
-                var q = document.createElement("div");
-                ((q.className = "chat-bio-count"), o.appendChild(q));
-                var O = function () {
-                  q.textContent = I.value.length + "/250";
-                };
-                (I.addEventListener("input", O), O());
-                var H = function () {
-                  var e = I.value.trim().slice(0, 250);
-                  e !== (s.bio || "") &&
-                    E("/api/profile", { method: "POST", body: { bio: e } })
-                      .then(function (e) {
-                        e && e.ok && e.user
-                          ? (s = rcKeep(e.user))
-                          : (be.textContent = (e && e.error) || "Couldn't save bio.");
-                      })
-                      .catch(function () {
-                        be.textContent = "Couldn't reach the chat server.";
-                      });
-                };
-                I.addEventListener("blur", H);
-                var j = document.createElement("div");
-                ((j.className = "chat-pw-title"),
-                  (j.textContent = "Notifications"),
-                  o.appendChild(j));
-                var R = document.createElement("div"),
-                  B = !1;
-                try {
-                  B =
-                    !(
-                      !window.matchMedia || !window.matchMedia("(display-mode: standalone)").matches
-                    ) || !!navigator.standalone;
-                } catch (e) {}
-                ((R.textContent = B
-                  ? "Get notified for mentions, replies, and VIP upgrades."
-                  : "Download the web app to enable push notifications."),
-                  (R.style.cssText = "font-size:12px;opacity:.55;margin:2px 0 2px;"),
-                  o.appendChild(R));
-                var U = (function (e, t) {
-                    var n = document.createElement("div");
-                    n.style.cssText =
-                      "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;";
-                    var a = document.createElement("span");
-                    ((a.textContent = "Push notifications"), (a.style.cssText = "font-size:14px;"));
-                    var r = document.createElement("button");
-                    ((r.type = "button"),
-                      r.setAttribute("aria-label", "Toggle push notifications"),
-                      (r.style.cssText =
-                        "position:relative;flex:none;width:46px;height:27px;border-radius:999px;border:none;cursor:pointer;transition:background .2s;padding:0;"));
-                    var o = document.createElement("span");
-                    ((o.style.cssText =
-                      "position:absolute;top:2px;width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left .2s;"),
-                      r.appendChild(o));
-                    var i = !!e,
-                      c = function () {
-                        ((r.style.background = i ? "#4ade80" : "rgba(255,255,255,0.25)"),
-                          (o.style.left = i ? "21px" : "2px"));
-                      };
-                    return (
-                      c(),
-                      r.addEventListener("click", function () {
-                        ((i = !i), c());
-                        try {
-                          t(i);
-                        } catch (e) {}
-                      }),
-                      n.appendChild(a),
-                      n.appendChild(r),
-                      {
-                        el: n,
-                        set: function (e) {
-                          ((i = !!e), c());
-                        },
-                      }
-                    );
-                  })(!1, function (e) {
-                    e
-                      ? ("Notification" in window
-                          ? Notification.requestPermission()
-                              .then(function (e) {
-                                if ("granted" !== e) throw new Error("Permission denied");
-                                return navigator.serviceWorker.ready;
-                              })
-                              .then(function (e) {
-                                return e.pushManager.subscribe({
-                                  userVisibleOnly: !0,
-                                  applicationServerKey: xt(Ct),
-                                });
-                              })
-                              .then(function (e) {
-                                return E("/api/push/subscribe", {
-                                  method: "POST",
-                                  body: { subscription: e.toJSON() },
-                                }).then(function (e) {
-                                  if (!e || !e.ok)
-                                    throw new Error(
-                                      (e && e.error) || "Couldn't save subscription.",
-                                    );
-                                });
-                              })
-                          : Promise.reject(new Error("Notifications not supported on this browser"))
-                        ).catch(function (e) {
-                          (U.set(!1),
-                            (be.textContent =
-                              (e && e.message) || "Couldn't enable notifications."));
-                        })
-                      : kt().catch(function () {});
-                  }),
-                  D = !1;
-                try {
-                  D =
-                    !(
-                      !window.matchMedia || !window.matchMedia("(display-mode: standalone)").matches
-                    ) || !!navigator.standalone;
-                } catch (e) {}
-                D && o.appendChild(U.el);
-                var F = document.createElement("div");
-                ((F.style.cssText = "font-size:11px;opacity:.45;margin:2px 0 8px;"),
-                  (F.textContent = "Push ID: —"),
-                  D && o.appendChild(F));
-                function V(e, t, n, a) {
-                  var r = document.createElement(e);
-                  return (
-                    t && (r.className = t),
-                    null != a && (r.textContent = a),
-                    n && n.appendChild(r),
-                    r
-                  );
-                }
-                (Et().then(function (e) {
-                  if ((U.set(!!e), e))
-                    try {
-                      var t = e.toJSON(),
-                        n =
-                          (t.keys && t.keys.p256dh ? t.keys.p256dh : "") +
-                          "|" +
-                          (t.keys && t.keys.auth ? t.keys.auth : "");
-                      window.crypto &&
-                        crypto.subtle &&
-                        crypto.subtle.digest &&
-                        crypto.subtle
-                          .digest("SHA-256", new TextEncoder().encode(n))
-                          .then(function (e) {
-                            var t = Array.from(new Uint8Array(e))
-                              .map(function (e) {
-                                return e.toString(16).padStart(2, "0");
-                              })
-                              .join("")
-                              .slice(0, 12);
-                            F.textContent = "Push ID: " + t;
-                          })
-                          .catch(function () {});
-                    } catch (e) {}
-                }),
-                  V("div", "chat-pw-title", o, "Signature"));
-                var W = !(!s.member && !s.owner);
-                V(
-                  "div",
-                  null,
-                  o,
-                  W
-                    ? "Shows under your forum posts. You can add photos and embeds."
-                    : "Shows under your forum posts. Members can also add photos and embeds.",
-                ).style.cssText = "font-size:12px;opacity:.55;margin:2px 0 8px;";
-                var Z = V("div", "sig-bubble", o),
-                  G = V("div", "sig-mount", Z),
-                  Y = V("div", "sig-embeds", Z),
-                  K = V("div", "chat-bio-count", o),
-                  te = [],
-                  ae = null,
-                  re = null,
-                  oe = null;
-                function ie(e) {
-                  return (window.MPSocialLogos || {})[e] || "";
-                }
-                function ce(e) {
-                  var t,
-                    n,
-                    a,
-                    r = String(e || "").trim();
-                  if (
-                    (t = r.match(
-                      /^https?:\/\/(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,30})/i,
-                    ))
-                  )
-                    ((n = "x"), (a = t[1]));
-                  else if (
-                    (t = r.match(/^https?:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9_.]{1,30})/i))
-                  )
-                    ((n = "instagram"), (a = t[1]));
-                  else if (
-                    (t = r.match(/^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9_.]{1,30})/i))
-                  )
-                    ((n = "tiktok"), (a = "@" + t[1]));
-                  else {
-                    if (
-                      !(t = r.match(
-                        /^https?:\/\/(?:www\.)?youtube\.com\/((?:@|channel\/|c\/|user\/)[A-Za-z0-9_.\/-]{1,40})/i,
-                      ))
-                    )
-                      return null;
-                    ((n = "youtube"), (a = t[1]));
-                  }
-                  return {
-                    kind: "social",
-                    network: n,
-                    handle: "x" === n || "instagram" === n ? "@" + a : a,
-                    url:
-                      {
-                        x: "https://x.com",
-                        instagram: "https://instagram.com",
-                        tiktok: "https://tiktok.com",
-                        youtube: "https://youtube.com",
-                      }[n] +
-                      "/" +
-                      a,
-                  };
-                }
-                function se(e) {
-                  if (!e) return "🔗 Embed";
-                  if ("social" === e.kind) return ie(e.network) + " " + x(e.handle);
-                  var t = e.src || "";
-                  return /spotify/i.test(t)
-                    ? "🎵 Spotify"
-                    : /soundcloud/i.test(t)
-                      ? "🎵 SoundCloud"
-                      : /vimeo/i.test(t)
-                        ? "🎬 Vimeo"
-                        : "🔗 Embed";
-                }
-                function le() {
-                  ((Y.innerHTML = ""),
-                    te.forEach(function (e, t) {
-                      var n = V("span", "sig-chip", Y);
-                      n.insertAdjacentHTML("afterbegin", se(e) + " ");
-                      var a = V("button", "sig-chip-x", n, "×");
-                      ((a.type = "button"),
-                        a.setAttribute("aria-label", "Remove embed"),
-                        a.addEventListener("click", function () {
-                          (te.splice(t, 1), le(), pe());
-                        }));
-                    }));
-                }
-                function de(e) {
-                  try {
-                    var t = new URL(e);
-                    return (
-                      "https:" === t.protocol &&
-                      ("open.spotify.com" === t.hostname
-                        ? 0 === t.pathname.indexOf("/embed/")
-                        : "player.vimeo.com" === t.hostname
-                          ? 0 === t.pathname.indexOf("/video/")
-                          : "w.soundcloud.com" === t.hostname
-                            ? 0 === t.pathname.indexOf("/player/")
-                            : ("www.youtube.com" === t.hostname ||
-                                "www.youtube-nocookie.com" === t.hostname) &&
-                              0 === t.pathname.indexOf("/embed/"))
-                    );
-                  } catch (e) {
-                    return !1;
-                  }
-                }
-                function ue(e) {
-                  var t = ce(e);
-                  if (t) return t;
-                  var n = String(e || "").trim(),
-                    a =
-                      n.match(/<iframe[^>]*src\s*=\s*"([^"]+)"/i) ||
-                      n.match(/<iframe[^>]*src\s*=\s*'([^']+)'/i),
-                    r = function (e) {
-                      return { kind: "iframe", src: e };
-                    },
-                    o = (n = a ? a[1] : n).match(
-                      /open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i,
-                    );
-                  if (o) return r("https://open.spotify.com/embed/" + o[1] + "/" + o[2]);
-                  var i = n.match(/vimeo\.com\/(\d+)/i);
-                  if (i) return r("https://player.vimeo.com/video/" + i[1]);
-                  if (de(n)) return r(n);
-                  try {
-                    var c = new URL(-1 === n.indexOf("://") ? "https://" + n : n);
-                    if ("soundcloud.com" === c.hostname || c.hostname.endsWith(".soundcloud.com"))
-                      return r("https://w.soundcloud.com/player/?url=" + encodeURIComponent(n));
-                  } catch (e) {}
-                  return null;
-                }
-                function me() {
-                  var e = "";
-                  return (
-                    ae
-                      ? (e = ae.getHTML())
-                      : re &&
-                        (e = re.value
-                          .split(/\n\s*\n/)
-                          .map(function (e) {
-                            return "<p>" + x(e).replace(/\n/g, "<br>") + "</p>";
-                          })
-                          .join("")),
-                    te.forEach(function (t) {
-                      "social" === t.kind
-                        ? (e +=
-                            '<div class="sig-social"><a href="' +
-                            String(t.url).replace(/"/g, "%22") +
-                            '">' +
-                            ie(t.network) +
-                            " " +
-                            x(t.handle) +
-                            "</a></div>")
-                        : t.src &&
-                          de(t.src) &&
-                          (e +=
-                            '<div class="sig-embed"><iframe src="' +
-                            t.src.replace(/"/g, "%22") +
-                            '" allowfullscreen loading="lazy" sandbox="allow-scripts"></iframe></div>');
-                    }),
-                    "<p></p>" === e && (e = ""),
-                    e
-                  );
-                }
-                function pe() {
-                  E("/api/profile", { method: "POST", body: { signature: me() } })
-                    .then(function (e) {
-                      e && e.ok && e.user
-                        ? ((s = rcKeep(e.user)),
-                          (K.textContent = "Saved ✓"),
-                          setTimeout(function () {
-                            "Saved ✓" === K.textContent && (K.textContent = "");
-                          }, 2e3))
-                        : (K.textContent = (e && e.error) || "Couldn't save signature.");
-                    })
-                    .catch(function () {
-                      K.textContent = "Couldn't reach the server.";
-                    });
-                }
-                function he() {
-                  ((K.textContent = ""), clearTimeout(oe), (oe = setTimeout(pe, 1200)));
-                }
-                !(function () {
-                  var e = s.signature || "";
-                  try {
-                    var t = new DOMParser().parseFromString(e, "text/html");
-                    (t.querySelectorAll("iframe").forEach(function (e) {
-                      var t = e.getAttribute("src") || "";
-                      (t && de(t) && te.length < 2 && te.push({ kind: "iframe", src: t }),
-                        ((e.closest && e.closest(".sig-embed")) || e).remove());
-                    }),
-                      t.querySelectorAll(".sig-social").forEach(function (e) {
-                        var t = e.querySelector("a"),
-                          n = ce((t && t.getAttribute("href")) || "");
-                        (n && te.length < 2 && te.push(n), e.remove());
-                      }),
-                      (e = t.body.innerHTML));
-                  } catch (e) {}
-                  if ((le(), window.MPSigEditor)) {
-                    if (window.__mpSigEd) {
-                      try {
-                        window.__mpSigEd.destroy();
-                      } catch (e) {}
-                      window.__mpSigEd = null;
-                    }
-                    window.MPSigEditor.mount(G, {
-                      html: e,
-                      member: W,
-                      placeholder: "Your signature…",
-                    }).then(function (t) {
-                      ((ae = t),
-                        (window.__mpSigEd = t),
-                        t
-                          ? t.on("update", he)
-                          : (((re = V("textarea", "chat-bio", G)).rows = 3),
-                            (re.value = e.replace(/<[^>]*>/g, "")),
-                            re.addEventListener("blur", pe)));
-                    });
-                  }
-                  if (W) {
-                    var n = V("button", "btn sig-embed-btn", Z, "＋ Add embed");
-                    n.type = "button";
-                    var a = V("div", "sig-embed-bar hidden", Z);
-                    ((a.innerHTML =
-                      '<input type="text" class="sig-embed-input" placeholder="Paste a music link or a social profile link…"><button type="button" class="btn accent sig-embed-add">Add</button>'),
-                      n.addEventListener("click", function () {
-                        a.classList.toggle("hidden");
-                      }),
-                      a.querySelector(".sig-embed-add").addEventListener("click", function () {
-                        var e = a.querySelector(".sig-embed-input"),
-                          t = ue(e.value);
-                        t
-                          ? te.length >= 2
-                            ? (K.textContent = "Two embeds max.")
-                            : (te.push(t), (e.value = ""), a.classList.add("hidden"), le(), pe())
-                          : (K.textContent =
-                              "That embed isn't supported — try a Spotify, SoundCloud, Vimeo or social profile link.");
-                      }));
-                  }
-                })();
-                var ve = V("div", null, o);
-                ((ve.style.cssText =
-                  "display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px;"),
-                  (V("span", null, ve, "Show signatures").style.cssText =
-                    "font-size:13px;opacity:.75;"));
-                var fe = V("button", "btn", ve, "On");
-                function ge() {
-                  var e = !0;
-                  try {
-                    e = "0" !== localStorage.getItem("mp_show_sigs");
-                  } catch (e) {}
-                  fe.textContent = e ? "On" : "Off";
-                }
-                ((fe.type = "button"),
-                  fe.addEventListener("click", function () {
-                    try {
-                      var e = "0" !== localStorage.getItem("mp_show_sigs");
-                      localStorage.setItem("mp_show_sigs", e ? "0" : "1");
-                    } catch (e) {}
-                    ge();
-                  }),
-                  ge());
-                var be = document.createElement("div");
-                ((be.className = "chat-err"), be.setAttribute("role", "alert"), o.appendChild(be));
-                var ye = document.createElement("div");
-                ((ye.className = "chat-pw-title"),
-                  (ye.textContent = "Change password"),
-                  o.appendChild(ye));
-                var we = document.createElement("label");
-                we.className = "chat-field";
-                var Ce = document.createElement("span");
-                ((Ce.textContent = "Current password"), we.appendChild(Ce));
-                var xe = document.createElement("input");
-                ((xe.type = "password"),
-                  (xe.autocomplete = "current-password"),
-                  we.appendChild(xe),
-                  o.appendChild(we));
-                var Ee = document.createElement("label");
-                Ee.className = "chat-field";
-                var ke = document.createElement("span");
-                ((ke.textContent = "New password"), Ee.appendChild(ke));
-                var Le = document.createElement("input");
-                ((Le.type = "password"),
-                  (Le.autocomplete = "new-password"),
-                  Ee.appendChild(Le),
-                  o.appendChild(Ee));
-                var Se = document.createElement("div");
-                ((Se.className = "pwd-strength"),
-                  (Se.hidden = !0),
-                  (Se.innerHTML =
-                    '<div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-level"></div>'),
-                  o.appendChild(Se));
-                var Me = Se.querySelectorAll(".pwd-bars span"),
-                  Te = Se.querySelector(".pwd-level"),
-                  Ae = ["Weak", "Fair", "Good", "Strong"],
-                  Ne = ["#FF7A7A", "#F59E0B", "#38BDF8", "#6EE7B7"];
-                function Pe(e) {
-                  if (!e) return 0;
-                  var t = 0;
-                  return (
-                    e.length >= 8 && (t += 1),
-                    /[A-Z]/.test(e) && (t += 1),
-                    /[0-9]/.test(e) && (t += 1),
-                    /[^A-Za-z0-9]/.test(e) && (t += 1),
-                    t
-                  );
-                }
-                function Ie() {
-                  var e = Le.value;
-                  if (e) {
-                    Se.hidden = !1;
-                    for (var t = Pe(e), n = 0; n < Me.length; n++)
-                      Me[n].style.background = n < t ? Ne[t - 1] : "";
-                    ((Te.textContent = Ae[t - 1] || "Weak"),
-                      (Te.style.color = t > 0 ? Ne[t - 1] : ""),
-                      je());
-                  } else Se.hidden = !0;
-                }
-                Le.addEventListener("input", Ie);
-                var qe = document.createElement("label");
-                qe.className = "chat-field";
-                var Oe = document.createElement("span");
-                ((Oe.textContent = "Confirm new password"), qe.appendChild(Oe));
-                var _e = document.createElement("input");
-                ((_e.type = "password"),
-                  (_e.autocomplete = "new-password"),
-                  qe.appendChild(_e),
-                  o.appendChild(qe));
-                var He = document.createElement("div");
-                function je() {
-                  var e = Le.value,
-                    t = _e.value;
-                  t
-                    ? ((He.hidden = !1),
-                      e === t
-                        ? ((He.textContent = "✓ Passwords match"), (He.style.color = "#6EE7B7"))
-                        : ((He.textContent = "✗ Passwords do not match"),
-                          (He.style.color = "#FF7A7A")))
-                    : (He.hidden = !0);
-                }
-                ((He.className = "pwd-match"),
-                  (He.hidden = !0),
-                  o.appendChild(He),
-                  _e.addEventListener("input", je));
-                var Re = document.createElement("button");
-                ((Re.type = "button"),
-                  (Re.className = "btn chat-pw"),
-                  (Re.textContent = "Change password"),
-                  Re.addEventListener("click", function () {
-                    ((be.textContent = ""),
-                      !xe.value || Le.value.length < 4
-                        ? (be.textContent = "Enter your current password and a new one (min 4).")
-                        : Le.value === _e.value
-                          ? ((Re.disabled = !0),
-                            E("/api/password", {
-                              method: "POST",
-                              body: { current: xe.value, new: Le.value },
-                            })
-                              .then(function (e) {
-                                ((Re.disabled = !1),
-                                  e && e.ok
-                                    ? ((xe.value = ""),
-                                      (Le.value = ""),
-                                      (_e.value = ""),
-                                      (be.textContent = "Password changed."))
-                                    : (be.textContent = (e && e.error) || "Couldn't change it."));
-                              })
-                              .catch(function () {
-                                ((Re.disabled = !1),
-                                  (be.textContent = "Couldn't reach the chat server."));
-                              }))
-                          : (be.textContent = "New passwords do not match."));
-                  }),
-                  o.appendChild(Re));
-                var Be = document.createElement("div");
-                if (((Be.style.marginTop = "18px"), (Be.className = "chat-xbox"), s.xUsername)) {
-                  Be.innerHTML =
-                    '<span class="chat-xlogo">' +
-                    a +
-                    '</span><span class="chat-xhandle">@' +
-                    x(s.xUsername) +
-                    '</span><span class="chat-xstatus">Connected</span>';
-                  var Ue = document.createElement("button");
-                  ((Ue.type = "button"),
-                    (Ue.className = "btn chat-xunlink"),
-                    (Ue.textContent = "Unlink"),
-                    Ue.addEventListener("click", function () {
-                      k("Unlink your X account?", {
-                        okText: "Unlink",
-                        cancelText: "Cancel",
-                        onOk: function () {
-                          ((Ue.disabled = !0),
-                            E("/api/x/unlink", { method: "POST", body: {} })
-                              .then(function (e) {
-                                e && e.ok
-                                  ? ((s.xUsername = null), location.reload())
-                                  : ((Ue.disabled = !1), k("Couldn't unlink."));
-                              })
-                              .catch(function () {
-                                Ue.disabled = !1;
-                              }));
-                        },
-                      });
-                    }),
-                    Be.appendChild(Ue));
-                } else {
-                  Be.innerHTML =
-                    '<span class="chat-xlogo">' +
-                    a +
-                    '</span><span class="chat-xstatus dim">Not connected</span>';
-                  var De = document.createElement("button");
-                  ((De.type = "button"),
-                    (De.className = "btn chat-xlink"),
-                    (De.textContent = "Connect"),
-                    De.addEventListener("click", function () {
-                      ((De.disabled = !0),
-                        (De.textContent = "Connecting..."),
-                        E("/api/x/link-start", { method: "POST", body: {} })
-                          .then(function (e) {
-                            if (e && e.ok && e.linkToken) {
-                              try {
-                                sessionStorage.setItem("x_link_token", e.linkToken);
-                              } catch (e) {}
-                              try {
-                                localStorage.setItem("x_link_token", e.linkToken);
-                              } catch (e) {}
-                              try {
-                                localStorage.setItem("x_link_pending", String(Date.now()));
-                              } catch (e) {}
-                              var a =
-                                "https://x.com/i/oauth2/authorize?response_type=code&client_id=" +
-                                encodeURIComponent(t) +
-                                "&redirect_uri=" +
-                                encodeURIComponent(n) +
-                                "&scope=" +
-                                encodeURIComponent("users.read tweet.read") +
-                                "&state=" +
-                                encodeURIComponent("link-" + e.linkToken) +
-                                (e.codeChallenge
-                                  ? "&code_challenge=" +
-                                    encodeURIComponent(e.codeChallenge) +
-                                    "&code_challenge_method=S256"
-                                  : "");
-                              location.href = a;
-                            } else
-                              ((De.disabled = !1),
-                                (De.textContent = "Connect"),
-                                alert((e && e.error) || "Couldn't start X link."));
-                          })
-                          .catch(function () {
-                            ((De.disabled = !1), (De.textContent = "Connect"));
-                          }));
-                    }),
-                    Be.appendChild(De));
-                }
-                o.appendChild(Be);
-                o.appendChild(rcSettingsRow());
-                var ze = document.createElement("button");
-                ((ze.type = "button"),
-                  (ze.className = "chat-logout"),
-                  (ze.textContent = "Sign out"),
-                  ze.addEventListener("click", ft),
-                  o.appendChild(ze),
-                  $(i, o),
-                  r.addEventListener("click", function (e) {
-                    e.target === r && gt();
-                  }),
-                  document.body.appendChild(r),
-                  document.body.appendChild(i),
-                  e && Q(o));
-              })(!0);
+              mpProfileSheet(!0);
             }, 120));
         }),
         pt.appendChild(r),
@@ -4734,6 +4738,9 @@
     ordLoad(b);
   }
   window.MPOpenOrders = ordOpen;
+  window.MPOpenProfile = function () {
+    mpProfileSheet(!0);
+  };
   // New account made with X: show its code once /api/me has loaded.
   function rcXNewCode(code) {
     var n = 0;
