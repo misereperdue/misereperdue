@@ -210,6 +210,77 @@ var MPShop = (function () {
     );
   }
 
+  /* Drop countdown tile (per dc): a live days/hours/min/sec count to
+   * 09.11.2027 00:00 Toronto time. One setInterval; it stops itself when the
+   * tile leaves the DOM (grid re-rendered) and removes the tile once the time
+   * has passed. */
+  var CD_END = Date.parse("2027-09-11T00:00:00-04:00");
+  var cdTimer = null;
+  function cdHTML() {
+    if (Date.now() >= CD_END) return "";
+    return (
+      '<div class="product-card mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><div class="tile-wrap mp-cd-tile">' +
+      '<div class="mp-cd-row" aria-hidden="true">' +
+      [
+        ["d", "days"],
+        ["h", "hours"],
+        ["m", "min"],
+        ["s", "sec"],
+      ]
+        .map(function (u) {
+          return (
+            '<span class="mp-cd-cell"><b class="mp-cd-n" data-u="' +
+            u[0] +
+            '">00</b><i class="mp-cd-l">' +
+            u[1] +
+            "</i></span>"
+          );
+        })
+        .join("") +
+      '</div><span class="mp-cd-date">09.11.2027</span></div></div>'
+    );
+  }
+  function mountCountdown(el) {
+    if (cdTimer) (clearInterval(cdTimer), (cdTimer = null));
+    if (!el) return;
+    var cells = {};
+    el.querySelectorAll("[data-u]").forEach(function (b) {
+      cells[b.dataset.u] = b;
+    });
+    function pad(n) {
+      return n < 10 ? "0" + n : "" + n;
+    }
+    var first = true;
+    function set(u, v) {
+      var b = cells[u];
+      if (b.textContent === v) return;
+      b.textContent = v;
+      if (first) return;
+      // restart the tick animation on the digits that changed
+      b.classList.remove("is-tick");
+      void b.offsetWidth;
+      b.classList.add("is-tick");
+    }
+    function tick() {
+      if (!el.isConnected) return (clearInterval(cdTimer), (cdTimer = null));
+      var ms = CD_END - Date.now();
+      if (ms <= 0) {
+        clearInterval(cdTimer);
+        cdTimer = null;
+        el.remove();
+        return;
+      }
+      var t = Math.floor(ms / 1e3);
+      set("d", "" + Math.floor(t / 86400));
+      set("h", pad(Math.floor((t % 86400) / 3600)));
+      set("m", pad(Math.floor((t % 3600) / 60)));
+      set("s", pad(t % 60));
+    }
+    tick();
+    first = false;
+    if (el.isConnected) cdTimer = setInterval(tick, 1e3);
+  }
+
   /* Misery Globe tile: a wireframe globe (meridians + parallels) drawn on a
    * small canvas, rotating about a tilted axis. Front lines are crisp, back
    * lines faint, so it reads as a sphere. Colour comes from the canvas's CSS
@@ -406,6 +477,7 @@ var MPShop = (function () {
           (t.innerHTML =
             '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
+            cdHTML() +
             e.map(g).join("") +
             (f
               ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
@@ -439,6 +511,7 @@ var MPShop = (function () {
               mountGlobe(e.querySelector(".gp-canvas"));
             }
             mountA2HS(t.querySelector(".a2hs"));
+            mountCountdown(t.querySelector(".mp-cd"));
           })(t));
       } else
         t.innerHTML =
