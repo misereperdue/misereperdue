@@ -392,9 +392,6 @@ body {
   -webkit-mask-image: none;
   mask-image: none;
 }
-[data-theme="light"] body.crop-hero-shop {
-  padding-top: calc(180px + env(safe-area-inset-top, 0px));
-}
 [data-theme="light"] .hero-rain {
   --sky-ext: 30px;
   background: linear-gradient(#b7c3d3, #cdd6e2 55%, #dfe5ee);
@@ -508,6 +505,88 @@ body.crop-hero-auth {
 }
 body.crop-hero-shop {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
+}
+/* Shop + Bag spacing (per dc): the first content sits 16px under the nav
+   pill (nav = safe area + 22px, 52px tall, so content starts at safe area +
+   90px), the same in light and dark, like the stacked bars on Chat/Globe.
+   The sky fades out (eased, mostly behind the nav pill) and is fully gone
+   by the first content. Canvas sizes are untouched so the clouds/moon keep
+   their layout; only the masks and the light hero box (status-bar tint)
+   change. #shop-grid has margin-top:-10px, #cart-lines margin-top:4px. */
+body.home:has(#shop.on) {
+  padding-top: calc(100px + env(safe-area-inset-top, 0px));
+}
+body.home:has(#cart.on) {
+  padding-top: calc(86px + env(safe-area-inset-top, 0px));
+}
+body.home:has(#shop.on) .hero,
+body.home:has(#cart.on) .hero {
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 40px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
+    transparent calc(env(safe-area-inset-top, 0px) + 90px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 40px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
+    transparent calc(env(safe-area-inset-top, 0px) + 90px)
+  );
+}
+[data-theme="light"] body.home:has(#shop.on) .hero,
+[data-theme="light"] body.home:has(#cart.on) .hero {
+  height: calc(40px + env(safe-area-inset-top, 0px));
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+[data-theme="light"] body.home:has(#shop.on) .hero-rain,
+[data-theme="light"] body.home:has(#cart.on) .hero-rain {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 40px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
+    transparent calc(env(safe-area-inset-top, 0px) + 90px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 40px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
+    transparent calc(env(safe-area-inset-top, 0px) + 90px)
+  );
 }
 [data-theme="light"] .hero video.sharp {
   filter: invert(1) hue-rotate(188deg) saturate(2.4) contrast(1.08);
