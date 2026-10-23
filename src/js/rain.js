@@ -30,7 +30,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
+      stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -40,7 +40,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.22,
+      stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.22,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -153,6 +153,41 @@
     }
   }
 
+  // Stars (dark sky only): a few dozen tiny points, fixed per size, gentle twinkle.
+  var stars = [];
+  function seedStars() {
+    var r = rng(29), n = Math.round(Math.min(56, Math.max(28, W * 0.11)));
+    stars = [];
+    for (var i = 0; i < n; i++) {
+      var big = i < 2;
+      stars.push({
+        x: r() * W, y: 4 + r() * (H * 0.8), s: big ? 1.2 + r() * 0.3 : 0.45 + r() * r() * 0.65,
+        a: big ? 0.95 : 0.4 + r() * 0.45, f: 0.35 + r() * 0.9, ph: r() * 6.283,
+      });
+    }
+  }
+  function drawStars(t, offs, wash) {
+    var k, i, st, cv2, a, tw;
+    ctx.fillStyle = "#f2f6ff";
+    for (i = 0; i < stars.length; i++) {
+      st = stars[i]; cv2 = 0;
+      for (k = 0; k < 3; k++) {
+        var L = LAYERS[k];
+        cv2 += coverAt(k, st.x, st.y, offs[k], Math.max(W, 390) * L.scale, H * L.h, H * L.y);
+      }
+      tw = 0.72 + 0.28 * Math.sin(t * st.f + st.ph);
+      a = st.a * tw * Math.max(0, 1 - cv2 * 1.4) * wash;
+      if (a < 0.02) continue;
+      ctx.globalAlpha = a;
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.s, 0, 6.283); ctx.fill();
+      if (st.s > 1) { // brighter ones: a faint soft glow
+        ctx.globalAlpha = a * 0.18;
+        ctx.beginPath(); ctx.arc(st.x, st.y, st.s * 3, 0, 6.283); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
   function resize() {
     var rc = cv.getBoundingClientRect();
     var w = Math.max(1, Math.round(rc.width)), h = Math.max(1, Math.round(rc.height));
@@ -165,6 +200,7 @@
     ctx.imageSmoothingEnabled = true;
     paint();
     seedDrops();
+    seedStars();
     draw(0);
   }
 
@@ -236,6 +272,7 @@
       offs.push(-((t * L.speed) % tw));
       cover += coverAt(k, mp.x, mp.y, offs[k], tw, H * L.h, H * L.y);
     }
+    if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
     var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.6, mp.x, mp.y, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
