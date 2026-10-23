@@ -8284,307 +8284,133 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 .glassbar .chat-head-right {
   text-shadow: var(--lg-text-halo);
 }
-/* ===== CSS clouds (per dc 12:01 "css generated"; 12:22: bring back the styling of the first
-   neutral puffy cloud batch: colour, softness, translucency, feathered edges, light top and
-   shaded underside) =====
-   One style for the header sky clouds and the nav / Chat/Globe top-bar clouds. rain.js only lays
-   out a few overlapping rounded lobes (seeded); everything visible is drawn here. A cloud (.cu)
-   = a body of merged lobes plus 3-5 rounded domes on a flat-ish base, masked to their union
-   with the first batch's feathered edge (solid to 76%, 0.6 at 90%, clear at 100%: slightly tighter than the first batch so the humps still read). All lobes
-   paint their slice of ONE cloud-wide gradient (bright top, shaded underside) and domes add a
-   soft lit top, so they read as soft puffs. The opacity sits on the whole cloud group, so it is
-   one translucent silhouette (no seams where lobes overlap; sky, rain and moon show through).
-   Neutral white/grey (no tint). Bars also get the first batch's light frosted backdrop blur. */
+/* ===== Cloud glass (per dc 2026-10-23): nav pill + Chat/Globe top bars, ONE shared recipe =====
+   Misty translucent body (light blur, very low haze fill: navy haze in dark, cool white in light),
+   lighter top / slightly darker underside, feathered edges instead of a crisp rim, and billowy
+   puffs (::before, layered radial gradients) that spill past the edges so the silhouette reads as
+   a cloud, not a hard rounded rect. Puffs breathe very slowly (transform only, off under reduced
+   motion). No refraction filter: clouds diffuse, they don't lens. */
 :root,
 [data-theme="light"] {
-  --cl-body: linear-gradient(180deg, #ffffff 0%, #fdfdfe 40%, #ececef 72%, #d4d4da 100%);
-  --cl-glow: rgba(255, 255, 255, 0.78);
-  --cl-op: 0.62;
-  --cl-blur: blur(10px) saturate(100%) brightness(1.06);
-  --wx-sky: linear-gradient(#b4c0d0, #cbd4e0 55%, #dce3ec);
-  --wx-moon: #ffffff;
-  --wx-moon-glow: rgba(255, 255, 255, 0.95);
-  --wx-moon-edge: rgba(70, 84, 110, 0.35);
-  --wx-halo: rgba(255, 255, 255, 0.5);
-  --wx-flash: rgba(255, 255, 255, 0.5);
+  --cl-blur: blur(10px) saturate(150%) brightness(1.06);
+  --cl-haze: rgba(236, 244, 255, 0.2);
+  --cl-volume: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.16) 48%,
+    rgba(150, 170, 205, 0.12) 100%
+  );
+  --cl-puff: rgba(255, 255, 255, 0.8);
+  --cl-puff-mid: rgba(232, 240, 252, 0.42);
+  --cl-under: rgba(160, 178, 210, 0.3);
+  --cl-shadow:
+    inset 0 1px 10px rgba(255, 255, 255, 0.55),
+    inset 0 -6px 12px rgba(140, 160, 200, 0.14),
+    0 0 18px rgba(255, 255, 255, 0.35),
+    0 12px 28px rgba(13, 25, 70, 0.12);
 }
 [data-theme="dark"] {
-  --cl-body: linear-gradient(180deg, #dcdcdf 0%, #bdbdc1 40%, #9a9a9f 70%, #5e5e64 100%);
-  --cl-glow: rgba(255, 255, 255, 0.5);
-  --cl-op: 0.5;
-  --cl-blur: blur(10px) saturate(60%) brightness(1.04);
-  --wx-sky: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
-  --wx-moon: #f1f1ee;
-  --wx-moon-glow: rgba(255, 255, 250, 0.75);
-  --wx-moon-edge: transparent;
-  --wx-halo: rgba(230, 232, 236, 0.3);
-  --wx-flash: rgba(235, 238, 255, 0.42);
+  --cl-blur: blur(10px) saturate(150%) brightness(1.04);
+  --cl-haze: rgba(26, 44, 112, 0.22);
+  --cl-volume: linear-gradient(
+    180deg,
+    rgba(200, 218, 255, 0.16) 0%,
+    rgba(160, 185, 240, 0.05) 50%,
+    rgba(4, 8, 26, 0.18) 100%
+  );
+  --cl-puff: rgba(160, 185, 245, 0.34);
+  --cl-puff-mid: rgba(110, 135, 210, 0.16);
+  --cl-under: rgba(60, 80, 150, 0.2);
+  --cl-shadow:
+    inset 0 1px 10px rgba(190, 210, 255, 0.16),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.18),
+    0 0 18px rgba(120, 150, 230, 0.12),
+    0 12px 28px rgba(0, 0, 0, 0.32);
 }
-.cu {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: block;
-  pointer-events: none;
-}
-.cu i {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  background-repeat: no-repeat;
-  background-image: var(--cl-body);
-  background-position: var(--sx) var(--sy);
-  background-size: var(--sw) var(--sh);
-}
-/* domes: a soft light glow on the upper part toward the moon so each hump reads as a fluffy
-   rounded puff; no rims, inner or drop shadows (the overlap stays seamless) */
-.cu i.d {
-  background-image:
-    radial-gradient(farthest-side at var(--hx, 60%) 20%, var(--cl-glow), transparent 80%),
-    var(--cl-body);
-  background-position: 0 0, var(--sx) var(--sy);
-  background-size: 100% 100%, var(--sw) var(--sh);
-}
-/* ---- header sky: sky < moon < back clouds < lightning glow < rain < front clouds < moon glow ---- */
-.wx {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: var(--wx-sky);
-  contain: strict;
-}
-/* Home: the weather fades out under the nav like before (Chat/Globe keep it behind the top bar) */
-body:not(:has(#journal.on)):not(:has(#forum.on)) .wx {
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
-}
-.hero-rain,
-[data-theme="light"] .hero-rain,
-body:has(#journal.on) .hero-rain,
-body:has(#forum.on) .hero-rain {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: none;
-  -webkit-mask-image: none;
-  mask-image: none;
-  contain: strict;
-}
-.wx-back,
-.wx-front {
-  position: absolute;
-  inset: 0;
-}
-.wx-c {
-  will-change: transform;
-  animation: wx-drift 90s linear infinite;
-}
-/* translucent: the whole cloud is one masked group, so its opacity applies once to the
-   unified silhouette (no darker seams where lobes overlap); sky, rain and moon show through */
-.wx-back .wx-c {
-  opacity: 0.3;
-}
-.wx-front .wx-c {
-  opacity: 0.44;
-}
-[data-theme="light"] .wx-back .wx-c {
-  opacity: 0.5;
-}
-[data-theme="light"] .wx-front .wx-c {
-  opacity: 0.64;
-}
-/* far clouds: a touch dimmer */
-[data-theme="dark"] .wx-back {
-  --cl-body: linear-gradient(180deg, #cfcfd2 0%, #b2b2b6 45%, #78787e 100%);
-  --cl-glow: rgba(255, 255, 255, 0.36);
-}
-[data-theme="light"] .wx-back {
-  --cl-body: linear-gradient(180deg, #ffffff 0%, #f7f7f9 45%, #dcdce1 100%);
-}
-@keyframes wx-drift {
-  from {
-    transform: translate3d(-100%, 0, 0);
-  }
-  to {
-    transform: translate3d(var(--wx-w, 100vw), 0, 0);
-  }
-}
-/* crescent moon: lit limb = inset shadow of a round box (soft terminator), tight glow, halo */
-.wx-mn {
-  position: absolute;
-  right: 30px;
-  top: calc(env(safe-area-inset-top, 0px) + 24px);
-  width: 0;
-  height: 0;
-}
-.wx-mn b,
-.wx-mn u {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-}
-.wx-mn b {
-  left: -64px;
-  top: -64px;
-  width: 128px;
-  height: 128px;
-  background: radial-gradient(closest-side, var(--wx-halo), transparent 28%, transparent 0) center / 100% 100% no-repeat,
-    radial-gradient(closest-side, var(--wx-halo), transparent) center / 100% 100% no-repeat;
-  opacity: 0.8;
-  animation: wx-halo 7s ease-in-out infinite alternate;
-}
-.wx-mn u {
-  left: -11px;
-  top: -11px;
-  width: 22px;
-  height: 22px;
-  transform: rotate(-24deg);
-  box-shadow: inset 6px -1px 0.5px 0 var(--wx-moon);
-  filter: drop-shadow(0 0 3px var(--wx-moon-glow)) drop-shadow(0 0 0.6px var(--wx-moon-edge));
-}
-/* the same moon again above the clouds, fainter: when a cloud drifts across, the crescent
-   dims but keeps shining through and its halo silvers the cloud edges around it */
-.wx-over {
-  opacity: 0.5;
-}
-.wx-over b {
-  opacity: 0.55;
-}
-[data-theme="dark"] .wx-over {
-  mix-blend-mode: screen;
-}
-/* light mode: white on a white cloud would vanish, so the shining-through copy gets a soft
-   neutral-grey edge glow and a little more strength */
-[data-theme="light"] .wx-over {
-  opacity: 0.75;
-}
-[data-theme="light"] .wx-over u {
-  filter: drop-shadow(0 0 1.2px rgba(70, 74, 86, 0.55)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
-}
-@keyframes wx-halo {
-  from {
-    opacity: 0.6;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 0.9;
-    transform: scale(1.04);
-  }
-}
-.wx-flash {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  background: radial-gradient(90px 80px at var(--fx, 50%) 30%, var(--wx-flash), transparent);
-  pointer-events: none;
-}
-
-/* ---- nav + Chat/Globe top bars: the bar itself is invisible; its cloud (.cb) is the shape ---- */
 .glassbar,
-[data-theme="light"] .glassbar,
-.glassbar.chat-head,
-[data-theme="light"] .glassbar.chat-head {
-  background: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-color: transparent;
-  box-shadow: none;
-  -webkit-mask: none;
-  mask: none;
-}
-.glassbar::before,
-.glassbar::after,
-[data-theme="light"] .glassbar::before {
-  content: none;
-}
-.nav {
-  /* no backdrop-filter any more, but keep the pill out of view transitions as before */
-  view-transition-name: none;
-}
-.glassbar > .cb {
-  z-index: -1;
-  opacity: var(--cl-op);
-  /* frosted like the first cloud bars: the rain behind is softly blurred inside the cloud */
+[data-theme="light"] .glassbar {
+  background-color: var(--cl-haze);
+  background-image: var(--cl-volume);
   -webkit-backdrop-filter: var(--cl-blur);
   backdrop-filter: var(--cl-blur);
-  transform-origin: 50% 90%;
-  animation: cb-breathe 9s ease-in-out infinite alternate;
+  border: 1px solid transparent;
+  box-shadow: var(--cl-shadow);
 }
-.chat-head.glassbar > .cb {
-  animation-duration: 11s;
-  animation-delay: -4s;
+/* billows: puffs along the top and underside, spilling past the edges */
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  content: "";
+  position: absolute;
+  inset: -20px -14px -16px;
+  z-index: -1;
+  border-radius: 0;
+  padding: 0;
+  -webkit-mask: none;
+  mask: none;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 4% 6px / 20% 40px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 21% 0 / 26% 48px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 42% 5px / 22% 40px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 62% 0 / 27% 50px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 82% 4px / 22% 42px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff) 45%, var(--cl-puff-mid) 75%, transparent) 97% 10px / 16% 34px no-repeat,
+    radial-gradient(closest-side, var(--cl-under) 40%, transparent) 10% 100% / 28% 30px no-repeat,
+    radial-gradient(closest-side, var(--cl-under) 40%, transparent) 38% 100% / 30% 34px no-repeat,
+    radial-gradient(closest-side, var(--cl-under) 40%, transparent) 66% 100% / 30% 30px no-repeat,
+    radial-gradient(closest-side, var(--cl-under) 40%, transparent) 92% 100% / 26% 28px no-repeat,
+    radial-gradient(closest-side, var(--cl-puff-mid) 40%, transparent) 0 60% / 28px 80% no-repeat,
+    radial-gradient(closest-side, var(--cl-puff-mid) 40%, transparent) 100% 60% / 28px 80% no-repeat;
+  animation: cl-breathe 14s ease-in-out infinite alternate;
 }
-@keyframes cb-breathe {
+@keyframes cl-breathe {
   from {
-    transform: translate3d(-1px, 0, 0) scale(1, 1);
+    transform: translateX(-2px) scale(1);
   }
   to {
-    transform: translate3d(1px, -0.5px, 0) scale(1.012, 1.03);
+    transform: translateX(2px) scale(1.015, 1.04);
   }
 }
-/* before rain.js has measured a bar (or without JS): a plain soft cloud-grey pill */
-.glassbar:not(.cbx) {
-  background: color-mix(in srgb, var(--cl-mid) 90%, transparent);
-  border-radius: 999px;
+.glassbar,
+[data-theme="light"] .glassbar,
+.glassbar.chat-head {
+  backdrop-filter: var(--cl-blur);
 }
-/* geometry: pills at y 34-76 of the 88px nav box (headroom for the domes); tight sides so
-   the moon stays clear */
-.nav-wrap {
-  top: calc(env(safe-area-inset-top, 0px) + 4px);
-}
-.nav {
-  padding: 34px 16px 12px;
-}
-.seg {
-  top: 34px;
-}
-.chat-head.glassbar {
-  padding: 30px 30px 14px;
-}
-/* icons + selected pill on the cloud; no shadows on navbar icons (per dc 11:51) */
-.nav svg,
-[data-theme="dark"] .nav svg,
-[data-theme="light"] .nav svg {
-  filter: none;
-}
-.nav button,
-.nav a {
-  text-shadow: none;
-}
-[data-theme="dark"] .nav button,
-[data-theme="dark"] .nav a {
-  color: rgba(255, 255, 255, 0.78);
-}
-[data-theme="dark"] .nav button.on {
-  color: #fff;
-}
-.seg,
-[data-theme="dark"] .seg {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.14));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 0 0 0.5px rgba(255, 255, 255, 0.22);
-}
-[data-theme="light"] .seg {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.78));
-  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 0.5px rgba(13, 25, 70, 0.12);
-}
-[data-theme="dark"] .glassbar .chat-title,
-[data-theme="dark"] .glassbar .chat-head-right {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.3);
-}
-[data-theme="light"] .glassbar .chat-title,
-[data-theme="light"] .glassbar .chat-head-right {
-  text-shadow: none;
+.glassbar .chat-title,
+.glassbar .chat-head-right {
+  text-shadow: var(--lg-text-halo);
 }
 @media (prefers-reduced-motion: reduce) {
-  .wx-c,
-  .wx-mn b,
-  .glassbar > .cb {
-    animation-play-state: paused;
+  .glassbar::before,
+  [data-theme="light"] .glassbar::before {
+    animation: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glassbar,
+  [data-theme="light"] .glassbar {
+    background-color: var(--lg-solid);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glassbar > .cb {
-    opacity: 0.94;
+  .glassbar,
+  [data-theme="light"] .glassbar,
+  .glassbar.chat-head {
+    background-color: var(--lg-solid);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
+}
+
+/* Restored first cloud design (per dc 12:29): only the nav icons lose their
+   drop-shadow halo so they sit flat and crisp inside the nav cloud. */
+.nav svg,
+[data-theme="dark"] .nav svg,
+[data-theme="light"] .nav svg,
+.nav button.on svg {
+  filter: none;
+}
+.nav button {
+  text-shadow: none;
 }
