@@ -8414,3 +8414,90 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     background-color: var(--lg-solid);
   }
 }
+/* ===== Puffier neutral cumulus (per dc 11:33): bigger lobes, deeper dips, no color tint ===== */
+:root,
+[data-theme="light"] {
+  --cu-blur: blur(10px) saturate(100%) brightness(1.06);
+  --cu-fill: rgba(255, 255, 255, 0.46);
+  --cu-hi: rgba(255, 255, 255, 0.78);
+  --cu-under: rgba(120, 120, 124, 0.3);
+  --cu-gap: rgba(130, 130, 134, 0.14);
+}
+[data-theme="dark"] {
+  --cu-blur: blur(10px) saturate(60%) brightness(1.04);
+  --cu-fill: rgba(186, 186, 190, 0.24);
+  --cu-hi: rgba(255, 255, 255, 0.26);
+  --cu-under: rgba(18, 18, 20, 0.34);
+  --cu-gap: rgba(0, 0, 0, 0.12);
+}
+.glassbar,
+[data-theme="light"] .glassbar {
+  --cu-p: radial-gradient(closest-side, #000 66%, rgba(0, 0, 0, 0.6) 84%, transparent 100%);
+  --cu-h: radial-gradient(closest-side, var(--cu-hi), transparent 72%);
+  background-color: var(--cu-fill);
+  background-image:
+    var(--cu-h) 22% 6% / 20% 44% no-repeat,
+    var(--cu-h) 64% 4% / 22% 46% no-repeat,
+    var(--cu-h) 6% 30% / 14% 36% no-repeat,
+    var(--cu-h) 45% 24% / 14% 34% no-repeat,
+    var(--cu-h) 88% 24% / 16% 38% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 35% 40% / 10% 40% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 55% 40% / 10% 40% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 77% 40% / 10% 40% no-repeat,
+    linear-gradient(180deg, transparent 40%, var(--cu-under) 100%);
+  -webkit-backdrop-filter: var(--cu-blur);
+  backdrop-filter: var(--cu-blur);
+  -webkit-mask:
+    var(--cu-p) 50% 60% / 84% 50% no-repeat,
+    var(--cu-p) 0 62% / 17% 74% no-repeat,
+    var(--cu-p) 6% 30% / 24% 80% no-repeat,
+    var(--cu-p) 24% 0 / 30% 100% no-repeat,
+    var(--cu-p) 45% 22% / 22% 74% no-repeat,
+    var(--cu-p) 66% 0 / 32% 100% no-repeat,
+    var(--cu-p) 88% 18% / 24% 84% no-repeat,
+    var(--cu-p) 100% 62% / 17% 74% no-repeat,
+    var(--cu-p) 16% 100% / 30% 62% no-repeat,
+    var(--cu-p) 41% 100% / 24% 54% no-repeat,
+    var(--cu-p) 64% 100% / 30% 62% no-repeat,
+    var(--cu-p) 88% 100% / 24% 54% no-repeat;
+  mask:
+    var(--cu-p) 50% 60% / 84% 50% no-repeat,
+    var(--cu-p) 0 62% / 17% 74% no-repeat,
+    var(--cu-p) 6% 30% / 24% 80% no-repeat,
+    var(--cu-p) 24% 0 / 30% 100% no-repeat,
+    var(--cu-p) 45% 22% / 22% 74% no-repeat,
+    var(--cu-p) 66% 0 / 32% 100% no-repeat,
+    var(--cu-p) 88% 18% / 24% 84% no-repeat,
+    var(--cu-p) 100% 62% / 17% 74% no-repeat,
+    var(--cu-p) 16% 100% / 30% 62% no-repeat,
+    var(--cu-p) 41% 100% / 24% 54% no-repeat,
+    var(--cu-p) 64% 100% / 30% 62% no-repeat,
+    var(--cu-p) 88% 100% / 24% 54% no-repeat;
+}
+/* more cloud around the contents for the bigger billows */
+.nav-wrap {
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+}
+.nav {
+  padding: 16px 22px 12px;
+}
+.seg {
+  top: 16px;
+}
+.chat-head.glassbar {
+  padding: 22px 30px 16px;
+}
+/* neutral halo keeps labels/icons readable on the white or grey cloud */
+[data-theme="dark"] .glassbar .chat-title,
+[data-theme="dark"] .glassbar .chat-head-right {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 6px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .nav svg {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.6));
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar,
+  [data-theme="light"] .glassbar {
+    background-color: var(--lg-solid);
+  }
+}
