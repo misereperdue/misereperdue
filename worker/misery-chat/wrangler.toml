@@ -11,7 +11,7 @@ name = "misery-chat"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 account_id = "3dca77f16102d81d039ce4e56b63885a"   # account "misereperdue" (not a secret)
-workers_dev = true                                  # misery-chat.freeglory416.workers.dev
+workers_dev = false                                 # workers.dev URL disabled 2026-10-23
 
 # Custom domain (Workers Custom Domain, zone misereperdue.com).
 # DNS record api.misereperdue.com AAAA 100:: (proxied) is managed by this binding.

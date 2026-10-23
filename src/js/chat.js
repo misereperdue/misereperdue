@@ -1732,7 +1732,7 @@
         if (((f.value = ""), e)) {
           var t = 0 === e.type.indexOf("video/"),
             n = "image/gif" === e.type,
-            a = s && (s.member || s.owner) ? 50 : 12;
+            a = s && (s.member || s.owner) ? 20 : 8; // matches the Worker /api/media caps
           if (e.size > 1024 * a * 1024) y("That file is too big (" + a + " MB max).");
           else if (t || n) {
             if (n) {

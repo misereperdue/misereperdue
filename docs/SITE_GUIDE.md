@@ -149,7 +149,7 @@ Therefore, **whenever a JS/CSS/image file changes you must**:
 1. Bump that file's `?v=N` in `index.html`, and in `sw.js` `SHELL` if it is listed there.
 2. Bump `SW_VERSION` in `sw.js` **and** the matching `register("/sw.js?v=N")` in `index.html` (they must be equal; `npm run check` enforces it).
 
-Pin counters on 2026-10-23 (Grim): css `599`, chat `289`, forum3 `1112`, shop `80`, app `5`, SW `124`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
+Pin counters on 2026-10-23 (Grim): css `599`, chat `290`, forum3 `1112`, shop `80`, app `5`, SW `125`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
 
 ---
 
@@ -159,7 +159,8 @@ Pin counters on 2026-10-23 (Grim): css `599`, chat `289`, forum3 `1112`, shop `8
 - Secrets (names only): `AGENT_KEY`, `GROQ_API_KEY`, `OWNER_SECRET`, `SHOPIFY_WEBHOOK_SECRET`, `TURNSTILE_SECRET`, `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`, `X_CLIENT_ID`, `X_CLIENT_SECRET`.
 - Main routes: `/api/register|login|logout|me|profile|password`, `/api/x/*` (X OAuth), `/api/ws`, `/api/ws-ticket`, `/api/messages|send|react|delete`, `/api/forum/*`, `/api/media/*`, `/api/notifications*`, `/api/push/*`, `/api/analytics`, `/api/shopify/order-paid`, `/api/agent/*` (bot actions with `X-Agent-Key`), plus owner/admin routes (`ban`, `badge`, `chat/pause`, …).
 - CORS allows only `https://misereperdue.com` and `https://www.misereperdue.com`. **Pages previews (`*.pages.dev`) cannot log in or post.** On a preview, check anything that needs the API on production after merge, or test against production with local files (see §7).
-- It was last deployed 2026-10-21 via the API/dashboard. It is **not** deployed from this repo. Never redeploy it without dc's explicit OK.
+- Source lives in the private repo `misereperdue/misery-worker`; it is deployed with the Cloudflare API (multipart PUT, `keep_bindings: ["secret_text"]`), last on 2026-10-23. It is **not** deployed from this repo. Never redeploy it without dc's explicit OK.
+- 2026-10-23 hardening (Grim, per dc): login lockout is per IP+account (5/15 min) plus 20/15 min per IP and 100/hour per account, so nobody can lock another person out; `/api/media` caps are 8 MB (everyone) / 20 MB (VIP/owner), checked from Content-Length before parsing; sign-out calls `/api/push/unsubscribe` (this device) and `/api/logout`; expired sessions, rate-limit buckets, WS tickets and OAuth handshakes are swept every 6 h; dead routes `/api/grim-reset`, `/api/clean-test`, `/api/push/debug`, `/api/agent/push/inspect`, `/api/forum/migrate-thread-ids` are gone; the `workers.dev` URL is off (API only at `api.misereperdue.com`).
 - `worker/legacy/comments.js` is the original Oct-8 backend. It is not deployed; it's kept for history.
 
 ---
