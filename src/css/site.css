@@ -3084,7 +3084,7 @@ html {
   min-height: calc(
     100vh - 140px - env(safe-area-inset-top, 0px) + var(--kb-shift, 0px)
   );
-  padding: 4px 2px calc(80px + var(--kb-shift, 0px));
+  padding: 4px 2px calc(100px + var(--kb-shift, 0px));
 }
 .chat-msg {
   display: flex;
@@ -6610,9 +6610,6 @@ textarea,
   user-select: text;
 }
 /* home indicator: keep fixed bottom UI clear of it */
-.chat-inputrow {
-  bottom: max(18px, env(safe-area-inset-bottom, 0px));
-}
 .mp-offline-banner {
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
