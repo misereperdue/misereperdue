@@ -8,7 +8,7 @@ is stroked with round caps, and the dashes are filled outlines, so the result
 is an ordinary web font: real selectable text that wraps natively.
 
 Needs: fonttools, shapely, brotli  (python -m venv v && v/bin/pip install fonttools shapely brotli)
-Usage: python3 tools/build-stitch-font.py [--dash 130 --gap 120 --width 90]
+Usage: python3 tools/build-stitch-font.py [--dash 170 --gap 150 --width 95]
 """
 import argparse, math, os, re, html
 from fontTools.svgLib.path import parse_path
@@ -21,9 +21,9 @@ from shapely.geometry.polygon import orient
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser()
-ap.add_argument('--dash', type=float, default=130)
-ap.add_argument('--gap', type=float, default=120)
-ap.add_argument('--width', type=float, default=90)
+ap.add_argument('--dash', type=float, default=170)
+ap.add_argument('--gap', type=float, default=150)
+ap.add_argument('--width', type=float, default=95)
 ap.add_argument('--out', default=os.path.join(ROOT, 'img/misery-stitch.woff2'))
 a = ap.parse_args()
 

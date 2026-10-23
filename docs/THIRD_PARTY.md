@@ -50,7 +50,7 @@ SingleLine Project Authors, licensed under the **SIL Open Font License 1.1**
 Stitch" and stays under the OFL.
 
 `tools/build-stitch-font.py` cuts every single-line stroke into round-capped
-running-stitch dashes (default dash 130, gap 120, stitch width 90 units/1000 em;
+running-stitch dashes (default dash 170, gap 150, stitch width 95 units/1000 em, tuned for 14px;
 dots become a single round knot) and writes the web font:
 
 ```
