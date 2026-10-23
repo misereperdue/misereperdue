@@ -6461,10 +6461,10 @@ button.forum-glass-pill:active {
 }
 .mp-end-tag {
   margin: 0 0 14px;
-  font: 400 8px/1.4 "Space Age", ui-monospace, monospace;
+  font: 400 9px/1.4 "Space Age", ui-monospace, monospace;
   letter-spacing: .14em;
   color: var(--accent);
-  -webkit-text-stroke: .45px currentColor;
+  -webkit-text-stroke: .25px currentColor;
   opacity: .26;
   animation: shop-end-breathe 7s ease-in-out infinite;
 }
