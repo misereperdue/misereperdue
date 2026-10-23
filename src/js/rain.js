@@ -8,7 +8,6 @@
  *    cover over it thins. Its bright limb turns live to the real moon's on-sky
  *    angle for the viewer (timezone-guessed location, SunCalc-style math,
  *    recomputed every 60 s and eased).
- *  - Night sky in both themes (per dc 12:52); the page below stays light.
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
  *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
  *    a faint branching bolt between cloud layers; "thunder" is a slight cloud
@@ -38,8 +37,8 @@
     },
     light: {
       sky: ["#b7c3d3", "#cdd6e2", "#dfe5ee"],
-      cloud: [[150, 163, 182], [176, 188, 205], [236, 240, 246]],
-      cloudA: [0.55, 0.55, 0.6],
+      cloud: [[126, 139, 160], [158, 171, 192], [246, 248, 252]],
+      cloudA: [0.62, 0.62, 0.7],
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
@@ -125,7 +124,7 @@
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
   function build() {
-    pal = PAL.dark; // night sky in light mode too (per dc 12:52)
+    pal = PAL[theme()];
     clouds = [];
     for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
     moon = moonTex(pal.moon, pal.moonA);

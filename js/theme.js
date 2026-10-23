@@ -6,7 +6,7 @@
     // index.html ships one theme-color per prefers-color-scheme (correct before JS
     // runs); keep any un-media'd one in sync for pages that use a single tag.
     var metas = document.querySelectorAll('meta[name="theme-color"]:not([media])');
-    for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", "#040a1f" /* night sky in both themes (per dc) */);
+    for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", dark ? "#040a1f" : "#b7c3d3" /* sky top colour per theme */);
   }
   apply();
   if (mq.addEventListener) mq.addEventListener("change", apply);

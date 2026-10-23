@@ -377,26 +377,17 @@ body {
   );
   mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
 }
-/* Night sky in light mode too (per dc 12:52 / 12:57 / 13:03). Root cause of the
-   washed-out top on iPhone: in light mode <html> was white (Safari tints the
-   status bar / safe area from it), the hero itself was white and the canvas was
-   masked to a thin band, with a white .hero-fade on top. Now: <html> is night
-   navy (the body stays white, so the page is unchanged), the hero is navy from
-   the very top, and the canvas dissolves into the page with a long eased mask
-   that ends above the first content: Shop gets 40px more room so its fade
-   (~98px, after the nav) finishes above the Misery Globe tile; on Chat/Globe the
-   fade (~64px) runs behind the glass top bar and ends above the chips/content. */
-[data-theme="light"] {
-  background: #040a1f;
-}
-/* the hero box itself is the solid navy part (iOS Safari 26 tints the status
-   bar from a fixed element's background-color at the top edge, not from
-   theme-color), and the canvas overflows below it for the fade */
+/* Light mode header (per dc 13:10): the pale overcast sky again (not night),
+   with a clean, long eased fade into the page that ends above the first
+   content (Shop gets 40px more room). The hero box is the solid pale-sky part
+   (iOS Safari 26 tints the status bar from a fixed element's background-color
+   at the top edge), the canvas overflows below it for the fade; no white
+   layer over the top. */
 [data-theme="light"] body.home .hero {
   --sky-ext: 30px;
   height: calc(70px + env(safe-area-inset-top, 0px));
   overflow: visible;
-  background: #040a1f;
+  background: #b7c3d3;
   pointer-events: none;
   -webkit-mask-image: none;
   mask-image: none;
@@ -406,7 +397,7 @@ body {
 }
 [data-theme="light"] .hero-rain {
   --sky-ext: 30px;
-  background: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
+  background: linear-gradient(#b7c3d3, #cdd6e2 55%, #dfe5ee);
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0,
