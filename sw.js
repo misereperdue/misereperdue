@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 177;
+var SW_VERSION = 178;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.webp, see js/emoji.js) live in their own
 // cache: filled on first use (never precached: ~3,800 files), kept across
@@ -14,7 +14,7 @@ var EMOJI_MAX = 800;
 var SHELL = [
   "/",
   "/webapp.json",
-  "/css/site.css?v=633",
+  "/css/site.css?v=634",
   "/js/theme.js?v=8",
   "/js/emoji.js?v=1",
   "/js/boot-head.js?v=2",
@@ -40,8 +40,8 @@ var SHELL = [
   "/img/splash-1206x2622.png?v=25",
   "/img/splash-1320x2868.png?v=25",
   "/img/splash-1260x2736.png?v=25",
-  "/img/hero-pattern-dark.webp?v=1",
-  "/img/hero-pattern-light.webp?v=1",
+  "/img/hero-tile-dark.webp?v=1",
+  "/img/hero-tile-light.webp?v=1",
   "/offline",
   "/js/offline.js?v=2",
 ];

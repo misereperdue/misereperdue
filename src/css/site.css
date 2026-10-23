@@ -359,8 +359,9 @@ body {
 .hero-pattern {
   position: absolute;
   inset: 0;
-  background: #f2f6fc url("../img/hero-pattern-light.webp?v=1") center 28% / cover
-    no-repeat;
+  /* Seamless repeat cell: 1164x1050 asset at 3x = 388x350 CSS px */
+  background: #f2f6fc url("../img/hero-tile-light.webp?v=1") center top / 388px
+    350px repeat;
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
@@ -371,7 +372,7 @@ body {
 }
 [data-theme="dark"] .hero-pattern {
   background-color: #081230;
-  background-image: url("../img/hero-pattern-dark.webp?v=1");
+  background-image: url("../img/hero-tile-dark.webp?v=1");
 }
 .hero-fade {
   position: absolute;
