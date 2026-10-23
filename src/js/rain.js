@@ -49,24 +49,15 @@
     };
   }
   function sm(t) { return t * t * (3 - 2 * t); }
-  // Cloud colours come from the bar cloud recipe in site.css (--cu-fill,
-  // --cu-hi, --cu-under) so the header clouds and the glass-bar clouds read
-  // as one family; read at init and on every theme change.
-  function cssRGBA(name, fb) {
-    var v = "";
-    try { v = getComputedStyle(root).getPropertyValue(name).trim(); } catch (e) {}
-    var m = v.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?/);
-    if (!m) return fb;
-    var al = m[4] === undefined ? 1 : m[4].indexOf("%") > 0 ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
-    return [+m[1], +m[2], +m[3], al];
-  }
+  // Cloud colours (neutral, no tint). These are the reference values the bar
+  // clouds match: body fill, lit tops, shaded base, per mode.
   function cloudColors(dark) {
     return dark
-      ? { fill: cssRGBA("--cu-fill", [186, 186, 190, 0.24]), hi: cssRGBA("--cu-hi", [255, 255, 255, 0.26]), under: cssRGBA("--cu-under", [18, 18, 20, 0.34]) }
-      : { fill: cssRGBA("--cu-fill", [255, 255, 255, 0.46]), hi: cssRGBA("--cu-hi", [255, 255, 255, 0.78]), under: cssRGBA("--cu-under", [120, 120, 124, 0.3]) };
+      ? { fill: [186, 186, 190, 0.3], hi: [255, 255, 255, 0.3], under: [18, 18, 20, 0.34] }
+      : { fill: [255, 255, 255, 0.55], hi: [255, 255, 255, 0.8], under: [120, 120, 124, 0.3] };
   }
-  // Soft cumulus, same build as the bar clouds: a union of feathered lobes
-  // (solid to 66% of the radius, 0.6 at 84%, clear at 100%) filled with
+  // Puffy cumulus with defined shapes: a union of lobes with a short soft
+  // edge (solid to 86% of the radius, 0.6 at 94%, clear at 100%) filled with
   // --cu-fill, soft --cu-hi highlights on the upper lobes, and a --cu-under
   // shade from 40% down to the base. Lobes wrap in x so layers scroll forever.
   function cloudTex(seed, w, h, clusters, yBase, rMax, lift, C) {
@@ -89,8 +80,8 @@
           var L = lobes[j], x = L[0] + ox, y = L[1], rr = L[2];
           if (x + rr < 0 || x - rr > w) continue;
           var g = gM.createRadialGradient(x, y, 0, x, y, rr);
-          g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.66, "rgba(0,0,0,1)");
-          g.addColorStop(0.84, "rgba(0,0,0,0.6)"); g.addColorStop(1, "rgba(0,0,0,0)");
+          g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.86, "rgba(0,0,0,1)");
+          g.addColorStop(0.94, "rgba(0,0,0,0.6)"); g.addColorStop(1, "rgba(0,0,0,0)");
           gM.fillStyle = g; gM.beginPath(); gM.arc(x, y, rr, 0, 6.2832); gM.fill();
           if (j < lobes.length - 1 && L[1] < by - rr * 0.3) {
             var hg = gH.createRadialGradient(x - rr * 0.1, y - rr * 0.3, 0, x - rr * 0.1, y - rr * 0.3, rr * 0.8);
@@ -98,11 +89,12 @@
             gH.fillStyle = hg; gH.fillRect(x - rr, y - rr * 1.2, rr * 2, rr * 2);
           }
         }
-        var bot = by + h * rMax * 0.25 + cw * 0.55 * 0.6, ug = gU.createLinearGradient(0, top, 0, bot);
-        ug.addColorStop(0, "rgba(0,0,0,0)"); ug.addColorStop(0.4, "rgba(0,0,0,0)"); ug.addColorStop(1, "rgba(0,0,0,1)");
-        gU.fillStyle = ug; gU.fillRect(cx - cw + ox, top, cw * 2, bot - top);
+        // (underside shade is one seamless vertical gradient, drawn below)
       }
     }
+    var ug = gU.createLinearGradient(0, h * (yBase - 0.12), 0, h * Math.min(1, yBase + 0.36));
+    ug.addColorStop(0, "rgba(0,0,0,0)"); ug.addColorStop(1, "rgba(0,0,0,1)");
+    gU.fillStyle = ug; gU.fillRect(0, 0, w, h);
     var M = gM.getImageData(0, 0, w, h).data, U = gU.getImageData(0, 0, w, h).data, Hh = gH.getImageData(0, 0, w, h).data;
     var c = cvs(), g2 = c.getContext("2d"), img = g2.createImageData(w, h), d = img.data, cover = new Float32Array(w * h);
     var F = C.fill, HI = C.hi, UN = C.under;
@@ -151,7 +143,7 @@
     { speed: 22, scale: 1.6, y: 0.04, h: 0.85 },
   ];
   // [w, h, clusters, base y (0-1), max puff radius (x h)], matched to each layer drawn aspect
-  var TEX = [[320, 160, 3, 0.42, 0.2], [320, 112, 3, 0.55, 0.26], [320, 82, 2, 0.66, 0.34]];
+  var TEX = [[600, 300, 3, 0.42, 0.2], [740, 259, 3, 0.55, 0.26], [940, 241, 2, 0.66, 0.34]]; // ~0.75x of the drawn size at DPR 2, so edges stay crisp
 
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
