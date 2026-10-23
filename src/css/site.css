@@ -389,10 +389,14 @@ body {
 [data-theme="light"] {
   background: #040a1f;
 }
+/* the hero box itself is the solid navy part (iOS Safari 26 tints the status
+   bar from a fixed element's background-color at the top edge, not from
+   theme-color), and the canvas overflows below it for the fade */
 [data-theme="light"] body.home .hero {
   --sky-ext: 30px;
-  height: calc(170px + env(safe-area-inset-top, 0px));
-  background: transparent;
+  height: calc(70px + env(safe-area-inset-top, 0px));
+  overflow: visible;
+  background: #040a1f;
   pointer-events: none;
   -webkit-mask-image: none;
   mask-image: none;
@@ -432,8 +436,16 @@ body {
     transparent calc(env(safe-area-inset-top, 0px) + 168px)
   );
 }
+[data-theme="light"] .hero-rain {
+  bottom: auto;
+  height: calc(170px + env(safe-area-inset-top, 0px));
+}
 [data-theme="light"] body:has(#journal.on) .hero,
 [data-theme="light"] body:has(#forum.on) .hero {
+  height: calc(90px + env(safe-area-inset-top, 0px));
+}
+[data-theme="light"] body:has(#journal.on) .hero-rain,
+[data-theme="light"] body:has(#forum.on) .hero-rain {
   height: calc(156px + env(safe-area-inset-top, 0px));
 }
 [data-theme="light"] body:has(#journal.on) .hero-rain,
