@@ -6613,3 +6613,19 @@ textarea,
 .mp-offline-banner {
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
+
+/* Paper grain (per dc): a faint, tileable paper texture behind every page,
+   light and dark. Sits under all content, never catches taps. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url(/img/paper.png?v=1) repeat;
+  background-size: 256px 256px;
+  opacity: .32;
+}
+[data-theme="light"] body::before {
+  opacity: .42;
+}
