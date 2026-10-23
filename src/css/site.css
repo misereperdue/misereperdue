@@ -7425,7 +7425,8 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
    above; shop.js mountCountdown. */
 #shop-grid .mp-cd {
   grid-column: 1/-1;
-  margin: -8px 0 -4px;
+  /* 20px grid gap -> ~14px above and below */
+  margin: -6px 0 -6px;
   text-align: center;
   pointer-events: none;
   -webkit-user-select: none;
