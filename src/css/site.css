@@ -6837,8 +6837,17 @@ html.rc-lock body {
 }
 .chat-forgot {
   display: block;
-  width: 100%;
-  margin-top: 10px;
+  margin: 14px auto 0;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 560;
+  cursor: pointer;
 }
 .chat-forgot[hidden] {
   display: none;
