@@ -6445,3 +6445,147 @@ button.forum-glass-pill:active {
 @media (prefers-reduced-motion: reduce) {
   #shop:has(.product-card)::after { animation: none; }
 }
+
+/* Native share (product + Globe thread); hidden when navigator.share is missing. */
+.share-btn[hidden] {
+  display: none;
+}
+.forum-head .forum-share {
+  margin-left: auto;
+  padding: 6px 11px;
+  color: var(--accent);
+}
+.forum-share svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* Home-screen app: one soft notification ask (chat.js pushAsk). */
+.mp-push-ask {
+  position: fixed;
+  z-index: 400;
+  left: 0;
+  right: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 80px);
+  margin: 0 auto;
+  width: min(340px, calc(100% - 32px));
+  padding: 16px 16px 14px;
+  border-radius: 22px;
+  background: var(--glass-regular-tint);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec), var(--shadow);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.mp-push-ask.on {
+  opacity: 1;
+  transform: none;
+}
+.mp-push-ask-eyes {
+  display: block;
+  width: 46px;
+  height: 12px;
+  margin: 2px auto 12px;
+  background: var(--accent);
+  opacity: 0.8;
+  -webkit-mask: url(/img/splash-eyes.png) center/contain no-repeat;
+  mask: url(/img/splash-eyes.png) center/contain no-repeat;
+}
+.mp-push-ask-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  margin: 0 0 14px;
+}
+.mp-push-ask-row {
+  display: flex;
+  gap: 8px;
+}
+.mp-push-ask-row button {
+  flex: 1;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: var(--glass-hairline);
+}
+.mp-push-ask-no {
+  background: var(--glass-clear-tint);
+  color: var(--muted);
+}
+.mp-push-ask-yes {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: transparent !important;
+}
+.mp-push-ask-row button:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mp-push-ask {
+    transition: opacity 0.2s linear;
+    transform: none;
+  }
+}
+
+/* Native feel: no document rubber-band (inner scrollers keep their own),
+   no grey tap flash, no 300ms / double-tap zoom on controls, no callout or
+   selection on UI chrome and product imagery. Text content + inputs untouched. */
+html,
+body {
+  overscroll-behavior: none;
+}
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+[role="button"],
+a,
+label,
+summary {
+  touch-action: manipulation;
+}
+button,
+[role="button"],
+.nav-wrap,
+.seg,
+.share-btn,
+.forum-glass-pill,
+.forum-cat-pill,
+.product-card,
+.tile-wrap,
+.carousel-track,
+video {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable=""] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* home indicator: keep fixed bottom UI clear of it */
+.chat-inputrow {
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+}
+.mp-offline-banner {
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}

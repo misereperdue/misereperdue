@@ -3,8 +3,10 @@
   function apply() {
     var dark = mq.matches;
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", dark ? "#070f29" : "#ffffff");
+    // index.html ships one theme-color per prefers-color-scheme (correct before JS
+    // runs); keep any un-media'd one in sync for pages that use a single tag.
+    var metas = document.querySelectorAll('meta[name="theme-color"]:not([media])');
+    for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", dark ? "#070f29" : "#ffffff");
   }
   apply();
   if (mq.addEventListener) mq.addEventListener("change", apply);
