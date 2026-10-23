@@ -7,6 +7,11 @@
       try { isRefresh = sessionStorage.getItem("mp-refreshing") === "1"; } catch (e) {}
       var shown = false;
       try { shown = sessionStorage.getItem("mp-splash-shown") === "1"; } catch (e) {}
+      // Freeze touch scrolling while the splash is up so iOS can't
+      // drag/bounce the page (and show a scroll bar) behind it.
+      document.addEventListener("touchmove", function (e) {
+        if (document.documentElement.classList.contains("mp-show-splash")) e.preventDefault();
+      }, { passive: false });
       if (!shown || isRefresh) {
         // Build the splash NOW (head-parse time) so it appears instantly
         // — no black gap while the body downloads/parses. position:fixed
