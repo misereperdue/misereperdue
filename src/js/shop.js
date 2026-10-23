@@ -211,7 +211,8 @@ var MPShop = (function () {
   }
 
   /* Drop countdown (per dc): one small etched line under the Globe tile
-   * counting to 2027-09-11 00:00 Toronto time ("322d 14h 06m 41s"). Each
+   * counting to 2027-09-11 00:00 Toronto time: days, hours, minutes and
+   * seconds, each in its own small debossed box. Each
    * digit that changes rolls in from above (~300ms); unchanged digits stay
    * still. One setInterval; it stops itself when the line leaves the DOM
    * (grid re-rendered) and removes the line once the time has passed. CSS
@@ -224,7 +225,7 @@ var MPShop = (function () {
       '<p class="mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><span class="mp-cd-in" aria-hidden="true">' +
       ["d", "h", "m", "s"]
         .map(function (u) {
-          return '<span class="mp-cd-n" data-u="' + u + '"></span><span class="mp-cd-u">' + u + "</span>";
+          return '<span class="mp-cd-box"><span class="mp-cd-n" data-u="' + u + '"></span></span>';
         })
         .join("") +
       "</span></p>"
