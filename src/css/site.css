@@ -1666,6 +1666,13 @@ textarea {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   transition: transform 0.15s ease;
 }
+.gp-line .gp-check {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-left: 0.3em;
+  vertical-align: -0.17em;
+}
 .globe-promo .gp-acct svg {
   width: 14px;
   height: 14px;

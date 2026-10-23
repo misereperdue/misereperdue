@@ -614,6 +614,60 @@ var MPShop = (function () {
     var e = document.querySelector('[data-view="' + t + '"]');
     e && e.click();
   }
+  /* Globe tile account state (per dc): signed out it pitches "Sign up";
+     signed in it reads "You're already signed up ✓" and the pill becomes "Post",
+     which opens the Globe new-thread composer. chat.js fires "mp-auth" (and keeps
+     window.MPAuthUser) on every sign-in/out; before that we go by the stored token. */
+  var GP_ARROW =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var GP_CHECK =
+    '<svg class="gp-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function gpSignedIn() {
+    if (window.MPAuthUser !== undefined) return !!window.MPAuthUser;
+    try {
+      return !!localStorage.getItem("chat_token");
+    } catch (e) {
+      return !1;
+    }
+  }
+  function gpAuth() {
+    var e = document.querySelector("#shop-grid .globe-promo");
+    if (!e) return;
+    var on = gpSignedIn();
+    if (e.getAttribute("data-auth") === (on ? "in" : "out")) return;
+    e.setAttribute("data-auth", on ? "in" : "out");
+    var l = e.querySelector(".gp-line"),
+      a = e.querySelector(".gp-acct");
+    l &&
+      (l.innerHTML = on
+        ? "You\u2019re already signed up" + GP_CHECK
+        : "Sign up to get access to exclusive deals &amp; content");
+    a && (a.innerHTML = (on ? "Post" : "Sign up") + GP_ARROW);
+    e.setAttribute(
+      "aria-label",
+      on
+        ? "Misery Globe. You\u2019re already signed up"
+        : "Misery Globe. Sign up to get access to exclusive deals and content",
+    );
+  }
+  // Signed in: go to the Globe and press its "New thread" button once it has
+  // rendered, pressing again if the Globe's own first render replaced it, until
+  // the composer is up (gives up after ~6 s).
+  function gpAct() {
+    if (!gpSignedIn()) return y("journal");
+    y("forum");
+    var n = 0;
+    (function tap() {
+      if (document.getElementById("forum-new-editor")) return;
+      var b = document.querySelector("#forum.on #forum-new-top");
+      b && b.offsetParent && b.click();
+      ++n < 40 && setTimeout(tap, 150);
+    })();
+  }
+  document.addEventListener("mp-auth", gpAuth);
+  window.addEventListener("storage", function (e) {
+    "chat_token" === e.key && window.MPAuthUser === undefined && gpAuth();
+  });
   var b = "";
   function k() {
     var t = document.getElementById("shop-grid");
@@ -667,12 +721,13 @@ var MPShop = (function () {
               var n = e.querySelector(".gp-acct");
               n &&
                 ((n.onclick = function (t) {
-                  (t.stopPropagation(), y("journal"));
+                  (t.stopPropagation(), gpAct());
                 }),
                 (n.onkeydown = function (t) {
                   ("Enter" !== t.key && " " !== t.key) ||
-                    (t.preventDefault(), t.stopPropagation(), y("journal"));
+                    (t.preventDefault(), t.stopPropagation(), gpAct());
                 }));
+              gpAuth();
               mountGlobe(e.querySelector(".gp-canvas"));
             }
             mountA2HS(t.querySelector(".a2hs"));
