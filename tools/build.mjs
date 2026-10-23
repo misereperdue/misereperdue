@@ -5,7 +5,7 @@
 //
 // Only files that exist in src/ are built; hand-written files that are already
 // readable (js/theme.js, js/shopify.js, js/social-logos.js, js/ph-icons.js,
-// js/uui-icons.js, sw.js, *.html) are edited in place and never touched here.
+// sw.js, *.html) are edited in place and never touched here.
 //
 //   npm run build            build everything in src/
 //   npm run build -- chat    build only src/js/chat.js   (PREFER THIS: build only what you changed,

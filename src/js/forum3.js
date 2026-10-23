@@ -476,9 +476,12 @@
             t.querySelector("#forum-notif-close").addEventListener("click", function () {
               t.remove();
             }),
-            y("/api/notifications/read", { method: "POST" }).then(function () {
-              q(!0);
-            }),
+            g() &&
+              y("/api/notifications/read", { method: "POST" })
+                .then(function () {
+                  q(!0);
+                })
+                .catch(function () {}),
             t.querySelectorAll(".forum-notif-link").forEach(function (e) {
               e.addEventListener("click", function (r) {
                 (r.preventDefault(), t.remove());
@@ -561,7 +564,8 @@
     }));
   var N = !1;
   function H() {
-    if ((q(), !N)) {
+    if ((q(), !N && g())) {
+      // Signed out: no /api/notifications/read (it only 401s).
       N = !0;
       try {
         y("/api/notifications/read", { method: "POST" })
@@ -1482,20 +1486,17 @@
   function he(e, t, r) {
     return (J ||
       (J = Promise.all([
-        import("https://esm.sh/@tiptap/core@2.11.5"),
-        import("https://esm.sh/@tiptap/starter-kit@2.11.5"),
-        import("https://esm.sh/@tiptap/extension-placeholder@2.11.5"),
-        import("https://esm.sh/@tiptap/extension-link@2.11.5"),
-        import("https://esm.sh/@tiptap/extension-image@2.11.5"),
+        // TipTap 2.11.5, vendored + pinned (vendor/tiptap-2.11.5/BUILD.md).
+        import("/vendor/tiptap-2.11.5/tiptap.min.js"),
       ])
         .then(function (e) {
           return {
             Editor: e[0].Editor,
             Node: e[0].Node,
-            StarterKit: e[1].default,
-            Placeholder: e[2].default,
-            Link: e[3].default,
-            Image: e[4].default,
+            StarterKit: e[0].StarterKit,
+            Placeholder: e[0].Placeholder,
+            Link: e[0].Link,
+            Image: e[0].Image,
           };
         })
         .catch(function () {

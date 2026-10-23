@@ -1,5 +1,5 @@
-import * as THREE from '/vendor/three-0.160.0/build/three.module.js';
-import { RoomEnvironment } from '/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js';
+import * as THREE from '/vendor/three-0.160.0/build/three.module.min.js';
+import { RoomEnvironment } from '/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js?v=2';
 
 const stage = document.getElementById('stage');
 const hint = document.getElementById('hint');

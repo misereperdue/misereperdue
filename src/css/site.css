@@ -2654,6 +2654,12 @@ body {
     transform: rotate(360deg);
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .chat-verified,
+  .chat-verified .seal {
+    animation: none;
+  }
+}
 .chat-msg:not(.mine) .chat-verified {
   left: auto;
   right: -4px;

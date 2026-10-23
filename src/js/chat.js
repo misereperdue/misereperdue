@@ -54,8 +54,9 @@
   }
   function E(t, n) {
     n = n || {};
-    var a = { "Content-Type": "application/json" };
-    d && (a.Authorization = "Bearer " + d);
+    var a = { "Content-Type": "application/json" },
+      tk = n.token !== void 0 ? n.token : d; // n.token: explicit token (sign-out runs after d is cleared)
+    tk && (a.Authorization = "Bearer " + tk);
     var r = null,
       o = { method: n.method || "GET", headers: a, body: n.body ? JSON.stringify(n.body) : void 0 };
     try {
@@ -1010,11 +1011,25 @@
           }),
       !document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]'))
     ) {
-      var T = document.createElement("script");
-      ((T.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"),
-        (T.async = !0),
-        (T.defer = !0),
-        document.head.appendChild(T));
+      // Turnstile loads only once the sign-in card is actually on screen
+      // (Chat tab open), not on every page load / every tab.
+      var T = function () {
+          if (document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]')) return;
+          var t = document.createElement("script");
+          ((t.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"),
+            (t.async = !0),
+            (t.defer = !0),
+            document.head.appendChild(t));
+        },
+        Tc = c.querySelector(".chat-card") || c;
+      if (window.IntersectionObserver) {
+        var To = new IntersectionObserver(function (t) {
+          t.some(function (e) {
+            return e.isIntersecting;
+          }) && (To.disconnect(), T());
+        });
+        To.observe(Tc);
+      } else T();
     }
     var A = c.querySelector(".cf-turnstile-wrap");
     c.querySelectorAll(".chat-tabs button").forEach(function (t) {
@@ -3770,11 +3785,18 @@
     }
   }
   function ft() {
+    // Sign out: with the token captured first, drop this device's push
+    // subscription and end the session on the server (/api/logout), then
+    // clear the token locally. The UI signs out right away; the two requests
+    // finish in the background with the captured token.
+    var tok = d;
     try {
-      try {
-        var e = kt();
-        e && e.catch && e.catch(function () {});
-      } catch (e) {}
+      kt(tok)
+        .catch(function () {})
+        .then(function () {
+          return tok ? E("/api/logout", { method: "POST", body: {}, token: tok }) : null;
+        })
+        .catch(function () {});
     } catch (e) {}
     try {
       localStorage.removeItem(r);
@@ -4009,14 +4031,22 @@
           })
       : Promise.resolve(null);
   }
-  function kt() {
+  function kt(tok) {
+    // tok given (sign-out): only this device's subscription is removed on the
+    // server, using the captured token. No tok: the notifications toggle (all subs).
     return Et().then(function (e) {
-      var t = Promise.resolve();
+      var t = Promise.resolve(),
+        ep = e && e.endpoint;
+      if (tok !== void 0 && !ep) return null;
       return (
         e && (t = e.unsubscribe()),
-        t.then(function () {
-          return E("/api/push/unsubscribe", { method: "POST", body: {} });
-        })
+        t
+          .catch(function () {})
+          .then(function () {
+            return tok !== void 0
+              ? E("/api/push/unsubscribe", { method: "POST", body: { endpoint: ep }, token: tok })
+              : E("/api/push/unsubscribe", { method: "POST", body: {} });
+          })
       );
     });
   }

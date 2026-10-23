@@ -424,9 +424,9 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
 
 (function(){
   var badges = {
-    shopify: "images/pay-shopify.png.b64",
-    paypal: "images/pay-paypal.png.b64",
-    visa: "images/pay-visa.png.b64"
+    shopify: "images/pay-shopify.png?v=1",
+    paypal: "images/pay-paypal.png?v=1",
+    visa: "images/pay-visa.png?v=1"
   };
   // Badges only show on the Bag panel: fetch them when it opens, or once
   // the page is idle, instead of competing with the first paint.
@@ -439,10 +439,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
     window.addEventListener("load", function(){ setTimeout(go, 4000); });
   }
   function load(k){
-    fetch(badges[k]).then(function(r){ return r.text(); }).then(function(b){
-      var el = document.querySelector('img[data-paybadge="' + k + '"]');
-      if (el && b.trim()) el.src = "data:image/png;base64," + b.trim();
-    }).catch(function(){});
+    var el = document.querySelector('img[data-paybadge="' + k + '"]');
+    if (el) el.src = badges[k];
   }
 })();
 

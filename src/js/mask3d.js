@@ -11,9 +11,9 @@ var MPMask3D = (function () {
       }
       return (
         Promise.all([
-          import("/vendor/three-0.160.0/build/three.module.js"),
-          import("/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js"),
-          import("/vendor/three-0.160.0/examples/jsm/utils/BufferGeometryUtils.js"),
+          import("/vendor/three-0.160.0/build/three.module.min.js"),
+          import("/vendor/three-0.160.0/examples/jsm/environments/RoomEnvironment.js?v=2"),
+          import("/vendor/three-0.160.0/examples/jsm/utils/BufferGeometryUtils.js?v=2"),
         ])
           .then(function (i) {
             if (!t)

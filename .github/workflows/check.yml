@@ -1,7 +1,9 @@
-# Sanity checks on pull requests. Builds and deploys NOTHING:
+# Sanity checks on pushes to main and pull requests. Builds and deploys NOTHING:
 # Cloudflare Pages still deploys straight from the repo on push.
 name: check
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
