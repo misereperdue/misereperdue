@@ -2,8 +2,8 @@
  * periodic lightning behind the glass nav pill and the Chat/Globe top bars.
  * One <canvas class="hero-rain"> inside header.hero, drawn with rAF.
  *  - DPR capped at 2, ~80 streaks batched into 3 strokes per frame.
- *  - Clouds: 3 periodic soft-noise textures generated once (small offscreen
- *    canvases, scaled up smoothly) and scrolled at different speeds. The moon
+ *  - Clouds: pre-rendered cumulus sprites (3 small WebPs) tinted per mode
+ *    and drifted in 3 parallax layers. The moon
  *    sits behind them; its halo breathes slowly and brightens where the cloud
  *    cover over it thins.
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
@@ -49,72 +49,76 @@
     };
   }
   function sm(t) { return t * t * (3 - 2 * t); }
-  // Cloud colours (neutral, no tint). These are the reference values the bar
-  // clouds match: body fill, lit tops, shaded base, per mode.
-  function cloudColors(dark) {
-    return dark
-      ? { fill: [186, 186, 190, 0.3], hi: [255, 255, 255, 0.3], under: [18, 18, 20, 0.34] }
-      : { fill: [255, 255, 255, 0.55], hi: [255, 255, 255, 0.8], under: [120, 120, 124, 0.3] };
-  }
-  // Puffy cumulus with defined shapes: a union of lobes with a short soft
-  // edge (solid to 86% of the radius, 0.6 at 94%, clear at 100%) filled with
-  // --cu-fill, soft --cu-hi highlights on the upper lobes, and a --cu-under
-  // shade from 40% down to the base. Lobes wrap in x so layers scroll forever.
-  function cloudTex(seed, w, h, clusters, yBase, rMax, lift, C) {
-    var r = rng(seed), i, j, k;
-    function cvs() { var c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
-    var cM = cvs(), cU = cvs(), cH = cvs(), gM = cM.getContext("2d"), gU = cU.getContext("2d"), gH = cH.getContext("2d");
-    for (i = 0; i < clusters; i++) {
-      var cx = r() * w, by = h * (yBase + (r() - 0.5) * 0.16), cw = w * (0.18 + r() * 0.14), n = 6 + Math.floor(r() * 5), top = by, lobes = [];
-      for (j = 0; j < n; j++) {
-        var u = j / (n - 1), dome = 1 - Math.abs(u - 0.5) * 2;
-        var pr = h * rMax * (0.5 + 0.5 * dome) * (0.85 + r() * 0.3);
-        var ly = by - pr * (0.2 + 0.5 * dome);
-        lobes.push([cx + (u - 0.5) * cw, ly, pr]);
-        top = Math.min(top, ly - pr);
+  // Clouds are pre-rendered cumulus sprites (img/cloud-0..2.webp: neutral
+  // luminance + alpha, lit from the upper left, ~3x the drawn size), tinted
+  // once per mode into canvases and drifted in 3 parallax layers.
+  var SPR_SRC = ["img/cloud-0.webp?v=1", "img/cloud-1.webp?v=1", "img/cloud-2.webp?v=1"];
+  var sprImgs = [], spr = [], sprReady = 0;
+  function tintSprites() {
+    if (sprReady < SPR_SRC.length) return;
+    var dark = theme() === "dark";
+    spr = sprImgs.map(function (im) {
+      var w = im.naturalWidth, h = im.naturalHeight, c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      var g = c.getContext("2d");
+      g.drawImage(im, 0, 0);
+      var id = g.getImageData(0, 0, w, h), d = id.data, cw = Math.ceil(w / 4), ch = Math.ceil(h / 4), cov = new Float32Array(cw * ch), i, x, y;
+      for (i = 0; i < d.length; i += 4) {
+        var L = d[i] / 255, v = dark ? 18 + 165 * Math.pow(L, 1.6) : 150 + 105 * L;
+        d[i] = d[i + 1] = d[i + 2] = v;
+        d[i + 3] = d[i + 3] * (dark ? 0.9 : 0.95);
       }
-      lobes.push([cx, by + h * rMax * 0.25, cw * 0.55]); // flat-ish base
-      for (k = -1; k <= 1; k++) {
-        var ox = k * w;
-        for (j = 0; j < lobes.length; j++) {
-          var L = lobes[j], x = L[0] + ox, y = L[1], rr = L[2];
-          if (x + rr < 0 || x - rr > w) continue;
-          var g = gM.createRadialGradient(x, y, 0, x, y, rr);
-          g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.86, "rgba(0,0,0,1)");
-          g.addColorStop(0.94, "rgba(0,0,0,0.6)"); g.addColorStop(1, "rgba(0,0,0,0)");
-          gM.fillStyle = g; gM.beginPath(); gM.arc(x, y, rr, 0, 6.2832); gM.fill();
-          if (j < lobes.length - 1 && L[1] < by - rr * 0.3) {
-            var hg = gH.createRadialGradient(x - rr * 0.1, y - rr * 0.3, 0, x - rr * 0.1, y - rr * 0.3, rr * 0.8);
-            hg.addColorStop(0, "rgba(0,0,0,1)"); hg.addColorStop(0.72, "rgba(0,0,0,0)");
-            gH.fillStyle = hg; gH.fillRect(x - rr, y - rr * 1.2, rr * 2, rr * 2);
-          }
-        }
-        // (underside shade is one seamless vertical gradient, drawn below)
-      }
-    }
-    var ug = gU.createLinearGradient(0, h * (yBase - 0.12), 0, h * Math.min(1, yBase + 0.36));
-    ug.addColorStop(0, "rgba(0,0,0,0)"); ug.addColorStop(1, "rgba(0,0,0,1)");
-    gU.fillStyle = ug; gU.fillRect(0, 0, w, h);
-    var M = gM.getImageData(0, 0, w, h).data, U = gU.getImageData(0, 0, w, h).data, Hh = gH.getImageData(0, 0, w, h).data;
-    var c = cvs(), g2 = c.getContext("2d"), img = g2.createImageData(w, h), d = img.data, cover = new Float32Array(w * h);
-    var F = C.fill, HI = C.hi, UN = C.under;
-    for (i = 0, j = 0; i < d.length; i += 4, j++) {
-      var m = M[i + 3] / 255;
-      if (m < 0.004) continue;
-      // premultiplied source-over: fill, then underside shade, then highlight
-      var af = F[3] * lift, pr2 = F[0] * af, pg = F[1] * af, pb = F[2] * af, pa = af;
-      var au = UN[3] * (U[i + 3] / 255);
-      pr2 = UN[0] * au + pr2 * (1 - au); pg = UN[1] * au + pg * (1 - au); pb = UN[2] * au + pb * (1 - au); pa = au + pa * (1 - au);
-      var ah = HI[3] * (Hh[i + 3] / 255) * lift;
-      pr2 = HI[0] * ah + pr2 * (1 - ah); pg = HI[1] * ah + pg * (1 - ah); pb = HI[2] * ah + pb * (1 - ah); pa = ah + pa * (1 - ah);
-      var A = pa * m;
-      d[i] = pr2 / pa; d[i + 1] = pg / pa; d[i + 2] = pb / pa; d[i + 3] = Math.round(255 * A);
-      cover[j] = A;
-    }
-    g2.putImageData(img, 0, 0);
-    c.cover = cover;
-    return c;
+      for (y = 0; y < ch; y++) for (x = 0; x < cw; x++) cov[y * cw + x] = d[((Math.min(h - 1, y * 4) * w) + Math.min(w - 1, x * 4)) * 4 + 3] / 255;
+      g.putImageData(id, 0, 0);
+      return { c: c, w: w, h: h, cov: cov, cw: cw, ch: ch };
+    });
   }
+  SPR_SRC.forEach(function (src, i) {
+    var im = new Image();
+    im.decoding = "async";
+    im.onload = function () { sprReady++; tintSprites(); if (!raf) draw(0); };
+    im.src = src;
+    sprImgs[i] = im;
+  });
+  // layers far -> near: [count, height (x H), top (x H), alpha, speed px/s]
+  var CL = [[3, 0.36, -0.04, 0.7, 6], [3, 0.5, 0.06, 0.85, 11], [2, 0.64, 0.2, 1, 18]];
+  var inst = [];
+  (function () {
+    var r = rng(41);
+    for (var k = 0; k < 3; k++) for (var i = 0; i < CL[k][0]; i++)
+      inst.push({ k: k, s: (k * 2 + i) % 3, u: (i + r() * 0.5) / CL[k][0], dy: (r() - 0.5) * 0.12, sc: 0.85 + r() * 0.3, x: 0, y: 0, w: 0, h: 0 });
+  })();
+  function placeClouds(t) {
+    if (!spr.length) return;
+    for (var i = 0; i < inst.length; i++) {
+      var n = inst[i], L = CL[n.k], sp = spr[n.s];
+      n.h = H * L[1] * n.sc; n.w = n.h * sp.w / sp.h;
+      var span = W + n.w + 40;
+      n.x = ((n.u * span + t * L[4]) % span) - n.w - 20;
+      n.y = H * (L[2] + n.dy);
+    }
+  }
+  function drawLayer(c, k, ox, oy, a) {
+    if (!spr.length) return;
+    for (var i = 0; i < inst.length; i++) {
+      var n = inst[i];
+      if (n.k !== k) continue;
+      c.globalAlpha = CL[k][3] * (a === undefined ? 1 : a);
+      c.drawImage(spr[n.s].c, n.x + ox, n.y + oy, n.w, n.h);
+    }
+    c.globalAlpha = 1;
+  }
+  function coverAt(px, py) {
+    var t = 0;
+    for (var i = 0; i < inst.length && spr.length; i++) {
+      var n = inst[i], sp = spr[n.s];
+      if (px < n.x || px >= n.x + n.w || py < n.y || py >= n.y + n.h) continue;
+      var a = sp.cov[Math.floor((py - n.y) / n.h * sp.ch) * sp.cw + Math.floor((px - n.x) / n.w * sp.cw)] * CL[n.k][3];
+      t = t + a * (1 - t);
+    }
+    return t;
+  }
+
   // Crescent moon: lit disc minus an offset disc (tilted), feathered edges,
   // the dark side not drawn apart from an extremely faint earthshine.
   function moonTex(col, alpha) {
@@ -136,22 +140,13 @@
   }
 
   var lb = null, lbx = null;
-  var W = 0, H = 0, dpr = 1, pal, clouds = [], moon, skyGrad, mistGrad, drops = [];
-  var LAYERS = [ // far, mid, near
-    { speed: 7, scale: 1.0, y: -0.08, h: 0.95 },
-    { speed: 13, scale: 1.25, y: -0.02, h: 0.9 },
-    { speed: 22, scale: 1.6, y: 0.04, h: 0.85 },
-  ];
-  // [w, h, clusters, base y (0-1), max puff radius (x h)], matched to each layer drawn aspect
-  var TEX = [[600, 300, 3, 0.42, 0.2], [740, 259, 3, 0.55, 0.26], [940, 241, 2, 0.66, 0.34]]; // ~0.75x of the drawn size at DPR 2, so edges stay crisp
+  var W = 0, H = 0, dpr = 1, pal, moon, skyGrad, mistGrad, drops = [];
 
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
   function build() {
     pal = PAL[theme()];
-    clouds = [];
-    var C = cloudColors(theme() === "dark");
-    for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TEX[k][0], TEX[k][1], TEX[k][2], TEX[k][3], TEX[k][4], [0.75, 0.9, 1.05][k], C));
+    tintSprites();
     moon = moonTex(pal.moon, pal.moonA);
     paint();
   }
@@ -201,13 +196,6 @@
     // upper right, just clear of the centred nav pill so it reads through glass
     var r = Math.max(12, Math.min(18, W * 0.04));
     return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
-  }
-  function coverAt(k, px, py, off, tw, th, y0) {
-    var u = (px - off) / tw; u -= Math.floor(u);
-    var v = (py - y0) / th;
-    if (v < 0 || v >= 1) return 0;
-    var c = clouds[k];
-    return c.cover[Math.floor(v * c.height) * c.width + Math.floor(u * c.width)];
   }
 
   // ---- lightning ----
@@ -259,12 +247,8 @@
     ctx.fillRect(0, 0, W, H);
 
     // moon + halo (behind clouds); halo breathes and grows where clouds thin
-    var mp = moonPos(), offs = [], cover = 0;
-    for (k = 0; k < 3; k++) {
-      var L = LAYERS[k], tw = Math.max(W, 390) * L.scale;
-      offs.push(-((t * L.speed) % tw));
-      cover += coverAt(k, mp.x, mp.y, offs[k], tw, H * L.h, H * L.y);
-    }
+    placeClouds(t);
+    var mp = moonPos(), cover = coverAt(mp.x, mp.y);
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
     var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.6, mp.x, mp.y, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
@@ -281,10 +265,7 @@
     // clouds: each texture spans a tile of (W*scale) and wraps horizontally;
     // a lightning bolt (if any) sits between the far and mid layers
     for (k = 0; k < 3; k++) {
-      var L2 = LAYERS[k], tw2 = Math.max(W, 390) * L2.scale, th2 = H * L2.h, y = H * L2.y + shake * (k + 1) * 0.5, off = offs[k];
-      ctx.drawImage(clouds[k], off, y, tw2, th2);
-      ctx.drawImage(clouds[k], off + tw2, y, tw2, th2);
-      if (off + 2 * tw2 < W) ctx.drawImage(clouds[k], off + 2 * tw2, y, tw2, th2);
+      drawLayer(ctx, k, 0, shake * (k + 1) * 0.5);
       if (k === 0 && bolt && fl > 0.05) drawBolt(fl);
     }
 
@@ -314,11 +295,7 @@
         lbx.setTransform(dpr, 0, 0, dpr, 0, 0);
         lbx.globalCompositeOperation = "source-over";
         lbx.clearRect(0, 0, bs, bs);
-        for (k = 1; k < 3; k++) {
-          var L4 = LAYERS[k], tw4 = Math.max(W, 390) * L4.scale;
-          lbx.drawImage(clouds[k], offs[k] - bx, H * L4.y - by, tw4, H * L4.h);
-          lbx.drawImage(clouds[k], offs[k] + tw4 - bx, H * L4.y - by, tw4, H * L4.h);
-        }
+        for (k = 1; k < 3; k++) drawLayer(lbx, k, -bx, -by);
         lbx.globalCompositeOperation = "destination-in";
         var mg = lbx.createRadialGradient(lr, lr, 0, lr, lr, lr);
         mg.addColorStop(0, "rgba(0,0,0,1)");
@@ -346,13 +323,7 @@
       gr.addColorStop(1, "rgba(" + pal.flash + ",0)");
       ctx.fillStyle = gr;
       ctx.fillRect(0, 0, W, H);
-      ctx.globalAlpha = Math.min(0.5, glow * 1.3);
-      for (k = 1; k < 3; k++) {
-        var L3 = LAYERS[k], tw3 = Math.max(W, 390) * L3.scale;
-        ctx.drawImage(clouds[k], offs[k], H * L3.y, tw3, H * L3.h);
-        ctx.drawImage(clouds[k], offs[k] + tw3, H * L3.y, tw3, H * L3.h);
-      }
-      ctx.globalAlpha = 1;
+      for (k = 1; k < 3; k++) drawLayer(ctx, k, 0, 0, Math.min(0.5, glow * 1.3));
       ctx.globalCompositeOperation = "source-over";
     }
 
