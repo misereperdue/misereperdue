@@ -59,7 +59,7 @@
         });
       }));
   }
-  function buildDashboard(o) {
+  function buildDashboard(o, quiet) {
     n();
     var d = document.createElement("div");
     ((d.className = "msg-popup"), (d.id = "msg-popup"), (d.style.animation = "none"));
@@ -234,6 +234,7 @@
       svg.setAttribute("preserveAspectRatio", "none");
       svg.setAttribute("aria-hidden", "true");
       svg.style.cssText = "display:block;width:100%;height:18px;margin-top:6px;overflow:visible;";
+      if (!vals.length) return svg;
       var pts = vals.map(function (v, i) {
           return [
             (i / Math.max(1, vals.length - 1)) * w,
@@ -2026,7 +2027,7 @@
         e.target === d && n();
       }),
       document.body.appendChild(d),
-      e.fadeSheetIn && e.fadeSheetIn(l));
+      quiet || (e.fadeSheetIn && e.fadeSheetIn(l)));
   }
   ((window.openAnalytics = function () {
     n();
@@ -2036,6 +2037,7 @@
     } catch (e) {
       _cached = null;
     }
+    var _openedAt = Date.now();
     if (_cached && _cached.stats && typeof _cached.stats === "object") {
       try {
         buildDashboard(_cached.stats);
@@ -2053,7 +2055,29 @@
           );
         } catch (e) {}
         // First open (no cache yet): build from the fresh stats.
-        if (!document.querySelector(".dashboard-sheet")) buildDashboard(o.stats);
+        var sh = document.querySelector(".dashboard-sheet");
+        if (!sh) return buildDashboard(o.stats);
+        /* The sheet was drawn from the cached copy: swap in the fresh numbers
+           (quietly, same tab + scroll) so it never shows stale data, unless
+           dc is already mid-action (a dialog/picker open or a while later). */
+        if (
+          _cached &&
+          JSON.stringify(_cached.stats) !== JSON.stringify(o.stats) &&
+          Date.now() - _openedAt < 8000 &&
+          !document.querySelector(".mp-dialog-back, .dash-avatar-picker")
+        ) {
+          var st = sh.scrollTop,
+            tab = null;
+          sh.querySelectorAll('button[aria-label="Chat"],button[aria-label="Forum"],button[aria-label="Manage"]').forEach(function (b) {
+            b.style.color === "var(--ink)" && (tab = b.getAttribute("aria-label"));
+          });
+          buildDashboard(o.stats, !0);
+          var nsh = document.querySelector(".dashboard-sheet");
+          if (nsh) {
+            tab && tab !== "Chat" && (nsh.querySelector('button[aria-label="' + tab + '"]') || { click: function () {} }).click();
+            nsh.scrollTop = st;
+          }
+        }
       })
       .catch(function (e) {
         if (document.querySelector(".dashboard-sheet")) return;
