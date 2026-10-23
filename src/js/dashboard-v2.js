@@ -113,7 +113,7 @@
       c.appendChild(p));
     var f = document.createElement("div");
     f.style.cssText =
-      "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:1px solid rgba(255,255,255,0.12);";
+      "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:var(--glass-hairline);";
     var h = document.createElement("span");
     ((h.style.cssText =
       "position:absolute;top:3px;bottom:3px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);pointer-events:none;left:3px;width:calc(33.333% - 3px);"),
@@ -211,7 +211,7 @@
         "font-size:18px;font-weight:700;white-space:nowrap;letter-spacing:-0.02em;"),
         t.appendChild(n));
       var a = document.createElement("div");
-      ((a.style.cssText = "font-size:12px;opacity:.6;margin-top:4px;"),
+      ((a.style.cssText = "font-size:12px;color:var(--muted);margin-top:4px;"),
         (a.textContent = e.label),
         t.appendChild(a),
         M.appendChild(t),
@@ -219,7 +219,7 @@
     }),
       (function () {
         var __tc = document.createElement("div");
-        ((__tc.style.cssText = "font-size:11px;opacity:.55;margin:-4px 0 8px;text-align:center;"),
+        ((__tc.className = "dash-caption"), (__tc.style.cssText = "margin:-4px 0 8px;"),
           (__tc.textContent = "Totals · Last 30 days"),
           k.appendChild(__tc));
       })(),
@@ -243,11 +243,10 @@
       ],
       I = H[1],
       O = document.createElement("div");
-    O.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px;";
+    O.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:10px;";
     var F = document.createElement("button");
     ((F.type = "button"),
-      (F.style.cssText =
-        "position:relative;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.06) 50%,rgba(0,0,0,.08) 100%);border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.25);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);"));
+      (F.className = "dash-pill"));
     var U = document.createElement("span");
     U.textContent = "Activity";
     var R = document.createElement("span");
@@ -326,20 +325,17 @@
       }),
       k.appendChild(O));
     var Y = document.createElement("div");
-    ((Y.style.cssText =
-      "display:inline-block;margin:0 0 8px 4px;padding:4px 12px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--glass-clear-tint);border:var(--glass-hairline);"),
-      (Y.style.display = "none"),
-      k.appendChild(Y));
+    ((Y.className = "dash-month"), (Y.style.display = "none"), O.appendChild(Y));
     var _ = document.createElement("div");
     ((_.style.cssText =
       "position:relative;height:262px;margin:0 0 12px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:20px;padding:16px;overflow:hidden;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);"),
       k.appendChild(_));
     var __utc = document.createElement("div");
-    ((__utc.style.cssText = "font-size:11px;opacity:.5;margin:-4px 0 12px;text-align:center;"),
+    ((__utc.className = "dash-caption"), (__utc.style.cssText = "margin:-4px 0 6px;"),
       (__utc.textContent = "Days are UTC"),
       k.appendChild(__utc));
     /* C-M11: day buckets are UTC (server toISOString) */ var G = document.createElement("div");
-    G.style.cssText = "font-size:12px;opacity:.55;margin:0 0 6px;text-align:center;";
+    G.className = "dash-caption";
     var X = {
       views: ["#0a84ff", "#5ac8fa"],
       visitors: ["#30d158", "#a6f3c0"],
@@ -495,7 +491,7 @@
       }
       var N = z();
       if (
-        (N ? ((Y.textContent = N), (Y.style.display = "inline-block")) : (Y.style.display = "none"),
+        (N ? ((Y.textContent = N), (Y.style.display = "")) : (Y.style.display = "none"),
         (G.textContent =
           C +
           " total · " +
@@ -641,7 +637,7 @@
           (r.setAttribute("cx", n.x.toFixed(1)),
             r.setAttribute("cy", n.y.toFixed(1)),
             r.setAttribute("r", "3.5"),
-            r.setAttribute("fill", "#0c0d12"),
+            r.setAttribute("fill", __lt ? "#ffffff" : "#0c0d12"),
             r.setAttribute("stroke", k),
             r.setAttribute("stroke-width", "2.5"),
             (r.style.animation = "fadeIn .4s ease both"),
@@ -681,13 +677,12 @@
     }
     (K(), window.addEventListener("resize", $));
     var ee = document.createElement("div");
-    ((ee.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;"),
+    ((ee.className = "dash-label"),
       (ee.textContent = "Newest Users"),
       k.appendChild(ee));
     var te = document.createElement("div");
-    ((te.style.cssText = "margin-bottom:16px;"),
-      (te.innerHTML =
-        '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Loading...</div>'),
+    ((te.className = "dash-box"),
+      (te.innerHTML = '<div class="dash-empty">Loading...</div>'),
       k.appendChild(te),
       k.insertBefore(G, ee),
       t("/api/users/recent")
@@ -697,7 +692,8 @@
               e.users.forEach(function (e) {
                 var t = document.createElement("div");
                 t.style.cssText =
-                  "display:flex;align-items:center;gap:12px;padding:8px 0;border-top:var(--glass-hairline);";
+                  "display:flex;align-items:center;gap:12px;padding:10px 0;";
+                t.className = "dash-urow";
                 var n = document.createElement("div");
                 ((n.style.cssText = "width:36px;height:36px;flex:none;"),
                   n.appendChild(a(e.username, e.avatar, "sm", e.hasAvatarImg ? e.avatarV : void 0)),
@@ -710,7 +706,7 @@
                   (i.textContent = e.username),
                   r.appendChild(i));
                 var o = document.createElement("div");
-                ((o.style.cssText = "font-size:12px;opacity:.5;"),
+                ((o.style.cssText = "font-size:12px;color:var(--muted);"),
                   (o.textContent =
                     "Joined " +
                     new Date(e.createdAt).toLocaleDateString(void 0, {
@@ -721,28 +717,28 @@
                   r.appendChild(o),
                   t.appendChild(r));
                 var s = document.createElement("div");
-                ((s.style.cssText = "font-size:13px;opacity:.6;flex:none;"),
+                ((s.style.cssText = "font-size:13px;color:var(--muted);flex:none;"),
                   (s.textContent = "★ " + (e.points || 0)),
                   t.appendChild(s),
                   te.appendChild(t));
               }),
               e.users.length ||
                 (te.innerHTML =
-                  '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">No users yet.</div>'))
+                  '<div class="dash-empty">No users yet.</div>'))
             : (te.innerHTML =
-                '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>');
+                '<div class="dash-empty">Could not load users.</div>');
         })
         .catch(function () {
           te.innerHTML =
-            '<div style="font-size:13px;opacity:.5;text-align:center;padding:12px;">Could not load users.</div>';
+            '<div class="dash-empty">Could not load users.</div>';
         }));
     var ne = document.createElement("div");
-    ((ne.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;"),
+    ((ne.className = "dash-label"),
       (ne.textContent = "Countries"),
       k.appendChild(ne));
     var ae = document.createElement("div");
-    ((ae.style.cssText =
-      "margin-bottom:16px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px 16px;"),
+    ((ae.className = "dash-box"),
+    (ae.style.padding = "6px 14px"),
       (function () {
         var e = {};
         (o.days || []).forEach(function (t) {
@@ -791,25 +787,21 @@
               i.appendChild(o),
               t.appendChild(i));
             var s = document.createElement("span");
-            ((s.style.cssText = "font-size:13px;opacity:.65;min-width:30px;text-align:right;"),
+            ((s.style.cssText = "font-size:13px;color:var(--muted);min-width:30px;text-align:right;"),
               (s.textContent = e.n),
               t.appendChild(s),
               ae.appendChild(t));
           });
         } else
           ae.innerHTML =
-            '<div style="font-size:13px;opacity:.5;text-align:center;padding:8px;">No visitor data yet.</div>';
+            '<div class="dash-empty">No visitor data yet.</div>';
       })(),
       k.appendChild(ae));
     var re = document.createElement("div");
-    re.style.cssText = "display:flex;gap:12px;margin-bottom:12px;";
+    re.className = "dash-actions";
     var ie = document.createElement("button");
     ((ie.type = "button"),
-      (ie.className = "msg-popup-close"),
-      (ie.style.cssText =
-        "flex:1;margin:0;background:" +
-        (r() ? "rgba(52,199,89,.25)" : "rgba(255,159,10,.25)") +
-        ";"),
+      (ie.className = "dash-btn " + (r() ? "t-green f-green" : "t-orange f-orange")),
       (ie.textContent = r() ? "Resume Chat" : "Pause Chat"),
       ie.addEventListener("click", function () {
         var n = r() ? "/api/chat/unpause" : "/api/chat/pause";
@@ -823,7 +815,7 @@
                 ((n = t.paused),
                 e.setPaused(n),
                 (ie.textContent = t.paused ? "Resume Chat" : "Pause Chat"),
-                (ie.style.background = t.paused ? "rgba(52,199,89,.25)" : "rgba(255,159,10,.25)")),
+                (ie.className = "dash-btn " + (t.paused ? "t-green f-green" : "t-orange f-orange"))),
                 (ie.disabled = !1));
             })
             .catch(function () {
@@ -904,37 +896,37 @@
         });
       }
       ((A.dataset.loaded = "1"),
-        (A.innerHTML = '<div style="text-align:center;opacity:.5;padding:20px;">Loading…</div>'),
+        (A.innerHTML = '<div class="dash-empty">Loading…</div>'),
         t("/api/forum/categories")
           .then(function (a) {
             var r = (a.ok && a.categories) || [];
             A.innerHTML = "";
             var o = document.createElement("div");
-            ((o.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;"),
+            ((o.className = "dash-label"),
               (o.textContent = "Categories"),
               A.appendChild(o));
             var s = document.createElement("div");
-            ((s.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"),
+            ((s.style.cssText = "display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"),
               r.forEach(function (n) {
                 var a = document.createElement("div");
                 (a.setAttribute("data-cat-id", n.id),
                   (a.style.cssText =
-                    "display:flex;align-items:center;gap:8px;padding:8px 12px;border:var(--glass-hairline);border-radius:10px;background:var(--glass-clear-tint);"));
+                    "display:flex;align-items:center;gap:6px;padding:6px 8px 6px 4px;border:var(--glass-hairline);border-radius:14px;background:var(--glass-clear-tint);"));
                 var r = document.createElement("div");
                 ((r.className = "cat-grip"),
                   (r.title = "Drag to reorder"),
                   (r.innerHTML =
                     '<svg viewBox="0 0 256 256" width="12" height="16" fill="currentColor"><path d="M104,60A12,12,0,1,1,92,48,12,12,0,0,1,104,60Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72ZM92,116a12,12,0,1,0,12,12A12,12,0,0,0,92,116Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116ZM92,184a12,12,0,1,0,12,12A12,12,0,0,0,92,184Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184Z"/></svg>'),
                   (r.style.cssText =
-                    "flex:none;display:flex;align-items:center;justify-content:center;width:28px;height:32px;cursor:grab;touch-action:none;opacity:.45;color:var(--ink);-webkit-user-select:none;user-select:none;"),
+                    "flex:none;display:flex;align-items:center;justify-content:center;width:24px;height:36px;cursor:grab;touch-action:none;color:var(--muted);-webkit-user-select:none;user-select:none;"),
                   a.appendChild(r));
                 var i = document.createElement("input");
                 ((i.type = "text"),
                   (i.value = n.name),
                   (i.maxLength = 40),
                   (i.title = "Tap to rename"),
-                  (i.style.cssText =
-                    "flex:1;min-width:0;background:rgba(128,128,128,.08);border:1px dashed rgba(140,160,255,.45);border-radius:8px;padding:8px 12px;color:var(--ink);font-size:16px;font-weight:600;outline:none;"),
+                  (i.className = "dash-input"),
+                  (i.style.cssText = "flex:1;height:36px;border-radius:10px;font-weight:600;"),
                   i.addEventListener("keydown", function (e) {
                     "Enter" === e.key && (e.preventDefault(), clearTimeout(o), d(), i.blur());
                   }));
@@ -964,14 +956,15 @@
                   ((l.textContent =
                     "private" === c ? "🔒 Private" : "members" === c ? "⭐ VIPs" : "Public"),
                   (l.title = "Visibility: Public → Private (only you) → VIPs → Public"),
+                  (l.className = "dash-vis"),
                   (l.style.cssText =
-                    "font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;border:var(--glass-hairline);cursor:pointer;background:" +
+                    "background:" +
                     ("private" === c
                       ? "rgba(120,140,255,.25)"
                       : "members" === c
                         ? "rgba(255,200,50,.2)"
                         : "transparent") +
-                    ";color:var(--ink);"),
+                    ";"),
                   l.addEventListener("click", function () {
                     var a =
                       "public" === c
@@ -987,13 +980,18 @@
                     });
                   }),
                   a.appendChild(l),
+                  "general" === n.id &&
+                    (function () {
+                      var __sp = document.createElement("span");
+                      ((__sp.className = "dash-x"), (__sp.style.visibility = "hidden"), a.appendChild(__sp));
+                    })(),
                   "general" !== n.id)
                 ) {
                   var p = document.createElement("button");
                   ((p.type = "button"),
                     (p.textContent = "×"),
-                    (p.style.cssText =
-                      "font-size:16px;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;"),
+                    (p.className = "dash-x"),
+                    p.setAttribute("aria-label", "Delete category"),
                     p.addEventListener("click", function () {
                       confirm("Delete category '" + n.name + "'? Its threads move to General.") &&
                         t("/api/forum/categories/" + encodeURIComponent(n.id), {
@@ -1009,18 +1007,17 @@
               n(s),
               A.appendChild(s));
             var d = document.createElement("div");
-            d.style.cssText = "display:flex;gap:8px;margin-bottom:16px;";
+            d.style.cssText = "display:flex;gap:8px;margin-bottom:20px;";
             var l = document.createElement("input");
             ((l.type = "text"),
               (l.placeholder = "New category name"),
               (l.maxLength = 40),
-              (l.style.cssText =
-                "flex:1;padding:8px 12px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);font-size:16px;"));
+              (l.className = "dash-input"),
+              (l.style.flex = "1"));
             var c = document.createElement("button");
             ((c.type = "button"),
               (c.textContent = "Add"),
-              (c.className = "btn accent"),
-              (c.style.cssText = "padding:8px 16px;font-size:14px;"),
+              (c.className = "dash-btn accent"),
               c.addEventListener("click", function () {
                 var n = l.value.trim();
                 n &&
@@ -1039,18 +1036,18 @@
             });
             if (p.length) {
               var u = document.createElement("div");
-              ((u.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px;"),
+              ((u.className = "dash-label"),
                 (u.textContent = "Private access"),
                 A.appendChild(u));
               var m = document.createElement("div");
-              ((m.style.cssText = "font-size:12px;opacity:.55;margin-bottom:12px;"),
+              ((m.style.cssText = "font-size:12px;color:var(--muted);margin:-2px 0 10px;"),
                 (m.textContent =
                   "Pick a user and a private category, then set whether they can access it. VIPs always have access to the 💵 category."),
                 A.appendChild(m));
               var v = document.createElement("div");
-              v.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;";
+              v.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;";
               var x =
-                  "flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);font-size:14px;",
+                  "flex:1;min-width:120px;",
                 f = document.createElement("select");
               f.style.cssText = x;
               var h = document.createElement("select");
@@ -1061,8 +1058,8 @@
                 }));
               var g = document.createElement("button");
               ((g.type = "button"),
-                (g.style.cssText =
-                  "width:100%;padding:10px;border-radius:10px;border:var(--glass-hairline);font-size:13px;font-weight:700;cursor:pointer;"));
+                (g.className = "dash-btn"),
+                (g.style.cssText = "width:100%;"));
               var b = [];
               function y() {
                 var e = b.find(function (e) {
@@ -1073,8 +1070,7 @@
               function C() {
                 var e = y();
                 ((g.textContent = e ? "Has access — tap to revoke" : "No access — tap to grant"),
-                  (g.style.background = e ? "rgba(52,199,89,.22)" : "rgba(255,255,255,.06)"),
-                  (g.style.color = "var(--ink)"));
+                  (g.className = e ? "dash-btn t-green f-green" : "dash-btn"));
               }
               (f.addEventListener("change", C),
                 h.addEventListener("change", C),
@@ -1128,7 +1124,7 @@
           })
           .catch(function () {
             A.innerHTML =
-              '<div style="text-align:center;opacity:.5;padding:20px;">Couldn’t load forum data.</div>';
+              '<div class="dash-empty">Couldn’t load forum data.</div>';
           }));
     }
     function de(e, n) {
@@ -1156,8 +1152,8 @@
       var p = document.createElement("button");
       ((p.type = "button"),
         (p.textContent = "Upload photo"),
-        (p.style.cssText =
-          "width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:12px;background:var(--glass-clear-tint);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;"),
+        (p.className = "dash-btn"),
+        (p.style.cssText = "width:100%;margin-bottom:8px;"),
         p.addEventListener("click", function () {
           c.click();
         }),
@@ -1166,8 +1162,8 @@
       var u = document.createElement("button");
       ((u.type = "button"),
         (u.textContent = "Reset to default"),
-        (u.style.cssText =
-          "width:100%;padding:10px;margin-bottom:12px;border:none;border-radius:12px;background:var(--glass-clear-tint);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;"),
+        (u.className = "dash-btn"),
+        (u.style.cssText = "width:100%;margin-bottom:12px;"),
         u.addEventListener("click", function () {
           t("/api/user/" + encodeURIComponent(e) + "/avatar", {
             method: "POST",
@@ -1234,8 +1230,8 @@
       var m = document.createElement("button");
       ((m.type = "button"),
         (m.textContent = "Cancel"),
-        (m.style.cssText =
-          "width:100%;padding:10px;border:none;border-radius:12px;background:var(--glass-clear-tint);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;"),
+        (m.className = "dash-btn"),
+        (m.style.cssText = "width:100%;"),
         m.addEventListener("click", function () {
           i.remove();
         }),
@@ -1271,21 +1267,20 @@
       }
       ((T.dataset.loaded = "1"),
         (T.innerHTML =
-          '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Loading users...</div>'),
+          '<div class="dash-empty">Loading users...</div>'),
         t("/api/users")
           .then(function (e) {
             if (e && e.ok && e.users) {
               T.innerHTML = "";
               var n = document.createElement("div");
-              ((n.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;"),
+              ((n.className = "dash-label"),
                 (n.textContent = "Stars"),
                 T.appendChild(n));
               var r = document.createElement("div");
               r.style.cssText =
-                "background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;";
+                "background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:14px;padding:12px;margin-bottom:20px;display:flex;flex-direction:column;gap:8px;";
               var o = document.createElement("select");
-              ((o.style.cssText =
-                "width:100%;background:var(--bg);color:var(--ink);border:var(--glass-hairline);border-radius:10px;padding:8px;font-size:13px;"),
+              ((o.style.cssText = "width:100%;"),
                 e.users.forEach(function (e) {
                   var t = document.createElement("option");
                   ((t.value = e.username),
@@ -1312,12 +1307,12 @@
                 r.appendChild(o));
               var c = document.createElement("div");
               ((c.style.cssText = "display:flex;gap:8px;align-items:center;"),
-                (s.style.cssText =
-                  "width:64px;flex:none;background:var(--bg);color:var(--ink);border:var(--glass-hairline);border-radius:10px;padding:8px;font-size:13px;"),
-                (d.style.cssText =
-                  "flex:1;padding:8px 6px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;"),
-                (l.style.cssText =
-                  "flex:1;padding:8px 6px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:#ff6b6b;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;"),
+                (s.className = "dash-input"),
+                (s.style.cssText = "width:64px;flex:none;text-align:center;"),
+                (d.className = "dash-btn"),
+                (d.style.flex = "1"),
+                (l.className = "dash-btn t-red"),
+                (l.style.flex = "1"),
                 c.appendChild(s),
                 c.appendChild(d),
                 c.appendChild(l),
@@ -1325,7 +1320,7 @@
                 r.appendChild(c),
                 T.appendChild(r));
               var p = document.createElement("div");
-              ((p.style.cssText = "font-size:14px;font-weight:600;margin-bottom:8px;opacity:.8;"),
+              ((p.className = "dash-label"),
                 (p.textContent = "All Users (" + e.users.length + ")"),
                 T.appendChild(p),
                 e.users.forEach(function (e) {
@@ -1357,7 +1352,7 @@
                     (d.autocomplete = "off"),
                     (d.style.cssText =
                       "font-size:16px;font-weight:700;background:transparent;border:none;outline:none;color:var(--ink);width:100%;padding:0;"),
-                    e.banned && (d.style.color = "#ff6b6b"),
+                    e.banned && d.classList.add("dash-tag-ban"),
                     d.setAttribute("aria-label", "Username"));
                   var l = e.username;
                   function c() {
@@ -1403,18 +1398,18 @@
                     e.member)
                   ) {
                     var p = document.createElement("span");
-                    ((p.style.cssText = "font-size:11px;color:#ffd60a;font-weight:700;"),
+                    ((p.className = "dash-tag-vip"),
                       (p.textContent = " ⭐ VIP"),
                       s.appendChild(p));
                   }
                   if (e.banned) {
                     var u = document.createElement("span");
-                    ((u.style.cssText = "font-size:11px;color:#ff6b6b;font-weight:600;"),
+                    ((u.className = "dash-tag-ban"),
                       (u.textContent = " (banned)"),
                       s.appendChild(u));
                   }
                   var x = document.createElement("div");
-                  ((x.style.cssText = "font-size:12px;opacity:.5;"),
+                  ((x.style.cssText = "font-size:12px;color:var(--muted);"),
                     x.setAttribute("data-stars-display", ""));
                   var f = document.createElement("span");
                   ((f.textContent = "★ " + (e.points || 0)),
@@ -1434,7 +1429,7 @@
                     r.appendChild(s),
                     n.appendChild(r));
                   var h = document.createElement("div");
-                  h.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;";
+                  h.className = "dash-ubtns";
                   var g = i(),
                     b = g && e.username.toLowerCase() === g.username.toLowerCase(),
                     y = "grim" === e.username.toLowerCase();
@@ -1443,10 +1438,7 @@
                     return (
                       (a.type = "button"),
                       (a.textContent = e),
-                      (a.style.cssText =
-                        "flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:" +
-                        t +
-                        ";font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;"),
+                      (a.className = "dash-btn " + t),
                       a.addEventListener("click", function () {
                         n(a);
                       }),
@@ -1458,7 +1450,7 @@
                     ((b || y) &&
                       "check" === d.dataset.protected &&
                       ((d.disabled = !0), (d.style.opacity = ".8")),
-                    C("Clear", "#ff9f0a", function (n) {
+                    C("Clear", "t-orange", function (n) {
                       confirm("Delete all messages from " + e.username + "?") &&
                         ((n.disabled = !0),
                         t("/api/user/" + encodeURIComponent(e.username) + "/clear-messages", {
@@ -1480,11 +1472,11 @@
                     b || y)
                   ) {
                     var E = document.createElement("div");
-                    ((E.style.cssText = "font-size:12px;opacity:.4;font-style:italic;"),
+                    ((E.style.cssText = "font-size:12px;color:var(--muted);font-style:italic;margin-bottom:6px;"),
                       (E.textContent = b ? "This is you." : "Bot account."),
                       n.insertBefore(E, r));
                   } else
-                    (C(e.banned ? "Unban" : "Ban", e.banned ? "#34c759" : "#ff6b6b", function (n) {
+                    (C(e.banned ? "Unban" : "Ban", e.banned ? "t-green" : "t-red", function (n) {
                       __fresh(e.username, function (__f) {
                         if (!__f) {
                           (alert("That user changed — refreshing list."), v());
@@ -1507,7 +1499,7 @@
                     }),
                       C(
                         e.member ? "Remove VIP" : "VIP",
-                        e.member ? "#8e8e93" : "#ffd60a",
+                        e.member ? "t-gray" : "t-yellow",
                         function (n) {
                           if (e.member) {
                             if (!confirm("Remove VIP status from " + e.username + "?")) return;
@@ -1540,7 +1532,7 @@
                           });
                         },
                       ),
-                      C("Delete", "#ff453a", function (n) {
+                      C("Delete", "t-red", function (n) {
                         __fresh(e.username, function (__f) {
                           if (!__f) {
                             (alert("That user changed — refreshing list."), v());
@@ -1567,10 +1559,10 @@
                 (T._refresh = v),
                 e.users.length ||
                   (T.innerHTML =
-                    '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">No users yet.</div>'));
+                    '<div class="dash-empty">No users yet.</div>'));
             } else
               T.innerHTML =
-                '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Could not load users.</div>';
+                '<div class="dash-empty">Could not load users.</div>';
             function u(e) {
               var n = o.value,
                 a = Math.max(1, parseInt(s.value, 10) || 1) * e;
@@ -1649,12 +1641,11 @@
           })
           .catch(function () {
             T.innerHTML =
-              '<div style="font-size:13px;opacity:.5;text-align:center;padding:20px;">Could not load users.</div>';
+              '<div class="dash-empty">Could not load users.</div>';
           }));
     }
     ((oe.type = "button"),
-      (oe.className = "msg-popup-close"),
-      (oe.style.cssText = "flex:1;margin:0;background:rgba(255,69,58,.2);color:#ff6b6b;"),
+      (oe.className = "dash-btn t-red f-red"),
       (oe.textContent = "Clear Chat"),
       oe.addEventListener("click", function () {
         /* B-M1: in-page dialog instead of confirm() */ var __b = document.createElement("div");
@@ -1708,7 +1699,7 @@
     var ce = document.createElement("button");
     ((ce.className = "msg-popup-close"),
       (ce.textContent = "Close"),
-      (ce.style.marginTop = "4px"),
+      
       (ce.onclick = function (e) {
         (e.stopPropagation(), n());
       }),
