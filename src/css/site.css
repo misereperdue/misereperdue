@@ -7928,3 +7928,239 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   padding: 10px 22px;
   font-size: 15px;
 }
+/* ===== Liquid Glass: nav pill + top bars (.glassbar) and chat bubbles, per dc 2026-10-23 =====
+   Clear glass (light blur + saturate + slight brightness lift), bright specular rim
+   (gradient border via mask, brightest top-left), soft inner glow, subtle outer shadow.
+   Sheets/popups keep --sheet-* (untouched). Only the bars get backdrop-filter; bubbles
+   get the look from fills + sheen + inset rim (no per-bubble blur in the scrolling list). */
+:root,
+[data-theme="light"] {
+  --lg-blur: blur(12px) saturate(180%) brightness(1.08);
+  --lg-tint: rgba(255, 255, 255, 0.3);
+  --lg-tint-head: rgba(255, 255, 255, 0.46);
+  --lg-sheen: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.14) 38%,
+    rgba(255, 255, 255, 0.04) 62%,
+    rgba(255, 255, 255, 0.22) 100%
+  );
+  --lg-rim: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.55) 22%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(13, 25, 70, 0.1) 72%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  --lg-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 1px 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px rgba(13, 25, 70, 0.06),
+    inset 0 0 16px rgba(255, 255, 255, 0.35),
+    0 10px 30px rgba(13, 25, 70, 0.14),
+    0 1px 4px rgba(13, 25, 70, 0.1);
+  --lg-drop: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.42));
+  --lg-drop-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px rgba(13, 25, 70, 0.08),
+    inset 0 0 10px rgba(255, 255, 255, 0.6),
+    0 0 0 0.5px rgba(13, 25, 70, 0.08),
+    0 3px 10px rgba(13, 25, 70, 0.14);
+  --lg-icon: rgba(7, 15, 41, 0.6);
+  --lg-icon-on: #070f29;
+  --lg-icon-halo: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.9));
+  --lg-solid: rgba(255, 255, 255, 0.94);
+}
+[data-theme="dark"] {
+  --lg-blur: blur(12px) saturate(180%) brightness(1.06);
+  --lg-tint: rgba(14, 22, 52, 0.26);
+  --lg-tint-head: rgba(10, 18, 48, 0.42);
+  --lg-sheen: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 38%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  --lg-rim: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.32) 22%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.04) 72%,
+    rgba(255, 255, 255, 0.38) 100%
+  );
+  --lg-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 16px rgba(255, 255, 255, 0.06),
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 1px 4px rgba(0, 0, 0, 0.22);
+  --lg-drop: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  --lg-drop-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 10px rgba(255, 255, 255, 0.12),
+    0 3px 10px rgba(0, 0, 0, 0.24);
+  --lg-icon: rgba(255, 255, 255, 0.66);
+  --lg-icon-on: #fff;
+  --lg-icon-halo: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+  --lg-solid: rgba(10, 18, 48, 0.94);
+}
+.glassbar,
+[data-theme="light"] .glassbar {
+  background-color: var(--lg-tint);
+  background-image: var(--lg-sheen);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border: 1px solid transparent;
+  box-shadow: var(--lg-shadow);
+}
+.chat-head.glassbar {
+  background-color: var(--lg-tint-head);
+}
+.glassbar::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--lg-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+.nav button,
+.nav a,
+[data-theme="light"] .nav a,
+[data-theme="light"] .nav button {
+  color: var(--lg-icon);
+}
+.nav button.on,
+[data-theme="light"] .nav button.on {
+  color: var(--lg-icon-on);
+}
+.nav svg {
+  filter: var(--lg-icon-halo);
+}
+/* selected item: a lighter glass droplet that springs between items */
+.seg,
+[data-theme="light"] .seg {
+  background: var(--lg-drop);
+  box-shadow: var(--lg-drop-shadow);
+  transition: transform 0.55s cubic-bezier(0.34, 1.36, 0.5, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .seg,
+  [data-theme="light"] .seg {
+    transition: transform 0.01s linear;
+  }
+}
+/* refraction edge: Chromium only (SVG filter in backdrop-filter); WebKit keeps the CSS glass */
+@supports (-webkit-app-region: drag) and (backdrop-filter: url(#lg-refract)) {
+  .nav.glassbar {
+    backdrop-filter: url(#lg-refract) var(--lg-blur);
+  }
+}
+/* fallbacks: reduced transparency or no backdrop-filter -> near-opaque bars */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glassbar,
+  [data-theme="light"] .glassbar,
+  .chat-head.glassbar {
+    background-color: var(--lg-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar,
+  [data-theme="light"] .glassbar,
+  .chat-head.glassbar {
+    background-color: var(--lg-solid);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .nav.glassbar {
+    backdrop-filter: none;
+  }
+}
+/* chat bubbles: glass from translucent fill + sheen + specular rim, no backdrop blur */
+.chat-bubble {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.chat-msg:not(.mine) .chat-bubble {
+  background-color: rgba(70, 78, 108, 0.46);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    inset 0 0 12px rgba(255, 255, 255, 0.05),
+    0 4px 14px rgba(0, 0, 0, 0.22);
+}
+.chat-msg.mine .chat-bubble {
+  background-color: rgba(169, 215, 245, 0.74);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  color: #0a1230;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 1px 0 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.25),
+    inset 0 0 12px rgba(255, 255, 255, 0.18),
+    0 4px 14px rgba(0, 0, 0, 0.24);
+}
+[data-theme="light"] .chat-msg:not(.mine) .chat-bubble {
+  background-color: rgba(226, 229, 238, 0.62);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.3) 45%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  color: #111;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 1px rgba(13, 25, 70, 0.05),
+    inset 0 0 12px rgba(255, 255, 255, 0.5),
+    0 0 0 0.5px rgba(13, 25, 70, 0.1),
+    0 4px 14px rgba(13, 25, 70, 0.1);
+}
+[data-theme="light"] .chat-msg.mine .chat-bubble {
+  background-color: rgba(150, 202, 238, 0.5);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.22) 45%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  color: #0a1230;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 1px rgba(13, 25, 70, 0.06),
+    inset 0 0 12px rgba(255, 255, 255, 0.45),
+    0 0 0 0.5px rgba(13, 25, 70, 0.12),
+    0 4px 14px rgba(13, 25, 70, 0.12);
+}
