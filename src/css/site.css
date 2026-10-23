@@ -1683,6 +1683,17 @@ textarea {
 .checkout-row .btn {
   flex: 1 1 auto;
 }
+/* Checkout locked until the drop (per dc): muted glass, not the accent fill. */
+.checkout-row .btn.accent.is-soon,
+[data-theme="dark"] .checkout-row .btn.accent.is-soon {
+  background: var(--glass-clear-tint);
+  border: var(--glass-hairline);
+  color: var(--muted);
+  opacity: 1;
+  cursor: not-allowed;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
 .pay-badges {
   display: flex;
   gap: 10px;

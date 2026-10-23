@@ -231,6 +231,41 @@ var MPShop = (function () {
       "</span></p>"
     );
   }
+  /* Checkout gate (per dc): until the drop (CD_END) the bag's Checkout
+   * button is disabled and reads "In N days", N using the same day math as
+   * the countdown ticker (floor of whole days left). On the final day (N = 0,
+   * still before CD_END) it reads "At midnight". From CD_END on it is enabled
+   * and reads "Checkout". Refreshed when the bag renders, on tab return, and
+   * by one setTimeout armed for the next day rollover (no per-second timer). */
+  var coTimer = null;
+  function checkoutLocked() {
+    return Date.now() < CD_END;
+  }
+  function checkoutGate() {
+    if (coTimer) (clearTimeout(coTimer), (coTimer = null));
+    var b = document.getElementById("checkout-btn");
+    if (!b) return;
+    var ms = CD_END - Date.now();
+    if (ms <= 0) {
+      if (b.classList.contains("is-soon")) {
+        b.classList.remove("is-soon");
+        b.disabled = !1;
+        b.removeAttribute("aria-disabled");
+        b.textContent = "Checkout";
+      }
+      return;
+    }
+    var d = Math.floor(ms / 864e5);
+    b.classList.add("is-soon");
+    b.disabled = !0;
+    b.setAttribute("aria-disabled", "true");
+    b.textContent = d >= 1 ? "In " + d + (1 === d ? " day" : " days") : "At midnight";
+    var next = ms - d * 864e5 + 50;
+    coTimer = setTimeout(checkoutGate, Math.min(next, 864e5));
+  }
+  document.addEventListener("visibilitychange", function () {
+    document.hidden || checkoutGate();
+  });
   function mountCountdown(el) {
     if (cdTimer) (clearInterval(cdTimer), (cdTimer = null));
     if (!el) return;
@@ -872,6 +907,7 @@ var MPShop = (function () {
   function S() {
     var t = document.getElementById("checkout-btn"),
       e = document.getElementById("checkout-err");
+    if (checkoutLocked()) return void checkoutGate();
     (e && (e.textContent = ""),
       window.MPShopify && MPShopify.configured()
         ? (t && ((t.disabled = !0), (t.innerHTML = '<span class="btn-spin"></span>')),
@@ -1118,7 +1154,8 @@ var MPShop = (function () {
         var r = !!n.length;
         ((o.style.display = r ? "" : "none"),
           i && (i.style.display = r ? "" : "none"),
-          (o.onclick = S));
+          (o.onclick = S),
+          checkoutGate());
       }
     }
   }
