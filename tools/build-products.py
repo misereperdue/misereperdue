@@ -13,7 +13,8 @@ Q = """{ products(first:50){ nodes{ id handle title description availableForSale
   variants(first:20){nodes{id title availableForSale price{amount currencyCode}}} } } }"""
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Page title = Shopify product name + " · Misère Perdue".
-SEO_TITLE = {}  # per dc: product page titles are the Shopify product name
+SEO_TITLE = {}
+OG_V = 1  # bump when img/og/product-*.jpg change  # per dc: product page titles are the Shopify product name
 
 def meta_desc(p):
     """<=155 chars, from the Shopify description ('+' bullet style -> commas)."""
@@ -138,6 +139,8 @@ def main():
     for p in prods:
         url = f"{SITE}/p/{p['handle']}"
         img = p["featuredImage"]["url"] if p.get("featuredImage") else f"{SITE}/img/og-image.jpg"
+        card = os.path.join(ROOT, "img", "og", f"{p['handle']}-p.jpg")  # 1200x630 product-only share card (tools/build-og-products.py)
+        share_img = f"{SITE}/img/og/{p['handle']}-p.jpg?v={OG_V}" if os.path.exists(card) else img
         stock = "In stock" if p["availableForSale"] else "Sold out"
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
@@ -155,7 +158,9 @@ def main():
                  f'<meta property="product:price:currency" content="{lo["currencyCode"]}">\n'
                  f'<meta name="twitter:label1" content="Price">\n'
                  f'<meta name="twitter:data1" content="{e(price_label(p))}">\n')
-        out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt, share_desc(p), extra) + body
+        if share_img != img:
+            extra += '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+        out = head(title, meta_desc(p), url, share_img, "product", jsonld(p, url), alt, share_desc(p), extra) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
