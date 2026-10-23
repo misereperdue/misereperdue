@@ -1,216 +1,246 @@
-/* Header weather (per dc): animated rain, drifting clouds, a faded moon and
- * periodic lightning behind the glass nav pill and the Chat/Globe top bars.
- * One <canvas class="hero-rain"> inside header.hero, drawn with rAF.
- *  - DPR capped at 2, ~80 streaks batched into 3 strokes per frame.
- *  - Clouds: pre-rendered cumulus sprites (3 small WebPs) tinted per mode
- *    and drifted in 3 parallax layers. The moon
- *    sits behind them; its halo breathes slowly and brightens where the cloud
- *    cover over it thins.
- *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
- *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
- *    a faint branching bolt between cloud layers; "thunder" is a slight cloud
- *    swell + tiny shake a moment later. No audio.
- *  - Paused when the tab is hidden or the header is offscreen; one static frame
- *    (moon, no lightning) under prefers-reduced-motion.
- *  - Re-themes when <html data-theme> changes. */
+/* Header weather + cloud bars (per dc 12:01: every cloud generated with CSS).
+ *
+ * Clouds: a seeded layout routine places overlapping ellipses ("puffs") like a cumulus
+ * (big domes, a body row, a flat wide base and cauliflower detail along the top) and builds
+ * them as plain elements; ALL drawing is CSS (site.css "CSS cumulus"): each puff is a
+ * border-radius ellipse shaded like a lit sphere (bright cap toward the moon, darker belly)
+ * plus its slice of a cloud-wide light/underside gradient, casting a soft occlusion shadow on
+ * the puffs behind it; the cloud container is masked to the union of the puffs (1.5px soft
+ * edge, flat feathered base) and faded as one group. No images, no canvas for clouds.
+ *  - Header (header.hero .wx): navy night / pale overcast sky, a CSS crescent moon with halo,
+ *    a back and a front cloud layer drifting at different speeds (CSS animations), the rain
+ *    canvas between them, and a second faint copy of the moon + halo above the clouds so it
+ *    keeps shining through (dims, never vanishes) and lights the cloud edges around it.
+ *  - Bars: every .glassbar (nav, Chat/Globe top bars) gets one cloud (.cb) generated from
+ *    the measured size of its contents so every pill/label sits inside the solid core.
+ *  - Lightning every ~8-20 s: 2-3 pulses within ~400 ms (<= 3/s); the clouds near the
+ *    strike light up from within (filter: brightness via WAAPI), a glow lights the sky
+ *    behind the front layer, sometimes a faint bolt on the rain canvas. Visual only.
+ *  - prefers-reduced-motion: clouds hold still, no lightning, one static rain frame. */
 (function () {
   "use strict";
-  var cv = document.querySelector("canvas.hero-rain");
-  if (!cv || !cv.getContext) return;
-  var ctx = cv.getContext("2d", { alpha: false });
-  if (!ctx) return;
   var root = document.documentElement;
   var rm = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-
-  var PAL = {
-    dark: {
-      sky: ["#040a1f", "#0a1636", "#0d1b40"],
-      rain: "190,214,245",
-      rainA: [0.12, 0.22, 0.36],
-      mist: "150,150,155",
-      moon: [238, 238, 236], moonA: 0.6, halo: "228,228,226", haloA: 0.26, lining: 0.45,
-      flash: "255,255,255", flashA: 0.28, bolt: "255,255,255",
-    },
-    light: {
-      sky: ["#b7c3d3", "#cdd6e2", "#dfe5ee"],
-      rain: "52,70,104",
-      rainA: [0.1, 0.17, 0.26],
-      mist: "255,255,255",
-      moon: [255, 255, 255], moonA: 0.42, halo: "255,255,255", haloA: 0.18, lining: 0.1,
-      flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
-    },
-  };
-
-  // ---- periodic value noise (wraps horizontally so clouds scroll forever) ----
-  function rng(seed) {
-    return function () {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
-    };
-  }
-  function sm(t) { return t * t * (3 - 2 * t); }
-  // Clouds are pre-rendered cumulus sprites (img/cloud-0..2.webp: neutral
-  // luminance + alpha, lit from the upper left, ~3x the drawn size), tinted
-  // once per mode into canvases and drifted in 3 parallax layers.
-  var SPR_SRC = ["img/cloud-0.webp?v=1", "img/cloud-1.webp?v=1", "img/cloud-2.webp?v=1"];
-  var sprImgs = [], spr = [], sprReady = 0;
-  function tintSprites() {
-    if (sprReady < SPR_SRC.length) return;
-    var dark = theme() === "dark";
-    spr = sprImgs.map(function (im) {
-      var w = im.naturalWidth, h = im.naturalHeight, c = document.createElement("canvas");
-      c.width = w; c.height = h;
-      var g = c.getContext("2d");
-      g.drawImage(im, 0, 0);
-      var id = g.getImageData(0, 0, w, h), d = id.data, cw = Math.ceil(w / 4), ch = Math.ceil(h / 4), cov = new Float32Array(cw * ch), i, x, y;
-      for (i = 0; i < d.length; i += 4) {
-        var L = d[i] / 255, v = dark ? 18 + 165 * Math.pow(L, 1.6) : 150 + 105 * L;
-        d[i] = d[i + 1] = d[i + 2] = v;
-        d[i + 3] = d[i + 3] * (dark ? 0.9 : 0.95);
-      }
-      for (y = 0; y < ch; y++) for (x = 0; x < cw; x++) cov[y * cw + x] = d[((Math.min(h - 1, y * 4) * w) + Math.min(w - 1, x * 4)) * 4 + 3] / 255;
-      g.putImageData(id, 0, 0);
-      return { c: c, w: w, h: h, cov: cov, cw: cw, ch: ch };
-    });
-  }
-  SPR_SRC.forEach(function (src, i) {
-    var im = new Image();
-    im.decoding = "async";
-    im.onload = function () { sprReady++; tintSprites(); if (!raf) draw(0); };
-    im.src = src;
-    sprImgs[i] = im;
-  });
-  // layers far -> near: [count, height (x H), top (x H), alpha, speed px/s]
-  var CL = [[3, 0.36, -0.04, 0.7, 6], [3, 0.5, 0.06, 0.85, 11], [2, 0.64, 0.2, 1, 18]];
-  var inst = [];
-  (function () {
-    var r = rng(41);
-    for (var k = 0; k < 3; k++) for (var i = 0; i < CL[k][0]; i++)
-      inst.push({ k: k, s: (k * 2 + i) % 3, u: (i + r() * 0.5) / CL[k][0], dy: (r() - 0.5) * 0.12, sc: 0.85 + r() * 0.3, x: 0, y: 0, w: 0, h: 0 });
-  })();
-  function placeClouds(t) {
-    if (!spr.length) return;
-    for (var i = 0; i < inst.length; i++) {
-      var n = inst[i], L = CL[n.k], sp = spr[n.s];
-      n.h = H * L[1] * n.sc; n.w = n.h * sp.w / sp.h;
-      var span = W + n.w + 40;
-      n.x = ((n.u * span + t * L[4]) % span) - n.w - 20;
-      n.y = H * (L[2] + n.dy);
-    }
-  }
-  function drawLayer(c, k, ox, oy, a) {
-    if (!spr.length) return;
-    for (var i = 0; i < inst.length; i++) {
-      var n = inst[i];
-      if (n.k !== k) continue;
-      c.globalAlpha = CL[k][3] * (a === undefined ? 1 : a);
-      c.drawImage(spr[n.s].c, n.x + ox, n.y + oy, n.w, n.h);
-    }
-    c.globalAlpha = 1;
-  }
-  function coverAt(px, py) {
-    var t = 0;
-    for (var i = 0; i < inst.length && spr.length; i++) {
-      var n = inst[i], sp = spr[n.s];
-      if (px < n.x || px >= n.x + n.w || py < n.y || py >= n.y + n.h) continue;
-      var a = sp.cov[Math.floor((py - n.y) / n.h * sp.ch) * sp.cw + Math.floor((px - n.x) / n.w * sp.cw)] * CL[n.k][3];
-      t = t + a * (1 - t);
-    }
-    return t;
-  }
-
-  // Crescent moon: lit disc minus an offset disc (tilted), feathered edges,
-  // the dark side not drawn apart from an extremely faint earthshine.
-  function moonTex(col, alpha) {
-    var S = 96, c = document.createElement("canvas");
-    c.width = c.height = S;
-    var m = c.getContext("2d"), img = m.createImageData(S, S), d = img.data, x, y, p = 0;
-    var ang = -0.45, ox = Math.cos(ang) * 0.3, oy = Math.sin(ang) * 0.3; // shadow disc offset (in radii)
-    for (y = 0; y < S; y++) for (x = 0; x < S; x++) {
-      var dx = ((x + 0.5) / S - 0.5) / 0.42, dy = ((y + 0.5) / S - 0.5) / 0.42; // unit = moon radius
-      var dd = Math.sqrt(dx * dx + dy * dy), disc = 1 - sm(Math.min(1, Math.max(0, (dd - 0.9) / 0.14)));
-      var sx = dx - ox, sy = dy - oy, sd = Math.sqrt(sx * sx + sy * sy) / 0.92;
-      var lit = disc * sm(Math.min(1, Math.max(0, (sd - 0.94) / 0.14)));
-      var a = Math.max(lit, disc * 0.05);
-      d[p++] = col[0]; d[p++] = col[1]; d[p++] = col[2];
-      d[p++] = Math.round(255 * alpha * a);
-    }
-    m.putImageData(img, 0, 0);
-    return c;
-  }
-
-  var lb = null, lbx = null;
-  var W = 0, H = 0, dpr = 1, pal, moon, moonOver, skyGrad, mistGrad, drops = [];
-
+  function still() { return !!(rm && rm.matches); }
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
-  function build() {
-    pal = PAL[theme()];
-    tintSprites();
-    moon = moonTex(pal.moon, pal.moonA);
-    moonOver = moonTex(pal.moon, 0.95);
-    paint();
+  // ===================== cumulus layout =====================
+  function rng(seed) { return function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+  function px(n) { return Math.round(n * 10) / 10 + "px"; }
+  function inside(P, x, y, k) {
+    for (var i = 0; i < P.length; i++) { var p = P[i], dx = (x - p.x) / (p.rx * k), dy = (y - p.y) / (p.ry * k); if (dx * dx + dy * dy <= 1) return true; }
+    return false;
   }
-  function paint() {
-    if (!W) return;
-    skyGrad = ctx.createLinearGradient(0, 0, 0, H);
-    skyGrad.addColorStop(0, pal.sky[0]);
-    skyGrad.addColorStop(0.55, pal.sky[1]);
-    skyGrad.addColorStop(1, pal.sky[2]);
-    mistGrad = ctx.createLinearGradient(0, H * 0.45, 0, H);
-    mistGrad.addColorStop(0, "rgba(" + pal.mist + ",0)");
-    mistGrad.addColorStop(1, "rgba(" + pal.mist + ",0.10)");
+  // free-floating sky cumulus: the same recipe as the bar clouds (so every cloud on the site
+  // matches), built around a virtual body box, with its own random hump profile
+  function cumulus(seed, W, H) {
+    var r = rng(seed * 31 + 7), m = 2;
+    var c = { x0: W * (0.16 + r() * 0.04), x1: W * (0.84 - r() * 0.04), y0: H * 0.5, y1: H * 0.74 };
+    return barCumulus(seed, W, H, c, m, 2, 0.25 + r() * 0.5);
+  }
+  // a cloud that must hold a content box (x0,y0)-(x1,y1) (a pill row or a title bar) inside
+  // its solid core with margin m. The core is a row of big overlapping lobes painted with the
+  // cloud-wide gradient only ("f"), so they merge seamlessly (nothing busy behind icons/text)
+  // while the outline stays lumpy; the cumulus structure lives above it: overlapping lit domes
+  // of different heights (tallest left of centre, a second hump right, low shoulders at the
+  // ends) whose bases tuck behind the core, and
+  // rounded billows underneath. Any point of the content stadium not inside the solid core
+  // gets its own lobe.
+  function barCumulus(seed, W, H, c, m, hi, pk1) {
+    var r = rng(seed), i, n, x, y, rr, domes = [], core = [], bot = [];
+    var ch = c.y1 - c.y0, cw = c.x1 - c.x0, cy = (c.y0 + c.y1) / 2, R = ch / 2 + m + 2;
+    n = Math.max(3, Math.ceil(cw / (R * 1.6)) + 1);
+    for (i = 0; i < n; i++) {
+      var e = i === 0 || i === n - 1;
+      x = c.x0 + R * 0.55 + (cw - R * 1.1) * i / (n - 1) + (r() - 0.5) * 6;
+      rr = R * (e ? 1 : 1.04 + r() * 0.1);
+      core.push({ x: x, y: cy + 1 + (r() - 0.5) * 2, rx: rr * (e ? 1.05 : 1.35 + r() * 0.2), ry: rr, f: 2 });
+    }
+    var head = c.y0 - m - hi;
+    var pk = pk1 === undefined ? 0.34 : pk1, pk2 = pk > 0.5 ? pk - 0.42 : pk + 0.42;
+    var prof = function (u) { return 0.3 + 0.7 * Math.exp(-Math.pow((u - pk) / 0.24, 2)) + 0.45 * Math.exp(-Math.pow((u - pk2) / 0.13, 2)); };
+    n = Math.max(3, Math.round(cw / 72));
+    for (i = 0; i < n; i++) {
+      var u = (i + 0.5) / n + (r() - 0.5) * 0.06;
+      x = c.x0 + cw * u;
+      var top = c.y0 - m - head * Math.min(1, prof(u) * (0.9 + r() * 0.2));
+      rr = (cy - top) / 2 * (0.95 + r() * 0.2);
+      domes.push({ x: x, y: top + rr, rx: Math.max(rr * 1.1, cw / n * (0.6 + r() * 0.14)), ry: rr });
+    }
+    // underside: gently scalloped billows of mixed sizes, not one straight line
+    n = Math.max(3, Math.round(cw / 64));
+    for (i = 0; i < n; i++) {
+      rr = (H - 2 - c.y1) * 0.5 + 7 + r() * 4;
+      x = c.x0 + cw * (0.08 + 0.84 * i / (n - 1)) + (r() - 0.5) * 8;
+      bot.push({ x: x, y: H - 2 - rr - (i % 2 ? 1 + r() * 2 : 4 + r() * 3) - (i === 0 || i === n - 1 ? 4 : 0), rx: rr * (1.3 + r() * 0.25), ry: rr, f: 2 });
+    }
+    var P = domes.concat(core, bot), add = [];
+    var rad = ch / 2 + m, X0 = c.x0 - m, X1 = c.x1 + m, Y0 = c.y0 - m, Y1 = c.y1 + m;
+    for (y = Y0; y <= Y1 + 0.1; y += 3) for (x = X0; x <= X1 + 0.1; x += 3) {
+      var ex = x < X0 + rad ? X0 + rad - x : x > X1 - rad ? x - (X1 - rad) : 0, ey = Math.abs(y - (Y0 + Y1) / 2);
+      if (ex > 0 && ex * ex + ey * ey > rad * rad) continue;
+      if (inside(P.concat(add), x, y, 0.92)) continue;
+      rr = R * 0.7;
+      add.push({ x: x + (x < (X0 + X1) / 2 ? 3 : -3), y: y + (y < cy ? rr * 0.5 : -rr * 0.4), rx: rr * 1.15, ry: rr, f: 2 });
+    }
+    // domes in FRONT of the core: their lit tops build the outline and their lower halves fade
+    // into the body colour, so no edge shows behind the contents; draw the smaller/lower ones
+    // last so each hump overlaps its taller neighbour (crease = its upward occlusion shadow)
+    domes.forEach(function (d) { d.d = 1; });
+    domes.sort(function (a, b) { return a.y - a.ry - (b.y - b.ry); });
+    return core.concat(add, bot, domes);
+  }
+  // puffs -> elements (back to front) inside a masked container; drawing is all CSS
+  function render(el, P, W, H, lx, round) {
+    var mi = [round ? "linear-gradient(#000 0 0)" : "linear-gradient(#000 calc(100% - 4px),transparent)"], mp = ["0 0"], ms = ["100% 100%"], html = "";
+    var hx = Math.round(50 + (lx || 0) * 18) + "%";
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i], x = p.x - p.rx, y = p.y - p.ry, w = p.rx * 2, h = p.ry * 2;
+      if (p.box) {
+        mi.push("linear-gradient(#000 0 0)", "radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)", "radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)");
+        mp.push(px(x + p.ry) + " " + px(y), px(x) + " " + px(y), px(x + w - h) + " " + px(y));
+        ms.push(px(w - h) + " " + px(h), px(h) + " " + px(h), px(h) + " " + px(h));
+      } else { mi.push("radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)"); mp.push(px(x) + " " + px(y)); ms.push(px(w) + " " + px(h)); }
+      html += '<i class="' + (p.d ? " d" : " g") + '" style="left:' + px(x) + ";top:" + px(y) + ";width:" + px(w) + ";height:" + px(h) +
+        ";--sx:" + px(-x) + ";--sy:" + px(-y) + ";--sw:" + Math.round(W) + "px;--sh:" + Math.round(H) + "px;--hx:" + hx + '"></i>';
+    }
+    el.innerHTML = html;
+    var s = el.style;
+    s.width = px(W); s.height = px(H);
+    s.webkitMaskImage = s.maskImage = mi.join(",");
+    s.webkitMaskPosition = s.maskPosition = mp.join(",");
+    s.webkitMaskSize = s.maskSize = ms.join(",");
+    s.webkitMaskRepeat = s.maskRepeat = "no-repeat";
+    s.webkitMaskComposite = "source-in" + new Array(mi.length).join(",source-over");
+    s.maskComposite = "intersect" + new Array(mi.length).join(",add");
   }
 
+  // ===================== bar clouds =====================
+  var LX = 0.5; // light from the moon, upper right
+  var bars = [], ro = window.ResizeObserver ? new ResizeObserver(function (es) { es.forEach(function (e) { fitBar(e.target); }); }) : null;
+  function fitBar(bar) {
+    if (!bar.isConnected) return;
+    var cb = bar.querySelector(":scope > .cb");
+    if (!cb) {
+      cb = document.createElement("span");
+      cb.className = "cb cu";
+      cb.setAttribute("aria-hidden", "true");
+      bar.insertBefore(cb, bar.firstChild);
+      bar.classList.add("cbx");
+      if (bars.indexOf(bar) < 0) { bars.push(bar); if (ro) ro.observe(bar); }
+    }
+    var br = bar.getBoundingClientRect();
+    if (!br.width || !br.height) return;
+    // content box = union of the visible children (pills / title / buttons)
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (var k = bar.children, i = 0; i < k.length; i++) {
+      var ch = k[i];
+      if (ch === cb || ch.classList.contains("seg") || ch.classList.contains("split")) continue;
+      var r = ch.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom);
+    }
+    if (!isFinite(x0)) return;
+    var isNav = bar.classList.contains("nav");
+    var EX = 14, ET = 2, EB = 6;
+    var W = br.width + EX * 2, H = br.height + ET + EB;
+    var c = { x0: x0 - br.left + EX, y0: y0 - br.top + ET, x1: x1 - br.left + EX, y1: y1 - br.top + ET };
+    if (!isNav) { // title text: keep the cloud snug to the text rows, not the full padding box
+      c.y0 = Math.max(c.y0, ET + 18); c.y1 = Math.min(c.y1, H - 14);
+    }
+    var key = [Math.round(W), Math.round(H), Math.round(c.x0), Math.round(c.x1), Math.round(c.y0), Math.round(c.y1)].join();
+    if (cb.getAttribute("data-k") === key) return;
+    cb.setAttribute("data-k", key);
+    cb.style.left = -EX + "px"; cb.style.top = -ET + "px";
+    render(cb, barCumulus(isNav ? 7 : 19, W, H, c, isNav ? 6 : 7, 2), W, H, LX, true);
+  }
+  function scanBars(n) {
+    var list = (n || document).querySelectorAll ? (n || document).querySelectorAll(".glassbar") : [];
+    for (var i = 0; i < list.length; i++) fitBar(list[i]);
+    if (n && n.classList && n.classList.contains("glassbar")) fitBar(n);
+  }
+  scanBars();
+  if (window.MutationObserver) new MutationObserver(function (ms) {
+    for (var i = 0; i < ms.length; i++) for (var j = 0, a = ms[i].addedNodes; j < a.length; j++) if (a[j].nodeType === 1 && !(a[j].classList && a[j].classList.contains("cb"))) scanBars(a[j]);
+  }).observe(document.body || root, { childList: true, subtree: true });
+  window.addEventListener("load", function () { bars.forEach(fitBar); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { bars.forEach(fitBar); });
+
+  // ===================== header sky =====================
+  var hero = document.querySelector("header.hero"), wx = hero && hero.querySelector(".wx");
+  var cv = hero && hero.querySelector("canvas.hero-rain");
+  var clouds = [];
+  function buildSky() {
+    if (!wx) return;
+    var hr = hero.getBoundingClientRect(), HW = Math.round(hr.width), HH = Math.round(hr.height);
+    if (!HW || !HH) return;
+    wx.style.setProperty("--wx-w", HW + "px");
+    var key = HW + "x" + HH;
+    if (wx.getAttribute("data-k") === key) return;
+    wx.setAttribute("data-k", key);
+    var r = rng(5), L = [[".wx-back", 4, 46, 70, 2.3, 3.1, -0.12, 0.34, 7], [".wx-front", 3, 64, 96, 2.4, 3.2, 0.3, 0.62, 13]];
+    clouds = [];
+    L.forEach(function (l, li) {
+      var host = wx.querySelector(l[0]);
+      if (!host) return;
+      host.innerHTML = "";
+      for (var i = 0; i < l[1]; i++) {
+        var h = l[2] + r() * (l[3] - l[2]), w = h * (l[4] + r() * (l[5] - l[4]));
+        var el = document.createElement("span");
+        el.className = "cu wx-c";
+        render(el, cumulus(101 + li * 17 + i * 7, w, h), w, h, LX);
+        var dur = (HW + w + 40) / (l[8] * (0.85 + r() * 0.3));
+        el.style.top = px(HH * (l[6] + r() * (l[7] - l[6])) - h * 0.2);
+        el.style.animationDuration = dur.toFixed(1) + "s";
+        el.style.animationDelay = (-dur * ((i + r() * 0.6) / l[1])).toFixed(1) + "s";
+        host.appendChild(el);
+        clouds.push(el);
+      }
+    });
+  }
+
+  // ---- rain canvas (transparent, between the cloud layers) ----
+  var ctx = cv && cv.getContext ? cv.getContext("2d") : null;
+  var W = 0, H = 0, dpr = 1, drops = [], RAIN = { dark: ["190,214,245", [0.12, 0.22, 0.36]], light: ["52,70,104", [0.1, 0.17, 0.26]] };
   function seedDrops() {
     var n = Math.min(120, Math.round((W * H) / 900)), r = rng(7);
     drops = [];
     for (var i = 0; i < n; i++) {
-      var layer = i % 3; // 0 far, 1 mid, 2 near
-      drops.push({
-        l: layer,
-        x: r() * (W + 60) - 30,
-        y: r() * H,
-        v: (380 + layer * 210) * (0.85 + r() * 0.3), // CSS px / s
-        len: (7 + layer * 6) * (0.8 + r() * 0.4),
-      });
+      var layer = i % 3;
+      drops.push({ l: layer, x: r() * (W + 60) - 30, y: r() * H, v: (380 + layer * 210) * (0.85 + r() * 0.3), len: (7 + layer * 6) * (0.8 + r() * 0.4) });
     }
   }
-
   function resize() {
+    buildSky();
+    if (!ctx) return;
     var rc = cv.getBoundingClientRect();
     var w = Math.max(1, Math.round(rc.width)), h = Math.max(1, Math.round(rc.height));
     dpr = Math.min(2, window.devicePixelRatio || 1);
     if (w === W && h === H && cv.width === Math.round(w * dpr)) return;
     W = w; H = h;
-    cv.width = Math.round(W * dpr);
-    cv.height = Math.round(H * dpr);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    paint();
     seedDrops();
-    draw(0);
-  }
-
-  // ---- moon placement + cloud cover over it ----
-  function moonPos() {
-    // top right corner, clear of the nav cloud (centre) and above the Chat/Globe
-    // top bar (starts ~82px down), so it is never hidden behind a bar
-    var r = Math.max(12, Math.min(16, W * 0.038));
-    return { x: W - r - 22, y: r + 14, r: r };
+    draw(still() ? 0.6 : 0);
   }
 
   // ---- lightning ----
-  var flashAt = -1, nextFlash = 6 + Math.random() * 6, pulses = [], bolt = null, flashX = 0;
-  function scheduleFlash(t) { nextFlash = t + 8 + Math.random() * 12; }
+  var flashAt = -1, nextFlash = 6 + Math.random() * 6, pulses = [], bolt = null, flashX = 0, PULSE_MS = 420;
+  function level(e) { // e = seconds since the strike
+    var f = 0;
+    for (var i = 0; i < pulses.length; i++) {
+      var p = pulses[i], q = (e - p[0]) / p[1];
+      if (q >= 0 && q <= 1) f = Math.max(f, p[2] * (q < 0.25 ? q / 0.25 : 1 - (q - 0.25) / 0.75));
+    }
+    return f;
+  }
   function trigger(t) {
     flashAt = t;
-    flashX = W * (0.15 + Math.random() * 0.7);
-    // 2-3 pulses inside ~400 ms (<= 3 flashes per second); [start, dur, peak]
+    flashX = (W || 390) * (0.15 + Math.random() * 0.7);
     pulses = [[0, 0.07, 1], [0.13, 0.06, 0.55]];
     if (Math.random() < 0.6) pulses.push([0.27, 0.11, 0.8]);
     bolt = null;
-    if (Math.random() < 0.45) {
+    if (Math.random() < 0.45 && H) {
       var x = flashX, y = -4, segs = [], br = [], i;
       for (i = 0; i < 9 && y < H * 0.62; i++) {
         var nx = x + (Math.random() - 0.5) * 14, ny = y + 6 + Math.random() * 9;
@@ -220,157 +250,66 @@
       }
       bolt = { segs: segs, br: br };
     }
-    scheduleFlash(t);
+    nextFlash = t + 8 + Math.random() * 12;
+    lightClouds();
   }
-  function flashLevel(t) {
-    if (flashAt < 0) return 0;
-    var e = t - flashAt, f = 0;
-    for (var i = 0; i < pulses.length; i++) {
-      var p = pulses[i], q = (e - p[0]) / p[1];
-      if (q >= 0 && q <= 1) f = Math.max(f, p[2] * (q < 0.25 ? q / 0.25 : 1 - (q - 0.25) / 0.75));
+  // light the clouds from inside: brightness keyframes sampled from the pulse curve, peak
+  // scaled by distance from the strike; plus the sky glow behind the front layer
+  function lightClouds() {
+    if (!Element.prototype.animate) return;
+    var dark = theme() === "dark", gain = dark ? 1.1 : 0.22, N = 22, i;
+    function frames(peak, prop) {
+      var out = [];
+      for (i = 0; i <= N; i++) {
+        var v = level((i / N) * PULSE_MS / 1000) * peak, fr = { offset: i / N };
+        if (prop === "o") fr.opacity = v; else fr.filter = "brightness(" + (1 + v).toFixed(3) + ")";
+        out.push(fr);
+      }
+      return out;
     }
-    return f;
-  }
-  function thunderLevel(t) { // swell ~0.7-1.9 s after the flash
-    if (flashAt < 0) return 0;
-    var e = t - flashAt - 0.7;
-    return e > 0 && e < 1.2 ? Math.sin((e / 1.2) * Math.PI) : 0;
+    var opts = { duration: PULSE_MS, easing: "linear" };
+    var all = clouds.concat(bars.map(function (b) { return b.querySelector(":scope > .cb"); }).filter(Boolean));
+    var vw = window.innerWidth || 390;
+    all.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.right < 0 || r.left > vw || r.bottom < 0) return;
+      var d = Math.abs((r.left + r.right) / 2 - flashX) / vw, near = Math.max(0.3, 1 - d * 1.4);
+      var bar = el.classList.contains("cb");
+      try { el.animate(frames(gain * near * (bar ? 0.55 : 1), "f"), opts); } catch (e) {}
+    });
+    var g = wx && wx.querySelector(".wx-flash");
+    if (g) { g.style.setProperty("--fx", Math.round(flashX) + "px"); try { g.animate(frames(dark ? 1 : 0.6, "o"), opts); } catch (e) {} }
   }
 
   var t0 = 0, last = 0, SLANT = 0.2;
   function draw(dt) {
-    if (!W) return;
-    var t = (t0 += dt), k, i, still = rm && rm.matches;
-    if (!still && dt > 0 && t >= nextFlash) trigger(t);
-    var fl = still ? 0 : flashLevel(t), th = still ? 0 : thunderLevel(t);
-    var shake = th ? Math.sin(t * 38) * 0.6 * th : 0;
-
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    // moon + halo (behind clouds); halo breathes and grows where clouds thin
-    placeClouds(t);
-    var mp = moonPos(), cover = coverAt(mp.x, mp.y);
-    var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.6, mp.x, mp.y, hr);
-    var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
-    hg.addColorStop(0, "rgba(" + pal.halo + "," + ha.toFixed(3) + ")");
-    hg.addColorStop(0.35, "rgba(" + pal.halo + "," + (ha * 0.35).toFixed(3) + ")");
-    hg.addColorStop(1, "rgba(" + pal.halo + ",0)");
-    ctx.fillStyle = hg;
-    ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
-    ctx.globalAlpha = 0.75 + 0.25 * clear;
-    var mR = mp.r / 0.84;
-    ctx.drawImage(moon, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
-    ctx.globalAlpha = 1;
-
-    // clouds: each texture spans a tile of (W*scale) and wraps horizontally;
-    // a lightning bolt (if any) sits between the far and mid layers
-    for (k = 0; k < 3; k++) {
-      drawLayer(ctx, k, 0, shake * (k + 1) * 0.5);
-      if (k === 0 && bolt && fl > 0.05) drawBolt(fl);
+    if (!ctx || !W) return;
+    var t = (t0 += dt), k, i, s = still();
+    if (!s && dt > 0 && t >= nextFlash) trigger(t);
+    var fl = s || flashAt < 0 ? 0 : level(t - flashAt), pal = RAIN[theme()];
+    ctx.clearRect(0, 0, W, H);
+    if (bolt && fl > 0.05) {
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      for (i = 0; i < bolt.segs.length; i++) { var a = bolt.segs[i]; ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); }
+      for (i = 0; i < bolt.br.length; i++) { var b = bolt.br[i]; ctx.moveTo(b[0], b[1]); ctx.lineTo(b[2], b[3]); }
+      ctx.strokeStyle = "rgba(255,255,255," + (0.14 * fl).toFixed(3) + ")"; ctx.lineWidth = 3.2; ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255," + (0.6 * fl).toFixed(3) + ")"; ctx.lineWidth = 0.9; ctx.stroke();
     }
-
-    // moonlight through cloud: backlit glow + silver lining on the clouds
-    // around the moon, and a softened crescent on top so it never vanishes
-    // (dimmer under thick cloud, brighter as it thins)
-    var cv2 = Math.min(1, cover * 1.6);
-    if (cv2 > 0.02) {
-      var lr = mp.r * 4.5;
-      // glow on the cloud around the moon (light mode: a faint cool shade
-      // ring instead, since white-on-white glow would not read)
-      var bg2 = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.8, mp.x, mp.y, lr);
-      if (theme() === "dark") {
-        ctx.globalCompositeOperation = "lighter";
-        var ba = pal.haloA * (0.7 + 0.3 * breathe) * cv2;
-        bg2.addColorStop(0, "rgba(" + pal.halo + "," + ba.toFixed(3) + ")");
-        bg2.addColorStop(0.4, "rgba(" + pal.halo + "," + (ba * 0.35).toFixed(3) + ")");
-        bg2.addColorStop(1, "rgba(" + pal.halo + ",0)");
-      } else {
-        var sa = 0.2 * cv2;
-        bg2.addColorStop(0, "rgba(118,132,158," + sa.toFixed(3) + ")");
-        bg2.addColorStop(0.35, "rgba(118,132,158," + (sa * 0.45).toFixed(3) + ")");
-        bg2.addColorStop(1, "rgba(118,132,158,0)");
-      }
-      ctx.fillStyle = bg2;
-      ctx.fillRect(mp.x - lr, mp.y - lr, lr * 2, lr * 2);
-      ctx.globalCompositeOperation = "source-over";
-      // silver lining: clouds around the moon re-drawn into a small buffer,
-      // feathered with a radial mask, then added on top (no hard edge)
-      var la = pal.lining * breathe * cv2;
-      if (la > 0.01) {
-        var bs = Math.ceil(lr * 2), bx = mp.x - lr, by = mp.y - lr;
-        if (!lb) { lb = document.createElement("canvas"); lbx = lb.getContext("2d"); }
-        if (lb.width !== Math.ceil(bs * dpr)) { lb.width = lb.height = Math.ceil(bs * dpr); }
-        lbx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        lbx.globalCompositeOperation = "source-over";
-        lbx.clearRect(0, 0, bs, bs);
-        for (k = 0; k < 3; k++) drawLayer(lbx, k, -bx, -by);
-        lbx.globalCompositeOperation = "destination-in";
-        var mg = lbx.createRadialGradient(lr, lr, 0, lr, lr, lr);
-        mg.addColorStop(0, "rgba(0,0,0,1)");
-        mg.addColorStop(0.45, "rgba(0,0,0,0.55)");
-        mg.addColorStop(1, "rgba(0,0,0,0)");
-        lbx.fillStyle = mg;
-        lbx.fillRect(0, 0, bs, bs);
-        ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = la;
-        ctx.drawImage(lb, bx, by, bs, bs);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = "source-over";
-      }
-      // the crescent itself, drawn over the clouds: ~0.6-0.7 opacity when
-      // fully covered, so it always reads
-      ctx.globalAlpha = cv2 * (0.6 + 0.1 * breathe);
-      ctx.drawImage(moonOver, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
-      ctx.globalAlpha = 1;
-    }
-
-    // lightning glow lights the clouds from within; thunder = slight swell
-    var glow = fl * pal.flashA + th * 0.05;
-    if (glow > 0.004) {
-      ctx.globalCompositeOperation = "lighter";
-      var gr = ctx.createRadialGradient(flashX, H * 0.25, 0, flashX, H * 0.25, W * 0.6);
-      gr.addColorStop(0, "rgba(" + pal.flash + "," + Math.min(0.34, glow).toFixed(3) + ")");
-      gr.addColorStop(1, "rgba(" + pal.flash + ",0)");
-      ctx.fillStyle = gr;
-      ctx.fillRect(0, 0, W, H);
-      for (k = 1; k < 3; k++) drawLayer(ctx, k, 0, 0, Math.min(0.5, glow * 1.3));
-      ctx.globalCompositeOperation = "source-over";
-    }
-
-    // rain: one stroke per depth layer
     ctx.lineCap = "round";
     for (k = 0; k < 3; k++) {
       ctx.beginPath();
       for (i = k; i < drops.length; i += 3) {
         var d = drops[i];
-        d.y += d.v * dt;
-        d.x += d.v * SLANT * dt;
+        d.y += d.v * dt; d.x += d.v * SLANT * dt;
         if (d.y - d.len > H) { d.y = -Math.random() * 20; d.x = Math.random() * (W + 60) - 60; }
         if (d.x > W + 30) d.x -= W + 60;
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x - d.len * SLANT, d.y - d.len);
+        ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.len * SLANT, d.y - d.len);
       }
-      ctx.strokeStyle = "rgba(" + pal.rain + "," + Math.min(0.6, pal.rainA[k] * (1 + fl)) + ")";
+      ctx.strokeStyle = "rgba(" + pal[0] + "," + Math.min(0.6, pal[1][k] * (1 + fl)) + ")";
       ctx.lineWidth = 0.6 + k * 0.35;
       ctx.stroke();
     }
-    ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, H * 0.45, W, H * 0.55);
-  }
-  function drawBolt(fl) {
-    var i, s;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    for (i = 0; i < bolt.segs.length; i++) { s = bolt.segs[i]; ctx.moveTo(s[0], s[1]); ctx.lineTo(s[2], s[3]); }
-    for (i = 0; i < bolt.br.length; i++) { s = bolt.br[i]; ctx.moveTo(s[0], s[1]); ctx.lineTo(s[2], s[3]); }
-    ctx.strokeStyle = "rgba(" + pal.bolt + "," + (0.12 * fl).toFixed(3) + ")";
-    ctx.lineWidth = 3.2;
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(" + pal.bolt + "," + (0.5 * fl).toFixed(3) + ")";
-    ctx.lineWidth = 0.9;
-    ctx.stroke();
   }
 
   var raf = 0, visible = true;
@@ -381,26 +320,24 @@
     draw(dt);
     schedule();
   }
-  function running() { return visible && !document.hidden && !(rm && rm.matches); }
+  function running() { return visible && !document.hidden && !still(); }
   function schedule() {
     if (!raf && running()) raf = requestAnimationFrame(frame);
     if (!running()) last = 0;
   }
 
-  build();
-  resize();
-  if (rm && rm.matches) draw(0.6); // static frame with rain mid-fall
-  schedule();
-
+  if (hero) {
+    resize();
+    schedule();
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(hero);
+    else window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", schedule);
+    if (rm && rm.addEventListener) rm.addEventListener("change", function () { draw(0.6); schedule(); });
+    if (window.IntersectionObserver)
+      new IntersectionObserver(function (es) { visible = es[es.length - 1].isIntersecting; schedule(); }).observe(hero);
+    if (window.MutationObserver)
+      new MutationObserver(function () { draw(0); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  }
   // Preview hook (screenshots/recordings): MPRain.flash() fires a strike now.
-  window.MPRain = { flash: function () { if (!(rm && rm.matches)) trigger(t0); } };
-
-  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv);
-  else window.addEventListener("resize", resize);
-  document.addEventListener("visibilitychange", schedule);
-  if (rm && rm.addEventListener) rm.addEventListener("change", function () { draw(0.6); schedule(); });
-  if (window.IntersectionObserver)
-    new IntersectionObserver(function (es) { visible = es[es.length - 1].isIntersecting; schedule(); }).observe(cv);
-  if (window.MutationObserver)
-    new MutationObserver(function () { build(); draw(0); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  window.MPRain = { flash: function () { if (!still()) trigger(t0); }, refit: function () { bars.forEach(function (b) { var c = b.querySelector(":scope > .cb"); if (c) c.removeAttribute("data-k"); fitBar(b); }); } };
 })();
