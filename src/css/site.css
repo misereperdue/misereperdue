@@ -7398,10 +7398,11 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   }
 }
 
-/* Drop countdown tile (per dc): full-width box under the Globe tile, four
-   frosted cells (days / hours / min / sec) with tabular mono digits, date
-   line under. Tile backdrop matches the other shop tiles
-   (#0c1230 dark / #d8d9dd light). shop.js mountCountdown drives it. */
+/* Drop countdown tile (per dc): a deep navy "hardware display". A slowly
+   rotating ice-blue conic gradient shows through a 1.5px gap as the border,
+   a soft light sweep crosses the face, each digit is a split flap that rolls
+   when it changes, and the colons pulse each second. Transform/opacity only;
+   all motion off under prefers-reduced-motion. shop.js mountCountdown. */
 #shop-grid .mp-cd {
   grid-column: 1/-1;
 }
@@ -7409,93 +7410,227 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   aspect-ratio: auto;
 }
 .mp-cd-tile {
-  --cd-bg: #0c1230;
-  --cd-ink: #f5f5f7;
-  --cd-sub: rgba(214, 233, 248, 0.62);
-  --cd-cell: rgba(255, 255, 255, 0.055);
-  --cd-edge: rgba(169, 215, 245, 0.16);
-  --cd-hi: rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  padding: 14px 14px 12px;
-  background:
-    linear-gradient(180deg, rgba(169, 215, 245, 0.07), transparent 55%),
-    var(--cd-bg);
-  color: var(--cd-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --cd-face: #070d24;
+  --cd-face2: #0e1838;
+  --cd-ink: #f2f8ff;
+  --cd-sub: rgba(169, 215, 245, 0.7);
+  --cd-acc: #a9d7f5;
+  --cd-flap: linear-gradient(180deg, #16224a 0%, #111b3d 49.5%, #0b1430 50.5%, #0d1735 100%);
+  --cd-flap-edge: rgba(169, 215, 245, 0.14);
+  --cd-seam: rgba(0, 0, 0, 0.55);
+  --cd-ring-a: rgba(169, 215, 245, 0);
+  --cd-ring-b: rgba(169, 215, 245, 0.95);
+  --cd-sweep: rgba(169, 215, 245, 0.07);
+  display: block;
+  position: relative;
+  isolation: isolate;
+  padding: 1.5px;
+  background: #0a1230;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   -webkit-user-select: none;
   user-select: none;
 }
 [data-theme="light"] .mp-cd-tile {
-  --cd-bg: #d8d9dd;
+  --cd-face: #e9ebf0;
+  --cd-face2: #d8d9dd;
   --cd-ink: #0a0f29;
-  --cd-sub: rgba(10, 18, 48, 0.6);
-  --cd-cell: rgba(255, 255, 255, 0.55);
-  --cd-edge: rgba(10, 18, 48, 0.08);
-  --cd-hi: rgba(255, 255, 255, 0.9);
+  --cd-sub: rgba(10, 18, 48, 0.62);
+  --cd-acc: #0a1230;
+  --cd-flap: linear-gradient(180deg, #ffffff 0%, #f6f7fa 49.5%, #eceef3 50.5%, #f3f4f7 100%);
+  --cd-flap-edge: rgba(10, 18, 48, 0.1);
+  --cd-seam: rgba(10, 18, 48, 0.14);
+  --cd-ring-a: rgba(10, 18, 48, 0);
+  --cd-ring-b: rgba(40, 110, 200, 1);
+  --cd-sweep: rgba(255, 255, 255, 0.55);
+  background: #c9ccd4;
+  box-shadow: 0 8px 22px rgba(10, 18, 48, 0.1);
+}
+/* the rotating ring: a big square conic gradient spun behind the face */
+.mp-cd-tile::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1;
+  margin: -75% 0 0 -75%;
+  background: conic-gradient(
+    from 0deg,
+    var(--cd-ring-a) 0deg,
+    var(--cd-ring-b) 40deg,
+    var(--cd-ring-a) 110deg,
+    var(--cd-ring-a) 180deg,
+    var(--cd-ring-b) 220deg,
+    var(--cd-ring-a) 290deg
+  );
+  animation: mp-cd-spin 9s linear infinite;
+  will-change: transform;
+}
+@keyframes mp-cd-spin {
+  to { transform: rotate(1turn); }
+}
+.mp-cd-face {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20.5px;
+  padding: 18px 12px 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 55%),
-    var(--cd-bg);
+    radial-gradient(120% 90% at 50% 0%, var(--cd-face2), transparent 70%),
+    var(--cd-face);
+  box-shadow:
+    inset 0 0 0 0.5px var(--cd-flap-edge),
+    inset 0 0 24px rgba(169, 215, 245, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+[data-theme="light"] .mp-cd-face {
+  box-shadow:
+    inset 0 0 0 0.5px var(--cd-flap-edge),
+    inset 0 0 20px rgba(60, 120, 190, 0.08),
+    inset 0 1px 0 #fff;
+}
+/* light sweep across the display */
+.mp-cd-face::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, var(--cd-sweep) 50%, transparent 100%);
+  transform: translateX(-120%) skewX(-12deg);
+  animation: mp-cd-sweep 6.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  will-change: transform;
+}
+@keyframes mp-cd-sweep {
+  0%, 55% { transform: translateX(-120%) skewX(-12deg); }
+  100% { transform: translateX(340%) skewX(-12deg); }
 }
 .mp-cd-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--cd-ink);
 }
-.mp-cd-cell {
+.mp-cd-grp {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding: 12px 2px 9px;
-  border-radius: 14px;
-  background: var(--cd-cell);
-  box-shadow:
-    inset 0 0 0 0.5px var(--cd-edge),
-    inset 0 1px 0 var(--cd-hi);
-  overflow: hidden;
+  gap: 9px;
 }
-.mp-cd-n {
+.mp-cd-digs {
+  display: flex;
+  gap: 3px;
+}
+.mp-cd-f {
+  position: relative;
   display: block;
+  width: 27px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--cd-flap);
+  box-shadow:
+    inset 0 0 0 0.5px var(--cd-flap-edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 6px rgba(0, 0, 0, 0.28);
+}
+[data-theme="light"] .mp-cd-f {
+  box-shadow:
+    inset 0 0 0 0.5px var(--cd-flap-edge),
+    inset 0 1px 0 #fff,
+    0 2px 5px rgba(10, 18, 48, 0.1);
+}
+/* split-flap seam */
+.mp-cd-f::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: var(--cd-seam);
+}
+.mp-cd-r {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+.mp-cd-r b {
+  display: block;
+  height: 44px;
   font-size: 30px;
   font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  line-height: 44px;
+  text-align: center;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
-  white-space: nowrap;
 }
-.mp-cd-n.is-tick {
-  animation: mp-cd-tick 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+.mp-cd-r:not(.is-roll) b + b {
+  visibility: hidden;
 }
-@keyframes mp-cd-tick {
-  0% { opacity: 0; transform: translateY(-40%); }
-  100% { opacity: 1; transform: none; }
+.mp-cd-r.is-roll {
+  animation: mp-cd-roll 0.5s cubic-bezier(0.3, 0.9, 0.25, 1.15) both;
+}
+@keyframes mp-cd-roll {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+.mp-cd-r.is-roll b:last-child {
+  animation: mp-cd-old 0.5s ease both;
+}
+@keyframes mp-cd-old {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 .mp-cd-l {
-  font-style: normal;
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.32em;
+  margin-right: -0.32em;
   text-transform: uppercase;
   color: var(--cd-sub);
 }
-.mp-cd-date {
-  align-self: center;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  font-variant-numeric: tabular-nums;
-  color: var(--cd-sub);
+.mp-cd-sep {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  width: 15px;
+  height: 44px;
+  align-items: center;
+}
+.mp-cd-sep i {
+  display: block;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: var(--cd-acc);
+  opacity: 0.9;
+  transition: opacity 0.45s ease;
+}
+.mp-cd.is-odd .mp-cd-sep i {
+  opacity: 0.25;
 }
 @media (max-width: 350px) {
-  .mp-cd-n { font-size: 25px; }
-  .mp-cd-l { letter-spacing: 0.08em; }
+  .mp-cd-f { width: 23px; height: 38px; }
+  .mp-cd-r b { height: 38px; line-height: 38px; font-size: 25px; }
+  .mp-cd-sep { width: 11px; height: 38px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-cd-n.is-tick { animation: none; }
+  .mp-cd-tile::before,
+  .mp-cd-face::after,
+  .mp-cd-r.is-roll,
+  .mp-cd-r.is-roll b:last-child {
+    animation: none;
+  }
+  .mp-cd-face::after { display: none; }
+  .mp-cd-r.is-roll b + b { visibility: hidden; }
+  .mp-cd-sep i { transition: none; }
+  .mp-cd.is-odd .mp-cd-sep i { opacity: 0.9; }
 }

@@ -210,58 +210,75 @@ var MPShop = (function () {
     );
   }
 
-  /* Drop countdown tile (per dc): a live days/hours/min/sec count to
-   * 09.11.2027 00:00 Toronto time. One setInterval; it stops itself when the
-   * tile leaves the DOM (grid re-rendered) and removes the tile once the time
-   * has passed. */
+  /* Drop countdown tile (per dc): a hardware-style display counting to
+   * 2027-09-11 00:00 Toronto time. Each digit is its own flap; a digit rolls
+   * (transform only) when it changes. One setInterval; it stops itself when
+   * the tile leaves the DOM (grid re-rendered) and removes the tile once the
+   * time has passed. CSS turns all motion off under prefers-reduced-motion. */
   var CD_END = Date.parse("2027-09-11T00:00:00-04:00");
   var cdTimer = null;
   function cdHTML() {
     if (Date.now() >= CD_END) return "";
+    var g = [
+      ["d", "Days"],
+      ["h", "Hrs"],
+      ["m", "Min"],
+      ["s", "Sec"],
+    ];
     return (
-      '<div class="product-card mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><div class="tile-wrap mp-cd-tile">' +
-      '<div class="mp-cd-row" aria-hidden="true">' +
-      [
-        ["d", "days"],
-        ["h", "hours"],
-        ["m", "min"],
-        ["s", "sec"],
-      ]
-        .map(function (u) {
+      '<div class="product-card mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><div class="tile-wrap mp-cd-tile"><div class="mp-cd-face"><div class="mp-cd-row" aria-hidden="true">' +
+      g
+        .map(function (u, i) {
           return (
-            '<span class="mp-cd-cell"><b class="mp-cd-n" data-u="' +
+            (i ? '<span class="mp-cd-sep"><i></i><i></i></span>' : "") +
+            '<span class="mp-cd-grp"><span class="mp-cd-digs" data-u="' +
             u[0] +
-            '">00</b><i class="mp-cd-l">' +
+            '"></span><span class="mp-cd-l">' +
             u[1] +
-            "</i></span>"
+            "</span></span>"
           );
         })
         .join("") +
-      '</div><span class="mp-cd-date">09.11.2027</span></div></div>'
+      "</div></div></div></div>"
     );
   }
   function mountCountdown(el) {
     if (cdTimer) (clearInterval(cdTimer), (cdTimer = null));
     if (!el) return;
-    var cells = {};
+    var groups = {};
     el.querySelectorAll("[data-u]").forEach(function (b) {
-      cells[b.dataset.u] = b;
+      groups[b.dataset.u] = { el: b, val: "" };
     });
     function pad(n) {
       return n < 10 ? "0" + n : "" + n;
     }
-    var first = true;
-    function set(u, v) {
-      var b = cells[u];
-      if (b.textContent === v) return;
-      b.textContent = v;
-      if (first) return;
-      // restart the tick animation on the digits that changed
-      b.classList.remove("is-tick");
-      void b.offsetWidth;
-      b.classList.add("is-tick");
+    function flap(ch) {
+      return '<span class="mp-cd-f"><span class="mp-cd-r"><b>' + ch + "</b><b>" + ch + "</b></span></span>";
     }
-    function tick() {
+    function set(u, v, roll) {
+      var g = groups[u];
+      if (g.val === v) return;
+      if (g.val.length !== v.length) {
+        g.el.innerHTML = v.split("").map(flap).join("");
+        g.val = v;
+        return;
+      }
+      var fl = g.el.children;
+      for (var i = 0; i < v.length; i++) {
+        if (v[i] === g.val[i]) continue;
+        var r = fl[i].firstChild;
+        // strip = [new, old]; roll from showing old (-50%) down to new (0)
+        r.lastChild.textContent = r.firstChild.textContent;
+        r.firstChild.textContent = v[i];
+        if (roll) {
+          r.classList.remove("is-roll");
+          void r.offsetWidth;
+          r.classList.add("is-roll");
+        }
+      }
+      g.val = v;
+    }
+    function tick(roll) {
       if (!el.isConnected) return (clearInterval(cdTimer), (cdTimer = null));
       var ms = CD_END - Date.now();
       if (ms <= 0) {
@@ -271,14 +288,17 @@ var MPShop = (function () {
         return;
       }
       var t = Math.floor(ms / 1e3);
-      set("d", "" + Math.floor(t / 86400));
-      set("h", pad(Math.floor((t % 86400) / 3600)));
-      set("m", pad(Math.floor((t % 3600) / 60)));
-      set("s", pad(t % 60));
+      set("d", "" + Math.floor(t / 86400), roll);
+      set("h", pad(Math.floor((t % 86400) / 3600)), roll);
+      set("m", pad(Math.floor((t % 3600) / 60)), roll);
+      set("s", pad(t % 60), roll);
+      el.classList.toggle("is-odd", t % 2 === 1);
     }
-    tick();
-    first = false;
-    if (el.isConnected) cdTimer = setInterval(tick, 1e3);
+    tick(false);
+    if (el.isConnected)
+      cdTimer = setInterval(function () {
+        tick(true);
+      }, 1e3);
   }
 
   /* Misery Globe tile: a wireframe globe (meridians + parallels) drawn on a
