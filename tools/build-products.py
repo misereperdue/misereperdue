@@ -138,7 +138,7 @@ def main():
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
-        title = SEO_TITLE.get(p["handle"]) or f"{p['title']} · Misère Perdue"
+        title = SEO_TITLE.get(p["handle"]) or f"Misère Perdue · {p['title']}"
         out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
@@ -150,7 +150,7 @@ def main():
     desc = ("Shop Misère Perdue, the Toronto merchandise brand: " + ", ".join(p["title"] for p, _ in items)
             + ". Prices in CAD, checkout by Shopify.")
     rows = "".join(f"<div class=\"product\"><h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Shop · Misère Perdue", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    shop = head("Misère Perdue · Shop", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):

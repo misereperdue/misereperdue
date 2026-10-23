@@ -206,7 +206,7 @@ h1{{font-size:26px;line-height:1.25}}
 
 def globe_page(threads_out):
     url = f"{SITE}/globe"
-    title = "Misery Globe · Fashion & Music Community by Misère Perdue"
+    title = "Misère Perdue · Misery Globe"
     desc = ("Misery Globe is the discussion board run by Misère Perdue, a Toronto "
             "merchandise brand. Talk fashion, music and more.")
     items = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)
@@ -334,10 +334,8 @@ def main():
         }], ensure_ascii=False).replace("</", "<\\/")
         threads_out.append((tid, title, author, full.get("createdAt"), desc, len(replies)))
 
-        pt = (f"{title} by Misère Perdue" if "misery globe" in title.lower()
-              else f"{title} · Misery Globe")
-        if len(pt) > 60: pt = f"{title} · Misery Globe"
-        if len(pt) > 60: pt = title[:57].rstrip() + "…"
+        pt = f"Misère Perdue · {title}"
+        if len(pt) > 60: pt = pt[:59].rstrip() + "…"
         page = PAGE.format(
             page_title=html.escape(pt), title=html.escape(title), desc=html.escape(desc, quote=True),
             url=f"{SITE}/t/{tid}", author=html.escape(author),

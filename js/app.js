@@ -325,9 +325,9 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       var t = base;
       if (current.type === "product") {
         var h = document.querySelector("#product h1");
-        if (h && h.textContent) t = h.textContent.trim() + " · " + base;
+        if (h && h.textContent) t = base + " · " + h.textContent.trim();
       } else if (names[current.type]) {
-        t = names[current.type] + " · " + base;
+        t = base + " · " + names[current.type];
       }
       document.title = t;
       var ogTitle = document.querySelector('meta[property="og:title"]');
