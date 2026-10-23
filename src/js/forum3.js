@@ -3550,7 +3550,7 @@
           : "thread" === r.name && r.threadId && (we(), (s = "thread"), (d = r.threadId))),
       y("/api/forum/categories")
         .then(function (e) {
-          return ((b.categories = (e.ok && e.categories) || []), y("/api/forum/threads"));
+          return ((b.categories = ((e.ok && e.categories) || []).filter(function (c) { return c && c.name; })), y("/api/forum/threads"));
         })
         .then(function (e) {
           var t = (e.ok && e.threads) || [];
