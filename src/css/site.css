@@ -6876,6 +6876,91 @@ html.rc-lock body {
   font: 500 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
   opacity: 0.6;
 }
+/* Recovery menus: one size for every box (fields, code, buttons) and an even 12px rhythm. */
+.rc-card {
+  max-width: 360px;
+  padding: 24px 22px 22px;
+}
+.rc-card .rc-title {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.rc-card:has(.rc-x-close) .rc-title {
+  padding: 0 30px;
+}
+.rc-card .rc-eyebrow + .rc-title {
+  margin-top: 8px;
+}
+.rc-card .rc-sub {
+  margin: 0 auto 20px;
+}
+.rc-card .chat-field {
+  margin: 0 0 12px;
+}
+.rc-card .chat-field input,
+.rc-card .rc-code,
+.rc-card .btn {
+  box-sizing: border-box;
+  min-height: 48px;
+  margin: 0;
+}
+.rc-card .chat-field input {
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+}
+.rc-card .rc-code {
+  padding: 0 12px;
+  border-radius: 14px;
+  min-height: 56px;
+}
+.rc-card .btn {
+  padding: 0 16px;
+  font-size: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.rc-card .rc-actions {
+  margin: 12px 0 0;
+  gap: 10px;
+}
+.rc-card .rc-actions .btn {
+  font-size: 15px;
+}
+.rc-card .rc-check {
+  margin: 16px 2px;
+}
+.rc-card .rc-err {
+  margin: 0 0 12px;
+}
+.rc-card .btn.accent,
+.rc-card .rc-later {
+  width: 100%;
+  margin-top: 0;
+}
+.rc-card > .btn + .btn,
+.rc-card > .rc-or + .btn {
+  margin-top: 12px;
+}
+.rc-card .rc-or {
+  margin: 16px 0 0;
+}
+.rc-card .rc-fine {
+  margin: 14px 0 0;
+}
+.rc-card .rc-x-close {
+  top: 14px;
+  right: 14px;
+  min-height: 0;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+}
 /* Light mode: frosted white glass, navy ink, etched navy code. */
 [data-theme="light"] .rc-back {
   background: radial-gradient(120% 80% at 50% 30%, rgba(169, 215, 245, 0.35), rgba(255, 255, 255, 0) 60%),
