@@ -29,7 +29,12 @@
     a.retry { display:inline-block; padding:8px 18px; border-radius:999px; border:.5px solid var(--hair); color:var(--accent);
       text-decoration:none; font-weight:800; font-size:12px; letter-spacing:.02em; touch-action:manipulation; }
     a.retry:active { opacity:.6; }
-    @media (prefers-reduced-motion: reduce) { .eyes { animation:none; } }
+    /* tapped: the pill shrinks into a small spinning ring */
+    a.retry { position:relative; transition:width .25s ease, padding .25s ease, color .2s ease; }
+    a.retry.busy { color:transparent; pointer-events:none; width:36px; height:36px; padding:0; border-radius:50%; vertical-align:middle; }
+    a.retry.busy::after { content:""; position:absolute; inset:9px; border-radius:50%; border:1.5px solid var(--hair); border-top-color:var(--accent); animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .eyes { animation:none; } a.retry.busy::after { animation-duration:2.4s; } }
   </style>
 </head>
 <body>
@@ -37,6 +42,6 @@
     <div class="eyes" role="img" aria-label="Closed eyes"></div>
     <a class="retry" id="retry" href="">Retry</a>
   </main>
-  <script src="/js/offline.js?v=1"></script>
+  <script src="/js/offline.js?v=2"></script>
 </body>
 </html>

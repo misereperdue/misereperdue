@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 105;
+var SW_VERSION = 106;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
@@ -39,7 +39,7 @@ var SHELL = [
   "/img/splash-1260x2736.png?v=24",
   "/video/header-poster.webp",
   "/offline",
-  "/js/offline.js?v=1"
+  "/js/offline.js?v=2"
 ];
 // Offline screen: precached at its clean URL (Pages 308s /offline.html -> /offline,
 // and a redirected response cannot answer a navigation).
