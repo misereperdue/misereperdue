@@ -25,9 +25,6 @@
   var PAL = {
     dark: {
       sky: ["#040a1f", "#0a1636", "#0d1b40"],
-      // neutral greys (no tint): [shadow, lit] per layer far -> near
-      cloud: [[[46, 46, 48], [104, 104, 106]], [[56, 56, 58], [126, 126, 128]], [[66, 66, 68], [150, 150, 152]]],
-      cloudA: [0.55, 0.6, 0.62],
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "150,150,155",
@@ -36,8 +33,6 @@
     },
     light: {
       sky: ["#b7c3d3", "#cdd6e2", "#dfe5ee"],
-      cloud: [[[178, 178, 180], [236, 236, 236]], [[192, 192, 194], [246, 246, 246]], [[206, 206, 208], [255, 255, 255]]],
-      cloudA: [0.55, 0.62, 0.7],
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
@@ -54,71 +49,77 @@
     };
   }
   function sm(t) { return t * t * (3 - 2 * t); }
-  // Puffy cumulus: clusters of overlapping soft spheres, each lit from the
-  // upper left (lit colour at the top, shadow at the rim/base), drawn three
-  // times at x-w/x/x+w so the texture wraps horizontally.
-  function cloudTex(seed, w, h, clusters, pal2, alpha, yBase, rMax) {
-    var r = rng(seed), c = document.createElement("canvas"), j;
-    c.width = w; c.height = h;
-    var g = c.getContext("2d"), puffs = [], i, j, k;
+  // Cloud colours come from the bar cloud recipe in site.css (--cu-fill,
+  // --cu-hi, --cu-under) so the header clouds and the glass-bar clouds read
+  // as one family; read at init and on every theme change.
+  function cssRGBA(name, fb) {
+    var v = "";
+    try { v = getComputedStyle(root).getPropertyValue(name).trim(); } catch (e) {}
+    var m = v.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?/);
+    if (!m) return fb;
+    var al = m[4] === undefined ? 1 : m[4].indexOf("%") > 0 ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
+    return [+m[1], +m[2], +m[3], al];
+  }
+  function cloudColors(dark) {
+    return dark
+      ? { fill: cssRGBA("--cu-fill", [186, 186, 190, 0.24]), hi: cssRGBA("--cu-hi", [255, 255, 255, 0.26]), under: cssRGBA("--cu-under", [18, 18, 20, 0.34]) }
+      : { fill: cssRGBA("--cu-fill", [255, 255, 255, 0.46]), hi: cssRGBA("--cu-hi", [255, 255, 255, 0.78]), under: cssRGBA("--cu-under", [120, 120, 124, 0.3]) };
+  }
+  // Soft cumulus, same build as the bar clouds: a union of feathered lobes
+  // (solid to 66% of the radius, 0.6 at 84%, clear at 100%) filled with
+  // --cu-fill, soft --cu-hi highlights on the upper lobes, and a --cu-under
+  // shade from 40% down to the base. Lobes wrap in x so layers scroll forever.
+  function cloudTex(seed, w, h, clusters, yBase, rMax, lift, C) {
+    var r = rng(seed), i, j, k;
+    function cvs() { var c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+    var cM = cvs(), cU = cvs(), cH = cvs(), gM = cM.getContext("2d"), gU = cU.getContext("2d"), gH = cH.getContext("2d");
     for (i = 0; i < clusters; i++) {
-      var cx = r() * w, by = h * (yBase + (r() - 0.5) * 0.18), cw = w * (0.16 + r() * 0.14), n = 7 + Math.floor(r() * 6);
+      var cx = r() * w, by = h * (yBase + (r() - 0.5) * 0.16), cw = w * (0.18 + r() * 0.14), n = 6 + Math.floor(r() * 5), top = by, lobes = [];
       for (j = 0; j < n; j++) {
-        var u = r(), dome = 1 - Math.abs(u - 0.5) * 2;
-        var pr = h * rMax * (0.45 + 0.55 * dome) * (0.8 + r() * 0.35);
-        puffs.push([cx + (u - 0.5) * cw, by - pr * (0.25 + 0.45 * dome * r()), pr]);
+        var u = j / (n - 1), dome = 1 - Math.abs(u - 0.5) * 2;
+        var pr = h * rMax * (0.5 + 0.5 * dome) * (0.85 + r() * 0.3);
+        var ly = by - pr * (0.2 + 0.5 * dome);
+        lobes.push([cx + (u - 0.5) * cw, ly, pr]);
+        top = Math.min(top, ly - pr);
       }
-    }
-    puffs.sort(function (p, q) { return q[1] - p[1]; }); // back (low) puffs first
-    var sh = pal2[0], li = pal2[1];
-    function rgba(cl, a) { return "rgba(" + cl[0] + "," + cl[1] + "," + cl[2] + "," + a + ")"; }
-    for (k = -1; k <= 1; k++) for (i = 0; i < puffs.length; i++) {
-      var p = puffs[i], x = p[0] + k * w, y = p[1], pr2 = p[2];
-      if (x + pr2 < 0 || x - pr2 > w) continue;
-      var gr = g.createRadialGradient(x - pr2 * 0.3, y - pr2 * 0.4, pr2 * 0.05, x, y, pr2);
-      gr.addColorStop(0, rgba(li, 0.8));
-      gr.addColorStop(0.5, rgba([(li[0] + sh[0]) >> 1, (li[1] + sh[1]) >> 1, (li[2] + sh[2]) >> 1], 0.55));
-      gr.addColorStop(0.8, rgba(sh, 0.22));
-      gr.addColorStop(1, rgba(sh, 0));
-      g.fillStyle = gr;
-      g.beginPath(); g.arc(x, y, pr2, 0, 6.2832); g.fill();
-    }
-    // soft focus: 3-pass box blur (premultiplied, wraps in x) so every cloud
-    // is a smooth, heavily feathered shape; then bake the layer alpha and keep
-    // a cover map for the moon
-    var img = g.getImageData(0, 0, w, h), d = img.data, n4 = w * h, cover = new Float32Array(n4);
-    var f = new Float32Array(n4 * 4), tmp = new Float32Array(n4 * 4), rad = Math.max(2, Math.round(h * 0.045)), pass, ch;
-    for (i = 0; i < n4; i++) { var aa = d[i * 4 + 3] / 255; f[i * 4] = d[i * 4] * aa; f[i * 4 + 1] = d[i * 4 + 1] * aa; f[i * 4 + 2] = d[i * 4 + 2] * aa; f[i * 4 + 3] = aa; }
-    function boxH(src, dst) {
-      var y, x, c2, acc, span = rad * 2 + 1;
-      for (y = 0; y < h; y++) for (c2 = 0; c2 < 4; c2++) {
-        acc = 0;
-        for (x = -rad; x <= rad; x++) acc += src[(y * w + ((x + w) % w)) * 4 + c2];
-        for (x = 0; x < w; x++) {
-          dst[(y * w + x) * 4 + c2] = acc / span;
-          acc += src[(y * w + ((x + rad + 1) % w)) * 4 + c2] - src[(y * w + ((x - rad + w) % w)) * 4 + c2];
+      lobes.push([cx, by + h * rMax * 0.25, cw * 0.55]); // flat-ish base
+      for (k = -1; k <= 1; k++) {
+        var ox = k * w;
+        for (j = 0; j < lobes.length; j++) {
+          var L = lobes[j], x = L[0] + ox, y = L[1], rr = L[2];
+          if (x + rr < 0 || x - rr > w) continue;
+          var g = gM.createRadialGradient(x, y, 0, x, y, rr);
+          g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.66, "rgba(0,0,0,1)");
+          g.addColorStop(0.84, "rgba(0,0,0,0.6)"); g.addColorStop(1, "rgba(0,0,0,0)");
+          gM.fillStyle = g; gM.beginPath(); gM.arc(x, y, rr, 0, 6.2832); gM.fill();
+          if (j < lobes.length - 1 && L[1] < by - rr * 0.3) {
+            var hg = gH.createRadialGradient(x - rr * 0.1, y - rr * 0.3, 0, x - rr * 0.1, y - rr * 0.3, rr * 0.8);
+            hg.addColorStop(0, "rgba(0,0,0,1)"); hg.addColorStop(0.72, "rgba(0,0,0,0)");
+            gH.fillStyle = hg; gH.fillRect(x - rr, y - rr * 1.2, rr * 2, rr * 2);
+          }
         }
+        var bot = by + h * rMax * 0.25 + cw * 0.55 * 0.6, ug = gU.createLinearGradient(0, top, 0, bot);
+        ug.addColorStop(0, "rgba(0,0,0,0)"); ug.addColorStop(0.4, "rgba(0,0,0,0)"); ug.addColorStop(1, "rgba(0,0,0,1)");
+        gU.fillStyle = ug; gU.fillRect(cx - cw + ox, top, cw * 2, bot - top);
       }
     }
-    function boxV(src, dst) {
-      var y, x, c2, acc, span = rad * 2 + 1;
-      for (x = 0; x < w; x++) for (c2 = 0; c2 < 4; c2++) {
-        acc = 0;
-        for (y = -rad; y <= rad; y++) acc += src[(Math.min(h - 1, Math.max(0, y)) * w + x) * 4 + c2];
-        for (y = 0; y < h; y++) {
-          dst[(y * w + x) * 4 + c2] = acc / span;
-          acc += src[(Math.min(h - 1, y + rad + 1) * w + x) * 4 + c2] - src[(Math.max(0, y - rad) * w + x) * 4 + c2];
-        }
-      }
+    var M = gM.getImageData(0, 0, w, h).data, U = gU.getImageData(0, 0, w, h).data, Hh = gH.getImageData(0, 0, w, h).data;
+    var c = cvs(), g2 = c.getContext("2d"), img = g2.createImageData(w, h), d = img.data, cover = new Float32Array(w * h);
+    var F = C.fill, HI = C.hi, UN = C.under;
+    for (i = 0, j = 0; i < d.length; i += 4, j++) {
+      var m = M[i + 3] / 255;
+      if (m < 0.004) continue;
+      // premultiplied source-over: fill, then underside shade, then highlight
+      var af = F[3] * lift, pr2 = F[0] * af, pg = F[1] * af, pb = F[2] * af, pa = af;
+      var au = UN[3] * (U[i + 3] / 255);
+      pr2 = UN[0] * au + pr2 * (1 - au); pg = UN[1] * au + pg * (1 - au); pb = UN[2] * au + pb * (1 - au); pa = au + pa * (1 - au);
+      var ah = HI[3] * (Hh[i + 3] / 255) * lift;
+      pr2 = HI[0] * ah + pr2 * (1 - ah); pg = HI[1] * ah + pg * (1 - ah); pb = HI[2] * ah + pb * (1 - ah); pa = ah + pa * (1 - ah);
+      var A = pa * m;
+      d[i] = pr2 / pa; d[i + 1] = pg / pa; d[i + 2] = pb / pa; d[i + 3] = Math.round(255 * A);
+      cover[j] = A;
     }
-    for (pass = 0; pass < 3; pass++) { boxH(f, tmp); boxV(tmp, f); }
-    for (i = 0; i < n4; i++) {
-      var a2 = f[i * 4 + 3];
-      for (ch = 0; ch < 3; ch++) d[i * 4 + ch] = a2 > 0.001 ? Math.min(255, f[i * 4 + ch] / a2) : 0;
-      d[i * 4 + 3] = Math.round(255 * Math.min(1, a2 * 1.25) * alpha);
-      cover[i] = d[i * 4 + 3] / 255;
-    }
-    g.putImageData(img, 0, 0);
+    g2.putImageData(img, 0, 0);
     c.cover = cover;
     return c;
   }
@@ -150,14 +151,15 @@
     { speed: 22, scale: 1.6, y: 0.04, h: 0.85 },
   ];
   // [w, h, clusters, base y (0-1), max puff radius (x h)], matched to each layer drawn aspect
-  var TEX = [[320, 160, 4, 0.42, 0.2], [320, 112, 4, 0.55, 0.26], [320, 82, 3, 0.66, 0.34]];
+  var TEX = [[320, 160, 3, 0.42, 0.2], [320, 112, 3, 0.55, 0.26], [320, 82, 2, 0.66, 0.34]];
 
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
   function build() {
     pal = PAL[theme()];
     clouds = [];
-    for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TEX[k][0], TEX[k][1], TEX[k][2], pal.cloud[k], pal.cloudA[k], TEX[k][3], TEX[k][4]));
+    var C = cloudColors(theme() === "dark");
+    for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TEX[k][0], TEX[k][1], TEX[k][2], TEX[k][3], TEX[k][4], [0.75, 0.9, 1.05][k], C));
     moon = moonTex(pal.moon, pal.moonA);
     paint();
   }
