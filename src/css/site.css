@@ -8752,3 +8752,91 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   --cu-hi: rgba(255, 255, 255, 0.3);
   --cu-under: rgba(16, 16, 20, 0.4);
 }
+/* ===== Cloud artwork bars (per dc 11:49-11:51) =====
+   Real pre-rendered cumulus art instead of CSS puffs: img/clouds/cloud-nav.webp (nav; its dense
+   core covers every tab slot incl. the selected droplet with a ~5px margin) and
+   img/clouds/cloud-bar.webp (Chat/Globe top bar bank). Rendered offline from lit, smoothly
+   shaded overlapping spheres (bright tops, grey creases, flat soft base), 3x, ~11 KB each.
+   The art is near-opaque in its core and carries its own soft alpha edge, so no backdrop blur
+   or mask is needed (cheaper on iPhone, and avoids WebKit mask+backdrop repaint drops). Light/dark files use the header sprites' exact colour mapping (rain.js). A second offset copy (::after)
+   breathes with scale/opacity only; nothing moves under reduced motion. */
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  --cloud-img: url(../img/clouds/cloud-bar.webp?v=1);
+  background: var(--cloud-img) 0 0 / 100% 100% no-repeat;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-mask: none;
+  mask: none;
+  filter: none;
+  animation: none;
+  transform: none;
+}
+.nav.glassbar::before {
+  --cloud-img: url(../img/clouds/cloud-nav.webp?v=1);
+}
+.glassbar::after {
+  --cloud-img: url(../img/clouds/cloud-bar.webp?v=1);
+  background: var(--cloud-img) 0 0 / 100% 100% no-repeat;
+  opacity: 0;
+  translate: 0 0;
+  scale: 1;
+  transform-origin: 50% 80%;
+  animation: cloud-breathe 9s ease-in-out infinite alternate;
+}
+.nav.glassbar::after {
+  --cloud-img: url(../img/clouds/cloud-nav.webp?v=1);
+}
+@keyframes cloud-breathe {
+  from {
+    opacity: 0;
+    translate: -2px 1px;
+    scale: 0.99 0.98;
+  }
+  to {
+    opacity: 0.45;
+    translate: 2px -1px;
+    scale: 1.015 1.035;
+  }
+}
+/* dark: the same art baked with the header's dark mapping (18 + 165*L^1.6 at 0.9), so the bar
+   clouds are the exact grey of the header clouds; no runtime filter */
+[data-theme="dark"] .glassbar::before,
+[data-theme="dark"] .glassbar::after {
+  --cloud-img: url(../img/clouds/cloud-bar-dark.webp?v=1);
+}
+[data-theme="dark"] .nav.glassbar::before,
+[data-theme="dark"] .nav.glassbar::after {
+  --cloud-img: url(../img/clouds/cloud-nav-dark.webp?v=1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glassbar::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* selected tab: a subtle brighter glass pill inside the cloud */
+.seg,
+[data-theme="light"] .seg {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.3);
+}
+[data-theme="light"] .seg {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.7));
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 0 0.5px rgba(13, 25, 70, 0.1),
+    0 2px 6px rgba(13, 25, 70, 0.1);
+}
+/* no shadows on navbar icons (per dc 11:51) */
+.nav svg,
+[data-theme="dark"] .nav svg,
+[data-theme="light"] .nav svg {
+  filter: none;
+}
+.nav button,
+.nav a {
+  text-shadow: none;
+}
