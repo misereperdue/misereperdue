@@ -210,36 +210,24 @@ var MPShop = (function () {
     );
   }
 
-  /* Drop countdown tile (per dc): a hardware-style display counting to
-   * 2027-09-11 00:00 Toronto time. Each digit is its own flap; a digit rolls
-   * (transform only) when it changes. One setInterval; it stops itself when
-   * the tile leaves the DOM (grid re-rendered) and removes the tile once the
-   * time has passed. CSS turns all motion off under prefers-reduced-motion. */
+  /* Drop countdown (per dc): one small etched line under the Globe tile
+   * counting to 2027-09-11 00:00 Toronto time ("322d 14h 06m 41s"). Each
+   * digit that changes rolls in from above (~300ms); unchanged digits stay
+   * still. One setInterval; it stops itself when the line leaves the DOM
+   * (grid re-rendered) and removes the line once the time has passed. CSS
+   * swaps instantly under prefers-reduced-motion. */
   var CD_END = Date.parse("2027-09-11T00:00:00-04:00");
   var cdTimer = null;
   function cdHTML() {
     if (Date.now() >= CD_END) return "";
-    var g = [
-      ["d", "Days"],
-      ["h", "Hrs"],
-      ["m", "Min"],
-      ["s", "Sec"],
-    ];
     return (
-      '<div class="product-card mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><div class="tile-wrap mp-cd-tile"><div class="mp-cd-face"><div class="mp-cd-row" aria-hidden="true">' +
-      g
-        .map(function (u, i) {
-          return (
-            (i ? '<span class="mp-cd-sep"><i></i><i></i></span>' : "") +
-            '<span class="mp-cd-grp"><span class="mp-cd-digs" data-u="' +
-            u[0] +
-            '"></span><span class="mp-cd-l">' +
-            u[1] +
-            "</span></span>"
-          );
+      '<p class="mp-cd" role="timer" aria-label="Countdown to September 11, 2027"><span class="mp-cd-in" aria-hidden="true">' +
+      ["d", "h", "m", "s"]
+        .map(function (u) {
+          return '<span class="mp-cd-n" data-u="' + u + '"></span><span class="mp-cd-u">' + u + "</span>";
         })
         .join("") +
-      "</div></div></div></div>"
+      "</span></p>"
     );
   }
   function mountCountdown(el) {
@@ -252,29 +240,32 @@ var MPShop = (function () {
     function pad(n) {
       return n < 10 ? "0" + n : "" + n;
     }
-    function flap(ch) {
-      return '<span class="mp-cd-f"><span class="mp-cd-r"><b>' + ch + "</b><b>" + ch + "</b></span></span>";
+    function cell(ch) {
+      return '<span class="mp-cd-c"><b>' + ch + "</b></span>";
     }
     function set(u, v, roll) {
       var g = groups[u];
       if (g.val === v) return;
       if (g.val.length !== v.length) {
-        g.el.innerHTML = v.split("").map(flap).join("");
+        g.el.innerHTML = v.split("").map(cell).join("");
         g.val = v;
         return;
       }
-      var fl = g.el.children;
+      var cs = g.el.children;
       for (var i = 0; i < v.length; i++) {
         if (v[i] === g.val[i]) continue;
-        var r = fl[i].firstChild;
-        // strip = [new, old]; roll from showing old (-50%) down to new (0)
-        r.lastChild.textContent = r.firstChild.textContent;
-        r.firstChild.textContent = v[i];
-        if (roll) {
-          r.classList.remove("is-roll");
-          void r.offsetWidth;
-          r.classList.add("is-roll");
+        var c = cs[i];
+        while (c.children.length > 1) c.removeChild(c.firstChild);
+        var old = c.firstChild;
+        if (!roll) {
+          old.textContent = v[i];
+          continue;
         }
+        old.className = "out";
+        var nb = document.createElement("b");
+        nb.className = "in";
+        nb.textContent = v[i];
+        c.appendChild(nb);
       }
       g.val = v;
     }
@@ -292,7 +283,6 @@ var MPShop = (function () {
       set("h", pad(Math.floor((t % 86400) / 3600)), roll);
       set("m", pad(Math.floor((t % 3600) / 60)), roll);
       set("s", pad(t % 60), roll);
-      el.classList.toggle("is-odd", t % 2 === 1);
     }
     tick(false);
     if (el.isConnected)
@@ -496,8 +486,8 @@ var MPShop = (function () {
           ((b = n),
           (t.innerHTML =
             '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>' +
-            '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
+            '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             e.map(g).join("") +
             (f
               ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
