@@ -1681,7 +1681,7 @@ textarea {
 .globe-promo .gp-me:active {
   transform: scale(0.95);
 }
-/* Profile / Orders (signed in): translucent outlined twins of the Post pill */
+/* Orders (signed in): translucent outlined twin of the Post pill */
 .globe-promo .gp-acct.gp-sec {
   padding: 6px 11px;
   background: rgba(169, 215, 245, 0.14);
