@@ -8678,3 +8678,70 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     display: none;
   }
 }
+/* ===== Cumulus silhouette that holds the pills (per dc 11:45) =====
+   Coverage lobes are px-sized and anchored to each end (left/right), centred on the outer pill
+   slots, with a dense core (opaque to 86%), so the selected droplet in ANY tab sits fully inside
+   the cloud with a small even margin; the feather only starts beyond the pills. Irregular domes
+   of different sizes (two big, smaller puffs between, a secondary puff breaking the outline,
+   left/right asymmetry) build a taller billowing top over a wide flat soft base. Same mask on the
+   nav and the Chat/Globe top bars. */
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  /* defined outline like the header clouds: solid lobes, only a few px of soft falloff */
+  --cs-l: radial-gradient(closest-side, #000 94%, transparent 100%);
+  --cs-d: radial-gradient(closest-side, #000 92%, transparent 100%);
+  -webkit-mask:
+    var(--cs-l) left 0 top 14px / 118px 72px no-repeat,
+    var(--cs-l) left 64px top 14px / 118px 72px no-repeat,
+    var(--cs-l) right 0 top 14px / 118px 72px no-repeat,
+    var(--cs-l) right 72px top 14px / 118px 72px no-repeat,
+    var(--cs-l) 50% 14px / calc(100% - 70px) 72px no-repeat,
+    var(--cs-d) 27% 0 / 42% 76px no-repeat,
+    var(--cs-d) 71% 3px / 34% 70px no-repeat,
+    var(--cs-d) 50% 9px / 18% 46px no-repeat,
+    var(--cs-d) 9% 14px / 16% 44px no-repeat,
+    var(--cs-d) 89% 9px / 12% 34px no-repeat,
+    var(--cs-d) 58% 4px / 9% 26px no-repeat,
+    var(--cs-d) 50% 100% / 98% 40px no-repeat;
+  mask:
+    var(--cs-l) left 0 top 14px / 118px 72px no-repeat,
+    var(--cs-l) left 64px top 14px / 118px 72px no-repeat,
+    var(--cs-l) right 0 top 14px / 118px 72px no-repeat,
+    var(--cs-l) right 72px top 14px / 118px 72px no-repeat,
+    var(--cs-l) 50% 14px / calc(100% - 70px) 72px no-repeat,
+    var(--cs-d) 27% 0 / 42% 76px no-repeat,
+    var(--cs-d) 71% 3px / 34% 70px no-repeat,
+    var(--cs-d) 50% 9px / 18% 46px no-repeat,
+    var(--cs-d) 9% 14px / 16% 44px no-repeat,
+    var(--cs-d) 89% 9px / 12% 34px no-repeat,
+    var(--cs-d) 58% 4px / 9% 26px no-repeat,
+    var(--cs-d) 50% 100% / 98% 40px no-repeat;
+  transform-origin: 50% 70%;
+}
+/* body geometry: pills at y 26-68 inside an 86px-tall cloud, 27px end margins */
+.nav-wrap {
+  top: calc(env(safe-area-inset-top, 0px) + 4px);
+}
+.nav {
+  padding: 26px 27px 18px;
+}
+.seg {
+  top: 26px;
+}
+.chat-head.glassbar {
+  padding: 26px 30px 18px;
+}
+/* defined, in-focus cloud body (per dc 11:46 "like the other clouds, not blurred"): denser
+   neutral fill with volume shading; only a light 4px backdrop blur inside for icon legibility */
+:root,
+[data-theme="light"] {
+  --cu-blur: blur(4px) saturate(120%) brightness(1.04);
+  --cu-fill: rgba(255, 255, 255, 0.62);
+  --cu-under: rgba(120, 120, 126, 0.34);
+}
+[data-theme="dark"] {
+  --cu-blur: blur(4px) saturate(120%) brightness(1.02);
+  --cu-fill: rgba(176, 176, 182, 0.36);
+  --cu-hi: rgba(255, 255, 255, 0.3);
+  --cu-under: rgba(16, 16, 20, 0.4);
+}
