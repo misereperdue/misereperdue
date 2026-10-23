@@ -6632,5 +6632,5 @@ html body.home {
   background-repeat: repeat;
 }
 html[data-theme="light"] body {
-  --paper: url(/img/paper-light.png?v=1);
+  --paper: url(/img/paper-light.png?v=2);
 }
