@@ -25,22 +25,23 @@
   var PAL = {
     dark: {
       sky: ["#040a1f", "#0a1636", "#0d1b40"],
-      cloud: [[44, 62, 108], [60, 84, 138], [84, 110, 166]],
-      cloudA: [0.62, 0.55, 0.45],
+      // neutral greys (no tint): [shadow, lit] per layer far -> near
+      cloud: [[[46, 46, 48], [104, 104, 106]], [[56, 56, 58], [126, 126, 128]], [[66, 66, 68], [150, 150, 152]]],
+      cloudA: [0.55, 0.6, 0.62],
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
-      mist: "120,150,200",
-      moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
-      flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
+      mist: "150,150,155",
+      moon: [238, 238, 236], moonA: 0.6, halo: "228,228,226", haloA: 0.26,
+      flash: "255,255,255", flashA: 0.28, bolt: "255,255,255",
     },
     light: {
       sky: ["#b7c3d3", "#cdd6e2", "#dfe5ee"],
-      cloud: [[150, 163, 182], [176, 188, 205], [236, 240, 246]],
-      cloudA: [0.55, 0.55, 0.6],
+      cloud: [[[178, 178, 180], [236, 236, 236]], [[192, 192, 194], [246, 246, 246]], [[206, 206, 208], [255, 255, 255]]],
+      cloudA: [0.55, 0.62, 0.7],
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      moon: [250, 252, 255], moonA: 0.5, halo: "255,255,255", haloA: 0.2,
+      moon: [255, 255, 255], moonA: 0.42, halo: "255,255,255", haloA: 0.18,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -53,55 +54,57 @@
     };
   }
   function sm(t) { return t * t * (3 - 2 * t); }
-  function cloudTex(seed, w, h, cells, color, alpha, top, bottom) {
-    var r = rng(seed), oct = [], o, i, j;
-    for (o = 0; o < 4; o++) {
-      var cx = cells << o, cy = Math.max(2, Math.round((cells << o) * h / w)) + 1, g = [];
-      for (i = 0; i < cx * cy; i++) g.push(r());
-      oct.push({ cx: cx, cy: cy, g: g });
-    }
-    function val(n, x, y) {
-      var fx = x * n.cx, fy = y * (n.cy - 1), x0 = Math.floor(fx), y0 = Math.floor(fy),
-        tx = sm(fx - x0), ty = sm(fy - y0), x1 = (x0 + 1) % n.cx, y1 = Math.min(y0 + 1, n.cy - 1);
-      x0 %= n.cx;
-      var a = n.g[y0 * n.cx + x0], b = n.g[y0 * n.cx + x1], c = n.g[y1 * n.cx + x0], d = n.g[y1 * n.cx + x1];
-      return a + (b - a) * tx + (c - a + (a - b - c + d) * tx) * ty;
-    }
-    var c = document.createElement("canvas");
+  // Puffy cumulus: clusters of overlapping soft spheres, each lit from the
+  // upper left (lit colour at the top, shadow at the rim/base), drawn three
+  // times at x-w/x/x+w so the texture wraps horizontally.
+  function cloudTex(seed, w, h, clusters, pal2, alpha, yBase, rMax) {
+    var r = rng(seed), c = document.createElement("canvas");
     c.width = w; c.height = h;
-    var x2 = c.getContext("2d"), img = x2.createImageData(w, h), d = img.data, p = 0, cover = new Float32Array(w * h);
-    for (j = 0; j < h; j++) {
-      var yy = j / (h - 1), band = Math.min(1, Math.max(0, (yy - top) / 0.25)) * Math.min(1, Math.max(0, (bottom - yy) / 0.3));
-      for (i = 0; i < w; i++) {
-        var xx = i / w, n = 0, amp = 0.5;
-        for (o = 0; o < 4; o++) { n += val(oct[o], xx, yy) * amp; amp *= 0.5; }
-        n = (n / 0.9375 - 0.42) / 0.38;
-        n = n < 0 ? 0 : n > 1 ? 1 : sm(n);
-        var a = n * alpha * band;
-        cover[j * w + i] = a;
-        d[p++] = color[0]; d[p++] = color[1]; d[p++] = color[2];
-        d[p++] = Math.round(255 * a);
+    var g = c.getContext("2d"), puffs = [], i, j, k;
+    for (i = 0; i < clusters; i++) {
+      var cx = r() * w, by = h * (yBase + (r() - 0.5) * 0.18), cw = w * (0.16 + r() * 0.14), n = 7 + Math.floor(r() * 6);
+      for (j = 0; j < n; j++) {
+        var u = r(), dome = 1 - Math.abs(u - 0.5) * 2;
+        var pr = h * rMax * (0.45 + 0.55 * dome) * (0.8 + r() * 0.35);
+        puffs.push([cx + (u - 0.5) * cw, by - pr * (0.25 + 0.45 * dome * r()), pr]);
       }
     }
-    x2.putImageData(img, 0, 0);
+    puffs.sort(function (p, q) { return q[1] - p[1]; }); // back (low) puffs first
+    var sh = pal2[0], li = pal2[1];
+    function rgba(cl, a) { return "rgba(" + cl[0] + "," + cl[1] + "," + cl[2] + "," + a + ")"; }
+    for (k = -1; k <= 1; k++) for (i = 0; i < puffs.length; i++) {
+      var p = puffs[i], x = p[0] + k * w, y = p[1], pr2 = p[2];
+      if (x + pr2 < 0 || x - pr2 > w) continue;
+      var gr = g.createRadialGradient(x - pr2 * 0.3, y - pr2 * 0.4, pr2 * 0.05, x, y, pr2);
+      gr.addColorStop(0, rgba(li, 0.95));
+      gr.addColorStop(0.55, rgba([(li[0] + sh[0]) >> 1, (li[1] + sh[1]) >> 1, (li[2] + sh[2]) >> 1], 0.8));
+      gr.addColorStop(0.85, rgba(sh, 0.45));
+      gr.addColorStop(1, rgba(sh, 0));
+      g.fillStyle = gr;
+      g.beginPath(); g.arc(x, y, pr2, 0, 6.2832); g.fill();
+    }
+    // bake the layer alpha, keep a cover map for the moon
+    var img = g.getImageData(0, 0, w, h), d = img.data, cover = new Float32Array(w * h);
+    for (i = 0, j = 0; i < d.length; i += 4, j++) { d[i + 3] = Math.round(d[i + 3] * alpha); cover[j] = d[i + 3] / 255; }
+    g.putImageData(img, 0, 0);
     c.cover = cover;
     return c;
   }
-  // Moon: soft disc with faint maria, drawn once; halo is a live gradient.
+  // Crescent moon: lit disc minus an offset disc (tilted), feathered edges,
+  // the dark side not drawn apart from an extremely faint earthshine.
   function moonTex(col, alpha) {
-    var s = 64, c = document.createElement("canvas");
-    c.width = c.height = s;
-    var m = c.getContext("2d"), img = m.createImageData(s, s), d = img.data, r = rng(5), spots = [], i, x, y, p = 0;
-    for (i = 0; i < 7; i++) spots.push([0.25 + r() * 0.5, 0.25 + r() * 0.5, 0.08 + r() * 0.12, 0.1 + r() * 0.12]);
-    for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
-      var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
-      var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.82) / 0.18))), shade = 1 - 0.18 * dd * dd;
-      for (i = 0; i < spots.length; i++) {
-        var sx = (x + 0.5) / s - spots[i][0], sy = (y + 0.5) / s - spots[i][1], q = Math.sqrt(sx * sx + sy * sy) / spots[i][2];
-        if (q < 1) shade -= spots[i][3] * (1 - sm(q));
-      }
-      d[p++] = col[0] * shade; d[p++] = col[1] * shade; d[p++] = col[2] * shade;
-      d[p++] = Math.round(255 * alpha * edge);
+    var S = 96, c = document.createElement("canvas");
+    c.width = c.height = S;
+    var m = c.getContext("2d"), img = m.createImageData(S, S), d = img.data, x, y, p = 0;
+    var ang = -0.45, ox = Math.cos(ang) * 0.3, oy = Math.sin(ang) * 0.3; // shadow disc offset (in radii)
+    for (y = 0; y < S; y++) for (x = 0; x < S; x++) {
+      var dx = ((x + 0.5) / S - 0.5) / 0.42, dy = ((y + 0.5) / S - 0.5) / 0.42; // unit = moon radius
+      var dd = Math.sqrt(dx * dx + dy * dy), disc = 1 - sm(Math.min(1, Math.max(0, (dd - 0.9) / 0.14)));
+      var sx = dx - ox, sy = dy - oy, sd = Math.sqrt(sx * sx + sy * sy) / 0.92;
+      var lit = disc * sm(Math.min(1, Math.max(0, (sd - 0.94) / 0.14)));
+      var a = Math.max(lit, disc * 0.05);
+      d[p++] = col[0]; d[p++] = col[1]; d[p++] = col[2];
+      d[p++] = Math.round(255 * alpha * a);
     }
     m.putImageData(img, 0, 0);
     return c;
@@ -113,14 +116,15 @@
     { speed: 13, scale: 1.25, y: -0.02, h: 0.9 },
     { speed: 22, scale: 1.6, y: 0.04, h: 0.85 },
   ];
-  var TW = 192, TH = 48;
+  // [w, h, clusters, base y (0-1), max puff radius (x h)], matched to each layer drawn aspect
+  var TEX = [[320, 160, 4, 0.42, 0.2], [320, 112, 4, 0.55, 0.26], [320, 82, 3, 0.66, 0.34]];
 
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
   function build() {
     pal = PAL[theme()];
     clouds = [];
-    for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
+    for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TEX[k][0], TEX[k][1], TEX[k][2], pal.cloud[k], pal.cloudA[k], TEX[k][3], TEX[k][4]));
     moon = moonTex(pal.moon, pal.moonA);
     paint();
   }
@@ -168,14 +172,15 @@
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
     // upper right, just clear of the centred nav pill so it reads through glass
-    var r = Math.max(10, Math.min(16, W * 0.034));
+    var r = Math.max(12, Math.min(18, W * 0.04));
     return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
   }
   function coverAt(k, px, py, off, tw, th, y0) {
     var u = (px - off) / tw; u -= Math.floor(u);
     var v = (py - y0) / th;
     if (v < 0 || v >= 1) return 0;
-    return clouds[k].cover[Math.floor(v * TH) * TW + Math.floor(u * TW)];
+    var c = clouds[k];
+    return c.cover[Math.floor(v * c.height) * c.width + Math.floor(u * c.width)];
   }
 
   // ---- lightning ----
@@ -242,7 +247,8 @@
     ctx.fillStyle = hg;
     ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
     ctx.globalAlpha = 0.75 + 0.25 * clear;
-    ctx.drawImage(moon, mp.x - mp.r, mp.y - mp.r, mp.r * 2, mp.r * 2);
+    var mR = mp.r / 0.84;
+    ctx.drawImage(moon, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
     ctx.globalAlpha = 1;
 
     // clouds: each texture spans a tile of (W*scale) and wraps horizontally;
