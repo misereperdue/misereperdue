@@ -7058,3 +7058,71 @@ html.rc-lock body {
 [data-theme="light"] .rc-card .chat-field input:-webkit-autofill {
   -webkit-text-fill-color: #0a1230;
 }
+/* ---------- One surface for every popup and sheet: the profile sheet's frosted glass (per dc) ----------
+   Profile sheet = .chat-sheet + .chat-sheet-blur: glass-regular tint, glass-regular blur, glass hairline,
+   glass spec + shadow, over a rgba(0,0,0,.45) scrim. Theme-aware through the glass vars. */
+[data-theme] {
+  --sheet-bg: var(--glass-regular-tint);
+  --sheet-blur: var(--glass-regular);
+  --sheet-border: var(--glass-hairline);
+  --sheet-shadow: var(--glass-spec), var(--shadow);
+  --sheet-scrim: rgba(0, 0, 0, 0.45);
+}
+.msg-popup-inner,
+.dashboard-sheet-blur,
+[data-theme="light"] .dashboard-sheet-blur,
+.chat-me-menu,
+[data-theme="light"] .chat-me-menu,
+.forum-notif-panel,
+[data-theme="light"] .forum-notif-panel,
+.avatar-options-menu,
+[data-theme="light"] .avatar-options-menu,
+.mp-dialog,
+.tagmenu,
+.chat-react-picker,
+[data-theme="light"] .chat-react-picker,
+.forum-copy-dialog,
+.rc-card,
+[data-theme="light"] .rc-card {
+  background: var(--sheet-bg);
+  -webkit-backdrop-filter: var(--sheet-blur);
+  backdrop-filter: var(--sheet-blur);
+  box-shadow: var(--sheet-shadow);
+}
+.msg-popup-inner,
+.chat-me-menu,
+[data-theme="light"] .chat-me-menu,
+.forum-notif-panel,
+[data-theme="light"] .forum-notif-panel,
+.avatar-options-menu,
+.mp-dialog,
+.tagmenu,
+.chat-react-picker,
+.forum-copy-dialog,
+.rc-card,
+[data-theme="light"] .rc-card {
+  border: var(--sheet-border);
+}
+.mp-dialog,
+.forum-notif-panel,
+.forum-copy-dialog {
+  color: var(--ink);
+}
+.rc-back,
+[data-theme="light"] .rc-back,
+.mp-dialog-back,
+.forum-copy-dialog-back,
+.avatar-options-overlay {
+  background: var(--sheet-scrim);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-theme="light"] .mp-dialog-cancel {
+  border-color: rgba(10, 18, 48, 0.12);
+  background: rgba(10, 18, 48, 0.05);
+  color: var(--ink);
+}
+/* Let the card's backdrop blur reach the page: no lingering opacity fill on the scrim. */
+.rc-back {
+  animation-fill-mode: backwards;
+}

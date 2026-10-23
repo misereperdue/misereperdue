@@ -498,10 +498,10 @@
     var r = document.createElement("div");
     ((r.className = "forum-copy-dialog-back"),
       (r.style.cssText =
-        "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;"));
+        "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;"));
     var n = document.createElement("div");
-    n.style.cssText =
-      "background:var(--bg,#fff);color:var(--ink,#000);border-radius:12px;padding:16px;width:100%;max-width:360px;box-shadow:0 8px 30px rgba(0,0,0,.3);";
+    ((n.className = "forum-copy-dialog"),
+      (n.style.cssText = "border-radius:12px;padding:16px;width:100%;max-width:360px;"));
     var a = document.createElement("input");
     ((a.type = "text"),
       (a.readOnly = !0),
