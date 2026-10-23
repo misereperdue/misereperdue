@@ -16,7 +16,7 @@
   var xReturnHash = (function () {
     try {
       var h = location.hash || "";
-      return /(^#|&)x_(code|error|token|link_confirm)=/.test(h) ? h : "";
+      return /(^#|&)x_(code|error|token|link_confirm|linked)=/.test(h) ? h : "";
     } catch (e) {
       return "";
     }
@@ -1151,6 +1151,13 @@
                 try {
                   localStorage.setItem("x_state", e.state);
                 } catch (e) {}
+                if (e.pollKey)
+                  try {
+                    localStorage.setItem(
+                      "x_poll",
+                      JSON.stringify({ state: e.state, pollKey: e.pollKey, ts: Date.now() }),
+                    );
+                  } catch (e) {}
                 var a = e.state + "." + i(),
                   r =
                     "https://x.com/i/oauth2/authorize?response_type=code&client_id=" +
@@ -3725,6 +3732,9 @@
                               try {
                                 localStorage.setItem("x_link_token", e.linkToken);
                               } catch (e) {}
+                              try {
+                                localStorage.setItem("x_link_pending", String(Date.now()));
+                              } catch (e) {}
                               var a =
                                 "https://x.com/i/oauth2/authorize?response_type=code&client_id=" +
                                 encodeURIComponent(t) +
@@ -3856,9 +3866,24 @@
             o.indexOf("x_token=") < 0 &&
             o.indexOf("x_error=") < 0 &&
             o.indexOf("x_link_confirm=") < 0 &&
-            o.indexOf("x_code=") < 0
+            o.indexOf("x_code=") < 0 &&
+            o.indexOf("x_linked=") < 0
           )
             return null;
+          var xl = o.match(/x_linked=([^&]*)/);
+          if (xl) {
+            try {
+              history.replaceState(null, "", location.pathname + location.search + "#chat");
+            } catch (e) {}
+            try {
+              localStorage.removeItem("x_link_pending");
+            } catch (e) {}
+            var xh = "";
+            try {
+              xh = decodeURIComponent(xl[1] || "");
+            } catch (e) {}
+            return { xLinked: xh || "1" };
+          }
           ((e = o.match(/x_token=([^&]+)/)),
             (t = o.match(/x_error=([^&]+)/)),
             (n = o.match(/x_state=([^&]+)/)),
@@ -3943,7 +3968,17 @@
           return { error: "Sign-in failed." };
         }
       })();
-      t && t.linkConfirm
+      t && t.xLinked
+        ? (k("X account linked" + ("1" !== t.xLinked ? ": @" + t.xLinked : ".")), wt(null))
+        : t && t.error && d
+        ? ((function () {
+            try {
+              localStorage.removeItem("x_link_pending");
+            } catch (e) {}
+          })(),
+          k(t.error),
+          wt(null))
+        : t && t.linkConfirm
         ? E("/api/x/link-confirm", { method: "POST", body: { code: t.linkConfirm } })
             .then(function (e) {
               (e && e.ok
@@ -4006,6 +4041,81 @@
       (t && (t.textContent = bt), (bt = null));
     }
   }
+  // X handoff for the iOS home-screen app: X can finish in Safari (separate
+  // storage). The page that started the flow picks the result up here:
+  // sign-in via /api/x/poll (secret pollKey), link by re-reading /api/me.
+  var xHandoffBusy = !1;
+  function xHandoff() {
+    if (xHandoffBusy || document.hidden) return;
+    var pend = null,
+      lp = 0;
+    try {
+      pend = JSON.parse(localStorage.getItem("x_poll") || "null");
+    } catch (e) {}
+    try {
+      lp = +localStorage.getItem("x_link_pending") || 0;
+    } catch (e) {}
+    if (pend && (!pend.ts || Date.now() - pend.ts > 6e5 || d)) {
+      try {
+        localStorage.removeItem("x_poll");
+      } catch (e) {}
+      pend = null;
+    }
+    if (lp && (Date.now() - lp > 6e5 || !d)) {
+      try {
+        localStorage.removeItem("x_link_pending");
+      } catch (e) {}
+      lp = 0;
+    }
+    if (pend && pend.state && pend.pollKey) {
+      xHandoffBusy = !0;
+      fetch(e + "/api/x/poll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: pend.state, pollKey: pend.pollKey }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (j) {
+          xHandoffBusy = !1;
+          if (j && j.pending) return;
+          try {
+            localStorage.removeItem("x_poll");
+          } catch (e) {}
+          j && j.ok && j.token
+            ? wt({ token: j.token })
+            : j && j.error && (d ? k(j.error) : wt({ error: j.error }));
+        })
+        .catch(function () {
+          xHandoffBusy = !1;
+        });
+    } else if (lp && d) {
+      xHandoffBusy = !0;
+      E("/api/me")
+        .then(function (j) {
+          xHandoffBusy = !1;
+          if (j && j.user && j.user.xUsername) {
+            try {
+              localStorage.removeItem("x_link_pending");
+            } catch (e) {}
+            s && (s.xUsername = j.user.xUsername);
+            k("X account linked: @" + j.user.xUsername);
+          }
+        })
+        .catch(function () {
+          xHandoffBusy = !1;
+        });
+    }
+  }
+  (document.addEventListener("visibilitychange", xHandoff),
+    window.addEventListener("focus", xHandoff),
+    window.addEventListener("pageshow", xHandoff),
+    setInterval(function () {
+      try {
+        localStorage.getItem("x_poll") && xHandoff();
+      } catch (e) {}
+    }, 3e3));
   ("loading" === document.readyState ? document.addEventListener("DOMContentLoaded", yt) : yt(),
     (window.MPChat = window.MPChat || {}),
     (function () {
