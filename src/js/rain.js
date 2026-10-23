@@ -140,7 +140,7 @@
   }
 
   var lb = null, lbx = null;
-  var W = 0, H = 0, dpr = 1, pal, moon, skyGrad, mistGrad, drops = [];
+  var W = 0, H = 0, dpr = 1, pal, moon, moonOver, skyGrad, mistGrad, drops = [];
 
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
@@ -148,6 +148,7 @@
     pal = PAL[theme()];
     tintSprites();
     moon = moonTex(pal.moon, pal.moonA);
+    moonOver = moonTex(pal.moon, 0.95);
     paint();
   }
   function paint() {
@@ -193,9 +194,10 @@
 
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
-    // upper right, just clear of the centred nav pill so it reads through glass
-    var r = Math.max(12, Math.min(18, W * 0.04));
-    return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
+    // top right corner, clear of the nav cloud (centre) and above the Chat/Globe
+    // top bar (starts ~82px down), so it is never hidden behind a bar
+    var r = Math.max(12, Math.min(16, W * 0.038));
+    return { x: W - r - 22, y: r + 14, r: r };
   }
 
   // ---- lightning ----
@@ -272,19 +274,27 @@
     // moonlight through cloud: backlit glow + silver lining on the clouds
     // around the moon, and a softened crescent on top so it never vanishes
     // (dimmer under thick cloud, brighter as it thins)
-    var cv2 = Math.min(1, cover * 1.4);
+    var cv2 = Math.min(1, cover * 1.6);
     if (cv2 > 0.02) {
       var lr = mp.r * 4.5;
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      var bg2 = ctx.createRadialGradient(mp.x, mp.y, 0, mp.x, mp.y, lr);
-      var ba = pal.haloA * 0.55 * breathe * cv2 * (1 - 0.35 * Math.max(0, cover - 0.7));
-      bg2.addColorStop(0, "rgba(" + pal.halo + "," + ba.toFixed(3) + ")");
-      bg2.addColorStop(0.5, "rgba(" + pal.halo + "," + (ba * 0.3).toFixed(3) + ")");
-      bg2.addColorStop(1, "rgba(" + pal.halo + ",0)");
+      // glow on the cloud around the moon (light mode: a faint cool shade
+      // ring instead, since white-on-white glow would not read)
+      var bg2 = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.8, mp.x, mp.y, lr);
+      if (theme() === "dark") {
+        ctx.globalCompositeOperation = "lighter";
+        var ba = pal.haloA * (0.7 + 0.3 * breathe) * cv2;
+        bg2.addColorStop(0, "rgba(" + pal.halo + "," + ba.toFixed(3) + ")");
+        bg2.addColorStop(0.4, "rgba(" + pal.halo + "," + (ba * 0.35).toFixed(3) + ")");
+        bg2.addColorStop(1, "rgba(" + pal.halo + ",0)");
+      } else {
+        var sa = 0.2 * cv2;
+        bg2.addColorStop(0, "rgba(118,132,158," + sa.toFixed(3) + ")");
+        bg2.addColorStop(0.35, "rgba(118,132,158," + (sa * 0.45).toFixed(3) + ")");
+        bg2.addColorStop(1, "rgba(118,132,158,0)");
+      }
       ctx.fillStyle = bg2;
       ctx.fillRect(mp.x - lr, mp.y - lr, lr * 2, lr * 2);
-      ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
       // silver lining: clouds around the moon re-drawn into a small buffer,
       // feathered with a radial mask, then added on top (no hard edge)
       var la = pal.lining * breathe * cv2;
@@ -295,7 +305,7 @@
         lbx.setTransform(dpr, 0, 0, dpr, 0, 0);
         lbx.globalCompositeOperation = "source-over";
         lbx.clearRect(0, 0, bs, bs);
-        for (k = 1; k < 3; k++) drawLayer(lbx, k, -bx, -by);
+        for (k = 0; k < 3; k++) drawLayer(lbx, k, -bx, -by);
         lbx.globalCompositeOperation = "destination-in";
         var mg = lbx.createRadialGradient(lr, lr, 0, lr, lr, lr);
         mg.addColorStop(0, "rgba(0,0,0,1)");
@@ -309,8 +319,10 @@
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = "source-over";
       }
-      ctx.globalAlpha = (0.3 + 0.25 * breathe) * cv2 * (1 - 0.4 * Math.max(0, cover - 0.6));
-      ctx.drawImage(moon, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
+      // the crescent itself, drawn over the clouds: ~0.6-0.7 opacity when
+      // fully covered, so it always reads
+      ctx.globalAlpha = cv2 * (0.6 + 0.1 * breathe);
+      ctx.drawImage(moonOver, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
       ctx.globalAlpha = 1;
     }
 
