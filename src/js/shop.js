@@ -4,8 +4,11 @@ function nativeShare(t, e, n) {
     : navigator.clipboard && navigator.clipboard.writeText(n).catch(function () {});
 }
 function shareProduct(t) {
-  var e = "https://misereperdue.com/#product-" + encodeURIComponent(t.id || "");
-  nativeShare(t.name, "Check out " + t.name + " on Misère Perdue", e);
+  // Canonical public product page (/p/<handle>), not the in-app hash route.
+  var e = t.handle
+    ? "https://misereperdue.com/p/" + encodeURIComponent(t.handle)
+    : "https://misereperdue.com/shop";
+  nativeShare(t.name, t.name + " by MISERY", e);
 }
 var MPShop = (function () {
   "use strict";
@@ -641,7 +644,7 @@ var MPShop = (function () {
         l(i.priceLabel || (null != i.price ? MP.money(i.price) : "")) +
         "</div>" +
         r +
-        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share</button>' +
+        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share</button>' +
         (((v = i.details)
           ? String(v)
               .split(/\n{2,}/)
