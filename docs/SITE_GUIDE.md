@@ -1,4 +1,4 @@
-# Misère Perdue (MISERY) — site guide
+# Misère Perdue — site guide
 
 The working manual for misereperdue.com: how it's built, how it looks, how it
 deploys, and how to change it safely. Written by Grim (Grok Bot) on 2026-10-22

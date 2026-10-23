@@ -1,7 +1,7 @@
 {
   "name": "misereperdue-site",
   "private": true,
-  "description": "Misère Perdue (MISERY) site — static files served by Cloudflare Pages. Readable sources in src/, minified output in js/ and css/.",
+  "description": "Misère Perdue site — static files served by Cloudflare Pages. Readable sources in src/, minified output in js/ and css/.",
   "type": "module",
   "scripts": {
     "build": "node tools/build.mjs",
