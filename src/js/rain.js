@@ -102,10 +102,14 @@
     for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
       var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.86) / 0.14))), shade = 1 - 0.12 * dd * dd;
-      // shadow disc offset straight down carves the crescent: lit limb points up
-      // (canonical), then it's rotated live to the real bright-limb angle
-      var ox = dx, oy = dy - 0.197, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
-      var lit = sm(Math.min(1, Math.max(0, (od - 0.9) / 0.14)));
+      // fat crescent (~40% lit, per dc 12:55): true round outer limb, smooth
+      // elliptical terminator (soft), lit limb points up (canonical) and is
+      // rotated live to the real bright-limb angle; faint earthshine keeps the
+      // whole disc just visible
+      var u = dx / 0.5, a = -dy / 0.5, term = 0.32 * Math.sqrt(Math.max(0, 1 - u * u));
+      var lit = sm(Math.min(1, Math.max(0, (a - term) / 0.3 + 0.5)));
+      lit = 0.08 + 0.92 * lit;
+      shade *= 0.6 + 0.4 * lit;
       for (i = 0; i < spots.length; i++) {
         var sx = (x + 0.5) / s - spots[i][0], sy = (y + 0.5) / s - spots[i][1], q = Math.sqrt(sx * sx + sy * sy) / spots[i][2];
         if (q < 1) shade -= spots[i][3] * 0.6 * (1 - sm(q));
