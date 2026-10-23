@@ -197,6 +197,30 @@
     /* ---- Dashboard v2 (needs the globe-pins-stats Worker; every piece is
        skipped when the server doesn't send its field, so the old Worker
        renders exactly as before) ---- */
+    /* One-line labels: shrink the font (max -> min px, 0.5px steps) until
+       the text fits its box; ellipsis only if it still doesn't fit at min. */
+    var __fitEls = [];
+    function __fitText(el, max, min) {
+      if (!el) return;
+      el.style.whiteSpace = "nowrap";
+      el.style.overflow = "hidden";
+      el.style.textOverflow = "ellipsis";
+      for (var fs = max; ; fs -= 0.5) {
+        el.style.fontSize = fs + "px";
+        if (fs <= min || !el.clientWidth || el.scrollWidth <= el.clientWidth + 0.5) break;
+      }
+    }
+    function __fitLater(el, max, min) {
+      __fitEls.push([el, max, min]);
+      requestAnimationFrame(function () {
+        __fitText(el, max, min);
+      });
+    }
+    window.addEventListener("resize", function () {
+      __fitEls.forEach(function (f) {
+        __fitText(f[0], f[1], f[2]);
+      });
+    });
     function __val(d, key) {
       return key === "posts" ? (d.forumPosts || 0) + (d.forumReplies || 0) : d[key] || 0;
     }
@@ -282,6 +306,7 @@
       a.style.cssText = "font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
       a.textContent = label;
       t.appendChild(a);
+      __fitLater(a, 12, 9);
       key && __tileExtras(t, key, value, prev);
       row.appendChild(t);
       fmt ? ((n.className = "easyui-anim-num"), (n.textContent = fmt(value))) : s(n, value);
@@ -375,7 +400,11 @@
       k.appendChild(
         __cap(
           "Last 30 days" +
-            (con ? " · orders exclude test and cancelled" : " · orders show once Shopify is connected") +
+            (con
+              ? " · orders exclude test and cancelled"
+              : o.shop && o.shop.error
+                ? " · Shopify error: " + o.shop.error
+                : " · orders show once Shopify is connected") +
             (a || g ? " · counters since " + (a || g) : " · cart adds and Globe views are new counters"),
         ),
       );
@@ -578,6 +607,10 @@
     var R = document.createElement("span");
     function D() {
       U.textContent = P[S] + " · " + I.label;
+      requestAnimationFrame(__fitPill);
+    }
+    function __fitPill() {
+      __fitText(U, 14, 10);
     }
     ((R.innerHTML =
       '<svg viewBox="0 0 256 256" width="12" height="12" fill="currentColor" style="display:block;flex:none"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></svg>'),
@@ -638,7 +671,10 @@
         ((t._id = e.id), j.push(t));
       }));
     var W = document.createElement("div");
-    ((W.style.cssText = "position:relative;display:inline-block;"),
+    ((W.style.cssText = "position:relative;display:inline-block;min-width:0;flex:0 1 auto;"),
+      (F.style.maxWidth = "100%"),
+      (U.style.minWidth = "0"),
+      (R.style.flex = "none"),
       W.appendChild(F),
       W.appendChild(Z),
       O.appendChild(W),
@@ -709,6 +745,7 @@
     }
     function $() {
       _.innerHTML = "";
+      requestAnimationFrame(__fitPill);
       // The legacy "What this shows" note (forum-mount-patch.js) only knows
       // Views/Visitors/Users/Posts: hide it for the newer metrics.
       var __cb = document.getElementById("chart-briefing");
