@@ -8501,12 +8501,12 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     background-color: var(--lg-solid);
   }
 }
-/* ===== Realistic cumulus texture (per dc 11:36) + nav/top bar parity =====
-   img/cloud-tex.webp (128px tileable billow-fBm, baked emboss: lit lobe tops, grey creases and
-   undersides, density in alpha) textures the fill; img/cloud-erode.webp (same noise, alpha
-   0.5-1) is intersected with the puff union so edges break up irregularly and density varies.
-   Both static images (no live SVG filters), ~18 KB total. Backdrop recipe is now identical on
-   the nav and the top bar (the nav had been left on a desaturated backdrop, which read grey). */
+/* ===== Smooth cloud bars (per dc 11:39: texture removed, gentle animation) =====
+   One recipe for the nav and the Chat/Globe top bars. The cloud body (fill, soft lit tops,
+   shaded underside, shape-clipped backdrop blur) lives on ::before so icons/labels stay crisp;
+   ::after carries soft highlight puffs that drift/breathe. Motion is transform/opacity only
+   (individual translate/scale properties on different periods, so lobes move out of phase),
+   never backdrop-filter or mask changes, and is off under prefers-reduced-motion. */
 :root,
 [data-theme="light"] {
   --cu-blur: blur(10px) saturate(150%) brightness(1.06);
@@ -8546,7 +8546,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   -webkit-backdrop-filter: var(--cu-blur);
   backdrop-filter: var(--cu-blur);
   background-image:
-    url(../img/cloud-tex.webp) 0 0 / 140px 140px repeat,
     var(--cu-h) 22% 6% / 20% 44% no-repeat,
     var(--cu-h) 64% 4% / 22% 46% no-repeat,
     var(--cu-h) 6% 30% / 14% 36% no-repeat,
@@ -8557,7 +8556,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     radial-gradient(closest-side, var(--cu-gap), transparent) 77% 40% / 10% 40% no-repeat,
     linear-gradient(180deg, transparent 40%, var(--cu-under) 100%);
   -webkit-mask:
-    url(../img/cloud-erode.webp) 0 0 / 110px 110px repeat,
     var(--cu-p) 50% 60% / 84% 50% no-repeat,
     var(--cu-p) 0 62% / 17% 74% no-repeat,
     var(--cu-p) 6% 30% / 24% 80% no-repeat,
@@ -8570,9 +8568,7 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     var(--cu-p) 41% 100% / 24% 54% no-repeat,
     var(--cu-p) 64% 100% / 30% 62% no-repeat,
     var(--cu-p) 88% 100% / 24% 54% no-repeat;
-  -webkit-mask-composite: source-in, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over;
   mask:
-    url(../img/cloud-erode.webp) 0 0 / 110px 110px repeat,
     var(--cu-p) 50% 60% / 84% 50% no-repeat,
     var(--cu-p) 0 62% / 17% 74% no-repeat,
     var(--cu-p) 6% 30% / 24% 80% no-repeat,
@@ -8585,7 +8581,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     var(--cu-p) 41% 100% / 24% 54% no-repeat,
     var(--cu-p) 64% 100% / 30% 62% no-repeat,
     var(--cu-p) 88% 100% / 24% 54% no-repeat;
-  mask-composite: intersect, add, add, add, add, add, add, add, add, add, add, add, add;
 }
 .glassbar::before,
 [data-theme="light"] .glassbar::before {
@@ -8604,5 +8599,82 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   .glassbar::before,
   [data-theme="light"] .glassbar::before {
     background-color: var(--lg-solid);
+  }
+}
+/* cloud body: very slow breathing of the whole silhouette */
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  transform-origin: 50% 60%;
+  animation: cb-breathe 10s ease-in-out infinite alternate;
+}
+/* billowing highlight puffs on top of the body (still behind the icons) */
+.glassbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side, var(--cb-puff), transparent 70%) 20% 8% / 26% 60% no-repeat,
+    radial-gradient(closest-side, var(--cb-puff), transparent 70%) 66% 4% / 28% 62% no-repeat,
+    radial-gradient(closest-side, var(--cb-puff2), transparent 70%) 44% 20% / 20% 50% no-repeat,
+    radial-gradient(closest-side, var(--cb-puff2), transparent 70%) 88% 22% / 18% 50% no-repeat,
+    radial-gradient(closest-side, var(--cb-puff2), transparent 70%) 6% 34% / 16% 46% no-repeat;
+  animation:
+    cb-drift 7s ease-in-out infinite alternate,
+    cb-swell 11s ease-in-out infinite alternate,
+    cb-glow 9s ease-in-out infinite alternate;
+}
+:root,
+[data-theme="light"] {
+  --cb-puff: rgba(255, 255, 255, 0.7);
+  --cb-puff2: rgba(255, 255, 255, 0.45);
+}
+[data-theme="dark"] {
+  --cb-puff: rgba(255, 255, 255, 0.2);
+  --cb-puff2: rgba(255, 255, 255, 0.12);
+}
+@keyframes cb-breathe {
+  from {
+    transform: scale(1, 1);
+  }
+  to {
+    transform: scale(1.012, 1.045);
+  }
+}
+@keyframes cb-drift {
+  from {
+    translate: -4px 1px;
+  }
+  to {
+    translate: 4px -2px;
+  }
+}
+@keyframes cb-swell {
+  from {
+    scale: 0.97 0.94;
+  }
+  to {
+    scale: 1.03 1.06;
+  }
+}
+@keyframes cb-glow {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glassbar::before,
+  [data-theme="light"] .glassbar::before,
+  .glassbar::after {
+    animation: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar::after {
+    display: none;
   }
 }
