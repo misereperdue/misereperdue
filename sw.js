@@ -4,13 +4,19 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 176;
+var SW_VERSION = 177;
 var CACHE = "mp-shell-v" + SW_VERSION;
+// Emoji images (/emoji/<set>/<key>.webp, see js/emoji.js) live in their own
+// cache: filled on first use (never precached: ~3,800 files), kept across
+// SW updates, and capped so it can't grow without bound.
+var EMOJI_CACHE = "mp-emoji-v1";
+var EMOJI_MAX = 800;
 var SHELL = [
   "/",
   "/webapp.json",
   "/css/site.css?v=633",
   "/js/theme.js?v=8",
+  "/js/emoji.js?v=1",
   "/js/boot-head.js?v=2",
   "/js/beacon.js?v=1",
   "/js/app.js?v=8",
@@ -56,7 +62,7 @@ self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
-        if (k !== CACHE) return caches.delete(k);
+        if (k !== CACHE && k !== EMOJI_CACHE) return caches.delete(k);
       }));
     }).then(function () { return self.clients.claim(); })
   );
@@ -68,6 +74,29 @@ self.addEventListener("fetch", function (e) {
   if (url.pathname.indexOf("/api/") === 0) return;
   if (e.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
+
+  // Emoji images: the set folder is immutable, so cache-first with no
+  // background revalidation (one network fetch per emoji, ever).
+  if (url.pathname.indexOf("/emoji/") === 0) {
+    e.respondWith(
+      caches.open(EMOJI_CACHE).then(function (cache) {
+        return cache.match(e.request).then(function (hit) {
+          if (hit) return hit;
+          return fetch(e.request).then(function (res) {
+            if (res.ok) {
+              cache.put(e.request, res.clone()).then(function () {
+                return cache.keys();
+              }).then(function (keys) {
+                for (var i = 0; i < keys.length - EMOJI_MAX; i++) cache.delete(keys[i]);
+              }).catch(function () {});
+            }
+            return res;
+          });
+        });
+      })
+    );
+    return;
+  }
 
   // HTML: network-first (fresh file refs on every load), cache as offline fallback.
   // Cache-first HTML served stale file versions (old JS/CSS refs) for days.

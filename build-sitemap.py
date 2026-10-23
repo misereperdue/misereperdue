@@ -122,6 +122,7 @@ img{{max-width:100%;border-radius:8px}}
 nav.crumbs{{font-size:13px;color:#666;margin:-14px 0 18px}}
 nav.crumbs a{{color:#666}}
 </style>
+<script src="/js/emoji.js?v=1" defer></script>
 </head>
 <body>
 <header><a href="/">MIS&Egrave;RE PERDUE</a></header>
@@ -203,6 +204,7 @@ nav.crumbs a{{color:#666}}
 .cta a{{font-weight:700;text-decoration:none}}
 h1{{font-size:26px;line-height:1.25}}
 </style>
+<script src="/js/emoji.js?v=1" defer></script>
 </head>
 <body>
 <header><a href="/">MIS&Egrave;RE PERDUE</a></header>

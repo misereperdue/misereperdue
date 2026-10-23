@@ -126,6 +126,7 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <meta name="twitter:image" content="{e(image)}">
 {extra}<script type="application/ld+json">{ld}</script>
 {STYLE}
+<script src="/js/emoji.js?v=1" defer></script>
 </head>
 <body>
 <header><a href="/">MIS&Egrave;RE PERDUE</a></header>

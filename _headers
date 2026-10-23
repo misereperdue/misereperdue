@@ -16,6 +16,10 @@
 /vendor/*
   ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
+# Emoji image sets (js/emoji.js): a set folder never changes (new art = new folder).
+/emoji/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
 # Images/video are not always pinned: cache a day, refresh in the background.
 /img/*
   ! Cache-Control

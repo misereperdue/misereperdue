@@ -269,3 +269,22 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 **X OAuth (2026-10-23):** Sign in / Connect with X go to `x.com/i/oauth2/authorize` with redirect `https://api.misereperdue.com/api/x/callback`. Connect completes server-side in the callback (the pending link is bound to the user at `/api/x/link-start`) and returns `#x_linked=<handle>`; sign-in returns `#x_code=` (swapped at `/api/x/exchange`). For the iOS home-screen app (X may finish in Safari, separate storage) the starting page polls `/api/x/poll` with a secret `pollKey` from `/api/x/pkce-start`, and re-reads `/api/me` on focus for a pending link. `chat.js` captures the `#x_...` hash at load because `app.js` rewrites it to `#chat`. Callback failures are logged (`x_callback_fail`, with X's error) in Workers Observability for misery-chat.
 
 **Recovery codes (2026-10-23, replaces email recovery):** 16 symbols from `23456789ABCDEFGHJKMNPQRSTUVWXYZ` (~79 bits), shown `XXXX-XXXX-XXXX-XXXX` (input ignores case/dashes/spaces and an `MPRD` prefix). Issued at signup (`/api/register` and new X accounts via `/api/x/exchange`/`/api/x/poll` → `recoveryCode`), stored only as PBKDF2(code + `RECOVERY_PEPPER`, per-code salt) in `user.recovery`. `/api/recovery/reset` {username, code, password}: buckets `rl:recover:pair|ip|acct` (5/15m, 20/15m, 50/h, failures only), kills all sessions, signs in, rotates the code, sets `pwResetNotice` (next `/api/login` returns `pwResetAt`, once). `/api/recovery/regenerate` (current password; X-only accounts replacing a code need an X session < 30 min). `/api/recovery/x-reset` (session `via:"x"` < 15 min) for "Recover with X". `/api/me` adds `hasRecovery`, `recoveryCreatedAt`, `hasPassword`. UI: `rc*` functions in `src/js/chat.js`, `.rc-*` in `site.css`; signed-in users without a code get a prompt each session until they create one ("Later" = `sessionStorage.rc_later`).
+
+---
+
+## 10. Added 2026-10-23: Apple emoji everywhere (`js/emoji.js`)
+
+- `js/emoji.js` (source `src/js/emoji.js`, loaded with `defer` in `index.html` and in every
+  static page `globe.html`, `shop.html`, `t/*.html`, `p/*.html` and their generators) wraps every
+  emoji in visible text in `<span class="mp-emo" data-k="1f600">😀</span>`, drawn from
+  `/emoji/<EMOJI_SET>/<key>.webp`. The character stays in the span (hidden behind the image),
+  so `textContent`, copy/paste and screen readers are unchanged. It only splits text nodes;
+  it never parses HTML.
+- Skipped: inputs, textareas, selects, `contenteditable` editors (TipTap), `<title>`, SVG,
+  canvas (the Share profile card is canvas-drawn and unchanged), anything with `data-no-emoji`.
+- On iPhone/iPad/Mac it does nothing (native emoji are already Apple's). Test override:
+  `localStorage.mp_emoji = "force"` or `"off"`.
+- Unknown emoji (no file in the set) fall back to the native glyph automatically.
+- `sw.js` caches `/emoji/*` cache-first in its own `mp-emoji-v1` cache (capped at 800, kept
+  across SW versions). `_routes.json` excludes `/emoji/*` from the Pages Function.
+- Licence and how to switch sets: `docs/THIRD_PARTY.md`.
