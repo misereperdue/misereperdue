@@ -36,7 +36,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      lining: "196,214,250", stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
+      lining: "196,214,250", stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.24,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -121,7 +121,7 @@
     return c;
   }
 
-  var W = 0, H = 0, dpr = 1, pal, clouds = [], moon, moonSoft, lc, lx, skyGrad, mistGrad, drops = [];
+  var W = 0, H = 0, HF = 0, dpr = 1, pal, clouds = [], moon, moonSoft, lc, lx, skyGrad, mistGrad, drops = [];
   var LAYERS = [ // far, mid, near
     { speed: 7, scale: 1.0, y: -0.08, h: 0.95 },
     { speed: 13, scale: 1.25, y: -0.02, h: 0.9 },
@@ -155,14 +155,14 @@
   }
 
   function seedDrops() {
-    var n = Math.min(120, Math.round((W * H) / 900)), r = rng(7);
+    var n = Math.min(140, Math.round((W * HF) / 900)), r = rng(7);
     drops = [];
     for (var i = 0; i < n; i++) {
       var layer = i % 3; // 0 far, 1 mid, 2 near
       drops.push({
         l: layer,
         x: r() * (W + 60) - 30,
-        y: r() * H,
+        y: r() * HF,
         v: (380 + layer * 210) * (0.85 + r() * 0.3), // CSS px / s
         len: (7 + layer * 6) * (0.8 + r() * 0.4),
       });
@@ -316,7 +316,7 @@
     // 2. moonlight scattering through thin cloud: wider, softer as cover grows
     if (thru > 0.01) {
       var gr = mp.r * (2.6 + 4.2 * thru), sg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-      var ga = (light ? 0.16 : 0.12) * thru * breathe;
+      var ga = (light ? 0.13 : 0.1) * thru * breathe;
       sg.addColorStop(0, "rgba(" + pal.lining + "," + ga.toFixed(3) + ")");
       sg.addColorStop(0.4, "rgba(" + pal.lining + "," + (ga * 0.4).toFixed(3) + ")");
       sg.addColorStop(1, "rgba(" + pal.lining + ",0)");
@@ -350,10 +350,13 @@
     var rc = cv.getBoundingClientRect();
     var w = Math.max(1, Math.round(rc.width)), h = Math.max(1, Math.round(rc.height));
     dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (w === W && h === H && cv.width === Math.round(w * dpr)) return;
-    W = w; H = h;
+    // --sky-ext (light mode): extra canvas height below the sky that only
+    // holds the fade into the page; clouds/moon lay out in the sky part (H)
+    var ext = parseFloat(getComputedStyle(cv).getPropertyValue("--sky-ext")) || 0;
+    if (w === W && h === HF && cv.width === Math.round(w * dpr)) return;
+    W = w; HF = h; H = Math.max(1, h - ext);
     cv.width = Math.round(W * dpr);
-    cv.height = Math.round(H * dpr);
+    cv.height = Math.round(HF * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
     paint();
@@ -365,8 +368,11 @@
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
     // upper right, just clear of the centred nav pill so it reads through glass
-    var r = Math.max(10, Math.min(16, W * 0.034));
-    return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
+    // bigger moon (per dc 12:58, ~38-44 px across): top right, beside the nav
+    // pill (vertically centred on it), below the status bar / notch and
+    // above the Chat/Globe top bar; never under the pill
+    var r = Math.max(16, Math.min(22, W * 0.049)), top = Math.max(0, H - 140);
+    return { x: Math.min(W - r - 8, W * 0.5 + 147 + r), y: top + 47, r: r };
   }
   function coverAt(k, px, py, off, tw, th, y0) {
     var u = (px - off) / tw; u -= Math.floor(u);
@@ -421,7 +427,7 @@
     var shake = th ? Math.sin(t * 38) * 0.6 * th : 0;
 
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, W, HF);
 
     // moon + halo (behind clouds); halo breathes and grows where clouds thin.
     // Cover is sampled at 5 points over the disc and eased so it never pops.
@@ -491,7 +497,7 @@
         var d = drops[i];
         d.y += d.v * dt;
         d.x += d.v * SLANT * dt;
-        if (d.y - d.len > H) { d.y = -Math.random() * 20; d.x = Math.random() * (W + 60) - 60; }
+        if (d.y - d.len > HF) { d.y = -Math.random() * 20; d.x = Math.random() * (W + 60) - 60; }
         if (d.x > W + 30) d.x -= W + 60;
         ctx.moveTo(d.x, d.y);
         ctx.lineTo(d.x - d.len * SLANT, d.y - d.len);
