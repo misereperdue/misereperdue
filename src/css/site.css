@@ -7928,7 +7928,7 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   padding: 10px 22px;
   font-size: 15px;
 }
-/* ===== Liquid Glass: nav pill + top bars (.glassbar) and chat bubbles, per dc 2026-10-23 =====
+/* ===== Liquid Glass: nav pill + Chat/Globe top bars share ONE recipe (.glassbar + --lg-* vars, no per-bar overrides) and chat bubbles, per dc 2026-10-23 =====
    Clear glass (light blur + saturate + slight brightness lift), bright specular rim
    (gradient border via mask, brightest top-left), soft inner glow, subtle outer shadow.
    Sheets/popups keep --sheet-* (untouched). Only the bars get backdrop-filter; bubbles
@@ -7937,7 +7937,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 [data-theme="light"] {
   --lg-blur: blur(12px) saturate(180%) brightness(1.08);
   --lg-tint: rgba(255, 255, 255, 0.3);
-  --lg-tint-head: rgba(255, 255, 255, 0.46);
   --lg-sheen: linear-gradient(
     155deg,
     rgba(255, 255, 255, 0.5) 0%,
@@ -7975,7 +7974,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 [data-theme="dark"] {
   --lg-blur: blur(12px) saturate(180%) brightness(1.06);
   --lg-tint: rgba(14, 22, 52, 0.26);
-  --lg-tint-head: rgba(10, 18, 48, 0.42);
   --lg-sheen: linear-gradient(
     155deg,
     rgba(255, 255, 255, 0.16) 0%,
@@ -8017,9 +8015,6 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   backdrop-filter: var(--lg-blur);
   border: 1px solid transparent;
   box-shadow: var(--lg-shadow);
-}
-.chat-head.glassbar {
-  background-color: var(--lg-tint-head);
 }
 .glassbar::before {
   content: "";
@@ -8073,15 +8068,13 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 /* fallbacks: reduced transparency or no backdrop-filter -> near-opaque bars */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glassbar,
-  [data-theme="light"] .glassbar,
-  .chat-head.glassbar {
+  [data-theme="light"] .glassbar {
     background-color: var(--lg-solid);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
   .glassbar,
-  [data-theme="light"] .glassbar,
-  .chat-head.glassbar {
+  [data-theme="light"] .glassbar {
     background-color: var(--lg-solid);
     background-image: none;
     -webkit-backdrop-filter: none;
