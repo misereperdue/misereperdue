@@ -149,7 +149,7 @@ Therefore, **whenever a JS/CSS/image file changes you must**:
 1. Bump that file's `?v=N` in `index.html`, and in `sw.js` `SHELL` if it is listed there.
 2. Bump `SW_VERSION` in `sw.js` **and** the matching `register("/sw.js?v=N")` in `index.html` (they must be equal; `npm run check` enforces it).
 
-Pin counters on 2026-10-23 (Grim): css `599`, chat `291`, forum3 `1112`, shop `80`, app `5`, SW `126`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
+Pin counters on 2026-10-23 (Grim): css `599`, chat `292`, forum3 `1112`, shop `80`, app `6`, SW `127`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
 
 ---
 

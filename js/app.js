@@ -412,7 +412,9 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (h === "#cart") { show("cart"); return true; }
       if (h === "#globe" || h === "#global" || h === "#forum") { show("forum"); return true; }
       if (h === "#journal" || h === "#chat") { show("journal"); return true; }
-      if (h.indexOf("#x_") === 0) { show("journal"); return true; }
+      // X return: chat.js already captured the payload at load; swap it for
+      // "#chat" in place so the one-time code never stays in history.
+      if (h.indexOf("#x_") === 0) { try { history.replaceState(null, "", "#chat"); } catch (e) {} show("journal"); return true; }
       if (h === "#" || h === "") { show("shop"); return true; }
       return false;
     }

@@ -9,6 +9,18 @@
     },
     !0,
   );
+  // X sign-in/link return (#x_code= / #x_error= / #x_link_confirm=):
+  // capture the hash NOW, while this script evaluates. app.js routes
+  // "#x_..." to the chat view and rewrites the URL to "#chat" before
+  // DOMContentLoaded, so reading location.hash later lost the code.
+  var xReturnHash = (function () {
+    try {
+      var h = location.hash || "";
+      return /(^#|&)x_(code|error|token|link_confirm)=/.test(h) ? h : "";
+    } catch (e) {
+      return "";
+    }
+  })();
   var e = "https://api.misereperdue.com",
     t = "Rkc1RmlJQWwtdFJTOVhudlczanc6MTpjaQ",
     n = "https://api.misereperdue.com/api/x/callback",
@@ -1114,17 +1126,22 @@
       l.addEventListener("input", x),
       w.addEventListener("click", q));
     var O = c.querySelector(".chat-xbtn");
-    if (
-      (O &&
+    if (O) {
         O.addEventListener("click", function () {
           O.disabled = !0;
-          var e = {};
-          try {
-            if (window.turnstile) {
-              var a = window.turnstile.getResponse();
-              a && (e.turnstileToken = a);
-            }
-          } catch (e) {}
+          // Turnstile is lazy-loaded with the sign-in card, so give it up to
+          // ~4 s to produce a token (new X accounts need one) before going.
+          var tries = 0;
+          (function waitTs() {
+            var tk = "";
+            try {
+              window.turnstile && (tk = window.turnstile.getResponse() || "");
+            } catch (e) {}
+            if (!tk && tries++ < 16) return void setTimeout(waitTs, 250);
+            startX(tk ? { turnstileToken: tk } : {});
+          })();
+        });
+      function startX(e) {
           E("/api/x/pkce-start", { method: "POST", body: e })
             .then(function (e) {
               if (e && e.ok) {
@@ -1153,8 +1170,10 @@
             .catch(function () {
               O.disabled = !1;
             });
-        }),
-      u.addEventListener("keydown", function (e) {
+      }
+    }
+    if (
+      (u.addEventListener("keydown", function (e) {
         "Enter" === e.key && q();
       }),
       l.addEventListener("keydown", function (e) {
@@ -3830,7 +3849,8 @@
           n,
           a,
           r,
-          o = location.hash || "";
+          o = xReturnHash || location.hash || "";
+        xReturnHash = "";
         try {
           if (
             o.indexOf("x_token=") < 0 &&
@@ -3845,7 +3865,8 @@
             (a = o.match(/x_link_confirm=([^&]+)/)),
             (r = o.match(/x_code=([^&]+)/)));
           try {
-            history.replaceState(null, "", location.pathname + location.search);
+            /^#x_/.test(location.hash || "") &&
+              history.replaceState(null, "", location.pathname + location.search + "#chat");
           } catch (e) {}
         } catch (e) {
           return null;
@@ -3945,7 +3966,7 @@
               .then(function (e) {
                 e && e.ok && e.token
                   ? wt({ token: e.token })
-                  : (k((e && e.error) || "Sign-in failed."), wt(null));
+                  : (k("Sign-in expired. Please try again."), wt(null));
               })
               .catch(function () {
                 (k("Sign-in failed."), wt(null));
