@@ -377,47 +377,95 @@ body {
   );
   mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
 }
-/* night sky in light mode too (per dc 12:52/12:57): same navy scene right up
-   through the status bar / notch; the hero grows by --sky-ext and the canvas
-   dissolves into the white page over ~120px with an eased multi-stop mask
-   (starts after the nav on Shop, behind the lower half of the Chat/Globe top
-   bar), so there's no haze at the top and no hard band at the bottom */
-[data-theme="light"] .hero {
-  --sky-ext: 64px;
-  height: calc(140px + env(safe-area-inset-top, 0px) + var(--sky-ext));
+/* Night sky in light mode too (per dc 12:52 / 12:57 / 13:03). Root cause of the
+   washed-out top on iPhone: in light mode <html> was white (Safari tints the
+   status bar / safe area from it), the hero itself was white and the canvas was
+   masked to a thin band, with a white .hero-fade on top. Now: <html> is night
+   navy (the body stays white, so the page is unchanged), the hero is navy from
+   the very top, and the canvas dissolves into the page with a long eased mask
+   that ends above the first content: Shop gets 40px more room so its fade
+   (~98px, after the nav) finishes above the Misery Globe tile; on Chat/Globe the
+   fade (~64px) runs behind the glass top bar and ends above the chips/content. */
+[data-theme="light"] {
+  background: #040a1f;
+}
+[data-theme="light"] body.home .hero {
+  --sky-ext: 30px;
+  height: calc(170px + env(safe-area-inset-top, 0px));
   background: transparent;
   pointer-events: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
-[data-theme="light"] .hero-rain,
-[data-theme="light"] body:has(#journal.on) .hero-rain,
-[data-theme="light"] body:has(#forum.on) .hero-rain {
-  --sky-ext: 64px;
-  background: linear-gradient(#040a1f, #0a1636 45%, #0d1b40);
+[data-theme="light"] body.crop-hero-shop {
+  padding-top: calc(180px + env(safe-area-inset-top, 0px));
+}
+[data-theme="light"] .hero-rain {
+  --sky-ext: 30px;
+  background: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0,
-    #000 calc(100% - 124px),
-    rgba(0, 0, 0, 0.94) calc(100% - 110px),
-    rgba(0, 0, 0, 0.82) calc(100% - 96px),
-    rgba(0, 0, 0, 0.64) calc(100% - 80px),
-    rgba(0, 0, 0, 0.44) calc(100% - 62px),
-    rgba(0, 0, 0, 0.26) calc(100% - 44px),
-    rgba(0, 0, 0, 0.12) calc(100% - 28px),
-    rgba(0, 0, 0, 0.04) calc(100% - 14px),
-    transparent 100%
+    #000 calc(env(safe-area-inset-top, 0px) + 70px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 81px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 92px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 103px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 114px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 124px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 135px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 146px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 157px),
+    transparent calc(env(safe-area-inset-top, 0px) + 168px)
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0,
-    #000 calc(100% - 124px),
-    rgba(0, 0, 0, 0.94) calc(100% - 110px),
-    rgba(0, 0, 0, 0.82) calc(100% - 96px),
-    rgba(0, 0, 0, 0.64) calc(100% - 80px),
-    rgba(0, 0, 0, 0.44) calc(100% - 62px),
-    rgba(0, 0, 0, 0.26) calc(100% - 44px),
-    rgba(0, 0, 0, 0.12) calc(100% - 28px),
-    rgba(0, 0, 0, 0.04) calc(100% - 14px),
-    transparent 100%
+    #000 calc(env(safe-area-inset-top, 0px) + 70px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 81px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 92px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 103px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 114px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 124px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 135px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 146px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 157px),
+    transparent calc(env(safe-area-inset-top, 0px) + 168px)
+  );
+}
+[data-theme="light"] body:has(#journal.on) .hero,
+[data-theme="light"] body:has(#forum.on) .hero {
+  height: calc(156px + env(safe-area-inset-top, 0px));
+}
+[data-theme="light"] body:has(#journal.on) .hero-rain,
+[data-theme="light"] body:has(#forum.on) .hero-rain {
+  --sky-ext: 16px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 90px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 97px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 104px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 111px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 118px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 126px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 133px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 140px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 147px),
+    transparent calc(env(safe-area-inset-top, 0px) + 154px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 calc(env(safe-area-inset-top, 0px) + 90px),
+    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 97px),
+    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 104px),
+    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 111px),
+    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 118px),
+    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 126px),
+    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 133px),
+    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 140px),
+    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 147px),
+    transparent calc(env(safe-area-inset-top, 0px) + 154px)
   );
 }
 /* Chat + Globe: keep the weather visible behind the glass top bar */

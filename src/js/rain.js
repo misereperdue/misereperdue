@@ -95,19 +95,19 @@
   }
   // Moon: a crescent (lit limb, faint maria), drawn once; halo is a live gradient.
   function moonTex(col, alpha) {
-    var s = 64, c = document.createElement("canvas");
+    var s = 192, c = document.createElement("canvas");
     c.width = c.height = s;
     var m = c.getContext("2d"), img = m.createImageData(s, s), d = img.data, r = rng(5), spots = [], i, x, y, p = 0;
     for (i = 0; i < 7; i++) spots.push([0.25 + r() * 0.5, 0.25 + r() * 0.5, 0.08 + r() * 0.12, 0.1 + r() * 0.12]);
     for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
       var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.86) / 0.14))), shade = 1 - 0.12 * dd * dd;
-      // fat crescent (~40% lit, per dc 12:55): true round outer limb, smooth
+      // crescent (~24% lit, per dc 13:02): true round outer limb, smooth
       // elliptical terminator (soft), lit limb points up (canonical) and is
       // rotated live to the real bright-limb angle; faint earthshine keeps the
       // whole disc just visible
-      var u = dx / 0.5, a = -dy / 0.5, term = 0.32 * Math.sqrt(Math.max(0, 1 - u * u));
-      var lit = sm(Math.min(1, Math.max(0, (a - term) / 0.3 + 0.5)));
+      var u = dx / 0.5, a = -dy / 0.5, term = 0.52 * Math.sqrt(Math.max(0, 1 - u * u));
+      var lit = sm(Math.min(1, Math.max(0, (a - term) / 0.16 + 0.5)));
       lit = 0.08 + 0.92 * lit;
       shade *= 0.6 + 0.4 * lit;
       for (i = 0; i < spots.length; i++) {
@@ -137,10 +137,10 @@
     for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
     moon = moonTex(pal.moon, pal.moonA);
     moonSoft = document.createElement("canvas");
-    moonSoft.width = moonSoft.height = 18;
+    moonSoft.width = moonSoft.height = 40;
     var sx = moonSoft.getContext("2d");
     sx.imageSmoothingEnabled = true;
-    sx.drawImage(moon, 1, 1, 16, 16);
+    sx.drawImage(moon, 2, 2, 36, 36);
     paint();
   }
   function paint() {
@@ -276,11 +276,11 @@
   var moonCover = -1;
   function moonlight(mp, offs, cover, breathe, lvx, lvy, shake) {
     var thru = Math.min(1, cover * 1.5), k, light = !pal.stars;
-    var gx = mp.x + lvx * mp.r * 0.45, gy = mp.y + lvy * mp.r * 0.45;
+    var gx = mp.lx, gy = mp.ly;
     // 1. silver lining: the cloud near the moon, minus a copy pulled ~5% in
     //    towards the moon (leaves the rims that face it), filled with a radial
     //    light and added on top. Done in a small offscreen square only.
-    var S = Math.round(mp.r * 11), ox = mp.x - S / 2, oy = mp.y - S / 2;
+    var S = Math.round(mp.r * 2.6), ox = gx - S / 2, oy = gy - S / 2;
     if (!lc) { lc = document.createElement("canvas"); lx = lc.getContext("2d"); }
     var px = Math.max(1, Math.round(S * dpr));
     if (lc.width !== px) lc.width = lc.height = px;
@@ -304,7 +304,7 @@
     lx.globalAlpha = 1;
     lx.globalCompositeOperation = "source-in";
     lx.setTransform(dpr, 0, 0, dpr, -ox * dpr, -oy * dpr);
-    var lr = S * 0.5, lg = lx.createRadialGradient(gx, gy, mp.r * 0.8, gx, gy, lr);
+    var lr = S * 0.5, lg = lx.createRadialGradient(gx, gy, mp.r * 0.12, gx, gy, lr);
     var la = (light ? 0.7 : 0.72) * breathe;
     lg.addColorStop(0, "rgba(" + pal.lining + "," + la.toFixed(3) + ")");
     lg.addColorStop(0.3, "rgba(" + pal.lining + "," + (la * 0.45).toFixed(3) + ")");
@@ -315,7 +315,7 @@
     ctx.drawImage(lc, ox, oy, S, S);
     // 2. moonlight scattering through thin cloud: wider, softer as cover grows
     if (thru > 0.01) {
-      var gr = mp.r * (2.6 + 4.2 * thru), sg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      var gr = mp.r * (0.8 + 0.7 * thru), sg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
       var ga = (light ? 0.13 : 0.1) * thru * breathe;
       sg.addColorStop(0, "rgba(" + pal.lining + "," + ga.toFixed(3) + ")");
       sg.addColorStop(0.4, "rgba(" + pal.lining + "," + (ga * 0.4).toFixed(3) + ")");
@@ -324,7 +324,7 @@
       ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
       // 3. a very faint corona ring in the cloud (dark sky only)
       if (!light && thru > 0.2) {
-        var cr = mp.r * 3.1, cg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 2.2, mp.x, mp.y, cr);
+        var cr = mp.r * 1.42, cg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 1.1, mp.x, mp.y, cr);
         var ca = 0.05 * (thru - 0.2) / 0.8;
         cg.addColorStop(0, "rgba(" + pal.lining + ",0)");
         cg.addColorStop(0.55, "rgba(" + pal.lining + "," + ca.toFixed(3) + ")");
@@ -368,11 +368,15 @@
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
     // upper right, just clear of the centred nav pill so it reads through glass
-    // bigger moon (per dc 12:58, ~38-44 px across): top right, beside the nav
-    // pill (vertically centred on it), below the status bar / notch and
-    // above the Chat/Globe top bar; never under the pill
-    var r = Math.max(16, Math.min(22, W * 0.049)), top = Math.max(0, H - 140);
-    return { x: Math.min(W - r - 8, W * 0.5 + 147 + r), y: top + 47, r: r };
+    // big zoomed-in moon in the top-right corner (per dc 13:02): ~200 px across
+    // at 390 wide (capped on wide screens), partly cropped by the screen edge
+    // and status bar. The centre is placed from the live bright-limb angle so
+    // the middle of the lit arc always sits at the same spot near the corner
+    // (on screen); the rest of the disc runs off the edge or fades behind the
+    // glass bars as earthshine.
+    var r = Math.max(80, Math.min(124, W * 0.26)), top = Math.max(0, H - 140);
+    var px = W - Math.min(64, r * 0.6), py = top + 22, rot = moonRot || 0;
+    return { x: px - Math.sin(rot) * r * 0.8, y: py + Math.cos(rot) * r * 0.8, r: r, lx: px, ly: py };
   }
   function coverAt(k, px, py, off, tw, th, y0) {
     var u = (px - off) / tw; u -= Math.floor(u);
@@ -435,7 +439,7 @@
     for (k = 0; k < 3; k++) {
       var L = LAYERS[k], tw = Math.max(W, 390) * L.scale;
       offs.push(-((t * L.speed) % tw));
-      for (sp = 0; sp < 5; sp++) cover += coverAt(k, mp.x + SP[sp][0] * mp.r, mp.y + SP[sp][1] * mp.r, offs[k], tw, H * L.h, H * L.y) / 5;
+      for (sp = 0; sp < 5; sp++) cover += coverAt(k, mp.lx + SP[sp][0] * mp.r * 0.3, mp.ly + SP[sp][1] * mp.r * 0.3, offs[k], tw, H * L.h, H * L.y) / 5;
     }
     if (still || moonCover < 0) moonCover = cover;
     else moonCover += (cover - moonCover) * Math.min(1, dt * 1.6);
@@ -444,8 +448,8 @@
     var lvx = Math.sin(moonRot), lvy = -Math.cos(moonRot); // unit vector towards the lit limb
     if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    var hx = mp.x + lvx * mp.r * 0.35, hy = mp.y + lvy * mp.r * 0.35;
-    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(hx, hy, mp.r * 0.6, hx, hy, hr);
+    var hx = mp.x + lvx * mp.r * 0.3, hy = mp.y + lvy * mp.r * 0.3;
+    var hr = mp.r * (1.45 + 0.25 * clear), hg = ctx.createRadialGradient(hx, hy, mp.r * 0.85, hx, hy, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
     hg.addColorStop(0, "rgba(" + pal.halo + "," + ha.toFixed(3) + ")");
     hg.addColorStop(0.35, "rgba(" + pal.halo + "," + (ha * 0.35).toFixed(3) + ")");
