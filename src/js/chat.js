@@ -4139,9 +4139,7 @@
   function rcShowCode(code, user, o) {
     o = o || {};
     var b = rcLayer(
-        (o.eyebrow === ""
-          ? ""
-          : '<div class="rc-eyebrow">' + rcEsc(o.eyebrow || "MISÈRE PERDUE · RECOVERY") + "</div>") +
+        (o.eyebrow ? '<div class="rc-eyebrow">' + rcEsc(o.eyebrow) + "</div>" : "") +
           '<h2 class="rc-title">' +
           rcEsc(o.title || "Your recovery code") +
           '</h2><p class="rc-sub">' +
@@ -4264,7 +4262,7 @@
           Go.textContent = "Reset password";
           j && j.ok && j.token
             ? rcSignedIn(j, j.recoveryCode, {
-                eyebrow: "PASSWORD RESET",
+                eyebrow: "",
                 title: "You're back in",
                 sub: "Your password is changed and every other device was signed out. Your old code is used up. Here's your new one, save it now.",
               })
@@ -4301,7 +4299,7 @@
     } catch (e) {}
     if (!t || Date.now() - t > 9e5 || !d || !s) return;
     var b = rcLayer(
-        '<div class="rc-eyebrow">RECOVER WITH X</div><h2 class="rc-title">Set a new password</h2><p class="rc-sub">Signed in with X as @' +
+        '<h2 class="rc-title">Set a new password</h2><p class="rc-sub">Signed in with X as @' +
           rcEsc(s.username) +
           '. Choose a new password. Other devices will be signed out.</p><label class="chat-field"><span>New password</span><input type="password" name="rc-new" maxlength="72" autocomplete="new-password"></label><label class="chat-field"><span>Confirm new password</span><input type="password" name="rc-new2" maxlength="72" autocomplete="new-password"></label><div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">Set password</button><button type="button" class="btn rc-later">Not now</button>',
         "rc-recover",
@@ -4321,7 +4319,7 @@
           Go.disabled = !1;
           j && j.ok && j.token
             ? rcSignedIn(j, j.recoveryCode, {
-                eyebrow: "PASSWORD RESET",
+                eyebrow: "",
                 title: "You're back in",
                 sub: "New password set and other devices signed out. Here's your new recovery code, save it now.",
               })
@@ -4340,7 +4338,7 @@
       replace = "regen" === mode,
       b = rcLayer(
         (replace ? '<button type="button" class="rc-x-close" aria-label="Close">×</button>' : "") +
-          (replace ? '<div class="rc-eyebrow">RECOVERY CODE</div>' : "") +
+          
           '<h2 class="rc-title">' +
           (replace ? "Make a new recovery code" : "Create your recovery code") +
           '</h2><p class="rc-sub">' +
