@@ -6628,3 +6628,7 @@ textarea,
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
+.forum-head .forum-title-end {
+  margin-left: auto;
+  text-align: right;
+}

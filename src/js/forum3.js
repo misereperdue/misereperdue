@@ -3358,7 +3358,7 @@
     X();
     var n =
       be() +
-      '<div class="forum-head"><button type="button" class="forum-back forum-glass-pill" id="forum-back">← Back</button><h2 class="forum-title">New thread</h2></div>';
+      '<div class="forum-head"><button type="button" class="forum-back forum-glass-pill" id="forum-back">← Back</button><h2 class="forum-title forum-title-end">New thread</h2></div>';
     ((n +=
       '<div class="forum-form"><label class="chat-field"><span>Category</span><select id="forum-cat-sel">'),
       b.categories.forEach(function (e) {
