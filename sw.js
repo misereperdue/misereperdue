@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 99;
+var SW_VERSION = 100;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
@@ -74,6 +74,14 @@ self.addEventListener("fetch", function (e) {
   // HTML: network-first (fresh file refs on every load), cache as offline fallback.
   // Cache-first HTML served stale file versions (old JS/CSS refs) for days.
   if (e.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")) {
+    // Opening the app with no connection shows the offline screen (per dc),
+    // not a stale cached copy of the site.
+    var isNav = e.request.mode === "navigate";
+    var offline = function () {
+      if (isNav) return caches.match(OFFLINE_URL).then(function (o) { return o || caches.match(e.request); });
+      return caches.match(e.request);
+    };
+    if (isNav && self.navigator && self.navigator.onLine === false) { e.respondWith(offline()); return; }
     e.respondWith(
       fetch(e.request).then(function (res) {
         if (res.ok) {
@@ -81,12 +89,7 @@ self.addEventListener("fetch", function (e) {
           caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
         }
         return res;
-      }).catch(function () {
-        return caches.match(e.request).then(function (cached) {
-          if (cached || e.request.mode !== "navigate") return cached;
-          return caches.match(OFFLINE_URL);
-        });
-      })
+      }).catch(offline)
     );
     return;
   }
