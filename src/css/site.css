@@ -126,12 +126,15 @@ textarea {
   display: flex;
   justify-content: center;
   pointer-events: none;
-  view-transition-name: pill;
 }
 .nav {
   pointer-events: auto;
   position: relative;
   isolation: isolate;
+  /* view-transition-name lives on the pill itself, not .nav-wrap: a view-transition-name
+     makes its element a backdrop root, so on .nav-wrap it stopped the nav's backdrop-filter
+     from seeing the page (no blur/tint on iPhone and Chromium) */
+  view-transition-name: pill;
   display: flex;
   gap: 2px;
   padding: 4px;
@@ -7990,8 +7993,8 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   --lg-solid: rgba(255, 255, 255, 0.94);
 }
 [data-theme="dark"] {
-  --lg-blur: blur(12px) saturate(180%) brightness(1.06);
-  --lg-tint: rgba(14, 22, 52, 0.26);
+  --lg-blur: blur(12px) saturate(180%) brightness(1.02);
+  --lg-tint: rgba(12, 22, 64, 0.5);
   --lg-sheen: linear-gradient(
     155deg,
     rgba(255, 255, 255, 0.16) 0%,
@@ -8172,4 +8175,16 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     inset 0 0 12px rgba(255, 255, 255, 0.45),
     0 0 0 0.5px rgba(13, 25, 70, 0.12),
     0 4px 14px rgba(13, 25, 70, 0.12);
+}
+/* Owner sparkles / kitty hearts / reaction badges carry z-index 2-3. Without a stacking
+   context on the bubble they escaped above the fixed hero (z-index 1) whenever the row's
+   fade opacity was exactly 1 (e.g. mid fast-scroll before the fade caught up), so they
+   twinkled through the glass nav. Isolate each bubble, and stop animating faded-out rows. */
+.chat-bubble {
+  isolation: isolate;
+}
+.chat-msg[data-fade="0.00"] .owner-sparkle-star,
+.chat-msg[data-fade="0.00"] .kitty-heart {
+  animation-play-state: paused;
+  visibility: hidden;
 }
