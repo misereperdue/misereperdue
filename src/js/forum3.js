@@ -869,6 +869,16 @@
                   if (3 !== r.nodeType)
                     if (1 === r.nodeType) {
                       var n = (r.tagName || "").toUpperCase();
+                      // Videos: only MP4s on our own media host (or the fixed
+                      // legacy GIF -> MP4 swaps below). Anything else is dropped.
+                      var mv =
+                        "VIDEO" === n
+                          ? mpVidSrc(r.getAttribute("src"), r.getAttribute("poster"))
+                          : "IMG" === n
+                            ? MP_LEGACY_VID[r.getAttribute("src") || ""] || null
+                            : null;
+                      if (mv) return void r.parentNode.replaceChild(mpVidEl(r.ownerDocument, mv), r);
+                      if ("VIDEO" === n) return void r.remove();
                       if (U[n]) {
                         var a = null,
                           o = null,
@@ -1113,6 +1123,45 @@
     }
   }
   var ae = /^https:\/\/(www\.youtube\.com|www\.youtube-nocookie\.com)\/embed\//i;
+  /* Post videos (audit fix per dc). Strict: the src must be an MP4 stored on
+   * our own media host (api.misereperdue.com/api/media/<id>); attributes are
+   * rebuilt from scratch (muted, looping, inline, no controls). Under
+   * prefers-reduced-motion the video doesn't autoplay, so the poster shows.
+   * MP_LEGACY_VID swaps specific old heavy GIFs for self-hosted MP4s. */
+  var MP_MEDIA_VID = /^https:\/\/api\.misereperdue\.com\/api\/media\/[A-Za-z0-9]{6,64}$/;
+  var MP_LEGACY_VID = {
+    // dc's pinned "Misery Globe" post banner: 10.2 MB GIF -> 241 KB MP4
+    "https://api.misereperdue.com/api/media/mmv91jz19f25554eo1gzkdz": {
+      src: "/video/globe-banner.mp4?v=1",
+      poster: "/img/globe-banner-poster.jpg?v=1",
+      w: 960,
+      h: 540,
+    },
+  };
+  function mpVidSrc(src, poster) {
+    src = String(src || "");
+    poster = String(poster || "");
+    return MP_MEDIA_VID.test(src) ? { src: src, poster: MP_MEDIA_VID.test(poster) ? poster : "" } : null;
+  }
+  function mpVidEl(d, v) {
+    var x = d.createElement("video"),
+      still = false;
+    try {
+      still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {}
+    x.setAttribute("class", "forum-post-video");
+    x.setAttribute("src", v.src);
+    v.poster && x.setAttribute("poster", v.poster);
+    v.w && v.h && (x.setAttribute("width", String(v.w)), x.setAttribute("height", String(v.h)));
+    x.setAttribute("muted", "");
+    x.setAttribute("loop", "");
+    x.setAttribute("playsinline", "");
+    x.setAttribute("disablepictureinpicture", "");
+    x.setAttribute("disableremoteplayback", "");
+    x.setAttribute("aria-hidden", "true");
+    still ? x.setAttribute("preload", v.poster ? "none" : "metadata") : (x.setAttribute("autoplay", ""), x.setAttribute("preload", "auto"));
+    return x;
+  }
   function oe(e, t) {
     return (
       (t || []).forEach(function (t) {
@@ -1330,6 +1379,10 @@
   function ue(e) {
     return new Promise(function (t, r) {
       if ("image/gif" === e.type) {
+        if (e.size > 3145728) {
+          alert("GIFs are capped at 3MB. Try a shorter or smaller GIF.");
+          return void r(new Error("gif too big"));
+        }
         var n = new FileReader();
         return (
           (n.onload = function () {
@@ -1366,6 +1419,9 @@
       if (-1 === ["image/jpeg", "image/png", "image/webp", "image/gif"].indexOf(t.type))
         return (alert("Only JPEG, PNG, WebP, or GIF images are allowed."), void r(null));
       if (t.size > 10485760) return (alert("Images are capped at 10MB."), void r(null));
+      // GIFs upload as-is (no resize), so keep them small: 3 MB cap (per dc).
+      if ("image/gif" === t.type && t.size > 3145728)
+        return (alert("GIFs are capped at 3MB. Try a shorter or smaller GIF."), void r(null));
       var n = "image/gif" === t.type,
         a = new FileReader();
       ((a.onload = function () {
@@ -1991,7 +2047,7 @@
       });
   }
   function we() {
-    ((t.innerHTML = '<div class="lg-spin-wrap"><span class="lg-spin"></span></div>'),
+    ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
       y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
         if (e.ok && e.thread)
           if (e.locked) {
@@ -2020,7 +2076,9 @@
             } catch (e) {}
             t.querySelector("#forum-back").addEventListener("click", Ae);
           } else ((b.thread = e.thread), ke());
-        else t.innerHTML = '<div class="forum-empty">Thread not found.</div>';
+        else mpState("Thread not found.", null, !0);
+      }, function () {
+        mpState("Couldn’t load this thread.", we, !0);
       }));
   }
   function ke() {
@@ -2322,7 +2380,7 @@
         a && (window.scrollTo(0, 0), window.MPScroll && MPScroll.pinTop(2e3)),
         (function () {
           var e = t.querySelector("#forum-reply-editor");
-          if ((le(e), !e)) return void (Y = null);
+          if ((e && le(e), !e)) return void (Y = null);
           if (Y) {
             try {
               Y.destroy();
@@ -2897,9 +2955,9 @@
                             f && f.classList.remove("hidden"))
                           : alert("Thumbnail upload failed"));
                     })
-                    .catch(function () {
+                    .catch(function (x) {
                       (u && ((u.disabled = !1), (u.textContent = "Change thumbnail")),
-                        alert("Thumbnail upload failed"));
+                        (x && "gif too big" === x.message) || alert("Thumbnail upload failed"));
                     }));
               });
             var m = t.querySelector("#forum-epoll-form"),
@@ -3395,7 +3453,7 @@
       }),
       t.querySelector("#forum-back").addEventListener("click", Ae));
     var o = t.querySelector("#forum-new-editor");
-    if ((le(o), o)) {
+    if ((o && le(o), o)) {
       if (Z) {
         try {
           Z.destroy();
@@ -3445,9 +3503,9 @@
                       d && d.classList.remove("hidden"))
                     : alert("Thumbnail upload failed"));
               })
-              .catch(function () {
+              .catch(function (x) {
                 (s && ((s.disabled = !1), (s.textContent = "Add thumbnail")),
-                  alert("Thumbnail upload failed"));
+                  (x && "gif too big" === x.message) || alert("Thumbnail upload failed"));
               }));
         }));
     var c = t.querySelector("#forum-poll-toggle"),
@@ -3528,6 +3586,66 @@
       (!(!O || !O.username) && String(e || "").toLowerCase() === String(O.username).toLowerCase())
     );
   }
+  /* Loading skeleton + error states (audit fixes per dc). The skeleton reuses
+   * the real header/chip/search/card classes so nothing jumps when the data
+   * lands; the error states keep the Globe header and offer Retry / Back. */
+  function mpWireHead() {
+    try {
+      (ve(), R(), H());
+    } catch (e) {}
+  }
+  function mpSkel(thread) {
+    if (!t) return;
+    var i,
+      line = function (w, h) {
+        return '<span class="forum-skel-line" style="width:' + w + "%" + (h ? ";height:" + h + "px" : "") + '"></span>';
+      },
+      card = function (lines) {
+        return (
+          '<div class="forum-thread-row forum-skel-row"><div class="forum-thread"><span class="forum-thread-main">' +
+          line(58, 15) +
+          '<span class="forum-skel-pill"></span>' +
+          line(34, 10) +
+          lines +
+          '</span></div><div class="forum-admin"><span class="forum-tag forum-skel-tag"></span><span class="forum-tag forum-skel-tag"></span></div></div>'
+        );
+      },
+      u = '<div class="forum-anim forum-skel" aria-busy="true">' + be();
+    if (thread)
+      u +=
+        '<div class="forum-head" aria-hidden="true"><span class="forum-back forum-glass-pill forum-skel-ghost">← Back</span></div><div class="forum-threads" role="status" aria-label="Loading thread">' +
+        card(line(92) + line(86) + line(64) + '<span class="forum-skel-media"></span>') +
+        "</div>";
+    else {
+      u += '<div class="forum-cats" aria-hidden="true"><span class="forum-cat on">All</span>';
+      for (i = 0; i < 5; i++) u += '<span class="forum-cat forum-skel-chip">&nbsp;</span>';
+      u +=
+        '</div><div class="forum-search" aria-hidden="true"><svg viewBox="0 0 256 256" width="16" height="16" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" aria-hidden="true"><circle cx="112" cy="112" r="72"/><path d="M168 168l56 56"/></svg><span class="forum-search-input forum-skel-ph">Search all threads</span></div><div class="forum-threads" role="status" aria-label="Loading threads">';
+      for (i = 0; i < 3; i++) u += card(line(52) + line(48) + line(40));
+      u += "</div>";
+    }
+    ((t.innerHTML = u + "</div>"), mpWireHead());
+  }
+  function mpState(msg, retry, back) {
+    if (!t) return;
+    ((t.innerHTML =
+      '<div class="forum-anim">' +
+      be() +
+      '<div class="forum-state" role="alert"><div class="forum-state-title">' +
+      w(msg) +
+      '</div><div class="forum-state-actions">' +
+      (retry ? '<button type="button" class="btn forum-state-btn" data-state="retry">Retry</button>' : "") +
+      (back ? '<button type="button" class="btn forum-state-btn" data-state="back">Back to Globe</button>' : "") +
+      "</div></div></div>"),
+      mpWireHead());
+    var a = t.querySelector('[data-state="retry"]'),
+      o = t.querySelector('[data-state="back"]');
+    (a &&
+      a.addEventListener("click", function () {
+        ((a.disabled = !0), retry());
+      }),
+      o && o.addEventListener("click", Re));
+  }
   function Be() {
     /* Dashboard "Globe views": one anonymous counter hit per browser session
        (no user, IP or path sent). Older Workers answer 400; harmless. */
@@ -3552,10 +3670,13 @@
             }
           })
           .catch(function () {}),
-      (b.threads.length || b.categories.length) &&
-        ("list" === r.name
+      (b.threads.length || b.categories.length
+        ? "list" === r.name
           ? (ye(), (s = "list"), (d = ""))
-          : "thread" === r.name && r.threadId && (we(), (s = "thread"), (d = r.threadId))),
+          : "thread" === r.name && r.threadId && (we(), (s = "thread"), (d = r.threadId))
+        : "list" === r.name
+          ? mpSkel(!1)
+          : "thread" === r.name && r.threadId && mpSkel(!0)),
       y("/api/forum/categories")
         .then(function (e) {
           return ((b.categories = (e.ok && e.categories) || []), y("/api/forum/threads"));
@@ -3587,8 +3708,7 @@
               "thread" === r.name && r.threadId ? we() : "new" === r.name ? Ie() : ye()));
         })
         .catch(function () {
-          b.threads.length ||
-            (t.innerHTML = '<div class="forum-empty">Couldn’t load the forum.</div>');
+          b.threads.length || mpState("Couldn’t load the forum.", Be, !1);
         }));
   }
   function Re() {

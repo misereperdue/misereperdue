@@ -21,6 +21,8 @@ import json, re, html, urllib.request, os, sys
 from datetime import datetime, timezone
 
 WORKER = "https://api.misereperdue.com"  # misery-chat Worker (custom domain)
+# 10.2 MB banner GIF in dc's pinned Misery Globe post (t29) -> poster still
+LEGACY_GIF_STILLS = {'mmv91jz19f25554eo1gzkdz': '/img/globe-banner-poster.jpg?v=1'}
 SITE = "https://misereperdue.com"
 OUT = os.path.dirname(os.path.abspath(__file__))  # repo root
 DRY = "--dry-run" in sys.argv
@@ -63,6 +65,9 @@ def clean_html(h):
     # absolute media URLs
     h = h.replace('src="/api/', 'src="' + WORKER + '/api/')
     h = h.replace("src='/api/", "src='" + WORKER + "/api/")
+    # heavy legacy GIFs -> still poster on the static pages (same map as forum3.js MP_LEGACY_VID)
+    for gif, still in LEGACY_GIF_STILLS.items():
+        h = h.replace(WORKER + '/api/media/' + gif, SITE + still)
     return h
 
 def iso(ts):
