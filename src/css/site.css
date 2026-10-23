@@ -6614,23 +6614,3 @@ textarea,
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Paper grain (per dc): a faint, tileable paper texture in the page
-   background itself, light and dark. */
-html body {
-  --paper: url(/img/paper-dark.png?v=1);
-  background-image:
-    var(--paper),
-    radial-gradient(520px 280px at 12% 0, var(--wash), transparent 70%),
-    radial-gradient(420px 240px at 100% 8%, var(--wash), transparent 68%),
-    linear-gradient(180deg, var(--bg-2), var(--bg));
-  background-size: 256px 256px, auto, auto, auto;
-  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-}
-html body.home {
-  background-image: var(--paper);
-  background-size: 256px 256px;
-  background-repeat: repeat;
-}
-html[data-theme="light"] body {
-  --paper: url(/img/paper-light.png?v=2);
-}
