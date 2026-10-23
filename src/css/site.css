@@ -8284,22 +8284,23 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 .glassbar .chat-head-right {
   text-shadow: var(--lg-text-halo);
 }
-/* ===== CSS clouds, stylized (per dc 12:01 "css generated" + 12:14 "way too realistic") =====
-   One clean illustrated style for the header sky clouds and the nav / Chat/Globe top-bar clouds.
-   rain.js only lays out a few overlapping rounded lobes (seeded); everything visible is drawn
-   here. A cloud (.cu) = a smooth body of merged lobes (.g) plus 3-5 rounded domes of varied size
-   (.d) along the top, on a flat-ish base, masked to their union (1.5px soft edge) and faded as
-   one group so overlaps never double up. Every lobe paints its own slice of ONE cloud-wide
-   vertical gradient (light top -> soft shade underneath), so the body is seamless; domes add a
-   soft top glow and a thin light rim, which is all that separates one hump from the next.
-   No texture, no micro-lobes, no blur. Neutral white-grey only, dimmer in dark mode. */
+/* ===== CSS clouds (per dc 12:01 "css generated"; 12:22: bring back the styling of the first
+   neutral puffy cloud batch: colour, softness, translucency, feathered edges, light top and
+   shaded underside) =====
+   One style for the header sky clouds and the nav / Chat/Globe top-bar clouds. rain.js only lays
+   out a few overlapping rounded lobes (seeded); everything visible is drawn here. A cloud (.cu)
+   = a body of merged lobes plus 3-5 rounded domes on a flat-ish base, masked to their union
+   with the first batch's feathered edge (solid to 76%, 0.6 at 90%, clear at 100%: slightly tighter than the first batch so the humps still read). All lobes
+   paint their slice of ONE cloud-wide gradient (bright top, shaded underside) and domes add a
+   soft lit top, so they read as soft puffs. The opacity sits on the whole cloud group, so it is
+   one translucent silhouette (no seams where lobes overlap; sky, rain and moon show through).
+   Neutral white/grey (no tint). Bars also get the first batch's light frosted backdrop blur. */
 :root,
 [data-theme="light"] {
-  --cl-body: linear-gradient(180deg, #ffffff 0%, #fbfbfc 40%, #e9e9ed 78%, #d9d9de 100%);
-  --cl-glow: rgba(255, 255, 255, 0.9);
-  --cl-rim: rgba(255, 255, 255, 1);
-  --cl-crease: rgba(120, 120, 135, 0.16);
-  --cl-op: 0.95;
+  --cl-body: linear-gradient(180deg, #ffffff 0%, #fdfdfe 40%, #ececef 72%, #d4d4da 100%);
+  --cl-glow: rgba(255, 255, 255, 0.78);
+  --cl-op: 0.62;
+  --cl-blur: blur(10px) saturate(100%) brightness(1.06);
   --wx-sky: linear-gradient(#b4c0d0, #cbd4e0 55%, #dce3ec);
   --wx-moon: #ffffff;
   --wx-moon-glow: rgba(255, 255, 255, 0.95);
@@ -8308,11 +8309,10 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   --wx-flash: rgba(255, 255, 255, 0.5);
 }
 [data-theme="dark"] {
-  --cl-body: linear-gradient(180deg, #b9babe 0%, #a3a4a9 38%, #85868c 74%, #6c6d73 100%);
-  --cl-glow: rgba(235, 236, 240, 0.42);
-  --cl-rim: rgba(240, 240, 244, 0.5);
-  --cl-crease: rgba(20, 20, 28, 0.2);
-  --cl-op: 0.94;
+  --cl-body: linear-gradient(180deg, #dcdcdf 0%, #bdbdc1 40%, #9a9a9f 70%, #5e5e64 100%);
+  --cl-glow: rgba(255, 255, 255, 0.5);
+  --cl-op: 0.5;
+  --cl-blur: blur(10px) saturate(60%) brightness(1.04);
   --wx-sky: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
   --wx-moon: #f1f1ee;
   --wx-moon-glow: rgba(255, 255, 250, 0.75);
@@ -8336,17 +8336,14 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   background-position: var(--sx) var(--sy);
   background-size: var(--sw) var(--sh);
 }
-/* domes: soft glow on the upper part toward the moon, a thin light rim along the top edge and
-   a faint soft crease where the hump sits on what is behind it */
+/* domes: a soft light glow on the upper part toward the moon so each hump reads as a fluffy
+   rounded puff; no rims, inner or drop shadows (the overlap stays seamless) */
 .cu i.d {
   background-image:
-    radial-gradient(farthest-side at var(--hx, 60%) 18%, var(--cl-glow), transparent 75%),
+    radial-gradient(farthest-side at var(--hx, 60%) 20%, var(--cl-glow), transparent 80%),
     var(--cl-body);
   background-position: 0 0, var(--sx) var(--sy);
   background-size: 100% 100%, var(--sw) var(--sh);
-  box-shadow:
-    inset 0 1.5px 1px -0.5px var(--cl-rim),
-    0 -1px 3px -1px var(--cl-crease);
 }
 /* ---- header sky: sky < moon < back clouds < lightning glow < rain < front clouds < moon glow ---- */
 .wx {
@@ -8383,19 +8380,27 @@ body:has(#forum.on) .hero-rain {
   will-change: transform;
   animation: wx-drift 90s linear infinite;
 }
+/* translucent: the whole cloud is one masked group, so its opacity applies once to the
+   unified silhouette (no darker seams where lobes overlap); sky, rain and moon show through */
 .wx-back .wx-c {
-  opacity: 0.8;
+  opacity: 0.3;
 }
 .wx-front .wx-c {
-  opacity: 0.93;
+  opacity: 0.44;
+}
+[data-theme="light"] .wx-back .wx-c {
+  opacity: 0.5;
+}
+[data-theme="light"] .wx-front .wx-c {
+  opacity: 0.64;
 }
 /* far clouds: a touch dimmer */
 [data-theme="dark"] .wx-back {
-  --cl-body: linear-gradient(180deg, #a2a3a8 0%, #8f9095 40%, #75767c 76%, #5f6066 100%);
-  --cl-glow: rgba(235, 236, 240, 0.3);
+  --cl-body: linear-gradient(180deg, #cfcfd2 0%, #b2b2b6 45%, #78787e 100%);
+  --cl-glow: rgba(255, 255, 255, 0.36);
 }
 [data-theme="light"] .wx-back {
-  --cl-body: linear-gradient(180deg, #fafafb 0%, #f2f2f4 40%, #e2e2e7 78%, #d3d3d9 100%);
+  --cl-body: linear-gradient(180deg, #ffffff 0%, #f7f7f9 45%, #dcdce1 100%);
 }
 @keyframes wx-drift {
   from {
@@ -8499,7 +8504,10 @@ body:has(#forum.on) .hero-rain {
 }
 .glassbar > .cb {
   z-index: -1;
-  opacity: 0.97;
+  opacity: var(--cl-op);
+  /* frosted like the first cloud bars: the rain behind is softly blurred inside the cloud */
+  -webkit-backdrop-filter: var(--cl-blur);
+  backdrop-filter: var(--cl-blur);
   transform-origin: 50% 90%;
   animation: cb-breathe 9s ease-in-out infinite alternate;
 }
@@ -8577,6 +8585,6 @@ body:has(#forum.on) .hero-rain {
 }
 @media (prefers-reduced-transparency: reduce) {
   .glassbar > .cb {
-    opacity: 1;
+    opacity: 0.94;
   }
 }

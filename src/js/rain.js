@@ -79,7 +79,7 @@
     for (y = Y0; y <= Y1 + 0.1; y += 3) for (x = X0; x <= X1 + 0.1; x += 3) {
       var ex = x < X0 + rad ? X0 + rad - x : x > X1 - rad ? x - (X1 - rad) : 0, ey = Math.abs(y - (Y0 + Y1) / 2);
       if (ex > 0 && ex * ex + ey * ey > rad * rad) continue;
-      if (inside(P.concat(add), x, y, 0.92)) continue;
+      if (inside(P.concat(add), x, y, 0.78)) continue;
       rr = R * 0.7;
       add.push({ x: x + (x < (X0 + X1) / 2 ? 3 : -3), y: y + (y < cy ? rr * 0.5 : -rr * 0.4), rx: rr * 1.15, ry: rr, f: 2 });
     }
@@ -100,7 +100,7 @@
         mi.push("linear-gradient(#000 0 0)", "radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)", "radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)");
         mp.push(px(x + p.ry) + " " + px(y), px(x) + " " + px(y), px(x + w - h) + " " + px(y));
         ms.push(px(w - h) + " " + px(h), px(h) + " " + px(h), px(h) + " " + px(h));
-      } else { mi.push("radial-gradient(closest-side,#000 calc(100% - 1.5px),transparent)"); mp.push(px(x) + " " + px(y)); ms.push(px(w) + " " + px(h)); }
+      } else { mi.push("radial-gradient(closest-side,#000 76%,rgba(0,0,0,.6) 90%,transparent)"); mp.push(px(x) + " " + px(y)); ms.push(px(w) + " " + px(h)); }
       html += '<i class="' + (p.d ? " d" : " g") + '" style="left:' + px(x) + ";top:" + px(y) + ";width:" + px(w) + ";height:" + px(h) +
         ";--sx:" + px(-x) + ";--sy:" + px(-y) + ";--sw:" + Math.round(W) + "px;--sh:" + Math.round(H) + "px;--hx:" + hx + '"></i>';
     }
