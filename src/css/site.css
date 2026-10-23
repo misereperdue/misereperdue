@@ -8501,3 +8501,108 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     background-color: var(--lg-solid);
   }
 }
+/* ===== Realistic cumulus texture (per dc 11:36) + nav/top bar parity =====
+   img/cloud-tex.webp (128px tileable billow-fBm, baked emboss: lit lobe tops, grey creases and
+   undersides, density in alpha) textures the fill; img/cloud-erode.webp (same noise, alpha
+   0.5-1) is intersected with the puff union so edges break up irregularly and density varies.
+   Both static images (no live SVG filters), ~18 KB total. Backdrop recipe is now identical on
+   the nav and the top bar (the nav had been left on a desaturated backdrop, which read grey). */
+:root,
+[data-theme="light"] {
+  --cu-blur: blur(10px) saturate(150%) brightness(1.06);
+}
+[data-theme="dark"] {
+  --cu-blur: blur(10px) saturate(150%) brightness(1.04);
+}
+/* The cloud (fill, texture, shape-clipped backdrop blur) lives on ::before so the erosion
+   mask never touches icons/labels, which sit crisp on top. */
+.glassbar,
+[data-theme="light"] .glassbar,
+.glassbar.chat-head {
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-mask: none;
+  mask: none;
+  box-shadow: none;
+}
+.nav {
+  /* view-transition-name makes an element a backdrop root, which would blind the cloud
+     layer's blur; the SPA never cross-document navigates with the pill, so drop it */
+  view-transition-name: none;
+}
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 0;
+  padding: 0;
+  pointer-events: none;
+  animation: none;
+  transform: none;
+  background-color: var(--cu-fill);
+  -webkit-backdrop-filter: var(--cu-blur);
+  backdrop-filter: var(--cu-blur);
+  background-image:
+    url(../img/cloud-tex.webp) 0 0 / 140px 140px repeat,
+    var(--cu-h) 22% 6% / 20% 44% no-repeat,
+    var(--cu-h) 64% 4% / 22% 46% no-repeat,
+    var(--cu-h) 6% 30% / 14% 36% no-repeat,
+    var(--cu-h) 45% 24% / 14% 34% no-repeat,
+    var(--cu-h) 88% 24% / 16% 38% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 35% 40% / 10% 40% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 55% 40% / 10% 40% no-repeat,
+    radial-gradient(closest-side, var(--cu-gap), transparent) 77% 40% / 10% 40% no-repeat,
+    linear-gradient(180deg, transparent 40%, var(--cu-under) 100%);
+  -webkit-mask:
+    url(../img/cloud-erode.webp) 0 0 / 110px 110px repeat,
+    var(--cu-p) 50% 60% / 84% 50% no-repeat,
+    var(--cu-p) 0 62% / 17% 74% no-repeat,
+    var(--cu-p) 6% 30% / 24% 80% no-repeat,
+    var(--cu-p) 24% 0 / 30% 100% no-repeat,
+    var(--cu-p) 45% 22% / 22% 74% no-repeat,
+    var(--cu-p) 66% 0 / 32% 100% no-repeat,
+    var(--cu-p) 88% 18% / 24% 84% no-repeat,
+    var(--cu-p) 100% 62% / 17% 74% no-repeat,
+    var(--cu-p) 16% 100% / 30% 62% no-repeat,
+    var(--cu-p) 41% 100% / 24% 54% no-repeat,
+    var(--cu-p) 64% 100% / 30% 62% no-repeat,
+    var(--cu-p) 88% 100% / 24% 54% no-repeat;
+  -webkit-mask-composite: source-in, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over, source-over;
+  mask:
+    url(../img/cloud-erode.webp) 0 0 / 110px 110px repeat,
+    var(--cu-p) 50% 60% / 84% 50% no-repeat,
+    var(--cu-p) 0 62% / 17% 74% no-repeat,
+    var(--cu-p) 6% 30% / 24% 80% no-repeat,
+    var(--cu-p) 24% 0 / 30% 100% no-repeat,
+    var(--cu-p) 45% 22% / 22% 74% no-repeat,
+    var(--cu-p) 66% 0 / 32% 100% no-repeat,
+    var(--cu-p) 88% 18% / 24% 84% no-repeat,
+    var(--cu-p) 100% 62% / 17% 74% no-repeat,
+    var(--cu-p) 16% 100% / 30% 62% no-repeat,
+    var(--cu-p) 41% 100% / 24% 54% no-repeat,
+    var(--cu-p) 64% 100% / 30% 62% no-repeat,
+    var(--cu-p) 88% 100% / 24% 54% no-repeat;
+  mask-composite: intersect, add, add, add, add, add, add, add, add, add, add, add, add;
+}
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  --cu-p: radial-gradient(closest-side, #000 66%, rgba(0, 0, 0, 0.6) 84%, transparent 100%);
+  --cu-h: radial-gradient(closest-side, var(--cu-hi), transparent 72%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar::before,
+  [data-theme="light"] .glassbar::before {
+    background-color: var(--lg-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glassbar::before,
+  [data-theme="light"] .glassbar::before {
+    background-color: var(--lg-solid);
+  }
+}
