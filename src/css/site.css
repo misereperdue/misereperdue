@@ -7634,3 +7634,280 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   .mp-cd-sep i { transition: none; }
   .mp-cd.is-odd .mp-cd-sep i { opacity: 0.9; }
 }
+/* ---------- Orders (per dc): same frosted card as the recovery menus ---------- */
+.ord-back ~ .mp-dialog-back {
+  z-index: 440;
+}
+.rc-card.ord-sheet {
+  max-width: 400px;
+}
+.ord-sheet .rc-sub {
+  margin-bottom: 16px;
+}
+.ord-sheet .rc-sub:empty {
+  display: none;
+}
+.ord-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ord-form[hidden],
+.ord-add[hidden] {
+  display: none !important;
+}
+.ord-form .chat-field {
+  display: block;
+}
+.ord-form .rc-err:empty {
+  display: none;
+}
+.ord-form .btn.accent {
+  width: 100%;
+}
+.ord-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ord-card {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+}
+.ord-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ord-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+.ord-date {
+  font-size: 13px;
+  opacity: 0.65;
+}
+.ord-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.ord-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(245, 245, 247, 0.85);
+}
+.ord-pill.go {
+  background: rgba(169, 215, 245, 0.2);
+  color: #a9d7f5;
+}
+.ord-pill.ok {
+  background: rgba(48, 209, 88, 0.18);
+  color: #6ee7b7;
+}
+.ord-pill.bad {
+  background: rgba(255, 69, 58, 0.18);
+  color: #ff6b6b;
+}
+.ord-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ord-items li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ord-items img,
+.ord-noimg {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+.ord-noimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+.ord-noimg svg {
+  width: 20px;
+  height: 20px;
+}
+.ord-it {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ord-it-t {
+  font-size: 15px;
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ord-it-v,
+.ord-qty {
+  font-size: 13px;
+  opacity: 0.65;
+}
+.ord-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(169, 215, 245, 0.1);
+  font-size: 14px;
+}
+.ord-track-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ord-track-n {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+.ord-track-a,
+.ord-view {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.ord-track-a {
+  flex: none;
+  padding: 6px 2px;
+}
+.ord-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.14);
+  font-size: 14px;
+}
+.ord-total {
+  font-weight: 700;
+}
+.ord-view {
+  display: block;
+  margin-top: 8px;
+  padding: 6px 0 2px;
+  font-size: 14px;
+}
+.ord-emails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ord-email {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.ord-email-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+.ord-unlink {
+  flex: none;
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: #ff6b6b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rc-card .btn.ord-add {
+  width: 100%;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+}
+.ord-spin {
+  width: 26px;
+  height: 26px;
+  margin: 6px auto 4px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(169, 215, 245, 0.25);
+  border-top-color: #a9d7f5;
+  animation: ord-spin 0.8s linear infinite;
+}
+@keyframes ord-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ord-spin {
+    animation-duration: 2.4s;
+  }
+}
+[data-theme="light"] .ord-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(10, 18, 48, 0.1);
+}
+[data-theme="light"] .ord-pill {
+  background: rgba(10, 18, 48, 0.07);
+  color: rgba(10, 18, 48, 0.8);
+}
+[data-theme="light"] .ord-pill.go {
+  background: rgba(0, 122, 255, 0.12);
+  color: #0058b8;
+}
+[data-theme="light"] .ord-pill.ok {
+  background: rgba(52, 199, 89, 0.15);
+  color: #1a7f37;
+}
+[data-theme="light"] .ord-pill.bad {
+  background: rgba(255, 59, 48, 0.12);
+  color: #d70015;
+}
+[data-theme="light"] .ord-items img,
+[data-theme="light"] .ord-noimg {
+  background: rgba(10, 18, 48, 0.06);
+}
+[data-theme="light"] .ord-track {
+  background: rgba(10, 18, 48, 0.05);
+}
+[data-theme="light"] .ord-foot {
+  border-top-color: rgba(10, 18, 48, 0.1);
+}
+[data-theme="light"] .ord-unlink {
+  color: #d70015;
+}
+[data-theme="light"] .rc-card .btn.ord-add {
+  background: rgba(10, 18, 48, 0.05);
+  border-color: rgba(10, 18, 48, 0.12);
+}
+[data-theme="light"] .ord-spin {
+  border-color: rgba(10, 18, 48, 0.15);
+  border-top-color: #0a1230;
+}

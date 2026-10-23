@@ -3791,6 +3791,7 @@
             }, 120));
         }),
         pt.appendChild(r),
+        pt.appendChild(ordMenuItem()),
         s && s.owner)
       ) {
         var o = document.createElement("button");
@@ -4436,6 +4437,293 @@
     });
     return row;
   }
+  /* ---------- Orders (per dc): link a checkout email with one order, then see every order + tracking ---------- */
+  var ordTitle = null;
+  var ORD_ICON =
+    "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z'/><path d='M12 22V12'/><polyline points='3.29 7 12 12 20.71 7'/><path d='m7.5 4.27 9 5.15'/></svg>";
+  function ordMenuItem() {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chat-me-item chat-me-orders";
+    b.innerHTML = ORD_ICON + "<span>Orders</span>";
+    b.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      ht();
+      setTimeout(ordOpen, 60);
+    });
+    return b;
+  }
+  function ordClose() {
+    rcClose();
+    if (ordTitle !== null) {
+      document.title = ordTitle;
+      ordTitle = null;
+    }
+  }
+  function ordWord(v, map) {
+    v = String(v || "");
+    if (map[v]) return map[v];
+    v = v.replace(/_/g, " ").toLowerCase();
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  }
+  var ORD_PAY = {
+    PAID: "Paid",
+    PENDING: "Payment pending",
+    AUTHORIZED: "Payment pending",
+    PARTIALLY_PAID: "Partly paid",
+    REFUNDED: "Refunded",
+    PARTIALLY_REFUNDED: "Partly refunded",
+    VOIDED: "Voided",
+    EXPIRED: "Expired",
+  };
+  var ORD_SHIP = {
+    UNFULFILLED: "Not shipped yet",
+    SCHEDULED: "Not shipped yet",
+    IN_PROGRESS: "Preparing",
+    ON_HOLD: "On hold",
+    PENDING_FULFILLMENT: "Preparing",
+    OPEN: "Preparing",
+    PARTIALLY_FULFILLED: "Partly shipped",
+    FULFILLED: "Shipped",
+    RESTOCKED: "Returned",
+  };
+  var ORD_DELIVERY = {
+    IN_TRANSIT: "In transit",
+    OUT_FOR_DELIVERY: "Out for delivery",
+    DELIVERED: "Delivered",
+    ATTEMPTED_DELIVERY: "Delivery attempted",
+    FAILURE: "Delivery problem",
+    READY_FOR_PICKUP: "Ready for pickup",
+    PICKED_UP: "Picked up",
+    LABEL_PRINTED: "Label made",
+    LABEL_PURCHASED: "Label made",
+    CONFIRMED: "Shipped",
+    FULFILLED: "Shipped",
+  };
+  function ordMoney(t) {
+    var n = parseFloat(t && t.amount);
+    if (isNaN(n)) return "";
+    return "$" + n.toFixed(n % 1 ? 2 : 0) + " " + ((t && t.currency) || "CAD");
+  }
+  function ordStatus(o) {
+    if (o.cancelled) return { text: "Cancelled", cls: "bad" };
+    if (o.fulfillment === "FULFILLED" || o.fulfillment === "PARTIALLY_FULFILLED") {
+      var dv = o.delivery && ORD_DELIVERY[o.delivery];
+      if (dv && o.fulfillment === "FULFILLED") return { text: dv, cls: o.delivery === "DELIVERED" ? "ok" : "go" };
+    }
+    return { text: ordWord(o.fulfillment, ORD_SHIP), cls: o.fulfillment === "FULFILLED" ? "go" : "" };
+  }
+  function ordCard(o) {
+    var st = ordStatus(o),
+      date = "";
+    try {
+      date = new Date(o.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    } catch (e) {}
+    var h =
+      "<article class='ord-card'><div class='ord-head'><span class='ord-name'>" +
+      x(o.name) +
+      "</span><span class='ord-date'>" +
+      x(date) +
+      "</span></div><div class='ord-pills'><span class='ord-pill " +
+      st.cls +
+      "'>" +
+      x(st.text) +
+      "</span>" +
+      (o.financial && !o.cancelled
+        ? "<span class='ord-pill" + (/REFUND|VOID/.test(o.financial) ? " bad" : "") + "'>" + x(ordWord(o.financial, ORD_PAY)) + "</span>"
+        : "") +
+      "</div><ul class='ord-items'>";
+    (o.items || []).forEach(function (it) {
+      h +=
+        "<li>" +
+        (it.image && /^https:\/\//.test(it.image)
+          ? "<img src='" + x(it.image) + "' alt='' loading='lazy' decoding='async'>"
+          : "<span class='ord-noimg' aria-hidden='true'>" + ORD_ICON + "</span>") +
+        "<span class='ord-it'><span class='ord-it-t'>" +
+        x(it.title) +
+        "</span>" +
+        (it.variant ? "<span class='ord-it-v'>" + x(it.variant) + "</span>" : "") +
+        "</span><span class='ord-qty'>×" +
+        x(it.qty) +
+        "</span></li>";
+    });
+    h += "</ul>";
+    (o.tracking || []).forEach(function (t) {
+      h +=
+        "<div class='ord-track'><span class='ord-track-t'>" +
+        x(t.company || "Tracking") +
+        (t.number ? " · <span class='ord-track-n'>" + x(t.number) + "</span>" : "") +
+        "</span>" +
+        (t.url && /^https:\/\//.test(t.url)
+          ? "<a class='ord-track-a' href='" + x(t.url) + "' target='_blank' rel='noopener noreferrer'>Track</a>"
+          : "") +
+        "</div>";
+    });
+    h +=
+      "<div class='ord-foot'><span>Total</span><span class='ord-total'>" +
+      x(ordMoney(o.total)) +
+      "</span></div>" +
+      (o.statusUrl && /^https:\/\//.test(o.statusUrl)
+        ? "<a class='ord-view' href='" + x(o.statusUrl) + "' target='_blank' rel='noopener noreferrer'>View order details</a>"
+        : "") +
+      "</article>";
+    return h;
+  }
+  function ordFormHTML(first) {
+    return (
+      "<div class='ord-form'" +
+      (first ? "" : " hidden") +
+      "><label class='chat-field'><span>Order number</span><input type='text' name='ord-num' inputmode='numeric' maxlength='12' placeholder='#1001' autocomplete='off' spellcheck='false'></label><label class='chat-field'><span>Checkout email</span><input type='email' name='ord-email' maxlength='254' autocomplete='email' autocapitalize='none' spellcheck='false'></label><div class='chat-err rc-err ord-err' role='alert'></div><button type='button' class='btn accent ord-go'>" +
+      (first ? "Find my orders" : "Add order") +
+      "</button></div>"
+    );
+  }
+  function ordRender(b, st) {
+    var card = b.querySelector(".rc-card"),
+      body = card.querySelector(".ord-body"),
+      sub = card.querySelector(".rc-sub");
+    if (st === "loading") {
+      sub.textContent = "Loading your orders…";
+      body.innerHTML = "<div class='ord-spin' aria-hidden='true'></div>";
+      return;
+    }
+    if (st === "off") {
+      sub.textContent = "Orders aren't available yet. Check back soon.";
+      body.innerHTML = "";
+      return;
+    }
+    if (st === "fail") {
+      sub.textContent = "Couldn't load your orders.";
+      body.innerHTML = "<button type='button' class='btn accent ord-retry'>Try again</button>";
+      body.querySelector(".ord-retry").addEventListener("click", function () {
+        ordLoad(b);
+      });
+      return;
+    }
+    var emails = st.emails || [],
+      orders = st.orders || [],
+      h = "";
+    if (!emails.length) {
+      sub.textContent = "Enter an order number and the email you used at checkout. We'll show all your orders here with tracking.";
+      h = ordFormHTML(!0);
+    } else {
+      sub.textContent = orders.length
+        ? orders.length + (orders.length === 1 ? " order" : " orders")
+        : "No orders on your linked email yet.";
+      h = "<div class='ord-list'>";
+      orders.forEach(function (o) {
+        h += ordCard(o);
+      });
+      h += "</div><div class='ord-emails'>";
+      emails.forEach(function (e) {
+        h +=
+          "<div class='ord-email'><span class='ord-email-t'>" +
+          x(e.email) +
+          "</span><button type='button' class='ord-unlink' data-email='" +
+          x(e.email) +
+          "'>Remove</button></div>";
+      });
+      h +=
+        "</div>" +
+        (emails.length < 3 ? "<button type='button' class='btn ord-add'>Add another order</button>" : "") +
+        ordFormHTML(!1);
+    }
+    body.innerHTML = h;
+    var add = body.querySelector(".ord-add");
+    add &&
+      add.addEventListener("click", function () {
+        add.hidden = !0;
+        var f = body.querySelector(".ord-form");
+        f.hidden = !1;
+        try {
+          f.querySelector("input").focus({ preventScroll: !0 });
+        } catch (e) {}
+      });
+    body.querySelectorAll(".ord-unlink").forEach(function (u) {
+      u.addEventListener("click", function () {
+        var em = u.getAttribute("data-email");
+        k("Remove " + em + "? Its orders will stop showing here.", {
+          okText: "Remove",
+          cancelText: "Cancel",
+          onOk: function () {
+            u.disabled = !0;
+            E("/api/orders/unlink", { method: "POST", body: { email: em } })
+              .then(function (j) {
+                j && j.ok ? ordLoad(b) : ((u.disabled = !1), k((j && j.error) || "Couldn't remove it."));
+              })
+              .catch(function () {
+                u.disabled = !1;
+                k("Couldn't reach the server. Try again.");
+              });
+          },
+        });
+      });
+    });
+    var go = body.querySelector(".ord-go");
+    if (go) {
+      var num = body.querySelector("[name='ord-num']"),
+        em = body.querySelector("[name='ord-email']"),
+        er = body.querySelector(".ord-err");
+      var send = function () {
+        er.textContent = "";
+        var n = num.value.replace(/[^0-9]/g, ""),
+          m = em.value.trim();
+        if (!n) return void (er.textContent = "Enter your order number, like #1001.");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) return void (er.textContent = "Enter the email you used at checkout.");
+        go.disabled = !0;
+        go.textContent = "Checking…";
+        E("/api/orders/link", { method: "POST", body: { order: n, email: m } })
+          .then(function (j) {
+            if (j && j.ok) return void ordLoad(b);
+            go.disabled = !1;
+            go.textContent = emails.length ? "Add order" : "Find my orders";
+            if (j && (j.code === "orders_unavailable" || j.error === "not found")) return void ordRender(b, "off");
+            er.textContent = (j && j.error) || "We couldn't find an order with that number and email.";
+          })
+          .catch(function () {
+            go.disabled = !1;
+            go.textContent = emails.length ? "Add order" : "Find my orders";
+            er.textContent = "Couldn't reach the server. Try again.";
+          });
+      };
+      go.addEventListener("click", send);
+      em.addEventListener("keydown", function (e) {
+        "Enter" === e.key && send();
+      });
+    }
+  }
+  function ordLoad(b) {
+    ordRender(b, "loading");
+    E("/api/orders")
+      .then(function (j) {
+        if (!b.isConnected) return;
+        if (j && j.ok) return void ordRender(b, j);
+        // Older API without the route (404) or no Shopify access yet (503): say so plainly.
+        if (j && (j.code === "orders_unavailable" || j.error === "not found")) return void ordRender(b, "off");
+        if (j && j.error === "not logged in") return void ordClose();
+        ordRender(b, "fail");
+      })
+      .catch(function (e) {
+        if (!b.isConnected) return;
+        ordRender(b, e && (e.status === 404 || e.status === 503) ? "off" : "fail");
+      });
+  }
+  function ordOpen() {
+    if (!s || !d) return;
+    var b = rcLayer(
+      "<button type='button' class='rc-x-close' aria-label='Close'>×</button><h2 class='rc-title'>Orders</h2><p class='rc-sub'></p><div class='ord-body'></div>",
+      "ord-back",
+    );
+    b.querySelector(".rc-card").classList.add("ord-sheet");
+    b.querySelector(".rc-x-close").addEventListener("click", ordClose);
+    b.addEventListener("click", function (e) {
+      e.target === b && ordClose();
+    });
+    ordTitle === null && (ordTitle = document.title);
+    document.title = "Misère Perdue · Orders";
+    ordLoad(b);
+  }
+  window.MPOpenOrders = ordOpen;
   // New account made with X: show its code once /api/me has loaded.
   function rcXNewCode(code) {
     var n = 0;
