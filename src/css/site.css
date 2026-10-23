@@ -7036,3 +7036,25 @@ html.rc-lock body {
     animation: none;
   }
 }
+/* iOS/Chrome autofill: keep the glass field instead of the yellow fill. */
+.chat-field input:-webkit-autofill,
+.chat-field input:-webkit-autofill:hover,
+.chat-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px rgba(20, 30, 62, 0.96) inset;
+  box-shadow: 0 0 0 1000px rgba(20, 30, 62, 0.96) inset;
+  caret-color: var(--ink);
+  transition: background-color 99999s ease 0s;
+}
+.rc-card .chat-field input:-webkit-autofill {
+  -webkit-text-fill-color: #f5f5f7;
+}
+[data-theme="light"] .chat-field input:-webkit-autofill,
+[data-theme="light"] .chat-field input:-webkit-autofill:hover,
+[data-theme="light"] .chat-field input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #eef3fb inset;
+  box-shadow: 0 0 0 1000px #eef3fb inset;
+}
+[data-theme="light"] .rc-card .chat-field input:-webkit-autofill {
+  -webkit-text-fill-color: #0a1230;
+}
