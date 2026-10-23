@@ -90,8 +90,19 @@ nav.crumbs{font-size:13px;color:#666;margin:-14px 0 18px}
 nav.crumbs a{color:#666}
 </style>"""
 
-def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes logo"):
+def share_desc(p):
+    """Link-preview text (X, iMessage, Slack...): price first, then the Shopify bullets."""
+    parts = [x.strip() for x in re.split(r"\s*\+", p["description"]) if x.strip()]
+    text = ", ".join(parts)
+    text = re.sub(r"\s*(SS\d+\s*)?MISERY \| Misère Perdue\s*$", "", text).strip()
+    text = price_label(p) + " · " + text
+    if len(text) > 160:
+        text = text[:159].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    return text
+
+def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes logo", og_desc=None, extra=""):
     e = html.escape
+    og_desc = og_desc or desc
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,16 +114,16 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="Mis&egrave;re Perdue">
 <meta property="og:title" content="{e(title)}">
-<meta property="og:description" content="{e(desc)}">
+<meta property="og:description" content="{e(og_desc)}">
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{e(image)}">
 <meta property="og:image:alt" content="{e(image_alt)}">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(title)}">
-<meta name="twitter:description" content="{e(desc)}">
+<meta name="twitter:description" content="{e(og_desc)}">
 <meta name="twitter:image" content="{e(image)}">
-<script type="application/ld+json">{ld}</script>
+{extra}<script type="application/ld+json">{ld}</script>
 {STYLE}
 </head>
 <body>
@@ -139,7 +150,12 @@ def main():
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
         title = SEO_TITLE.get(p["handle"]) or f"Misère Perdue · {p['title']}"
-        out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt) + body
+        lo = p["priceRange"]["minVariantPrice"]
+        extra = (f'<meta property="product:price:amount" content="{money(lo["amount"])}">\n'
+                 f'<meta property="product:price:currency" content="{lo["currencyCode"]}">\n'
+                 f'<meta name="twitter:label1" content="Price">\n'
+                 f'<meta name="twitter:data1" content="{e(price_label(p))}">\n')
+        out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt, share_desc(p), extra) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
