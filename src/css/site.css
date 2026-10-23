@@ -7126,3 +7126,19 @@ html.rc-lock body {
 .rc-back {
   animation-fill-mode: backwards;
 }
+/* Dashboard + message popups: same scrim and single glass layer as the profile sheet (per dc). */
+.msg-popup,
+.msg-popup:has(.dashboard-sheet),
+[data-theme="light"] .msg-popup:has(.dashboard-sheet) {
+  background: var(--sheet-scrim);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.msg-popup-inner.dashboard-sheet {
+  background: 0 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border: var(--sheet-border);
+  will-change: auto;
+}

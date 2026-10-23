@@ -283,7 +283,7 @@
       );
     }
     Z.style.cssText =
-      "position:absolute;z-index:50;min-width:180px;margin-top:6px;border-radius:14px;padding:6px;background:var(--bg);border:var(--glass-hairline);box-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);display:none;max-height:320px;overflow-y:auto;";
+      "position:absolute;z-index:50;min-width:180px;margin-top:6px;border-radius:14px;padding:6px;background:var(--sheet-bg);border:var(--sheet-border);box-shadow:var(--sheet-shadow);backdrop-filter:var(--sheet-blur);-webkit-backdrop-filter:var(--sheet-blur);display:none;max-height:320px;overflow-y:auto;";
     var B = [],
       j = [];
     function J() {
@@ -1145,7 +1145,7 @@
           s +
           "px;top:" +
           d +
-          "px;z-index:9999;background:var(--bg);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:var(--glass-hairline);border-radius:14px;padding:12px;width:min(240px,80vw);box-shadow:0 12px 48px rgba(0,0,0,.5);"));
+          "px;z-index:9999;background:var(--sheet-bg);border:var(--sheet-border);box-shadow:var(--sheet-shadow);backdrop-filter:var(--sheet-blur);-webkit-backdrop-filter:var(--sheet-blur);border-radius:14px;padding:12px;width:min(240px,80vw);color:var(--ink);"));
       var l = document.createElement("div");
       ((l.style.cssText =
         "font-size:13px;font-weight:700;margin-bottom:12px;color:var(--ink);text-align:center;"),
@@ -1744,6 +1744,8 @@
             JSON.stringify({ ts: Date.now(), stats: o.stats }),
           );
         } catch (e) {}
+        // First open (no cache yet): build from the fresh stats.
+        if (!document.querySelector(".dashboard-sheet")) buildDashboard(o.stats);
       })
       .catch(function (e) {
         if (document.querySelector(".dashboard-sheet")) return;
