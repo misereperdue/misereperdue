@@ -91,14 +91,8 @@ nav.crumbs{font-size:13px;color:#666;margin:-14px 0 18px}
 nav.crumbs a{color:#666}
 </style>"""
 
-OG = SITE + "/img/og/"   # share cards rendered by tools/build-og.mjs (1200x630)
-
-def og_card(name):
-    return OG + name + ".jpg" if os.path.exists(os.path.join(ROOT, "img", "og", name + ".jpg")) else None
-
 def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes logo"):
     e = html.escape
-    size = '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n' if "/img/og/" in image else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,8 +107,7 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{e(image)}">
-{size}<meta property="og:image:alt" content="{e(image_alt)}">
-<meta name="twitter:image:alt" content="{e(image_alt)}">
+<meta property="og:image:alt" content="{e(image_alt)}">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(title)}">
@@ -147,9 +140,7 @@ def main():
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
         title = SEO_TITLE.get(p["handle"]) or f"{p['title']} | MISERY (Misère Perdue)"
-        card = og_card("product-" + p["handle"])
-        out = head(title, meta_desc(p), url, card or img, "product", jsonld(p, url),
-                   f"{p['title']} by MISERY (Misère Perdue) on navy" if card else alt) + body
+        out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
@@ -160,8 +151,7 @@ def main():
     desc = ("Shop MISERY (Misère Perdue), the Toronto merchandise brand: " + ", ".join(p["title"] for p, _ in items)
             + ". Prices in CAD, checkout by Shopify.")
     rows = "".join(f"<div class=\"product\"><h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Shop MISERY: " + " & ".join(p["title"] for p, _ in items) + " | Misère Perdue", desc, f"{SITE}/shop", og_card("shop") or f"{SITE}/img/og-image.jpg", "website", ld,
-                "MISERY shop: V_V Mask and VIP card on navy") + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    shop = head("Shop MISERY: " + " & ".join(p["title"] for p, _ in items) + " | Misère Perdue", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
