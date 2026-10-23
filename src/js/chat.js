@@ -4034,7 +4034,20 @@
   function kt(tok) {
     // tok given (sign-out): only this device's subscription is removed on the
     // server, using the captured token. No tok: the notifications toggle (all subs).
-    return Et().then(function (e) {
+    // serviceWorker.ready never settles without a registered SW, so sign-out
+    // waits at most 1.5 s for it (then /api/logout still runs).
+    var sub =
+      tok !== void 0
+        ? Promise.race([
+            Et(),
+            new Promise(function (t) {
+              setTimeout(function () {
+                t(null);
+              }, 1500);
+            }),
+          ])
+        : Et();
+    return sub.then(function (e) {
       var t = Promise.resolve(),
         ep = e && e.endpoint;
       if (tok !== void 0 && !ep) return null;
