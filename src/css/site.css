@@ -6852,7 +6852,10 @@ html.rc-lock body {
   width: 22px;
   height: 22px;
   flex: none;
-  color: var(--accent);
+  color: #fff;
+}
+[data-theme="light"] .rc-row-icon {
+  color: #000;
 }
 .rc-row-icon svg {
   width: 100%;
