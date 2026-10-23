@@ -7446,14 +7446,16 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   vertical-align: bottom;
   text-align: center;
 }
-.mp-cd-c b {
-  display: block;
-  font-weight: inherit;
+/* hidden in-flow glyph keeps the baseline steady; the real digits sit
+   absolutely on top of it so rolling ones never shift the line */
+.mp-cd-c::before {
+  content: "0";
+  visibility: hidden;
 }
-.mp-cd-c b.out,
-.mp-cd-c b.in {
+.mp-cd-c b {
   position: absolute;
   inset: 0;
+  font-weight: inherit;
 }
 .mp-cd-c b.in {
   animation: mp-cd-in 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) both;
