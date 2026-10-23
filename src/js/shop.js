@@ -972,8 +972,11 @@ var MPShop = (function () {
         (((v = i.details)
           ? String(v)
               .split(/\n{2,}/)
+              .filter(function (t) {
+                return t.trim();
+              })
               .map(function (t) {
-                return '<p class="meta">' + l(t).replace(/\n/g, "<br>") + "</p>";
+                return '<p class="meta pdesc"><span class="stitch">' + l(t).replace(/\n/g, "<br>") + "</span></p>";
               })
               .join("")
           : "") +

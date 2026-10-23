@@ -4026,6 +4026,64 @@ html {
 .article-card .share-btn {
   margin-bottom: 10px;
 }
+/* Product description stitched into the page (per dc): each line is satin
+   stitch (fine diagonal threads, each shaded dark-light-dark so it reads as
+   a rounded strand) with a running stitch under every line (custom dashes,
+   per line via box-decoration-break), and a slight emboss so the thread sits
+   on the fabric. Thread colours follow the theme. 26px under the Share pill. */
+.article-card .share-btn + .pdesc {
+  margin-top: 14px;
+}
+.article-card #bag-action + .share-btn[hidden] + .pdesc {
+  margin-top: 20px;
+}
+.pdesc {
+  --th-d: #2f3852;
+  --th-m: #4f5a78;
+  --th-h: #8e99b6;
+  --th-run: #5d6886;
+  --th-hi: #fff;
+  --th-sh: rgba(10, 18, 48, 0.24);
+  margin: 0 0 18px;
+  font-size: 17px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--th-m);
+  -webkit-filter: drop-shadow(0 0.8px 0.7px var(--th-sh)) drop-shadow(0 -0.6px 0 var(--th-hi));
+  filter: drop-shadow(0 0.8px 0.7px var(--th-sh)) drop-shadow(0 -0.6px 0 var(--th-hi));
+}
+.pdesc .stitch {
+  padding-bottom: 5px;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image:
+    repeating-linear-gradient(-62deg, var(--th-d) 0, var(--th-m) 0.55px, var(--th-h) 1.05px, var(--th-m) 1.55px, var(--th-d) 2.1px),
+    repeating-linear-gradient(90deg, transparent 0, var(--th-run) 0.7px, var(--th-run) 4.3px, transparent 5px, transparent 8px);
+  background-repeat: repeat, repeat-x;
+  background-position: 0 0, 1px 100%;
+  background-size: auto, 100% 2px;
+  -webkit-background-clip: text, border-box;
+  background-clip: text, border-box;
+}
+[data-theme="dark"] .pdesc {
+  --th-d: #6f7a9a;
+  --th-m: #b3bcd5;
+  --th-h: #f4f6fc;
+  --th-run: #8792b0;
+  --th-hi: rgba(255, 255, 255, 0.1);
+  --th-sh: rgba(0, 0, 0, 0.85);
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .pdesc .stitch {
+    color: var(--th-m);
+    background-image: repeating-linear-gradient(90deg, transparent 0, var(--th-run) 0.7px, var(--th-run) 4.3px, transparent 5px, transparent 8px);
+    background-position: 1px 100%;
+    background-size: 100% 2px;
+    background-repeat: repeat-x;
+  }
+}
 .chat-me-menu {
   position: fixed;
   z-index: 300;
