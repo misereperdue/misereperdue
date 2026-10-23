@@ -2546,7 +2546,7 @@
               ("number" == typeof t.online && Xe(t.online),
                 "boolean" == typeof t.paused && st(t.paused),
                 t.badges && (T = Object.assign(Object.create(null), t.badges)),
-                t.you && te((s = t.you).points || 0),
+                t.you && te((s = rcKeep(t.you)).points || 0),
                 t.messages && t.messages.forEach(Fe),
                 Ne(!0),
                 setTimeout(function () {
@@ -2710,7 +2710,7 @@
                 x &&
                   E("/api/me")
                     .then(function (e) {
-                      e && e.user && te((s = e.user).points || 0);
+                      e && e.user && te((s = rcKeep(e.user)).points || 0);
                     })
                     .catch(function () {}));
             } else if ("reaction" === t.t && t.id)
@@ -2914,7 +2914,7 @@
                           E("/api/profile", { method: "POST", body: { removeAvatar: !0 } })
                             .then(function (e) {
                               e && e.ok && e.user
-                                ? ((s = e.user), h(), (f.textContent = "Photo removed."))
+                                ? ((s = rcKeep(e.user)), h(), (f.textContent = "Photo removed."))
                                 : (be.textContent = (e && e.error) || "Couldn't remove.");
                             })
                             .catch(function () {
@@ -3070,7 +3070,7 @@
                       .then(function (e) {
                         if (e && e.ok && e.user) {
                           var t = s.username;
-                          ((s = e.user),
+                          ((s = rcKeep(e.user)),
                             h(),
                             t !== s.username &&
                               c.querySelectorAll(".chat-msg[data-user]").forEach(function (e) {
@@ -3129,7 +3129,7 @@
                             })
                               .then(function (e) {
                                 if (e && e.ok && e.user) {
-                                  var t = N((s = e.user));
+                                  var t = N((s = rcKeep(e.user)));
                                   T.querySelectorAll(".chat-badge-opt").forEach(function (e) {
                                     e.classList.toggle("on", e.getAttribute("data-badge") === t);
                                   });
@@ -3175,7 +3175,7 @@
                     E("/api/profile", { method: "POST", body: { bio: e } })
                       .then(function (e) {
                         e && e.ok && e.user
-                          ? (s = e.user)
+                          ? (s = rcKeep(e.user))
                           : (be.textContent = (e && e.error) || "Couldn't save bio.");
                       })
                       .catch(function () {
@@ -3485,7 +3485,7 @@
                   E("/api/profile", { method: "POST", body: { signature: me() } })
                     .then(function (e) {
                       e && e.ok && e.user
-                        ? ((s = e.user),
+                        ? ((s = rcKeep(e.user)),
                           (K.textContent = "Saved ✓"),
                           setTimeout(function () {
                             "Saved ✓" === K.textContent && (K.textContent = "");
@@ -4410,6 +4410,14 @@
     setTimeout(function () {
       s && !s.hasRecovery && !rcOpen && rcCreate("create");
     }, 1400);
+  }
+  // Profile/socket replies carry the public user only, so keep the
+  // signed-in-only fields (recovery status, has-password) we already know.
+  function rcKeep(n) {
+    if (s && n) ["hasRecovery", "recoveryCreatedAt", "hasPassword"].forEach(function (k) {
+      !(k in n) && k in s && (n[k] = s[k]);
+    });
+    return n;
   }
   function rcSettingsRow() {
     var row = document.createElement("div");
