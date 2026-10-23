@@ -64,7 +64,7 @@
     var d = document.createElement("div");
     ((d.className = "msg-popup"), (d.id = "msg-popup"), (d.style.animation = "none"));
     var l = document.createElement("div");
-    ((l.className = "msg-popup-inner dashboard-sheet"), (l.style.maxWidth = "min(520px, 94vw)"));
+    (l.className = "msg-popup-inner dashboard-sheet");
     var __dw = document.createElement("div");
     __dw.className = "dashboard-sheet-wrap";
     var __dp = document.createElement("div");
@@ -86,12 +86,13 @@
     var v = document.createElement("span");
     ((v.className = "easyui-live-badge dashboard-online-badge"),
       (v.innerHTML = '<span class="live-dot"></span><span class="live-num">…</span>'),
+      (v.hidden = !0),
       u.appendChild(v),
       (function e(t) {
         var n = "number" == typeof window.MPOnlineCount ? window.MPOnlineCount : null,
           a = v.querySelector(".live-num");
         null !== n && a
-          ? (a.textContent = n)
+          ? ((a.textContent = n), (v.hidden = !(n > 0)))
           : t < 10 &&
             a &&
             setTimeout(function () {
@@ -1671,7 +1672,7 @@
           }));
         var __g = document.createElement("button");
         ((__g.type = "button"),
-          (__g.className = "mp-dialog-grant"),
+          (__g.className = "mp-dialog-grant mp-dialog-danger"),
           (__g.textContent = "Clear"),
           __g.addEventListener("click", function () {
             (__b.remove(),

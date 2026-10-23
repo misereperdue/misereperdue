@@ -646,12 +646,32 @@ var MPShop = (function () {
         r +
         '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share</button>' +
         (((v = i.details)
-          ? String(v)
-              .split(/\n{2,}/)
-              .map(function (t) {
-                return '<p class="meta">' + l(t).replace(/\n/g, "<br>") + "</p>";
-              })
-              .join("")
+          ? (function (paras) {
+              // "+" lines -> one tidy list; a plain last line after the list -> fine print.
+              var out = "", pts = [], sawList = false;
+              function flush() {
+                pts.length &&
+                  ((out += '<ul class="product-points">' + pts.join("") + "</ul>"), (pts = []), (sawList = !0));
+              }
+              var lastText = -1;
+              paras.forEach(function (t, k) {
+                String(t).trim() && (lastText = k);
+              });
+              paras.forEach(function (t, k) {
+                var lines = String(t).split("\n").filter(function (x) { return x.trim(); });
+                if (!lines.length) return;
+                if (lines.length && lines.every(function (x) { return /^\s*[+•-]\s*/.test(x); })) {
+                  lines.forEach(function (x) { pts.push("<li>" + l(x.replace(/^\s*[+•-]\s*/, "")) + "</li>"); });
+                  return;
+                }
+                flush();
+                out +=
+                  '<p class="meta' + (sawList && k === lastText ? " product-fine" : "") + '">' +
+                  l(t).replace(/\n/g, "<br>") + "</p>";
+              });
+              flush();
+              return out;
+            })(String(v).split(/\n{2,}/))
           : "") +
           "</article>")),
         window.MPNav && MPNav.refreshTitle && MPNav.refreshTitle(),
