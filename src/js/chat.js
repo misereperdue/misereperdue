@@ -4074,7 +4074,7 @@
       return Promise.resolve();
     }
   }
-  // Navy keepsake card (PNG) with the eyes, code, username.
+  // Simple navy card (PNG): wordmark, code, username.
   function rcRender(code, user) {
     return rcFont().then(function () {
       return new Promise(function (res) {
@@ -4084,85 +4084,32 @@
         cv.width = W;
         cv.height = H;
         var x = cv.getContext("2d"),
-          g = x.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, "#0d1840");
-        g.addColorStop(0.55, "#0a1230");
-        g.addColorStop(1, "#070f29");
-        x.fillStyle = g;
+          mono = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace',
+          sans = "-apple-system, BlinkMacSystemFont, sans-serif";
+        x.fillStyle = "#0a1230";
         x.fillRect(0, 0, W, H);
-        var rg = x.createRadialGradient(W / 2, 520, 40, W / 2, 520, 620);
-        rg.addColorStop(0, "rgba(169,215,245,0.16)");
-        rg.addColorStop(1, "rgba(169,215,245,0)");
-        x.fillStyle = rg;
-        x.fillRect(0, 0, W, H);
-        // faint M monogram
-        x.save();
-        x.font = '760px "Space Age", ui-monospace, monospace';
         x.textAlign = "center";
-        x.textBaseline = "middle";
-        x.fillStyle = "rgba(169,215,245,0.035)";
-        x.fillText("M", W / 2, 700);
-        x.restore();
-        // card frame
-        x.strokeStyle = "rgba(169,215,245,0.22)";
-        x.lineWidth = 2;
-        if (x.roundRect) {
-          x.beginPath();
-          x.roundRect(60, 60, W - 120, H - 120, 56);
-          x.stroke();
-        } else x.strokeRect(60, 60, W - 120, H - 120);
-        var mono = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace';
-        function done() {
-          x.textAlign = "center";
-          x.textBaseline = "alphabetic";
-          x.fillStyle = "rgba(169,215,245,0.85)";
-          x.font = '30px "Space Age", ' + mono;
-          x.fillText("MISÈRE PERDUE", W / 2, 400);
-          x.fillStyle = "rgba(169,215,245,0.6)";
-          x.font = "500 26px " + mono;
-          x.fillText("R E C O V E R Y   C O D E", W / 2, 560);
-          var parts = String(code).split("-"),
-            l1 = parts.slice(0, 2).join("-"),
-            l2 = parts.slice(2).join("-");
-          x.font = "600 96px " + mono;
-          [
-            [l1, 700],
-            [l2, 830],
-          ].forEach(function (ln) {
-            // etched: dark inset + ice face + soft glow
-            x.fillStyle = "rgba(0,0,0,0.45)";
-            x.fillText(ln[0], W / 2, ln[1] + 3);
-            x.shadowColor = "rgba(169,215,245,0.45)";
-            x.shadowBlur = 22;
-            x.fillStyle = "#cfe9fb";
-            x.fillText(ln[0], W / 2, ln[1]);
-            x.shadowBlur = 0;
-          });
-          x.fillStyle = "rgba(245,245,247,0.92)";
-          x.font = "600 40px -apple-system, BlinkMacSystemFont, sans-serif";
-          x.fillText("@" + user, W / 2, 990);
-          x.fillStyle = "rgba(183,189,208,0.85)";
-          x.font = "500 30px -apple-system, BlinkMacSystemFont, sans-serif";
-          x.fillText("Keep this safe.", W / 2, 1100);
-          x.font = "400 24px " + mono;
-          x.fillStyle = "rgba(183,189,208,0.6)";
-          x.fillText("It resets your password. One use, then it changes.", W / 2, 1150);
-          x.fillText("misereperdue.com · " + new Date().toISOString().slice(0, 10), W / 2, 1210);
-          cv.toBlob(function (b) {
-            res(b);
-          }, "image/png");
-        }
-        var im = new Image();
-        im.onload = function () {
-          var w = 420,
-            h = (im.height / im.width) * w;
-          x.globalAlpha = 0.95;
-          x.drawImage(im, (W - w) / 2, 180, w, h);
-          x.globalAlpha = 1;
-          done();
-        };
-        im.onerror = done;
-        im.src = "/img/splash-eyes.png";
+        x.textBaseline = "alphabetic";
+        x.fillStyle = "rgba(169,215,245,0.7)";
+        x.font = '28px "Space Age", ' + mono;
+        x.fillText("MISÈRE PERDUE", W / 2, 470);
+        x.fillStyle = "rgba(183,189,208,0.6)";
+        x.font = "500 24px " + mono;
+        x.fillText("RECOVERY CODE", W / 2, 540);
+        var parts = String(code).split("-");
+        x.fillStyle = "#e6f3fd";
+        x.font = "600 92px " + mono;
+        x.fillText(parts.slice(0, 2).join("-"), W / 2, 690);
+        x.fillText(parts.slice(2).join("-"), W / 2, 810);
+        x.fillStyle = "rgba(245,245,247,0.85)";
+        x.font = "500 34px " + sans;
+        x.fillText("@" + user, W / 2, 930);
+        x.fillStyle = "rgba(183,189,208,0.5)";
+        x.font = "400 24px " + mono;
+        x.fillText("Keep this safe.", W / 2, 1010);
+        cv.toBlob(function (b) {
+          res(b);
+        }, "image/png");
       });
     });
   }
