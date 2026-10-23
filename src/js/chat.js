@@ -4095,19 +4095,29 @@
           x.stroke();
         } else x.strokeRect(60, 60, W - 120, H - 120);
         function done() {
-          x.textAlign = "center";
           x.textBaseline = "alphabetic";
-          x.fillStyle = "rgba(183,189,208,0.6)";
-          x.font = "500 24px " + mono;
-          x.fillText("RECOVERY CODE", W / 2, 600);
-          var parts = String(code).split("-");
+          x.textAlign = "left";
           x.fillStyle = "#e6f3fd";
-          x.font = "600 92px " + mono;
-          x.fillText(parts.slice(0, 2).join("-"), W / 2, 740);
-          x.fillText(parts.slice(2).join("-"), W / 2, 860);
-          x.fillStyle = "rgba(183,189,208,0.5)";
-          x.font = "400 24px " + mono;
-          x.fillText("Keep this safe.", W / 2, 980);
+          x.font = "600 84px " + mono;
+          var parts = String(code).split("-"),
+            gap = 26;
+          // draw each character with extra space so the code is easy to read
+          [
+            [parts.slice(0, 2).join("-"), 760],
+            [parts.slice(2).join("-"), 890],
+          ].forEach(function (ln) {
+            var ch = ln[0].split(""),
+              tw = 0;
+            ch.forEach(function (c) {
+              tw += x.measureText(c).width;
+            });
+            tw += gap * (ch.length - 1);
+            var cx = (W - tw) / 2;
+            ch.forEach(function (c) {
+              x.fillText(c, cx, ln[1]);
+              cx += x.measureText(c).width + gap;
+            });
+          });
           cv.toBlob(function (b) {
             res(b);
           }, "image/png");
@@ -4117,7 +4127,7 @@
           var w = 420,
             h = (im.height / im.width) * w;
           x.globalAlpha = 0.95;
-          x.drawImage(im, (W - w) / 2, 260, w, h);
+          x.drawImage(im, (W - w) / 2, 420, w, h);
           x.globalAlpha = 1;
           done();
         };
