@@ -377,8 +377,28 @@ body {
   );
   mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
 }
+/* night sky in light mode too (per dc 12:52): same navy scene, longer eased
+   fade into the white page so there's no grey band */
 [data-theme="light"] .hero-rain {
-  background: linear-gradient(#b7c3d3, #cdd6e2 55%, #dfe5ee);
+  background: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 46%,
+    rgba(0, 0, 0, 0.72) 62%,
+    rgba(0, 0, 0, 0.36) 76%,
+    rgba(0, 0, 0, 0.1) 88%,
+    transparent 98%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 46%,
+    rgba(0, 0, 0, 0.72) 62%,
+    rgba(0, 0, 0, 0.36) 76%,
+    rgba(0, 0, 0, 0.1) 88%,
+    transparent 98%
+  );
 }
 /* Chat + Globe: keep the weather visible behind the glass top bar */
 body:has(#journal.on) .hero-rain,
@@ -430,9 +450,10 @@ body.crop-hero-shop {
 [data-theme="light"] .hero-fade {
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.2) 0,
-    rgba(255, 255, 255, 0) 16%,
-    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) 52%,
+    rgba(255, 255, 255, 0.18) 68%,
+    rgba(255, 255, 255, 0.55) 84%,
     #fff 100%
   );
 }
@@ -450,7 +471,9 @@ body:has(#forum.on) .hero-fade {
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0) 58%,
+    rgba(255, 255, 255, 0) 56%,
+    rgba(255, 255, 255, 0.3) 74%,
+    rgba(255, 255, 255, 0.75) 90%,
     #fff 100%
   );
 }
