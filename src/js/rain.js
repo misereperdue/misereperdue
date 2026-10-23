@@ -5,12 +5,9 @@
  *  - Clouds: 3 periodic soft-noise textures generated once (small offscreen
  *    canvases, scaled up smoothly) and scrolled at different speeds. The moon
  *    sits behind them; its halo breathes slowly and brightens where the cloud
- *    cover over it thins. When cloud passes over it, the cloud near it gets a
- *    silver lining (rims facing the moon, lit with "lighter"), a wider soft
- *    scattered glow, a faint corona, and the crescent stays visible, softened
- *    and dimmed (all eased from a smoothed 5-point cover sample).
- *  - The crescent's bright limb turns live to the real moon's on-sky angle for
- *    the viewer (timezone-guessed location, SunCalc-style math, every 60 s).
+ *    cover over it thins. Its bright limb turns live to the real moon's on-sky
+ *    angle for the viewer (timezone-guessed location, SunCalc-style math,
+ *    recomputed every 60 s and eased).
  *  - Night sky in both themes (per dc 12:52); the page below stays light.
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
  *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
@@ -36,7 +33,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      lining: "196,214,250", stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.24,
+      stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -46,7 +43,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      lining: "255,255,255", stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.22,
+      stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.22,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -95,21 +92,17 @@
   }
   // Moon: a crescent (lit limb, faint maria), drawn once; halo is a live gradient.
   function moonTex(col, alpha) {
-    var s = 192, c = document.createElement("canvas");
+    var s = 64, c = document.createElement("canvas");
     c.width = c.height = s;
     var m = c.getContext("2d"), img = m.createImageData(s, s), d = img.data, r = rng(5), spots = [], i, x, y, p = 0;
     for (i = 0; i < 7; i++) spots.push([0.25 + r() * 0.5, 0.25 + r() * 0.5, 0.08 + r() * 0.12, 0.1 + r() * 0.12]);
     for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
       var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.86) / 0.14))), shade = 1 - 0.12 * dd * dd;
-      // crescent (~24% lit, per dc 13:02): true round outer limb, smooth
-      // elliptical terminator (soft), lit limb points up (canonical) and is
-      // rotated live to the real bright-limb angle; faint earthshine keeps the
-      // whole disc just visible
-      var u = dx / 0.5, a = -dy / 0.5, term = 0.52 * Math.sqrt(Math.max(0, 1 - u * u));
-      var lit = sm(Math.min(1, Math.max(0, (a - term) / 0.16 + 0.5)));
-      lit = 0.08 + 0.92 * lit;
-      shade *= 0.6 + 0.4 * lit;
+      // shadow disc offset (same crescent as before) carves it with the lit limb
+      // pointing up (canonical); it's rotated live to the real bright-limb angle
+      var ox = dx, oy = dy - 0.197, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
+      var lit = sm(Math.min(1, Math.max(0, (od - 0.9) / 0.14)));
       for (i = 0; i < spots.length; i++) {
         var sx = (x + 0.5) / s - spots[i][0], sy = (y + 0.5) / s - spots[i][1], q = Math.sqrt(sx * sx + sy * sy) / spots[i][2];
         if (q < 1) shade -= spots[i][3] * 0.6 * (1 - sm(q));
@@ -121,7 +114,7 @@
     return c;
   }
 
-  var W = 0, H = 0, HF = 0, dpr = 1, pal, clouds = [], moon, moonSoft, lc, lx, skyGrad, mistGrad, drops = [];
+  var W = 0, H = 0, HF = 0, dpr = 1, pal, clouds = [], moon, skyGrad, mistGrad, drops = [];
   var LAYERS = [ // far, mid, near
     { speed: 7, scale: 1.0, y: -0.08, h: 0.95 },
     { speed: 13, scale: 1.25, y: -0.02, h: 0.9 },
@@ -132,15 +125,10 @@
   function theme() { return root.getAttribute("data-theme") === "light" ? "light" : "dark"; }
 
   function build() {
-    pal = PAL.dark; // night sky in light mode too (per dc 12:52); theme() kept for re-theme hooks
+    pal = PAL.dark; // night sky in light mode too (per dc 12:52)
     clouds = [];
     for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
     moon = moonTex(pal.moon, pal.moonA);
-    moonSoft = document.createElement("canvas");
-    moonSoft.width = moonSoft.height = 40;
-    var sx = moonSoft.getContext("2d");
-    sx.imageSmoothingEnabled = true;
-    sx.drawImage(moon, 2, 2, 36, 36);
     paint();
   }
   function paint() {
@@ -273,79 +261,6 @@
     ctx.drawImage(img, -mp.r, -mp.r, mp.r * 2, mp.r * 2);
     ctx.restore();
   }
-  var moonCover = -1;
-  function moonlight(mp, offs, cover, breathe, lvx, lvy, shake) {
-    var thru = Math.min(1, cover * 1.5), k, light = !pal.stars;
-    var gx = mp.lx, gy = mp.ly;
-    // 1. silver lining: the cloud near the moon, minus a copy pulled ~5% in
-    //    towards the moon (leaves the rims that face it), filled with a radial
-    //    light and added on top. Done in a small offscreen square only.
-    var S = Math.round(mp.r * 2.6), ox = gx - S / 2, oy = gy - S / 2;
-    if (!lc) { lc = document.createElement("canvas"); lx = lc.getContext("2d"); }
-    var px = Math.max(1, Math.round(S * dpr));
-    if (lc.width !== px) lc.width = lc.height = px;
-    lx.setTransform(1, 0, 0, 1, 0, 0);
-    lx.globalCompositeOperation = "source-over";
-    lx.globalAlpha = 1;
-    lx.clearRect(0, 0, px, px);
-    function clouds2(scale) {
-      lx.setTransform(dpr * scale, 0, 0, dpr * scale, (mp.x - ox - scale * mp.x) * dpr, (mp.y - oy - scale * mp.y) * dpr);
-      for (k = 0; k < 3; k++) {
-        var L = LAYERS[k], tw = Math.max(W, 390) * L.scale, th = H * L.h, y = H * L.y + shake * (k + 1) * 0.5;
-        lx.drawImage(clouds[k], offs[k], y, tw, th);
-        lx.drawImage(clouds[k], offs[k] + tw, y, tw, th);
-        if (offs[k] + 2 * tw < W) lx.drawImage(clouds[k], offs[k] + 2 * tw, y, tw, th);
-      }
-    }
-    clouds2(1);
-    lx.globalCompositeOperation = "destination-out";
-    lx.globalAlpha = 0.72;
-    clouds2(0.94);
-    lx.globalAlpha = 1;
-    lx.globalCompositeOperation = "source-in";
-    lx.setTransform(dpr, 0, 0, dpr, -ox * dpr, -oy * dpr);
-    var lr = S * 0.5, lg = lx.createRadialGradient(gx, gy, mp.r * 0.12, gx, gy, lr);
-    var la = (light ? 0.7 : 0.72) * breathe;
-    lg.addColorStop(0, "rgba(" + pal.lining + "," + la.toFixed(3) + ")");
-    lg.addColorStop(0.3, "rgba(" + pal.lining + "," + (la * 0.45).toFixed(3) + ")");
-    lg.addColorStop(1, "rgba(" + pal.lining + ",0)");
-    lx.fillStyle = lg;
-    lx.fillRect(ox, oy, S, S);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.drawImage(lc, ox, oy, S, S);
-    // 2. moonlight scattering through thin cloud: wider, softer as cover grows
-    if (thru > 0.01) {
-      var gr = mp.r * (0.8 + 0.7 * thru), sg = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-      var ga = (light ? 0.13 : 0.1) * thru * breathe;
-      sg.addColorStop(0, "rgba(" + pal.lining + "," + ga.toFixed(3) + ")");
-      sg.addColorStop(0.4, "rgba(" + pal.lining + "," + (ga * 0.4).toFixed(3) + ")");
-      sg.addColorStop(1, "rgba(" + pal.lining + ",0)");
-      ctx.fillStyle = sg;
-      ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
-      // 3. a very faint corona ring in the cloud (dark sky only)
-      if (!light && thru > 0.2) {
-        var cr = mp.r * 1.42, cg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 1.1, mp.x, mp.y, cr);
-        var ca = 0.05 * (thru - 0.2) / 0.8;
-        cg.addColorStop(0, "rgba(" + pal.lining + ",0)");
-        cg.addColorStop(0.55, "rgba(" + pal.lining + "," + ca.toFixed(3) + ")");
-        cg.addColorStop(0.75, "rgba(225,205,235," + (ca * 0.6).toFixed(3) + ")");
-        cg.addColorStop(1, "rgba(" + pal.lining + ",0)");
-        ctx.fillStyle = cg;
-        ctx.fillRect(mp.x - cr, mp.y - cr, cr * 2, cr * 2);
-      }
-    }
-    ctx.globalCompositeOperation = "source-over";
-    // 4. the crescent through the cloud: crisp copy fades out, a softened one
-    //    fades in, so it dims and blurs with the cover instead of vanishing
-    if (thru > 0.01) {
-      ctx.globalAlpha = thru * (1 - thru) * 0.9;
-      drawMoon(moon, mp);
-      ctx.globalAlpha = thru * (light ? 0.75 : 0.62) * (0.92 + 0.08 * breathe);
-      drawMoon(moonSoft, mp);
-      ctx.globalAlpha = 1;
-    }
-  }
-
   function resize() {
     var rc = cv.getBoundingClientRect();
     var w = Math.max(1, Math.round(rc.width)), h = Math.max(1, Math.round(rc.height));
@@ -368,15 +283,8 @@
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
     // upper right, just clear of the centred nav pill so it reads through glass
-    // big zoomed-in moon in the top-right corner (per dc 13:02): ~200 px across
-    // at 390 wide (capped on wide screens), partly cropped by the screen edge
-    // and status bar. The centre is placed from the live bright-limb angle so
-    // the middle of the lit arc always sits at the same spot near the corner
-    // (on screen); the rest of the disc runs off the edge or fades behind the
-    // glass bars as earthshine.
-    var r = Math.max(80, Math.min(124, W * 0.26)), top = Math.max(0, H - 140);
-    var px = W - Math.min(64, r * 0.6), py = top + 22, rot = moonRot || 0;
-    return { x: px - Math.sin(rot) * r * 0.8, y: py + Math.cos(rot) * r * 0.8, r: r, lx: px, ly: py };
+    var r = Math.max(10, Math.min(16, W * 0.034));
+    return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
   }
   function coverAt(k, px, py, off, tw, th, y0) {
     var u = (px - off) / tw; u -= Math.floor(u);
@@ -433,29 +341,23 @@
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, W, HF);
 
-    // moon + halo (behind clouds); halo breathes and grows where clouds thin.
-    // Cover is sampled at 5 points over the disc and eased so it never pops.
-    var mp = moonPos(), offs = [], cover = 0, sp, SP = [[0, 0], [0.8, 0], [-0.8, 0], [0, 0.8], [0, -0.8]];
+    // moon + halo (behind clouds); halo breathes and grows where clouds thin
+    var mp = moonPos(), offs = [], cover = 0;
     for (k = 0; k < 3; k++) {
       var L = LAYERS[k], tw = Math.max(W, 390) * L.scale;
       offs.push(-((t * L.speed) % tw));
-      for (sp = 0; sp < 5; sp++) cover += coverAt(k, mp.lx + SP[sp][0] * mp.r * 0.3, mp.ly + SP[sp][1] * mp.r * 0.3, offs[k], tw, H * L.h, H * L.y) / 5;
+      cover += coverAt(k, mp.x, mp.y, offs[k], tw, H * L.h, H * L.y);
     }
-    if (still || moonCover < 0) moonCover = cover;
-    else moonCover += (cover - moonCover) * Math.min(1, dt * 1.6);
-    cover = moonCover;
     if (still) { if (moonRot === null) moonAim(true); } else easeMoon(dt);
-    var lvx = Math.sin(moonRot), lvy = -Math.cos(moonRot); // unit vector towards the lit limb
     if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    var hx = mp.x + lvx * mp.r * 0.3, hy = mp.y + lvy * mp.r * 0.3;
-    var hr = mp.r * (1.45 + 0.25 * clear), hg = ctx.createRadialGradient(hx, hy, mp.r * 0.85, hx, hy, hr);
+    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.6, mp.x, mp.y, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
     hg.addColorStop(0, "rgba(" + pal.halo + "," + ha.toFixed(3) + ")");
     hg.addColorStop(0.35, "rgba(" + pal.halo + "," + (ha * 0.35).toFixed(3) + ")");
     hg.addColorStop(1, "rgba(" + pal.halo + ",0)");
     ctx.fillStyle = hg;
-    ctx.fillRect(hx - hr, hy - hr, hr * 2, hr * 2);
+    ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
     ctx.globalAlpha = 0.75 + 0.25 * clear;
     drawMoon(moon, mp);
     ctx.globalAlpha = 1;
@@ -470,9 +372,18 @@
       if (k === 0 && bolt && fl > 0.05) drawBolt(fl);
     }
 
-    // moonlight in the cloud (per dc 12:49): silver lining, scattered glow,
-    // faint corona and a soft dimmed crescent, all eased with the cover
-    moonlight(mp, offs, cover, breathe, lvx, lvy, shake);
+    // the moon shines through passing cloud: soft glow + crescent re-drawn on top
+    var thru = Math.min(1, cover * 1.6);
+    if (thru > 0.02) {
+      var sg = ctx.createRadialGradient(mp.x, mp.y, 0, mp.x, mp.y, mp.r * 2.6);
+      sg.addColorStop(0, "rgba(" + pal.halo + "," + (0.32 * thru * breathe).toFixed(3) + ")");
+      sg.addColorStop(1, "rgba(" + pal.halo + ",0)");
+      ctx.fillStyle = sg;
+      ctx.fillRect(mp.x - mp.r * 2.6, mp.y - mp.r * 2.6, mp.r * 5.2, mp.r * 5.2);
+      ctx.globalAlpha = thru * (0.62 + 0.08 * breathe);
+      drawMoon(moon, mp);
+      ctx.globalAlpha = 1;
+    }
 
     // lightning glow lights the clouds from within; thunder = slight swell
     var glow = fl * pal.flashA + th * 0.05;
