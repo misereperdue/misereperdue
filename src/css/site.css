@@ -8334,3 +8334,83 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     backdrop-filter: none;
   }
 }
+/* ===== Seamless cloud bars (per dc 2026-10-23, supersedes the puffs-around-a-bar look) =====
+   Each bar IS one cloud: the element (fill, backdrop blur and contents) is masked by a union of
+   soft overlapping ellipses, so the outline is a single billowy feathered blob with no straight
+   edge, rim or border anywhere. Shared by the nav and the Chat/Globe top bars. */
+:root,
+[data-theme="light"] {
+  --cc-fill: rgba(250, 252, 255, 0.42);
+  --cc-volume: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.18) 45%,
+    rgba(150, 168, 202, 0.28) 100%
+  );
+}
+[data-theme="dark"] {
+  --cc-fill: rgba(44, 66, 150, 0.3);
+  --cc-volume: linear-gradient(
+    180deg,
+    rgba(185, 205, 255, 0.2) 0%,
+    rgba(130, 155, 225, 0.06) 48%,
+    rgba(6, 10, 34, 0.26) 100%
+  );
+}
+.glassbar,
+[data-theme="light"] .glassbar {
+  --cc-p: radial-gradient(closest-side, #000 58%, rgba(0, 0, 0, 0.55) 80%, transparent 100%);
+  background-color: var(--cc-fill);
+  background-image: var(--cc-volume);
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-mask:
+    var(--cc-p) 50% 50% / 86% 64% no-repeat,
+    var(--cc-p) 0 50% / 16% 86% no-repeat,
+    var(--cc-p) 7% 18% / 22% 72% no-repeat,
+    var(--cc-p) 25% 0 / 26% 84% no-repeat,
+    var(--cc-p) 46% 12% / 22% 70% no-repeat,
+    var(--cc-p) 66% 0 / 28% 86% no-repeat,
+    var(--cc-p) 88% 16% / 22% 74% no-repeat,
+    var(--cc-p) 100% 50% / 16% 86% no-repeat,
+    var(--cc-p) 14% 100% / 30% 70% no-repeat,
+    var(--cc-p) 38% 92% / 26% 66% no-repeat,
+    var(--cc-p) 60% 100% / 30% 72% no-repeat,
+    var(--cc-p) 84% 92% / 26% 66% no-repeat;
+  mask:
+    var(--cc-p) 50% 50% / 86% 64% no-repeat,
+    var(--cc-p) 0 50% / 16% 86% no-repeat,
+    var(--cc-p) 7% 18% / 22% 72% no-repeat,
+    var(--cc-p) 25% 0 / 26% 84% no-repeat,
+    var(--cc-p) 46% 12% / 22% 70% no-repeat,
+    var(--cc-p) 66% 0 / 28% 86% no-repeat,
+    var(--cc-p) 88% 16% / 22% 74% no-repeat,
+    var(--cc-p) 100% 50% / 16% 86% no-repeat,
+    var(--cc-p) 14% 100% / 30% 70% no-repeat,
+    var(--cc-p) 38% 92% / 26% 66% no-repeat,
+    var(--cc-p) 60% 100% / 30% 72% no-repeat,
+    var(--cc-p) 84% 92% / 26% 66% no-repeat;
+}
+.glassbar::before,
+[data-theme="light"] .glassbar::before {
+  content: none;
+}
+/* room for the billows so icons, labels and the droplet sit in the cloud's dense middle */
+.nav-wrap {
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+.nav {
+  padding: 10px 18px;
+}
+.seg {
+  top: 10px;
+}
+.chat-head.glassbar {
+  padding: 16px 26px;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar,
+  [data-theme="light"] .glassbar {
+    background-color: var(--lg-solid);
+  }
+}
