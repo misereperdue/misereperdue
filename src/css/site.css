@@ -6448,17 +6448,26 @@ button.forum-glass-pill:active {
 }
 .mp-end-copy {
   margin: 0;
-  font: 600 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 700 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: .24em;
   color: var(--accent);
-  opacity: .38;
+  opacity: .26;
+  animation: shop-end-breathe 7s ease-in-out infinite;
+}
+/* etched: dark lip above, faint light edge below, so the eyes and the
+   line read as cut into the page */
+.mp-end {
+  filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, .75)) drop-shadow(0 1px 0 rgba(255, 255, 255, .16));
+}
+[data-theme="light"] .mp-end {
+  filter: drop-shadow(0 -1px 0 rgba(10, 18, 48, .35)) drop-shadow(0 1px 0 rgba(255, 255, 255, .95));
 }
 @keyframes shop-end-breathe {
   0%, 100% { opacity: .26; transform: translateY(0); }
   50% { opacity: .14; transform: translateY(2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-end-eyes { animation: none; }
+  .mp-end-eyes, .mp-end-copy { animation: none; }
 }
 
 /* Native share (product + Globe thread); hidden when navigator.share is missing. */
