@@ -193,16 +193,314 @@
       setTimeout(function () {
         (A.dataset.loaded || se(), T.dataset.loaded || le());
       }, 500));
+
+    /* ---- Dashboard v2 (needs the globe-pins-stats Worker; every piece is
+       skipped when the server doesn't send its field, so the old Worker
+       renders exactly as before) ---- */
+    function __val(d, key) {
+      return key === "posts" ? (d.forumPosts || 0) + (d.forumReplies || 0) : d[key] || 0;
+    }
+    function __spark(vals, color) {
+      var ns = "http://www.w3.org/2000/svg",
+        w = 100,
+        h = 22,
+        mx = Math.max.apply(null, vals.concat([1])),
+        svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+      svg.setAttribute("preserveAspectRatio", "none");
+      svg.setAttribute("aria-hidden", "true");
+      svg.style.cssText = "display:block;width:100%;height:18px;margin-top:6px;overflow:visible;";
+      var pts = vals.map(function (v, i) {
+          return [
+            (i / Math.max(1, vals.length - 1)) * w,
+            h - 2 - (v / mx) * (h - 4),
+          ];
+        }),
+        d = pts
+          .map(function (q, i) {
+            return (i ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1);
+          })
+          .join(" "),
+        area = document.createElementNS(ns, "path");
+      area.setAttribute("d", d + " L " + w + " " + h + " L 0 " + h + " Z");
+      area.setAttribute("fill", color);
+      area.setAttribute("fill-opacity", ".14");
+      svg.appendChild(area);
+      var line = document.createElementNS(ns, "path");
+      line.setAttribute("d", d);
+      line.setAttribute("fill", "none");
+      line.setAttribute("stroke", color);
+      line.setAttribute("stroke-width", "1.6");
+      line.setAttribute("stroke-linejoin", "round");
+      line.setAttribute("vector-effect", "non-scaling-stroke");
+      svg.appendChild(line);
+      return svg;
+    }
+    function __delta(cur, prev) {
+      if (typeof prev !== "number") return null;
+      var el = document.createElement("div");
+      el.style.cssText = "font-size:10px;font-weight:700;margin-top:3px;white-space:nowrap;";
+      if (!prev && !cur) return ((el.textContent = "–"), (el.style.color = "var(--muted)"), el);
+      if (!prev) return ((el.textContent = "new"), (el.style.color = "#30d158"), el);
+      var pc = Math.round(((cur - prev) / prev) * 100);
+      el.textContent = (pc > 0 ? "▲ " : pc < 0 ? "▼ " : "") + Math.abs(pc) + "%";
+      el.style.color = pc > 0 ? "#30d158" : pc < 0 ? "#ff453a" : "var(--muted)";
+      return el;
+    }
+    var __SC = {
+      views: "#0a84ff",
+      visitors: "#30d158",
+      posts: "#3b82f6",
+      newUsers: "#ff9f0a",
+      active: "#bf5af2",
+      globeViews: "#64d2ff",
+      cartAdds: "#ff375f",
+      orders: "#30d158",
+      revenue: "#ffd60a",
+    };
+    function __series(key) {
+      return (o.days || [])
+        .slice()
+        .reverse()
+        .map(function (d) {
+          return __val(d, key);
+        });
+    }
+    function __tileExtras(tile, key, cur, prev) {
+      tile.appendChild(__spark(__series(key), __SC[key] || "#0a84ff"));
+      var dl = __delta(cur, prev);
+      dl && tile.appendChild(dl);
+    }
+    function __tile(row, label, value, key, prev, fmt) {
+      var t = document.createElement("div");
+      t.style.cssText =
+        "flex:1 1 0;min-width:0;text-align:center;padding:10px 4px;border-radius:16px;background:var(--glass-clear-tint);border:var(--glass-hairline);";
+      var n = document.createElement("div");
+      n.style.cssText = "font-size:18px;font-weight:700;white-space:nowrap;letter-spacing:-0.02em;";
+      t.appendChild(n);
+      var a = document.createElement("div");
+      a.style.cssText = "font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+      a.textContent = label;
+      t.appendChild(a);
+      key && __tileExtras(t, key, value, prev);
+      row.appendChild(t);
+      fmt ? ((n.className = "easyui-anim-num"), (n.textContent = fmt(value))) : s(n, value);
+      return t;
+    }
+    function __row() {
+      var r = document.createElement("div");
+      r.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+      return r;
+    }
+    function __cap(txt) {
+      var c = document.createElement("div");
+      c.className = "dash-caption";
+      c.style.cssText = "margin:-4px 0 12px;";
+      c.textContent = txt;
+      return c;
+    }
+    function __since(key) {
+      var d = o.since && o.since[key];
+      return d ? new Date(d + "T12:00:00Z").toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "";
+    }
+    function __overview() {
+      var sm = o.summary;
+      if (!sm) return;
+      var days = o.days || [],
+        today = days[0] || {},
+        act7 = days.slice(0, 7).reduce(function (a, d) {
+          return a + (d.active || 0);
+        }, 0),
+        mc = sm.memberCountries || {},
+        ncc = Object.keys(mc).length,
+        lb = document.createElement("div");
+      lb.className = "dash-label";
+      lb.textContent = "Members";
+      k.appendChild(lb);
+      var r = __row();
+      __tile(r, "Members", sm.members || 0);
+      __tile(r, "VIP", sm.vip || 0);
+      __tile(r, "Active today", today.active || 0, "active", null);
+      __tile(r, "Countries", ncc);
+      k.appendChild(r);
+      var st = __since("active");
+      k.appendChild(
+        __cap(
+          "Active = signed-in members who opened the site, per UTC day · 7-day avg " +
+            (act7 / 7).toFixed(1) +
+            (st ? " · recording since " + st : ""),
+        ),
+      );
+    }
+    function __shop() {
+      if (!(o.v >= 2)) return;
+      var con = o.shop && o.shop.connected,
+        pv = o.prev || {},
+        days = o.days || [],
+        tot = function (key) {
+          return days.reduce(function (a, d) {
+            return a + __val(d, key);
+          }, 0);
+        },
+        cur = (o.shop && o.shop.currency) || "CAD",
+        money = function (v) {
+          try {
+            return new Intl.NumberFormat(void 0, {
+              style: "currency",
+              currency: cur,
+              currencyDisplay: "narrowSymbol",
+              notation: v >= 1e4 ? "compact" : "standard",
+              maximumFractionDigits: v >= 1e4 ? 1 : 0,
+            }).format(v);
+          } catch (e) {
+            return "$" + Math.round(v);
+          }
+        },
+        lb = document.createElement("div");
+      lb.className = "dash-label";
+      lb.textContent = "Shop";
+      k.appendChild(lb);
+      var r = __row();
+      if (con) {
+        var ord = tot("orders"),
+          rev = Math.round(tot("revenue") * 100) / 100;
+        __tile(r, "Orders", ord, "orders", pv.orders);
+        __tile(r, "Revenue", rev, "revenue", pv.revenue, money);
+      }
+      __tile(r, "Cart adds", tot("cartAdds"), "cartAdds", pv.cartAdds);
+      __tile(r, "Globe views", tot("globeViews"), "globeViews", pv.globeViews);
+      k.appendChild(r);
+      var a = __since("cartAdds"),
+        g = __since("globeViews");
+      k.appendChild(
+        __cap(
+          "Last 30 days" +
+            (con ? " · orders exclude test and cancelled" : " · orders show once Shopify is connected") +
+            (a || g ? " · counters since " + (a || g) : " · cart adds and Globe views are new counters"),
+        ),
+      );
+    }
+    function __flag(e) {
+      if (!e || 2 !== e.length) return "🌐";
+      for (var t = "", n = 0; n < 2; n++) {
+        var a = String(e).toUpperCase().charCodeAt(n);
+        if (a < 65 || a > 90) return "🌐";
+        t += String.fromCodePoint(a - 65 + 127462);
+      }
+      return t;
+    }
+    function __countries(box, label) {
+      var vis = {};
+      (o.days || []).forEach(function (t) {
+        var n = t.countries || {};
+        Object.keys(n).forEach(function (t) {
+          vis[t] = (vis[t] || 0) + (n[t] || 0);
+        });
+      });
+      var mem = (o.summary && o.summary.memberCountries) || null,
+        mode = "visitors";
+      function draw() {
+        var src = mode === "members" ? mem : vis,
+          all = Object.keys(src || {})
+            .map(function (t) {
+              return { code: t, n: src[t] };
+            })
+            .sort(function (e, t) {
+              return t.n - e.n;
+            }),
+          list = all.slice(0, 5);
+        box.innerHTML = "";
+        if (!list.length) {
+          box.innerHTML =
+            '<div class="dash-empty">' + (mode === "members" ? "No member countries yet." : "No visitor data yet.") + "</div>";
+          return;
+        }
+        var top = list[0].n;
+        list.forEach(function (e) {
+          var t = document.createElement("div");
+          t.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;";
+          var a = document.createElement("span");
+          a.style.cssText = "font-size:18px;line-height:1;";
+          a.textContent = __flag(e.code);
+          t.appendChild(a);
+          var r = document.createElement("span");
+          r.style.cssText = "font-size:13px;font-weight:600;width:32px;";
+          r.textContent = e.code;
+          t.appendChild(r);
+          var i = document.createElement("div");
+          i.style.cssText = "flex:1;height:6px;border-radius:3px;background:rgba(127,127,127,.18);overflow:hidden;";
+          var b = document.createElement("div");
+          b.style.cssText =
+            "height:100%;width:" +
+            Math.max(5, Math.round((e.n / top) * 100)) +
+            "%;border-radius:3px;background:" +
+            (mode === "members" ? "linear-gradient(90deg,#bf5af2,#e4b8fb)" : "linear-gradient(90deg,#0a84ff,#5ac8fa)") +
+            ";";
+          i.appendChild(b);
+          t.appendChild(i);
+          var c = document.createElement("span");
+          c.style.cssText = "font-size:13px;color:var(--muted);min-width:30px;text-align:right;";
+          c.textContent = e.n;
+          t.appendChild(c);
+          box.appendChild(t);
+        });
+        if (all.length > 5) {
+          var more = document.createElement("div");
+          more.className = "dash-empty";
+          more.style.padding = "4px 0 8px";
+          more.textContent = all.length + " countries in total";
+          box.appendChild(more);
+        }
+      }
+      if (mem && Object.keys(mem).length && label) {
+        label.style.cssText = "display:flex;align-items:center;justify-content:space-between;";
+        label.textContent = "";
+        var tx = document.createElement("span");
+        tx.textContent = "Countries";
+        label.appendChild(tx);
+        var seg = document.createElement("span");
+        seg.style.cssText =
+          "display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:rgba(120,120,128,0.12);border:var(--glass-hairline);text-transform:none;letter-spacing:0;";
+        [
+          ["visitors", "Visitors"],
+          ["members", "Members"],
+        ].forEach(function (m) {
+          var bt = document.createElement("button");
+          bt.type = "button";
+          bt.textContent = m[1];
+          bt.dataset.mode = m[0];
+          bt.style.cssText =
+            "border:none;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);";
+          bt.addEventListener("click", function () {
+            mode = m[0];
+            paint();
+            draw();
+          });
+          seg.appendChild(bt);
+        });
+        function paint() {
+          Array.prototype.forEach.call(seg.children, function (b) {
+            var on = b.dataset.mode === mode;
+            b.style.background = on ? "var(--glass-clear-tint)" : "transparent";
+            b.style.color = on ? "var(--ink)" : "var(--muted)";
+          });
+        }
+        paint();
+        label.appendChild(seg);
+      }
+      draw();
+    }
     var M = document.createElement("div");
     M.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
     var z = o.days.reduce(function (e, t) {
       return e + (t.forumPosts || 0) + (t.forumReplies || 0);
     }, 0);
+    var __pv = o.prev || null;
     ([
-      { label: "Views", value: o.totalViews },
-      { label: "Visitors", value: o.totalVisitors },
-      { label: "Posts", value: z },
-      { label: "Users", value: o.totalNewUsers || 0 },
+      { label: "Views", value: o.totalViews, k: "views", pv: __pv && __pv.views },
+      { label: "Visitors", value: o.totalVisitors, k: "visitors", pv: __pv && __pv.visitors },
+      { label: "Posts", value: z, k: "posts", pv: __pv && __pv.posts },
+      { label: "Users", value: o.totalNewUsers || 0, k: "newUsers", pv: __pv && __pv.newUsers },
     ].forEach(function (e) {
       var t = document.createElement("div");
       t.style.cssText =
@@ -215,24 +513,51 @@
       ((a.style.cssText = "font-size:12px;color:var(--muted);margin-top:4px;"),
         (a.textContent = e.label),
         t.appendChild(a),
+        __tileExtras(t, e.k, e.value, e.pv),
         M.appendChild(t),
         s(n, e.value));
     }),
       (function () {
         var __tc = document.createElement("div");
         ((__tc.className = "dash-caption"), (__tc.style.cssText = "margin:-4px 0 8px;"),
-          (__tc.textContent = "Totals · Last 30 days"),
+          (__tc.textContent = "Totals · Last 30 days" + (o.prev ? " · change vs prior 30" : "")),
           k.appendChild(__tc));
       })(),
       /* C-M11: totals cover the 30 days the server returns */ k.appendChild(M));
+    __overview();
     var S = "views",
-      P = { views: "Views", visitors: "Visitors", messages: "Posts", newUsers: "Users" },
+      P = {
+        views: "Views",
+        visitors: "Visitors",
+        messages: "Posts",
+        newUsers: "Users",
+        active: "Active members",
+        globeViews: "Globe views",
+        cartAdds: "Cart adds",
+        orders: "Orders",
+        revenue: "Revenue",
+      },
       N = [
         { id: "views", label: "Views" },
         { id: "visitors", label: "Visitors" },
         { id: "messages", label: "Posts" },
         { id: "newUsers", label: "Users" },
-      ],
+      ].concat(
+        o.v >= 2
+          ? [
+              { id: "active", label: "Active members" },
+              { id: "globeViews", label: "Globe views" },
+              { id: "cartAdds", label: "Cart adds" },
+            ].concat(
+              o.shop && o.shop.connected
+                ? [
+                    { id: "orders", label: "Orders" },
+                    { id: "revenue", label: "Revenue" },
+                  ]
+                : [],
+            )
+          : [],
+      ),
       H = [
         { id: "24h", label: "Last 24 hours", days: 1 },
         { id: "7d", label: "Last 7 days", days: 7 },
@@ -342,6 +667,11 @@
       visitors: ["#30d158", "#a6f3c0"],
       messages: ["#3b82f6", "#bfdbfe"],
       newUsers: ["#ff9f0a", "#ffd60a"],
+      active: ["#bf5af2", "#e4b8fb"],
+      globeViews: ["#64d2ff", "#c4eeff"],
+      cartAdds: ["#ff375f", "#ffb3c1"],
+      orders: ["#30d158", "#a6f3c0"],
+      revenue: ["#ffd60a", "#fff0a6"],
     };
     function Q(e) {
       if (!e.length) return "";
@@ -379,6 +709,10 @@
     }
     function $() {
       _.innerHTML = "";
+      // The legacy "What this shows" note (forum-mount-patch.js) only knows
+      // Views/Visitors/Users/Posts: hide it for the newer metrics.
+      var __cb = document.getElementById("chart-briefing");
+      __cb && (__cb.style.display = P[S] && ["views", "visitors", "messages", "newUsers"].indexOf(S) < 0 ? "none" : "");
       var __lt = "light" === document.documentElement.getAttribute("data-theme");
       function __dm(a) {
         return (__lt ? "rgba(0,0,0," : "rgba(255,255,255,") + a + ")";
@@ -494,7 +828,7 @@
       if (
         (N ? ((Y.textContent = N), (Y.style.display = "")) : (Y.style.display = "none"),
         (G.textContent =
-          C +
+          A(C) +
           " total · " +
           E +
           "/day avg" +
@@ -740,64 +1074,9 @@
     var ae = document.createElement("div");
     ((ae.className = "dash-box"),
     (ae.style.padding = "6px 14px"),
-      (function () {
-        var e = {};
-        (o.days || []).forEach(function (t) {
-          var n = t.countries || {};
-          Object.keys(n).forEach(function (t) {
-            e[t] = (e[t] || 0) + (n[t] || 0);
-          });
-        });
-        var t = Object.keys(e)
-          .map(function (t) {
-            return { code: t, n: e[t] };
-          })
-          .sort(function (e, t) {
-            return t.n - e.n;
-          })
-          .slice(0, 5);
-        if (t.length) {
-          var n = t[0].n;
-          t.forEach(function (e) {
-            var t = document.createElement("div");
-            t.style.cssText = "display:flex;align-items:center;gap:12px;padding:8px 0;";
-            var a = document.createElement("span");
-            ((a.style.cssText = "font-size:18px;line-height:1;"),
-              (a.textContent = (function (e) {
-                if (!e || 2 !== e.length) return "🌐";
-                for (var t = "", n = 0; n < 2; n++) {
-                  var a = String(e).toUpperCase().charCodeAt(n);
-                  if (a < 65 || a > 90) return "🌐";
-                  t += String.fromCodePoint(a - 65 + 127462);
-                }
-                return t;
-              })(e.code)),
-              t.appendChild(a));
-            var r = document.createElement("span");
-            ((r.style.cssText = "font-size:13px;font-weight:600;width:32px;"),
-              (r.textContent = e.code),
-              t.appendChild(r));
-            var i = document.createElement("div");
-            i.style.cssText =
-              "flex:1;height:6px;border-radius:3px;background:rgba(127,127,127,.18);overflow:hidden;";
-            var o = document.createElement("div");
-            ((o.style.cssText =
-              "height:100%;width:" +
-              Math.max(5, Math.round((e.n / n) * 100)) +
-              "%;border-radius:3px;background:linear-gradient(90deg,#0a84ff,#5ac8fa);"),
-              i.appendChild(o),
-              t.appendChild(i));
-            var s = document.createElement("span");
-            ((s.style.cssText = "font-size:13px;color:var(--muted);min-width:30px;text-align:right;"),
-              (s.textContent = e.n),
-              t.appendChild(s),
-              ae.appendChild(t));
-          });
-        } else
-          ae.innerHTML =
-            '<div class="dash-empty">No visitor data yet.</div>';
-      })(),
-      k.appendChild(ae));
+      __countries(ae, ne),
+      k.appendChild(ae),
+      __shop());
     var re = document.createElement("div");
     re.className = "dash-actions";
     var ie = document.createElement("button");

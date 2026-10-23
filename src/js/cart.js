@@ -33,6 +33,8 @@ function mpCartTotal() {
 function mpAddItem(t, e) {
   var r = MP_PRODUCTS[t];
   if (r) {
+    /* Dashboard "Cart adds": anonymous daily counter, nothing else sent. */
+    (function(t){try{var b=JSON.stringify({type:t});navigator.sendBeacon?navigator.sendBeacon("https://api.misereperdue.com/api/analytics",new Blob([b],{type:"text/plain"})):fetch("https://api.misereperdue.com/api/analytics",{method:"POST",body:b,keepalive:!0}).catch(function(){})}catch(e){}})("cart_add");
     var n = mpReadCart(),
       a = t + ":" + (e || "one"),
       i = null;

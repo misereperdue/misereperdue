@@ -3529,6 +3529,12 @@
     );
   }
   function Be() {
+    /* Dashboard "Globe views": one anonymous counter hit per browser session
+       (no user, IP or path sent). Older Workers answer 400; harmless. */
+    try {
+      sessionStorage.getItem("mp-gv") ||
+        (sessionStorage.setItem("mp-gv", "1"), (function(t){try{var b=JSON.stringify({type:t});navigator.sendBeacon?navigator.sendBeacon("https://api.misereperdue.com/api/analytics",new Blob([b],{type:"text/plain"})):fetch("https://api.misereperdue.com/api/analytics",{method:"POST",body:b,keepalive:!0}).catch(function(){})}catch(e){}})("globe_view"));
+    } catch (e) {}
     (t = document.getElementById("forum-root")) &&
       (g() &&
         y("/api/me")

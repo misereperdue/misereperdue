@@ -334,6 +334,83 @@ var MPShop = (function () {
    * follows the theme. One frame only under prefers-reduced-motion; pauses
    * when off screen or the tab is hidden; stops itself when the grid is
    * re-rendered (canvas detached). No dependencies. */
+  /* Live pins: soft glowing dots on the Globe tile for roughly where members
+   * are, by country only. GET /api/globe/pins returns aggregated counts
+   * {members:{CC:n}, online:{CC:n}} (no names, no per-user data); each
+   * country is drawn at its centroid (static table below, ISO 3166-1
+   * alpha-2 -> lat,lon). Size/brightness scale with the member count; online
+   * countries get a slow outward ping. Fetched once per 5 min; any failure
+   * (404 before the Worker ships, offline, bad JSON) just means no pins. */
+  var PIN_CC = "AD42.5,1.6;AE23.4,53.8;AF33.9,67.7;AG17.1,-61.8;AI18.2,-63.1;AL41.2,20.2;AM40.1,45;AN12.2,-69.1;AO-11.2,17.9;AQ-75.3,-0.1;AR-38.4,-63.6;AS-14.3,-170.1;AT47.5,14.6;AU-25.3,133.8;AW12.5,-70;AZ40.1,47.6;BA43.9,17.7;BB13.2,-59.5;BD23.7,90.4;BE50.5,4.5;BF12.2,-1.6;BG42.7,25.5;BH25.9,50.6;BI-3.4,29.9;BJ9.3,2.3;BM32.3,-64.8;BN4.5,114.7;BO-16.3,-63.6;BR-14.2,-51.9;BS25,-77.4;BT27.5,90.4;BV-54.4,3.4;BW-22.3,24.7;BY53.7,28;BZ17.2,-88.5;CA56.1,-106.3;CC-12.2,96.9;CD-4,21.8;CF6.6,20.9;CG-0.2,15.8;CH46.8,8.2;CI7.5,-5.5;CK-21.2,-159.8;CL-35.7,-71.5;CM7.4,12.4;CN35.9,104.2;CO4.6,-74.3;CR9.7,-83.8;CU21.5,-77.8;CV16,-24;CX-10.4,105.7;CY35.1,33.4;CZ49.8,15.5;DE51.2,10.5;DJ11.8,42.6;DK56.3,9.5;DM15.4,-61.4;DO18.7,-70.2;DZ28,1.7;EC-1.8,-78.2;EE58.6,25;EG26.8,30.8;EH24.2,-12.9;ER15.2,39.8;ES40.5,-3.7;ET9.1,40.5;FI61.9,25.7;FJ-16.6,179.4;FK-51.8,-59.5;FM7.4,150.6;FO61.9,-6.9;FR46.2,2.2;GA-0.8,11.6;GB55.4,-3.4;GD12.3,-61.6;GE42.3,43.4;GF3.9,-53.1;GG49.5,-2.6;GH7.9,-1;GI36.1,-5.3;GL71.7,-42.6;GM13.4,-15.3;GN9.9,-9.7;GP17,-62.1;GQ1.7,10.3;GR39.1,21.8;GS-54.4,-36.6;GT15.8,-90.2;GU13.4,144.8;GW11.8,-15.2;GY4.9,-58.9;GZ31.4,34.3;HK22.4,114.1;HM-53.1,73.5;HN15.2,-86.2;HR45.1,15.2;HT19,-72.3;HU47.2,19.5;ID-0.8,113.9;IE53.4,-8.2;IL31,34.9;IM54.2,-4.5;IN20.6,79;IO-6.3,71.9;IQ33.2,43.7;IR32.4,53.7;IS65,-19;IT41.9,12.6;JE49.2,-2.1;JM18.1,-77.3;JO30.6,36.2;JP36.2,138.3;KE-0,37.9;KG41.2,74.8;KH12.6,105;KI-3.4,-168.7;KM-11.9,43.9;KN17.4,-62.8;KP40.3,127.5;KR35.9,127.8;KW29.3,47.5;KY19.5,-80.6;KZ48,66.9;LA19.9,102.5;LB33.9,35.9;LC13.9,-61;LI47.2,9.6;LK7.9,80.8;LR6.4,-9.4;LS-29.6,28.2;LT55.2,23.9;LU49.8,6.1;LV56.9,24.6;LY26.3,17.2;MA31.8,-7.1;MC43.8,7.4;MD47.4,28.4;ME42.7,19.4;MG-18.8,46.9;MH7.1,171.2;MK41.6,21.7;ML17.6,-4;MM21.9,96;MN46.9,103.8;MO22.2,113.5;MP17.3,145.4;MQ14.6,-61;MR21,-10.9;MS16.7,-62.2;MT35.9,14.4;MU-20.3,57.6;MV3.2,73.2;MW-13.3,34.3;MX23.6,-102.6;MY4.2,102;MZ-18.7,35.5;NA-23,18.5;NC-20.9,165.6;NE17.6,8.1;NF-29,168;NG9.1,8.7;NI12.9,-85.2;NL52.1,5.3;NO60.5,8.5;NP28.4,84.1;NR-0.5,166.9;NU-19.1,-169.9;NZ-40.9,174.9;OM21.5,55.9;PA8.5,-80.8;PE-9.2,-75;PF-17.7,-149.4;PG-6.3,144;PH12.9,121.8;PK30.4,69.3;PL51.9,19.1;PM46.9,-56.3;PN-24.7,-127.4;PR18.2,-66.6;PS32,35.2;PT39.4,-8.2;PW7.5,134.6;PY-23.4,-58.4;QA25.4,51.2;RE-21.1,55.5;RO45.9,25;RS44,21;RU61.5,105.3;RW-1.9,29.9;SA23.9,45.1;SB-9.6,160.2;SC-4.7,55.5;SD12.9,30.2;SE60.1,18.6;SG1.4,103.8;SH-24.1,-10;SI46.2,15;SJ77.6,23.7;SK48.7,19.7;SL8.5,-11.8;SM43.9,12.5;SN14.5,-14.5;SO5.2,46.2;SR3.9,-56;ST0.2,6.6;SV13.8,-88.9;SY34.8,39;SZ-26.5,31.5;TC21.7,-71.8;TD15.5,18.7;TF-49.3,69.3;TG8.6,0.8;TH15.9,101;TJ38.9,71.3;TK-9,-171.9;TL-8.9,125.7;TM39,59.6;TN33.9,9.5;TO-21.2,-175.2;TR39,35.2;TT10.7,-61.2;TV-7.1,177.6;TW23.7,121;TZ-6.4,34.9;UA48.4,31.2;UG1.4,32.3;US37.1,-95.7;UY-32.5,-55.8;UZ41.4,64.6;VA41.9,12.5;VC13,-61.3;VE6.4,-66.6;VG18.4,-64.6;VI18.3,-64.9;VN14.1,108.3;VU-15.4,167;WF-13.8,-177.2;WS-13.8,-172.1;XK42.6,20.9;YE15.6,48.5;YT-12.8,45.2;ZA-30.6,22.9;ZM-13.1,27.8;ZW-19,29.2";
+  var pinCent = null,
+    pins = { at: 0, list: [], max: 1, p: null };
+  function pinTable() {
+    if (pinCent) return pinCent;
+    pinCent = {};
+    PIN_CC.split(";").forEach(function (r) {
+      var ll = r.slice(2).split(",");
+      pinCent[r.slice(0, 2)] = [(+ll[0] * Math.PI) / 180, (+ll[1] * Math.PI) / 180];
+    });
+    return pinCent;
+  }
+  function loadPins(done) {
+    if (Date.now() - pins.at < 3e5) return done && done();
+    if (pins.p) return pins.p.then(done);
+    pins.p = fetch("https://api.misereperdue.com/api/globe/pins", { credentials: "omit" })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (d) {
+        var tb = pinTable(),
+          list = [],
+          max = 1,
+          mem = (d && d.members) || {},
+          onl = (d && d.online) || {};
+        Object.keys(mem)
+          .concat(Object.keys(onl))
+          .forEach(function (cc) {
+            var c = tb[cc];
+            if (!c || list.some(function (p) { return p.cc === cc; })) return;
+            var m = Math.max(+mem[cc] || 0, +onl[cc] || 0),
+              o = +onl[cc] || 0;
+            if (!(m > 0)) return;
+            max = Math.max(max, m);
+            // per-country phase so the pulses don't beat in sync
+            var ph = ((cc.charCodeAt(0) * 31 + cc.charCodeAt(1)) % 97) / 97;
+            list.push({ cc: cc, lat: c[0], lon: c[1], m: m, o: o, ph: ph });
+          });
+        pins.list = list.slice(0, 250);
+        pins.max = max;
+      })
+      .catch(function () {
+        pins.list = [];
+      })
+      .then(function () {
+        pins.at = Date.now();
+        pins.p = null;
+      });
+    return pins.p.then(done);
+  }
+  var pinSprite = null,
+    pinSpriteKey = "";
+  function pinGlow(colour, light) {
+    var key = colour + light;
+    if (pinSprite && pinSpriteKey === key) return pinSprite;
+    var c = document.createElement("canvas");
+    c.width = c.height = 64;
+    var x = c.getContext("2d"),
+      m = colour.match(/\d+(\.\d+)?/g) || [169, 215, 245],
+      rgb = m[0] + "," + m[1] + "," + m[2],
+      g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, "rgba(" + rgb + "," + (light ? 0.55 : 0.9) + ")");
+    g.addColorStop(0.35, "rgba(" + rgb + "," + (light ? 0.22 : 0.38) + ")");
+    g.addColorStop(1, "rgba(" + rgb + ",0)");
+    x.fillStyle = g;
+    x.fillRect(0, 0, 64, 64);
+    pinSpriteKey = key;
+    return (pinSprite = c);
+  }
+
   var globeStop = null;
   function mountGlobe(cv) {
     if (globeStop) (globeStop(), (globeStop = null));
@@ -461,6 +538,44 @@ var MPShop = (function () {
       ctx.strokeStyle = rgba(0.8);
       ctx.lineWidth = 1.4;
       ctx.stroke();
+      // live pins (front hemisphere only, fading out towards the rim)
+      if (pins.list.length) {
+        var light = document.documentElement.getAttribute("data-theme") === "light",
+          still = rm && rm.matches,
+          spr = pinGlow(colour || "rgb(169,215,245)", light),
+          lmax = Math.log(1 + pins.max);
+        ctx.save();
+        for (var q = 0; q < pins.list.length; q++) {
+          var pn = pins.list[q];
+          P(pn.lat, pn.lon, pt);
+          if (pt[2] < 0.04) continue;
+          var fade = Math.min(1, (pt[2] - 0.04) / 0.3),
+            s0 = 1.6 + 2.2 * (Math.log(1 + pn.m) / lmax),
+            beat = still ? 0.5 : 0.5 + 0.5 * Math.sin(now / 900 + pn.ph * 6.283),
+            gr = s0 * (3.6 + 1.6 * beat);
+          ctx.globalCompositeOperation = light ? "source-over" : "lighter";
+          ctx.globalAlpha = fade * (0.55 + 0.35 * beat);
+          ctx.drawImage(spr, pt[0] - gr, pt[1] - gr, gr * 2, gr * 2);
+          if (pn.o && !still) {
+            // online now: a thin ring easing outwards every ~2.4s
+            var k = (now / 2400 + pn.ph) % 1;
+            ctx.globalCompositeOperation = "source-over";
+            ctx.globalAlpha = fade * (1 - k) * 0.7;
+            ctx.beginPath();
+            ctx.arc(pt[0], pt[1], s0 * (1.4 + 4.5 * k), 0, Math.PI * 2);
+            ctx.strokeStyle = light ? rgba(0.9) : "rgba(235,246,255,0.9)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+          ctx.globalCompositeOperation = "source-over";
+          ctx.globalAlpha = fade * (pn.o ? 1 : 0.85);
+          ctx.beginPath();
+          ctx.arc(pt[0], pt[1], s0 * 0.62, 0, Math.PI * 2);
+          ctx.fillStyle = light ? rgba(0.95) : "#eef8ff";
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       if (running && visible && !document.hidden && !(rm && rm.matches))
         raf = requestAnimationFrame(draw);
       else raf = 0;
@@ -490,6 +605,10 @@ var MPShop = (function () {
     }
     globeStop = stop;
     kick();
+    loadPins(function () {
+      // redraw once data lands (needed for the single reduced-motion frame)
+      running && (cancelAnimationFrame(raf), (raf = 0), kick());
+    });
   }
   function y(t) {
     var e = document.querySelector('[data-view="' + t + '"]');
