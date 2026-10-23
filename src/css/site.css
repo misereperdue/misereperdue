@@ -1514,6 +1514,12 @@ textarea {
 #shop-grid .globe-promo {
   grid-column: 1/-1;
 }
+/* The shop grid is its own stacking layer so raised bits inside it (the Globe
+   tile's text sits at z-index 1) scroll under the fixed hero and nav instead
+   of painting over them. */
+#shop-grid {
+  isolation: isolate;
+}
 #shop-grid .globe-promo .tile-wrap {
   aspect-ratio: 5/2;
 }
