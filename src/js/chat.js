@@ -4171,6 +4171,7 @@
                   sessionStorage.setItem("mp-refreshing", "1");
                 } catch (e) {}
                 (document.documentElement.classList.add("mp-show-splash"),
+                  window.scrollTo(0, 0),
                   setTimeout(function () {
                     location.reload();
                   }, 50));
