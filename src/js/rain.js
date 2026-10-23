@@ -31,7 +31,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "150,150,155",
-      moon: [238, 238, 236], moonA: 0.6, halo: "228,228,226", haloA: 0.26,
+      moon: [238, 238, 236], moonA: 0.6, halo: "228,228,226", haloA: 0.26, lining: 0.45,
       flash: "255,255,255", flashA: 0.28, bolt: "255,255,255",
     },
     light: {
@@ -41,7 +41,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      moon: [255, 255, 255], moonA: 0.42, halo: "255,255,255", haloA: 0.18,
+      moon: [255, 255, 255], moonA: 0.42, halo: "255,255,255", haloA: 0.18, lining: 0.1,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -58,7 +58,7 @@
   // upper left (lit colour at the top, shadow at the rim/base), drawn three
   // times at x-w/x/x+w so the texture wraps horizontally.
   function cloudTex(seed, w, h, clusters, pal2, alpha, yBase, rMax) {
-    var r = rng(seed), c = document.createElement("canvas");
+    var r = rng(seed), c = document.createElement("canvas"), j;
     c.width = w; c.height = h;
     var g = c.getContext("2d"), puffs = [], i, j, k;
     for (i = 0; i < clusters; i++) {
@@ -76,16 +76,48 @@
       var p = puffs[i], x = p[0] + k * w, y = p[1], pr2 = p[2];
       if (x + pr2 < 0 || x - pr2 > w) continue;
       var gr = g.createRadialGradient(x - pr2 * 0.3, y - pr2 * 0.4, pr2 * 0.05, x, y, pr2);
-      gr.addColorStop(0, rgba(li, 0.95));
-      gr.addColorStop(0.55, rgba([(li[0] + sh[0]) >> 1, (li[1] + sh[1]) >> 1, (li[2] + sh[2]) >> 1], 0.8));
-      gr.addColorStop(0.85, rgba(sh, 0.45));
+      gr.addColorStop(0, rgba(li, 0.8));
+      gr.addColorStop(0.5, rgba([(li[0] + sh[0]) >> 1, (li[1] + sh[1]) >> 1, (li[2] + sh[2]) >> 1], 0.55));
+      gr.addColorStop(0.8, rgba(sh, 0.22));
       gr.addColorStop(1, rgba(sh, 0));
       g.fillStyle = gr;
       g.beginPath(); g.arc(x, y, pr2, 0, 6.2832); g.fill();
     }
-    // bake the layer alpha, keep a cover map for the moon
-    var img = g.getImageData(0, 0, w, h), d = img.data, cover = new Float32Array(w * h);
-    for (i = 0, j = 0; i < d.length; i += 4, j++) { d[i + 3] = Math.round(d[i + 3] * alpha); cover[j] = d[i + 3] / 255; }
+    // soft focus: 3-pass box blur (premultiplied, wraps in x) so every cloud
+    // is a smooth, heavily feathered shape; then bake the layer alpha and keep
+    // a cover map for the moon
+    var img = g.getImageData(0, 0, w, h), d = img.data, n4 = w * h, cover = new Float32Array(n4);
+    var f = new Float32Array(n4 * 4), tmp = new Float32Array(n4 * 4), rad = Math.max(2, Math.round(h * 0.045)), pass, ch;
+    for (i = 0; i < n4; i++) { var aa = d[i * 4 + 3] / 255; f[i * 4] = d[i * 4] * aa; f[i * 4 + 1] = d[i * 4 + 1] * aa; f[i * 4 + 2] = d[i * 4 + 2] * aa; f[i * 4 + 3] = aa; }
+    function boxH(src, dst) {
+      var y, x, c2, acc, span = rad * 2 + 1;
+      for (y = 0; y < h; y++) for (c2 = 0; c2 < 4; c2++) {
+        acc = 0;
+        for (x = -rad; x <= rad; x++) acc += src[(y * w + ((x + w) % w)) * 4 + c2];
+        for (x = 0; x < w; x++) {
+          dst[(y * w + x) * 4 + c2] = acc / span;
+          acc += src[(y * w + ((x + rad + 1) % w)) * 4 + c2] - src[(y * w + ((x - rad + w) % w)) * 4 + c2];
+        }
+      }
+    }
+    function boxV(src, dst) {
+      var y, x, c2, acc, span = rad * 2 + 1;
+      for (x = 0; x < w; x++) for (c2 = 0; c2 < 4; c2++) {
+        acc = 0;
+        for (y = -rad; y <= rad; y++) acc += src[(Math.min(h - 1, Math.max(0, y)) * w + x) * 4 + c2];
+        for (y = 0; y < h; y++) {
+          dst[(y * w + x) * 4 + c2] = acc / span;
+          acc += src[(Math.min(h - 1, y + rad + 1) * w + x) * 4 + c2] - src[(Math.max(0, y - rad) * w + x) * 4 + c2];
+        }
+      }
+    }
+    for (pass = 0; pass < 3; pass++) { boxH(f, tmp); boxV(tmp, f); }
+    for (i = 0; i < n4; i++) {
+      var a2 = f[i * 4 + 3];
+      for (ch = 0; ch < 3; ch++) d[i * 4 + ch] = a2 > 0.001 ? Math.min(255, f[i * 4 + ch] / a2) : 0;
+      d[i * 4 + 3] = Math.round(255 * Math.min(1, a2 * 1.25) * alpha);
+      cover[i] = d[i * 4 + 3] / 255;
+    }
     g.putImageData(img, 0, 0);
     c.cover = cover;
     return c;
@@ -110,6 +142,7 @@
     return c;
   }
 
+  var lb = null, lbx = null;
   var W = 0, H = 0, dpr = 1, pal, clouds = [], moon, skyGrad, mistGrad, drops = [];
   var LAYERS = [ // far, mid, near
     { speed: 7, scale: 1.0, y: -0.08, h: 0.95 },
@@ -259,6 +292,55 @@
       ctx.drawImage(clouds[k], off + tw2, y, tw2, th2);
       if (off + 2 * tw2 < W) ctx.drawImage(clouds[k], off + 2 * tw2, y, tw2, th2);
       if (k === 0 && bolt && fl > 0.05) drawBolt(fl);
+    }
+
+    // moonlight through cloud: backlit glow + silver lining on the clouds
+    // around the moon, and a softened crescent on top so it never vanishes
+    // (dimmer under thick cloud, brighter as it thins)
+    var cv2 = Math.min(1, cover * 1.4);
+    if (cv2 > 0.02) {
+      var lr = mp.r * 4.5;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      var bg2 = ctx.createRadialGradient(mp.x, mp.y, 0, mp.x, mp.y, lr);
+      var ba = pal.haloA * 0.55 * breathe * cv2 * (1 - 0.35 * Math.max(0, cover - 0.7));
+      bg2.addColorStop(0, "rgba(" + pal.halo + "," + ba.toFixed(3) + ")");
+      bg2.addColorStop(0.5, "rgba(" + pal.halo + "," + (ba * 0.3).toFixed(3) + ")");
+      bg2.addColorStop(1, "rgba(" + pal.halo + ",0)");
+      ctx.fillStyle = bg2;
+      ctx.fillRect(mp.x - lr, mp.y - lr, lr * 2, lr * 2);
+      ctx.restore();
+      // silver lining: clouds around the moon re-drawn into a small buffer,
+      // feathered with a radial mask, then added on top (no hard edge)
+      var la = pal.lining * breathe * cv2;
+      if (la > 0.01) {
+        var bs = Math.ceil(lr * 2), bx = mp.x - lr, by = mp.y - lr;
+        if (!lb) { lb = document.createElement("canvas"); lbx = lb.getContext("2d"); }
+        if (lb.width !== Math.ceil(bs * dpr)) { lb.width = lb.height = Math.ceil(bs * dpr); }
+        lbx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        lbx.globalCompositeOperation = "source-over";
+        lbx.clearRect(0, 0, bs, bs);
+        for (k = 1; k < 3; k++) {
+          var L4 = LAYERS[k], tw4 = Math.max(W, 390) * L4.scale;
+          lbx.drawImage(clouds[k], offs[k] - bx, H * L4.y - by, tw4, H * L4.h);
+          lbx.drawImage(clouds[k], offs[k] + tw4 - bx, H * L4.y - by, tw4, H * L4.h);
+        }
+        lbx.globalCompositeOperation = "destination-in";
+        var mg = lbx.createRadialGradient(lr, lr, 0, lr, lr, lr);
+        mg.addColorStop(0, "rgba(0,0,0,1)");
+        mg.addColorStop(0.45, "rgba(0,0,0,0.55)");
+        mg.addColorStop(1, "rgba(0,0,0,0)");
+        lbx.fillStyle = mg;
+        lbx.fillRect(0, 0, bs, bs);
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = la;
+        ctx.drawImage(lb, bx, by, bs, bs);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.globalAlpha = (0.3 + 0.25 * breathe) * cv2 * (1 - 0.4 * Math.max(0, cover - 0.6));
+      ctx.drawImage(moon, mp.x - mR, mp.y - mR, mR * 2, mR * 2);
+      ctx.globalAlpha = 1;
     }
 
     // lightning glow lights the clouds from within; thunder = slight swell
