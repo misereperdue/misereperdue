@@ -250,3 +250,15 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
 - Titles ≤60 / descriptions ≤155. Product search titles live in `SEO_TITLE` in `tools/build-products.py`. `refreshTitle()` in `app.js` keeps the `<title>` from `index.html` for every view.
 - Cloudflare: www → apex 301 (Redirect Rule), Always Use HTTPS on, Crawler Hints (IndexNow) on. `*.pages.dev` sends `X-Robots-Tag: noindex`. `/mask-3d` and `/vip-card` are noindex.
 - Cache: `/js/*`, `/css/*`, `/vendor/*` are immutable for 1 year, so **always bump `?v=`** (or the versioned path) when one changes. Images and video are cached for 1 day.
+
+## 11. Home-screen app (2026-10-22)
+
+- **Offline screen:** `offline.html` (served at `/offline`, noindex) and `js/offline.js` (Retry reloads the page; coming back online reloads it too). Both are precached in `sw.js`. The precache entry must be the clean `/offline`, because Pages 308s `.html` and a redirected response can't answer a navigation. Navigations stay network-first. On a network failure the SW serves the cached copy of that page, and if there is none, `/offline`. The closed eyes are inlined as a data: PNG mask so the page needs nothing else. It blinks slowly and is static with reduced motion.
+- **Notification ask:** `pushAsk()` in `src/js/chat.js` runs only in the home-screen app (display-mode standalone or `navigator.standalone`). It also needs: Notification + PushManager support, `Notification.permission === "default"`, a signed-in user (`/api/push/subscribe` needs the token), and no active snooze. It appears 4s after sign-in is known. **Allow** calls `Notification.requestPermission()` inside the tap, then subscribes (VAPID `Ct`) and POSTs `/api/push/subscribe`. **Not now** sets `localStorage["mp-push-ask-until"]` 14 days out.
+- **Share:** the product view `.share-btn` shares `https://misereperdue.com/p/<handle>`. The thread head `#forum-share` shares `/t/<id>`. Both are hidden or omitted when `navigator.share` is missing. Static pages have no share button.
+- **Native feel:**
+  - `index.html` has a theme-color meta per `prefers-color-scheme`. `theme.js` only touches metas without a media attribute. The status bar is `black-translucent` with `viewport-fit=cover`.
+  - `html, body` use `overscroll-behavior: none`. Inner scrollers keep their own behaviour. The custom standalone pull-to-refresh uses touch events, so it still works.
+  - Tap highlight is transparent everywhere. Controls use `touch-action: manipulation`.
+  - Callout and selection are off on UI chrome, buttons and product imagery. They are forced back on for inputs, textareas and contenteditable. Message and post text is untouched.
+  - The chat input row and the offline banner clear the home indicator.
