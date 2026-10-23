@@ -1531,7 +1531,8 @@ textarea {
 }
 /* Misery Globe tile: a product-card that spans both grid columns. Same 22px
    tile and product-photo backdrop (#0c1230 dark / #d8d9dd light); the text
-   block sits inside on the left, the canvas globe (with orbit) on the right. */
+   block sits inside on the left, the canvas globe (with orbit) on the right.
+   Tile text uses the Apple system font (SF Pro) per dc. */
 #shop-grid .globe-promo {
   grid-column: 1/-1;
 }
@@ -1605,19 +1606,19 @@ textarea {
   min-width: 0;
 }
 .gp-title {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   line-height: 1.1;
   color: var(--gp-ink);
   white-space: nowrap;
 }
 .gp-line {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
   color: var(--gp-sub);
   text-wrap: pretty;
 }
@@ -1630,10 +1631,10 @@ textarea {
   border-radius: 999px;
   background: var(--gp-accent);
   color: var(--gp-cta-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   transition: transform 0.15s ease;
@@ -1647,10 +1648,10 @@ textarea {
 }
 @media (max-width: 370px) {
   .gp-title {
-    font-size: 16px;
+    font-size: 17px;
   }
   .gp-line {
-    font-size: 10.5px;
+    font-size: 11px;
   }
   .gp-text {
     width: 62%;
