@@ -654,6 +654,7 @@ var MPShop = (function () {
               .join("")
           : "") +
           "</article>")),
+        window.MPNav && MPNav.refreshTitle && MPNav.refreshTitle(),
         (function (t) {
           var e = t.querySelector(".carousel-track"),
             n = e ? e.children.length : 0;

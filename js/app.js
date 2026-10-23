@@ -318,8 +318,17 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (!keepThreadLink && location.hash !== hash) history.pushState(null, "", hash);
     }
     function refreshTitle() {
-      // One title for every view: the SEO title from index.html <title>.
-      var t = window.__mpTitle || (window.__mpTitle = document.title || "Misère Perdue");
+      // Per view (per dc): "Shop · Misère Perdue", and a product shows its
+      // Shopify product name.
+      var base = "Misère Perdue";
+      var names = { shop: "Shop", journal: "Chat", forum: "Misery Globe", cart: "Cart" };
+      var t = base;
+      if (current.type === "product") {
+        var h = document.querySelector("#product h1");
+        if (h && h.textContent) t = h.textContent.trim() + " · " + base;
+      } else if (names[current.type]) {
+        t = names[current.type] + " · " + base;
+      }
       document.title = t;
       var ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute("content", t);

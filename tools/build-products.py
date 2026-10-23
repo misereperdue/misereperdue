@@ -12,14 +12,13 @@ Q = """{ products(first:50){ nodes{ id handle title description availableForSale
   priceRange{minVariantPrice{amount currencyCode} maxVariantPrice{amount currencyCode}}
   variants(first:20){nodes{id title availableForSale price{amount currencyCode}}} } } }"""
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Search titles (<=60 chars). Unknown handles fall back to "<title> | MISERY (Misère Perdue)".
-SEO_TITLE = {"misery-v_v-sleeping-mask": "V_V Mask: Silk Sleeping Mask | MISERY (Misère Perdue)",
-             "membership": "VIP Membership | MISERY (Misère Perdue)"}
+# Page title = Shopify product name + " · Misère Perdue".
+SEO_TITLE = {}  # per dc: product page titles are the Shopify product name
 
 def meta_desc(p):
     """<=155 chars, from the Shopify description ('+' bullet style -> commas)."""
     parts = [x.strip() for x in re.split(r"\s*\+", p["description"]) if x.strip()]
-    text = p["title"] + " by MISERY: " + ", ".join(parts)
+    text = p["title"] + " by Misère Perdue: " + ", ".join(parts)
     text = re.sub(r"\s*MISERY \| Misère Perdue\s*$", "", text).strip()
     if len(text) > 155:
         text = text[:154].rsplit(" ", 1)[0].rstrip(",;:") + "…"
@@ -131,7 +130,7 @@ def main():
         stock = "In stock" if p["availableForSale"] else "Sold out"
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
-        alt = f"{p['title']} by MISERY (Misère Perdue)"
+        alt = f"{p['title']} by Misère Perdue"
         body = (f"<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; <a href=\"/shop\">Shop</a> &rsaquo; {e(p['title'])}</nav>\n"
                 f"<article>\n<h1>{e(p['title'])}</h1>\n"
                 f"<p class=\"price\">{price_label(p)}</p>\n<p><span class=\"tag\">{stock}</span></p>\n"
@@ -139,7 +138,7 @@ def main():
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
-        title = SEO_TITLE.get(p["handle"]) or f"{p['title']} | MISERY (Misère Perdue)"
+        title = SEO_TITLE.get(p["handle"]) or f"{p['title']} · Misère Perdue"
         out = head(title, meta_desc(p), url, img, "product", jsonld(p, url), alt) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
@@ -148,10 +147,10 @@ def main():
           "url": f"{SITE}/shop", "mainEntity": {"@type": "ItemList", "itemListElement": [
               {"@type": "ListItem", "position": i + 1, "url": u, "name": p["title"]} for i, (p, u) in enumerate(items)]}},
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
-    desc = ("Shop MISERY (Misère Perdue), the Toronto merchandise brand: " + ", ".join(p["title"] for p, _ in items)
+    desc = ("Shop Misère Perdue, the Toronto merchandise brand: " + ", ".join(p["title"] for p, _ in items)
             + ". Prices in CAD, checkout by Shopify.")
     rows = "".join(f"<div class=\"product\"><h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Shop MISERY: " + " & ".join(p["title"] for p, _ in items) + " | Misère Perdue", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    shop = head("Shop · Misère Perdue", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):

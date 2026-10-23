@@ -206,8 +206,8 @@ h1{{font-size:26px;line-height:1.25}}
 
 def globe_page(threads_out):
     url = f"{SITE}/globe"
-    title = "Misery Globe · Fashion & Music Community by MISERY"
-    desc = ("Misery Globe is the discussion board run by MISERY (Misère Perdue), a Toronto "
+    title = "Misery Globe · Fashion & Music Community by Misère Perdue"
+    desc = ("Misery Globe is the discussion board run by Misère Perdue, a Toronto "
             "merchandise brand. Talk fashion, music and more.")
     items = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Misery Globe", "url": url,
@@ -226,7 +226,7 @@ def globe_page(threads_out):
                                jsonld=json.dumps(ld, ensure_ascii=False).replace("</", "<\\/"))
             + '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Misery Globe</nav>\n'
             + "<h1>Misery Globe</h1>\n"
-            + "<p>Misery Globe is a secure online discussion board run by MISERY (Misère Perdue), a merchandise brand. "
+            + "<p>Misery Globe is a secure online discussion board run by Misère Perdue, a merchandise brand. "
               "Members discuss fashion, music and more. Posting and chatting earns stars, and VIP members get "
               "exclusive boards and perks (see <a href=\"/p/membership\">VIP</a>).</p>\n"
             + "<h2>Latest public threads</h2>\n" + rows
@@ -334,8 +334,8 @@ def main():
         }], ensure_ascii=False).replace("</", "<\\/")
         threads_out.append((tid, title, author, full.get("createdAt"), desc, len(replies)))
 
-        pt = (f"{title} by MISERY (Misère Perdue)" if "misery globe" in title.lower()
-              else f"{title} · Misery Globe by MISERY")
+        pt = (f"{title} by Misère Perdue" if "misery globe" in title.lower()
+              else f"{title} · Misery Globe")
         if len(pt) > 60: pt = f"{title} · Misery Globe"
         if len(pt) > 60: pt = title[:57].rstrip() + "…"
         page = PAGE.format(
