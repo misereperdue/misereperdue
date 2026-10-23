@@ -4341,14 +4341,13 @@
       replace = "regen" === mode,
       b = rcLayer(
         (replace ? '<button type="button" class="rc-x-close" aria-label="Close">×</button>' : "") +
-          '<div class="rc-eyebrow">' +
-          (replace ? "RECOVERY CODE" : "ONE MORE THING") +
-          '</div><h2 class="rc-title">' +
+          (replace ? '<div class="rc-eyebrow">RECOVERY CODE</div>' : "") +
+          '<h2 class="rc-title">' +
           (replace ? "Make a new recovery code" : "Create your recovery code") +
           '</h2><p class="rc-sub">' +
           (replace
             ? "Your current code stops working as soon as the new one is made."
-            : "There's no email reset on Misère Perdue. A recovery code is how you get back in if you ever forget your password.") +
+            : "Misery doesn’t verify with your email. The only way to reset a lost password is with your secret code.") +
           "</p>" +
           (needPw
             ? '<label class="chat-field"><span>Current password</span><input type="password" name="rc-pw" maxlength="72" autocomplete="current-password"></label>'
