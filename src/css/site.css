@@ -6460,7 +6460,7 @@ button.forum-glass-pill:active {
   font-display: swap;
 }
 .mp-end-tag {
-  margin: 7px 0 0;
+  margin: 0 0 14px;
   font: 400 8px/1.4 "Space Age", ui-monospace, monospace;
   letter-spacing: .14em;
   color: var(--accent);
