@@ -39,3 +39,24 @@ Then set `EMOJI_SET` (and the file extension) in `src/js/emoji.js`, build, bump 
 `emoji.js?v=` pins (index.html, sw.js SHELL, static pages and their generators),
 the `EMOJI_CACHE` name and SW_VERSION, delete the old set folder, and update the
 attribution.
+
+# Misery Stitch (product description font)
+
+`img/misery-stitch.woff2` is a derivative of **Relief SingleLine**
+(https://github.com/isdat-type/Relief-SingleLine), Copyright 2022 The Relief
+SingleLine Project Authors, licensed under the **SIL Open Font License 1.1**
+(full text in `tools/stitch-font/OFL.txt`; the source SVG font is
+`tools/stitch-font/ReliefSingleLineSVG-Regular.svg`). It is renamed "Misery
+Stitch" and stays under the OFL.
+
+`tools/build-stitch-font.py` cuts every single-line stroke into round-capped
+running-stitch dashes (default dash 130, gap 120, stitch width 90 units/1000 em;
+dots become a single round knot) and writes the web font:
+
+```
+python3 -m venv /tmp/fv && /tmp/fv/bin/pip install fonttools shapely brotli
+/tmp/fv/bin/python tools/build-stitch-font.py
+```
+
+After rebuilding, bump `misery-stitch.woff2?v=` in `src/css/site.css`, build the CSS
+and bump its pins.
