@@ -8590,20 +8590,31 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   }
 }
 /* navbar: the selected tab is a round glass orb that fills the capsule's height */
+/* seat (per dc 6:34 PM "the orbs don't sit nice"): the capsule is exactly orb + an even
+   gap all round. Border-box height 54 = 1px border + 4px padding + 44px tap row; the 44px
+   orb sits 4px into the padding box, so there is 5px from orb body (4px from its blue rim)
+   to the capsule edge on top, bottom and the outer end. End tabs are 52px wide with no
+   side padding, so their centre is 27px (half the bar height) from the end: the orb on the
+   first/last tab is concentric with the rounded end cap. JS centres the orb on each tab. */
 .nav button,
 .nav a {
+  width: 52px;
   height: 44px;
 }
-.nav {
-  padding: 3px 5px;
-  gap: 4px;
+.nav,
+.nav.glassbar {
+  padding: 4px 0;
+  gap: 12px;
+}
+.nav .split {
+  margin: 0;
 }
 .seg,
 [data-theme="light"] .seg {
-  top: 0;
-  left: 10px;
-  width: 50px;
-  height: 50px;
+  top: 4px;
+  left: 4px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--orb-fill);
   box-shadow: var(--orb-shadow);
@@ -8624,7 +8635,7 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   transition: transform 0.35s cubic-bezier(0.34, 1.36, 0.5, 1);
 }
 .nav button.on svg {
-  transform: scale(1.14);
+  transform: scale(1.08);
   fill: url(#orb-ink);
 }
 [data-theme="dark"] .nav button.on svg {
@@ -8733,4 +8744,8 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+/* optical centring: the bag glyph's ink sits 1px high in its 256 box */
+.nav button[data-view="shop"] svg {
+  translate: 0 1px;
 }

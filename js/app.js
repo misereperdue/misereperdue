@@ -81,9 +81,20 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
         var t = current.type === "product" ? "shop" : current.type;
         var btn = nav.querySelector('button[data-view="' + t + '"]') ||
                   nav.querySelector('button[data-view="journal"]');
-        if (btn) nav.querySelector(".seg").style.transform = "translateX(" + (btn.offsetLeft - 4) + "px)";
+        var seg = nav.querySelector(".seg");
+        if (!btn || !seg || !btn.offsetWidth) return;
+        // centre the orb on the tab with sub-pixel rects (offsetLeft rounds, and Safari
+        // lays the centred bar out on half pixels); seg is absolutely placed at its CSS left
+        var b = btn.getBoundingClientRect(), n = nav.getBoundingClientRect();
+        var x = (b.left - n.left - nav.clientLeft) + (b.width - seg.offsetWidth) / 2 - seg.offsetLeft;
+        seg.style.transform = "translateX(" + (Math.round(x * 4) / 4) + "px)";
       });
     }
+    // re-seat after anything that can move the tabs: resize/rotate, web fonts, bar size changes
+    window.addEventListener("resize", refreshSeg);
+    window.addEventListener("orientationchange", refreshSeg);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refreshSeg);
+    if (window.ResizeObserver) new ResizeObserver(function () { refreshSeg(); }).observe(nav);
     function refreshPostBtn() {
       var btn = document.getElementById("post-btn");
       var badge = document.getElementById("post-badge");
