@@ -6439,7 +6439,7 @@ button.forum-glass-pill:active {
   display: block;
   width: 64px;
   height: 17px;
-  margin: 0 auto 14px;
+  margin: 0 auto 6px;
   background: var(--accent);
   opacity: .26;
   -webkit-mask: url(/img/splash-eyes.png) center/contain no-repeat;
