@@ -4,24 +4,24 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 96;
+var SW_VERSION = 97;
 var CACHE = "mp-shell-v" + SW_VERSION;
 var SHELL = [
   "/",
   "/index.html",
   "/webapp.json",
-  "/css/site.css?v=581",
-  "/js/theme.js?v=7",
+  "/css/site.css?v=582",
+  "/js/theme.js?v=8",
   "/js/boot-head.js?v=1",
   "/js/beacon.js?v=1",
   "/js/app.js?v=2",
   "/js/shopify.js?v=12",
   "/js/cart.js?v=1",
-  "/js/shop.js?v=77",
+  "/js/shop.js?v=78",
   "/js/social-logos.js?v=2",
-  "/js/chat.js?v=285",
+  "/js/chat.js?v=286",
   "/js/dashboard-v2.js?v=47",
-  "/js/forum3.js?v=1107",
+  "/js/forum3.js?v=1108",
   "/js/ph-icons.js?v=1",
   "/js/forum-mount-patch.js?v=1073",
   "/img/apple-touch-icon.png?v=26",
@@ -37,8 +37,13 @@ var SHELL = [
   "/img/splash-1206x2622.png?v=24",
   "/img/splash-1320x2868.png?v=24",
   "/img/splash-1260x2736.png?v=24",
-  "/video/header-poster.webp"
+  "/video/header-poster.webp",
+  "/offline",
+  "/js/offline.js?v=1"
 ];
+// Offline screen: precached at its clean URL (Pages 308s /offline.html -> /offline,
+// and a redirected response cannot answer a navigation).
+var OFFLINE_URL = "/offline";
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
@@ -76,7 +81,12 @@ self.addEventListener("fetch", function (e) {
           caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
         }
         return res;
-      }).catch(function () { return caches.match(e.request); })
+      }).catch(function () {
+        return caches.match(e.request).then(function (cached) {
+          if (cached || e.request.mode !== "navigate") return cached;
+          return caches.match(OFFLINE_URL);
+        });
+      })
     );
     return;
   }
