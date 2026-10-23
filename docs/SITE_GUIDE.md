@@ -149,7 +149,7 @@ Therefore, **whenever a JS/CSS/image file changes you must**:
 1. Bump that file's `?v=N` in `index.html`, and in `sw.js` `SHELL` if it is listed there.
 2. Bump `SW_VERSION` in `sw.js` **and** the matching `register("/sw.js?v=N")` in `index.html` (they must be equal; `npm run check` enforces it).
 
-Pin counters on 2026-10-23 (Grim): css `599`, chat `293`, forum3 `1112`, shop `80`, app `6`, SW `128`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
+Pin counters on 2026-10-23 (Grim): css `600`, chat `294`, forum3 `1112`, shop `80`, app `6`, SW `129`; lazy 3D `vip3d.js`/`mask3d.js` `?v=4` (pinned in `shop.js`), `mask-3d-page.js`/`vip-card-page.js` `?v=2`.
 
 ---
 
@@ -267,3 +267,5 @@ pages in `p/` are hand-edited. Keep their `<title>`, canonical, `og:url` and JSO
   - The chat input row and the offline banner clear the home indicator.
 
 **X OAuth (2026-10-23):** Sign in / Connect with X go to `x.com/i/oauth2/authorize` with redirect `https://api.misereperdue.com/api/x/callback`. Connect completes server-side in the callback (the pending link is bound to the user at `/api/x/link-start`) and returns `#x_linked=<handle>`; sign-in returns `#x_code=` (swapped at `/api/x/exchange`). For the iOS home-screen app (X may finish in Safari, separate storage) the starting page polls `/api/x/poll` with a secret `pollKey` from `/api/x/pkce-start`, and re-reads `/api/me` on focus for a pending link. `chat.js` captures the `#x_...` hash at load because `app.js` rewrites it to `#chat`. Callback failures are logged (`x_callback_fail`, with X's error) in Workers Observability for misery-chat.
+
+**Recovery codes (2026-10-23, replaces email recovery):** 16 symbols from `23456789ABCDEFGHJKMNPQRSTUVWXYZ` (~79 bits), shown `XXXX-XXXX-XXXX-XXXX` (input ignores case/dashes/spaces and an `MPRD` prefix). Issued at signup (`/api/register` and new X accounts via `/api/x/exchange`/`/api/x/poll` → `recoveryCode`), stored only as PBKDF2(code + `RECOVERY_PEPPER`, per-code salt) in `user.recovery`. `/api/recovery/reset` {username, code, password}: buckets `rl:recover:pair|ip|acct` (5/15m, 20/15m, 50/h, failures only), kills all sessions, signs in, rotates the code, sets `pwResetNotice` (next `/api/login` returns `pwResetAt`, once). `/api/recovery/regenerate` (current password; X-only accounts replacing a code need an X session < 30 min). `/api/recovery/x-reset` (session `via:"x"` < 15 min) for "Recover with X". `/api/me` adds `hasRecovery`, `recoveryCreatedAt`, `hasPassword`. UI: `rc*` functions in `src/js/chat.js`, `.rc-*` in `site.css`; signed-in users without a code get a prompt each session until they create one ("Later" = `sessionStorage.rc_later`).

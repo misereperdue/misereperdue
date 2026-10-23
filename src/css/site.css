@@ -6638,3 +6638,309 @@ textarea,
   margin-left: auto;
   text-align: right;
 }
+
+/* ---------- Recovery codes (per dc) ---------- */
+html.rc-lock,
+html.rc-lock body {
+  overflow: hidden;
+}
+.rc-back {
+  position: fixed;
+  inset: 0;
+  z-index: 420;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  background: radial-gradient(120% 80% at 50% 30%, rgba(169, 215, 245, 0.1), rgba(7, 15, 41, 0) 60%),
+    rgba(4, 9, 26, 0.62);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  overflow-y: auto;
+  animation: rc-fade 0.24s ease both;
+}
+.rc-back.out {
+  animation: rc-fade 0.2s ease reverse both;
+}
+.rc-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: auto;
+  padding: 26px 20px 20px;
+  border-radius: 28px;
+  color: #f5f5f7;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 42%),
+    rgba(10, 18, 48, 0.72);
+  border: 0.5px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(169, 215, 245, 0.08),
+    0 24px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  animation: rc-rise 0.34s cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+}
+.rc-eyebrow {
+  font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.22em;
+  color: rgba(169, 215, 245, 0.75);
+  text-align: center;
+}
+.rc-title {
+  margin: 8px 0 6px;
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+.rc-sub {
+  margin: 0 auto 18px;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(214, 220, 236, 0.82);
+  text-align: center;
+}
+.rc-code {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 10px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(3, 8, 24, 0.55), rgba(10, 18, 48, 0.4));
+  border: 0.5px solid rgba(169, 215, 245, 0.28);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 -1px 0 rgba(169, 215, 245, 0.12);
+  flex-wrap: nowrap;
+  font: 600 clamp(16px, 5.2vw, 21px)/1.2 ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.rc-g {
+  color: #cfe9fb;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.55), 0 0 12px rgba(169, 215, 245, 0.45);
+}
+.rc-dash {
+  color: rgba(169, 215, 245, 0.35);
+}
+.rc-user {
+  margin: 10px 0 16px;
+  text-align: center;
+  font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.06em;
+  color: rgba(169, 215, 245, 0.7);
+}
+.rc-actions {
+  display: flex;
+  gap: 8px;
+}
+.rc-actions .btn {
+  flex: 1;
+  padding: 11px 10px;
+  font-size: 15px;
+  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+}
+.rc-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 2px 14px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.rc-check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: #a9d7f5;
+}
+.rc-card .btn.accent,
+.rc-card .rc-later {
+  width: 100%;
+  margin-top: 4px;
+}
+.rc-card .btn.accent {
+  background: #a9d7f5;
+  color: #070f29;
+  font-weight: 650;
+}
+.rc-card .btn.accent:disabled {
+  opacity: 0.4;
+}
+.rc-card .rc-later {
+  margin-top: 8px;
+  color: #f5f5f7;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.rc-card .chat-field {
+  margin-bottom: 10px;
+}
+.rc-card .chat-field > span {
+  color: rgba(214, 220, 236, 0.8);
+}
+.rc-card .chat-field input {
+  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.rc-codein {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rc-card .rc-err {
+  min-height: 0;
+  margin: 2px 0 8px;
+}
+.rc-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+  font: 500 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.18em;
+  color: rgba(169, 215, 245, 0.55);
+  text-transform: uppercase;
+}
+.rc-or::before,
+.rc-or::after {
+  content: "";
+  flex: 1;
+  height: 0.5px;
+  background: rgba(169, 215, 245, 0.25);
+}
+.rc-fine {
+  margin: 14px 0 0;
+  text-align: center;
+  font: 400 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(183, 189, 208, 0.6);
+}
+.rc-x-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f7;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-forgot {
+  display: block;
+  margin: -2px 0 8px auto;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 560;
+  cursor: pointer;
+}
+.chat-forgot[hidden] {
+  display: none;
+}
+.rc-row-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--accent);
+}
+.rc-row-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.rc-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rc-row-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.rc-row-status {
+  font: 500 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0.6;
+}
+/* Light mode: frosted white glass, navy ink, etched navy code. */
+[data-theme="light"] .rc-back {
+  background: radial-gradient(120% 80% at 50% 30%, rgba(169, 215, 245, 0.35), rgba(255, 255, 255, 0) 60%),
+    rgba(240, 244, 252, 0.6);
+}
+[data-theme="light"] .rc-card {
+  color: #0a1230;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.62));
+  border-color: rgba(10, 18, 48, 0.1);
+  box-shadow: inset 0 1px 0 #fff, 0 24px 60px rgba(10, 18, 48, 0.18);
+}
+[data-theme="light"] .rc-eyebrow,
+[data-theme="light"] .rc-user,
+[data-theme="light"] .rc-or {
+  color: rgba(10, 18, 48, 0.55);
+}
+[data-theme="light"] .rc-sub,
+[data-theme="light"] .rc-card .chat-field > span {
+  color: rgba(10, 18, 48, 0.7);
+}
+[data-theme="light"] .rc-code {
+  background: linear-gradient(180deg, rgba(10, 18, 48, 0.06), rgba(169, 215, 245, 0.18));
+  border-color: rgba(10, 18, 48, 0.12);
+  box-shadow: inset 0 2px 6px rgba(10, 18, 48, 0.12), inset 0 -1px 0 #fff;
+}
+[data-theme="light"] .rc-g {
+  color: #0a1230;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+[data-theme="light"] .rc-dash {
+  color: rgba(10, 18, 48, 0.3);
+}
+[data-theme="light"] .rc-actions .btn,
+[data-theme="light"] .rc-card .rc-later,
+[data-theme="light"] .rc-x-close {
+  color: #0a1230;
+  background: rgba(10, 18, 48, 0.05);
+  border-color: rgba(10, 18, 48, 0.12);
+}
+[data-theme="light"] .rc-card .btn.accent {
+  background: #0a1230;
+  color: #fff;
+}
+[data-theme="light"] .rc-check input {
+  accent-color: #0a1230;
+}
+[data-theme="light"] .rc-card .chat-field input {
+  color: #0a1230;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(10, 18, 48, 0.14);
+}
+[data-theme="light"] .rc-fine {
+  color: rgba(10, 18, 48, 0.5);
+}
+@keyframes rc-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-back,
+  .rc-back.out,
+  .rc-card {
+    animation: none;
+  }
+}

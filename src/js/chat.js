@@ -943,7 +943,7 @@
     (mt(),
       (s = null),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title">Chat</div><div class="chat-head-right"><button type="button" class="btn chat-topbar-signin" id="chat-signin-top">Sign in</button></div></div><div class="chat-auth"><div class="chat-auth-head"><div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div><div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div></div><div class="chat-card"><div class="chat-tabs" data-active="login"><span class="chat-tabs-slider"></span><button type="button" class="on" data-tab="login">Sign in</button><button type="button" data-tab="register">Sign up</button></div><label class="chat-field"><span>Username</span><input type="text" name="username" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" readonly data-ro-unlock></label><label class="chat-field"><span>Password</span><input type="password" name="password" maxlength="72" autocomplete="off" readonly data-ro-unlock></label><div class="pwd-strength" hidden><div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div></div><label class="chat-field chat-secret hidden"><span>Owner secret</span><input type="password" name="secret" autocomplete="off"></label><div class="chat-err" role="alert"></div><div class="cf-turnstile-wrap" hidden><div class="cf-turnstile" data-sitekey="0x4AAAAAAFV46HnTH3nPGGRk" data-theme="auto"></div></div><button type="button" class="btn accent chat-submit">Sign in</button><button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' +
+        '<div class="chat-head glassbar"><div class="chat-title">Chat</div><div class="chat-head-right"><button type="button" class="btn chat-topbar-signin" id="chat-signin-top">Sign in</button></div></div><div class="chat-auth"><div class="chat-auth-head"><div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div><div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div></div><div class="chat-card"><div class="chat-tabs" data-active="login"><span class="chat-tabs-slider"></span><button type="button" class="on" data-tab="login">Sign in</button><button type="button" data-tab="register">Sign up</button></div><label class="chat-field"><span>Username</span><input type="text" name="username" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" readonly data-ro-unlock></label><label class="chat-field"><span>Password</span><input type="password" name="password" maxlength="72" autocomplete="off" readonly data-ro-unlock></label><button type="button" class="chat-forgot">Forgot password?</button><div class="pwd-strength" hidden><div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div></div><label class="chat-field chat-secret hidden"><span>Owner secret</span><input type="password" name="secret" autocomplete="off"></label><div class="chat-err" role="alert"></div><div class="cf-turnstile-wrap" hidden><div class="cf-turnstile" data-sitekey="0x4AAAAAAFV46HnTH3nPGGRk" data-theme="auto"></div></div><button type="button" class="btn accent chat-submit">Sign in</button><button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' +
         a +
         "</span>Continue with X</button></div></div>"));
     var e = "login",
@@ -1056,6 +1056,7 @@
           k && k.setAttribute("data-active", n ? "register" : "login"),
           S(!0),
           (w.textContent = a ? "Sign up" : "Sign in"),
+          Fg && (Fg.hidden = a),
           C(""),
           x(),
           g());
@@ -1075,7 +1076,12 @@
         var t = document.querySelector('[data-view="shop"]');
         t && t.click();
       });
-    var I = c.querySelector("#chat-signin-top");
+    var I = c.querySelector("#chat-signin-top"),
+      Fg = c.querySelector(".chat-forgot");
+    Fg &&
+      Fg.addEventListener("click", function () {
+        rcOpenRecover(l.value.trim());
+      });
     function q() {
       var t = l.value.trim(),
         n = u.value;
@@ -1104,6 +1110,11 @@
                       localStorage.setItem(r, d);
                     } catch (e) {}
                     ((s = e.user), ke());
+                    e.recoveryCode
+                      ? rcShowCode(e.recoveryCode, s.username, {
+                          eyebrow: "WELCOME TO MISÈRE PERDUE",
+                        })
+                      : (rcResetNotice(e.pwResetAt), rcMaybePrompt());
                   } else {
                     C((e && e.error) || "Something went wrong.");
                     try {
@@ -3762,6 +3773,7 @@
                     Be.appendChild(De));
                 }
                 o.appendChild(Be);
+                o.appendChild(rcSettingsRow());
                 var ze = document.createElement("button");
                 ((ze.type = "button"),
                   (ze.className = "chat-logout"),
@@ -4000,7 +4012,7 @@
               })
               .then(function (e) {
                 e && e.ok && e.token
-                  ? wt({ token: e.token })
+                  ? (wt({ token: e.token }), e.recoveryCode && rcXNewCode(e.recoveryCode))
                   : (k("Sign-in expired. Please try again."), wt(null));
               })
               .catch(function () {
@@ -4008,6 +4020,464 @@
               })
           : wt(t);
     }
+  }
+  /* ---------- Recovery codes (replace email recovery) ---------- */
+  var rcOpen = null,
+    rcPrompted = !1;
+  function rcEsc(t) {
+    return String(null == t ? "" : t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function rcClose() {
+    if (rcOpen) {
+      var b = rcOpen;
+      rcOpen = null;
+      b.classList.add("out");
+      setTimeout(function () {
+        b.parentNode && b.parentNode.removeChild(b);
+      }, 220);
+      document.documentElement.classList.remove("rc-lock");
+    }
+  }
+  function rcLayer(inner, cls) {
+    rcOpen && rcOpen.parentNode && rcOpen.parentNode.removeChild(rcOpen);
+    var b = document.createElement("div");
+    b.className = "rc-back" + (cls ? " " + cls : "");
+    b.setAttribute("role", "dialog");
+    b.setAttribute("aria-modal", "true");
+    b.innerHTML = '<div class="rc-card">' + inner + "</div>";
+    document.body.appendChild(b);
+    document.documentElement.classList.add("rc-lock");
+    rcOpen = b;
+    return b;
+  }
+  function rcCodeHTML(code) {
+    return String(code)
+      .split("-")
+      .map(function (g) {
+        return '<span class="rc-g">' + rcEsc(g) + "</span>";
+      })
+      .join('<span class="rc-dash" aria-hidden="true">-</span>');
+  }
+  function rcFont() {
+    try {
+      return document.fonts && document.fonts.load
+        ? Promise.race([
+            document.fonts.load('64px "Space Age"'),
+            new Promise(function (r) {
+              setTimeout(r, 1200);
+            }),
+          ])
+        : Promise.resolve();
+    } catch (e) {
+      return Promise.resolve();
+    }
+  }
+  // Navy keepsake card (PNG) with the eyes, code, username.
+  function rcRender(code, user) {
+    return rcFont().then(function () {
+      return new Promise(function (res) {
+        var W = 1080,
+          H = 1350,
+          cv = document.createElement("canvas");
+        cv.width = W;
+        cv.height = H;
+        var x = cv.getContext("2d"),
+          g = x.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, "#0d1840");
+        g.addColorStop(0.55, "#0a1230");
+        g.addColorStop(1, "#070f29");
+        x.fillStyle = g;
+        x.fillRect(0, 0, W, H);
+        var rg = x.createRadialGradient(W / 2, 520, 40, W / 2, 520, 620);
+        rg.addColorStop(0, "rgba(169,215,245,0.16)");
+        rg.addColorStop(1, "rgba(169,215,245,0)");
+        x.fillStyle = rg;
+        x.fillRect(0, 0, W, H);
+        // faint M monogram
+        x.save();
+        x.font = '760px "Space Age", ui-monospace, monospace';
+        x.textAlign = "center";
+        x.textBaseline = "middle";
+        x.fillStyle = "rgba(169,215,245,0.035)";
+        x.fillText("M", W / 2, 700);
+        x.restore();
+        // card frame
+        x.strokeStyle = "rgba(169,215,245,0.22)";
+        x.lineWidth = 2;
+        if (x.roundRect) {
+          x.beginPath();
+          x.roundRect(60, 60, W - 120, H - 120, 56);
+          x.stroke();
+        } else x.strokeRect(60, 60, W - 120, H - 120);
+        var mono = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace';
+        function done() {
+          x.textAlign = "center";
+          x.textBaseline = "alphabetic";
+          x.fillStyle = "rgba(169,215,245,0.85)";
+          x.font = '30px "Space Age", ' + mono;
+          x.fillText("MISÈRE PERDUE", W / 2, 400);
+          x.fillStyle = "rgba(169,215,245,0.6)";
+          x.font = "500 26px " + mono;
+          x.fillText("R E C O V E R Y   C O D E", W / 2, 560);
+          var parts = String(code).split("-"),
+            l1 = parts.slice(0, 2).join("-"),
+            l2 = parts.slice(2).join("-");
+          x.font = "600 96px " + mono;
+          [
+            [l1, 700],
+            [l2, 830],
+          ].forEach(function (ln) {
+            // etched: dark inset + ice face + soft glow
+            x.fillStyle = "rgba(0,0,0,0.45)";
+            x.fillText(ln[0], W / 2, ln[1] + 3);
+            x.shadowColor = "rgba(169,215,245,0.45)";
+            x.shadowBlur = 22;
+            x.fillStyle = "#cfe9fb";
+            x.fillText(ln[0], W / 2, ln[1]);
+            x.shadowBlur = 0;
+          });
+          x.fillStyle = "rgba(245,245,247,0.92)";
+          x.font = "600 40px -apple-system, BlinkMacSystemFont, sans-serif";
+          x.fillText("@" + user, W / 2, 990);
+          x.fillStyle = "rgba(183,189,208,0.85)";
+          x.font = "500 30px -apple-system, BlinkMacSystemFont, sans-serif";
+          x.fillText("Keep this safe.", W / 2, 1100);
+          x.font = "400 24px " + mono;
+          x.fillStyle = "rgba(183,189,208,0.6)";
+          x.fillText("It resets your password. One use, then it changes.", W / 2, 1150);
+          x.fillText("misereperdue.com · " + new Date().toISOString().slice(0, 10), W / 2, 1210);
+          cv.toBlob(function (b) {
+            res(b);
+          }, "image/png");
+        }
+        var im = new Image();
+        im.onload = function () {
+          var w = 420,
+            h = (im.height / im.width) * w;
+          x.globalAlpha = 0.95;
+          x.drawImage(im, (W - w) / 2, 180, w, h);
+          x.globalAlpha = 1;
+          done();
+        };
+        im.onerror = done;
+        im.src = "/img/splash-eyes.png";
+      });
+    });
+  }
+  function rcShowCode(code, user, o) {
+    o = o || {};
+    var b = rcLayer(
+        '<div class="rc-eyebrow">' +
+          rcEsc(o.eyebrow || "MISÈRE PERDUE · RECOVERY") +
+          '</div><h2 class="rc-title">' +
+          rcEsc(o.title || "Your recovery code") +
+          '</h2><p class="rc-sub">' +
+          rcEsc(
+            o.sub ||
+              "If you ever forget your password, this code gets you back in. It's shown only once, so save it somewhere safe.",
+          ) +
+          '</p><div class="rc-code" aria-label="Recovery code ' +
+          rcEsc(code) +
+          '">' +
+          rcCodeHTML(code) +
+          '</div><div class="rc-user">@' +
+          rcEsc(user) +
+          '</div><div class="rc-actions"><button type="button" class="btn rc-copy">Copy</button><button type="button" class="btn rc-save">Save as image</button></div><label class="rc-check"><input type="checkbox"><span>I saved my recovery code</span></label><button type="button" class="btn accent rc-continue" disabled>Continue</button>',
+        "rc-showcode",
+      ),
+      cp = b.querySelector(".rc-copy"),
+      sv = b.querySelector(".rc-save"),
+      ck = b.querySelector(".rc-check input"),
+      go = b.querySelector(".rc-continue"),
+      blob = null;
+    rcRender(code, user).then(function (bl) {
+      blob = bl;
+    });
+    cp.addEventListener("click", function () {
+      var ok = function () {
+        cp.textContent = "Copied";
+        setTimeout(function () {
+          cp.textContent = "Copy";
+        }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(code).then(ok, function () {
+          cp.textContent = code;
+        });
+      } catch (e) {
+        cp.textContent = code;
+      }
+    });
+    sv.addEventListener("click", function () {
+      function give(bl) {
+        var name = "misere-perdue-recovery-" + user + ".png";
+        try {
+          var f = new File([bl], name, { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [f] })) {
+            navigator.share({ files: [f], title: "Misère Perdue recovery code" }).catch(function () {});
+            return;
+          }
+        } catch (e) {}
+        var u = URL.createObjectURL(bl),
+          a = document.createElement("a");
+        a.href = u;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () {
+          URL.revokeObjectURL(u);
+        }, 4e3);
+      }
+      blob ? give(blob) : rcRender(code, user).then(give);
+    });
+    ck.addEventListener("change", function () {
+      go.disabled = !ck.checked;
+    });
+    go.addEventListener("click", function () {
+      if (!ck.checked) return;
+      rcClose();
+      o.onDone && o.onDone();
+    });
+    return b;
+  }
+  function rcSignedIn(res, code, opts) {
+    d = res.token;
+    try {
+      localStorage.setItem(r, d);
+    } catch (e) {}
+    s = res.user;
+    ke();
+    code && rcShowCode(code, s.username, opts);
+  }
+  function rcOpenRecover(prefill) {
+    var hasX = !!(c && c.querySelector(".chat-xbtn")),
+      b = rcLayer(
+        '<button type="button" class="rc-x-close" aria-label="Close">×</button><div class="rc-eyebrow">ACCOUNT RECOVERY</div><h2 class="rc-title">Forgot your password?</h2><p class="rc-sub">Enter your username and the recovery code you saved when you signed up.</p><label class="chat-field"><span>Username</span><input type="text" name="rc-user" maxlength="16" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="chat-field"><span>Recovery code</span><input type="text" name="rc-code" class="rc-codein" maxlength="29" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></label><label class="chat-field"><span>New password</span><input type="password" name="rc-new" maxlength="72" autocomplete="new-password"></label><label class="chat-field"><span>Confirm new password</span><input type="password" name="rc-new2" maxlength="72" autocomplete="new-password"></label><div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">Reset password</button>' +
+          (hasX
+            ? '<div class="rc-or"><span>or</span></div><button type="button" class="btn chat-xbtn rc-xrec"><span class="chat-xlogo">' +
+              a +
+              "</span>Recover with X</button>"
+            : "") +
+          '<p class="rc-fine">No code and no linked X account? There is no email reset. Message dc in the forum.</p>',
+        "rc-recover",
+      ),
+      U = b.querySelector('[name="rc-user"]'),
+      Cd = b.querySelector('[name="rc-code"]'),
+      N1 = b.querySelector('[name="rc-new"]'),
+      N2 = b.querySelector('[name="rc-new2"]'),
+      Er = b.querySelector(".rc-err"),
+      Go = b.querySelector(".rc-go");
+    prefill && (U.value = prefill);
+    b.querySelector(".rc-x-close").addEventListener("click", rcClose);
+    Cd.addEventListener("input", function () {
+      var raw = Cd.value.toUpperCase().replace(/[^0-9A-Z]/g, "");
+      raw.length === 20 && 0 === raw.indexOf("MPRD") && (raw = raw.slice(4));
+      raw = raw.slice(0, 16);
+      var f = raw.match(/.{1,4}/g);
+      Cd.value = f ? f.join("-") : "";
+    });
+    Go.addEventListener("click", function () {
+      Er.textContent = "";
+      var un = U.value.trim(),
+        cd = Cd.value.replace(/[^0-9A-Za-z]/g, "");
+      if (!un) return void (Er.textContent = "Enter your username.");
+      if (cd.length !== 16) return void (Er.textContent = "Recovery codes are 16 characters.");
+      if (N1.value.length < 8) return void (Er.textContent = "New password must be at least 8 characters.");
+      if (N1.value !== N2.value) return void (Er.textContent = "New passwords do not match.");
+      Go.disabled = !0;
+      Go.textContent = "Checking…";
+      E("/api/recovery/reset", { method: "POST", body: { username: un, code: cd, password: N1.value } })
+        .then(function (j) {
+          Go.disabled = !1;
+          Go.textContent = "Reset password";
+          j && j.ok && j.token
+            ? rcSignedIn(j, j.recoveryCode, {
+                eyebrow: "PASSWORD RESET",
+                title: "You're back in",
+                sub: "Your password is changed and every other device was signed out. Your old code is used up. Here's your new one, save it now.",
+              })
+            : (Er.textContent = (j && j.error) || "Couldn't reset your password.");
+        })
+        .catch(function () {
+          Go.disabled = !1;
+          Go.textContent = "Reset password";
+          Er.textContent = "Couldn't reach the chat server. Try again.";
+        });
+    });
+    var Xr = b.querySelector(".rc-xrec");
+    Xr &&
+      Xr.addEventListener("click", function () {
+        try {
+          localStorage.setItem("x_recover", String(Date.now()));
+        } catch (e) {}
+        rcClose();
+        var xb = c && c.querySelector(".chat-card .chat-xbtn");
+        xb && xb.click();
+      });
+    setTimeout(function () {
+      try {
+        (prefill ? Cd : U).focus({ preventScroll: !0 });
+      } catch (e) {}
+    }, 260);
+  }
+  // After an X sign-in started from "Recover with X": set a new password.
+  function rcAfterX() {
+    var t = 0;
+    try {
+      t = +localStorage.getItem("x_recover") || 0;
+      localStorage.removeItem("x_recover");
+    } catch (e) {}
+    if (!t || Date.now() - t > 9e5 || !d || !s) return;
+    var b = rcLayer(
+        '<div class="rc-eyebrow">RECOVER WITH X</div><h2 class="rc-title">Set a new password</h2><p class="rc-sub">Signed in with X as @' +
+          rcEsc(s.username) +
+          '. Choose a new password. Other devices will be signed out.</p><label class="chat-field"><span>New password</span><input type="password" name="rc-new" maxlength="72" autocomplete="new-password"></label><label class="chat-field"><span>Confirm new password</span><input type="password" name="rc-new2" maxlength="72" autocomplete="new-password"></label><div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">Set password</button><button type="button" class="btn rc-later">Not now</button>',
+        "rc-recover",
+      ),
+      N1 = b.querySelector('[name="rc-new"]'),
+      N2 = b.querySelector('[name="rc-new2"]'),
+      Er = b.querySelector(".rc-err"),
+      Go = b.querySelector(".rc-go");
+    b.querySelector(".rc-later").addEventListener("click", rcClose);
+    Go.addEventListener("click", function () {
+      Er.textContent = "";
+      if (N1.value.length < 8) return void (Er.textContent = "New password must be at least 8 characters.");
+      if (N1.value !== N2.value) return void (Er.textContent = "New passwords do not match.");
+      Go.disabled = !0;
+      E("/api/recovery/x-reset", { method: "POST", body: { password: N1.value } })
+        .then(function (j) {
+          Go.disabled = !1;
+          j && j.ok && j.token
+            ? rcSignedIn(j, j.recoveryCode, {
+                eyebrow: "PASSWORD RESET",
+                title: "You're back in",
+                sub: "New password set and other devices signed out. Here's your new recovery code, save it now.",
+              })
+            : (Er.textContent = (j && j.error) || "Couldn't set your password.");
+        })
+        .catch(function () {
+          Go.disabled = !1;
+          Er.textContent = "Couldn't reach the chat server. Try again.";
+        });
+    });
+  }
+  // Create / replace the code while signed in (settings row + prompt).
+  function rcCreate(mode) {
+    if (!s) return;
+    var needPw = !!s.hasPassword,
+      replace = "regen" === mode,
+      b = rcLayer(
+        (replace ? '<button type="button" class="rc-x-close" aria-label="Close">×</button>' : "") +
+          '<div class="rc-eyebrow">' +
+          (replace ? "RECOVERY CODE" : "ONE MORE THING") +
+          '</div><h2 class="rc-title">' +
+          (replace ? "Make a new recovery code" : "Create your recovery code") +
+          '</h2><p class="rc-sub">' +
+          (replace
+            ? "Your current code stops working as soon as the new one is made."
+            : "There's no email reset on Misère Perdue. A recovery code is how you get back in if you ever forget your password.") +
+          "</p>" +
+          (needPw
+            ? '<label class="chat-field"><span>Current password</span><input type="password" name="rc-pw" maxlength="72" autocomplete="current-password"></label>'
+            : "") +
+          '<div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">' +
+          (replace ? "Make new code" : "Create code") +
+          "</button>" +
+          (replace ? "" : '<button type="button" class="btn rc-later">Later</button>'),
+        replace ? "rc-regen" : "rc-prompt",
+      ),
+      Pw = b.querySelector('[name="rc-pw"]'),
+      Er = b.querySelector(".rc-err"),
+      Go = b.querySelector(".rc-go"),
+      X = b.querySelector(".rc-x-close"),
+      La = b.querySelector(".rc-later");
+    X && X.addEventListener("click", rcClose);
+    La &&
+      La.addEventListener("click", function () {
+        try {
+          sessionStorage.setItem("rc_later", "1");
+        } catch (e) {}
+        rcClose();
+      });
+    Go.addEventListener("click", function () {
+      Er.textContent = "";
+      if (Pw && !Pw.value) return void (Er.textContent = "Enter your current password.");
+      Go.disabled = !0;
+      E("/api/recovery/regenerate", { method: "POST", body: Pw ? { password: Pw.value } : {} })
+        .then(function (j) {
+          Go.disabled = !1;
+          if (j && j.ok && j.recoveryCode) {
+            j.user && (s.hasRecovery = !0, s.recoveryCreatedAt = j.user.recoveryCreatedAt);
+            rcShowCode(j.recoveryCode, s.username, {
+              title: replace ? "Your new recovery code" : "Your recovery code",
+              sub: replace
+                ? "Your old code no longer works. This one is shown only once, so save it now."
+                : undefined,
+              onDone: function () {
+                var row = document.querySelector(".rc-row .rc-row-status");
+                row && (row.textContent = "Saved · " + new Date().toLocaleDateString());
+              },
+            });
+          } else Er.textContent = (j && j.error) || "Couldn't make a code.";
+        })
+        .catch(function () {
+          Go.disabled = !1;
+          Er.textContent = "Couldn't reach the chat server. Try again.";
+        });
+    });
+    Pw &&
+      setTimeout(function () {
+        try {
+          Pw.focus({ preventScroll: !0 });
+        } catch (e) {}
+      }, 260);
+  }
+  function rcMaybePrompt() {
+    if (rcPrompted || !s || !d || s.hasRecovery !== !1) return;
+    try {
+      if (sessionStorage.getItem("rc_later")) return;
+    } catch (e) {}
+    rcPrompted = !0;
+    setTimeout(function () {
+      s && !s.hasRecovery && !rcOpen && rcCreate("create");
+    }, 1400);
+  }
+  function rcSettingsRow() {
+    var row = document.createElement("div");
+    row.className = "chat-xbox rc-row";
+    var has = s && s.hasRecovery;
+    row.innerHTML =
+      '<span class="rc-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M15.5 7.5a3.5 3.5 0 1 1-2.6 5.85L6 20.25H3.75V18L10.6 11.1A3.5 3.5 0 0 1 15.5 7.5zM16 9.25h.01"/></svg></span><span class="rc-row-text"><span class="rc-row-title">Recovery code</span><span class="rc-row-status">' +
+      (has
+        ? "Saved · " + (s.recoveryCreatedAt ? new Date(s.recoveryCreatedAt).toLocaleDateString() : "")
+        : "Not set up") +
+      '</span></span><button type="button" class="btn chat-xlink rc-row-btn">' +
+      (has ? "New code" : "Create") +
+      "</button>";
+    row.querySelector(".rc-row-btn").addEventListener("click", function () {
+      rcCreate(s && s.hasRecovery ? "regen" : "create-row");
+    });
+    return row;
+  }
+  // New account made with X: show its code once /api/me has loaded.
+  function rcXNewCode(code) {
+    var n = 0;
+    (function w() {
+      s && s.username
+        ? rcShowCode(code, s.username, { eyebrow: "WELCOME TO MISÈRE PERDUE" })
+        : ++n < 40 && setTimeout(w, 150);
+    })();
+  }
+  function rcResetNotice(ts) {
+    ts &&
+      k(
+        "Your password was reset on " +
+          new Date(ts).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) +
+          ". If that wasn't you, use your recovery code now.",
+      );
   }
   function wt(e) {
     if (e && e.token) {
@@ -4024,7 +4494,7 @@
     if (d)
       E("/api/me")
         .then(function (e) {
-          if (e && e.user) ((s = e.user), ke());
+          if (e && e.user) ((s = e.user), ke(), rcAfterX(), rcMaybePrompt());
           else {
             d = null;
             try {
@@ -4084,7 +4554,7 @@
             localStorage.removeItem("x_poll");
           } catch (e) {}
           j && j.ok && j.token
-            ? wt({ token: j.token })
+            ? (wt({ token: j.token }), j.recoveryCode && rcXNewCode(j.recoveryCode))
             : j && j.error && (d ? k(j.error) : wt({ error: j.error }));
         })
         .catch(function () {
