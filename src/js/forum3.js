@@ -2784,7 +2784,7 @@
                     '"' +
                     (n.category === e.id ? " selected" : "") +
                     ">" +
-            w(catLabel(e)) +
+                    w(e.name) +
                     (e.membersOnly ? " ⭐" : "") +
                     "</option>");
               }),
@@ -3355,12 +3355,6 @@
           .catch(function () {}),
       i());
   }
-  // Category picker: emoji-only names get a readable label ("🌍 General").
-  var CAT_LABELS = { "🌍": "General", "🎧": "Music", "📺": "TV & Film", "🛍️": "Fashion", "🛍": "Fashion", "🍔 + 🍷": "Food & Drink", "🧩": "Other", "💵": "Money" };
-  function catLabel(e) {
-    var n = String((e && e.name) || "").trim(), t = CAT_LABELS[n];
-    return t ? n + "  " + t : n;
-  }
   function Ie() {
     X();
     var n =
@@ -3376,7 +3370,7 @@
             '"' +
             (r.category === e.id ? " selected" : "") +
             ">" +
-            w(catLabel(e)) +
+            w(e.name) +
             (e.membersOnly ? " ⭐" : "") +
             "</option>");
       }),

@@ -69,7 +69,6 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       document.body.classList.toggle("crop-hero", isShop || (current.type === "journal" && isAuth));
       document.body.classList.toggle("crop-hero-auth", current.type === "journal" && isAuth);
       document.body.classList.toggle("crop-hero-shop", isShop);
-      document.body.classList.toggle("crop-hero-fade", current.type === "product" || current.type === "cart");
     }
 
     function esc(s) {
