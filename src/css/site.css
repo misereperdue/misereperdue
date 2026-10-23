@@ -6422,28 +6422,43 @@ button.forum-glass-pill:active {
 }
 
 
-/* Shop tab only: a quiet, purely decorative ending under the grid —
-   the closed eyes (same artwork as the splash), low contrast, slow breath.
-   No text, no links, not a footer. Shown once products have rendered. */
-#shop:has(.product-card)::after {
-  content: "";
+/* Site ending (per dc): the closed eyes, slowly breathing, with a tiny
+   monospace line under them. Shown on every tab except chat. */
+.mp-end {
+  margin: 0 auto;
+  padding: 0 0 calc(48px + env(safe-area-inset-bottom));
+  text-align: center;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.page:has(> #journal.on) + .mp-end {
+  display: none;
+}
+.mp-end-eyes {
   display: block;
   width: 64px;
   height: 17px;
-  margin: 64px auto calc(56px + env(safe-area-inset-bottom));
+  margin: 0 auto 14px;
   background: var(--accent);
   opacity: .26;
   -webkit-mask: url(/img/splash-eyes.png) center/contain no-repeat;
   mask: url(/img/splash-eyes.png) center/contain no-repeat;
   animation: shop-end-breathe 7s ease-in-out infinite;
-  pointer-events: none;
+}
+.mp-end-copy {
+  margin: 0;
+  font: 600 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .24em;
+  color: var(--accent);
+  opacity: .38;
 }
 @keyframes shop-end-breathe {
   0%, 100% { opacity: .26; transform: translateY(0); }
   50% { opacity: .14; transform: translateY(2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  #shop:has(.product-card)::after { animation: none; }
+  .mp-end-eyes { animation: none; }
 }
 
 /* Native share (product + Globe thread); hidden when navigator.share is missing. */
