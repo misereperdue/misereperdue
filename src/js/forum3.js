@@ -1680,7 +1680,7 @@
         '" data-cat="">All</button>'),
       b.categories.forEach(function (e) {
         var t = "";
-        (e.ownerOnly &&
+        ((e.ownerOnly || e.locked) &&
           (t = e.locked
             ? ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>'
             : ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.8-1.3"/></svg>'),
@@ -1692,10 +1692,11 @@
             w(e.id) +
             '"' +
             (e.locked ? ' data-locked="1"' : "") +
+            (e.name ? "" : ' aria-label="Locked category"') +
             ">" +
-            w(e.name) +
+            w(e.name || "") +
             (e.membersOnly ? " ⭐" : "") +
-            t +
+            (e.name ? t : t.replace(/^ /, "")) +
             "</button>"));
       }),
       (u += "</div>"),
@@ -3550,7 +3551,7 @@
           : "thread" === r.name && r.threadId && (we(), (s = "thread"), (d = r.threadId))),
       y("/api/forum/categories")
         .then(function (e) {
-          return ((b.categories = ((e.ok && e.categories) || []).filter(function (c) { return c && c.name; })), y("/api/forum/threads"));
+          return ((b.categories = (e.ok && e.categories) || []), y("/api/forum/threads"));
         })
         .then(function (e) {
           var t = (e.ok && e.threads) || [];
