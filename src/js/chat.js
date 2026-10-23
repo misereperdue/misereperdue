@@ -937,6 +937,7 @@
         var a = P(s);
         a && t.insertAdjacentHTML("beforeend", a);
       }
+      mpAuthEmit();
     }
   }
   /* Auth state for other modules (shop Globe tile): window.MPAuthUser is the

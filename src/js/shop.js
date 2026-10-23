@@ -634,6 +634,7 @@ var MPShop = (function () {
     var e = document.querySelector("#shop-grid .globe-promo");
     if (!e) return;
     var on = gpSignedIn();
+    gpMe(e, on);
     if (e.getAttribute("data-auth") === (on ? "in" : "out")) return;
     e.setAttribute("data-auth", on ? "in" : "out");
     var l = e.querySelector(".gp-line"),
@@ -652,6 +653,27 @@ var MPShop = (function () {
         ? "Misery Globe. You\u2019re already signed up"
         : "Misery Globe. Sign up to get access to exclusive deals and content",
     );
+  }
+  // Signed in (per dc): the user's avatar + active badge sit bottom-right, level
+  // with the pill row, built with chat.js's own avatar/badge renderers. Rebuilt
+  // only when the user, avatar or badge changes (chat.js re-emits "mp-auth"
+  // whenever it redraws its own profile avatar).
+  function gpMe(e, on) {
+    var m = e.querySelector(".gp-me"),
+      u = on && window.MPAuthUser,
+      C = window.MPChat;
+    if (!m) return;
+    if (!u || !C || !C.avatarNode) return ((m.hidden = !0), (m.innerHTML = ""), void (m._k = ""));
+    var v = u.hasAvatarImg ? u.avatarV : void 0,
+      b = (C.badgeFor && C.badgeFor(u)) || "",
+      k = [u.username, v, window._myAvatarDataUrl ? window._myAvatarDataUrl.length : 0, b].join("|");
+    m.hidden = !1;
+    if (m._k === k) return;
+    m._k = k;
+    var w = C.avatarNode(u.username, u.avatar, null, v);
+    b && w.insertAdjacentHTML("beforeend", b);
+    m.innerHTML = "";
+    m.appendChild(w);
   }
   // Signed in: Profile / Orders open the same sheets as the profile menu
   // (chat.js exposes them). Post goes to the Globe and presses its "New thread"
@@ -700,7 +722,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="gp-acct gp-sec" data-act="profile" role="button" tabindex="0" hidden>Profile</span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div></div></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="gp-acct gp-sec" data-act="profile" role="button" tabindex="0" hidden>Profile</span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
             e.map(g).join("") +
@@ -724,7 +746,7 @@ var MPShop = (function () {
                 (e.onkeydown = function (t) {
                   ("Enter" !== t.key && " " !== t.key) || (t.preventDefault(), y("forum"));
                 }));
-              e.querySelectorAll(".gp-acct").forEach(function (n) {
+              e.querySelectorAll(".gp-acct, .gp-me").forEach(function (n) {
                 var go = function () {
                   gpAct(n.getAttribute("data-act"));
                 };
