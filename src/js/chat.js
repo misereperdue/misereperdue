@@ -4334,7 +4334,7 @@
   // Create / replace the code while signed in (settings row + prompt).
   function rcCreate(mode) {
     if (!s) return;
-    var needPw = !!s.hasPassword,
+    var needPw = s.hasPassword !== false,
       replace = "regen" === mode,
       b = rcLayer(
         (replace ? '<button type="button" class="rc-x-close" aria-label="Close">×</button>' : "") +
