@@ -6489,6 +6489,13 @@ button.forum-glass-pill:active {
   user-select: none;
   -webkit-touch-callout: none;
 }
+[data-theme="light"] .mp-push-ask,
+:root:not([data-theme]) .mp-push-ask {
+  background: rgba(255, 255, 255, 0.84);
+}
+[data-theme="dark"] .mp-push-ask {
+  background: rgba(10, 16, 40, 0.82);
+}
 .mp-push-ask.on {
   opacity: 1;
   transform: none;
