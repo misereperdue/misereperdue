@@ -4020,11 +4020,99 @@
       );
     });
   }
+  // Home-screen app only: one soft ask for push after sign-in (subscriptions are
+  // per account: /api/push/subscribe needs the bearer token). Never in Safari tabs,
+  // never once the user has answered the system prompt; "Not now" snoozes 14 days.
+  (function pushAsk() {
+    var SNOOZE = "mp-push-ask-until";
+    function standalone() {
+      try {
+        return (
+          !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+          !!navigator.standalone
+        );
+      } catch (e) {
+        return !1;
+      }
+    }
+    function eligible() {
+      if (!standalone()) return !1;
+      if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window))
+        return !1;
+      if (Notification.permission !== "default") return !1;
+      try {
+        if (Date.now() < +(localStorage.getItem(SNOOZE) || 0)) return !1;
+      } catch (e) {}
+      return !0;
+    }
+    if (!eligible()) return;
+    var tries = 0,
+      shown = !1,
+      poll = setInterval(function () {
+        if (++tries > 300 || shown) return clearInterval(poll);
+        if (!(d && s)) return;
+        (clearInterval(poll), setTimeout(show, 4e3));
+      }, 2e3);
+    function show() {
+      if (shown || !(d && s) || !eligible() || document.getElementById("mp-push-ask")) return;
+      shown = !0;
+      var card = document.createElement("div");
+      ((card.id = "mp-push-ask"),
+        (card.className = "mp-push-ask"),
+        card.setAttribute("role", "dialog"),
+        card.setAttribute("aria-label", "Notifications"),
+        (card.innerHTML =
+          '<span class="mp-push-ask-eyes" aria-hidden="true"></span>' +
+          '<p class="mp-push-ask-text">Get notified about drops &amp; replies</p>' +
+          '<div class="mp-push-ask-row"><button type="button" class="mp-push-ask-no">Not now</button>' +
+          '<button type="button" class="mp-push-ask-yes">Allow</button></div>'),
+        document.body.appendChild(card),
+        requestAnimationFrame(function () {
+          card.classList.add("on");
+        }));
+      function hide() {
+        (card.classList.remove("on"),
+          setTimeout(function () {
+            card.remove();
+          }, 400));
+      }
+      (card.querySelector(".mp-push-ask-no").addEventListener("click", function () {
+        try {
+          localStorage.setItem(SNOOZE, String(Date.now() + 14 * 864e5));
+        } catch (e) {}
+        hide();
+      }),
+        card.querySelector(".mp-push-ask-yes").addEventListener("click", function () {
+          // requestPermission must run synchronously inside the tap (iOS requires a gesture).
+          var ask;
+          try {
+            ask = Notification.requestPermission();
+          } catch (e) {
+            ask = Promise.reject(e);
+          }
+          (hide(),
+            Promise.resolve(ask)
+              .then(function (p) {
+                if ("granted" !== p) throw new Error("Permission " + p);
+                return navigator.serviceWorker.ready;
+              })
+              .then(function (r) {
+                return r.pushManager.getSubscription().then(function (sub) {
+                  return sub || r.pushManager.subscribe({ userVisibleOnly: !0, applicationServerKey: xt(Ct) });
+                });
+              })
+              .then(function (sub) {
+                return E("/api/push/subscribe", { method: "POST", body: { subscription: sub.toJSON() } });
+              })
+              .catch(function () {}));
+        }));
+    }
+  })();
   var Lt = document.createElement("div");
   ((Lt.className = "mp-offline-banner"),
     (Lt.textContent = "You're offline — showing cached content"),
     (Lt.style.cssText =
-      "position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;display:none;pointer-events:none;white-space:nowrap;"),
+      "position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:9999;display:none;pointer-events:none;white-space:nowrap;"),
     document.body.appendChild(Lt));
   var St = !1;
   function Mt(e) {
