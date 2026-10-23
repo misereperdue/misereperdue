@@ -4063,7 +4063,7 @@
         card.setAttribute("aria-label", "Notifications"),
         (card.innerHTML =
           '<span class="mp-push-ask-eyes" aria-hidden="true"></span>' +
-          '<p class="mp-push-ask-text">Get notified about drops &amp; replies</p>' +
+          '<p class="mp-push-ask-text">Get notified about future updates</p>' +
           '<div class="mp-push-ask-row"><button type="button" class="mp-push-ask-no">Not now</button>' +
           '<button type="button" class="mp-push-ask-yes">Allow</button></div>'),
         document.body.appendChild(card),
