@@ -6567,10 +6567,6 @@ button.forum-glass-pill:active {
 /* Native feel: no document rubber-band (inner scrollers keep their own),
    no grey tap flash, no 300ms / double-tap zoom on controls, no callout or
    selection on UI chrome and product imagery. Text content + inputs untouched. */
-html,
-body {
-  overscroll-behavior: none;
-}
 html {
   -webkit-tap-highlight-color: transparent;
 }
