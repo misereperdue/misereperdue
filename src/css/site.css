@@ -8052,11 +8052,11 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
    get the look from fills + sheen + inset rim (no per-bubble blur in the scrolling list). */
 :root,
 [data-theme="light"] {
-  /* Apple iOS 26 style Liquid Glass (per dc 12:44/12:45): neutral, ~40% fill, saturated
+  /* Apple iOS 26 style Liquid Glass (per dc 12:44/12:45/12:49): neutral, 60% fill (40% transparency), saturated
      lens blur, thin specular rim (bright top, fading sides, faint darker bottom edge),
      soft wide lift shadow, glass droplet for the selected tab */
   --lg-blur: blur(16px) saturate(180%) brightness(1.04);
-  --lg-tint: rgba(255, 255, 255, 0.4);
+  --lg-tint: rgba(255, 255, 255, 0.6);
   --lg-text-halo: none;
   --lg-sheen: linear-gradient(
     165deg,
@@ -8089,7 +8089,7 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 }
 [data-theme="dark"] {
   --lg-blur: blur(16px) saturate(180%) brightness(0.96);
-  --lg-tint: rgba(28, 28, 32, 0.4);
+  --lg-tint: rgba(28, 28, 32, 0.6);
   --lg-text-halo: none;
   --lg-sheen: linear-gradient(
     165deg,
