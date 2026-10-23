@@ -6464,6 +6464,7 @@ button.forum-glass-pill:active {
   font: 400 8px/1.4 "Space Age", ui-monospace, monospace;
   letter-spacing: .14em;
   color: var(--accent);
+  -webkit-text-stroke: .45px currentColor;
   opacity: .26;
   animation: shop-end-breathe 7s ease-in-out infinite;
 }
