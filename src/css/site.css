@@ -6454,6 +6454,19 @@ button.forum-glass-pill:active {
   opacity: .26;
   animation: shop-end-breathe 7s ease-in-out infinite;
 }
+@font-face {
+  font-family: "Space Age";
+  src: url(/img/space-age.woff2?v=1) format("woff2");
+  font-display: swap;
+}
+.mp-end-tag {
+  margin: 7px 0 0;
+  font: 400 8px/1.4 "Space Age", ui-monospace, monospace;
+  letter-spacing: .14em;
+  color: var(--accent);
+  opacity: .26;
+  animation: shop-end-breathe 7s ease-in-out infinite;
+}
 /* etched: dark lip above, faint light edge below, so the eyes and the
    line read as cut into the page */
 .mp-end {
@@ -6467,7 +6480,7 @@ button.forum-glass-pill:active {
   50% { opacity: .14; transform: translateY(2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-end-eyes, .mp-end-copy { animation: none; }
+  .mp-end-eyes, .mp-end-copy, .mp-end-tag { animation: none; }
 }
 
 /* Native share (product + Globe thread); hidden when navigator.share is missing. */
