@@ -5,9 +5,9 @@
  *  - Clouds: 3 periodic soft-noise textures generated once (small offscreen
  *    canvases, scaled up smoothly) and scrolled at different speeds. The moon
  *    sits behind them; its halo breathes slowly and brightens where the cloud
- *    cover over it thins. Fixed orientation (per dc 17:40): the original
- *    crescent turned a quarter-turn clockwise, lit limb low-left; the halo and
- *    shine-through glow lean the same way.
+ *    cover over it thins. Fixed orientation (per dc 17:40/17:44): the original
+ *    crescent turned a quarter-turn clockwise then mirrored left-right, lit
+ *    limb low-right; the halo, inner glow and shine-through lean the same way.
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
  *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
  *    a faint branching bolt between cloud layers; "thunder" is a slight cloud
@@ -91,10 +91,11 @@
   }
   // Moon: a crescent (lit limb, faint maria, earthshine on the dark side),
   // drawn once at 128px so it downsamples crisply; the halo is a live gradient.
-  // Orientation (per dc 17:40): the original crescent (shadow disc up-left of
-  // centre) turned 90 deg clockwise, so the shadow disc sits up-right and the
-  // lit limb faces low-left (MOON_LIT). Fixed, no live rotation.
-  var MOON_LIT = [-0.507, 0.862]; // unit vector, screen coords (y down)
+  // Orientation (per dc 17:40/17:44): the original crescent (shadow disc
+  // up-left of centre) turned 90 deg clockwise, then mirrored horizontally, so
+  // the shadow disc sits up-left and the lit limb faces low-right (MOON_LIT).
+  // Fixed, no live rotation.
+  var MOON_LIT = [0.507, 0.862]; // unit vector, screen coords (y down)
   function moonTex(col, alpha, earth) {
     var s = 128, c = document.createElement("canvas");
     c.width = c.height = s;
@@ -104,8 +105,9 @@
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
       // crisp limb: ~1 device px of anti-aliasing at the drawn size
       var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.94) / 0.06))), shade = 1 - 0.12 * dd * dd;
-      // shadow disc (original offset rotated 90 deg cw: (-0.17,-0.1) -> (0.1,-0.17))
-      var ox = dx - 0.1, oy = dy + 0.17, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
+      // shadow disc: original offset (-0.17,-0.1) turned 90 deg cw -> (0.1,-0.17),
+      // then mirrored left-right -> (-0.1,-0.17)
+      var ox = dx + 0.1, oy = dy + 0.17, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
       var lit = sm(Math.min(1, Math.max(0, (od - 0.94) / 0.1)));
       for (i = 0; i < spots.length; i++) {
         var sx = (x + 0.5) / s - spots[i][0], sy = (y + 0.5) / s - spots[i][1], q = Math.sqrt(sx * sx + sy * sy) / spots[i][2];
@@ -338,7 +340,7 @@
     }
     if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    // glow leans toward the lit limb (inner circle nudged low-left), fades round
+    // glow leans toward the lit limb (inner circle nudged low-right), fades round
     var lx = mp.x + MOON_LIT[0] * mp.r * 0.3, ly = mp.y + MOON_LIT[1] * mp.r * 0.3;
     var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(lx, ly, mp.r * 0.6, mp.x, mp.y, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
@@ -347,6 +349,13 @@
     hg.addColorStop(1, "rgba(" + pal.halo + ",0)");
     ctx.fillStyle = hg;
     ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
+    // second, tighter glow hugging the lit limb (layered with the wide halo)
+    var gr2 = mp.r * 2, ig = ctx.createRadialGradient(lx, ly, mp.r * 0.7, mp.x, mp.y, gr2);
+    ig.addColorStop(0, "rgba(" + pal.halo + "," + (ha * 0.9).toFixed(3) + ")");
+    ig.addColorStop(0.5, "rgba(" + pal.halo + "," + (ha * 0.3).toFixed(3) + ")");
+    ig.addColorStop(1, "rgba(" + pal.halo + ",0)");
+    ctx.fillStyle = ig;
+    ctx.fillRect(mp.x - gr2, mp.y - gr2, gr2 * 2, gr2 * 2);
     ctx.globalAlpha = 0.75 + 0.25 * clear;
     drawMoon(moon, mp);
     ctx.globalAlpha = 1;
@@ -451,13 +460,13 @@
     flash: function () { if (!(rm && rm.matches)) trigger(t0); },
     // MPRain.moonAt(date) pins the moon to that moment (null = live again) and
     // returns the numbers: zenithDeg = bright-limb angle from straight up
-    // (eastward). The drawn crescent is fixed (per dc 17:40): rotDeg is its
-    // constant quarter-turn clockwise from the original crescent.
+    // (eastward). The drawn crescent is fixed (per dc 17:40/17:44): rotDeg is its
+    // constant quarter-turn clockwise from the original crescent, mirrored = true.
     moonAt: function (date) {
       moonForced = date ? new Date(date) : null;
       var m = moonAim();
       var deg = function (x) { return Math.round((x / RAD) * 10) / 10; };
-      return { zenithDeg: deg(m.zenith), rotDeg: 90, angleDeg: deg(m.angle), parallacticDeg: deg(m.parallactic), altitudeDeg: deg(m.alt), illuminated: Math.round(m.fraction * 1000) / 1000, lat: LOC[0], lon: LOC[1] };
+      return { zenithDeg: deg(m.zenith), rotDeg: 90, mirrored: true, angleDeg: deg(m.angle), parallacticDeg: deg(m.parallactic), altitudeDeg: deg(m.alt), illuminated: Math.round(m.fraction * 1000) / 1000, lat: LOC[0], lon: LOC[1] };
     },
   };
 
