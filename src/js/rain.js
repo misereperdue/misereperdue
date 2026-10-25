@@ -7,7 +7,8 @@
  *    sits behind them; its halo breathes slowly and brightens where the cloud
  *    cover over it thins. Fixed orientation (per dc 17:40/17:44): the original
  *    crescent turned a quarter-turn clockwise then mirrored left-right, lit
- *    limb low-right; the halo, inner glow and shine-through lean the same way.
+ *    limb low-right; the halo, inner glow and shine-through centre on the lit
+ *    crescent and fade smoothly to nothing (no earthshine, no disc outline).
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
  *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
  *    a faint branching bolt between cloud layers; "thunder" is a slight cloud
@@ -32,7 +33,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      stars: 1, moon: [222, 234, 250], moonA: 0.62, earth: 0.1, halo: "170,200,240", haloA: 0.18,
+      stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.18,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -42,7 +43,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      stars: 0, moon: [255, 255, 255], moonA: 0.92, earth: 0.07, halo: "120,138,166", haloA: 0.145,
+      stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.145,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -89,14 +90,25 @@
     c.cover = cover;
     return c;
   }
-  // Moon: a crescent (lit limb, faint maria, earthshine on the dark side),
+  // Moon: a crescent (lit limb, faint maria; dark side fully clear, per dc 17:52),
   // drawn once at 128px so it downsamples crisply; the halo is a live gradient.
   // Orientation (per dc 17:40/17:44): the original crescent (shadow disc
   // up-left of centre) turned 90 deg clockwise, then mirrored horizontally, so
   // the shadow disc sits up-left and the lit limb faces low-right (MOON_LIT).
   // Fixed, no live rotation.
   var MOON_LIT = [0.507, 0.862]; // unit vector, screen coords (y down)
-  function moonTex(col, alpha, earth) {
+  // glows centre on the lit crescent's centroid (0.49 r along MOON_LIT), start
+  // at their peak (no flat inner disc) and ease out to exactly 0, so no layer
+  // ever shows a circular edge
+  var GLOW_FALL = [[0, 1], [0.12, 0.72], [0.28, 0.42], [0.48, 0.19], [0.7, 0.06], [0.86, 0.015], [1, 0]];
+  function moonGlow(cx, cy, R, peak) {
+    var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    for (var i = 0; i < GLOW_FALL.length; i++)
+      g.addColorStop(GLOW_FALL[i][0], "rgba(" + pal.halo + "," + (peak * GLOW_FALL[i][1]).toFixed(4) + ")");
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+  }
+  function moonTex(col, alpha) {
     var s = 128, c = document.createElement("canvas");
     c.width = c.height = s;
     var m = c.getContext("2d"), img = m.createImageData(s, s), d = img.data, r = rng(5), spots = [], i, x, y, p = 0;
@@ -115,7 +127,7 @@
       }
       // a touch brighter along the sunlit limb
       shade += 0.08 * lit * sm(Math.min(1, Math.max(0, (dd - 0.6) / 0.35)));
-      var a = lit + earth * (1 - lit), tone = shade * (0.82 + 0.18 * lit);
+      var a = lit, tone = shade * (0.82 + 0.18 * lit);
       d[p++] = Math.min(255, col[0] * tone); d[p++] = Math.min(255, col[1] * tone); d[p++] = Math.min(255, col[2] * tone);
       d[p++] = Math.round(255 * alpha * edge * a);
     }
@@ -137,7 +149,7 @@
     pal = PAL[theme()];
     clouds = [];
     for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
-    moon = moonTex(pal.moon, pal.moonA, pal.earth);
+    moon = moonTex(pal.moon, pal.moonA);
     paint();
   }
   function paint() {
@@ -341,22 +353,11 @@
     }
     if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    // glow leans toward the lit limb (inner circle nudged low-right), fades round
-    var lx = mp.x + MOON_LIT[0] * mp.r * 0.3, ly = mp.y + MOON_LIT[1] * mp.r * 0.3;
-    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(lx, ly, mp.r * 0.6, mp.x, mp.y, hr);
+    // layered glow centred on the lit crescent: wide breathing halo + tight glow
+    var lx = mp.x + MOON_LIT[0] * mp.r * 0.49, ly = mp.y + MOON_LIT[1] * mp.r * 0.49;
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
-    hg.addColorStop(0, "rgba(" + pal.halo + "," + ha.toFixed(3) + ")");
-    hg.addColorStop(0.35, "rgba(" + pal.halo + "," + (ha * 0.35).toFixed(3) + ")");
-    hg.addColorStop(1, "rgba(" + pal.halo + ",0)");
-    ctx.fillStyle = hg;
-    ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
-    // second, tighter glow hugging the lit limb (layered with the wide halo)
-    var gr2 = mp.r * 2, ig = ctx.createRadialGradient(lx, ly, mp.r * 0.7, mp.x, mp.y, gr2);
-    ig.addColorStop(0, "rgba(" + pal.halo + "," + (ha * 0.75).toFixed(3) + ")");
-    ig.addColorStop(0.5, "rgba(" + pal.halo + "," + (ha * 0.25).toFixed(3) + ")");
-    ig.addColorStop(1, "rgba(" + pal.halo + ",0)");
-    ctx.fillStyle = ig;
-    ctx.fillRect(mp.x - gr2, mp.y - gr2, gr2 * 2, gr2 * 2);
+    moonGlow(lx, ly, mp.r * (4.2 + 1.2 * clear), ha);
+    moonGlow(lx, ly, mp.r * 2, ha * 0.75);
     ctx.globalAlpha = 0.75 + 0.25 * clear;
     drawMoon(moon, mp);
     ctx.globalAlpha = 1;
@@ -374,11 +375,7 @@
     // the moon shines through passing cloud: soft glow + crescent re-drawn on top
     var thru = Math.min(1, cover * 1.6);
     if (thru > 0.02) {
-      var sg = ctx.createRadialGradient(lx, ly, 0, mp.x, mp.y, mp.r * 2.6);
-      sg.addColorStop(0, "rgba(" + pal.halo + "," + (0.32 * thru * breathe).toFixed(3) + ")");
-      sg.addColorStop(1, "rgba(" + pal.halo + ",0)");
-      ctx.fillStyle = sg;
-      ctx.fillRect(mp.x - mp.r * 2.6, mp.y - mp.r * 2.6, mp.r * 5.2, mp.r * 5.2);
+      moonGlow(lx, ly, mp.r * 2.6, 0.32 * thru * breathe);
       ctx.globalAlpha = thru * (0.62 + 0.08 * breathe);
       drawMoon(moon, mp);
       ctx.globalAlpha = 1;
