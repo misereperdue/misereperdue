@@ -5,9 +5,9 @@
  *  - Clouds: 3 periodic soft-noise textures generated once (small offscreen
  *    canvases, scaled up smoothly) and scrolled at different speeds. The moon
  *    sits behind them; its halo breathes slowly and brightens where the cloud
- *    cover over it thins. Its bright limb turns live to the real moon's on-sky
- *    angle for the viewer (timezone-guessed location, SunCalc-style math,
- *    recomputed every 60 s and eased).
+ *    cover over it thins. Fixed orientation (per dc 17:40): the original
+ *    crescent turned a quarter-turn clockwise, lit limb low-left; the halo and
+ *    shine-through glow lean the same way.
  *  - Lightning every ~8-20 s: a cloud-lit glow (brightness capped, never a
  *    page-wide white), 2-3 pulses within ~400 ms (<= 3 per second), sometimes
  *    a faint branching bolt between cloud layers; "thunder" is a slight cloud
@@ -32,7 +32,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.3,
+      stars: 1, moon: [222, 234, 250], moonA: 0.62, earth: 0.1, halo: "170,200,240", haloA: 0.3,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -42,7 +42,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.22,
+      stars: 0, moon: [255, 255, 255], moonA: 0.92, earth: 0.07, halo: "120,138,166", haloA: 0.22,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -89,25 +89,33 @@
     c.cover = cover;
     return c;
   }
-  // Moon: a crescent (lit limb, faint maria), drawn once; halo is a live gradient.
-  function moonTex(col, alpha) {
-    var s = 64, c = document.createElement("canvas");
+  // Moon: a crescent (lit limb, faint maria, earthshine on the dark side),
+  // drawn once at 128px so it downsamples crisply; the halo is a live gradient.
+  // Orientation (per dc 17:40): the original crescent (shadow disc up-left of
+  // centre) turned 90 deg clockwise, so the shadow disc sits up-right and the
+  // lit limb faces low-left (MOON_LIT). Fixed, no live rotation.
+  var MOON_LIT = [-0.507, 0.862]; // unit vector, screen coords (y down)
+  function moonTex(col, alpha, earth) {
+    var s = 128, c = document.createElement("canvas");
     c.width = c.height = s;
     var m = c.getContext("2d"), img = m.createImageData(s, s), d = img.data, r = rng(5), spots = [], i, x, y, p = 0;
     for (i = 0; i < 7; i++) spots.push([0.25 + r() * 0.5, 0.25 + r() * 0.5, 0.08 + r() * 0.12, 0.1 + r() * 0.12]);
     for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
-      var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.86) / 0.14))), shade = 1 - 0.12 * dd * dd;
-      // shadow disc offset (same crescent as before) carves it with the lit limb
-      // pointing up (canonical); it's rotated live to the real bright-limb angle
-      var ox = dx, oy = dy - 0.197, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
-      var lit = sm(Math.min(1, Math.max(0, (od - 0.9) / 0.14)));
+      // crisp limb: ~1 device px of anti-aliasing at the drawn size
+      var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.94) / 0.06))), shade = 1 - 0.12 * dd * dd;
+      // shadow disc (original offset rotated 90 deg cw: (-0.17,-0.1) -> (0.1,-0.17))
+      var ox = dx - 0.1, oy = dy + 0.17, od = Math.sqrt(ox * ox + oy * oy) / 0.45;
+      var lit = sm(Math.min(1, Math.max(0, (od - 0.94) / 0.1)));
       for (i = 0; i < spots.length; i++) {
         var sx = (x + 0.5) / s - spots[i][0], sy = (y + 0.5) / s - spots[i][1], q = Math.sqrt(sx * sx + sy * sy) / spots[i][2];
         if (q < 1) shade -= spots[i][3] * 0.6 * (1 - sm(q));
       }
-      d[p++] = col[0] * shade; d[p++] = col[1] * shade; d[p++] = col[2] * shade;
-      d[p++] = Math.round(255 * alpha * edge * lit);
+      // a touch brighter along the sunlit limb
+      shade += 0.08 * lit * sm(Math.min(1, Math.max(0, (dd - 0.6) / 0.35)));
+      var a = lit + earth * (1 - lit), tone = shade * (0.82 + 0.18 * lit);
+      d[p++] = Math.min(255, col[0] * tone); d[p++] = Math.min(255, col[1] * tone); d[p++] = Math.min(255, col[2] * tone);
+      d[p++] = Math.round(255 * alpha * edge * a);
     }
     m.putImageData(img, 0, 0);
     return c;
@@ -127,7 +135,7 @@
     pal = PAL[theme()];
     clouds = [];
     for (var k = 0; k < 3; k++) clouds.push(cloudTex(11 + k * 37, TW, TH, 3 + k, pal.cloud[k], pal.cloudA[k], 0, 0.9 - k * 0.12));
-    moon = moonTex(pal.moon, pal.moonA);
+    moon = moonTex(pal.moon, pal.moonA, pal.earth);
     paint();
   }
   function paint() {
@@ -191,11 +199,10 @@
     ctx.globalAlpha = 1;
   }
 
-  // ---- real moon orientation (per dc 12:51): the bright limb points where the
-  // moon's lit side appears in the viewer's sky right now (SunCalc-style math,
-  // inlined). Zenith angle of the bright limb = illumination angle - parallactic
-  // angle, measured from straight up. Location is guessed from the timezone
-  // (no geolocation prompt). Recomputed every 60 s and eased.
+  // ---- real moon numbers (MPRain.moonAt only; the drawn moon no longer follows
+  // them, per dc 17:40). Zenith angle of the bright limb = illumination angle -
+  // parallactic angle, measured from straight up (SunCalc-style math, inlined).
+  // Location is guessed from the timezone (no geolocation prompt).
   var RAD = Math.PI / 180, OBL = RAD * 23.4397;
   function raOf(l, b) { return Math.atan2(Math.sin(l) * Math.cos(OBL) - Math.tan(b) * Math.sin(OBL), Math.cos(l)); }
   function decOf(l, b) { return Math.asin(Math.sin(b) * Math.cos(OBL) + Math.cos(b) * Math.sin(OBL) * Math.sin(l)); }
@@ -236,29 +243,11 @@
     // unknown zone: longitude from the UTC offset (15 deg/hour), mid-latitude
     return [45, Math.max(-180, Math.min(180, -new Date().getTimezoneOffset() / 4))];
   }
-  var LOC = where(), moonRot = null, moonRotTo = 0, moonAtMs = 0, moonForced = null;
-  function moonAim(snap) {
-    var m = moonSky(moonForced || new Date(), LOC[0], LOC[1]);
-    // screen rotation (clockwise, canvas) of the canonical lit-up crescent:
-    // the zenith angle runs eastward = counter-clockwise on the sky as seen
-    moonRotTo = -m.zenith;
-    if (snap || moonRot === null) moonRot = moonRotTo;
-    moonAtMs = Date.now();
-    return m;
-  }
-  function easeMoon(dt) {
-    if (Date.now() - moonAtMs > 60000 && !moonForced) moonAim(false);
-    var dd = moonRotTo - moonRot;
-    dd = Math.atan2(Math.sin(dd), Math.cos(dd)); // shortest way round
-    moonRot += dd * Math.min(1, dt * 0.6);
-  }
+  var LOC = where(), moonForced = null;
+  function moonAim() { return moonSky(moonForced || new Date(), LOC[0], LOC[1]); }
 
   function drawMoon(img, mp) {
-    ctx.save();
-    ctx.translate(mp.x, mp.y);
-    ctx.rotate(moonRot || 0);
-    ctx.drawImage(img, -mp.r, -mp.r, mp.r * 2, mp.r * 2);
-    ctx.restore();
+    ctx.drawImage(img, mp.x - mp.r, mp.y - mp.r, mp.r * 2, mp.r * 2);
   }
   function resize() {
     var rc = cv.getBoundingClientRect();
@@ -347,10 +336,11 @@
       offs.push(-((t * L.speed) % tw));
       cover += coverAt(k, mp.x, mp.y, offs[k], tw, H * L.h, H * L.y);
     }
-    if (still) { if (moonRot === null) moonAim(true); } else easeMoon(dt);
     if (pal.stars) drawStars(t, offs, Math.max(0, 1 - fl * 2.2));
     var clear = Math.max(0, 1 - cover * 1.1), breathe = 0.82 + 0.18 * Math.sin(t * 0.9);
-    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(mp.x, mp.y, mp.r * 0.6, mp.x, mp.y, hr);
+    // glow leans toward the lit limb (inner circle nudged low-left), fades round
+    var lx = mp.x + MOON_LIT[0] * mp.r * 0.3, ly = mp.y + MOON_LIT[1] * mp.r * 0.3;
+    var hr = mp.r * (4.2 + 1.2 * clear), hg = ctx.createRadialGradient(lx, ly, mp.r * 0.6, mp.x, mp.y, hr);
     var ha = pal.haloA * breathe * (0.45 + 0.55 * clear);
     hg.addColorStop(0, "rgba(" + pal.halo + "," + ha.toFixed(3) + ")");
     hg.addColorStop(0.35, "rgba(" + pal.halo + "," + (ha * 0.35).toFixed(3) + ")");
@@ -374,7 +364,7 @@
     // the moon shines through passing cloud: soft glow + crescent re-drawn on top
     var thru = Math.min(1, cover * 1.6);
     if (thru > 0.02) {
-      var sg = ctx.createRadialGradient(mp.x, mp.y, 0, mp.x, mp.y, mp.r * 2.6);
+      var sg = ctx.createRadialGradient(lx, ly, 0, mp.x, mp.y, mp.r * 2.6);
       sg.addColorStop(0, "rgba(" + pal.halo + "," + (0.32 * thru * breathe).toFixed(3) + ")");
       sg.addColorStop(1, "rgba(" + pal.halo + ",0)");
       ctx.fillStyle = sg;
@@ -461,13 +451,13 @@
     flash: function () { if (!(rm && rm.matches)) trigger(t0); },
     // MPRain.moonAt(date) pins the moon to that moment (null = live again) and
     // returns the numbers: zenithDeg = bright-limb angle from straight up
-    // (eastward), rotDeg = on-screen clockwise rotation used for the crescent
+    // (eastward). The drawn crescent is fixed (per dc 17:40): rotDeg is its
+    // constant quarter-turn clockwise from the original crescent.
     moonAt: function (date) {
       moonForced = date ? new Date(date) : null;
-      var m = moonAim(true);
-      draw(0);
+      var m = moonAim();
       var deg = function (x) { return Math.round((x / RAD) * 10) / 10; };
-      return { zenithDeg: deg(m.zenith), rotDeg: deg(moonRot), angleDeg: deg(m.angle), parallacticDeg: deg(m.parallactic), altitudeDeg: deg(m.alt), illuminated: Math.round(m.fraction * 1000) / 1000, lat: LOC[0], lon: LOC[1] };
+      return { zenithDeg: deg(m.zenith), rotDeg: 90, angleDeg: deg(m.angle), parallacticDeg: deg(m.parallactic), altitudeDeg: deg(m.alt), illuminated: Math.round(m.fraction * 1000) / 1000, lat: LOC[0], lon: LOC[1] };
     },
   };
 
