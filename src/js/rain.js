@@ -32,7 +32,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      stars: 1, moon: [222, 234, 250], moonA: 0.62, earth: 0.1, halo: "170,200,240", haloA: 0.3,
+      stars: 1, moon: [222, 234, 250], moonA: 0.62, earth: 0.1, halo: "170,200,240", haloA: 0.18,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -42,7 +42,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      stars: 0, moon: [255, 255, 255], moonA: 0.92, earth: 0.07, halo: "120,138,166", haloA: 0.22,
+      stars: 0, moon: [255, 255, 255], moonA: 0.92, earth: 0.07, halo: "120,138,166", haloA: 0.145,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -272,9 +272,10 @@
 
   // ---- moon placement + cloud cover over it ----
   function moonPos() {
-    // upper right, just clear of the centred nav pill so it reads through glass
+    // upper right, clear of the centred nav pill; nudged 8px right and 8px down
+    // (per dc 17:48), still >= 18px from the right edge
     var r = Math.max(10, Math.min(16, W * 0.034));
-    return { x: Math.min(W - r - 18, W * 0.5 + 118), y: Math.max(r + 8, H * 0.2), r: r };
+    return { x: Math.min(W - r - 18, W * 0.5 + 126), y: Math.max(r + 8, H * 0.2) + 8, r: r };
   }
   function coverAt(k, px, py, off, tw, th, y0) {
     var u = (px - off) / tw; u -= Math.floor(u);
@@ -351,8 +352,8 @@
     ctx.fillRect(mp.x - hr, mp.y - hr, hr * 2, hr * 2);
     // second, tighter glow hugging the lit limb (layered with the wide halo)
     var gr2 = mp.r * 2, ig = ctx.createRadialGradient(lx, ly, mp.r * 0.7, mp.x, mp.y, gr2);
-    ig.addColorStop(0, "rgba(" + pal.halo + "," + (ha * 0.9).toFixed(3) + ")");
-    ig.addColorStop(0.5, "rgba(" + pal.halo + "," + (ha * 0.3).toFixed(3) + ")");
+    ig.addColorStop(0, "rgba(" + pal.halo + "," + (ha * 0.75).toFixed(3) + ")");
+    ig.addColorStop(0.5, "rgba(" + pal.halo + "," + (ha * 0.25).toFixed(3) + ")");
     ig.addColorStop(1, "rgba(" + pal.halo + ",0)");
     ctx.fillStyle = ig;
     ctx.fillRect(mp.x - gr2, mp.y - gr2, gr2 * 2, gr2 * 2);
