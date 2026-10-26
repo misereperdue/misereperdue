@@ -500,7 +500,7 @@
       (t.className = "chat-sheet-share"),
       t.setAttribute("aria-label", "Share profile"),
       (t.innerHTML =
-        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>'),
+        '<svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/></svg>'),
       (t.style.cssText =
         "position:absolute;top:10px;left:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
       t.addEventListener("click", function (n) {
@@ -692,7 +692,7 @@
               (i.className = "chat-sheet-x"),
               i.setAttribute("aria-label", "Close"),
               (i.innerHTML =
-                '<svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>'),
+                '<svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
               (i.style.cssText =
                 "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
               i.addEventListener("click", gt),
@@ -1567,7 +1567,7 @@
       (Ue = []),
       (m = 0),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor"><path fill="currentColor" d="M168,224a8,8,0,0,1-8,8H96a8,8,0,1,1,0-16h64A8,8,0,0,1,168,224Zm53.81-48.06C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H208a16,16,0,0,0,13.8-24.06Z"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add photo or video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
+        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" data-hi="wiggle"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add photo or video"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 4.5v15m7.5-7.5h-15"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
       window.MPForum && MPForum.updateBellBadge)
     )
       try {
@@ -1745,7 +1745,7 @@
           (a.className = "chat-attach-x"),
           a.setAttribute("aria-label", "Remove attachment"),
           (a.innerHTML =
-            '<svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>'),
+            '<svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
           a.addEventListener("click", function () {
             ((h = null), b());
           }),
@@ -2873,7 +2873,7 @@
       (l.className = "chat-sheet-x"),
       l.setAttribute("aria-label", "Close"),
       (l.innerHTML =
-        '<svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>'),
+        '<svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
       (l.style.cssText =
         "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
       l.addEventListener("click", gt),
@@ -3797,7 +3797,7 @@
         ((r.type = "button"),
         (r.className = "chat-me-item"),
         (r.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg><span>Profile</span>'),
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg><span>Profile</span>'),
         r.addEventListener("click", function (e) {
           (e.stopPropagation(),
             ht(),
@@ -3813,7 +3813,7 @@
         ((o.type = "button"),
           (o.className = "chat-me-item"),
           (o.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg><span>Dashboard</span>'),
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="rubber-band"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg><span>Dashboard</span>'),
           o.addEventListener("click", function (e) {
             (e.stopPropagation(), ht(), window.openAnalytics && window.openAnalytics());
           }),
@@ -3823,7 +3823,7 @@
       ((i.type = "button"),
         (i.className = "chat-me-item chat-me-logout"),
         (i.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Sign out</span>'),
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/></svg><span>Sign out</span>'),
         i.addEventListener("click", function (e) {
           (e.stopPropagation(), ft());
         }),
@@ -4440,7 +4440,7 @@
     row.className = "chat-xbox rc-row";
     var has = s && s.hasRecovery;
     row.innerHTML =
-      '<span class="rc-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg></span><span class="rc-row-text"><span class="rc-row-title">Recovery code</span><span class="rc-row-status">' +
+      '<span class="rc-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"/></svg></span><span class="rc-row-text"><span class="rc-row-title">Recovery code</span><span class="rc-row-status">' +
       (has
         ? "Saved · " + (s.recoveryCreatedAt ? new Date(s.recoveryCreatedAt).toLocaleDateString() : "")
         : "Not set up") +

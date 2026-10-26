@@ -619,7 +619,7 @@ var MPShop = (function () {
      which opens the Globe new-thread composer. chat.js fires "mp-auth" (and keeps
      window.MPAuthUser) on every sign-in/out; before that we go by the stored token. */
   var GP_ARROW =
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>';
   var GP_CHECK =
     '<svg class="gp-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function gpSignedIn() {
@@ -722,7 +722,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals and content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/icon-192.png?v=11" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
             e.map(g).join("") +
@@ -899,7 +899,7 @@ var MPShop = (function () {
             : '<div style="height:12px"></div>'));
       var v,
         h =
-          '<div class="vip-3d-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Drag to spin</span></div></div>',
+          '<div class="vip-3d-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg><span>Drag to spin</span></div></div>',
         g = n(i)
           ? '<div class="vip-3d"><div class="vip-3d-stage"></div>' + h
           : a(i)
@@ -968,7 +968,7 @@ var MPShop = (function () {
         l(i.priceLabel || (null != i.price ? MP.money(i.price) : "")) +
         "</div>" +
         r +
-        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share</button>' +
+        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg style="width:16px;height:16px;flex:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/></svg>Share</button>' +
         (((v = i.details)
           ? String(v)
               .split(/\n{2,}/)

@@ -8749,3 +8749,32 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 .nav button[data-view="shop"] svg {
   translate: 0 1px;
 }
+/* Heroicons Animated motions (MIT) - played once on tap/press and when a nav tab becomes active.
+   Individual transform properties so they stack on top of the active tab's scale(1.08). */
+svg[data-hi].hi-play {
+  animation-duration: 0.45s;
+  animation-iteration-count: 2;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+svg[data-hi="scale"].hi-play { animation-name: hi-scale; }
+svg[data-hi="rotate"].hi-play { animation-name: hi-rotate; }
+svg[data-hi="shake"].hi-play { animation-name: hi-shake; }
+svg[data-hi="bounce"].hi-play { animation-name: hi-bounce; }
+svg[data-hi="wiggle"].hi-play { animation-name: hi-wiggle; }
+svg[data-hi="fade"].hi-play { animation-name: hi-fade; }
+svg[data-hi="slide"].hi-play { animation-name: hi-slide; }
+svg[data-hi="float"].hi-play { animation-name: hi-float; }
+svg[data-hi="rubber-band"].hi-play { animation-name: hi-rubber-band; }
+@keyframes hi-scale { 0%, 100% { scale: 1; } 50% { scale: 1.08; } }
+@keyframes hi-rotate { 0%, 100% { rotate: 0deg; } 25% { rotate: -10deg; } 75% { rotate: 10deg; } }
+@keyframes hi-shake { 0%, 100% { translate: 0; } 20%, 60% { translate: -2px 0; } 40%, 80% { translate: 2px 0; } }
+@keyframes hi-bounce { 0%, 100% { translate: 0; } 50% { translate: 0 -3px; } }
+@keyframes hi-wiggle { 0%, 100% { rotate: 0deg; } 15% { rotate: -8deg; } 30% { rotate: 6deg; } 45% { rotate: -4deg; } 60% { rotate: 2deg; } 75% { rotate: -1deg; } }
+@keyframes hi-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes hi-slide { 0%, 100% { translate: 0; } 50% { translate: 3px 0; } }
+@keyframes hi-float { 0%, 100% { translate: 0; } 50% { translate: 0 -4px; } }
+@keyframes hi-rubber-band { 0%, 100% { scale: 1 1; } 30% { scale: 1.25 0.75; } 40% { scale: 0.75 1.25; } 50% { scale: 1.15 0.85; } 65% { scale: 0.95 1.05; } 75% { scale: 1.05 0.95; } }
+@media (prefers-reduced-motion: reduce) {
+  svg[data-hi].hi-play { animation: none; }
+}

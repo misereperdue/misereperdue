@@ -363,7 +363,7 @@
               (t.style.right = window.innerWidth - n.right + "px"));
           } catch (e) {}
           var i =
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="width:28px;height:28px;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"><svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button></div>';
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="width:28px;height:28px;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"><svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div>';
           if (!e.notifications.length)
             return (
               (i +=
@@ -1689,7 +1689,7 @@
           "</span></span>"
         : "") +
       (g()
-        ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="forum-bell-badge" class="forum-bell-badge hidden"></span></button>'
+        ? '<button type="button" class="forum-bell" id="forum-bell" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" data-hi="wiggle"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/></svg><span id="forum-bell-badge" class="forum-bell-badge hidden"></span></button>'
         : "") +
       (g()
         ? '<button type="button" class="chat-me" id="forum-me" aria-label="Profile">' +
@@ -1739,8 +1739,8 @@
         var t = "";
         ((e.ownerOnly || e.locked) &&
           (t = e.locked
-            ? ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>'
-            : ' <svg class="forum-cat-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.8-1.3"/></svg>'),
+            ? ' <svg class="forum-cat-lock" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>'
+            : ' <svg class="forum-cat-lock" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>'),
           (u +=
             '<button type="button" class="forum-cat' +
             (r.category === e.id ? " on" : "") +
@@ -1767,13 +1767,13 @@
             t && (e = t.name));
         }
         u +=
-          '<div class="forum-search"><svg viewBox="0 0 256 256" width="16" height="16" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" aria-hidden="true"><circle cx="112" cy="112" r="72"/><path d="M168 168l56 56"/></svg><input type="text" class="forum-search-input" placeholder="' +
+          '<div class="forum-search"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg><input type="text" class="forum-search-input" placeholder="' +
           w(e ? "Search in " + e : "Search all threads") +
           '" value="' +
           w(n) +
           '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="forum-search-clear" aria-label="Clear search"' +
           (n && s ? "" : ' style="display:none"') +
-          '><svg viewBox="0 0 256 256" width="12" height="12" fill="currentColor" style="display:block"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button></div>';
+          '><svg width="12" height="12" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div>';
       })(),
       r.tag &&
         (u +=
@@ -2096,7 +2096,7 @@
         '<div class="forum-head"><button type="button" class="forum-back forum-glass-pill" id="forum-back">← Back</button>' +
         (n.categoryName ? '<span class="forum-cat-pill">' + w(n.categoryName) + "</span>" : "") +
         (navigator.share
-          ? '<button type="button" class="forum-share forum-glass-pill" id="forum-share" aria-label="Share thread"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></button>'
+          ? '<button type="button" class="forum-share forum-glass-pill" id="forum-share" aria-label="Share thread"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/></svg></button>'
           : "") +
         "</div>";
       ((o +=
@@ -3285,7 +3285,7 @@
         (t.className = "forum-topbtn"),
         t.setAttribute("aria-label", "Back to top"),
         (t.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>'),
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg>'),
         t.addEventListener("click", function () {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }),
@@ -3620,7 +3620,7 @@
       u += '<div class="forum-cats" aria-hidden="true"><span class="forum-cat on">All</span>';
       for (i = 0; i < 5; i++) u += '<span class="forum-cat forum-skel-chip">&nbsp;</span>';
       u +=
-        '</div><div class="forum-search" aria-hidden="true"><svg viewBox="0 0 256 256" width="16" height="16" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" aria-hidden="true"><circle cx="112" cy="112" r="72"/><path d="M168 168l56 56"/></svg><span class="forum-search-input forum-skel-ph">Search all threads</span></div><div class="forum-threads" role="status" aria-label="Loading threads">';
+        '</div><div class="forum-search" aria-hidden="true"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg><span class="forum-search-input forum-skel-ph">Search all threads</span></div><div class="forum-threads" role="status" aria-label="Loading threads">';
       for (i = 0; i < 3; i++) u += card(line(52) + line(48) + line(40));
       u += "</div>";
     }

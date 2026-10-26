@@ -470,3 +470,35 @@ document.addEventListener("click", function (e) {
   location.hash = a.getAttribute("data-spa");
   window.scrollTo(0, 0);
 });
+
+// Heroicons Animated: play an icon's motion once on tap/press, and once when a nav tab becomes active.
+(function () {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  function play(svg) {
+    svg.classList.remove("hi-play");
+    void svg.getBoundingClientRect();
+    svg.classList.add("hi-play");
+  }
+  document.addEventListener("animationend", function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains("hi-play")) t.classList.remove("hi-play");
+  }, true);
+  document.addEventListener("pointerdown", function (e) {
+    var el = e.target.closest && e.target.closest('button,a,[role="button"],label,.forum-search');
+    if (!el) return;
+    var s = el.matches("svg[data-hi]") ? [el] : el.querySelectorAll("svg[data-hi]");
+    for (var i = 0; i < s.length; i++) play(s[i]);
+  }, { passive: true, capture: true });
+  var nav = document.getElementById("nav");
+  if (nav && window.MutationObserver) {
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        var b = m.target;
+        if (b.tagName === "BUTTON" && b.classList.contains("on") && !(m.oldValue || "").split(" ").includes("on")) {
+          var s = b.querySelector("svg[data-hi]");
+          if (s) play(s);
+        }
+      });
+    }).observe(nav, { subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
+  }
+})();

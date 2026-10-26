@@ -60,3 +60,8 @@ python3 -m venv /tmp/fv && /tmp/fv/bin/pip install fonttools shapely brotli
 
 After rebuilding, bump `misery-stitch.woff2?v=` in `src/css/site.css`, build the CSS
 and bump its pins.
+
+## Heroicons + heroicons-animated (UI icons)
+
+- Icon shapes: [Heroicons](https://github.com/tailwindlabs/heroicons) v2 (24px solid and outline), © Tailwind Labs, Inc., MIT License.
+- Motions (scale, rotate, shake, wiggle, fade, float, rubber-band, ...): [heroicons-animated](https://github.com/heroicons-animated/heroicons-animated) (https://www.heroicons-animated.com), © 2026 Aniket Pawar, MIT License. Ported to plain inline SVG + CSS keyframes (`src/css/site.css`, `js/app.js`, `js/ph-icons.js`).
