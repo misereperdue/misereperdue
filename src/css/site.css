@@ -8780,3 +8780,170 @@ svg[data-hi="spin"].hi-play { animation-name: hi-spin; animation-duration: 0.6s;
 @media (prefers-reduced-motion: reduce) {
   svg[data-hi].hi-play { animation: none; }
 }
+/* Globe post editor: floating format card (per dc's reference) */
+.forum-toolbar.mp-ecard,
+.sig-bubble .forum-toolbar.mp-ecard {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 10px;
+  padding: 8px;
+  border: 0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 10px 34px rgba(20, 24, 40, 0.14), 0 2px 8px rgba(20, 24, 40, 0.06);
+  --ec-tile: #f2f2f3;
+  --ec-ink: #3a3a3c;
+  --ec-pill: #fff;
+}
+.mp-ecard .mp-ec-top {
+  display: flex;
+  gap: 6px;
+}
+.mp-ecard .mp-ec-tile {
+  background: var(--ec-tile);
+  border-radius: 14px;
+}
+.mp-ecard .mp-ec-color {
+  flex: 0 0 auto;
+  width: 120px;
+  aspect-ratio: 1;
+  border: 0;
+  padding: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background-color: var(--ec-tile);
+  background-image: radial-gradient(rgba(60, 60, 67, 0.22) 0.8px, transparent 1.2px);
+  background-size: 7px 7px;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-ecard .mp-ec-sphere {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 40, 0.28) 100%),
+    conic-gradient(from 200deg, #2f5bff, #7b2fff, #ff2fa0, #ff4b2f, #ffb22f, #b8ff2f, #2fff8a, #2fe6ff, #2f5bff);
+  box-shadow: 0 6px 14px rgba(40, 60, 160, 0.22);
+  transition: transform 0.25s cubic-bezier(0.34, 1.36, 0.5, 1);
+}
+.mp-ecard .mp-ec-color:active .mp-ec-sphere {
+  transform: scale(0.94);
+}
+.mp-ecard .mp-ec-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 4px;
+}
+.mp-ecard .forum-tb {
+  min-width: 0;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ec-ink);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-ecard .forum-tb svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.mp-ecard .forum-tb.on,
+[data-theme="dark"] .mp-ecard .forum-tb.on {
+  background: var(--ec-pill);
+  color: var(--ec-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.mp-ecard .mp-ec-row {
+  display: flex;
+  gap: 6px;
+}
+.mp-ecard .mp-ec-seg {
+  flex: 1;
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+}
+.mp-ecard .mp-ec-seg .forum-tb {
+  flex: 1;
+  height: 34px;
+}
+.mp-ecard .mp-ec-extra .forum-tb {
+  flex: 0 0 auto;
+  width: 44px;
+  background: var(--ec-tile);
+  border-radius: 12px;
+}
+.mp-ecard .tb-quote {
+  font-family: Georgia, serif;
+  font-size: 24px;
+  padding-top: 8px;
+}
+.mp-ecard .mp-ec-swatches {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+.mp-ecard .mp-ec-swatches.hidden {
+  display: none;
+}
+.mp-ecard .tc-sw {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-ecard .tc-sw.on {
+  box-shadow: 0 0 0 2px var(--ec-pill), 0 0 0 3.5px var(--ec-ink);
+}
+.mp-ecard .tc-none {
+  background: linear-gradient(135deg, transparent 45%, #ff3b30 45%, #ff3b30 55%, transparent 55%), var(--ec-pill);
+}
+[data-theme="dark"] .forum-toolbar.mp-ecard {
+  background: var(--sheet-bg);
+  -webkit-backdrop-filter: var(--sheet-blur);
+  backdrop-filter: var(--sheet-blur);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 10px 34px rgba(0, 0, 0, 0.45);
+  --ec-tile: rgba(255, 255, 255, 0.07);
+  --ec-ink: rgba(235, 235, 245, 0.88);
+  --ec-pill: rgba(255, 255, 255, 0.16);
+}
+[data-theme="dark"] .mp-ecard .mp-ec-color {
+  background-image: radial-gradient(rgba(235, 235, 245, 0.16) 0.8px, transparent 1.2px);
+}
+/* rendered + editing: text colours, alignment, highlight, underline */
+.mp-tc-red, .mp-tcb-red { --tc: #e5484d; }
+.mp-tc-orange, .mp-tcb-orange { --tc: #f76b15; }
+.mp-tc-yellow, .mp-tcb-yellow { --tc: #e2a400; }
+.mp-tc-green, .mp-tcb-green { --tc: #30a46c; }
+.mp-tc-blue, .mp-tcb-blue { --tc: #3e7bfa; }
+.mp-tc-purple, .mp-tcb-purple { --tc: #8e4ec6; }
+.mp-tc-pink, .mp-tcb-pink { --tc: #d6409f; }
+.mp-tc-gray, .mp-tcb-gray { --tc: #8b8d98; }
+[class^="mp-tc-"] { color: var(--tc); }
+.mp-ecard [class*="mp-tcb-"] { background: var(--tc); }
+.mp-al-center { text-align: center; }
+.mp-al-right { text-align: right; }
+.forum-editor-input mark,
+.forum-post-body mark,
+.forum-sig mark {
+  background: rgba(255, 214, 10, 0.45);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}

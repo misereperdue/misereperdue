@@ -105,3 +105,13 @@ package.json used:
         "@tiptap/pm": "$@tiptap/pm"
       }
     }
+tiptap-ext.min.js (2026-10-25, used by js/forum3.js for the editor card): same pinned 2.11.5
+packages plus @tiptap/extension-underline@2.11.5 and @tiptap/extension-highlight@2.11.5
+(all MIT), built with esbuild 0.24.0 (--bundle --format=esm --minify) from:
+    export { Editor, Node, Mark, Extension } from '@tiptap/core';
+    export { default as StarterKit } from '@tiptap/starter-kit';
+    export { default as Placeholder } from '@tiptap/extension-placeholder';
+    export { default as Link } from '@tiptap/extension-link';
+    export { default as Image } from '@tiptap/extension-image';
+    export { default as Underline } from '@tiptap/extension-underline';
+    export { default as Highlight } from '@tiptap/extension-highlight';
