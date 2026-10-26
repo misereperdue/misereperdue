@@ -8758,14 +8758,14 @@ svg[data-hi].hi-play {
   animation-fill-mode: both;
 }
 svg[data-hi="scale"].hi-play { animation-name: hi-scale; }
-svg[data-hi="rotate"].hi-play { animation-name: hi-rotate; }
-svg[data-hi="shake"].hi-play { animation-name: hi-shake; }
+svg[data-hi="rotate"].hi-play { animation-name: hi-scale; }
+svg[data-hi="shake"].hi-play { animation-name: hi-scale; }
 svg[data-hi="bounce"].hi-play { animation-name: hi-bounce; }
-svg[data-hi="wiggle"].hi-play { animation-name: hi-wiggle; }
+svg[data-hi="wiggle"].hi-play { animation-name: hi-scale; }
 svg[data-hi="fade"].hi-play { animation-name: hi-fade; }
 svg[data-hi="slide"].hi-play { animation-name: hi-slide; }
 svg[data-hi="float"].hi-play { animation-name: hi-float; }
-svg[data-hi="rubber-band"].hi-play { animation-name: hi-rubber-band; }
+svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 @keyframes hi-scale { 0%, 100% { scale: 1; } 50% { scale: 1.08; } }
 @keyframes hi-rotate { 0%, 100% { rotate: 0deg; } 25% { rotate: -10deg; } 75% { rotate: 10deg; } }
 @keyframes hi-shake { 0%, 100% { translate: 0; } 20%, 60% { translate: -2px 0; } 40%, 80% { translate: 2px 0; } }
