@@ -8775,8 +8775,6 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 @keyframes hi-slide { 0%, 100% { translate: 0; } 50% { translate: 3px 0; } }
 @keyframes hi-float { 0%, 100% { translate: 0; } 50% { translate: 0 -4px; } }
 @keyframes hi-rubber-band { 0%, 100% { scale: 1 1; } 30% { scale: 1.25 0.75; } 40% { scale: 0.75 1.25; } 50% { scale: 1.15 0.85; } 65% { scale: 0.95 1.05; } 75% { scale: 1.05 0.95; } }
-svg[data-hi="spin"].hi-play { animation-name: hi-spin; animation-duration: 0.6s; animation-iteration-count: 1; }
-@keyframes hi-spin { from { rotate: y 0deg; } to { rotate: y 360deg; } }
 @media (prefers-reduced-motion: reduce) {
   svg[data-hi].hi-play { animation: none; }
 }
