@@ -8656,6 +8656,17 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 [data-theme="dark"] .nav button.on svg {
   fill: url(#orb-ink-dark);
 }
+/* line globe: stroke resolves to the same ink as the filled icons */
+.nav svg .hi-line {
+  fill: none;
+  stroke: currentColor;
+}
+.nav button.on svg .hi-line {
+  stroke: url(#orb-ink);
+}
+[data-theme="dark"] .nav button.on svg .hi-line {
+  stroke: url(#orb-ink-dark);
+}
 @media (prefers-reduced-motion: reduce) {
   .nav svg {
     transition: none;
