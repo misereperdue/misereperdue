@@ -745,6 +745,10 @@
       v = "left" === v ? null : v;
       return o.updateAttributes("paragraph", { mpAlign: v }).updateAttributes("heading", { mpAlign: v }).run();
     }
+    if ("more" === a) {
+      var mm = r && r.querySelector(".mp-tb-more");
+      return void (mm && (mm.classList.toggle("hidden"), r.querySelector('[data-act="more"]').classList.toggle("on", !mm.classList.contains("hidden"))));
+    }
     if ("color" === a) {
       var s = r && r.querySelector(".mp-ec-swatches");
       return void (s && s.classList.toggle("hidden"));
@@ -1142,17 +1146,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   function re(e) {
     e = e || {};
     var t =
-      '<div class="forum-toolbar mp-ecard"><div class="mp-ec-top"><button type="button" class="mp-ec-color" data-act="color" title="Text colour" aria-label="Text colour"><span class="mp-ec-sphere"></span></button><div class="mp-ec-tile mp-ec-grid"><button type="button" class="forum-tb" data-act="bold" title="Bold" aria-label="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path stroke-linejoin="round" d="M6.75 3.744h-.753v8.25h7.125a4.125 4.125 0 0 0 0-8.25H6.75Zm0 0v.38m0 16.122h6.747a4.5 4.5 0 0 0 0-9.001h-7.5v9h.753Zm0 0v-.37m0-15.751h6a3.75 3.75 0 1 1 0 7.5h-6m0-7.5v7.5m0 0v8.25m0-8.25h6.375a4.125 4.125 0 0 1 0 8.25H6.75m.747-15.38h4.875a3.375 3.375 0 0 1 0 6.75H7.497v-6.75Zm0 7.5h5.25a3.75 3.75 0 0 1 0 7.5h-5.25v-7.5Z"/></svg></button><button type="button" class="forum-tb" data-act="italic" title="Italic" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M5.248 20.246H9.05m0 0h3.696m-3.696 0 5.893-16.502m0 0h-3.697m3.697 0h3.803"/></svg></button><button type="button" class="forum-tb" data-act="underline" title="Underline" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M17.995 3.744v7.5a6 6 0 1 1-12 0v-7.5m-2.25 16.502h16.5"/></svg></button><button type="button" class="forum-tb" data-act="strike" title="Strikethrough" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M12 12a8.912 8.912 0 0 1-.318-.079c-1.585-.424-2.904-1.247-3.76-2.236-.873-1.009-1.265-2.19-.968-3.301.59-2.2 3.663-3.29 6.863-2.432A8.186 8.186 0 0 1 16.5 5.21M6.42 17.81c.857.99 2.176 1.812 3.761 2.237 3.2.858 6.274-.23 6.863-2.431.233-.868.044-1.779-.465-2.617M3.75 12h16.5"/></svg></button><button type="button" class="forum-tb" data-act="code" title="Code" aria-label="Code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/></svg></button><button type="button" class="forum-tb" data-act="highlight" title="Highlight" aria-label="Highlight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"/></svg></button><button type="button" class="forum-tb" data-act="link" title="Link" aria-label="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg></button><button type="button" class="forum-tb" data-act="mention" title="Mention someone" aria-label="Mention someone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M16.5 12a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 1 0-2.636 6.364M16.5 12V8.25"/></svg></button><button type="button" class="forum-tb" data-act="image" title="Add photo or GIF" aria-label="Add photo or GIF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/></svg></button></div></div>' +
-      '<div class="mp-ec-tile mp-ec-swatches hidden"><button type="button" class="tc-sw mp-tcb-red" data-act="tc-red" aria-label="Red text"></button><button type="button" class="tc-sw mp-tcb-orange" data-act="tc-orange" aria-label="Orange text"></button><button type="button" class="tc-sw mp-tcb-yellow" data-act="tc-yellow" aria-label="Yellow text"></button><button type="button" class="tc-sw mp-tcb-green" data-act="tc-green" aria-label="Green text"></button><button type="button" class="tc-sw mp-tcb-blue" data-act="tc-blue" aria-label="Blue text"></button><button type="button" class="tc-sw mp-tcb-purple" data-act="tc-purple" aria-label="Purple text"></button><button type="button" class="tc-sw mp-tcb-pink" data-act="tc-pink" aria-label="Pink text"></button><button type="button" class="tc-sw mp-tcb-gray" data-act="tc-gray" aria-label="Gray text"></button><button type="button" class="tc-sw tc-none" data-act="tc-none" aria-label="Default colour"></button></div>' +
-      '<div class="mp-ec-row"><div class="mp-ec-tile mp-ec-seg"><button type="button" class="forum-tb" data-act="align-left" title="Align left" aria-label="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg></button><button type="button" class="forum-tb" data-act="align-center" title="Align center" aria-label="Align center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg></button><button type="button" class="forum-tb" data-act="align-right" title="Align right" aria-label="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25"/></svg></button></div><div class="mp-ec-tile mp-ec-seg"><button type="button" class="forum-tb" data-act="h3" title="Heading" aria-label="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M20.905 14.626a4.52 4.52 0 0 1 .738 3.603c-.154.695-.794 1.143-1.504 1.208a15.194 15.194 0 0 1-3.639-.104m4.405-4.707a4.52 4.52 0 0 0 .738-3.603c-.154-.696-.794-1.144-1.504-1.209a15.19 15.19 0 0 0-3.639.104m4.405 4.708H18M2.243 4.493v7.5m0 0v7.502m0-7.501h10.5m0-7.5v7.5m0 0v7.501"/></svg></button><button type="button" class="forum-tb" data-act="bullet" title="Bulleted list" aria-label="Bulleted list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg></button><button type="button" class="forum-tb" data-act="ordered" title="Numbered list" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"/></svg></button><button type="button" class="forum-tb tb-quote" data-act="quote" title="Quote" aria-label="Quote">“</button></div></div>';
+      '<div class="forum-toolbar mp-tbar"><div class="mp-tb-main"><button type="button" class="forum-tb" data-act="bold" data-tip="Bold" data-kbd="⌘B" aria-label="Bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path stroke-linejoin="round" d="M6.75 3.744h-.753v8.25h7.125a4.125 4.125 0 0 0 0-8.25H6.75Zm0 0v.38m0 16.122h6.747a4.5 4.5 0 0 0 0-9.001h-7.5v9h.753Zm0 0v-.37m0-15.751h6a3.75 3.75 0 1 1 0 7.5h-6m0-7.5v7.5m0 0v8.25m0-8.25h6.375a4.125 4.125 0 0 1 0 8.25H6.75m.747-15.38h4.875a3.375 3.375 0 0 1 0 6.75H7.497v-6.75Zm0 7.5h5.25a3.75 3.75 0 0 1 0 7.5h-5.25v-7.5Z"/></svg></button><button type="button" class="forum-tb" data-act="italic" data-tip="Italic" data-kbd="⌘I" aria-label="Italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M5.248 20.246H9.05m0 0h3.696m-3.696 0 5.893-16.502m0 0h-3.697m3.697 0h3.803"/></svg></button><button type="button" class="forum-tb" data-act="underline" data-tip="Underline" data-kbd="⌘U" aria-label="Underline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M17.995 3.744v7.5a6 6 0 1 1-12 0v-7.5m-2.25 16.502h16.5"/></svg></button><button type="button" class="forum-tb" data-act="strike" data-tip="Strikethrough" data-kbd="⇧⌘X" aria-label="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M12 12a8.912 8.912 0 0 1-.318-.079c-1.585-.424-2.904-1.247-3.76-2.236-.873-1.009-1.265-2.19-.968-3.301.59-2.2 3.663-3.29 6.863-2.432A8.186 8.186 0 0 1 16.5 5.21M6.42 17.81c.857.99 2.176 1.812 3.761 2.237 3.2.858 6.274-.23 6.863-2.431.233-.868.044-1.779-.465-2.617M3.75 12h16.5"/></svg></button><span class="mp-tb-sep" aria-hidden="true"></span><button type="button" class="forum-tb" data-act="image" data-tip="Photo" aria-label="Photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg></button><button type="button" class="forum-tb" data-act="link" data-tip="Link" data-kbd="⌘K" aria-label="Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg></button><button type="button" class="forum-tb" data-act="code" data-tip="Inline code" data-kbd="⌘E" aria-label="Inline code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/></svg></button><button type="button" class="forum-tb" data-act="h3" data-tip="Heading" data-kbd="⌥⌘1" aria-label="Heading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M2.243 4.493v7.5m0 0v7.502m0-7.501h10.5m0-7.5v7.5m0 0v7.501m4.501-8.627 2.25-1.5v10.126m0 0h-2.25m2.25 0h2.25"/></svg></button><button type="button" class="forum-tb" data-act="bullet" data-tip="Bulleted list" data-kbd="⇧⌘8" aria-label="Bulleted list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg></button><span class="mp-tb-sep" aria-hidden="true"></span><button type="button" class="forum-tb" data-act="more" data-tip="More" aria-label="More"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg></button></div><div class="mp-tb-more hidden"><div class="mp-tb-row"><button type="button" class="forum-tb" data-act="ordered" data-tip="Numbered list" data-kbd="⇧⌘7" aria-label="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 1 1 1.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 0 1 0 2.25H3.74m0-.002h.375a1.125 1.125 0 0 1 0 2.25H2.99"/></svg></button><button type="button" class="forum-tb" data-act="quote" data-tip="Quote" data-kbd="⇧⌘B" aria-label="Quote">“</button><button type="button" class="forum-tb" data-act="highlight" data-tip="Highlight" data-kbd="⇧⌘H" aria-label="Highlight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"/></svg></button><button type="button" class="forum-tb" data-act="color" data-tip="Text colour" aria-label="Text colour"><span class="mp-tb-dot"></span></button><button type="button" class="forum-tb" data-act="mention" data-tip="Mention" aria-label="Mention"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M16.5 12a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 1 0-2.636 6.364M16.5 12V8.25"/></svg></button><button type="button" class="forum-tb" data-act="align-left" data-tip="Align left" aria-label="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg></button><button type="button" class="forum-tb" data-act="align-center" data-tip="Align center" aria-label="Align center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg></button><button type="button" class="forum-tb" data-act="align-right" data-tip="Align right" aria-label="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25"/></svg></button></div><div class="mp-ec-swatches hidden"><button type="button" class="tc-sw mp-tcb-red" data-act="tc-red" aria-label="Red text"></button><button type="button" class="tc-sw mp-tcb-orange" data-act="tc-orange" aria-label="Orange text"></button><button type="button" class="tc-sw mp-tcb-yellow" data-act="tc-yellow" aria-label="Yellow text"></button><button type="button" class="tc-sw mp-tcb-green" data-act="tc-green" aria-label="Green text"></button><button type="button" class="tc-sw mp-tcb-blue" data-act="tc-blue" aria-label="Blue text"></button><button type="button" class="tc-sw mp-tcb-purple" data-act="tc-purple" aria-label="Purple text"></button><button type="button" class="tc-sw mp-tcb-pink" data-act="tc-pink" aria-label="Pink text"></button><button type="button" class="tc-sw mp-tcb-gray" data-act="tc-gray" aria-label="Gray text"></button><button type="button" class="tc-sw tc-none" data-act="tc-none" aria-label="Default colour"></button></div>';
     if (e.lock || e.embed)
       t +=
-        '<div class="mp-ec-row mp-ec-extra">' +
-        (e.lock ? '<button type="button" class="forum-tb" data-act="lock" title="Hide content" aria-label="Hide content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg></button>' : "") +
-        (e.embed && e.member ? '<button type="button" class="forum-tb" data-act="embed" title="Media embed" aria-label="Media embed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5m0-5.25v5.25m0-5.25C6 5.004 6.504 4.5 7.125 4.5h9.75c.621 0 1.125.504 1.125 1.125m1.125 2.625h1.5m-1.5 0A1.125 1.125 0 0 1 18 7.125v-1.5m1.125 2.625c-.621 0-1.125.504-1.125 1.125v1.5m2.625-2.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125M18 5.625v5.25M7.125 12h9.75m-9.75 0A1.125 1.125 0 0 1 6 10.875M7.125 12C6.504 12 6 12.504 6 13.125m0-2.25C6 11.496 5.496 12 4.875 12M18 10.875c0 .621-.504 1.125-1.125 1.125M18 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-12 5.25v-5.25m0 5.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125m-12 0v-1.5c0-.621-.504-1.125-1.125-1.125M18 18.375v-5.25m0 5.25v-1.5c0-.621.504-1.125 1.125-1.125M18 13.125v1.5c0 .621.504 1.125 1.125 1.125M18 13.125c0-.621.504-1.125 1.125-1.125M6 13.125v1.5c0 .621-.504 1.125-1.125 1.125M6 13.125C6 12.504 5.496 12 4.875 12m-1.5 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M19.125 12h1.5m0 0c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h1.5m14.25 0h1.5"/></svg></button>' : "") +
+        '<div class="mp-tb-row mp-ec-extra">' +
+        (e.lock ? '<button type="button" class="forum-tb" data-act="lock" data-tip="Hide content" aria-label="Hide content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg></button>' : "") +
+        (e.embed && e.member ? '<button type="button" class="forum-tb" data-act="embed" data-tip="Media embed" aria-label="Media embed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5m0-5.25v5.25m0-5.25C6 5.004 6.504 4.5 7.125 4.5h9.75c.621 0 1.125.504 1.125 1.125m1.125 2.625h1.5m-1.5 0A1.125 1.125 0 0 1 18 7.125v-1.5m1.125 2.625c-.621 0-1.125.504-1.125 1.125v1.5m2.625-2.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125M18 5.625v5.25M7.125 12h9.75m-9.75 0A1.125 1.125 0 0 1 6 10.875M7.125 12C6.504 12 6 12.504 6 13.125m0-2.25C6 11.496 5.496 12 4.875 12M18 10.875c0 .621-.504 1.125-1.125 1.125M18 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-12 5.25v-5.25m0 5.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125m-12 0v-1.5c0-.621-.504-1.125-1.125-1.125M18 18.375v-5.25m0 5.25v-1.5c0-.621.504-1.125 1.125-1.125M18 13.125v1.5c0 .621.504 1.125 1.125 1.125M18 13.125c0-.621.504-1.125 1.125-1.125M6 13.125v1.5c0 .621-.504 1.125-1.125 1.125M6 13.125C6 12.504 5.496 12 4.875 12m-1.5 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M19.125 12h1.5m0 0c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h1.5m14.25 0h1.5"/></svg></button>' : "") +
         "</div>";
     return (
-      (t += "</div>"),
+      (t += "</div></div>"),
       e.lock &&
         (t +=
           '<div class="forum-lockbar hidden"><span class="forum-lockbar-label">Hidden for:</span><button type="button" data-lockmode="reply">💬 Repliers</button><button type="button" data-lockmode="member">⭐ VIPs</button><button type="button" class="forum-lock-cancel" aria-label="Cancel">×</button></div>'),
@@ -3888,4 +3890,114 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       },
       showNotifications: P,
     }));
+})();
+
+/* Warm tooltips for the Globe editor toolbar (per dc) */
+(function () {
+  if (typeof document === "undefined") return;
+  var tip, txt, kb, warm = false, cur = null, showT = 0, coolT = 0, lp = null, lpFired = false;
+  var touch = window.matchMedia && matchMedia("(hover: none)").matches;
+  var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  function el() {
+    if (tip) return tip;
+    tip = document.createElement("div");
+    tip.className = "mp-tip";
+    tip.setAttribute("role", "tooltip");
+    tip.innerHTML = '<span class="mp-tip-in"><span class="mp-tip-t"></span><span class="mp-tip-k"></span></span>';
+    txt = tip.querySelector(".mp-tip-t");
+    kb = tip.querySelector(".mp-tip-k");
+    document.body.appendChild(tip);
+    return tip;
+  }
+  function kfmt(k) { return isMac ? k : k.replace(/⌘/g, "Ctrl+").replace(/⇧/g, "Shift+").replace(/⌥/g, "Alt+"); }
+  function place(b, instant) {
+    el();
+    var k = b.getAttribute("data-kbd") || "";
+    var swap = cur && cur !== b && warm;
+    if (swap) { tip.classList.remove("xf"); void tip.offsetWidth; tip.classList.add("xf"); }
+    txt.textContent = b.getAttribute("data-tip");
+    kb.textContent = k && !touch ? kfmt(k) : "";
+    kb.style.display = k && !touch ? "" : "none";
+    tip.classList.toggle("instant", !!instant);
+    var r = b.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = r.left + r.width / 2 - w / 2, cx = w / 2;
+    var cl = Math.max(8, Math.min(innerWidth - w - 8, x));
+    cx += x - cl;
+    var y = r.top - h - 8, below = y < 8;
+    if (below) y = r.bottom + 8;
+    tip.classList.toggle("below", below);
+    tip.style.setProperty("--cx", cx + "px");
+    tip.style.transform = "translate(" + cl + "px," + y + "px)";
+    cur = b;
+  }
+  function show(b) {
+    clearTimeout(coolT);
+    if (warm) { place(b, false); return; }
+    place(b, true);
+    void tip.offsetWidth;
+    tip.classList.remove("instant");
+    tip.classList.add("on");
+    warm = true;
+  }
+  function hide(now) {
+    clearTimeout(showT);
+    if (!tip) return;
+    tip.classList.remove("on");
+    clearTimeout(coolT);
+    coolT = setTimeout(function () { warm = false; cur = null; }, now ? 0 : 300);
+  }
+  function btnOf(t) { return t && t.closest && t.closest(".mp-tbar [data-tip]"); }
+  document.addEventListener("pointerover", function (e) {
+    if (e.pointerType === "touch") return;
+    var b = btnOf(e.target);
+    if (!b) return;
+    clearTimeout(showT); clearTimeout(coolT);
+    if (warm) show(b); else showT = setTimeout(function () { show(b); }, 500);
+  });
+  document.addEventListener("pointerout", function (e) {
+    if (e.pointerType === "touch") return;
+    var b = btnOf(e.target);
+    if (!b) return;
+    var to = btnOf(e.relatedTarget);
+    if (to) return;
+    clearTimeout(showT);
+    if (tip) tip.classList.remove("on");
+    clearTimeout(coolT);
+    coolT = setTimeout(function () { warm = false; cur = null; }, 300);
+  });
+  document.addEventListener("pointerdown", function (e) { if (e.pointerType !== "touch" && btnOf(e.target)) hide(true); }, true);
+  // Touch: long press to show, slide to morph, lift to hide.
+  document.addEventListener("touchstart", function (e) {
+    var b = btnOf(e.target);
+    if (!b) return;
+    lpFired = false;
+    clearTimeout(lp);
+    lp = setTimeout(function () { lpFired = true; show(b); }, 350);
+  }, { passive: true });
+  document.addEventListener("touchmove", function (e) {
+    if (!lpFired) { clearTimeout(lp); return; }
+    e.preventDefault();
+    var t = e.touches[0], b = btnOf(document.elementFromPoint(t.clientX, t.clientY));
+    if (b && b !== cur) show(b);
+  }, { passive: false });
+  function end(e) {
+    clearTimeout(lp);
+    if (lpFired) { if (e.cancelable) e.preventDefault(); hide(true); setTimeout(function () { lpFired = false; }, 400); }
+  }
+  document.addEventListener("touchend", end, { passive: false });
+  document.addEventListener("touchcancel", end, { passive: false });
+  document.addEventListener("click", function (e) { if (lpFired && btnOf(e.target)) { e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener("contextmenu", function (e) { if (btnOf(e.target)) e.preventDefault(); });
+  // Cheap extra shortcuts TipTap lacks: ⌘K link, ⌥⌘1 heading.
+  document.addEventListener("keydown", function (e) {
+    if (!(e.metaKey || e.ctrlKey)) return;
+    var ed = e.target && e.target.closest && e.target.closest(".ProseMirror");
+    if (!ed) return;
+    var act = !e.altKey && !e.shiftKey && (e.key === "k" || e.key === "K") ? "link" : e.altKey && e.code === "Digit1" ? "h3" : null;
+    if (!act) return;
+    var root = ed.parentNode, b = null;
+    while (root && root !== document && !(b = root.querySelector && root.querySelector('.mp-tbar [data-act="' + act + '"]'))) root = root.parentNode;
+    if (b) { e.preventDefault(); b.click(); }
+  });
+  window.MPTip = { show: show, hide: hide };
 })();
