@@ -738,24 +738,23 @@
   }
   // The ⋯ panel is portaled to <body> while open (position:fixed) so the reply card's overflow can't clip it.
   function mpMorePlace(mm) {
-    var bar = mm._bar, btn = bar && bar.querySelector('[data-act="more"]'), w = mm._wrap;
-    if (!w) return;
-    if (!bar || !bar.isConnected) { w.remove(); return; }
-    var vv = window.visualViewport, vx = vv ? vv.offsetLeft : 0, vy = vv ? vv.offsetTop : 0,
-      vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, M = 8;
+    var bar = mm._bar, btn = bar && bar.querySelector('[data-act="more"]');
+    if (!btn) return;
+    // Document coordinates (position:absolute in <body>) so it scrolls natively with the page; placed once at open.
+    var sx = window.scrollX || 0, sy = window.scrollY || 0, vw = document.documentElement.clientWidth, vh = innerHeight, M = 8;
     var br = btn.getBoundingClientRect(), pw = mm.offsetWidth, ph = mm.offsetHeight;
-    var left = Math.min(Math.max(br.right - pw, vx + M), vx + vw - pw - M);
-    var below = br.bottom + 6, up = below + ph > vy + vh - M && br.top - 6 - ph >= vy + M;
-    var top = up ? br.top - 6 - ph : Math.max(vy + M, Math.min(below, vy + vh - ph - M));
-    mm.style.left = Math.round(left) + "px"; mm.style.top = Math.round(top) + "px";
+    var left = Math.min(Math.max(br.right - pw, M), vw - pw - M);
+    var up = br.bottom + 6 + ph > vh - M && br.top - 6 - ph >= M;
+    var top = up ? br.top - 6 - ph : br.bottom + 6;
+    mm.style.left = Math.round(left + sx) + "px"; mm.style.top = Math.round(top + sy) + "px";
     mm.style.setProperty("--ox", Math.round(br.left + br.width / 2 - left) + "px");
     mm.style.setProperty("--oy", up ? ph + 6 + "px" : "-6px");
   }
   var mpOpenMore = null;
-  function mpMoreReflow() { mpOpenMore && mpMorePlace(mpOpenMore); }
-  window.addEventListener("resize", mpMoreReflow);
-  document.addEventListener("scroll", function (ev) { if (mpOpenMore && !(ev.target && ev.target.closest && ev.target.closest(".mp-tb-more"))) mpMoreReflow(); }, !0);
-  window.visualViewport && (visualViewport.addEventListener("resize", mpMoreReflow), visualViewport.addEventListener("scroll", mpMoreReflow));
+  function mpMoreDismiss() { mpOpenMore && mpMoreSet(mpOpenMore, !1); }
+  window.addEventListener("resize", mpMoreDismiss);
+  window.visualViewport && visualViewport.addEventListener("resize", mpMoreDismiss);
+  document.addEventListener("scroll", function (ev) { var t = ev.target; mpOpenMore && t && t.closest && t.closest(".mp-tbar") && !t.closest(".mp-tb-portal") && mpMoreDismiss(); }, !0);
   function mpMoreSet(mm, open) {
     var bar = mm._bar || mm.closest(".mp-tbar"), btn = bar && bar.querySelector('[data-act="more"]');
     mm._bar = bar; bar && (bar._mm = mm);
@@ -810,7 +809,7 @@
     }
     if ("color" === a) {
       var s = r && (r._mm || r).querySelector(".mp-ec-swatches");
-      return void (s && (s.classList.toggle("hidden"), r._mm && mpMorePlace(r._mm)));
+      return void (s && s.classList.toggle("hidden"));
     }
     if ("tc-none" === a) return o.unsetMark("mpColor").run();
     if (0 === a.indexOf("tc-")) return o.setMark("mpColor", { c: a.slice(3) }).run();
