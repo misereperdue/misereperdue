@@ -736,22 +736,49 @@
     if (0 === n.indexOf("tc-") && "tc-none" !== n) return e.isActive("mpColor", { c: n.slice(3) });
     return !1;
   }
+  // The ⋯ panel is portaled to <body> while open (position:fixed) so the reply card's overflow can't clip it.
+  function mpMorePlace(mm) {
+    var bar = mm._bar, btn = bar && bar.querySelector('[data-act="more"]'), w = mm._wrap;
+    if (!w) return;
+    if (!bar || !bar.isConnected) { w.remove(); return; }
+    var vv = window.visualViewport, vx = vv ? vv.offsetLeft : 0, vy = vv ? vv.offsetTop : 0,
+      vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, M = 8;
+    var br = btn.getBoundingClientRect(), pw = mm.offsetWidth, ph = mm.offsetHeight;
+    var left = Math.min(Math.max(br.right - pw, vx + M), vx + vw - pw - M);
+    var below = br.bottom + 6, up = below + ph > vy + vh - M && br.top - 6 - ph >= vy + M;
+    var top = up ? br.top - 6 - ph : Math.max(vy + M, Math.min(below, vy + vh - ph - M));
+    mm.style.left = Math.round(left) + "px"; mm.style.top = Math.round(top) + "px";
+    mm.style.setProperty("--ox", Math.round(br.left + br.width / 2 - left) + "px");
+    mm.style.setProperty("--oy", up ? ph + 6 + "px" : "-6px");
+  }
+  var mpOpenMore = null;
+  function mpMoreReflow() { mpOpenMore && mpMorePlace(mpOpenMore); }
+  window.addEventListener("resize", mpMoreReflow);
+  document.addEventListener("scroll", function (ev) { if (mpOpenMore && !(ev.target && ev.target.closest && ev.target.closest(".mp-tb-more"))) mpMoreReflow(); }, !0);
+  window.visualViewport && (visualViewport.addEventListener("resize", mpMoreReflow), visualViewport.addEventListener("scroll", mpMoreReflow));
   function mpMoreSet(mm, open) {
-    var bar = mm.closest(".mp-tbar"), btn = bar && bar.querySelector('[data-act="more"]');
+    var bar = mm._bar || mm.closest(".mp-tbar"), btn = bar && bar.querySelector('[data-act="more"]');
+    mm._bar = bar; bar && (bar._mm = mm);
     clearTimeout(mm._t);
     btn && (btn.classList.toggle("on", open), btn.setAttribute("aria-expanded", open ? "true" : "false"));
     if (open) {
+      if (!mm._wrap) { mm._wrap = document.createElement("div"); mm._wrap.className = "forum-toolbar mp-tbar mp-tb-portal"; }
+      mm._wrap.appendChild(mm); document.body.appendChild(mm._wrap);
       mm.classList.remove("hidden", "closing");
-      if (btn && bar) {
-        var br = btn.getBoundingClientRect(), pr = mm.getBoundingClientRect();
-        mm.style.setProperty("--ox", Math.round(br.left + br.width / 2 - pr.left) + "px");
-      }
+      mpOpenMore = mm; mpMorePlace(mm);
       void mm.offsetWidth;
       mm.classList.add("open");
     } else if (!mm.classList.contains("hidden")) {
       mm.classList.remove("open");
       mm.classList.add("closing");
-      mm._t = setTimeout(function () { mm.classList.add("hidden"); mm.classList.remove("closing"); var sw = mm.querySelector(".mp-ec-swatches"); sw && sw.classList.add("hidden"); }, 150);
+      mpOpenMore === mm && (mpOpenMore = null);
+      mm._t = setTimeout(function () {
+        mm.classList.add("hidden"); mm.classList.remove("closing");
+        var sw = mm.querySelector(".mp-ec-swatches"); sw && sw.classList.add("hidden");
+        var mn = bar && bar.querySelector(".mp-tb-main");
+        bar && bar.isConnected && mn ? mn.after(mm) : mm.remove();
+        mm._wrap && mm._wrap.remove();
+      }, 150);
     }
   }
   function mpMoreCloseAll(except) {
@@ -759,7 +786,7 @@
   }
   document.addEventListener("pointerdown", function (ev) {
     var t = ev.target, m = t && t.closest && t.closest(".mp-tbar");
-    mpMoreCloseAll(m ? m.querySelector(".mp-tb-more") : null);
+    mpMoreCloseAll(m ? m._mm || m.querySelector(".mp-tb-more") : null);
   }, !0);
   document.addEventListener("keydown", function (ev) { "Escape" === ev.key && mpMoreCloseAll(null); });
   document.addEventListener("click", function (ev) {
@@ -778,12 +805,12 @@
       return o.updateAttributes("paragraph", { mpAlign: v }).updateAttributes("heading", { mpAlign: v }).run();
     }
     if ("more" === a) {
-      var mm = r && r.querySelector(".mp-tb-more");
+      var mm = r && (r._mm || r.querySelector(".mp-tb-more"));
       return void (mm && mpMoreSet(mm, !mm.classList.contains("open")));
     }
     if ("color" === a) {
-      var s = r && r.querySelector(".mp-ec-swatches");
-      return void (s && s.classList.toggle("hidden"));
+      var s = r && (r._mm || r).querySelector(".mp-ec-swatches");
+      return void (s && (s.classList.toggle("hidden"), r._mm && mpMorePlace(r._mm)));
     }
     if ("tc-none" === a) return o.unsetMark("mpColor").run();
     if (0 === a.indexOf("tc-")) return o.setMark("mpColor", { c: a.slice(3) }).run();
@@ -1361,7 +1388,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         underline: "underline",
         highlight: "highlight",
       };
-      t.querySelectorAll("[data-act]").forEach(function (t) {
+      var acts = Array.prototype.slice.call(t.querySelectorAll("[data-act]"));
+      t._mm && !t.contains(t._mm) && (acts = acts.concat(Array.prototype.slice.call(t._mm.querySelectorAll("[data-act]"))));
+      acts.forEach(function (t) {
         var n = t.getAttribute("data-act"),
           a = !1;
         try {
