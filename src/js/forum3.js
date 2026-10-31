@@ -1159,7 +1159,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         (t +=
           '<div class="forum-lockbar hidden"><span class="forum-lockbar-label">Hidden for:</span><button type="button" data-lockmode="reply">💬 Repliers</button><button type="button" data-lockmode="member">⭐ VIPs</button><button type="button" class="forum-lock-cancel" aria-label="Cancel">×</button></div>'),
       (t +=
-        '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://…"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove">Remove</button></div>'),
+        '<div class="forum-linkbar hidden"><input type="url" class="forum-link-input" placeholder="https://…"><button type="button" class="forum-link-apply">Add link</button><button type="button" class="forum-link-remove" aria-label="Remove link">×</button></div>'),
       e.embed &&
         (t +=
           '<div class="forum-embedbar hidden"><input type="text" class="forum-embed-input" placeholder="Paste a YouTube link or embed code"><button type="button" class="forum-embed-add">Embed</button><button type="button" class="forum-embed-cancel">×</button></div>'),
