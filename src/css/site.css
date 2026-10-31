@@ -8947,13 +8947,12 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 }
 
 /* Globe editor: compact floating toolbar + warm tooltips (per dc, from @jalcowastaken) */
-.forum-toolbar.mp-tbar,.sig-bubble .forum-toolbar.mp-tbar{display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;width:max-content;max-width:calc(100% - 20px);margin:10px;padding:4px;border:1px solid rgba(0,0,0,.07);border-radius:16px;background:#fff;box-shadow:0 8px 28px rgba(20,24,40,.12),0 2px 6px rgba(20,24,40,.06);--tb-ink:#5d5d63;--tb-ink-on:#111;--tb-hl:rgba(0,0,0,.06);--tb-sep:rgba(0,0,0,.1)}
-[data-theme=dark] .forum-toolbar.mp-tbar{background:#232325;border-color:rgba(255,255,255,.07);box-shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);--tb-ink:rgba(245,245,247,.86);--tb-ink-on:#fff;--tb-hl:rgba(255,255,255,.1);--tb-sep:rgba(255,255,255,.1)}
-.mp-tbar .mp-tb-main,.mp-tbar .mp-tb-row{display:flex;align-items:center;gap:0;flex-wrap:wrap}.mp-tbar .mp-tb-main{flex-wrap:nowrap}
+.forum-toolbar.mp-tbar,.sig-bubble .forum-toolbar.mp-tbar{display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;width:max-content;max-width:calc(100% - 20px);box-sizing:border-box;margin:10px;padding:4px;border:1px solid var(--sheet-border);border-radius:14px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);box-shadow:var(--sheet-shadow);--tb-ink:var(--muted);--tb-ink-on:var(--ink);--tb-hl:color-mix(in srgb,var(--ink) 9%,transparent);--tb-sep:color-mix(in srgb,var(--ink) 14%,transparent)}
+.mp-tbar .mp-tb-main,.mp-tbar .mp-tb-row{display:flex;align-items:center;gap:0;flex-wrap:wrap}.mp-tbar .mp-tb-main{flex-wrap:nowrap;max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:10px}.mp-tbar .mp-tb-main::-webkit-scrollbar{display:none}.mp-tbar .mp-tb-row{max-width:100%}
 .mp-tbar .mp-tb-more{border-top:1px solid var(--tb-sep);padding-top:4px;display:flex;flex-direction:column;gap:4px}
 .mp-tbar .mp-tb-more.hidden,.mp-tbar .mp-ec-swatches.hidden{display:none}
 .mp-tbar .mp-tb-sep{width:1px;height:18px;margin:0 3px;background:var(--tb-sep);flex:0 0 auto}
-.mp-tbar .forum-tb{flex:0 0 auto;width:31px;height:32px;margin:0;min-width:0;padding:0;border:0;border-radius:9px;background:0 0;color:var(--tb-ink);display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:background-color .12s}
+.mp-tbar .forum-tb{flex:0 0 auto;width:32px;height:32px;margin:0 1px;min-width:0;padding:0;border:0;border-radius:8px;touch-action:pan-x;background:0 0;color:var(--tb-ink);display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:background-color .12s}
 .mp-tbar .forum-tb svg{width:18px;height:18px;display:block}
 @media (hover:hover){.mp-tbar .forum-tb:hover{background:var(--tb-hl);color:var(--tb-ink-on)}}
 .mp-tbar .forum-tb:active,.mp-tbar .forum-tb.on{background:var(--tb-hl);color:var(--tb-ink-on)}
@@ -8966,12 +8965,12 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .mp-tip{position:fixed;left:0;top:0;z-index:2147483000;pointer-events:none;opacity:0;transform-origin:var(--cx,50%) 100%;transition:transform .18s cubic-bezier(.2,.9,.3,1),opacity .14s ease-out}
 .mp-tip.below{transform-origin:var(--cx,50%) 0}
 .mp-tip.instant{transition:none}
-.mp-tip-in{position:relative;display:flex;align-items:center;gap:6px;padding:5px 6px 5px 9px;border-radius:9px;background:#18181a;color:#fff;font:500 12.5px/1.2 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;white-space:nowrap;box-shadow:0 0 0 .5px rgba(255,255,255,.08),0 6px 18px rgba(0,0,0,.35);scale:.92;transform-origin:inherit;transition:scale .18s cubic-bezier(.2,.9,.3,1)}
+.mp-tip-in{position:relative;display:flex;align-items:center;gap:6px;padding:5px 6px 5px 9px;border-radius:8px;background:var(--ink);color:var(--bg);overflow:visible;transition:scale .18s cubic-bezier(.2,.9,.3,1),width .18s cubic-bezier(.2,.9,.3,1);box-sizing:border-box;font:500 12px/1.2 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.28);scale:.92;transform-origin:inherit}
 .mp-tip.on{opacity:1}.mp-tip.on .mp-tip-in{scale:1}
-.mp-tip-in::after{content:"";position:absolute;left:calc(var(--cx,50%) - 5px);bottom:-4px;width:10px;height:10px;background:#18181a;transform:rotate(45deg);border-radius:0 0 2px 0}
+.mp-tip-in::after{content:"";position:absolute;left:calc(var(--cx,50%) - 5px);bottom:-4px;width:10px;height:10px;background:var(--ink);transform:rotate(45deg);border-radius:0 0 2px 0}
 .mp-tip.below .mp-tip-in::after{bottom:auto;top:-4px;border-radius:2px 0 0 0}
 .mp-tip-in:not(:has(.mp-tip-k:not(:empty))){padding-right:9px}
-.mp-tip-k{padding:1px 5px;border-radius:5px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);font-size:11px;font-weight:500}
+.mp-tip-k{padding:1px 5px;border-radius:5px;background:color-mix(in srgb,var(--bg) 16%,transparent);color:color-mix(in srgb,var(--bg) 70%,transparent);font-size:11px;font-weight:500}
 .mp-tip.xf .mp-tip-t,.mp-tip.xf .mp-tip-k{animation:mp-tip-xf .16s ease-out}
 @keyframes mp-tip-xf{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:none}}
 @media (prefers-reduced-motion:reduce){.mp-tip,.mp-tip-in{transition:opacity .12s}.mp-tip.xf .mp-tip-t,.mp-tip.xf .mp-tip-k{animation:none}}

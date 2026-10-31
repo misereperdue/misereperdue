@@ -3918,8 +3918,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     txt.textContent = b.getAttribute("data-tip");
     kb.textContent = k && !touch ? kfmt(k) : "";
     kb.style.display = k && !touch ? "" : "none";
+    var pin = tip.firstChild, ow = pin.offsetWidth;
+    pin.style.transition = "none"; pin.style.width = "";
+    var nw = pin.offsetWidth;
+    if (swap && !instant) { pin.style.width = ow + "px"; void pin.offsetWidth; pin.style.transition = ""; pin.style.width = nw + "px"; }
+    else pin.style.transition = "";
     tip.classList.toggle("instant", !!instant);
-    var r = b.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    var r = b.getBoundingClientRect(), w = nw, h = tip.offsetHeight;
     var x = r.left + r.width / 2 - w / 2, cx = w / 2;
     var cl = Math.max(8, Math.min(innerWidth - w - 8, x));
     cx += x - cl;
@@ -3974,8 +3979,11 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     clearTimeout(lp);
     lp = setTimeout(function () { lpFired = true; show(b); }, 350);
   }, { passive: true });
+  var sx = 0, sy = 0;
+  document.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true, capture: true });
+  document.addEventListener("scroll", function (e) { if (!lpFired && e.target && e.target.closest && e.target.closest(".mp-tbar")) { clearTimeout(lp); if (tip) tip.classList.remove("on"); } }, true);
   document.addEventListener("touchmove", function (e) {
-    if (!lpFired) { clearTimeout(lp); return; }
+    if (!lpFired) { var t0 = e.touches[0]; if (Math.abs(t0.clientX - sx) + Math.abs(t0.clientY - sy) > 6) clearTimeout(lp); return; }
     e.preventDefault();
     var t = e.touches[0], b = btnOf(document.elementFromPoint(t.clientX, t.clientY));
     if (b && b !== cur) show(b);
