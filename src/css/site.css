@@ -8972,7 +8972,7 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .mp-tbar .mp-tm-sec{padding:4px 2px 6px}
 .mp-tbar .mp-tm-sec+.mp-tm-sec{border-top:1px solid var(--tb-sep)}
 .mp-tbar .mp-tm-lbl{padding:2px 6px 4px;font:600 10.5px/1.2 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--tb-ink);opacity:.5}
-.mp-tbar .mp-tb-more .mp-tb-row{display:grid;grid-template-columns:repeat(5,36px);justify-content:space-between;gap:2px}
+.mp-tbar .mp-tb-more .mp-tb-row{display:grid;grid-template-columns:repeat(5,36px);justify-content:start;gap:4px}
 .mp-tbar .mp-tb-more .forum-tb{width:36px;height:36px;margin:0;border-radius:10px}
 .mp-tbar .mp-tb-more.open .mp-tm-sec{animation:mp-tm-in .26s cubic-bezier(.2,.9,.3,1) both}
 .mp-tbar .mp-tb-more.open .mp-tm-sec:nth-child(2){animation-delay:.03s}.mp-tbar .mp-tb-more.open .mp-tm-sec:nth-child(3){animation-delay:.06s}
@@ -8991,8 +8991,12 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .mp-tbar .forum-tb svg{width:18px;height:18px;display:block}
 @media (hover:hover){.mp-tbar .forum-tb:hover{background:var(--tb-hl);color:var(--tb-ink-on)}}
 .mp-tbar .forum-tb:active,.mp-tbar .forum-tb.on{background:var(--tb-hl);color:var(--tb-ink-on)}
-.mp-tbar .tb-quote,.mp-tbar [data-act=quote]{font-family:Georgia,serif;font-size:22px;padding-top:7px}
 .mp-tbar .mp-tb-dot{width:15px;height:15px;border-radius:50%;background:conic-gradient(from 200deg,#2f5bff,#7b2fff,#ff2fa0,#ff4b2f,#ffb22f,#b8ff2f,#2fff8a,#2fe6ff,#2f5bff);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+/* Main bar matches the ⋯ panel (per dc) */
+.forum-toolbar.mp-tbar:not(.mp-tb-portal),.sig-bubble .forum-toolbar.mp-tbar:not(.mp-tb-portal){padding:6px;border-radius:16px;box-shadow:var(--sheet-shadow),0 18px 40px -12px rgba(0,0,0,.28)}
+.mp-tbar .mp-tb-main .forum-tb{width:36px;height:36px;margin:0;border-radius:10px}
+.mp-tbar .mp-tb-main{gap:2px}
+.mp-tbar .mp-tb-sep{height:22px;margin:0 4px}
 .mp-tbar .mp-ec-swatches{display:flex;justify-content:space-between;gap:4px;padding:2px 4px 4px}
 .mp-tbar .tc-sw{width:22px;height:22px;border-radius:50%;border:0;padding:0;background:var(--tc);box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);-webkit-tap-highlight-color:transparent}
 .mp-tbar .tc-sw.on{box-shadow:0 0 0 2px var(--tb-hl),0 0 0 3px var(--tb-ink)}
