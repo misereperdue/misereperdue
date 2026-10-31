@@ -8965,38 +8965,26 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .forum-toolbar.mp-tbar,.sig-bubble .forum-toolbar.mp-tbar{display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;width:max-content;max-width:calc(100% - 20px);box-sizing:border-box;margin:10px;padding:4px;border:1px solid var(--sheet-border);border-radius:14px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);box-shadow:var(--sheet-shadow);--tb-ink:var(--muted);--tb-ink-on:var(--ink);--tb-hl:color-mix(in srgb,var(--ink) 9%,transparent);--tb-sep:color-mix(in srgb,var(--ink) 14%,transparent)}
 .mp-tbar .mp-tb-main,.mp-tbar .mp-tb-row{display:flex;align-items:center;gap:0;flex-wrap:wrap}.mp-tbar .mp-tb-main{flex-wrap:nowrap;max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:10px}.mp-tbar .mp-tb-main::-webkit-scrollbar{display:none}.mp-tbar .mp-tb-row{max-width:100%}
 .forum-toolbar.mp-tbar{position:relative;overflow:visible}
-.mp-tbar .mp-tb-more{position:absolute;z-index:900;top:0;left:0;width:212px;box-sizing:border-box;padding:6px;display:flex;flex-direction:column;gap:0;border:1px solid var(--sheet-border);border-radius:16px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);box-shadow:var(--sheet-shadow),0 18px 40px -12px rgba(0,0,0,.28);transform-origin:var(--ox,90%) var(--oy,-6px);opacity:0;transform:translateY(-4px) scale(.86);pointer-events:none;transition:opacity .14s ease-in,transform .14s cubic-bezier(.4,0,1,1)}
-.mp-tbar .mp-tb-more.open{opacity:1;transform:none;pointer-events:auto;transition:opacity .16s ease-out,transform .22s cubic-bezier(.2,.9,.3,1.18)}
-.forum-toolbar.mp-tbar.mp-tb-portal,.mp-tbar.mp-tb-portal{all:unset!important;display:contents!important}
-.mp-tbar .mp-tb-more.hidden,.mp-tbar .mp-ec-swatches.hidden{display:none}
-.mp-tbar .mp-tm-sec{padding:4px 2px 6px}
-.mp-tbar .mp-tm-sec+.mp-tm-sec{border-top:1px solid var(--tb-sep)}
-.mp-tbar .mp-tm-lbl{padding:2px 6px 4px;font:600 10.5px/1.2 -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--tb-ink);opacity:.5}
-.mp-tbar .mp-tb-more .mp-tb-row{display:grid;grid-template-columns:repeat(5,36px);justify-content:start;gap:4px}
-.mp-tbar .mp-tb-more .forum-tb{width:36px;height:36px;margin:0;border-radius:10px}
-.mp-tbar .mp-tb-more.open .mp-tm-sec{animation:mp-tm-in .26s cubic-bezier(.2,.9,.3,1) both}
-.mp-tbar .mp-tb-more.open .mp-tm-sec:nth-child(2){animation-delay:.03s}.mp-tbar .mp-tb-more.open .mp-tm-sec:nth-child(3){animation-delay:.06s}
-@keyframes mp-tm-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
-.mp-tbar .mp-tm-seg{display:flex!important;gap:2px;padding:2px;border-radius:11px;background:var(--tb-hl);background:color-mix(in srgb,var(--tb-hl) 55%,transparent)}
-.mp-tbar .mp-tm-seg .forum-tb{flex:1 1 0;width:auto;height:32px;border-radius:9px}
-.mp-tbar .mp-tm-seg .forum-tb.on{background:var(--sheet-bg);box-shadow:0 1px 3px rgba(0,0,0,.14),inset 0 0 0 .5px var(--sheet-border)}
-.mp-tbar [data-act=more] svg{transition:transform .22s cubic-bezier(.2,.9,.3,1.2)}
-.mp-tbar [data-act=more].on svg{transform:rotate(90deg)}
-.mp-tbar .mp-tb-more .mp-ec-swatches{margin:6px 2px 0;padding:6px;border-radius:12px;background:color-mix(in srgb,var(--tb-hl) 55%,transparent);animation:mp-tm-in .2s cubic-bezier(.2,.9,.3,1) both;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:0;justify-items:center}
-.mp-tbar .mp-tb-more .mp-ec-swatches.hidden{display:none}
-.mp-tbar .mp-tb-more .tc-sw{width:18px;height:18px}
-@media (prefers-reduced-motion:reduce){.mp-tbar .mp-tb-more,.mp-tbar .mp-tb-more.open{transform:none;transition:opacity .12s}.mp-tbar .mp-tb-more.open .mp-tm-sec,.mp-tbar .mp-tb-more .mp-ec-swatches{animation:none}.mp-tbar [data-act=more] svg{transition:none}}
 .mp-tbar .mp-tb-sep{width:1px;height:18px;margin:0 3px;background:var(--tb-sep);flex:0 0 auto}
 .mp-tbar .forum-tb{flex:0 0 auto;width:32px;height:32px;margin:0 1px;min-width:0;padding:0;border:0;border-radius:8px;touch-action:pan-x;background:0 0;color:var(--tb-ink);display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:background-color .12s}
 .mp-tbar .forum-tb svg{width:18px;height:18px;display:block}
 @media (hover:hover){.mp-tbar .forum-tb:hover{background:var(--tb-hl);color:var(--tb-ink-on)}}
 .mp-tbar .forum-tb:active,.mp-tbar .forum-tb.on{background:var(--tb-hl);color:var(--tb-ink-on)}
 .mp-tbar .mp-tb-dot{width:15px;height:15px;border-radius:50%;background:conic-gradient(from 200deg,#2f5bff,#7b2fff,#ff2fa0,#ff4b2f,#ffb22f,#b8ff2f,#2fff8a,#2fe6ff,#2f5bff);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
-/* Main bar matches the ⋯ panel (per dc) */
-.forum-toolbar.mp-tbar:not(.mp-tb-portal),.sig-bubble .forum-toolbar.mp-tbar:not(.mp-tb-portal){padding:6px;border-radius:16px;box-shadow:var(--sheet-shadow),0 18px 40px -12px rgba(0,0,0,.28)}
+/* Swipeable toolbar: momentum, edge fades (per dc) */
+.mp-tbar .mp-tb-main{scroll-snap-type:x proximity;scroll-behavior:smooth;-webkit-mask-image:none;mask-image:none}
+.mp-tbar .mp-tb-main>*{scroll-snap-align:start}
+.mp-tbar .mp-tb-main.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.mp-tbar .mp-tb-main.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+.mp-tbar .mp-tb-main.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.mp-tbar .mp-ec-swatches{animation:mp-sw-in .2s cubic-bezier(.2,.9,.3,1) both}
+@keyframes mp-sw-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mp-tbar .mp-ec-swatches{animation:none}.mp-tbar .mp-tb-main{scroll-behavior:auto}}
+/* Main bar glass (per dc) */
 .mp-tbar .mp-tb-main .forum-tb{width:36px;height:36px;margin:0;border-radius:10px}
 .mp-tbar .mp-tb-main{gap:2px}
 .mp-tbar .mp-tb-sep{height:22px;margin:0 4px}
+.mp-tbar .mp-ec-swatches.hidden{display:none}
 .mp-tbar .mp-ec-swatches{display:flex;justify-content:space-between;gap:4px;padding:2px 4px 4px}
 .mp-tbar .tc-sw{width:22px;height:22px;border-radius:50%;border:0;padding:0;background:var(--tc);box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);-webkit-tap-highlight-color:transparent}
 .mp-tbar .tc-sw.on{box-shadow:0 0 0 2px var(--tb-hl),0 0 0 3px var(--tb-ink)}
