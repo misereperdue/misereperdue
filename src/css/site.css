@@ -6662,17 +6662,7 @@ button.forum-glass-pill:active {
 .cf-turnstile-wrap[hidden] {
   display: none;
 }
-.forum-topbar {
-  padding-right: 20px;
-}
-.forum-topbar .chat-avatar-img.sm {
-  width: 28px;
-  height: 28px;
-}
-.forum-topbar .chat-badge {
-  right: 0;
-  bottom: 0;
-}
+/* Globe top bar shares Chat's padding, avatar (32px) and badge offsets (per dc) */
 .forum-thread-meta-text {
   display: block;
   margin-top: 2px;
