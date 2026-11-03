@@ -9002,3 +9002,29 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .mp-tip.xf .mp-tip-t,.mp-tip.xf .mp-tip-k{animation:mp-tip-xf .16s ease-out}
 @keyframes mp-tip-xf{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:none}}
 @media (prefers-reduced-motion:reduce){.mp-tip,.mp-tip-in{transition:opacity .12s}.mp-tip.xf .mp-tip-t,.mp-tip.xf .mp-tip-k{animation:none}}
+/* Chat + Globe top bars (per dc): one shared sizing. Right-side items never shrink
+   (Globe's extra "New thread" button used to squeeze the avatar/pill), the row
+   gap is the same on both, and nothing animates size on tab change. */
+.chat-head .chat-head-right {
+  gap: 6px;
+  flex: none;
+}
+.chat-head .chat-head-right > *,
+.chat-head .chat-me .chat-avatar-wrap,
+.chat-head .chat-avatar-img.sm {
+  flex: none;
+}
+.chat-head .chat-avatar-img.sm {
+  width: 32px;
+  height: 32px;
+  transition: none;
+}
+.chat-head .chat-points {
+  padding: 7px 13px;
+  font-size: 14px;
+  transition: none;
+}
+.chat-head .chat-title {
+  min-width: 0;
+  white-space: nowrap;
+}
