@@ -984,6 +984,166 @@
         })
         .catch(function () {});
   }
+  /* Profile bubble (per dc): compact profile popover anchored to the tapped avatar.
+     "Full profile" opens the old sheet (K), which keeps the larger avatar and owner tools. */
+  var mpPBel = null, mpPBreq = 0;
+  function mpPBclose(fast) {
+    var b = mpPBel;
+    if (!b) return;
+    mpPBel = null;
+    b._off && b._off();
+    b.classList.remove("is-in");
+    b.classList.add("is-out");
+    setTimeout(function () { b.remove(); }, fast ? 0 : 140);
+  }
+  function mpPB(u, anchor) {
+    if (!u) return;
+    if (!anchor || !anchor.isConnected) return K(u);
+    if (mpPBel && mpPBel._u === u && mpPBel._a === anchor) return mpPBclose();
+    mpPBclose(!0);
+    var rq = ++mpPBreq;
+    E("/api/user/" + encodeURIComponent(u))
+      .then(function (t) {
+        if (rq !== mpPBreq || !(t && t.ok && t.user) || !anchor.isConnected) return;
+        var n = t.user,
+          me = !!(s && String(n.username).toLowerCase() === String(s.username).toLowerCase()),
+          b = document.createElement("div");
+        b.className = "mp-pb";
+        b.setAttribute("role", "dialog");
+        b.setAttribute("aria-label", n.username + "'s profile");
+        b.tabIndex = -1;
+        b._u = u;
+        b._a = anchor;
+        var hd = document.createElement("div");
+        hd.className = "mp-pb-hd";
+        var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
+          pill = O(n);
+        if (!pill) {
+          var bd = P(n);
+          bd && av.insertAdjacentHTML("beforeend", bd);
+        }
+        hd.appendChild(av);
+        var nm = document.createElement("div");
+        nm.className = "mp-pb-nm";
+        var n1 = document.createElement("div");
+        n1.className = "mp-pb-name";
+        n1.textContent = n.username;
+        nm.appendChild(n1);
+        var n2 = document.createElement("div");
+        n2.className = "mp-pb-sub";
+        n2.textContent = [n.numId ? "#" + n.numId : "", n.createdAt ? "Joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }) : ""].filter(Boolean).join(" · ");
+        nm.appendChild(n2);
+        pill && nm.insertAdjacentHTML("beforeend", pill);
+        hd.appendChild(nm);
+        b.appendChild(hd);
+        var st = document.createElement("div");
+        st.className = "mp-pb-stats";
+        st.innerHTML = '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
+        if (n.badges && n.badges.length) {
+          var br = document.createElement("span");
+          br.className = "mp-pb-badges";
+          n.badges.forEach(function (e) {
+            if (A(n.username, e)) {
+              var i = document.createElement("span");
+              i.className = "mp-pb-badge" + ((n.activeBadge || null) === e ? " on" : "");
+              i.innerHTML = M(e);
+              br.appendChild(i);
+            }
+          });
+          br.childNodes.length && st.appendChild(br);
+        }
+        b.appendChild(st);
+        if (n.bio) {
+          var bio = document.createElement("div");
+          bio.className = "mp-pb-bio";
+          bio.textContent = n.bio;
+          b.appendChild(bio);
+        }
+        var ac = document.createElement("div");
+        ac.className = "mp-pb-acts";
+        function btn(label, icon, run, cls) {
+          var k = document.createElement("button");
+          k.type = "button";
+          k.className = "mp-pb-act" + (cls ? " " + cls : "");
+          k.innerHTML = "<svg " + MP_IC + ">" + icon + "</svg><span></span>";
+          k.querySelector("span").textContent = label;
+          k.addEventListener("click", function (e) { e.stopPropagation(); run(k); });
+          ac.appendChild(k);
+          return k;
+        }
+        if (!me && mpPM.on && s)
+          btn("Whisper", '<path d="M11 19H8l-4 2.5V17a5 5 0 0 1-1-3V9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v1"/><rect x="13.5" y="15" width="8" height="6" rx="1.6"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/>', function () { mpPBclose(); mpPMStart(n.username); });
+        me && btn("Edit", '<path d="M16.9 4.6a2 2 0 0 1 2.8 2.8L8.5 18.6 4 20l1.4-4.5z"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
+        btn("Share", '<path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>', function (k) {
+          k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
+        });
+        if (!me && window.mpHide) {
+          mpHide.seen(n.username, n.numId);
+          var hk = btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', function () {
+            mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again")) : mpHideUser(n.username, n.numId);
+            mpPBclose();
+          }, "is-danger");
+        }
+        b.appendChild(ac);
+        var fp = document.createElement("button");
+        fp.type = "button";
+        fp.className = "mp-pb-full";
+        fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
+        fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
+        b.appendChild(fp);
+        var tail = document.createElement("i");
+        tail.className = "mp-pb-tail";
+        tail.setAttribute("aria-hidden", "true");
+        b.appendChild(tail);
+        document.body.appendChild(b);
+        /* place: below by default, above when it doesn't fit; clamp to viewport + safe areas */
+        var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
+          r = anchor.getBoundingClientRect(),
+          w = b.offsetWidth,
+          h = b.offsetHeight,
+          vw = document.documentElement.clientWidth,
+          vh = window.innerHeight,
+          M8 = 10,
+          gap = 10,
+          below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
+          left = Math.max(M8, Math.min(r.left + r.width / 2 - w / 2, vw - w - M8)),
+          top = below ? r.bottom + gap : r.top - gap - h,
+          ax = Math.max(22, Math.min(r.left + r.width / 2 - left, w - 22));
+        top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
+        b.classList.add(below ? "is-below" : "is-above");
+        b.style.left = left + "px";
+        b.style.top = top + "px";
+        b.style.setProperty("--ax", ax + "px");
+        b.style.transformOrigin = ax + "px " + (below ? "-8px" : h + 8 + "px");
+        mpPBel = b;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { b.classList.add("is-in"); });
+        });
+        try { b.focus({ preventScroll: !0 }); } catch (e) {}
+        var out = function (e) { b.contains(e.target) || (anchor.contains(e.target) ? 0 : mpPBclose()); },
+          esc = function (e) { "Escape" === e.key && (e.preventDefault(), mpPBclose(), anchor.focus && anchor.focus()); },
+          scr = function (e) { b.contains(e.target) || mpPBclose(); },
+          pop = function () { mpPBclose(!0); };
+        b._off = function () {
+          document.removeEventListener("pointerdown", out, !0);
+          document.removeEventListener("keydown", esc, !0);
+          window.removeEventListener("scroll", scr, !0);
+          window.removeEventListener("popstate", pop);
+          window.removeEventListener("resize", pop);
+          window.removeEventListener("hashchange", pop);
+        };
+        setTimeout(function () {
+          if (mpPBel !== b) return;
+          document.addEventListener("pointerdown", out, !0);
+          document.addEventListener("keydown", esc, !0);
+          window.addEventListener("scroll", scr, !0);
+          window.addEventListener("popstate", pop);
+          window.addEventListener("resize", pop);
+          window.addEventListener("hashchange", pop);
+        }, 0);
+      })
+      .catch(function () {});
+  }
   var mpPM = { on: !1, to: null, lp: 0 };
   function mpPMEnable() {
     mpPM.on = !0;
@@ -1063,7 +1223,7 @@
       e.setAttribute("aria-label", "View " + t + "'s profile"));
     var n = function (e) {
       if (Date.now() - mpPM.lp < 700) return void (e && (e.stopPropagation(), e.preventDefault()));
-      (e && e.stopPropagation(), K(t));
+      (e && e.stopPropagation(), mpPB(t, avEl));
     };
     /* long-press an avatar = whisper to that user (per dc; only once the Worker supports it) */
     var lpT = null,
@@ -6333,12 +6493,13 @@
     (window.MPChat.catchUp = function () {
       return d && s ? ut() : Promise.resolve();
     }),
-    (window.MPChat.openUserSheet = K),
+    (window.MPChat.openUserSheet = function (u, el) { return el ? mpPB(u, el) : K(u); }),
+    (window.MPChat.openFullProfile = K),
     (window.MPChat.fadeSheetIn = Q),
     (window.MPChat.addBorderSparkles = Z),
     (window.MPChat.hasSparkles = F),
     document.addEventListener("mp-open-user-sheet", function (e) {
-      e.detail && e.detail.username && K(e.detail.username);
+      e.detail && e.detail.username && mpPB(e.detail.username, e.detail.anchor);
     }),
     (window.MPChat.toggleMeMenu = vt),
     (window.MPChat.badgeHTML = M),

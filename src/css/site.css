@@ -9810,3 +9810,35 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-vrec.is-deaf .chat-vrec-hint { display: block; }
 .chat-vrec.is-deaf .chat-vrec-wv { display: none; }
 .chat-vrec.is-busy .chat-vrec-hint { display: none; }
+/* ---------- Profile bubble (per dc): compact profile popover anchored to the tapped avatar ---------- */
+.mp-pb{position:fixed;z-index:2147482000;width:min(280px,calc(100vw - 20px));padding:14px 14px 6px;border-radius:20px;color:var(--ink);background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);border:var(--sheet-border);box-shadow:var(--sheet-shadow),0 18px 48px rgba(0,0,0,.28);opacity:0;transform:scale(.86);transition:opacity .16s ease,transform .26s cubic-bezier(.2,.8,.25,1);outline:none;-webkit-user-select:none;user-select:none}
+.mp-pb.is-in{opacity:1;transform:none}
+.mp-pb.is-out{opacity:0;transform:scale(.94);transition:opacity .12s ease,transform .12s ease;pointer-events:none}
+.mp-pb-tail{position:absolute;left:calc(var(--ax,50%) - 7px);width:14px;height:14px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);border:var(--sheet-border);transform:rotate(45deg);border-radius:3px;pointer-events:none}
+.mp-pb.is-below .mp-pb-tail{top:-7.5px;border-right:0;border-bottom:0}
+.mp-pb.is-above .mp-pb-tail{bottom:-7.5px;border-left:0;border-top:0}
+.mp-pb-hd{display:flex;align-items:center;gap:12px}
+.mp-pb-hd>.chat-avatar-wrap{flex:none;width:52px;height:52px;position:relative}
+.mp-pb-hd>.chat-avatar-wrap>img,.mp-pb-hd>.chat-avatar-wrap>.chat-avatar{width:52px!important;height:52px!important;border-radius:50%;object-fit:cover;font-size:24px}
+.mp-pb-nm{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.mp-pb-name{font-size:17px;font-weight:700;letter-spacing:-.01em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-pb-sub{font-size:12px;color:var(--muted)}
+.mp-pb-nm .chat-badge-pill{margin:3px 0 0;transform:scale(.86);transform-origin:left center}
+.mp-pb-stats{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 0;padding:8px 10px;border-radius:12px;background:var(--fill,rgba(128,128,128,.12));font-size:13px;color:var(--muted)}
+.mp-pb-pts b{color:var(--ink);font-weight:700}
+.mp-pb-pts span{color:#f5c542}
+.mp-pb-badges{display:flex;gap:4px}
+.mp-pb-badge{display:grid;place-items:center;width:22px;height:22px;opacity:.75}
+.mp-pb-badge.on{opacity:1}
+.mp-pb-badge .chat-badge{position:static!important;inset:auto!important;transform:none!important;width:auto!important;height:auto!important;font-size:15px!important;line-height:1;background:none!important;border:0!important;box-shadow:none!important;margin:0!important}
+.mp-pb-badge svg,.mp-pb-badge img{max-width:18px;max-height:18px}
+.mp-pb-bio{margin:10px 2px 0;font-size:13.5px;line-height:1.38;color:var(--ink);opacity:.9;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.mp-pb-acts{display:flex;gap:6px;margin:12px 0 0}
+.mp-pb-act{flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 4px;border-radius:13px;border:0;background:var(--fill,rgba(128,128,128,.12));color:var(--ink);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,background .15s}
+.mp-pb-act svg{width:19px;height:19px}
+.mp-pb-act:active{transform:scale(.96);background:rgba(128,128,128,.22)}
+.mp-pb-act.is-danger{color:#ff5a5f}
+.mp-pb-act:disabled{opacity:.5}
+.mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.mp-pb-full svg{width:14px;height:14px}
+@media (prefers-reduced-motion:reduce){.mp-pb,.mp-pb.is-out{transition:opacity .12s ease;transform:none}}

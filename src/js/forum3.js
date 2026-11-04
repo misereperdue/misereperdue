@@ -329,9 +329,9 @@
             t && (t.preventDefault(), t.stopPropagation());
             var r = e.getAttribute("data-username");
             if (r)
-              if (window.MPChat && window.MPChat.openUserSheet) window.MPChat.openUserSheet(r);
+              if (window.MPChat && window.MPChat.openUserSheet) window.MPChat.openUserSheet(r, e);
               else {
-                var n = new CustomEvent("mp-open-user-sheet", { detail: { username: r } });
+                var n = new CustomEvent("mp-open-user-sheet", { detail: { username: r, anchor: e } });
                 document.dispatchEvent(n);
               }
           };
@@ -727,7 +727,7 @@
         e.addEventListener("click", function (t) {
           (t.preventDefault(), t.stopPropagation());
           var r = e.getAttribute("data-user");
-          r && window.MPChat && window.MPChat.openUserSheet && window.MPChat.openUserSheet(r);
+          r && window.MPChat && window.MPChat.openUserSheet && window.MPChat.openUserSheet(r, e);
         }));
     });
   }
@@ -736,7 +736,7 @@
       e.addEventListener("click", function (t) {
         t.stopPropagation();
         var r = e.getAttribute("data-username");
-        r && window.MPChat && window.MPChat.openUserSheet && window.MPChat.openUserSheet(r);
+        r && window.MPChat && window.MPChat.openUserSheet && window.MPChat.openUserSheet(r, e);
       });
     });
     var e = t.querySelector("#forum-me");
