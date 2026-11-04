@@ -2389,6 +2389,88 @@
         mpPhotoViewer(a, Math.max(0, r));
       }
     }));
+  /* "Now listening" (per dc): a message like "+frank ocean nights" becomes a
+     glass card with the song resolved client-side via the iTunes Search API.
+     Derived from the text, so it looks the same for everyone. */
+  var mpNP = Object.create(null);
+  function mpNPLookup(e) {
+    if (mpNP[e]) return mpNP[e];
+    var t = "mp-np:" + e.toLowerCase();
+    try {
+      var n = JSON.parse(localStorage.getItem(t) || "null");
+      if (n) return (mpNP[e] = Promise.resolve(n.r || null));
+    } catch (e) {}
+    return (mpNP[e] = fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e))
+      .then(function (e) {
+        return e.json();
+      })
+      .then(function (n) {
+        var a = (n && n.results) || [],
+          r = e.toLowerCase(),
+          q = function (e) {
+            return String(e || "").toLowerCase().replace(/\s*[(\[].*$/, "").split(" / ")[0].trim();
+          },
+          sc = function (e) {
+            var t = q(e.trackName),
+              n = q(e.artistName);
+            return (t && r.indexOf(t) >= 0 ? 2 : 0) + (n && r.indexOf(n) >= 0 ? 3 : 0);
+          },
+          o = a.slice().sort(function (e, t) {
+            return sc(t) - sc(e);
+          })[0],
+          i = o
+            ? { title: o.trackName, artist: o.artistName, art: String(o.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: o.trackViewUrl || "" }
+            : null;
+        try {
+          localStorage.setItem(t, JSON.stringify({ r: i }));
+        } catch (e) {}
+        return i;
+      })
+      .catch(function () {
+        return (delete mpNP[e], null);
+      }));
+  }
+  function mpNowListening(e, t, n, a) {
+    var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
+    if (!r || /^\+\d/.test(String(t).trim())) return;
+    var o = r[1].trim(),
+      i = e.querySelector(".chat-text"),
+      c = document.createElement("div");
+    ((c.className = "chat-np is-loading"),
+      (c.innerHTML =
+        '<span class="chat-np-glow"></span><span class="chat-np-art"></span><span class="chat-np-tx"><span class="chat-np-who"></span><span class="chat-np-line"></span><span class="chat-np-line s"></span></span>'),
+      e.classList.add("chat-np-bubble"),
+      i && (i.hidden = !0),
+      e.insertBefore(c, e.firstChild));
+    var l = c.querySelector(".chat-np-who"),
+      d = document.createElement("span");
+    function s() {
+      var e = a && a.querySelector(".chat-avatar-img, .avatar img, img[class*=avatar]");
+      if (e) {
+        var t = e.cloneNode(!0);
+        ((t.className = "chat-np-av"), t.removeAttribute("style"), l.insertBefore(t, l.firstChild));
+      }
+    }
+    ((d.textContent = (n || "Someone") + " is listening to"), l.appendChild(d));
+    mpNPLookup(o).then(function (n) {
+      if (!n) return (c.remove(), e.classList.remove("chat-np-bubble"), void (i && (i.hidden = !1)));
+      (s(), c.classList.remove("is-loading"));
+      var a = c.querySelector(".chat-np-art"),
+        r = document.createElement("img");
+      ((r.src = n.art), (r.alt = ""), (r.draggable = !1), a.appendChild(r));
+      c.querySelector(".chat-np-glow").style.backgroundImage = "url(" + JSON.stringify(n.art) + ")";
+      var d = c.querySelectorAll(".chat-np-line");
+      ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
+      var u = document.createElement("span");
+      ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), c.querySelector(".chat-np-tx").appendChild(u));
+      n.url &&
+        /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url) &&
+        (c.setAttribute("role", "link"),
+        c.addEventListener("click", function (e) {
+          (e.stopPropagation(), document.querySelector(".chat-react-picker") || window.open(n.url, "_blank", "noopener"));
+        }));
+    });
+  }
   function He(t) {
     return t && t.id && /^[A-Za-z0-9]+$/.test(t.id)
       ? "video" === t.kind
@@ -2547,7 +2629,7 @@
             ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
             var cW = document.createElement("div");
             ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
-          } else o.appendChild(i);
+          } else (!e.media && mpNowListening(i, l, e.user, o), o.appendChild(i));
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
@@ -2595,7 +2677,7 @@
             var N = ye(e.id, e.reactions);
             N && k.appendChild(N);
           }
-          (w.appendChild(k), o.appendChild(w));
+          (!e.media && mpNowListening(k, S, e.user, o), w.appendChild(k), o.appendChild(w));
         }
         if (
           (e.ts && Date.now() - e.ts < 2e3 && o.classList.add("chat-msg-in"),

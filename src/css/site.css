@@ -9341,3 +9341,27 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-inputrow > .chat-attach[hidden] {
   display: none;
 }
+
+/* Now listening card (per dc) */
+.chat-bubble.chat-np-bubble{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0!important;overflow:visible!important}
+.chat-bubble.chat-np-bubble::before,.chat-bubble.chat-np-bubble::after{display:none!important}
+.chat-np{position:relative;display:flex;align-items:center;gap:12px;width:min(280px,72vw);padding:10px 14px 10px 10px;border-radius:20px;overflow:hidden;isolation:isolate;cursor:pointer;background:var(--sheet-bg,var(--glass-regular-tint));border:var(--sheet-border,var(--glass-hairline));-webkit-backdrop-filter:var(--sheet-blur,var(--glass-regular));backdrop-filter:var(--sheet-blur,var(--glass-regular));box-shadow:var(--sheet-shadow,var(--shadow));-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .25s}
+.chat-np-glow{position:absolute;inset:-30%;z-index:-1;background-size:cover;background-position:center;filter:blur(28px) saturate(1.6);opacity:.38}
+.chat-np-art{flex:none;width:64px;height:64px;border-radius:12px;overflow:hidden;background:rgba(128,128,128,.18);box-shadow:0 6px 16px rgba(0,0,0,.28)}
+.chat-np-art img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.chat-np-tx{position:relative;min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;padding-right:18px}
+.chat-np-who{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-np-av{width:16px;height:16px;border-radius:50%;object-fit:cover;flex:none}
+.chat-np-line{font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-np-line.s{font-size:13px;font-weight:500;color:var(--muted)}
+.chat-np-eq{position:absolute;right:0;top:2px;display:flex;align-items:flex-end;gap:2px;height:12px}
+.chat-np-eq i{width:3px;height:100%;border-radius:2px;background:var(--ink);opacity:.7;transform-origin:bottom;animation:chat-np-eq .9s ease-in-out infinite}
+.chat-np-eq i:nth-child(2){animation-delay:-.3s}
+.chat-np-eq i:nth-child(3){animation-delay:-.6s}
+@keyframes chat-np-eq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.chat-np.is-loading .chat-np-art,.chat-np.is-loading .chat-np-line{background:linear-gradient(90deg,rgba(128,128,128,.16),rgba(128,128,128,.3),rgba(128,128,128,.16));background-size:200% 100%;animation:chat-np-sk 1.2s linear infinite;border-radius:8px;min-height:14px;width:80%}
+.chat-np.is-loading .chat-np-art{width:64px;border-radius:12px}
+.chat-np.is-loading .chat-np-line.s{width:55%}
+@keyframes chat-np-sk{to{background-position:-200% 0}}
+.chat-react-target .chat-np{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.chat-np-eq i{animation:none}}
