@@ -6304,3 +6304,103 @@
       (e && !e.classList.contains("on")) || Ae();
     }));
 })();
+/* Voice typing (per dc): mic left of Send, recording bar morph, Whisper via /api/transcribe. Hidden until the Worker route is live. */
+(function () {
+  var API = "https://api.misereperdue.com/api/transcribe", ready = false, st = null;
+  function toast(t) { try { window.mpHide && mpHide.toast ? mpHide.toast(t) : alert(t); } catch (_) {} }
+  function hap(n) { try { window.haptic && window.haptic(n); } catch (_) {} }
+  var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  fetch(API, { method: "GET" }).then(function (r) { if (r.status === 200 || r.status === 405) { window.MP_VOICE_READY = ready = true; mount(); } }).catch(function () {});
+  var MIC = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.75" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.75"/></svg>';
+  function mount() {
+    if (!ready) return;
+    var f = document.querySelector("#chat .chat-inputbar"); if (!f) return void setTimeout(mount, 800);
+    if (f.querySelector(".chat-mic")) return;
+    var b = document.createElement("button"); b.type = "button"; b.className = "chat-mic"; b.setAttribute("aria-label", "Voice typing"); b.innerHTML = MIC;
+    f.insertBefore(b, f.querySelector(".chat-send"));
+    b.addEventListener("click", function (e) { e.preventDefault(); st ? stop() : start(f); });
+  }
+  new MutationObserver(function () { ready && mount(); }).observe(document.documentElement, { childList: true, subtree: true });
+  function pickType() {
+    var t = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    for (var i = 0; i < t.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t[i])) return t[i];
+    return "";
+  }
+  function bar(f) {
+    var o = document.createElement("div"); o.className = "chat-vrec";
+    o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
+    f.appendChild(o); o.offsetWidth; f.classList.add("is-rec");
+    o.querySelector(".chat-vrec-x").onclick = function (e) { e.preventDefault(); cancel(); };
+    o.querySelector(".chat-vrec-ok").onclick = function (e) { e.preventDefault(); stop(); };
+    return o;
+  }
+  function start(f) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return toast("Voice typing isn't supported on this browser");
+    if (!localStorage.getItem("chat_token")) return toast("Log in to use voice typing");
+    st = { f: f, chunks: [], t0: 0, pending: true };
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (s) {
+      if (!st || !st.pending) return void s.getTracks().forEach(function (t) { t.stop(); });
+      st.pending = false; st.s = s; var ty = pickType();
+      try { st.rec = ty ? new MediaRecorder(s, { mimeType: ty }) : new MediaRecorder(s); } catch (e) { st.rec = new MediaRecorder(s); }
+      st.type = st.rec.mimeType || ty || "audio/webm";
+      st.rec.ondataavailable = function (e) { e.data && e.data.size && st && st.chunks.push(e.data); };
+      st.rec.start(250); st.t0 = performance.now(); st.o = bar(f); hap(12);
+      try { var AC = window.AudioContext || window.webkitAudioContext; st.ac = new AC(); st.an = st.ac.createAnalyser(); st.an.fftSize = 256; st.an.smoothingTimeConstant = 0.75; st.ac.createMediaStreamSource(s).connect(st.an); } catch (e) {}
+      st.lv = []; loop();
+    }).catch(function () { st = null; toast("Microphone access was denied. Allow it in Settings to use voice typing."); });
+  }
+  function loop() {
+    if (!st || !st.o) return;
+    var el = (performance.now() - st.t0) / 1000;
+    st.o.querySelector(".chat-vrec-t").textContent = Math.floor(el / 60) + ":" + ("0" + Math.floor(el % 60)).slice(-2);
+    if (el >= 60) { toast("Stopped at 60 seconds"); return void stop(); }
+    var cv = st.o.querySelector(".chat-vrec-wv"), w = cv.clientWidth, h = cv.clientHeight, d = Math.min(window.devicePixelRatio || 1, 2);
+    if (cv.width !== w * d) { cv.width = w * d; cv.height = h * d; }
+    var lvl = 0;
+    if (st.an) { var a = new Uint8Array(st.an.fftSize); st.an.getByteTimeDomainData(a); for (var i = 0; i < a.length; i++) { var v = (a[i] - 128) / 128; lvl += v * v; } lvl = Math.min(1, Math.sqrt(lvl / a.length) * 4); }
+    var x = cv.getContext("2d"), n = Math.max(8, Math.floor(w / 5));
+    st.lv.push(lvl); st.lv.length > n && st.lv.shift();
+    x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h); x.fillStyle = getComputedStyle(cv).color || "#a9d7f5";
+    for (var k = 0; k < n; k++) {
+      var L = red ? lvl : st.lv[st.lv.length - n + k] || 0, bh = Math.max(3, L * (h - 4)), bx = k * 5 + 1;
+      x.globalAlpha = 0.45 + 0.55 * (k / n); x.beginPath(); x.roundRect ? x.roundRect(bx, (h - bh) / 2, 3, bh, 1.5) : x.rect(bx, (h - bh) / 2, 3, bh); x.fill();
+    }
+    st.raf = requestAnimationFrame(loop);
+  }
+  function release() {
+    if (!st) return;
+    st.raf && cancelAnimationFrame(st.raf);
+    st.s && st.s.getTracks().forEach(function (t) { t.stop(); });
+    try { st.ac && st.ac.close(); } catch (e) {}
+  }
+  function close(s) {
+    var f = s.f, o = s.o; f.classList.remove("is-rec", "is-busy");
+    o && (o.classList.add("out"), setTimeout(function () { o.remove(); }, 260));
+  }
+  function cancel() { if (!st) return; var s = st; release(); try { s.rec && s.rec.state !== "inactive" && s.rec.stop(); } catch (e) {} st = null; s.o && close(s); hap(8); }
+  function stop() {
+    if (!st || !st.rec) return cancel();
+    var s = st; release(); hap(12); s.f.classList.add("is-busy");
+    s.rec.onstop = function () {
+      var blob = new Blob(s.chunks, { type: s.type.split(";")[0] });
+      if (blob.size < 800) { st = null; close(s); return toast("Didn't catch that, try again"); }
+      if (blob.size > 2 * 1024 * 1024) { st = null; close(s); return toast("Recording too long"); }
+      fetch(API, { method: "POST", headers: { "Content-Type": blob.type || "audio/webm", Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: blob })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); })
+        .then(function (j) {
+          st = null; close(s);
+          var inp = s.f.querySelector("input"), t = String(j.text || "").trim();
+          if (!t) return toast("Didn't catch that, try again");
+          var a = inp.selectionStart != null ? inp.selectionStart : inp.value.length, b = inp.selectionEnd != null ? inp.selectionEnd : a, pre = inp.value.slice(0, a), post = inp.value.slice(b);
+          t = (pre && !/\s$/.test(pre) ? " " : "") + t + (post && !/^\s/.test(post) ? " " : "");
+          inp.value = (pre + t + post).slice(0, inp.maxLength > 0 ? inp.maxLength : 500);
+          inp.dispatchEvent(new Event("input", { bubbles: true })); inp.focus();
+          try { inp.setSelectionRange(pre.length + t.length, pre.length + t.length); } catch (e) {}
+        })
+        .catch(function (e) { st = null; close(s); toast(e.message || "Couldn't transcribe, try again"); });
+    };
+    try { s.rec.stop(); } catch (e) { st = null; close(s); }
+  }
+  document.addEventListener("visibilitychange", function () { document.hidden && st && cancel(); });
+  window.addEventListener("pagehide", function () { st && cancel(); });
+})();

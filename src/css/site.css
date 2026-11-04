@@ -9769,3 +9769,29 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll-q3d .chat-poll-ring .dot{fill:var(--poll-acc)!important}
 .chat-poll-q3d .chat-poll-opt.is-mine{background:rgba(169,215,245,.12)!important}
 .chat-poll-q3d .chat-poll-opt.is-mine:active{background:rgba(169,215,245,.18)!important}
+/* Voice typing (per dc) */
+.chat-inputbar { position: relative; }
+.chat-mic { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; background: transparent; color: var(--ink); opacity: .82; transition: opacity .2s, transform .15s; }
+.chat-mic svg { width: 20px; height: 20px; }
+.chat-mic:active { transform: scale(.9); opacity: 1; }
+.chat-vrec { position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 6px; border-radius: 999px; background: var(--glass-regular-tint); -webkit-backdrop-filter: var(--glass-regular); backdrop-filter: var(--glass-regular); opacity: 0; transform: scaleX(.94); transition: opacity .26s ease, transform .32s cubic-bezier(.2,.9,.3,1); z-index: 2; color: #a9d7f5; }
+.chat-inputbar.is-rec .chat-vrec { opacity: 1; transform: none; }
+.chat-vrec.out { opacity: 0 !important; transform: scaleX(.96) !important; }
+.chat-inputbar.is-rec > input, .chat-inputbar.is-rec > .chat-send, .chat-inputbar.is-rec > .chat-mic { opacity: 0; pointer-events: none; transition: opacity .2s; }
+.chat-vrec-x { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 0; display: grid; place-items: center; background: rgba(127,127,127,.18); color: var(--ink); cursor: pointer; }
+.chat-vrec-x svg { width: 15px; height: 15px; }
+.chat-vrec-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff453a; box-shadow: 0 0 8px rgba(255,69,58,.7); animation: chat-vrec-pulse 1.2s ease-in-out infinite; }
+@keyframes chat-vrec-pulse { 50% { opacity: .35; transform: scale(.8); } }
+.chat-vrec-t { flex: none; font: 600 14px/1 -apple-system, system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 32px; }
+.chat-vrec-wv { flex: 1; min-width: 0; height: 26px; color: #a9d7f5; }
+[data-theme="light"] .chat-vrec, [data-theme="light"] .chat-vrec-wv { color: #3b8fc4; }
+.chat-vrec-ok { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 0; display: grid; place-items: center; background: #fff; color: #000; cursor: pointer; }
+[data-theme="light"] .chat-vrec-ok { background: #000; color: #fff; }
+.chat-vrec-ok svg { width: 19px; height: 19px; }
+.chat-vrec-busy { display: none; flex: 1; font: 600 14px/1 -apple-system, system-ui, sans-serif; background: linear-gradient(90deg, rgba(169,215,245,.45) 0%, #fff 50%, rgba(169,215,245,.45) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: chat-vrec-sh 1.4s linear infinite; }
+[data-theme="light"] .chat-vrec-busy { background-image: linear-gradient(90deg, rgba(0,0,0,.35) 0%, #000 50%, rgba(0,0,0,.35) 100%); }
+@keyframes chat-vrec-sh { to { background-position: -200% 0; } }
+.chat-inputbar.is-busy .chat-vrec-busy { display: block; }
+.chat-inputbar.is-busy .chat-vrec-wv, .chat-inputbar.is-busy .chat-vrec-dot, .chat-inputbar.is-busy .chat-vrec-t { display: none; }
+.chat-inputbar.is-busy .chat-vrec-ok { opacity: .4; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .chat-vrec-dot, .chat-vrec-busy { animation: none; } }
