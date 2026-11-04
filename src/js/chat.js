@@ -3064,13 +3064,17 @@
     }
     function loop(now) {
       raf = 0;
-      if (!seen || document.hidden || !host.isConnected) return;
+      if (!host.isConnected) return void dispose();
+      if (!seen || document.hidden) return;
       now - last >= 15 && ((last = now), draw(now));
       drops.length || !red ? (raf = requestAnimationFrame(loop)) : draw(now);
     }
-    function kick() { !raf && seen && !document.hidden && (drops.length || !red) && (raf = requestAnimationFrame(loop)); }
+    function kick() { if (!host.isConnected) return void dispose(); !raf && seen && !document.hidden && (drops.length || !red) && (raf = requestAnimationFrame(loop)); }
+    /* audit fix: tear down listener/observer/rAF once the bubble leaves the DOM */
+    var ro = window.ResizeObserver ? new ResizeObserver(size) : null, gone = false;
+    function dispose() { if (gone) return; gone = true; raf && cancelAnimationFrame(raf); raf = 0; document.removeEventListener("visibilitychange", kick); ro && ro.disconnect(); }
     document.addEventListener("visibilitychange", kick);
-    window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
+    ro ? ro.observe(host) : setTimeout(size, 50);
     size(); kick();
     return {
       drop: function (dx, dy) {
