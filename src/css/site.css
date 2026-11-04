@@ -9761,3 +9761,11 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll-q3d .chat-poll-opt.is-mine:active{background:rgba(91,155,255,.18)!important}
 .chat-msg .chat-bubble.chat-poll-q3d{max-width:none!important}
 .chat-poll-cv{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:inherit}
+
+/* selected ring / dot / row use the site's light blue (--accent in dark theme, #a9d7f5); the card is black in both themes (per dc) */
+.chat-poll-q3d{--poll-acc:#a9d7f5}
+[data-theme="dark"] .chat-poll-q3d{--poll-acc:var(--accent)}
+.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:var(--poll-acc)!important}
+.chat-poll-q3d .chat-poll-ring .dot{fill:var(--poll-acc)!important}
+.chat-poll-q3d .chat-poll-opt.is-mine{background:rgba(169,215,245,.12)!important}
+.chat-poll-q3d .chat-poll-opt.is-mine:active{background:rgba(169,215,245,.18)!important}

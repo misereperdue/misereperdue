@@ -2990,7 +2990,7 @@
     var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var cv = document.createElement("canvas"); cv.className = "chat-poll-cv"; cv.setAttribute("aria-hidden", "true");
     host.insertBefore(cv, host.firstChild);
-    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, G = 8, DUR = 1100;
+    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 1100;
     function size() {
       var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 3);
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
@@ -3007,18 +3007,21 @@
           rings.push({ x: d.x, y: d.y, r: expo(Math.min(1, a / 0.64)) * d.R, s: e[1] * Math.pow(1 - a, 1.6) });
         });
       });
-      var cy = H / 2;
+      var cy = H / 2, T = now / 1000;
       for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) {
         var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), lift = 0, push = 0, ox = 0, oy = 0;
+        /* ambient breathing swell: three slow sines (~4.3s, 5.9s, 7.1s) at different angles */
+        var amb = red ? 0 : 0.5 + 0.5 * (0.45 * Math.sin(gx * 0.021 + gy * 0.013 - T * 1.46) + 0.33 * Math.sin(-gx * 0.012 + gy * 0.024 - T * 1.06 + 1.7) + 0.22 * Math.sin(gx * 0.017 - gy * 0.009 - T * 0.88 + 4.1));
+        amb = amb * amb * 0.3;
         for (var i = 0; i < rings.length; i++) {
           var R = rings[i], dx = gx - R.x, dy = gy - R.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, u = dist - R.r;
           var crest = Math.exp(-(u * u) / 90), trough = u < 0 ? -0.35 * Math.exp(-((u + 16) * (u + 16)) / 160) : 0, h = (crest + trough) * R.s;
           lift += h; push = crest * R.s * 3; ox += (dx / dist) * push; oy += (dy / dist) * push;
         }
-        var sc = Math.max(0.7, 1 + lift * 1.2), al = Math.max(0.05, Math.min(0.8, 0.14 * m + Math.max(0, lift) * 0.66 + Math.min(0, lift) * 0.1));
-        var px = gx + ox, py = gy + oy - lift * 1.6 + (gy - cy) * lift * 0.015;
+        var sc = Math.max(0.7, 1 + lift * 1.2 + amb * 1.15), al = Math.max(0.05, Math.min(0.8, 0.14 * m + amb * 0.3 + Math.max(0, lift) * 0.66 + Math.min(0, lift) * 0.1));
+        var px = gx + ox, py = gy + oy - lift * 1.6 - amb * 4.5 + (gy - cy) * (lift + amb * 0.5) * 0.015;
         x.globalAlpha = al;
-        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 90 * Math.min(1, lift)) + "," + Math.round(255 - 50 * Math.min(1, lift)) + ",255)" : "#fff";
+        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 86 * Math.min(1, lift)) + "," + Math.round(255 - 40 * Math.min(1, lift)) + "," + Math.round(255 - 10 * Math.min(1, lift)) + ")" : "#fff"; /* toward --accent light blue #a9d7f5 */
         x.beginPath(); x.arc(px, py, 0.95 * Math.min(2.2, sc), 0, 6.2832); x.fill();
       }
       x.globalAlpha = 1;
@@ -3026,13 +3029,13 @@
     function loop(now) {
       raf = 0;
       if (!seen || document.hidden || !host.isConnected) return;
-      draw(now);
-      drops.length ? (raf = requestAnimationFrame(loop)) : draw(now);
+      now - last >= 15 && ((last = now), draw(now));
+      drops.length || !red ? (raf = requestAnimationFrame(loop)) : draw(now);
     }
-    function kick() { !raf && seen && !document.hidden && drops.length && (raf = requestAnimationFrame(loop)); }
+    function kick() { !raf && seen && !document.hidden && (drops.length || !red) && (raf = requestAnimationFrame(loop)); }
     document.addEventListener("visibilitychange", kick);
     window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
-    size();
+    size(); kick();
     return {
       drop: function (dx, dy) {
         if (red) return;
