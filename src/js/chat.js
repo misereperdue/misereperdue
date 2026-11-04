@@ -2990,7 +2990,7 @@
     var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var cv = document.createElement("canvas"); cv.className = "chat-poll-cv"; cv.setAttribute("aria-hidden", "true");
     host.insertBefore(cv, host.firstChild);
-    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 1100;
+    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 2500;
     function size() {
       var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 3);
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
@@ -2999,12 +2999,17 @@
     function expo(k) { return k >= 1 ? 1 : 1 - Math.pow(2, -10 * k); }
     function draw(now) {
       x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      drops = drops.filter(function (d) { return now - d.t < DUR + 140; });
-      var rings = [];
+      /* calm water drop (per dc): ~80px/s rings, 3 rings 160ms apart, small centre dip, ~2.4s life */
+      drops = drops.filter(function (d) { return now - d.t < DUR; });
+      var rings = [], cents = [];
       drops.forEach(function (d) {
-        [[0, 1], [120, 0.38]].forEach(function (e) {
-          var a = (now - d.t - e[0]) / DUR; if (a <= 0 || a >= 1) return;
-          rings.push({ x: d.x, y: d.y, r: expo(Math.min(1, a / 0.64)) * d.R, s: e[1] * Math.pow(1 - a, 1.6) });
+        var age = (now - d.t) / 1000;
+        age < 0.45 && cents.push({ x: d.x, y: d.y, s: Math.sin(Math.min(1, age / 0.45) * Math.PI) * (age < 0.15 ? -0.5 : 0.6) });
+        [[0, 1], [0.16, 0.62], [0.32, 0.36]].forEach(function (e) {
+          var a = age - e[0]; if (a <= 0) return;
+          var r = 80 * a * (1 - 0.12 * Math.min(1, a / 2.4)) + 2;
+          var fade = Math.max(0, 1 - a / (DUR / 1000 - e[0])), s0 = e[1] * Math.pow(fade, 1.4) * Math.min(1, a / 0.12);
+          s0 > 0.01 && rings.push({ x: d.x, y: d.y, r: r, s: s0 });
         });
       });
       var cy = H / 2, T = now / 1000;
@@ -3015,13 +3020,14 @@
         amb = amb * amb * 0.3;
         for (var i = 0; i < rings.length; i++) {
           var R = rings[i], dx = gx - R.x, dy = gy - R.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, u = dist - R.r;
-          var crest = Math.exp(-(u * u) / 90), trough = u < 0 ? -0.35 * Math.exp(-((u + 16) * (u + 16)) / 160) : 0, h = (crest + trough) * R.s;
-          lift += h; push = crest * R.s * 3; ox += (dx / dist) * push; oy += (dy / dist) * push;
+          var att = 1 / Math.sqrt(1 + dist / 22), crest = Math.exp(-(u * u) / 70), trough = u < 0 ? -0.3 * Math.exp(-((u + 13) * (u + 13)) / 110) : 0, h = (crest + trough) * R.s * att * 0.85;
+          lift += h; push = crest * R.s * att * 2.2; ox += (dx / dist) * push; oy += (dy / dist) * push;
         }
-        var sc = Math.max(0.7, 1 + lift * 1.2 + amb * 1.15), al = Math.max(0.05, Math.min(0.8, 0.14 * m + amb * 0.3 + Math.max(0, lift) * 0.66 + Math.min(0, lift) * 0.1));
-        var px = gx + ox, py = gy + oy - lift * 1.6 - amb * 4.5 + (gy - cy) * (lift + amb * 0.5) * 0.015;
+        for (var j = 0; j < cents.length; j++) { var C = cents[j], cd = Math.hypot(gx - C.x, gy - C.y); lift += C.s * Math.exp(-(cd * cd) / 120); }
+        var sc = Math.max(0.7, Math.min(1.7, 1 + lift * 0.9 + amb * 1.15)), al = Math.max(0.05, Math.min(0.55, 0.14 * m + amb * 0.3 + Math.max(0, lift) * 0.45 + Math.min(0, lift) * 0.1));
+        var px = gx + ox, py = gy + oy - lift * 1.4 - amb * 4.5 + (gy - cy) * (lift + amb * 0.5) * 0.015;
         x.globalAlpha = al;
-        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 86 * Math.min(1, lift)) + "," + Math.round(255 - 40 * Math.min(1, lift)) + "," + Math.round(255 - 10 * Math.min(1, lift)) + ")" : "#fff"; /* toward --accent light blue #a9d7f5 */
+        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 60 * Math.min(1, lift)) + "," + Math.round(255 - 28 * Math.min(1, lift)) + "," + Math.round(255 - 7 * Math.min(1, lift)) + ")" : "#fff"; /* toward --accent light blue #a9d7f5 */
         x.beginPath(); x.arc(px, py, 0.95 * Math.min(2.2, sc), 0, 6.2832); x.fill();
       }
       x.globalAlpha = 1;
