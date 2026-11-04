@@ -7,7 +7,7 @@
   var page = document.querySelector("main.page"), nav = document.getElementById("nav");
   if (!page || !nav) return;
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
-  var SKIP = "input,textarea,select,[contenteditable]:not([contenteditable=false]),canvas,video,iframe,[role=slider],.chat-bubble,.no-swipe,[data-noswipe]";
+  var SKIP = "input,textarea,select,[contenteditable]:not([contenteditable=false]),canvas,video,iframe,[role=slider],.chat-bubble,.chat-photo-card,.chat-photo-stacked,.no-swipe,[data-noswipe]";
   function tabs() {
     return [].filter.call(nav.querySelectorAll("button[data-view]"), function (b) {
       // Bag joins the swipe order only when it holds something (per dc)

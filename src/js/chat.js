@@ -2066,68 +2066,309 @@
   }
   /* Photo cards (per dc): the image floats on its own with rounded corners and a
      soft shadow, no bubble. Back-to-back photo-only messages from one person
-     (within 2 min) fan into an iMessage-style stack; tap opens full screen. */
+     (within 2 min) fan into an iMessage-style stack you can flick through in
+     place; tap opens the viewer, long-press reacts like any bubble. */
   function mpPhotoCard(e) {
     if (!e || "IMG" !== e.tagName) return null;
-    var t = document.createElement("button");
-    return ((t.type = "button"), (t.className = "chat-photo-card"), t.setAttribute("aria-label", "Open photo"), t.appendChild(e), t);
+    var t = document.createElement("div");
+    return (
+      (t.className = "chat-photo-card"),
+      t.setAttribute("role", "button"),
+      t.setAttribute("aria-label", "Open photo"),
+      (e.draggable = !1),
+      t.appendChild(e),
+      t
+    );
+  }
+  var mpStackCur = Object.create(null);
+  function mpStackGroup(e) {
+    if (!e || !e.classList.contains("chat-photo-stacked")) return e ? [e] : [];
+    for (var t = e; t.classList.contains("chat-photo-follow") && t.previousElementSibling; ) t = t.previousElementSibling;
+    for (var n = [t], a = t; (a = a.nextElementSibling) && a.classList.contains("chat-photo-follow"); ) n.push(a);
+    return n;
+  }
+  function mpStackLayout(e) {
+    var t = e[0] && e[0].getAttribute("data-id"),
+      n = e.length,
+      a = ((mpStackCur[t] || 0) % n + n) % n;
+    e.forEach(function (e, t) {
+      var r = (t - a + n) % n;
+      (e.setAttribute("data-pos", String(Math.min(r, 3))), (e.style.zIndex = String(10 + n - r)));
+      var o = e.querySelector(".chat-photo-card");
+      o && (o.style.transform = "");
+      var i = e.querySelector(".chat-stack-dots");
+      i && i.remove();
+    });
+    var r = e[n - 1].querySelector(".chat-photo-only");
+    if (r) {
+      var o = document.createElement("div");
+      o.className = "chat-stack-dots";
+      for (var i = 0; i < n; i++) {
+        var c = document.createElement("i");
+        (i === a && (c.className = "on"), o.appendChild(c));
+      }
+      r.appendChild(o);
+    }
   }
   function mpPhotoStack(e) {
-    for (var t = e.querySelectorAll(".chat-msg:not(.chat-typing-msg)"), n = null, a = 0, r = 0; r < t.length; r++) {
-      var o = t[r],
-        i = !!o.querySelector(".chat-photo-only"),
-        c = o.getAttribute("data-user") || "",
-        l = parseInt(o.getAttribute("data-ts") || "0", 10) || 0;
-      (o.classList.remove("chat-photo-stacked", "chat-photo-follow"), o.removeAttribute("data-fan"));
-      if (i && n && n.u === c && Math.abs(l - n.ts) < 12e4) {
-        (n.el.classList.add("chat-photo-stacked"),
-          o.classList.add("chat-photo-stacked", "chat-photo-follow"),
-          o.setAttribute("data-fan", String(++a % 3)),
-          (n = { el: o, u: c, ts: l }));
-      } else ((a = 0), (n = i ? { el: o, u: c, ts: l } : null));
+    for (var t = e.querySelectorAll(".chat-msg:not(.chat-typing-msg)"), n = null, a = [], r = [], o = 0; o < t.length; o++) {
+      var i = t[o],
+        c = !!i.querySelector(".chat-photo-only"),
+        l = i.getAttribute("data-user") || "",
+        d = parseInt(i.getAttribute("data-ts") || "0", 10) || 0;
+      (i.classList.remove("chat-photo-stacked", "chat-photo-follow"), i.removeAttribute("data-pos"), (i.style.zIndex = ""));
+      var s = i.querySelector(".chat-stack-dots");
+      s && s.remove();
+      c && n && n.u === l && Math.abs(d - n.ts) < 12e4
+        ? (n.el.classList.add("chat-photo-stacked"), i.classList.add("chat-photo-stacked", "chat-photo-follow"), a.push(i), (n = { el: i, u: l, ts: d }))
+        : (a.length > 1 && r.push(a), (a = c ? [i] : []), (n = c ? { el: i, u: l, ts: d } : null));
     }
+    (a.length > 1 && r.push(a), r.forEach(mpStackLayout));
+  }
+  function mpTime(e) {
+    if (!e) return "";
+    var t = new Date(e);
+    return t.toLocaleDateString(void 0, { month: "short", day: "numeric" }) + " · " + t.toLocaleTimeString(void 0, { hour: "numeric", minute: "2-digit" });
   }
   function mpPhotoViewer(e, t) {
     Ve();
-    var n = document.createElement("div");
-    ((n.className = "msg-popup chat-photo-viewer"), (n.id = "msg-popup"));
-    var a = document.createElement("div");
-    ((a.className = "chat-photo-track"),
-      e.forEach(function (e) {
-        var t = document.createElement("img");
-        ((t.src = e), (t.alt = ""), a.appendChild(t));
+    var n = e.map(function (e) {
+        var t = e.querySelector(".chat-photo-card img");
+        return t ? t.src : "";
       }),
-      n.appendChild(a));
-    if (e.length > 1) {
-      var r = document.createElement("div");
-      ((r.className = "chat-photo-count"), (r.textContent = e.length + " photos"), n.appendChild(r));
+      a = t,
+      r = document.createElement("div");
+    ((r.className = "msg-popup chat-photo-viewer"), (r.id = "msg-popup"));
+    var o = document.createElement("div");
+    o.className = "chat-pv-bg";
+    var i = document.createElement("div");
+    ((i.className = "chat-photo-track"),
+      n.forEach(function (e) {
+        var t = document.createElement("div");
+        t.className = "chat-pv-slide";
+        var n = document.createElement("img");
+        ((n.src = e), (n.alt = ""), (n.draggable = !1), t.appendChild(n), i.appendChild(t));
+      }));
+    var c = document.createElement("div");
+    c.className = "chat-pv-top";
+    var l = document.createElement("div");
+    l.className = "chat-pv-meta";
+    var d = document.createElement("strong"),
+      s = document.createElement("span");
+    (l.appendChild(d), l.appendChild(s));
+    var u = document.createElement("button");
+    ((u.type = "button"),
+      (u.className = "chat-pv-close"),
+      u.setAttribute("aria-label", "Close"),
+      (u.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
+      c.appendChild(l),
+      c.appendChild(u));
+    var m = document.createElement("div");
+    m.className = "chat-pv-count";
+    (r.appendChild(o), r.appendChild(i), r.appendChild(c), n.length > 1 && r.appendChild(m), document.body.appendChild(r));
+    function p() {
+      var t = e[a];
+      ((d.textContent = (t && t.getAttribute("data-user")) || ""),
+        (s.textContent = mpTime(parseInt((t && t.getAttribute("data-ts")) || "0", 10))),
+        (m.textContent = a + 1 + " / " + n.length));
     }
-    ((n.onclick = function () {
-      Ve();
-    }),
-      document.body.appendChild(n),
+    function f() {
+      var t = e[a] && e[a].querySelector(".chat-photo-card img"),
+        n = i.children[a] && i.children[a].querySelector("img");
+      if (!t || !n || !n.naturalWidth) return null;
+      var r = t.getBoundingClientRect(),
+        o = window.innerWidth,
+        c = window.innerHeight,
+        l = Math.min(o / n.naturalWidth, c / n.naturalHeight),
+        d = n.naturalWidth * l,
+        s = n.naturalHeight * l,
+        u = Math.max(r.width / d, r.height / s);
+      return { n: n, t: "translate(" + (r.left + r.width / 2 - o / 2) + "px," + (r.top + r.height / 2 - c / 2) + "px) scale(" + u + ")" };
+    }
+    (p(),
+      (i.scrollLeft = i.clientWidth * a),
       requestAnimationFrame(function () {
-        a.scrollLeft = a.clientWidth * (t || 0);
+        i.scrollLeft = i.clientWidth * a;
+        var e = f();
+        (e && ((e.n.style.transition = "none"), (e.n.style.transform = e.t), e.n.offsetWidth, (e.n.style.transition = ""), (e.n.style.transform = "")),
+          r.classList.add("on"));
+      }),
+      i.addEventListener(
+        "scroll",
+        function () {
+          var e = Math.round(i.scrollLeft / Math.max(1, i.clientWidth));
+          e !== a && e >= 0 && e < n.length && (y(), (a = e), p());
+        },
+        { passive: !0 },
+      ));
+    var g = !1;
+    function h() {
+      if (!g) {
+        g = !0;
+        var e = f();
+        (r.classList.remove("on"),
+          r.classList.add("closing"),
+          e && ((e.n.style.transform = e.t)),
+          setTimeout(function () {
+            r.remove();
+          }, 300));
+      }
+    }
+    u.addEventListener("click", function (e) {
+      (e.stopPropagation(), h());
+    });
+    /* zoom: pinch, double-tap; pan while zoomed; swipe down to dismiss */
+    var v = 1, b = 0, x = 0, w = null, k = 0;
+    function C() {
+      return i.children[a] && i.children[a].querySelector("img");
+    }
+    function E() {
+      var e = C();
+      e && (e.style.transform = 1 === v ? "" : "translate(" + b + "px," + x + "px) scale(" + v + ")");
+      i.style.overflowX = v > 1 ? "hidden" : "";
+    }
+    function y() {
+      ((v = 1), (b = x = 0), E());
+    }
+    (r.addEventListener(
+      "touchstart",
+      function (e) {
+        var t = e.touches;
+        2 === t.length
+          ? (w = { pinch: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY), v: v })
+          : 1 === t.length && (w = { x: t[0].clientX, y: t[0].clientY, b: b, ty: x, dir: 0 });
+      },
+      { passive: !0 },
+    ),
+      r.addEventListener(
+        "touchmove",
+        function (e) {
+          if (w) {
+            var t = e.touches;
+            if (w.pinch && 2 === t.length)
+              return (e.preventDefault(), (v = Math.max(1, Math.min(4, (w.v * Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)) / w.pinch))), void E());
+            if (1 === t.length && !w.pinch) {
+              var n = t[0].clientX - w.x,
+                a = t[0].clientY - w.y;
+              if (v > 1) return (e.preventDefault(), (b = w.b + n), (x = w.ty + a), void E());
+              if ((w.dir || (Math.abs(a) > 8 && Math.abs(a) > Math.abs(n) ? (w.dir = "v") : Math.abs(n) > 8 && (w.dir = "h")), "v" === w.dir)) {
+                e.preventDefault();
+                var r = C(),
+                  i = Math.max(0, a);
+                (r && ((r.style.transition = "none"), (r.style.transform = "translateY(" + a + "px) scale(" + (1 - i / 1500) + ")")),
+                  (o.style.opacity = String(Math.max(0.2, 1 - i / 400))),
+                  (w.dy = a));
+              }
+            }
+          }
+        },
+        { passive: !1 },
+      ),
+      r.addEventListener("touchend", function (e) {
+        if (w && "v" === w.dir) {
+          var t = C();
+          (t && (t.style.transition = ""), (o.style.opacity = ""), (w.dy || 0) > 110 ? h() : t && (t.style.transform = ""));
+        }
+        e.touches.length || (w = null);
+      }),
+      r.addEventListener("click", function (e) {
+        if (!e.target.closest(".chat-pv-top")) {
+          var t = Date.now();
+          if (t - k < 300) {
+            if (((k = 0), v > 1)) y();
+            else {
+              var n = C(),
+                a = n && n.getBoundingClientRect();
+              ((v = 2.5), a && ((b = (a.left + a.width / 2 - e.clientX) * 1.5), (x = (a.top + a.height / 2 - e.clientY) * 1.5)), E());
+            }
+            return;
+          }
+          ((k = t),
+            setTimeout(function () {
+              k === t && 1 === v && !e.target.closest("img") && h();
+            }, 300));
+        }
       }));
   }
-  document.addEventListener("click", function (e) {
-    var t = e.target.closest && e.target.closest(".chat-photo-card");
-    if (t) {
-      e.preventDefault();
-      var n = t.closest(".chat-msg"),
-        a = [n];
-      if (n && n.classList.contains("chat-photo-stacked")) {
-        for (var r = n; r && r.classList.contains("chat-photo-follow") && r.previousElementSibling; ) (r = r.previousElementSibling), a.unshift(r);
-        for (r = n; (r = r.nextElementSibling) && r.classList.contains("chat-photo-follow"); ) a.push(r);
+  /* tap = viewer, long-press = reactions (shared delegate), horizontal flick on a stack = next/prev */
+  var mpPress = null;
+  function mpPressStart(e) {
+    var t = e.target.closest && e.target.closest("#chat .chat-photo-card");
+    if (!t) return void (mpPress = null);
+    var n = (e.touches && e.touches[0]) || e;
+    mpPress = { card: t, msg: t.closest(".chat-msg"), x: n.clientX, y: n.clientY, t: Date.now(), dx: 0, h: !1, moved: !1 };
+  }
+  function mpPressMove(e) {
+    if (mpPress) {
+      var t = (e.touches && e.touches[0]) || e,
+        n = t.clientX - mpPress.x,
+        a = t.clientY - mpPress.y;
+      if (!mpPress.h && (Math.abs(n) > 10 || Math.abs(a) > 10)) {
+        mpPress.moved = !0;
+        if (!(mpPress.msg && mpPress.msg.classList.contains("chat-photo-stacked") && Math.abs(n) > Math.abs(a))) return;
+        mpPress.h = !0;
+        mpPress.group = mpStackGroup(mpPress.msg);
+        var r = mpPress.group[0].getAttribute("data-id"),
+          o = mpStackCur[r] || 0;
+        mpPress.top = mpPress.group[((o % mpPress.group.length) + mpPress.group.length) % mpPress.group.length].querySelector(".chat-photo-card");
       }
-      var o = [];
-      a.forEach(function (e) {
-        var t = e && e.querySelector(".chat-photo-card img");
-        t && o.push(t.src);
-      });
-      o.length && mpPhotoViewer(o, Math.max(0, a.indexOf(n)));
+      if (mpPress.h) {
+        (e.cancelable && e.preventDefault(), (mpPress.dx = n));
+        var i = mpPress.top;
+        i && ((i.style.transition = "none"), (i.style.transform = "translateX(" + n + "px) rotate(" + n / 18 + "deg)"));
+      }
     }
-  });
+  }
+  function mpPressEnd() {
+    var e = mpPress;
+    if (((mpPress = null), e)) {
+      if (e.h) {
+        var t = e.top,
+          n = e.group,
+          a = n[0].getAttribute("data-id"),
+          r = e.dx;
+        if (((t.style.transition = "transform .32s cubic-bezier(.2,.8,.2,1)"), Math.abs(r) > 50)) {
+          ((t.style.transform = "translateX(" + (r > 0 ? 130 : -130) + "%) rotate(" + (r > 0 ? 14 : -14) + "deg)"), window.haptic && window.haptic(8));
+          var o = r < 0 ? 1 : -1;
+          setTimeout(function () {
+            ((t.style.transition = ""), (mpStackCur[a] = (mpStackCur[a] || 0) + o), mpStackLayout(n));
+          }, 220);
+        } else
+          ((t.style.transform = ""),
+            setTimeout(function () {
+              t.style.transition = "";
+            }, 340));
+        return void (mpSuppressClick = Date.now());
+      }
+      Date.now() - e.t > 420 && (mpSuppressClick = Date.now());
+    }
+  }
+  var mpSuppressClick = 0;
+  (document.addEventListener("touchstart", mpPressStart, { passive: !0 }),
+    document.addEventListener("touchmove", mpPressMove, { passive: !1 }),
+    document.addEventListener("touchend", mpPressEnd, { passive: !0 }),
+    document.addEventListener("touchcancel", mpPressEnd, { passive: !0 }),
+    document.addEventListener("mousedown", function (e) {
+      0 === e.button && mpPressStart(e);
+    }),
+    document.addEventListener("mousemove", function (e) {
+      mpPress && mpPressMove(e);
+    }),
+    document.addEventListener("mouseup", mpPressEnd),
+    document.addEventListener("click", function (e) {
+      var t = e.target.closest && e.target.closest("#chat .chat-photo-card");
+      if (t) {
+        if ((e.preventDefault(), Date.now() - mpSuppressClick < 500 || document.querySelector(".chat-react-picker"))) return;
+        var n = t.closest(".chat-msg"),
+          a = mpStackGroup(n),
+          r = a.indexOf(n);
+        if (a.length > 1) {
+          var o = mpStackCur[a[0].getAttribute("data-id")] || 0;
+          r = ((o % a.length) + a.length) % a.length;
+        }
+        mpPhotoViewer(a, Math.max(0, r));
+      }
+    }));
   function He(t) {
     return t && t.id && /^[A-Za-z0-9]+$/.test(t.id)
       ? "video" === t.kind
