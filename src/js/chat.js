@@ -2425,7 +2425,7 @@
   }
   function mpNPLookup(e) {
     if (mpNP[e]) return mpNP[e];
-    var t = "mp-np2:" + e.toLowerCase();
+    var t = "mp-np3:" + e.toLowerCase();
     try {
       var n = JSON.parse(localStorage.getItem(t) || "null");
       if (n) return ((mpNPv[e] = n.r || null), (mpNP[e] = Promise.resolve(n.r || null)));
@@ -2436,6 +2436,46 @@
         var n = mpNPPick(t, e);
         if (n.r && n.s >= 5) return mpNPOut(n.r);
         var nF = n.r && n.s >= 2 ? mpNPOut(n.r) : null;
+        /* not on iTunes: MusicBrainz + Cover Art Archive, exact title + artist only */
+        return fetch("https://musicbrainz.org/ws/2/recording?fmt=json&limit=15&query=" + encodeURIComponent(e))
+          .then(function (e) {
+            return e.json();
+          })
+          .then(function (t) {
+            var n = ((t && t.recordings) || []).map(function (e) {
+                return { trackName: e.title, artistName: (e["artist-credit"] || []).map(function (e) { return e.name + (e.joinphrase || ""); }).join("") || "", rel: (e.releases || []).map(function (e) { return e.id; }) };
+              }),
+              a = mpNPPick(n, e);
+            return a.r && a.s >= 5
+              ? {
+                  title: a.r.trackName,
+                  artist: a.r.artistName,
+                  arts: a.r.rel.slice(0, 4).filter(function (e) { return /^[0-9a-f-]{36}$/.test(e); }).map(function (e) { return "https://coverartarchive.org/release/" + e + "/front-250"; }),
+                  url: "https://music.apple.com/search?term=" + encodeURIComponent(a.r.artistName + " " + a.r.trackName),
+                }
+              : null;
+          })
+          .catch(function () {
+            return null;
+          })
+          .then(function (t) {
+            return t || mpNPArtist(e, nF);
+          });
+      })
+      .then(function (n) {
+        mpNPv[e] = n;
+        try {
+          localStorage.setItem(t, JSON.stringify({ r: n }));
+        } catch (e) {}
+        return n;
+      })
+      .catch(function () {
+        return (delete mpNP[e], null);
+      }));
+  }
+  function mpNPArtist(e, nF) {
+    var a = e.split(/\s+/);
+    {
         /* forgiving: find the artist from the first words, then match the song
            from the rest; if the song isn't in Apple's catalog keep the typed title */
         var r = [];
@@ -2454,24 +2494,14 @@
                 return mpNPq(e.artistName) === mpNPq(i) || (" " + mpNPq(e.artistName) + " ").indexOf(" " + mpNPq(i) + " ") >= 0;
               })[0];
               return d
-                ? { s: 3, v: mpNPOut(d, c.replace(/(^|\s)\p{L}/gu, function (e) { return e.toUpperCase(); })) }
+                ? { s: 3, v: { title: c.replace(/(^|\s)\p{L}/gu, function (e) { return e.toUpperCase(); }), artist: d.artistName, art: "", url: d.artistViewUrl || "" } }
                 : t(n);
             });
           });
         })(null).then(function (e) {
           return e && e.v ? e.v : e && e.title ? e : nF;
         });
-      })
-      .then(function (n) {
-        mpNPv[e] = n;
-        try {
-          localStorage.setItem(t, JSON.stringify({ r: n }));
-        } catch (e) {}
-        return n;
-      })
-      .catch(function () {
-        return (delete mpNP[e], null);
-      }));
+    }
   }
   function mpNowListening(e, t, n, a) {
     var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
@@ -2501,8 +2531,16 @@
       (s(), c.classList.remove("is-loading"));
       var a = c.querySelector(".chat-np-art"),
         r = document.createElement("img");
-      ((r.src = n.art), (r.alt = ""), (r.draggable = !1), a.appendChild(r));
-      c.querySelector(".chat-np-glow").style.backgroundImage = "url(" + JSON.stringify(n.art) + ")";
+      var aL = (n.arts || [n.art]).filter(Boolean),
+        gl = c.querySelector(".chat-np-glow");
+      function ph() {
+        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19.95 2.3a.75.75 0 0 1 .55.72v12.23a3 3 0 1 1-1.5-2.6V7.3l-9 2.25v7.7a3 3 0 1 1-1.5-2.6V5.25c0-.34.23-.64.57-.73l10.5-2.62a.75.75 0 0 1 .38.4Z"/></svg>'), (gl.style.backgroundImage = ""));
+      }
+      function nx() {
+        var e = aL.shift();
+        e ? ((r.src = e), (gl.style.backgroundImage = "url(" + JSON.stringify(e) + ")")) : ph();
+      }
+      ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), a.appendChild(r), nx());
       var d = c.querySelectorAll(".chat-np-line");
       ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");

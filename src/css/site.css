@@ -9365,3 +9365,16 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 @keyframes chat-np-sk{to{background-position:-200% 0}}
 .chat-react-target .chat-np{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.chat-np-eq i{animation:none}}
+/* Now listening: compact, bubble-sized (per dc) */
+.chat-np{width:auto;max-width:min(240px,70vw);gap:9px;padding:8px 12px 8px 8px;border-radius:18px}
+.chat-np-art,.chat-np.is-loading .chat-np-art{width:42px;height:42px;border-radius:9px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.chat-np-tx{gap:1px;padding-right:14px}
+.chat-np-who{font-size:11px;gap:4px}
+.chat-np-av{width:13px;height:13px}
+.chat-np-line{font-size:14px}
+.chat-np-line.s{font-size:12px}
+.chat-np.is-loading .chat-np-line{min-height:11px;width:120px}
+.chat-np.is-loading .chat-np-line.s{width:80px}
+.chat-np-eq{height:9px;gap:1.5px;top:3px}
+.chat-np-eq i{width:2px}
+.chat-np.no-art .chat-np-art{display:grid;place-items:center;color:var(--ink);background:var(--glass-regular-tint);border:var(--glass-hairline);opacity:.85}
