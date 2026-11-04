@@ -2841,7 +2841,25 @@
         list.appendChild(b);
       });
     }
-    m.querySelectorAll(".chat-gp-tabs button").forEach(function (b) { b.addEventListener("click", function (e) { e.stopPropagation(); sort = b.getAttribute("data-s"); m.querySelectorAll(".chat-gp-tabs button").forEach(function (x) { x.classList.toggle("is-on", x === b); }); paint(); list.scrollTop = 0; }); });
+    var tabs = m.querySelector(".chat-gp-tabs"), tbs = [].slice.call(tabs.querySelectorAll("button")), red2 = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var thumb = document.createElement("span"); thumb.className = "chat-gp-thumb"; tabs.insertBefore(thumb, tabs.firstChild);
+    function place(k) { thumb.style.width = "calc((100% - 4px) / " + tbs.length + ")"; thumb.style.transform = "translateX(" + k * 100 + "%)"; }
+    place(0);
+    function go(k) {
+      var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); });
+      if (k < 0 || k >= tbs.length || k === cur) return;
+      sort = tbs[k].getAttribute("data-s"); tbs.forEach(function (x, n) { x.classList.toggle("is-on", n === k); }); place(k);
+      window.haptic && window.haptic(8);
+      paint(); list.scrollTop = 0;
+      red2 || list.animate([{ transform: "translateX(" + (k > cur ? 28 : -28) + "px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.15,.5,1)" });
+    }
+    tbs.forEach(function (b, k) { b.addEventListener("click", function (e) { e.stopPropagation(); go(k); }); });
+    var sx = 0, sy = 0;
+    list.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: !0 });
+    list.addEventListener("touchend", function (e) {
+      var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6) { var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); }); go(cur + (dx < 0 ? 1 : -1)); }
+    }, { passive: !0 });
     q.addEventListener("input", paint);
     q.addEventListener("keydown", function (e) { e.key === "Enter" && (e.preventDefault(), q.blur()); });
     paint();
@@ -2890,50 +2908,80 @@
   }
   function mpPollPaint(c, id) {
     var p = mpPolls[id], pl = p.poll, v = pl.v || {}, me = s && s.username ? s.username.toLowerCase() : "";
+    var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var counts = pl.o.map(function () { return 0; }), voters = 0;
     Object.keys(v).forEach(function (k) { if (window.mpHide && mpHide.is(k)) return; var a = Array.isArray(v[k]) ? v[k] : []; a.length && voters++; a.forEach(function (i) { counts[i] != null && counts[i]++; }); });
-    var mine = (me && v[me]) || [], tot = counts.reduce(function (a, b) { return a + b; }, 0);
-    c.innerHTML = '<div class="chat-poll-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Poll</div><div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"></div>';
-    c.querySelector(".chat-poll-q").textContent = p.q || "Poll";
-    var L = c.querySelector(".chat-poll-list");
-    pl.o.forEach(function (o, i) {
-      var pct = tot ? Math.round((counts[i] / tot) * 100) : 0, on = mine.indexOf(i) !== -1;
-      var b = document.createElement("button"); b.type = "button"; b.className = "chat-poll-opt" + (on ? " is-mine" : "");
-      b.innerHTML = '<span class="chat-poll-bar"></span><span class="chat-poll-lbl"></span><span class="chat-poll-pct">' + (mine.length || tot ? pct + "%" : "") + "</span>";
-      var bar = b.querySelector(".chat-poll-bar"), w1 = (mine.length || tot ? pct : 0), w0 = (p.w && p.w[i] != null) ? p.w[i] : w1;
-      bar.style.width = w0 + "%"; w0 !== w1 && requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = w1 + "%"; }); });
-      (p.w || (p.w = []))[i] = w1;
-      b.querySelector(".chat-poll-lbl").textContent = o;
-      var rg = (mine.length || tot ? pct : 0);
-      b.setAttribute("data-pct", mine.length || tot ? pct + "%" : "");
-      b.insertAdjacentHTML("afterbegin", '<svg class="chat-poll-ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" class="bg"/><circle cx="12" cy="12" r="9.5" class="fg" style="stroke-dasharray:' + (rg * 0.597).toFixed(1) + ' 59.7"/></svg>');
-      on && b.insertAdjacentHTML("afterbegin", '<svg class="chat-poll-ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.4l2.6 2.6L12 5.4"/></svg>');
-      /* voter avatars, like Globe polls: shown once you've voted, 3 + "+N" (per dc) */
-      if (mine.length && counts[i]) {
-        var vw = document.createElement("span"); vw.className = "chat-poll-voters"; var shown = 0;
-        Object.keys(v).forEach(function (k) {
-          if (shown >= 3 || (window.mpHide && mpHide.is(k)) || !Array.isArray(v[k]) || v[k].indexOf(i) === -1) return;
-          var info = (Je && Je[k]) || null, sp = document.createElement("span");
-          sp.className = "poll-voter-avatar"; sp.title = info && info.username ? info.username : k;
-          try { var av = J(info && info.username ? info.username : k, info && info.avatar, "xs", info && info.hasImg ? info.imgV : void 0); av && sp.appendChild(av); } catch (_) {}
-          vw.appendChild(sp); shown++;
+    var mine = (me && v[me]) || [], tot = counts.reduce(function (a, b) { return a + b; }, 0), show = !!(mine.length || tot);
+    /* build once, then update in place so votes animate (per dc) */
+    if (c.getAttribute("data-n") !== String(pl.o.length)) {
+      c.setAttribute("data-n", pl.o.length);
+      c.innerHTML = '<div class="chat-poll-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Poll</div><div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span></span></div>';
+      c.querySelector(".chat-poll-q").textContent = p.q || "Poll";
+      var L = c.querySelector(".chat-poll-list");
+      pl.o.forEach(function (o, i) {
+        var b = document.createElement("button"); b.type = "button"; b.className = "chat-poll-opt";
+        b.innerHTML = '<svg class="chat-poll-ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.4l2.6 2.6L12 5.4"/></svg><svg class="chat-poll-ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" class="bg"/><circle cx="12" cy="12" r="9.5" class="fg" style="stroke-dasharray:0 59.7"/><circle cx="12" cy="12" r="3.2" class="dot"/></svg><span class="chat-poll-bar"></span><span class="chat-poll-lbl"></span><span class="chat-poll-voters"></span><span class="chat-poll-pct"></span>';
+        b.querySelector(".chat-poll-lbl").textContent = o;
+        b.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (!s) return mpToast("Log in to vote");
+          var P = mpPolls[id], cur = P.poll, cv = cur.v || {}, cm = (me && cv[me]) || [], on = cm.indexOf(i) !== -1;
+          var nx = cur.multi ? (on ? cm.filter(function (x) { return x !== i; }) : cm.concat([i])) : (on ? [] : [i]);
+          var nv = Object.assign({}, cv); nx.length ? (nv[me] = nx) : delete nv[me];
+          window.haptic && window.haptic(10);
+          if (!red) {
+            b.animate([{ transform: "scale(1)" }, { transform: "scale(.95)" }, { transform: "scale(1.02)" }, { transform: "scale(1)" }], { duration: 420, easing: "cubic-bezier(.3,1.4,.5,1)" });
+            var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect(), rp = document.createElement("span");
+            rp.className = "chat-poll-rip"; rp.style.left = (e.clientX || br.left + br.width / 2) - br.left + "px"; rp.style.top = (e.clientY || br.top + br.height / 2) - br.top + "px";
+            bub.appendChild(rp); setTimeout(function () { rp.remove(); }, 1000);
+          }
+          var prev = cur;
+          mpPollUpdate(id, Object.assign({}, cur, { v: nv }));
+          E("/api/poll/vote", { method: "POST", body: { id: id, choices: nx } }).then(function (r) { r && r.ok && r.poll ? mpPollUpdate(id, r.poll) : (mpPollUpdate(id, prev), mpToast((r && r.error) || "Vote failed")); }).catch(function () { mpPollUpdate(id, prev); });
         });
-        counts[i] > shown && shown && ((vw.innerHTML += '<span class="poll-voter-avatar poll-voter-more">+' + (counts[i] - shown) + "</span>"));
-        shown && b.insertBefore(vw, b.querySelector(".chat-poll-pct"));
-      }
-      b.addEventListener("click", function (e) {
-        e.stopPropagation();
-        if (!s) return mpToast("Log in to vote");
-        var nx = pl.multi ? (on ? mine.filter(function (x) { return x !== i; }) : mine.concat([i])) : (on ? [] : [i]);
-        var nv = Object.assign({}, v); nx.length ? (nv[me] = nx) : delete nv[me];
-        mpPollUpdate(id, Object.assign({}, pl, { v: nv }));
-        E("/api/poll/vote", { method: "POST", body: { id: id, choices: nx } }).then(function (r) { r && r.ok && r.poll ? mpPollUpdate(id, r.poll) : (mpPollUpdate(id, pl), mpToast((r && r.error) || "Vote failed")); }).catch(function () { mpPollUpdate(id, pl); });
+        L.appendChild(b);
       });
-      L.appendChild(b);
+      mpPollWatch(c);
+    }
+    var rows = c.querySelectorAll(".chat-poll-opt");
+    pl.o.forEach(function (o, i) {
+      var b = rows[i]; if (!b) return;
+      var pct = tot ? Math.round((counts[i] / tot) * 100) : 0, on = mine.indexOf(i) !== -1, w1 = show ? pct : 0;
+      var was = b.classList.contains("is-mine");
+      b.classList.toggle("is-mine", on);
+      on && !was && !red && (b.classList.remove("is-pop"), void b.offsetWidth, b.classList.add("is-pop"));
+      b.querySelector(".chat-poll-bar").style.width = w1 + "%";
+      b.querySelector(".fg").style.strokeDasharray = (w1 * 0.597).toFixed(1) + " 59.7";
+      var pe = b.querySelector(".chat-poll-pct"), from = parseInt(pe.getAttribute("data-v") || "0", 10) || 0;
+      pe.setAttribute("data-v", w1);
+      if (!show) pe.textContent = "";
+      else if (red || from === w1 || !pe.textContent) pe.textContent = w1 + "%";
+      else { var t0 = performance.now(); (function tick(t) { var k = Math.min(1, (t - t0) / 600), e2 = 1 - Math.pow(1 - k, 3); pe.textContent = Math.round(from + (w1 - from) * e2) + "%"; k < 1 && requestAnimationFrame(tick); })(t0); }
+      b.setAttribute("data-pct", show ? w1 + "%" : "");
+      /* voter avatars (Globe-style), after you've voted: 3 + "+N"; new faces slide in */
+      var vw = b.querySelector(".chat-poll-voters"), keep = {}, shown = 0;
+      [].forEach.call(vw.querySelectorAll("[data-u]"), function (x) { keep[x.getAttribute("data-u")] = x; });
+      var nxt = [];
+      if (mine.length) Object.keys(v).forEach(function (k) { if (shown < 3 && !(window.mpHide && mpHide.is(k)) && Array.isArray(v[k]) && v[k].indexOf(i) !== -1) { nxt.push(k); shown++; } });
+      vw.innerHTML = "";
+      nxt.forEach(function (k) {
+        var sp = keep[k];
+        if (!sp) {
+          var info = (Je && Je[k]) || null; sp = document.createElement("span");
+          sp.className = "poll-voter-avatar" + (red ? "" : " is-new"); sp.setAttribute("data-u", k); sp.title = info && info.username ? info.username : k;
+          try { var av = J(info && info.username ? info.username : k, info && info.avatar, "xs", info && info.hasImg ? info.imgV : void 0); av && sp.appendChild(av); } catch (_) {}
+        }
+        vw.appendChild(sp);
+      });
+      counts[i] > shown && shown && vw.insertAdjacentHTML("beforeend", '<span class="poll-voter-avatar poll-voter-more">+' + (counts[i] - shown) + "</span>");
     });
-    c.querySelector(".chat-poll-ft").innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span></span>';
-    c.querySelector(".chat-poll-ft span").textContent = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 Multiple answers" : "");
+    var ft = c.querySelector(".chat-poll-ft span"), txt = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 Multiple answers" : "");
+    if (ft.textContent && ft.textContent !== txt && !red) { ft.classList.remove("is-tick"); void ft.offsetWidth; ft.classList.add("is-tick"); }
+    ft.textContent = txt;
   }
+  /* pause the ambient dot ripple when the card is off screen */
+  var mpPollIO = window.IntersectionObserver ? new IntersectionObserver(function (es) { es.forEach(function (e) { var b = e.target.closest(".chat-bubble"); b && b.classList.toggle("is-off", !e.isIntersecting); }); }) : null;
+  function mpPollWatch(c) { try { mpPollIO && mpPollIO.observe(c); } catch (_) {} }
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
     var m = MP_GE_RE.exec(String(t));

@@ -9694,3 +9694,34 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 [data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
 .chat-poll-q3d .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
 .chat-poll-q3d .is-mine .chat-poll-lbl{font-weight:650}
+
+/* poll vote animations + dot ripple (per dc) */
+.chat-poll-ck{display:none}
+.chat-poll-q3d .chat-poll-ring{overflow:visible}
+.chat-poll-ring .dot{fill:#5b9bff;stroke:none!important;transform-origin:12px 12px;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+.chat-poll-q3d .is-mine .chat-poll-ring .dot{transform:scale(1)}
+.chat-poll-ring .fg{transition:stroke-dasharray .65s cubic-bezier(.22,1.25,.4,1),stroke .25s}
+.chat-poll-opt.is-pop .chat-poll-ring{animation:mp-ring-pop .45s cubic-bezier(.3,1.7,.5,1)}
+@keyframes mp-ring-pop{40%{transform:rotate(-90deg) scale(1.22)}100%{transform:rotate(-90deg) scale(1)}}
+.chat-poll-q3d .chat-poll-lbl{transition:font-weight .2s}
+.poll-voter-avatar.is-new{animation:mp-voter-in .4s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes mp-voter-in{from{opacity:0;transform:translateX(8px) scale(.6)}}
+.chat-poll-ft span.is-tick{display:inline-block;animation:mp-tick .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes mp-tick{from{opacity:.2;transform:translateY(5px)}}
+.chat-poll-pct{font-variant-numeric:tabular-nums}
+.chat-poll-rip{position:absolute;z-index:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;pointer-events:none;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 0 18px rgba(91,155,255,.45),inset 0 0 12px rgba(255,255,255,.25);animation:mp-rip .95s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes mp-rip{to{transform:scale(22);opacity:0;border-width:.2px}}
+/* ambient dot wave: brighter dot layer revealed by a drifting soft band */
+.chat-msg .chat-bubble.chat-poll-q3d::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(rgba(255,255,255,.26) 1px,transparent 1.5px) 0 0/8px 8px;-webkit-mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);-webkit-mask-size:300% 300%;mask-size:300% 300%;animation:mp-dot-wave 5s ease-in-out infinite;opacity:.55}
+@keyframes mp-dot-wave{0%{-webkit-mask-position:100% 100%;mask-position:100% 100%}100%{-webkit-mask-position:0% 0%;mask-position:0% 0%}}
+.chat-bubble.chat-poll-q3d.is-off::after{animation-play-state:paused}
+/* Globe picker: sliding segmented thumb */
+.chat-gp-tabs{position:relative}
+.chat-gp-tabs button{position:relative;z-index:1;transition:opacity .2s}
+.chat-gp-tabs button.is-on{background:none!important;box-shadow:none!important}
+.chat-gp-thumb{position:absolute;z-index:0;left:2px;top:2px;bottom:2px;border-radius:8px;background:var(--sheet-bg,rgba(255,255,255,.14));box-shadow:0 1px 4px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .38s cubic-bezier(.3,1.3,.5,1)}
+[data-theme="light"] .chat-gp-thumb{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.14)}
+@media (prefers-reduced-motion:reduce){.chat-msg .chat-bubble.chat-poll-q3d::after{animation:none;display:none}.chat-gp-thumb,.chat-poll-ring .fg,.chat-poll-ring .dot{transition:none}.chat-poll-rip{display:none}}
+.chat-poll{position:relative;z-index:1}
+.chat-poll-q3d .chat-poll-opt::after{content:none!important}
+.chat-poll-q3d .chat-poll-pct{display:block!important;position:relative;font-size:12px;font-weight:650;opacity:.75;min-width:32px;text-align:right}
