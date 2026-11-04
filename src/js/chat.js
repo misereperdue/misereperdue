@@ -2872,7 +2872,7 @@
     setTimeout(function () { qi.focus(); }, 60);
   }
   /* poll card style (per dc): "p1" frosted + animated border, "p2" indigo glass, "p3" ticket */
-  var MP_POLL_STYLE = "p1";
+  var MP_POLL_STYLE = "q3d";
   var mpPolls = Object.create(null);
   function mpPollRender(b, e) {
     if (!b || !e || !e.poll || !Array.isArray(e.poll.o)) return;
@@ -2904,6 +2904,9 @@
       bar.style.width = w0 + "%"; w0 !== w1 && requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = w1 + "%"; }); });
       (p.w || (p.w = []))[i] = w1;
       b.querySelector(".chat-poll-lbl").textContent = o;
+      var rg = (mine.length || tot ? pct : 0);
+      b.setAttribute("data-pct", mine.length || tot ? pct + "%" : "");
+      b.insertAdjacentHTML("afterbegin", '<svg class="chat-poll-ring" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" class="bg"/><circle cx="12" cy="12" r="9.5" class="fg" style="stroke-dasharray:' + (rg * 0.597).toFixed(1) + ' 59.7"/></svg>');
       on && b.insertAdjacentHTML("afterbegin", '<svg class="chat-poll-ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.4l2.6 2.6L12 5.4"/></svg>');
       /* voter avatars, like Globe polls: shown once you've voted, 3 + "+N" (per dc) */
       if (mine.length && counts[i]) {

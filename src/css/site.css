@@ -9606,3 +9606,91 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 [data-theme="light"] .chat-msg .chat-bubble.chat-poll-p3{background:#fff!important;color:#151823!important;border-color:rgba(0,0,0,.06)!important;box-shadow:0 12px 28px rgba(20,30,60,.14)!important}
 [data-theme="light"] .chat-poll-p3 .chat-poll-tag{color:#2f5fd0}
 @media (prefers-reduced-motion:reduce){.chat-msg .chat-bubble.chat-poll-p1::before{animation:none}}
+
+/* ===== Poll style concepts Q1-Q4 (local, per dc) ===== */
+.chat-poll-ring{display:none}
+.chat-poll-bubble[class*="chat-poll-q"] .chat-poll-tag{display:none!important}
+/* Q1 minimal: no card, question as text, floating glass pills */
+.chat-msg .chat-bubble.chat-poll-q1{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:2px 0!important}
+.chat-poll-q1 .chat-poll-q{font-size:16px;font-weight:650;padding:0 4px 2px}
+.chat-poll-q1 .chat-poll-opt{background:var(--glass-regular-tint)!important;-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);border:var(--glass-hairline)!important;box-shadow:var(--glass-spec),0 4px 14px rgba(0,0,0,.18)}
+.chat-poll-q1 .chat-poll-opt.is-mine{box-shadow:0 0 0 1.5px rgba(79,140,255,.8),0 4px 14px rgba(0,0,0,.18)}
+/* Q2 native iOS card */
+.chat-msg .chat-bubble.chat-poll-q2{border:0!important;border-radius:22px!important;background:#1c1c1e!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 1px 0 rgba(255,255,255,.04) inset!important;color:#fff!important;padding:12px!important}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q2{background:#fff!important;color:#000!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+.chat-poll-q2 .chat-poll-q{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.chat-poll-q2 .chat-poll-opt{min-height:40px;border-radius:12px;border:0!important;background:rgba(118,118,128,.24)!important;box-shadow:none!important}
+.chat-poll-q2 .chat-poll-bar{background:rgba(10,132,255,.35)!important;border-radius:12px}
+.chat-poll-q2 .chat-poll-opt.is-mine .chat-poll-bar{background:#0a84ff!important}
+.chat-poll-q2 .chat-poll-opt.is-mine{color:#fff}
+.chat-poll-q2 .chat-poll-ck{stroke:#fff!important}
+[data-theme="light"] .chat-poll-q2 .chat-poll-opt{background:rgba(118,118,128,.12)!important}
+[data-theme="light"] .chat-poll-q2 .chat-poll-bar{background:rgba(0,122,255,.22)!important}
+[data-theme="light"] .chat-poll-q2 .chat-poll-opt.is-mine .chat-poll-bar{background:#007aff!important}
+/* Q3 progress rings */
+.chat-msg .chat-bubble.chat-poll-q3{border-radius:20px!important}
+.chat-poll-q3 .chat-poll-opt{background:none!important;border:0!important;box-shadow:none!important;padding:0 4px;min-height:36px;border-bottom:1px solid rgba(127,127,127,.15)!important;border-radius:0}
+.chat-poll-q3 .chat-poll-opt:last-child{border-bottom:0!important}
+.chat-poll-q3 .chat-poll-bar,.chat-poll-q3 .chat-poll-ck,.chat-poll-q3 .chat-poll-pct{display:none}
+.chat-poll-q3 .chat-poll-ring{display:block;position:relative;flex:none;width:26px;height:26px;transform:rotate(-90deg)}
+.chat-poll-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+.chat-poll-ring .bg{stroke:rgba(127,127,127,.25)}
+.chat-poll-ring .fg{stroke:rgba(200,205,220,.85);transition:stroke-dasharray .6s cubic-bezier(.25,1.3,.45,1)}
+.chat-poll-q3 .is-mine .chat-poll-ring .fg{stroke:#4f8cff}
+[data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
+.chat-poll-q3 .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
+.chat-poll-q3 .is-mine .chat-poll-lbl{font-weight:650}
+/* Q4 monochrome editorial */
+.chat-msg .chat-bubble.chat-poll-q4{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14)!important;border-radius:4px!important;background:#0b0b0c!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;color:#f4f4f4!important;padding:12px 12px 10px!important}
+.chat-msg .chat-bubble.chat-poll-q4::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q4{background:#fafafa!important;color:#0b0b0c!important;border-color:rgba(0,0,0,.2)!important}
+.chat-poll-q4 .chat-poll-q{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.15;text-transform:none}
+.chat-poll-q4 .chat-poll-list{gap:10px}
+.chat-poll-q4 .chat-poll-opt{display:grid;grid-template-columns:1fr auto auto;grid-template-rows:auto 2px;row-gap:5px;min-height:0;padding:0;border:0!important;background:none!important;box-shadow:none!important;border-radius:0;overflow:visible}
+.chat-poll-q4 .chat-poll-ck{display:none}
+.chat-poll-q4 .chat-poll-lbl{grid-column:1;font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.chat-poll-q4 .chat-poll-voters{grid-column:2;grid-row:1;margin-right:6px}
+.chat-poll-q4 .chat-poll-pct{grid-column:3;grid-row:1;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.chat-poll-q4 .chat-poll-bar{position:relative!important;grid-column:1/4;grid-row:2;height:2px;inset:auto!important;border-radius:0;background:currentColor!important;opacity:.85;min-width:2px}
+.chat-poll-q4 .chat-poll-opt::before{content:"";grid-column:1/4;grid-row:2;height:1px;align-self:center;background:currentColor;opacity:.18}
+.chat-poll-q4 .is-mine .chat-poll-lbl::before{content:"\2014\00a0"}
+.chat-poll-q4 .chat-poll-voters .poll-voter-avatar{filter:grayscale(1)}
+.chat-poll-q4 .chat-poll-ft{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.chat-poll-q4 .chat-poll-bar{justify-self:start}
+/* Q3 pattern variants (per dc): black gradient card + white stripes / dots, black in both themes */
+.chat-msg .chat-bubble.chat-poll-q3s,.chat-msg .chat-bubble.chat-poll-q3d{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(255,255,255,.1)!important;border-radius:20px!important;background:linear-gradient(145deg,#1d1d1f 0%,#0b0b0c 55%,#000 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 10px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07)!important;color:#f5f5f7!important}
+.chat-msg .chat-bubble.chat-poll-q3s::before,.chat-msg .chat-bubble.chat-poll-q3d::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;-webkit-mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%)}
+.chat-msg .chat-bubble.chat-poll-q3s::before{background:repeating-linear-gradient(135deg,rgba(255,255,255,.075) 0 1px,transparent 1px 7px)}
+.chat-msg .chat-bubble.chat-poll-q3d::before{background:radial-gradient(rgba(255,255,255,.14) .9px,transparent 1.3px) 0 0/8px 8px}
+.chat-poll-q3s .chat-poll-ring .fg,.chat-poll-q3d .chat-poll-ring .fg{stroke:rgba(255,255,255,.85)}
+.chat-poll-q3s .chat-poll-ring .bg,.chat-poll-q3d .chat-poll-ring .bg{stroke:rgba(255,255,255,.16)}
+.chat-poll-q3s .is-mine .chat-poll-ring .fg,.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#5b9bff}
+.chat-poll-q3s .chat-poll-opt,.chat-poll-q3d .chat-poll-opt{border-bottom-color:rgba(255,255,255,.1)!important}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3s,[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3d{box-shadow:0 10px 24px rgba(0,0,0,.22)!important}
+.chat-poll-q3s .chat-poll-voters .poll-voter-avatar,.chat-poll-q3d .chat-poll-voters .poll-voter-avatar{border-color:#111!important}
+
+.chat-msg .chat-bubble.chat-poll-q3s{border-radius:20px!important}
+.chat-poll-q3s .chat-poll-opt{background:none!important;border:0!important;box-shadow:none!important;padding:0 4px;min-height:36px;border-bottom:1px solid rgba(127,127,127,.15)!important;border-radius:0}
+.chat-poll-q3s .chat-poll-opt:last-child{border-bottom:0!important}
+.chat-poll-q3s .chat-poll-bar,.chat-poll-q3s .chat-poll-ck,.chat-poll-q3s .chat-poll-pct{display:none}
+.chat-poll-q3s .chat-poll-ring{display:block;position:relative;flex:none;width:26px;height:26px;transform:rotate(-90deg)}
+.chat-poll-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+.chat-poll-ring .bg{stroke:rgba(127,127,127,.25)}
+.chat-poll-ring .fg{stroke:rgba(200,205,220,.85);transition:stroke-dasharray .6s cubic-bezier(.25,1.3,.45,1)}
+.chat-poll-q3s .is-mine .chat-poll-ring .fg{stroke:#4f8cff}
+[data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
+.chat-poll-q3s .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
+.chat-poll-q3s .is-mine .chat-poll-lbl{font-weight:650}
+
+.chat-msg .chat-bubble.chat-poll-q3d{border-radius:20px!important}
+.chat-poll-q3d .chat-poll-opt{background:none!important;border:0!important;box-shadow:none!important;padding:0 4px;min-height:36px;border-bottom:1px solid rgba(127,127,127,.15)!important;border-radius:0}
+.chat-poll-q3d .chat-poll-opt:last-child{border-bottom:0!important}
+.chat-poll-q3d .chat-poll-bar,.chat-poll-q3d .chat-poll-ck,.chat-poll-q3d .chat-poll-pct{display:none}
+.chat-poll-q3d .chat-poll-ring{display:block;position:relative;flex:none;width:26px;height:26px;transform:rotate(-90deg)}
+.chat-poll-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+.chat-poll-ring .bg{stroke:rgba(127,127,127,.25)}
+.chat-poll-ring .fg{stroke:rgba(200,205,220,.85);transition:stroke-dasharray .6s cubic-bezier(.25,1.3,.45,1)}
+.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#4f8cff}
+[data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
+.chat-poll-q3d .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
+.chat-poll-q3d .is-mine .chat-poll-lbl{font-weight:650}
