@@ -6311,7 +6311,7 @@
   function hap(n) { try { window.haptic && window.haptic(n); } catch (_) {} }
   var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   fetch(API, { method: "GET" }).then(function (r) { if (r.status === 200 || r.status === 405) { window.MP_VOICE_READY = ready = true; mount(); } }).catch(function () {});
-  var MIC = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.75" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.75"/></svg>';
+  var MIC = '<span class="chat-mic-g"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.75 11a6.25 6.25 0 0 0 12.5 0M12 17.25V21"/></svg></span>';
   function mount() {
     if (!ready) return;
     var f = document.querySelector("#chat .chat-inputbar"); if (!f) return void setTimeout(mount, 800);
@@ -6329,7 +6329,13 @@
   function bar(f) {
     var o = document.createElement("div"); o.className = "chat-vrec";
     o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
-    f.appendChild(o); o.offsetWidth; f.classList.add("is-rec");
+    var row = f.parentNode, mic = f.querySelector(".chat-mic");
+    row.appendChild(o);
+    if (mic) { var rr = row.getBoundingClientRect(), mr = mic.getBoundingClientRect(); o.style.transformOrigin = Math.round(mr.left + mr.width / 2 - rr.left) + "px 100%"; }
+    o.offsetWidth; o.classList.add("in"); f.classList.add("is-rec");
+    var m = document.querySelector("#chat .chat-msgs"), at = row.querySelector(".chat-attach:not([hidden])");
+    at && (o.style.bottom = "calc(100% + " + Math.round(at.getBoundingClientRect().height + 16) + "px)");
+    if (m) { var near = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80; m.style.setProperty("--vr-h", "64px"); near && setTimeout(function () { window.scrollTo(0, document.documentElement.scrollHeight); }, 30); }
     o.querySelector(".chat-vrec-x").onclick = function (e) { e.preventDefault(); cancel(); };
     o.querySelector(".chat-vrec-ok").onclick = function (e) { e.preventDefault(); stop(); };
     return o;
@@ -6337,7 +6343,8 @@
   function start(f) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return toast("Voice typing isn't supported on this browser");
     if (!localStorage.getItem("chat_token")) return toast("Log in to use voice typing");
-    st = { f: f, chunks: [], t0: 0, pending: true };
+    var inp0 = f.querySelector("input"), ca = inp0.selectionStart != null ? inp0.selectionStart : inp0.value.length, cb = inp0.selectionEnd != null ? inp0.selectionEnd : ca;
+    st = { f: f, chunks: [], t0: 0, pending: true, inp: inp0, orig: inp0.value, pre: inp0.value.slice(0, ca), post: inp0.value.slice(cb), live: "" };
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (s) {
       if (!st || !st.pending) return void s.getTracks().forEach(function (t) { t.stop(); });
       st.pending = false; st.s = s; var ty = pickType();
@@ -6346,7 +6353,7 @@
       st.rec.ondataavailable = function (e) { e.data && e.data.size && st && st.chunks.push(e.data); };
       st.rec.start(250); st.t0 = performance.now(); st.o = bar(f); hap(12);
       try { var AC = window.AudioContext || window.webkitAudioContext; st.ac = new AC(); st.an = st.ac.createAnalyser(); st.an.fftSize = 256; st.an.smoothingTimeConstant = 0.75; st.ac.createMediaStreamSource(s).connect(st.an); } catch (e) {}
-      st.lv = []; loop();
+      st.lv = []; loop(); listen(st);
     }).catch(function () { st = null; toast("Microphone access was denied. Allow it in Settings to use voice typing."); });
   }
   /* V3 dot-column waveform (per dc): timeline of smoothed levels as columns of small dots, soft fade, tapered ends */
@@ -6367,6 +6374,29 @@
       }
     }
   }
+  /* live text while speaking: browser SpeechRecognition for interim words; Whisper replaces it on stop */
+  function put(s, t, cls) {
+    var i = s.inp, pre = s.pre, post = s.post; t = String(t || "").replace(/\s+/g, " ").trim();
+    var mid = t ? (pre && !/\s$/.test(pre) ? " " : "") + t + (post && !/^\s/.test(post) ? " " : "") : "";
+    i.value = (pre + mid + post).slice(0, i.maxLength > 0 ? i.maxLength : 500);
+    i.classList.toggle("is-live", cls === "live" && !!t);
+    try { i.setSelectionRange(pre.length + mid.length, pre.length + mid.length); i.scrollLeft = i.scrollWidth; } catch (e) {}
+    return mid;
+  }
+  function listen(s) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return;
+    try {
+      var r = new SR(); r.continuous = true; r.interimResults = true; r.lang = navigator.language || "en-US";
+      var fin = "";
+      r.onresult = function (e) {
+        if (st !== s) return; var tmp = "";
+        for (var i = e.resultIndex; i < e.results.length; i++) e.results[i].isFinal ? (fin += e.results[i][0].transcript + " ") : (tmp += e.results[i][0].transcript);
+        s.live = (fin + tmp).trim(); put(s, s.live, "live");
+      };
+      r.onerror = function () {}; r.onend = function () { st === s && !s.stopping && s.sr === r && setTimeout(function () { if (st === s && !s.stopping) try { r.start(); } catch (e) {} }, 120); };
+      s.sr = r; r.start();
+    } catch (e) { s.sr = null; }
+  }
   function loop() {
     if (!st || !st.o) return;
     var el = (performance.now() - st.t0) / 1000;
@@ -6383,37 +6413,36 @@
   }
   function release() {
     if (!st) return;
-    st.raf && cancelAnimationFrame(st.raf);
+    st.raf && cancelAnimationFrame(st.raf); st.stopping = true;
+    try { st.sr && st.sr.abort(); } catch (e) {}
     st.s && st.s.getTracks().forEach(function (t) { t.stop(); });
     try { st.ac && st.ac.close(); } catch (e) {}
   }
   function close(s) {
-    var f = s.f, o = s.o; f.classList.remove("is-rec", "is-busy");
+    var f = s.f, o = s.o; f.classList.remove("is-rec"); s.inp && s.inp.classList.remove("is-live", "is-busy");
+    var m = document.querySelector("#chat .chat-msgs"); m && m.style.setProperty("--vr-h", "0px");
     o && (o.classList.add("out"), setTimeout(function () { o.remove(); }, 260));
   }
-  function cancel() { if (!st) return; var s = st; release(); try { s.rec && s.rec.state !== "inactive" && s.rec.stop(); } catch (e) {} st = null; s.o && close(s); hap(8); }
+  function cancel() { if (!st) return; var s = st; release(); try { s.rec && s.rec.state !== "inactive" && s.rec.stop(); } catch (e) {} st = null; s.inp && (s.inp.value = s.orig); s.o && close(s); hap(8); }
   function stop() {
     if (!st || !st.rec) return cancel();
-    var s = st; release(); hap(12); s.f.classList.add("is-busy");
+    var s = st; release(); hap(12); s.o && s.o.classList.add("is-busy"); s.inp.classList.add("is-busy");
+    function keep(msg) { st = null; close(s); if (s.live) { put(s, s.live); s.inp.focus(); s.inp.dispatchEvent(new Event("input", { bubbles: true })); } else toast(msg); }
     s.rec.onstop = function () {
       var blob = new Blob(s.chunks, { type: s.type.split(";")[0] });
-      if (blob.size < 800) { st = null; close(s); return toast("Didn't catch that, try again"); }
-      if (blob.size > 2 * 1024 * 1024) { st = null; close(s); return toast("Recording too long"); }
+      if (blob.size < 800) return keep("Didn't catch that, try again");
+      if (blob.size > 2 * 1024 * 1024) return keep("Recording too long");
       fetch(API, { method: "POST", headers: { "Content-Type": blob.type || "audio/webm", Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: blob })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); })
         .then(function (j) {
-          st = null; close(s);
-          var inp = s.f.querySelector("input"), t = String(j.text || "").trim();
-          if (!t) return toast("Didn't catch that, try again");
-          var a = inp.selectionStart != null ? inp.selectionStart : inp.value.length, b = inp.selectionEnd != null ? inp.selectionEnd : a, pre = inp.value.slice(0, a), post = inp.value.slice(b);
-          t = (pre && !/\s$/.test(pre) ? " " : "") + t + (post && !/^\s/.test(post) ? " " : "");
-          inp.value = (pre + t + post).slice(0, inp.maxLength > 0 ? inp.maxLength : 500);
-          inp.dispatchEvent(new Event("input", { bubbles: true })); inp.focus();
-          try { inp.setSelectionRange(pre.length + t.length, pre.length + t.length); } catch (e) {}
+          var t = String(j.text || "").trim(); if (!t) return keep("Didn't catch that, try again");
+          st = null; close(s); put(s, t); var i = s.inp;
+          i.classList.remove("is-swap"); i.offsetWidth; i.classList.add("is-swap");
+          i.dispatchEvent(new Event("input", { bubbles: true })); i.focus();
         })
-        .catch(function (e) { st = null; close(s); toast(e.message || "Couldn't transcribe, try again"); });
+        .catch(function (e) { keep(e.message || "Couldn't transcribe, try again"); });
     };
-    try { s.rec.stop(); } catch (e) { st = null; close(s); }
+    try { s.rec.stop(); } catch (e) { keep("Couldn't transcribe, try again"); }
   }
   document.addEventListener("visibilitychange", function () { document.hidden && st && cancel(); });
   window.addEventListener("pagehide", function () { st && cancel(); });
