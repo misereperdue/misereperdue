@@ -1000,7 +1000,7 @@
   }
   function mpAvMenu(el, u) {
     var items = [];
-    mpPM.on && s && items.push({ label: "Whisper", icon: "<svg " + MP_IC + '><path d="M3.98 8.22A10.48 10.48 0 0 0 1.93 12C3.23 16.34 7.24 19.5 12 19.5c.99 0 1.95-.14 2.86-.4M6.23 6.23A10.45 10.45 0 0 1 12 4.5c4.76 0 8.77 3.16 10.07 7.5a10.5 10.5 0 0 1-4.29 5.77M6.23 6.23 3 3m3.23 3.23 3.65 3.65m7.89 7.89L21 21m-3.23-3.23-3.65-3.65a3 3 0 1 0-4.24-4.24m4.24 4.24L9.88 9.88"/></svg>', run: function () { mpPMStart(u); } });
+    mpPM.on && s && items.push({ label: "Whisper", icon: "<svg " + MP_IC + '><path d="M11 19H8l-4 2.5V17a5 5 0 0 1-1-3V9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v1"/><rect x="13.5" y="15" width="8" height="6" rx="1.6"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/></svg>', run: function () { mpPMStart(u); } });
     items.push({ label: "Hide", danger: !0, icon: "<svg " + MP_IC + '><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>', run: function () { mpHideUser(u); } });
     mpHide.menu(el, items);
   }
