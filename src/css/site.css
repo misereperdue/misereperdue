@@ -9725,3 +9725,13 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll{position:relative;z-index:1}
 .chat-poll-q3d .chat-poll-opt::after{content:none!important}
 .chat-poll-q3d .chat-poll-pct{display:block!important;position:relative;font-size:12px;font-weight:650;opacity:.75;min-width:32px;text-align:right}
+
+/* calmer rings (per dc): no size change, smooth sweep, gentle selected state */
+.chat-poll-q3d .chat-poll-opt,.chat-poll-q3d .chat-poll-opt:active{transform:none!important;transition:background-color .2s ease}
+.chat-poll-q3d .chat-poll-opt:active{background-color:rgba(255,255,255,.06)!important}
+.chat-poll-q3d .chat-poll-ring{transform:none!important;animation:none!important}
+.chat-poll-q3d .chat-poll-ring .bg,.chat-poll-q3d .chat-poll-ring .fg{transform:rotate(-90deg);transform-box:fill-box;transform-origin:center}
+.chat-poll-q3d .chat-poll-ring .fg{transition:stroke-dasharray .55s cubic-bezier(.22,1,.36,1),stroke .3s ease}
+.chat-poll-q3d .chat-poll-ring .dot{transform-box:fill-box;transform-origin:center;transform:scale(.6);opacity:0;transition:transform .35s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+.chat-poll-q3d .is-mine .chat-poll-ring .dot{transform:scale(1);opacity:1}
+@media (prefers-reduced-motion:reduce){.chat-poll-q3d .chat-poll-ring .fg,.chat-poll-q3d .chat-poll-ring .dot{transition:none}}

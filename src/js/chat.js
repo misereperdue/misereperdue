@@ -2930,7 +2930,7 @@
           var nv = Object.assign({}, cv); nx.length ? (nv[me] = nx) : delete nv[me];
           window.haptic && window.haptic(10);
           if (!red) {
-            b.animate([{ transform: "scale(1)" }, { transform: "scale(.95)" }, { transform: "scale(1.02)" }, { transform: "scale(1)" }], { duration: 420, easing: "cubic-bezier(.3,1.4,.5,1)" });
+            b.animate([{ backgroundColor: "rgba(255,255,255,.10)" }, { backgroundColor: "rgba(255,255,255,0)" }], { duration: 450, easing: "ease-out" });
             var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect(), rp = document.createElement("span");
             rp.className = "chat-poll-rip"; rp.style.left = (e.clientX || br.left + br.width / 2) - br.left + "px"; rp.style.top = (e.clientY || br.top + br.height / 2) - br.top + "px";
             bub.appendChild(rp); setTimeout(function () { rp.remove(); }, 1000);
@@ -2949,7 +2949,6 @@
       var pct = tot ? Math.round((counts[i] / tot) * 100) : 0, on = mine.indexOf(i) !== -1, w1 = show ? pct : 0;
       var was = b.classList.contains("is-mine");
       b.classList.toggle("is-mine", on);
-      on && !was && !red && (b.classList.remove("is-pop"), void b.offsetWidth, b.classList.add("is-pop"));
       b.querySelector(".chat-poll-bar").style.width = w1 + "%";
       b.querySelector(".fg").style.strokeDasharray = (w1 * 0.597).toFixed(1) + " 59.7";
       var pe = b.querySelector(".chat-poll-pct"), from = parseInt(pe.getAttribute("data-v") || "0", 10) || 0;
