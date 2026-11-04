@@ -6349,22 +6349,42 @@
       st.lv = []; loop();
     }).catch(function () { st = null; toast("Microphone access was denied. Allow it in Settings to use voice typing."); });
   }
+  /* Siri-style flowing waveform (per dc): layered sines under a Gaussian envelope, additive glow */
+  function wave(x, w, h, d, L, T, lite) {
+    x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
+    var mid = h / 2, A = (h / 2 - 2) * (0.24 + 0.76 * L) * (0.92 + 0.08 * Math.sin(T * 2.1));
+    var g = x.createLinearGradient(0, 0, w, 0), c1 = lite ? "#3b8fc4" : "#a9d7f5", c2 = lite ? "#7a63d8" : "#b9a6ff";
+    g.addColorStop(0, "rgba(169,215,245,0)"); g.addColorStop(0.18, c1); g.addColorStop(0.5, c2); g.addColorStop(0.82, c1); g.addColorStop(1, "rgba(169,215,245,0)");
+    var cg = x.createLinearGradient(0, 0, w, 0), cc = lite ? "31,111,163" : "255,255,255"; cg.addColorStop(0, "rgba(" + cc + ",0)"); cg.addColorStop(0.5, "rgba(" + cc + ",.95)"); cg.addColorStop(1, "rgba(" + cc + ",0)");
+    x.globalCompositeOperation = lite ? "source-over" : "lighter";
+    var layers = red ? [[1.6, 0, 1, 1]] : [[1.3, 0.9, 1, 0.55], [2.1, -1.4, 0.7, 0.45], [2.9, 2.2, 0.5, 0.4], [1.7, -2.8, 0.85, 0.5]];
+    for (var k = 0; k < layers.length; k++) {
+      var Lr = layers[k], ph = red ? 0 : T * Lr[1] * 2.2 + k * 1.3;
+      for (var pass = 0; pass < 2; pass++) {
+        x.beginPath();
+        for (var px = 0; px <= w; px += 2) {
+          var u = px / w * 2 - 1, env = Math.exp(-u * u * 3.2), y = mid + Math.sin(u * Math.PI * Lr[0] + ph) * A * Lr[2] * env;
+          px ? x.lineTo(px, y) : x.moveTo(px, y);
+        }
+        if (pass === 0) { x.strokeStyle = g; x.globalAlpha = Lr[3] * 0.5; x.lineWidth = 5; x.shadowColor = c1; x.shadowBlur = 10; }
+        else { x.strokeStyle = k === 0 ? cg : g; x.globalAlpha = Lr[3] + (k === 0 ? 0.35 : 0); x.lineWidth = k === 0 ? 1.6 : 1.2; x.shadowBlur = 0; }
+        x.stroke();
+      }
+    }
+    x.globalAlpha = 1; x.globalCompositeOperation = "source-over"; x.shadowBlur = 0;
+  }
   function loop() {
     if (!st || !st.o) return;
     var el = (performance.now() - st.t0) / 1000;
     st.o.querySelector(".chat-vrec-t").textContent = Math.floor(el / 60) + ":" + ("0" + Math.floor(el % 60)).slice(-2);
     if (el >= 60) { toast("Stopped at 60 seconds"); return void stop(); }
     var cv = st.o.querySelector(".chat-vrec-wv"), w = cv.clientWidth, h = cv.clientHeight, d = Math.min(window.devicePixelRatio || 1, 2);
-    if (cv.width !== w * d) { cv.width = w * d; cv.height = h * d; }
-    var lvl = 0;
-    if (st.an) { var a = new Uint8Array(st.an.fftSize); st.an.getByteTimeDomainData(a); for (var i = 0; i < a.length; i++) { var v = (a[i] - 128) / 128; lvl += v * v; } lvl = Math.min(1, Math.sqrt(lvl / a.length) * 4); }
-    var x = cv.getContext("2d"), n = Math.max(8, Math.floor(w / 5));
-    st.lv.push(lvl); st.lv.length > n && st.lv.shift();
-    x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h); x.fillStyle = getComputedStyle(cv).color || "#a9d7f5";
-    for (var k = 0; k < n; k++) {
-      var L = red ? lvl : st.lv[st.lv.length - n + k] || 0, bh = Math.max(3, L * (h - 4)), bx = k * 5 + 1;
-      x.globalAlpha = 0.45 + 0.55 * (k / n); x.beginPath(); x.roundRect ? x.roundRect(bx, (h - bh) / 2, 3, bh, 1.5) : x.rect(bx, (h - bh) / 2, 3, bh); x.fill();
-    }
+    if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
+    var lvl = 0, now = performance.now(), dt = Math.min(0.1, (now - (st.tl || now)) / 1000); st.tl = now;
+    if (st.an) { var a = new Uint8Array(st.an.fftSize); st.an.getByteTimeDomainData(a); for (var i = 0; i < a.length; i++) { var v = (a[i] - 128) / 128; lvl += v * v; } lvl = Math.min(1, Math.sqrt(lvl / a.length) * 4.5); }
+    /* smoothed level: fast attack (~60ms), slow release (~250ms) */
+    st.sm = st.sm || 0; st.sm += (lvl - st.sm) * (1 - Math.exp(-dt / (lvl > st.sm ? 0.06 : 0.25)));
+    wave(cv.getContext("2d"), w, h, d, st.sm, now / 1000, document.documentElement.getAttribute("data-theme") === "light");
     st.raf = requestAnimationFrame(loop);
   }
   function release() {

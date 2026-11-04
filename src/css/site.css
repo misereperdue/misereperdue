@@ -9783,7 +9783,7 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-vrec-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff453a; box-shadow: 0 0 8px rgba(255,69,58,.7); animation: chat-vrec-pulse 1.2s ease-in-out infinite; }
 @keyframes chat-vrec-pulse { 50% { opacity: .35; transform: scale(.8); } }
 .chat-vrec-t { flex: none; font: 600 14px/1 -apple-system, system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 32px; }
-.chat-vrec-wv { flex: 1; min-width: 0; height: 26px; color: #a9d7f5; }
+.chat-vrec-wv { flex: 1; min-width: 0; height: 32px; color: #a9d7f5; }
 [data-theme="light"] .chat-vrec, [data-theme="light"] .chat-vrec-wv { color: #3b8fc4; }
 .chat-vrec-ok { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 0; display: grid; place-items: center; background: #fff; color: #000; cursor: pointer; }
 [data-theme="light"] .chat-vrec-ok { background: #000; color: #fff; }
