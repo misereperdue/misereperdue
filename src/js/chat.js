@@ -6476,7 +6476,7 @@
         var body = a.blob.size <= 2 * 1024 * 1024 ? a.blob : raw.size <= 2 * 1024 * 1024 ? raw : null;
         if (!body) return keep("Recording too long");
         function send(n) {
-          return fetch(API, { method: "POST", headers: { "Content-Type": body.type || "audio/wav", "X-Voice-Session": s.sid, Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: body })
+          return fetch(API, { method: "POST", headers: (function () { var h = { "Content-Type": body.type || "audio/wav", Authorization: "Bearer " + localStorage.getItem("chat_token") }; prog && (h["X-Voice-Session"] = s.sid); return h; })(), body: body })
             .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status >= 500 && n < 1) return send(n + 1); if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); }, function (e) { if (n < 1) return send(n + 1); throw e; });
         }
         send(0).then(function (j) {
