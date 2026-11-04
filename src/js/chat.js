@@ -1927,8 +1927,11 @@
       function t() {
         var t = v.hidden ? 0 : Math.round(v.getBoundingClientRect().height + 8);
         if (t !== e) {
+          /* only follow the tray while Chat is on screen, and not on the first measure:
+             on a deep-linked Globe post this pulled the page to the bottom (per dc) */
           var n = Le(),
-            a = Se();
+            f0 = e === -1,
+            a = !f0 && Te() && Se();
           if ((n && n.style.setProperty("--tray-h", t + "px"), (e = t), a)) {
             var r = Date.now();
             (function o() {
@@ -2256,7 +2259,7 @@
         var i = r[o].getBoundingClientRect(),
           s = (i.top + i.bottom) / 2,
           l = 1;
-        i.bottom < n ? (l = 0) : s < n + 120 && (l = Math.max(0, (s - n) / 120));
+        i.bottom < n ? (l = 0) : s < n + 44 && (l = Math.max(0, (s - n) / 44));
         var d = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200,
           u = 1;
         if (i.top > a) u = 0;
@@ -2828,7 +2831,7 @@
         b.querySelector(".chat-ge-l2").textContent = (t.title || "") + (t.excerpt ? " \u2014 " + t.excerpt : "");
         var pic = b.querySelector(".chat-ge-pic");
         if (t.thumb && /^(https?:|\/)/i.test(t.thumb)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = t.thumb; pic.appendChild(im); }
-        else { try { var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0); av && pic.appendChild(av); } catch (_) {} }
+        else { try { var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0); av && (pic.appendChild(av), pic.classList.add("is-av")); } catch (_) {} }
         b.addEventListener("click", function (e) {
           e.stopPropagation();
           var inp = document.querySelector("#chat .chat-inputbar input"), snd = document.querySelector("#chat .chat-send");
@@ -2937,7 +2940,7 @@
       l2.textContent = th.title ? th.title + (body ? " \u2014 " + body : "") : body;
       var img = th.thumb || ((/<img[^>]+src="([^"]+)"/i.exec(th.content || "") || [])[1]);
       if (img && /^(https?:|\/|data:image)/i.test(img)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = img; im.onerror = function () { im.remove(); }; pic.appendChild(im); }
-      else { try { var av = J(th.author, th.authorAvatar, "xs", th.hasAvatarImg ? th.avatarV : void 0); av && pic.appendChild(av); } catch (_) {} }
+      else { try { var av = J(th.author, th.authorAvatar, "xs", th.hasAvatarImg ? th.avatarV : void 0); av && (pic.appendChild(av), pic.classList.add("is-av")); } catch (_) {} }
       c.setAttribute("aria-label", "Globe post by @" + th.author + ": " + (th.title || ""));
     });
   }

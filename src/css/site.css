@@ -9503,3 +9503,20 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll-pct{position:relative;font-size:12px;font-weight:650;opacity:.85}
 .chat-poll-ft{font-size:11.5px;opacity:.6}
 @media (prefers-reduced-motion:reduce){.chat-poll-bar{transition:none}}
+
+/* Globe card thumb + light glass (per dc) */
+.chat-ge-pic{position:relative;align-self:center;box-sizing:border-box;border:1px solid rgba(127,127,127,.22);border-radius:9px}
+.chat-ge-pic.is-av{border-radius:50%}
+.chat-ge-pic>img,.chat-ge-pic>.chat-avatar-wrap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;display:block!important}
+.chat-ge-pic img,.chat-ge-pic .chat-avatar-img,.chat-ge-pic .chat-avatar{width:100%!important;height:100%!important;object-fit:cover!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;position:static!important}
+[data-theme="light"] .chat-ge{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(20,30,60,.10)}
+[data-theme="light"] .chat-gp-row.chat-ge{background:rgba(0,0,0,.04);box-shadow:none}
+/* One menu glass for every menu/popover: the profile card's look (its glass over the .45 scrim) without needing a scrim (per dc) */
+[data-theme] { --menu-glass-bg: rgba(250, 250, 252, 0.78); --menu-glass-filter: blur(24px) saturate(160%); --menu-glass-border: rgba(0, 0, 0, 0.08); }
+[data-theme="dark"] { --menu-glass-bg: rgba(13, 13, 17, 0.72); --menu-glass-border: rgba(255, 255, 255, 0.1); }
+.chat-plus-menu, .mp-ctx-menu, .chat-mention-menu, .chat-me-menu, .online-dropdown, .avatar-options-menu, .chat-react-picker, .forum-mention-dropdown, .forum-menu, .forum-more-menu {
+  background: var(--menu-glass-bg) !important;
+  -webkit-backdrop-filter: var(--menu-glass-filter) !important;
+  backdrop-filter: var(--menu-glass-filter) !important;
+  border-color: var(--menu-glass-border) !important;
+}
