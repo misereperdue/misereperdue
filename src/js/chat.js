@@ -911,15 +911,101 @@
         })
         .catch(function () {});
   }
+  var mpPM = { on: !1, to: null, lp: 0 };
+  function mpPMEnable() {
+    mpPM.on = !0;
+  }
+  function mpPMRow() {
+    return document.querySelector("#chat .chat-inputrow");
+  }
+  function mpPMStart(e) {
+    mpPM.to = e;
+    var t = mpPMRow();
+    if (t) {
+      var n = t.querySelector(".chat-pm-chip");
+      (n ||
+        (((n = document.createElement("div")).className = "chat-pm-chip"),
+        (n.innerHTML =
+          '<svg class="chat-pm-ico" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="chat-pm-txt"></span><button type="button" class="chat-pm-x" aria-label="Cancel private message"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button>'),
+        n.querySelector(".chat-pm-x").addEventListener("click", function (e) {
+          (e.preventDefault(), mpPMStop());
+        }),
+        t.appendChild(n)),
+        (n.querySelector(".chat-pm-txt").textContent = "Only @" + e + " can see this message"),
+        t.classList.add("chat-pm-mode"));
+      var m = document.querySelector("#chat .chat-msgs"),
+        b = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200;
+      (m && m.style.setProperty("--pm-h", "46px"), b && setTimeout(function () { window.scrollTo(0, document.documentElement.scrollHeight); }, 30));
+      var a = t.querySelector(".chat-inputbar input");
+      a && (a.setAttribute("placeholder", "Whisper to @" + e), a.focus());
+    }
+  }
+  function mpPMStop() {
+    mpPM.to = null;
+    var e = mpPMRow();
+    if (e) {
+      var t = e.querySelector(".chat-pm-chip");
+      (t && t.remove(), e.classList.remove("chat-pm-mode"));
+      var m = document.querySelector("#chat .chat-msgs");
+      m && m.style.setProperty("--pm-h", "0px");
+      var n = e.querySelector(".chat-inputbar input");
+      n && n.setAttribute("placeholder", "Message");
+    }
+  }
+  function mpPMCaption(e, t) {
+    if (!e.querySelector(".chat-pm-cap")) {
+      var n = document.createElement("div");
+      n.className = "chat-pm-cap";
+      var a = s && t.to && String(t.to).toLowerCase() === String(s.username).toLowerCase();
+      n.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+      var r = document.createElement("span");
+      ((r.textContent = a ? "Only visible to you" : "Only visible to @" + (t.to || "")), n.appendChild(r));
+      var o = e.querySelector(".chat-msg-main") || e.querySelector(".chat-photo-col") || e;
+      if (o === e) {
+        var i = e.querySelector(".chat-bubble");
+        i && i.parentNode === e ? i.appendChild(n) : e.appendChild(n);
+      } else o.appendChild(n);
+    }
+  }
   function ee(e, t) {
     (e.classList.add("chat-avatar-click"),
       e.setAttribute("role", "button"),
       e.setAttribute("tabindex", "0"),
       e.setAttribute("aria-label", "View " + t + "'s profile"));
     var n = function (e) {
+      if (Date.now() - mpPM.lp < 700) return void (e && (e.stopPropagation(), e.preventDefault()));
       (e && e.stopPropagation(), K(t));
     };
-    (e.addEventListener("click", n),
+    /* long-press an avatar = whisper to that user (per dc; only once the Worker supports it) */
+    var lpT = null,
+      lpXY = null,
+      lpGo = function (e) {
+        if (mpPM.on && s && t && t.toLowerCase() !== String(s.username).toLowerCase()) {
+          var n = (e.touches && e.touches[0]) || e;
+          ((lpXY = [n.clientX, n.clientY]),
+            clearTimeout(lpT),
+            (lpT = setTimeout(function () {
+              ((mpPM.lp = Date.now()), window.haptic && window.haptic(20), mpPMStart(t));
+            }, 480)));
+        }
+      },
+      lpMv = function (e) {
+        var t = (e.touches && e.touches[0]) || e;
+        lpXY && (Math.abs(t.clientX - lpXY[0]) > 10 || Math.abs(t.clientY - lpXY[1]) > 10) && clearTimeout(lpT);
+      },
+      lpEnd = function () {
+        clearTimeout(lpT);
+      };
+    (e.addEventListener("touchstart", lpGo, { passive: !0 }),
+      e.addEventListener("touchmove", lpMv, { passive: !0 }),
+      e.addEventListener("touchend", lpEnd),
+      e.addEventListener("touchcancel", lpEnd),
+      e.addEventListener("mousedown", lpGo),
+      e.addEventListener("mouseup", lpEnd),
+      e.addEventListener("contextmenu", function (e) {
+        mpPM.on && e.preventDefault();
+      }),
+      e.addEventListener("click", n),
       e.addEventListener("keydown", function (e) {
         ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), n(e));
       }));
@@ -1640,12 +1726,14 @@
             window.haptic && window.haptic(15);
             var n = "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
               a = { t: "send", text: e, cid: n };
+            mpPM.to && (a.to = mpPM.to);
             t && (a.media = t);
             if (p && 1 === p.readyState) {
               if (s && s.username) {
                 var r =
                     "opt-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
                   o = { id: r, user: s.username, avatar: s.avatar, text: e, ts: Date.now() + tI };
+                mpPM.to && ((o.to = mpPM.to), (o.private = !0));
                 (t && (o.media = t),
                   (We[n] = { tempId: r, ts: o.ts }),
                   Fe(o),
@@ -1658,7 +1746,7 @@
                 p.send(JSON.stringify(a));
               } catch (e) {}
             } else
-              E("/api/send", { method: "POST", body: { text: e, media: t || null, cid: n } })
+              E("/api/send", { method: "POST", body: { text: e, media: t || null, cid: n, to: mpPM.to || void 0 } })
                 .then(function (e) {
                   e && e.ok
                     ? (e.message && Fe(e.message),
@@ -1936,7 +2024,8 @@
       E("/api/messages?limit=200&_=" + Date.now())
         .then(function (e) {
           if (
-            (e && e.badges && (T = Object.assign(Object.create(null), e.badges)),
+            (e && e.caps && e.caps.private && mpPMEnable(),
+            e && e.badges && (T = Object.assign(Object.create(null), e.badges)),
             (window.__chatBatchLoading = !0),
             e && e.messages)
           ) {
@@ -2694,6 +2783,7 @@
             (s && e.user === s.username ? " mine" : "") +
             (F(e.user) ? " owner-msg" : "") +
             (V(e.user) ? " kitty-msg" : "")),
+          e.private && o.classList.add("chat-private"),
           o.setAttribute("data-id", e.id),
           o.setAttribute("data-user", e.user || ""),
           e.ts && o.setAttribute("data-ts", String(e.ts)),
@@ -2791,6 +2881,7 @@
             a.appendChild(o);
           })(),
           mpPhotoStack(a),
+          e.private && mpPMCaption(o, e),
           a.querySelectorAll(".chat-typing-msg").forEach(function (e) {
             a.appendChild(e);
           }),
@@ -3111,6 +3202,7 @@
                 "boolean" == typeof t.paused && st(t.paused),
                 t.badges && (T = Object.assign(Object.create(null), t.badges)),
                 t.you && te((s = rcKeep(t.you)).points || 0),
+                t.caps && t.caps.private && mpPMEnable(),
                 t.messages && t.messages.forEach(Fe),
                 Ne(!0),
                 setTimeout(function () {
