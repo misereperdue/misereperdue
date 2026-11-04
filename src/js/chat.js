@@ -1018,16 +1018,18 @@
         hd.className = "mp-pb-hd";
         var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
           pill = O(n);
-        if (!pill) {
-          var bd = P(n);
-          bd && av.insertAdjacentHTML("beforeend", bd);
-        }
+        /* badge sits right of the avatar, inline after the name (per dc), not overlaid on it */
+        var bd = pill ? "" : P(n);
         hd.appendChild(av);
         var nm = document.createElement("div");
         nm.className = "mp-pb-nm";
         var n1 = document.createElement("div");
         n1.className = "mp-pb-name";
-        n1.textContent = n.username;
+        var n1t = document.createElement("span");
+        n1t.className = "mp-pb-name-t";
+        n1t.textContent = n.username;
+        n1.appendChild(n1t);
+        bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
         nm.appendChild(n1);
         var n2 = document.createElement("div");
         n2.className = "mp-pb-sub";
@@ -1043,7 +1045,7 @@
           var br = document.createElement("span");
           br.className = "mp-pb-badges";
           n.badges.forEach(function (e) {
-            if (A(n.username, e)) {
+            if (A(n.username, e) && !((bd || pill) && e === N(n))) {
               var i = document.createElement("span");
               i.className = "mp-pb-badge" + ((n.activeBadge || null) === e ? " on" : "");
               i.innerHTML = M(e);
@@ -1091,10 +1093,12 @@
         fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
         fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
         b.appendChild(fp);
-        var tail = document.createElement("i");
-        tail.className = "mp-pb-tail";
-        tail.setAttribute("aria-hidden", "true");
-        b.appendChild(tail);
+        /* bubble shape (per dc): one SVG outline = rounded rect + rounded tail, used as the
+           glass layer's mask and drawn again as the hairline, so the tail is seamless */
+        var shp = document.createElement("i");
+        shp.className = "mp-pb-shape";
+        shp.setAttribute("aria-hidden", "true");
+        b.appendChild(shp);
         document.body.appendChild(b);
         /* place: below by default, above when it doesn't fit; clamp to viewport + safe areas */
         var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
@@ -1104,17 +1108,36 @@
           vw = document.documentElement.clientWidth,
           vh = window.innerHeight,
           M8 = 10,
-          gap = 10,
+          TH = 7,
+          gap = 5 + TH,
+          cx = r.left + r.width / 2,
           below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
-          left = Math.max(M8, Math.min(r.left + r.width / 2 - w / 2, vw - w - M8)),
+          left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
           top = below ? r.bottom + gap : r.top - gap - h,
-          ax = Math.max(22, Math.min(r.left + r.width / 2 - left, w - 22));
+          ax;
+        /* keep the tail clear of the corner radius: shift the bubble (down to a 4px margin) first */
+        cx - left < 30 && (left = Math.max(4, cx - 30));
+        left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
+        ax = Math.max(28, Math.min(cx - left, w - 28));
         top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
+        (function () {
+          var R = 20, T = TH, H = h, W = w, a = ax,
+            d = "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T + "L" + (a - 9) + " " + T +
+              "C" + (a - 4.5) + " " + T + " " + (a - 2.4) + " 0.4 " + a + " 0.4" +
+              "C" + (a + 2.4) + " 0.4 " + (a + 4.5) + " " + T + " " + (a + 9) + " " + T +
+              "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) + "L" + W + " " + (T + H - R) +
+              "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) + "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z",
+            fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
+            vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
+            mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>') + "\")";
+          shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk;
+          shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
+        })();
         b.classList.add(below ? "is-below" : "is-above");
         b.style.left = left + "px";
         b.style.top = top + "px";
         b.style.setProperty("--ax", ax + "px");
-        b.style.transformOrigin = ax + "px " + (below ? "-8px" : h + 8 + "px");
+        b.style.transformOrigin = ax + "px " + (below ? -TH + "px" : h + TH + "px");
         mpPBel = b;
         requestAnimationFrame(function () {
           requestAnimationFrame(function () { b.classList.add("is-in"); });
