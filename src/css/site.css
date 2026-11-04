@@ -9453,3 +9453,19 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-mention{font-weight:600;color:#7aa7ff}
 .chat-msg.mine .chat-mention{color:inherit;text-decoration:underline;text-decoration-color:rgba(255,255,255,.45);text-underline-offset:2px}
 @media (prefers-reduced-motion:reduce){.chat-mention-menu{animation:none}}
+
+/* Globe embeds (per dc): compact one-row card */
+.chat-ge{display:flex;align-items:center;gap:9px;width:min(240px,100%);max-width:240px;box-sizing:border-box;padding:6px 10px 6px 6px;margin-top:6px;border-radius:14px;text-decoration:none!important;color:var(--sheet-text,var(--ink))!important;background:var(--sheet-bg,var(--glass-regular-tint));border:1px solid var(--sheet-border,rgba(127,127,127,.2));-webkit-backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));box-shadow:var(--shadow);-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.chat-ge:active{transform:scale(.97)}
+.chat-ge-bubble{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.chat-ge-bubble .chat-ge{margin-top:0}
+.chat-ge-pic{flex:none;width:36px;height:36px;border-radius:9px;overflow:hidden;background:rgba(127,127,127,.18);display:grid;place-items:center}
+.chat-ge-pic img,.chat-ge-pic .chat-avatar-img,.chat-ge-pic .chat-avatar{width:36px!important;height:36px!important;object-fit:cover;display:block;border-radius:0}
+.chat-ge-pic .chat-avatar-wrap{display:block}
+.chat-ge-tx{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.chat-ge-l1{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;opacity:.75}
+.chat-ge-who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-ge-ico{flex:none;width:12px;height:12px}
+.chat-ge-l2{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.chat-ge.is-loading .chat-ge-l2{height:1em;width:70%;border-radius:4px;background:rgba(127,127,127,.2)}
+.chat-ge.is-na .chat-ge-l2{opacity:.65;font-style:italic}

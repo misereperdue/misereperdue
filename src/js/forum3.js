@@ -2558,7 +2558,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var f = t.querySelector("#forum-copy-link");
       (f &&
         f.addEventListener("click", function () {
-          var e = location.origin + "/#globe/" + n.id;
+          var e = "https://misereperdue.com/t/" + encodeURIComponent(n.id);
           navigator.clipboard && navigator.clipboard.writeText
             ? navigator.clipboard
                 .writeText(e)

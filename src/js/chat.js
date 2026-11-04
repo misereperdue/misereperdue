@@ -2778,6 +2778,44 @@
         });
     }
   }
+  /* Globe post embeds (per dc): compact one-row card for misereperdue.com/t/<id> or /#globe/<id>.
+     Data from the public GET /api/forum/thread/<id>?limit=1, cached per id. */
+  var mpGeCache = Object.create(null);
+  var MP_GE_RE = /(?:https?:\/\/(?:www\.)?misereperdue\.com)?\/(?:t\/|#globe\/)(t\d+)(?:\.html)?\/?/i;
+  function mpGeAgo(ts) {
+    var d = Math.max(0, (Date.now() - ts) / 1000);
+    return d < 60 ? "now" : d < 3600 ? Math.floor(d / 60) + "m" : d < 86400 ? Math.floor(d / 3600) + "h" : d < 604800 ? Math.floor(d / 86400) + "d" : new Date(ts).toLocaleDateString(void 0, { month: "short", day: "numeric" });
+  }
+  function mpGlobeEmbed(b, t) {
+    if (!b || !t || b.classList.contains("chat-np-bubble")) return;
+    var m = MP_GE_RE.exec(String(t));
+    if (!m || !/https?:\/\/|^\/|\s\//.test(t)) return;
+    var id = m[1], only = !String(t).replace(m[0], "").replace(/https?:\/\/(www\.)?misereperdue\.com/i, "").trim();
+    var c = document.createElement("a");
+    c.className = "chat-ge is-loading"; c.href = "/#globe/" + id;
+    c.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span><svg class="chat-ge-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span class="chat-ge-l2"></span></span>';
+    c.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); if (location.pathname === "/" || /index\.html$/.test(location.pathname)) location.hash = "#globe/" + id; else location.href = "/#globe/" + id; });
+    var tx = b.querySelector(".chat-text");
+    if (only) { b.classList.add("chat-ge-bubble"); tx && (tx.hidden = !0); b.insertBefore(c, b.firstChild); }
+    else tx ? tx.insertAdjacentElement("afterend", c) : b.appendChild(c);
+    var who = c.querySelector(".chat-ge-who"), l2 = c.querySelector(".chat-ge-l2"), pic = c.querySelector(".chat-ge-pic");
+    function fail() { c.classList.remove("is-loading"); c.classList.add("is-na"); who.textContent = "Globe"; l2.textContent = "Post unavailable"; }
+    var pr = mpGeCache[id] || (mpGeCache[id] = E("/api/forum/thread/" + encodeURIComponent(id) + "?limit=1").catch(function () { delete mpGeCache[id]; return null; }));
+    pr.then(function (r) {
+      var th = r && r.ok && r.thread;
+      if (!th) return fail();
+      c.classList.remove("is-loading");
+      if (r.locked) { who.textContent = "Globe"; l2.textContent = "Members-only post"; return; }
+      if (th.author && window.mpHide && mpHide.is(th.author)) { c.classList.add("is-na"); who.textContent = "Globe"; l2.textContent = "Post made by a hidden user"; return; }
+      who.textContent = "@" + (th.author || "unknown") + (th.createdAt ? " \u00b7 " + mpGeAgo(th.createdAt) : "");
+      var body = String(th.content || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
+      l2.textContent = th.title ? th.title + (body ? " \u2014 " + body : "") : body;
+      var img = th.thumb || ((/<img[^>]+src="([^"]+)"/i.exec(th.content || "") || [])[1]);
+      if (img && /^(https?:|\/|data:image)/i.test(img)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = img; im.onerror = function () { im.remove(); }; pic.appendChild(im); }
+      else { try { var av = J(th.author, th.authorAvatar, "xs", th.hasAvatarImg ? th.avatarV : void 0); av && pic.appendChild(av); } catch (_) {} }
+      c.setAttribute("aria-label", "Globe post by @" + th.author + ": " + (th.title || ""));
+    });
+  }
   function mpNowListening(e, t, n, a) {
     var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
     if (!r || /^\+\d/.test(String(t).trim())) return;
@@ -3002,7 +3040,7 @@
             ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
             var cW = document.createElement("div");
             ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
-          } else (!e.media && mpNowListening(i, l, e.user, o), o.appendChild(i));
+          } else (!e.media && mpNowListening(i, l, e.user, o), mpGlobeEmbed(i, l), o.appendChild(i));
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
@@ -3050,7 +3088,7 @@
             var N = ye(e.id, e.reactions);
             N && k.appendChild(N);
           }
-          (!e.media && mpNowListening(k, S, e.user, o), w.appendChild(k), o.appendChild(w));
+          (!e.media && mpNowListening(k, S, e.user, o), mpGlobeEmbed(k, S), w.appendChild(k), o.appendChild(w));
         }
         if (
           (e.ts && Date.now() - e.ts < 2e3 && o.classList.add("chat-msg-in"),
