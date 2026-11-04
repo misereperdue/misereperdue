@@ -6321,6 +6321,25 @@
     b.addEventListener("click", function (e) { e.preventDefault(); st ? stop() : start(f); });
   }
   new MutationObserver(function () { ready && mount(); }).observe(document.documentElement, { childList: true, subtree: true });
+  /* iOS records AAC in mp4, which Whisper turbo chokes on (30-90s fallbacks, empty text): send 16kHz mono PCM WAV instead */
+  function toWav(blob) {
+    return blob.arrayBuffer().then(function (ab) {
+      var AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
+      return new Promise(function (ok, no) { ac.decodeAudioData(ab, ok, no); }).then(function (buf) {
+        try { ac.close(); } catch (e) {}
+        var R = 16000, n = Math.ceil(buf.duration * R), OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, oc = new OC(1, n, R), src = oc.createBufferSource();
+        src.buffer = buf; src.connect(oc.destination); src.start(0);
+        return new Promise(function (ok) { var pr = oc.startRendering(); pr && pr.then ? pr.then(ok) : (oc.oncomplete = function (e) { ok(e.renderedBuffer); }); });
+      }).then(function (r) {
+        var d = r.getChannelData(0), out = new DataView(new ArrayBuffer(44 + d.length * 2)), rms = 0;
+        function w(o, t) { for (var i = 0; i < t.length; i++) out.setUint8(o + i, t.charCodeAt(i)); }
+        w(0, "RIFF"); out.setUint32(4, 36 + d.length * 2, !0); w(8, "WAVEfmt "); out.setUint32(16, 16, !0); out.setUint16(20, 1, !0); out.setUint16(22, 1, !0);
+        out.setUint32(24, 16000, !0); out.setUint32(28, 32000, !0); out.setUint16(32, 2, !0); out.setUint16(34, 16, !0); w(36, "data"); out.setUint32(40, d.length * 2, !0);
+        for (var i = 0; i < d.length; i++) { var v = Math.max(-1, Math.min(1, d[i])); rms += v * v; out.setInt16(44 + i * 2, v < 0 ? v * 32768 : v * 32767, !0); }
+        return { blob: new Blob([out], { type: "audio/wav" }), rms: Math.sqrt(rms / Math.max(1, d.length)), dur: r.duration };
+      });
+    });
+  }
   function pickType() {
     var t = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
     for (var i = 0; i < t.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t[i])) return t[i];
@@ -6407,7 +6426,7 @@
     var lvl = 0, now = performance.now(), dt = Math.min(0.1, (now - (st.tl || now)) / 1000); st.tl = now;
     if (st.an) { var a = new Uint8Array(st.an.fftSize); st.an.getByteTimeDomainData(a); for (var i = 0; i < a.length; i++) { var v = (a[i] - 128) / 128; lvl += v * v; } lvl = Math.min(1, Math.sqrt(lvl / a.length) * 4.5); }
     /* smoothed level: fast attack (~60ms), slow release (~250ms) */
-    st.dtw = dt; st.sm = st.sm || 0; st.sm += (lvl - st.sm) * (1 - Math.exp(-dt / (lvl > st.sm ? 0.06 : 0.25)));
+    st.dtw = dt; st.pk = Math.max(st.pk || 0, lvl); st.sm = st.sm || 0; st.sm += (lvl - st.sm) * (1 - Math.exp(-dt / (lvl > st.sm ? 0.06 : 0.25)));
     wave(cv.getContext("2d"), w, h, d, st.sm, now / 1000, document.documentElement.getAttribute("data-theme") === "light");
     st.raf = requestAnimationFrame(loop);
   }
@@ -6427,21 +6446,31 @@
   function stop() {
     if (!st || !st.rec) return cancel();
     var s = st; release(); hap(12); s.o && s.o.classList.add("is-busy"); s.inp.classList.add("is-busy");
-    function keep(msg) { st = null; close(s); if (s.live) { put(s, s.live); s.inp.focus(); s.inp.dispatchEvent(new Event("input", { bubbles: true })); } else toast(msg); }
+    function keep(msg) { st = null; close(s); if (s.live) { put(s, s.live); s.inp.focus(); s.inp.dispatchEvent(new Event("input", { bubbles: true })); } else msg && toast(msg); }
     s.rec.onstop = function () {
-      var blob = new Blob(s.chunks, { type: s.type.split(";")[0] });
-      if (blob.size < 800) return keep("Didn't catch that, try again");
-      if (blob.size > 2 * 1024 * 1024) return keep("Recording too long");
-      fetch(API, { method: "POST", headers: { "Content-Type": blob.type || "audio/webm", Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: blob })
-        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); })
-        .then(function (j) {
-          var t = String(j.text || "").trim(); if (!t) return keep("Didn't catch that, try again");
+      var raw = new Blob(s.chunks, { type: s.type.split(";")[0] });
+      if (raw.size < 800) return keep("Didn't catch that, try again");
+      /* silent capture (e.g. iOS speech recognition holding the mic) but live text exists: keep it, skip Whisper */
+      if (s.live && (s.pk || 0) < 0.02) return keep("");
+      toWav(raw).catch(function () { return { blob: raw, rms: 1 }; }).then(function (a) {
+        if (a.rms < 0.002 && s.live) return keep("");
+        if (a.rms < 0.002) return keep("Didn't catch that, try again");
+        var body = a.blob.size <= 2 * 1024 * 1024 ? a.blob : raw.size <= 2 * 1024 * 1024 ? raw : null;
+        if (!body) return keep("Recording too long");
+        function send(n) {
+          return fetch(API, { method: "POST", headers: { "Content-Type": body.type || "audio/wav", Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: body })
+            .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status >= 500 && n < 1) return send(n + 1); if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); }, function (e) { if (n < 1) return send(n + 1); throw e; });
+        }
+        send(0).then(function (j) {
+          var t = String(j.text || "").trim();
+          if (!t) return keep("Didn't catch that, try again");
           st = null; close(s); put(s, t); var i = s.inp;
           i.classList.remove("is-swap"); i.offsetWidth; i.classList.add("is-swap");
           i.dispatchEvent(new Event("input", { bubbles: true })); i.focus();
-        })
-        .catch(function (e) { keep(e.message || "Couldn't transcribe, try again"); });
+        }).catch(function (e) { keep(e.message || "Couldn't transcribe, try again"); });
+      });
     };
+    try { s.rec.state === "recording" && s.rec.requestData && s.rec.requestData(); } catch (e) {}
     try { s.rec.stop(); } catch (e) { keep("Couldn't transcribe, try again"); }
   }
   document.addEventListener("visibilitychange", function () { document.hidden && st && cancel(); });
