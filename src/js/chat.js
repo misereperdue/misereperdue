@@ -2393,38 +2393,81 @@
      glass card with the song resolved client-side via the iTunes Search API.
      Derived from the text, so it looks the same for everyone. */
   var mpNP = Object.create(null);
-  function mpNPLookup(e) {
-    if (mpNP[e]) return mpNP[e];
-    var t = "mp-np:" + e.toLowerCase();
-    try {
-      var n = JSON.parse(localStorage.getItem(t) || "null");
-      if (n) return (mpNP[e] = Promise.resolve(n.r || null));
-    } catch (e) {}
-    return (mpNP[e] = fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e))
+  var mpNPv = Object.create(null); // resolved results, so re-renders paint the card instantly
+  function mpNPq(e) {
+    return String(e || "").toLowerCase().replace(/\s*[(\[].*$/, "").split(" / ")[0].replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim();
+  }
+  function mpNPSearch(e) {
+    return fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e))
       .then(function (e) {
         return e.json();
       })
+      .then(function (e) {
+        return (e && e.results) || [];
+      });
+  }
+  function mpNPPick(e, t) {
+    var n = " " + mpNPq(t) + " ",
+      a = null,
+      r = -1;
+    return (
+      e.forEach(function (e) {
+        var t = mpNPq(e.trackName),
+          o = mpNPq(e.artistName),
+          i = (t && n.indexOf(" " + t + " ") >= 0 ? 2 : 0) + (o && n.indexOf(" " + o + " ") >= 0 ? 3 : 0);
+        i > r && ((r = i), (a = e));
+      }),
+      { r: a, s: r }
+    );
+  }
+  function mpNPOut(e, t) {
+    return { title: t || e.trackName, artist: e.artistName, art: String(e.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: t ? e.artistViewUrl || "" : e.trackViewUrl || "" };
+  }
+  function mpNPLookup(e) {
+    if (mpNP[e]) return mpNP[e];
+    var t = "mp-np2:" + e.toLowerCase();
+    try {
+      var n = JSON.parse(localStorage.getItem(t) || "null");
+      if (n) return ((mpNPv[e] = n.r || null), (mpNP[e] = Promise.resolve(n.r || null)));
+    } catch (e) {}
+    var a = e.split(/\s+/);
+    return (mpNP[e] = mpNPSearch(e)
+      .then(function (t) {
+        var n = mpNPPick(t, e);
+        if (n.r && n.s >= 5) return mpNPOut(n.r);
+        var nF = n.r && n.s >= 2 ? mpNPOut(n.r) : null;
+        /* forgiving: find the artist from the first words, then match the song
+           from the rest; if the song isn't in Apple's catalog keep the typed title */
+        var r = [];
+        for (var o = Math.min(3, a.length - 1); o >= 1; o--) r.push(o);
+        return (function t(n) {
+          if (!r.length) return n && n.s >= 3 ? n : null;
+          var o = r.shift(),
+            i = a.slice(0, o).join(" "),
+            c = a.slice(o).join(" ");
+          return mpNPSearch(i + " " + c.split(" ")[0]).then(function (a) {
+            return mpNPSearch(i).then(function (r) {
+              var o = a.concat(r),
+                l = mpNPPick(o, e);
+              if (l.r && l.s >= 5) return mpNPOut(l.r);
+              var d = o.filter(function (e) {
+                return mpNPq(e.artistName) === mpNPq(i) || (" " + mpNPq(e.artistName) + " ").indexOf(" " + mpNPq(i) + " ") >= 0;
+              })[0];
+              return d
+                ? { s: 3, v: mpNPOut(d, c.replace(/(^|\s)\p{L}/gu, function (e) { return e.toUpperCase(); })) }
+                : t(n);
+            });
+          });
+        })(null).then(function (e) {
+          return e && e.v ? e.v : e && e.title ? e : nF;
+        });
+      })
       .then(function (n) {
-        var a = (n && n.results) || [],
-          r = e.toLowerCase(),
-          q = function (e) {
-            return String(e || "").toLowerCase().replace(/\s*[(\[].*$/, "").split(" / ")[0].trim();
-          },
-          sc = function (e) {
-            var t = q(e.trackName),
-              n = q(e.artistName);
-            return (t && r.indexOf(t) >= 0 ? 2 : 0) + (n && r.indexOf(n) >= 0 ? 3 : 0);
-          },
-          o = a.slice().sort(function (e, t) {
-            return sc(t) - sc(e);
-          })[0],
-          i = o
-            ? { title: o.trackName, artist: o.artistName, art: String(o.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: o.trackViewUrl || "" }
-            : null;
+        mpNPv[e] = n;
         try {
-          localStorage.setItem(t, JSON.stringify({ r: i }));
+          localStorage.setItem(t, JSON.stringify({ r: n }));
         } catch (e) {}
-        return i;
+        return n;
       })
       .catch(function () {
         return (delete mpNP[e], null);
@@ -2433,7 +2476,8 @@
   function mpNowListening(e, t, n, a) {
     var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
     if (!r || /^\+\d/.test(String(t).trim())) return;
-    var o = r[1].trim(),
+    if (e.querySelector(".chat-np")) return;
+    var o = r[1].replace(/&amp;/g, "&").trim(),
       i = e.querySelector(".chat-text"),
       c = document.createElement("div");
     ((c.className = "chat-np is-loading"),
@@ -2452,7 +2496,7 @@
       }
     }
     ((d.textContent = (n || "Someone") + " is listening to"), l.appendChild(d));
-    mpNPLookup(o).then(function (n) {
+    function g(n) {
       if (!n) return (c.remove(), e.classList.remove("chat-np-bubble"), void (i && (i.hidden = !1)));
       (s(), c.classList.remove("is-loading"));
       var a = c.querySelector(".chat-np-art"),
@@ -2469,6 +2513,9 @@
         c.addEventListener("click", function (e) {
           (e.stopPropagation(), document.querySelector(".chat-react-picker") || window.open(n.url, "_blank", "noopener"));
         }));
+    }
+    o in mpNPv ? g(mpNPv[o]) : mpNPLookup(o).then(function (e) {
+      g(e);
     });
   }
   function He(t) {
