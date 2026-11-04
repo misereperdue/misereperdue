@@ -80,7 +80,7 @@ header a{text-decoration:none;color:#1a1a2e}
 .cta{margin:30px 0;padding:18px;border-radius:14px;background:#f4f4f8;text-align:center}
 .cta a{font-weight:700;text-decoration:none}
 h1{font-size:26px;line-height:1.25}
-img{max-width:100%;border-radius:8px}
+img{max-width:100%;height:auto;border-radius:8px}
 .tag{display:inline-block;padding:4px 10px;border-radius:999px;background:#f4f4f8;font-size:12px;font-weight:700}
 .product{margin:0 0 22px}
 .product h2{font-size:19px;margin:0 0 4px}
@@ -146,10 +146,12 @@ def main():
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
         alt = f"{p['title']} by Misère Perdue"
+        fi = p.get("featuredImage") or {}
+        hattr = f" height=\"{round(720*fi['height']/fi['width'])}\"" if fi.get("width") and fi.get("height") else ""
         body = (f"<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; <a href=\"/shop\">Shop</a> &rsaquo; {e(p['title'])}</nav>\n"
                 f"<article>\n<h1>{e(p['title'])}</h1>\n"
                 f"<p class=\"price\">{price_label(p)}</p>\n<p><span class=\"tag\">{stock}</span></p>\n"
-                f"<p><img src=\"{e(img)}&width=720\" alt=\"{e(alt)}\" width=\"720\" loading=\"lazy\"></p>\n"
+                f"<p><img src=\"{e(img)}&width=720\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")

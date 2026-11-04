@@ -166,7 +166,7 @@
             : "kitty" === e
               ? '<span class="chat-badge-kitty" title="Hello Kitty" aria-label="Hello Kitty badge"><img src="img/badge-kitty.png?v=2" alt=""></span>'
               : "mask" === e
-                ? '<span class="chat-badge-mask" title="Sleep Mask" aria-label="Sleep Mask badge"><img src="img/badge-mask.png?v=1" alt=""></span>'
+                ? '<span class="chat-badge-mask" title="Sleep Mask" aria-label="Sleep Mask badge"><img src="img/badge-mask.png?v=2" alt=""></span>'
                 : "verified" === e
                   ? '<span class="chat-verified" title="Verified" aria-label="Verified">' +
                     S +
