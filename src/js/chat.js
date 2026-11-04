@@ -2931,9 +2931,8 @@
           window.haptic && window.haptic(10);
           if (!red) {
             b.animate([{ backgroundColor: "rgba(255,255,255,.10)" }, { backgroundColor: "rgba(255,255,255,0)" }], { duration: 450, easing: "ease-out" });
-            var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect(), rp = document.createElement("span");
-            rp.className = "chat-poll-rip"; rp.style.left = (e.clientX || br.left + br.width / 2) - br.left + "px"; rp.style.top = (e.clientY || br.top + br.height / 2) - br.top + "px";
-            bub.appendChild(rp); setTimeout(function () { rp.remove(); }, 1000);
+            var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect();
+            bub._dots && bub._dots.wave((e.clientX || br.left + br.width / 2) - br.left, (e.clientY || br.top + br.height / 2) - br.top);
           }
           var prev = cur;
           mpPollUpdate(id, Object.assign({}, cur, { v: nv }));
@@ -2979,8 +2978,67 @@
     ft.textContent = txt;
   }
   /* pause the ambient dot ripple when the card is off screen */
-  var mpPollIO = window.IntersectionObserver ? new IntersectionObserver(function (es) { es.forEach(function (e) { var b = e.target.closest(".chat-bubble"); b && b.classList.toggle("is-off", !e.isIntersecting); }); }) : null;
-  function mpPollWatch(c) { try { mpPollIO && mpPollIO.observe(c); } catch (_) {} }
+  var mpPollIO = window.IntersectionObserver ? new IntersectionObserver(function (es) { es.forEach(function (e) { var b = e.target.closest(".chat-bubble"); if (!b) return; b.classList.toggle("is-off", !e.isIntersecting); b._dots && b._dots.vis(e.isIntersecting); }); }) : null;
+  function mpPollWatch(c) {
+    var b = c.closest(".chat-bubble");
+    if (b && !b._dots && b.classList.contains("chat-poll-q3d")) try { b._dots = mpDots(b); } catch (_) {}
+    try { mpPollIO && mpPollIO.observe(c); } catch (_) {}
+  }
+  /* Dot field (per dc): canvas behind the poll card. 8px grid, ~14% white, slow ambient drift,
+     and a tap shock-wave that pushes dots outward and brightens the crest. rAF only while visible. */
+  var mpDotsAll = [];
+  document.addEventListener("visibilitychange", function () { mpDotsAll.forEach(function (d) { d.kick(); }); });
+  function mpDots(host) {
+    var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var cv = document.createElement("canvas"); cv.className = "chat-poll-cv"; cv.setAttribute("aria-hidden", "true");
+    host.insertBefore(cv, host.firstChild);
+    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, waves = [], seen = !0, raf = 0, last = 0, t0 = performance.now(), G = 8;
+    function size() {
+      var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 3);
+      W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
+      cv.width = W * dpr; cv.height = H * dpr; draw(performance.now());
+    }
+    function draw(now) {
+      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      var t = (now - t0) / 1000, diag = W + H, live = [];
+      waves.forEach(function (w) { var a = (now - w.t) / 1000; a < 1.6 && live.push({ x: w.x, y: w.y, a: a, r: a * w.v }); });
+      waves = waves.filter(function (w) { return (now - w.t) / 1000 < 1.6; });
+      for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) {
+        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), al = 0.14, rad = 0.95, px = gx, py = gy;
+        if (!red) {
+          var ph = ((gx + gy) / diag - t / 5) % 1; ph < 0 && (ph += 1);
+          var band = Math.exp(-Math.pow((ph - 0.5) * 7, 2));
+          px += band * 0.8; py -= band * 0.8; al += band * 0.09;
+          for (var i = 0; i < live.length; i++) {
+            var L = live[i], dx = gx - L.x, dy = gy - L.y, d = Math.sqrt(dx * dx + dy * dy) || 1, del = d - L.r;
+            var env = Math.exp(-(del * del) / 260) * Math.exp(-L.a * 1.6);
+            if (env < 0.01) continue;
+            var off = 4.8 * env * Math.cos(del / 9);
+            px += (dx / d) * off; py += (dy / d) * off; al += 0.5 * env; rad += 0.9 * env;
+          }
+        }
+        x.globalAlpha = Math.min(0.62, al * (al > 0.2 ? 1 : m));
+        x.beginPath(); x.arc(px, py, rad, 0, 6.2832); x.fillStyle = "#fff"; x.fill();
+      }
+      x.globalAlpha = 1;
+    }
+    function loop(now) {
+      raf = 0;
+      if (!seen || document.hidden || !host.isConnected) return;
+      if (now - last >= 15) { last = now; draw(now); }
+      (!red || waves.length) && (raf = requestAnimationFrame(loop));
+    }
+    function kick() { raf || !seen || document.hidden || red && !waves.length || (raf = requestAnimationFrame(loop)); }
+    window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
+    size();
+    var api = {
+      wave: function (wx, wy) { if (red) return; waves.push({ x: wx, y: wy, t: performance.now(), v: (W + H) / 1.1 }); kick(); },
+      vis: function (v) { seen = v; v && kick(); },
+      kick: kick
+    };
+    mpDotsAll.push(api); kick();
+    return api;
+  }
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
     var m = MP_GE_RE.exec(String(t));
