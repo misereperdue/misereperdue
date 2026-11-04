@@ -2849,7 +2849,7 @@
   }
   /* Polls (per dc): the Poll row only appears once the Worker advertises caps.poll. */
   function mpPollForm() {
-    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi" for="chat-poll-multi"><input type="checkbox" id="chat-poll-multi"><span>Allow multiple answers</span></label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
+    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi" for="chat-poll-multi"><input type="checkbox" id="chat-poll-multi" class="chat-poll-cb"><span class="chat-poll-box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 10.4l3 3 6-6.6"/></svg></span><span class="chat-poll-mt">Allow multiple answers</span></label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
   }
   function mpPollWire(m, close) {
     var os = m.querySelector(".chat-poll-os"), add = m.querySelector(".chat-poll-add"), go = m.querySelector(".chat-poll-go"), qi = m.querySelector(".chat-poll-qi");

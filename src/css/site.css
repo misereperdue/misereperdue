@@ -9537,3 +9537,17 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 [data-theme="dark"] .chat-poll-go{background:#fff;color:#000}
 .chat-poll-go:disabled{opacity:.35;cursor:default}
 @media (prefers-reduced-motion:reduce){.chat-poll-multi input[type=checkbox],.chat-poll-multi input[type=checkbox]::after{transition:none}}
+
+/* poll checkbox: glassy accent fill + drawn check (per dc) */
+.chat-poll-multi span.chat-poll-mt{flex:1}
+.chat-poll-f .chat-poll-multi input.chat-poll-cb{position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;pointer-events:none}
+.chat-poll-multi{position:relative}
+.chat-poll-box{flex:none!important;position:relative;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;border:1.5px solid rgba(127,127,127,.5);background:rgba(127,127,127,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:background .28s ease,border-color .28s ease,box-shadow .28s ease,transform .38s cubic-bezier(.3,1.6,.5,1)}
+.chat-poll-box svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:16;stroke-dashoffset:16;transition:stroke-dashoffset .26s cubic-bezier(.4,0,.2,1) .06s;filter:drop-shadow(0 1px 1px rgba(0,30,90,.35))}
+.chat-poll-cb:checked + .chat-poll-box{border-color:transparent;background:linear-gradient(160deg,#7fb0ff 0%,#4f8cff 45%,#3a6cf0 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 2px rgba(0,20,80,.25),0 2px 8px rgba(79,140,255,.45),0 0 0 3px rgba(79,140,255,.14);transform:scale(1.08)}
+.chat-poll-cb:checked + .chat-poll-box svg{stroke-dashoffset:0}
+.chat-poll-multi:active .chat-poll-box{transform:scale(.9)}
+.chat-poll-cb:focus-visible + .chat-poll-box{outline:2px solid #4f8cff;outline-offset:2px}
+[data-theme="dark"] .chat-poll-box{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.06)}
+[data-theme="dark"] .chat-poll-cb:checked + .chat-poll-box{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 2px rgba(0,20,80,.3),0 2px 12px rgba(79,140,255,.55),0 0 0 3px rgba(79,140,255,.18)}
+@media (prefers-reduced-motion:reduce){.chat-poll-box,.chat-poll-box svg{transition:none}.chat-poll-cb:checked + .chat-poll-box{transform:none}}
