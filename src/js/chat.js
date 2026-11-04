@@ -1,3 +1,63 @@
+/* mpHide: per-viewer hidden users (localStorage; no Worker prefs endpoint exists) */
+(function () {
+  if (window.mpHide) return;
+  var KEY = "mp_hidden_v1";
+  function all() { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function vk() { return H.viewer || localStorage.getItem("mp_hide_viewer") || "anon"; }
+  function load() { var a = all()[vk()]; return Array.isArray(a) ? a : []; }
+  function save(a) { try { var o = all(); o[vk()] = a; localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+  function low(u) { return String(u || "").replace(/^@/, "").toLowerCase(); }
+  var H = {
+    viewer: null,
+    list: load,
+    is: function (u) { u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
+    hide: function (u, id) { u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
+    unhide: function (u) { u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
+    /* rename-safe: if a stored entry has this numeric id under an old handle, move it to the new handle */
+    seen: function (u, id) { if (!id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
+    setViewer: function (v) { v = low(v) || null; if (v === H.viewer) return; H.viewer = v; try { v && localStorage.setItem("mp_hide_viewer", v); } catch (e) {} H.emit(); },
+    filt: function (r) { if (!r) return r; var o = {}, any = !1; Object.keys(r).forEach(function (k) { H.is(k) ? (any = !0) : (o[k] = r[k]); }); return any ? o : r; },
+    css: function () {
+      var st = document.getElementById("mp-hide-css");
+      st || ((st = document.createElement("style")), (st.id = "mp-hide-css"), document.head.appendChild(st));
+      st.textContent = load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n");
+    },
+    emit: function () { H.css(); try { window.dispatchEvent(new CustomEvent("mp-hidden-change")); } catch (e) {} },
+    toast: function (msg, undo) {
+      var old = document.querySelector(".mp-toast"); old && old.remove();
+      var t = document.createElement("div"); t.className = "mp-toast"; t.setAttribute("role", "status");
+      var sp = document.createElement("span"); sp.textContent = msg; t.appendChild(sp);
+      if (undo) { var b = document.createElement("button"); b.type = "button"; b.textContent = "Undo"; b.addEventListener("click", function () { undo(); t.remove(); }); t.appendChild(b); }
+      document.body.appendChild(t); requestAnimationFrame(function () { t.classList.add("is-in"); });
+      setTimeout(function () { t.classList.remove("is-in"); setTimeout(function () { t.remove(); }, 260); }, 3200);
+    },
+    /* small glass action menu anchored to an element */
+    menu: function (anchor, items) {
+      var prev = document.querySelector(".mp-ctx-menu"); prev && prev.remove();
+      var m = document.createElement("div"); m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu");
+      function close() { document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("scroll", close, !0); m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
+      function out(e) { m.contains(e.target) || close(); }
+      function esc(e) { "Escape" === e.key && (e.preventDefault(), close()); }
+      items.forEach(function (it, i) {
+        if (i) { var sp = document.createElement("div"); sp.className = "chat-pmenu-sep"; m.appendChild(sp); }
+        var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
+        b.className = "chat-pmenu-row" + (it.danger ? " is-danger" : "");
+        b.innerHTML = (it.icon || "") + "<span></span>"; b.querySelector("span").textContent = it.label;
+        b.addEventListener("click", function (e) { e.stopPropagation(); close(); it.run(); });
+        m.appendChild(b);
+      });
+      document.body.appendChild(m);
+      var r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth, vw = innerWidth;
+      var left = Math.max(8, Math.min(r.left, vw - w - 8)), up = r.top - h - 8 > 60, top = up ? r.top - h - 8 : r.bottom + 8;
+      m.style.cssText = "position:fixed;left:" + left + "px;top:" + top + "px;bottom:auto;z-index:2147483000;transform-origin:" + (r.left + r.width / 2 - left) + "px " + (up ? h + 8 + r.height / 2 : -8 - r.height / 2) + "px";
+      requestAnimationFrame(function () { m.classList.add("is-in"); });
+      setTimeout(function () { document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("scroll", close, !0); }, 0);
+      return m;
+    },
+  };
+  window.mpHide = H;
+  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", H.css) : H.css();
+})();
 !(function () {
   "use strict";
   // CSP: no inline handlers. Inputs rendered readonly (autofill guard) unlock on focus.
@@ -792,6 +852,19 @@
               var g = document.createElement("div");
               ((g.className = "chat-bio-view"), (g.textContent = n.bio), r.appendChild(g));
             }
+            if (window.mpHide && (!s || String(n.username).toLowerCase() !== String(s.username).toLowerCase())) {
+              mpHide.seen(n.username, n.numId);
+              var hb = document.createElement("button");
+              hb.type = "button";
+              hb.className = "chat-hide-btn";
+              var hl = function () { var h = mpHide.is(n.username); hb.textContent = h ? "Unhide" : "Hide user"; hb.classList.toggle("is-hidden", h); };
+              hl();
+              hb.addEventListener("click", function (e) {
+                e.stopPropagation();
+                mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again"), hl()) : (mpHideUser(n.username, n.numId), gt());
+              });
+              r.appendChild(hb);
+            }
             var b = !(!s || !s.owner || n.username === s.username);
             if (!b && n.badges && n.badges.length) {
               var y = document.createElement("div");
@@ -918,6 +991,22 @@
   function mpPMRow() {
     return document.querySelector("#chat .chat-inputrow");
   }
+  var MP_IC = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  function mpHideUser(u, id) {
+    mpHide.hide(u, id);
+    window.haptic && window.haptic(12);
+    mpPM.to && String(mpPM.to).toLowerCase() === String(u).toLowerCase() && mpPMStop();
+    mpHide.toast("@" + u + " is hidden", function () { mpHide.unhide(u); mpHide.toast("@" + u + " is visible again"); });
+  }
+  function mpAvMenu(el, u) {
+    var items = [];
+    mpPM.on && s && items.push({ label: "Whisper", icon: "<svg " + MP_IC + '><path d="M3.98 8.22A10.48 10.48 0 0 0 1.93 12C3.23 16.34 7.24 19.5 12 19.5c.99 0 1.95-.14 2.86-.4M6.23 6.23A10.45 10.45 0 0 1 12 4.5c4.76 0 8.77 3.16 10.07 7.5a10.5 10.5 0 0 1-4.29 5.77M6.23 6.23 3 3m3.23 3.23 3.65 3.65m7.89 7.89L21 21m-3.23-3.23-3.65-3.65a3 3 0 1 0-4.24-4.24m4.24 4.24L9.88 9.88"/></svg>', run: function () { mpPMStart(u); } });
+    items.push({ label: "Hide", danger: !0, icon: "<svg " + MP_IC + '><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>', run: function () { mpHideUser(u); } });
+    mpHide.menu(el, items);
+  }
+  window.addEventListener("mp-hidden-change", function () {
+    try { Object.keys(De).forEach(function (id) { De[id] && De[id].reactions && we(id, De[id].reactions); }); } catch (e) {}
+  });
   function mpPMStart(e) {
     mpPM.to = e;
     var t = mpPMRow();
@@ -979,13 +1068,20 @@
     /* long-press an avatar = whisper to that user (per dc; only once the Worker supports it) */
     var lpT = null,
       lpXY = null,
+      avEl = e,
       lpGo = function (e) {
-        if (mpPM.on && s && t && t.toLowerCase() !== String(s.username).toLowerCase()) {
+        if (t && s && t.toLowerCase() === String(s.username).toLowerCase()) {
+          /* own avatar: long-press does nothing (and must not fall through to the profile tap) */
+          clearTimeout(lpT);
+          lpT = setTimeout(function () { mpPM.lp = Date.now(); }, 480);
+          return;
+        }
+        if (t) {
           var n = (e.touches && e.touches[0]) || e;
           ((lpXY = [n.clientX, n.clientY]),
             clearTimeout(lpT),
             (lpT = setTimeout(function () {
-              ((mpPM.lp = Date.now()), window.haptic && window.haptic(20), mpPMStart(t));
+              ((mpPM.lp = Date.now()), window.haptic && window.haptic(20), mpAvMenu(avEl, t));
             }, 480)));
         }
       },
@@ -1003,7 +1099,7 @@
       e.addEventListener("mousedown", lpGo),
       e.addEventListener("mouseup", lpEnd),
       e.addEventListener("contextmenu", function (e) {
-        mpPM.on && e.preventDefault();
+        e.preventDefault();
       }),
       e.addEventListener("click", n),
       e.addEventListener("keydown", function (e) {
@@ -1205,7 +1301,7 @@
                     try {
                       localStorage.setItem(r, d);
                     } catch (e) {}
-                    ((s = e.user), ke());
+                    ((s = e.user), window.mpHide && mpHide.setViewer(s.username), ke());
                     e.recoveryCode
                       ? rcShowCode(e.recoveryCode, s.username, {
                           eyebrow: "",
@@ -1396,6 +1492,7 @@
     ge = !1;
   function be(e) {
     if (!e) return "";
+    e = window.mpHide ? mpHide.filt(e) : e;
     var t = {};
     Object.keys(e).forEach(function (n) {
       var a = e[n];
@@ -1428,7 +1525,7 @@
           (function (e) {
             Ce();
             var t = De[e],
-              n = (t && t.reactions) || {},
+              n = window.mpHide ? mpHide.filt((t && t.reactions) || {}) : (t && t.reactions) || {},
               a = Object.keys(n);
             if (!a.length) return;
             var r = document.createElement("div");
@@ -2008,7 +2105,7 @@
           if (m && !m.classList.contains("is-out")) return close();
           var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu");
-          m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15.5-4.6-4.6a1.5 1.5 0 0 0-2.1 0L5.5 19.5"/></svg><span>Add media</span></button>' +
+          m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M7 4.5h10.5A2.5 2.5 0 0 1 20 7v8"/><rect x="3.5" y="8" width="13.5" height="11.5" rx="2.5"/><circle cx="7.6" cy="11.9" r="1.2"/><path d="m17 17.2-3.4-3.4a1.4 1.4 0 0 0-2 0L5 20.2"/></svg><span>Add media</span></button>' +
             '<div class="chat-pmenu-sep"></div><button type="button" role="menuitem" class="chat-pmenu-row" disabled aria-disabled="true"><svg ' + ico + '><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><span>misery.fm</span><em>Soon</em></button>';
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
@@ -5437,7 +5534,7 @@
     if (d)
       E("/api/me")
         .then(function (e) {
-          if (e && e.user) ((s = e.user), ke(), rcAfterX(), rcMaybePrompt());
+          if (e && e.user) ((s = e.user), window.mpHide && mpHide.setViewer(s.username), ke(), rcAfterX(), rcMaybePrompt());
           else {
             d = null;
             try {

@@ -1,3 +1,98 @@
+/* mpHide: per-viewer hidden users (localStorage; no Worker prefs endpoint exists) */
+(function () {
+  if (window.mpHide) return;
+  var KEY = "mp_hidden_v1";
+  function all() { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function vk() { return H.viewer || localStorage.getItem("mp_hide_viewer") || "anon"; }
+  function load() { var a = all()[vk()]; return Array.isArray(a) ? a : []; }
+  function save(a) { try { var o = all(); o[vk()] = a; localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+  function low(u) { return String(u || "").replace(/^@/, "").toLowerCase(); }
+  var H = {
+    viewer: null,
+    list: load,
+    is: function (u) { u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
+    hide: function (u, id) { u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
+    unhide: function (u) { u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
+    /* rename-safe: if a stored entry has this numeric id under an old handle, move it to the new handle */
+    seen: function (u, id) { if (!id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
+    setViewer: function (v) { v = low(v) || null; if (v === H.viewer) return; H.viewer = v; try { v && localStorage.setItem("mp_hide_viewer", v); } catch (e) {} H.emit(); },
+    filt: function (r) { if (!r) return r; var o = {}, any = !1; Object.keys(r).forEach(function (k) { H.is(k) ? (any = !0) : (o[k] = r[k]); }); return any ? o : r; },
+    css: function () {
+      var st = document.getElementById("mp-hide-css");
+      st || ((st = document.createElement("style")), (st.id = "mp-hide-css"), document.head.appendChild(st));
+      st.textContent = load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n");
+    },
+    emit: function () { H.css(); try { window.dispatchEvent(new CustomEvent("mp-hidden-change")); } catch (e) {} },
+    toast: function (msg, undo) {
+      var old = document.querySelector(".mp-toast"); old && old.remove();
+      var t = document.createElement("div"); t.className = "mp-toast"; t.setAttribute("role", "status");
+      var sp = document.createElement("span"); sp.textContent = msg; t.appendChild(sp);
+      if (undo) { var b = document.createElement("button"); b.type = "button"; b.textContent = "Undo"; b.addEventListener("click", function () { undo(); t.remove(); }); t.appendChild(b); }
+      document.body.appendChild(t); requestAnimationFrame(function () { t.classList.add("is-in"); });
+      setTimeout(function () { t.classList.remove("is-in"); setTimeout(function () { t.remove(); }, 260); }, 3200);
+    },
+    /* small glass action menu anchored to an element */
+    menu: function (anchor, items) {
+      var prev = document.querySelector(".mp-ctx-menu"); prev && prev.remove();
+      var m = document.createElement("div"); m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu");
+      function close() { document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("scroll", close, !0); m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
+      function out(e) { m.contains(e.target) || close(); }
+      function esc(e) { "Escape" === e.key && (e.preventDefault(), close()); }
+      items.forEach(function (it, i) {
+        if (i) { var sp = document.createElement("div"); sp.className = "chat-pmenu-sep"; m.appendChild(sp); }
+        var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
+        b.className = "chat-pmenu-row" + (it.danger ? " is-danger" : "");
+        b.innerHTML = (it.icon || "") + "<span></span>"; b.querySelector("span").textContent = it.label;
+        b.addEventListener("click", function (e) { e.stopPropagation(); close(); it.run(); });
+        m.appendChild(b);
+      });
+      document.body.appendChild(m);
+      var r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth, vw = innerWidth;
+      var left = Math.max(8, Math.min(r.left, vw - w - 8)), up = r.top - h - 8 > 60, top = up ? r.top - h - 8 : r.bottom + 8;
+      m.style.cssText = "position:fixed;left:" + left + "px;top:" + top + "px;bottom:auto;z-index:2147483000;transform-origin:" + (r.left + r.width / 2 - left) + "px " + (up ? h + 8 + r.height / 2 : -8 - r.height / 2) + "px";
+      requestAnimationFrame(function () { m.classList.add("is-in"); });
+      setTimeout(function () { document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("scroll", close, !0); }, 0);
+      return m;
+    },
+  };
+  window.mpHide = H;
+  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", H.css) : H.css();
+})();
+/* Globe: content from users the viewer hid becomes a muted placeholder */
+(function () {
+  var EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.98 8.22A10.48 10.48 0 0 0 1.93 12C3.23 16.34 7.24 19.5 12 19.5c.99 0 1.95-.14 2.86-.4M6.23 6.23A10.45 10.45 0 0 1 12 4.5c4.76 0 8.77 3.16 10.07 7.5a10.5 10.5 0 0 1-4.29 5.77M6.23 6.23 3 3m3.23 3.23 3.65 3.65m7.89 7.89L21 21m-3.23-3.23-3.65-3.65a3 3 0 1 0-4.24-4.24m4.24 4.24L9.88 9.88"/></svg>';
+  function mark(el, u, label) {
+    var hid = mpHide.is(u), ph = el.querySelector(":scope > .mp-hid-ph");
+    if (hid) {
+      el.classList.add("mp-hid");
+      if (!ph) {
+        ph = document.createElement("button"); ph.type = "button"; ph.className = "mp-hid-ph";
+        ph.innerHTML = EYE + "<span></span>"; ph.querySelector("span").textContent = label;
+        ph.addEventListener("click", function (e) {
+          e.stopPropagation(); e.preventDefault();
+          mpHide.menu(ph, [{ label: "Unhide", run: function () { mpHide.unhide(u); mpHide.toast("User is visible again"); } }]);
+        });
+        el.insertBefore(ph, el.firstChild);
+      }
+    } else if (el.classList.contains("mp-hid")) { el.classList.remove("mp-hid"); ph && ph.remove(); }
+  }
+  function scan(root) {
+    if (!window.mpHide) return;
+    root.querySelectorAll(".forum-thread-row").forEach(function (r) {
+      var n = r.querySelector(".forum-thread-author-name"), u = n && n.firstChild && n.firstChild.textContent.trim();
+      u && mark(r, u, "Post made by a hidden user");
+    });
+    root.querySelectorAll("article.forum-post").forEach(function (a) {
+      var p = a.querySelector(":scope > .forum-post-head [data-username]"), u = p && p.getAttribute("data-username");
+      u && mark(a, u, a.classList.contains("forum-op") ? "Post made by a hidden user" : "Reply made by a hidden user");
+    });
+  }
+  var q = 0;
+  function sched() { q || (q = requestAnimationFrame(function () { q = 0; var r = document.getElementById("forum-root"); r && scan(r); })); }
+  new MutationObserver(sched).observe(document.documentElement, { childList: !0, subtree: !0 });
+  window.addEventListener("mp-hidden-change", sched);
+  sched();
+})();
 !(function () {
   "use strict";
   // CSP: no inline onerror. Images with data-fallback swap to it once on error.
@@ -3759,7 +3854,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         y("/api/me")
           .then(function (e) {
             if (e && e.user) {
-              ((O = e.user), (Ne = !!e.user.owner));
+              ((O = e.user), (Ne = !!e.user.owner), window.mpHide && mpHide.setViewer(O.username));
               var n = document.getElementById("forum-points");
               n && (n.textContent = O.points || 0);
               var a = t && t.querySelector("#forum-me");
