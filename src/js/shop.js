@@ -50,8 +50,8 @@ var MPShop = (function () {
       ("misery-v_v-sleeping-mask" === t.handle || "gid://shopify/Product/8161016414310" === t.id)
     );
   }
-  var o = ["img/mask-front-light.jpg", "img/mask-back-light.jpg"],
-    i = "img/vip-card-light.jpg";
+  var o = ["img/mask-front-light.jpg?v=2", "img/mask-back-light.jpg?v=2"],
+    i = "img/vip-card-light.jpg?v=2";
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
