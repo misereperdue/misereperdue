@@ -9738,7 +9738,6 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 
 /* canvas dot field replaces the CSS dots on the dots poll card (per dc) */
 .chat-msg .chat-bubble.chat-poll-q3d::before,.chat-msg .chat-bubble.chat-poll-q3d::after{display:none!important}
-.chat-poll-cv{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:inherit}
 /* dots poll card spacing pass (per dc): no dividers, 8pt rhythm */
 .chat-msg .chat-bubble.chat-poll-q3d{padding:14px 14px 12px!important}
 .chat-poll-q3d .chat-poll{gap:0;width:min(232px,64vw)}
@@ -9752,3 +9751,13 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll-q3d .chat-poll-pct{min-width:34px;padding-right:0;align-self:center;line-height:1}
 .chat-poll-q3d .chat-poll-ft{margin:10px 0 0;padding:0}
 .chat-poll-q3d .chat-poll-opt{padding-right:2px!important}
+
+/* dots card: static dots, row highlight pill hugs each option evenly (per dc) */
+.chat-poll-rip{display:none!important}
+.chat-poll-q3d .chat-poll-list{margin:0 -8px;gap:4px}
+.chat-poll-q3d .chat-poll-opt{padding:6px 8px!important;border-radius:12px!important;min-height:40px;box-sizing:border-box;background:transparent!important;transition:background-color .25s ease}
+.chat-poll-q3d .chat-poll-opt:active{background:rgba(255,255,255,.07)!important}
+.chat-poll-q3d .chat-poll-opt.is-mine{background:rgba(91,155,255,.12)!important}
+.chat-poll-q3d .chat-poll-opt.is-mine:active{background:rgba(91,155,255,.18)!important}
+.chat-msg .chat-bubble.chat-poll-q3d{max-width:none!important}
+.chat-poll-cv{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:inherit}

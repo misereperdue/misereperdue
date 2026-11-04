@@ -2929,10 +2929,8 @@
           var nx = cur.multi ? (on ? cm.filter(function (x) { return x !== i; }) : cm.concat([i])) : (on ? [] : [i]);
           var nv = Object.assign({}, cv); nx.length ? (nv[me] = nx) : delete nv[me];
           window.haptic && window.haptic(10);
+          if (!red) { var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect(); bub._dots && bub._dots.drop((e.clientX || br.left + br.width / 2) - br.left, (e.clientY || br.top + br.height / 2) - br.top); }
           if (!red) {
-            b.animate([{ backgroundColor: "rgba(255,255,255,.10)" }, { backgroundColor: "rgba(255,255,255,0)" }], { duration: 450, easing: "ease-out" });
-            var bub = c.closest(".chat-bubble") || c, br = bub.getBoundingClientRect();
-            bub._dots && bub._dots.wave((e.clientX || br.left + br.width / 2) - br.left, (e.clientY || br.top + br.height / 2) - br.top);
           }
           var prev = cur;
           mpPollUpdate(id, Object.assign({}, cur, { v: nv }));
@@ -2984,74 +2982,65 @@
     if (b && !b._dots && b.classList.contains("chat-poll-q3d")) try { b._dots = mpDots(b); } catch (_) {}
     try { mpPollIO && mpPollIO.observe(c); } catch (_) {}
   }
-  /* Dot field (per dc): canvas behind the poll card. 8px grid, ~14% white, slow ambient drift,
-     and a tap shock-wave that pushes dots outward and brightens the crest. rAF only while visible. */
-  var mpDotsAll = [];
-  document.addEventListener("visibilitychange", function () { mpDotsAll.forEach(function (d) { d.kick(); }); });
+  /* Dot matrix with a water-drop ripple (per dc). Static grid at rest; a tap sends a crisp Gaussian
+     wavefront (ease-out expo, ~0.7s to cover the card, gone by ~1.1s) plus a faint echo 120ms behind.
+     Crest dots lift (up to ~2.2x, ~80% white, faint blue), nudge outward ~3px, soft trough behind.
+     rAF runs only during a ripple and only while on screen. */
   function mpDots(host) {
     var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var cv = document.createElement("canvas"); cv.className = "chat-poll-cv"; cv.setAttribute("aria-hidden", "true");
     host.insertBefore(cv, host.firstChild);
-    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, waves = [], seen = !0, raf = 0, last = 0, t0 = performance.now(), G = 8;
+    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, G = 8, DUR = 1100;
     function size() {
       var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 3);
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
       cv.width = W * dpr; cv.height = H * dpr; draw(performance.now());
     }
-    /* 3D height field (per dc): z from an ambient two-wave swell + tap shock rings, projected with a
-       tilted-camera perspective; dots grow/brighten toward the camera and catch a fake light on slopes. */
-    function zAt(gx, gy, t, live) {
-      var z = 0;
-      if (!red) {
-        z += 2.2 * Math.sin(gx * 0.045 + gy * 0.02 - t * 2.3) + 1.6 * Math.sin(-gx * 0.018 + gy * 0.05 - t * 2.0 + 1.3);
-        for (var i = 0; i < live.length; i++) {
-          var L = live[i], dx = gx - L.x, dy = gy - L.y, d = Math.sqrt(dx * dx + dy * dy), u = L.r - d;
-          if (u < -24) continue;
-          var damp = Math.exp(-L.a * 2.6), front = Math.exp(-(u * u) / 120);
-          var trail = u > 0 ? Math.sin(u / 7.5) * Math.exp(-u / 38) : 0;
-          z += 13 * damp * (u > 0 ? trail * 0.9 + front * 0.6 : front);
-        }
-      }
-      return z;
-    }
+    function expo(k) { return k >= 1 ? 1 : 1 - Math.pow(2, -10 * k); }
     function draw(now) {
       x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      var t = (now - t0) / 1000, live = [], cx = W / 2, F = 26, TILT = 0.72;
-      waves = waves.filter(function (w) { return (now - w.t) / 1000 < 1.3; });
-      waves.forEach(function (w) { var a = (now - w.t) / 1000; live.push({ x: w.x, y: w.y, a: a, r: a * w.v }); });
-      x.fillStyle = "#fff";
+      drops = drops.filter(function (d) { return now - d.t < DUR + 140; });
+      var rings = [];
+      drops.forEach(function (d) {
+        [[0, 1], [120, 0.38]].forEach(function (e) {
+          var a = (now - d.t - e[0]) / DUR; if (a <= 0 || a >= 1) return;
+          rings.push({ x: d.x, y: d.y, r: expo(Math.min(1, a / 0.64)) * d.R, s: e[1] * Math.pow(1 - a, 1.6) });
+        });
+      });
+      var cy = H / 2;
       for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) {
-        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45);
-        var z = zAt(gx, gy, t, live), sc = 1, al = 0.14 * m, px = gx, py = gy;
-        if (!red) {
-          var zx = zAt(gx + 2, gy, t, live) - z, zy = zAt(gx, gy + 2, t, live) - z;
-          sc = Math.max(0.6, Math.min(2, F / Math.max(F - z, 6)));
-          px = cx + (gx - cx) * sc;
-          py = gy - z * TILT;
-          var light = Math.max(-1, Math.min(1, (-zx * 0.6 - zy * 0.9) * 0.5));
-          al = Math.min(0.62, Math.max(0.03, 0.14 * m + z * 0.022 + light * 0.16));
+        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), lift = 0, push = 0, ox = 0, oy = 0;
+        for (var i = 0; i < rings.length; i++) {
+          var R = rings[i], dx = gx - R.x, dy = gy - R.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, u = dist - R.r;
+          var crest = Math.exp(-(u * u) / 90), trough = u < 0 ? -0.35 * Math.exp(-((u + 16) * (u + 16)) / 160) : 0, h = (crest + trough) * R.s;
+          lift += h; push = crest * R.s * 3; ox += (dx / dist) * push; oy += (dy / dist) * push;
         }
+        var sc = Math.max(0.7, 1 + lift * 1.2), al = Math.max(0.05, Math.min(0.8, 0.14 * m + Math.max(0, lift) * 0.66 + Math.min(0, lift) * 0.1));
+        var px = gx + ox, py = gy + oy - lift * 1.6 + (gy - cy) * lift * 0.015;
         x.globalAlpha = al;
-        x.beginPath(); x.arc(px, py, 0.95 * sc, 0, 6.2832); x.fill();
+        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 90 * Math.min(1, lift)) + "," + Math.round(255 - 50 * Math.min(1, lift)) + ",255)" : "#fff";
+        x.beginPath(); x.arc(px, py, 0.95 * Math.min(2.2, sc), 0, 6.2832); x.fill();
       }
       x.globalAlpha = 1;
     }
     function loop(now) {
       raf = 0;
       if (!seen || document.hidden || !host.isConnected) return;
-      if (now - last >= 15) { last = now; draw(now); }
-      (!red || waves.length) && (raf = requestAnimationFrame(loop));
+      draw(now);
+      drops.length ? (raf = requestAnimationFrame(loop)) : draw(now);
     }
-    function kick() { raf || !seen || document.hidden || red && !waves.length || (raf = requestAnimationFrame(loop)); }
+    function kick() { !raf && seen && !document.hidden && drops.length && (raf = requestAnimationFrame(loop)); }
+    document.addEventListener("visibilitychange", kick);
     window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
     size();
-    var api = {
-      wave: function (wx, wy) { if (red) return; waves.push({ x: wx, y: wy, t: performance.now(), v: Math.sqrt(W * W + H * H) / 0.55 }); kick(); },
-      vis: function (v) { seen = v; v && kick(); },
-      kick: kick
+    return {
+      drop: function (dx, dy) {
+        if (red) return;
+        var R = Math.max(Math.hypot(dx, dy), Math.hypot(W - dx, dy), Math.hypot(dx, H - dy), Math.hypot(W - dx, H - dy)) + 20;
+        drops.push({ x: dx, y: dy, t: performance.now(), R: R }); kick();
+      },
+      vis: function (v) { seen = v; v ? kick() : draw(performance.now()); }
     };
-    mpDotsAll.push(api); kick();
-    return api;
   }
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
