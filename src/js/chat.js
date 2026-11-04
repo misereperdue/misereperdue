@@ -2107,8 +2107,12 @@
           var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu");
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M20 12.5V17a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4.5"/><path d="M4.5 17l4.5-4.5 3 3 2-2 5.5 5"/><path d="M18 2.5v6M15 5.5h6"/></svg><span>Add media</span></button>' +
+            '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Globe</span></button>' +
+            (window.mpPollOn ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span></button>' : '') +
             '<div class="chat-pmenu-sep"></div><button type="button" role="menuitem" class="chat-pmenu-row" disabled aria-disabled="true"><svg ' + ico + '><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><span>misery.fm</span><em>Soon</em></button>';
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
+          m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
+          var pq = m.querySelector('[data-act="poll"]'); pq && pq.addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "poll", close); });
           row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
           requestAnimationFrame(function () { m.classList.add("is-in"); });
           document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0);
@@ -2140,7 +2144,7 @@
       E("/api/messages?limit=200&_=" + Date.now())
         .then(function (e) {
           if (
-            (e && e.caps && e.caps.private && mpPMEnable(),
+            (e && e.caps && e.caps.private && mpPMEnable(), e && e.caps && e.caps.poll && (window.mpPollOn = !0),
             e && e.badges && (T = Object.assign(Object.create(null), e.badges)),
             (window.__chatBatchLoading = !0),
             e && e.messages)
@@ -2786,6 +2790,125 @@
     var d = Math.max(0, (Date.now() - ts) / 1000);
     return d < 60 ? "now" : d < 3600 ? Math.floor(d / 60) + "m" : d < 86400 ? Math.floor(d / 3600) + "h" : d < 604800 ? Math.floor(d / 86400) + "d" : new Date(ts).toLocaleDateString(void 0, { month: "short", day: "numeric" });
   }
+  function mpToast(t) { try { window.mpHide && mpHide.toast ? mpHide.toast(t) : alert(t); } catch (_) {} }
+  /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
+  var mpGpCache = null, mpGpAt = 0;
+  function mpMorph(m, kind, close) {
+    var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
+    m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : "chat-pbig-globe");
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs" role="tablist"><button type="button" data-s="active" class="is-on">Active</button><button type="button" data-s="new">Recent</button><button type="button" data-s="pop">Popular</button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
+    m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
+    if (!red) {
+      var r1 = m.getBoundingClientRect();
+      m.style.transformOrigin = "0 100%";
+      m.animate([{ transform: "scale(" + (r0.width / r1.width) + "," + (r0.height / r1.height) + ")", opacity: .6 }, { transform: "none", opacity: 1 }], { duration: 320, easing: "cubic-bezier(.3,1.25,.5,1)" });
+    }
+    kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
+  }
+  function mpGpWire(m, close) {
+    var sort = "active", list = m.querySelector(".chat-gp-list"), q = m.querySelector(".chat-gp-q");
+    function paint() {
+      var all = (mpGpCache || []).filter(function (t) {
+        if (t.author && window.mpHide && mpHide.is(t.author)) return !1;
+        if ((t.membersOnly || t.ownerOnly) && !(s && (s.member || s.owner))) return !1;
+        return !0;
+      });
+      var k = q.value.trim().toLowerCase();
+      k && (all = all.filter(function (t) { return ((t.title || "") + " " + (t.excerpt || "") + " @" + (t.author || "") + " " + (t.tags || []).join(" ")).toLowerCase().indexOf(k) !== -1; }));
+      sort === "new" ? all.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }) : sort === "pop" && all.sort(function (a, b) { return (b.replies || 0) - (a.replies || 0) || (b.lastActivity || 0) - (a.lastActivity || 0); });
+      list.innerHTML = "";
+      if (!all.length) { list.innerHTML = '<div class="chat-gp-empty">' + (mpGpCache ? "No posts found" : "Loading…") + "</div>"; return; }
+      all.slice(0, 60).forEach(function (t) {
+        var b = document.createElement("button"); b.type = "button"; b.className = "chat-ge chat-gp-row";
+        b.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span></span><span class="chat-ge-l2"></span></span>';
+        b.querySelector(".chat-ge-who").textContent = "@" + (t.author || "unknown") + (t.createdAt ? " \u00b7 " + mpGeAgo(t.createdAt) : "") + (t.replies ? " \u00b7 " + t.replies + (t.replies === 1 ? " reply" : " replies") : "");
+        b.querySelector(".chat-ge-l2").textContent = (t.title || "") + (t.excerpt ? " \u2014 " + t.excerpt : "");
+        var pic = b.querySelector(".chat-ge-pic");
+        if (t.thumb && /^(https?:|\/)/i.test(t.thumb)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = t.thumb; pic.appendChild(im); }
+        else { try { var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0); av && pic.appendChild(av); } catch (_) {} }
+        b.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var inp = document.querySelector("#chat .chat-inputbar input"), snd = document.querySelector("#chat .chat-send");
+          if (!inp || !snd) return;
+          close(); inp.value = "https://misereperdue.com/t/" + t.id; inp.dispatchEvent(new Event("input", { bubbles: !0 })); snd.click();
+        });
+        list.appendChild(b);
+      });
+    }
+    m.querySelectorAll(".chat-gp-tabs button").forEach(function (b) { b.addEventListener("click", function (e) { e.stopPropagation(); sort = b.getAttribute("data-s"); m.querySelectorAll(".chat-gp-tabs button").forEach(function (x) { x.classList.toggle("is-on", x === b); }); paint(); list.scrollTop = 0; }); });
+    q.addEventListener("input", paint);
+    q.addEventListener("keydown", function (e) { e.key === "Enter" && (e.preventDefault(), q.blur()); });
+    paint();
+    if (!mpGpCache || Date.now() - mpGpAt > 60000) E("/api/forum/threads").then(function (r) { r && r.ok && Array.isArray(r.threads) && ((mpGpCache = r.threads), (mpGpAt = Date.now())); paint(); }).catch(function () { list.innerHTML = '<div class="chat-gp-empty">Couldn\u2019t load Globe posts</div>'; });
+  }
+  /* Polls (per dc): the Poll row only appears once the Worker advertises caps.poll. */
+  function mpPollForm() {
+    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi"><input type="checkbox"> Allow multiple answers</label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
+  }
+  function mpPollWire(m, close) {
+    var os = m.querySelector(".chat-poll-os"), add = m.querySelector(".chat-poll-add"), go = m.querySelector(".chat-poll-go"), qi = m.querySelector(".chat-poll-qi");
+    function vals() { return [].map.call(os.querySelectorAll("input"), function (i) { return i.value.trim(); }); }
+    function chk() { var v = vals().filter(Boolean); go.disabled = !qi.value.trim() || v.length < 2; add.hidden = os.children.length >= 4; [].forEach.call(os.querySelectorAll(".chat-poll-rm"), function (b) { b.hidden = os.children.length <= 2; }); }
+    function opt() {
+      var d = document.createElement("div"); d.className = "chat-poll-o";
+      d.innerHTML = '<input maxlength="60" placeholder="Option ' + (os.children.length + 1) + '" autocomplete="off"><button type="button" class="chat-poll-rm" aria-label="Remove option">\u00d7</button>';
+      d.querySelector("input").addEventListener("input", chk);
+      d.querySelector("button").addEventListener("click", function (e) { e.stopPropagation(); d.remove(); chk(); });
+      os.appendChild(d); chk(); return d;
+    }
+    opt(); opt(); qi.addEventListener("input", chk);
+    add.addEventListener("click", function (e) { e.stopPropagation(); opt().querySelector("input").focus(); });
+    go.addEventListener("click", function (e) {
+      e.stopPropagation(); go.disabled = !0;
+      var body = { poll: { q: qi.value.trim(), o: vals().filter(Boolean), multi: m.querySelector(".chat-poll-multi input").checked }, cid: "p" + Date.now().toString(36) };
+      E("/api/send", { method: "POST", body: body }).then(function (r) { if (r && r.ok) close(); else { go.disabled = !1; mpToast((r && r.error) || "Couldn\u2019t send poll"); } }).catch(function () { go.disabled = !1; mpToast("Couldn\u2019t send poll"); });
+    });
+    setTimeout(function () { qi.focus(); }, 60);
+  }
+  var mpPolls = Object.create(null);
+  function mpPollRender(b, e) {
+    if (!b || !e || !e.poll || !Array.isArray(e.poll.o)) return;
+    var tx = b.querySelector(".chat-text"); tx && (tx.hidden = !0);
+    var ex = b.querySelector(".chat-embed"); ex && ex.remove();
+    b.classList.add("chat-poll-bubble");
+    var c = document.createElement("div"); c.className = "chat-poll"; c.setAttribute("data-poll", e.id);
+    b.insertBefore(c, b.firstChild);
+    mpPolls[e.id] = { q: e.text, poll: e.poll };
+    mpPollPaint(c, e.id);
+  }
+  function mpPollUpdate(id, poll) {
+    var p = mpPolls[id]; if (!p) return; p.poll = poll;
+    document.querySelectorAll('.chat-poll[data-poll="' + CSS.escape(id) + '"]').forEach(function (c) { mpPollPaint(c, id); });
+  }
+  function mpPollPaint(c, id) {
+    var p = mpPolls[id], pl = p.poll, v = pl.v || {}, me = s && s.username ? s.username.toLowerCase() : "";
+    var counts = pl.o.map(function () { return 0; }), voters = 0;
+    Object.keys(v).forEach(function (k) { if (window.mpHide && mpHide.is(k)) return; var a = Array.isArray(v[k]) ? v[k] : []; a.length && voters++; a.forEach(function (i) { counts[i] != null && counts[i]++; }); });
+    var mine = (me && v[me]) || [], tot = counts.reduce(function (a, b) { return a + b; }, 0);
+    c.innerHTML = '<div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"></div>';
+    c.querySelector(".chat-poll-q").textContent = p.q || "Poll";
+    var L = c.querySelector(".chat-poll-list");
+    pl.o.forEach(function (o, i) {
+      var pct = tot ? Math.round((counts[i] / tot) * 100) : 0, on = mine.indexOf(i) !== -1;
+      var b = document.createElement("button"); b.type = "button"; b.className = "chat-poll-opt" + (on ? " is-mine" : "");
+      b.innerHTML = '<span class="chat-poll-bar"></span><span class="chat-poll-lbl"></span><span class="chat-poll-pct">' + (mine.length || tot ? pct + "%" : "") + "</span>";
+      b.querySelector(".chat-poll-bar").style.width = (mine.length || tot ? pct : 0) + "%";
+      b.querySelector(".chat-poll-lbl").textContent = (on ? "\u2713 " : "") + o;
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (!s) return mpToast("Log in to vote");
+        var nx = pl.multi ? (on ? mine.filter(function (x) { return x !== i; }) : mine.concat([i])) : (on ? [] : [i]);
+        var nv = Object.assign({}, v); nx.length ? (nv[me] = nx) : delete nv[me];
+        mpPollUpdate(id, Object.assign({}, pl, { v: nv }));
+        E("/api/poll/vote", { method: "POST", body: { id: id, choices: nx } }).then(function (r) { r && r.ok && r.poll ? mpPollUpdate(id, r.poll) : (mpPollUpdate(id, pl), mpToast((r && r.error) || "Vote failed")); }).catch(function () { mpPollUpdate(id, pl); });
+      });
+      L.appendChild(b);
+    });
+    c.querySelector(".chat-poll-ft").textContent = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 multiple answers" : "");
+  }
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
     var m = MP_GE_RE.exec(String(t));
@@ -3044,7 +3167,7 @@
             ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
             var cW = document.createElement("div");
             ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
-          } else (!e.media && mpNowListening(i, l, e.user, o), mpGlobeEmbed(i, e.text), o.appendChild(i));
+          } else (!e.media && mpNowListening(i, l, e.user, o), mpGlobeEmbed(i, e.text), mpPollRender(i, e), o.appendChild(i));
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
@@ -3092,7 +3215,7 @@
             var N = ye(e.id, e.reactions);
             N && k.appendChild(N);
           }
-          (!e.media && mpNowListening(k, S, e.user, o), mpGlobeEmbed(k, e.text), w.appendChild(k), o.appendChild(w));
+          (!e.media && mpNowListening(k, S, e.user, o), mpGlobeEmbed(k, e.text), mpPollRender(k, e), w.appendChild(k), o.appendChild(w));
         }
         if (
           (e.ts && Date.now() - e.ts < 2e3 && o.classList.add("chat-msg-in"),
@@ -3429,7 +3552,7 @@
                 "boolean" == typeof t.paused && st(t.paused),
                 t.badges && (T = Object.assign(Object.create(null), t.badges)),
                 t.you && te((s = rcKeep(t.you)).points || 0),
-                t.caps && t.caps.private && mpPMEnable(),
+                t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
                 t.messages && t.messages.forEach(Fe),
                 Ne(!0),
                 setTimeout(function () {
@@ -3596,7 +3719,8 @@
                       e && e.user && te((s = rcKeep(e.user)).points || 0);
                     })
                     .catch(function () {}));
-            } else if ("reaction" === t.t && t.id)
+            } else if ("poll" === t.t && t.id && t.poll) mpPollUpdate(t.id, t.poll);
+            else if ("reaction" === t.t && t.id)
               (De[t.id] && (De[t.id].reactions = t.reactions || {}), we(t.id, t.reactions || {}));
             else if ("forum" === t.t)
               document.dispatchEvent(
