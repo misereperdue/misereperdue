@@ -9520,3 +9520,20 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
   backdrop-filter: var(--menu-glass-filter) !important;
   border-color: var(--menu-glass-border) !important;
 }
+
+/* poll composer checkbox (per dc) */
+.chat-poll-f .chat-poll-multi{display:flex!important;flex-direction:row!important;align-items:center;justify-content:flex-start!important;gap:10px;min-height:44px;width:100%;margin:0;padding:0 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:1}
+.chat-poll-multi span{flex:1;min-width:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.chat-poll-f .chat-poll-multi input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:20px!important;height:20px!important;min-width:0!important;margin:0!important;padding:0!important;border-radius:6px!important;border:1.5px solid rgba(127,127,127,.55)!important;background:rgba(127,127,127,.12)!important;display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}
+.chat-poll-f .chat-poll-multi input[type=checkbox]::after{content:"";width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-1px) rotate(-45deg) scale(0);transition:transform .15s}
+.chat-poll-f .chat-poll-multi input[type=checkbox]:checked{background:#4f8cff!important;border-color:#4f8cff!important}
+.chat-poll-f .chat-poll-multi input[type=checkbox]:checked::after{transform:translateY(-1px) rotate(-45deg) scale(1)}
+.chat-poll-f .chat-poll-multi input[type=checkbox]:focus-visible{outline:2px solid #4f8cff;outline-offset:2px}
+.chat-poll-f{min-width:0}
+.chat-poll-f input:not([type=checkbox]){min-width:0;-webkit-appearance:none;appearance:none}
+.chat-poll-go{min-height:44px;transition:opacity .15s}
+.chat-poll-go:not(:disabled):active{transform:scale(.98)}
+[data-theme="light"] .chat-poll-go{background:#111;color:#fff}
+[data-theme="dark"] .chat-poll-go{background:#fff;color:#000}
+.chat-poll-go:disabled{opacity:.35;cursor:default}
+@media (prefers-reduced-motion:reduce){.chat-poll-multi input[type=checkbox],.chat-poll-multi input[type=checkbox]::after{transition:none}}

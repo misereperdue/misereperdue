@@ -2849,7 +2849,7 @@
   }
   /* Polls (per dc): the Poll row only appears once the Worker advertises caps.poll. */
   function mpPollForm() {
-    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi"><input type="checkbox"> Allow multiple answers</label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
+    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi" for="chat-poll-multi"><input type="checkbox" id="chat-poll-multi"><span>Allow multiple answers</span></label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
   }
   function mpPollWire(m, close) {
     var os = m.querySelector(".chat-poll-os"), add = m.querySelector(".chat-poll-add"), go = m.querySelector(".chat-poll-go"), qi = m.querySelector(".chat-poll-qi");
