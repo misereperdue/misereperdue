@@ -9378,3 +9378,18 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-np-eq{height:9px;gap:1.5px;top:3px}
 .chat-np-eq i{width:2px}
 .chat-np.no-art .chat-np-art{display:grid;place-items:center;color:var(--ink);background:var(--glass-regular-tint);border:var(--glass-hairline);opacity:.85}
+/* Now listening: breathing glow (per dc) — transform/opacity only */
+.chat-np-art{position:relative;z-index:1}
+.chat-np-halo{position:absolute;left:8px;top:50%;width:42px;height:42px;margin-top:-21px;border-radius:12px;background-size:cover;background-position:center;filter:blur(12px) saturate(1.8);opacity:.35;transform:scale(1.1);z-index:0;pointer-events:none;will-change:transform,opacity}
+.chat-np.no-art .chat-np-halo{background:var(--ink);opacity:.12}
+.chat-np-art,.chat-np-halo,.chat-np-glow{animation-duration:3.8s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-delay:var(--np-delay,0s);animation-play-state:paused}
+.chat-np:not(.is-loading) .chat-np-art{animation-name:np-breathe}
+.chat-np:not(.is-loading) .chat-np-halo{animation-name:np-halo}
+.chat-np:not(.is-loading) .chat-np-glow{animation-name:np-glow}
+.chat-np.np-on .chat-np-art,.chat-np.np-on .chat-np-halo,.chat-np.np-on .chat-np-glow{animation-play-state:running}
+@keyframes np-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes np-halo{0%,100%{transform:scale(1.05);opacity:.28}50%{transform:scale(1.45);opacity:.7}}
+@keyframes np-glow{0%,100%{opacity:.3}50%{opacity:.46}}
+.chat-np.no-art.np-on .chat-np-halo{animation-name:np-halo-ph}
+@keyframes np-halo-ph{0%,100%{transform:scale(1.05);opacity:.08}50%{transform:scale(1.4);opacity:.22}}
+@media (prefers-reduced-motion:reduce){.chat-np-art,.chat-np-halo,.chat-np-glow{animation:none!important}}

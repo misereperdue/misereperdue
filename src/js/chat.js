@@ -2393,7 +2393,8 @@
      glass card with the song resolved client-side via the iTunes Search API.
      Derived from the text, so it looks the same for everyone. */
   var mpNP = Object.create(null);
-  var mpNPv = Object.create(null); // resolved results, so re-renders paint the card instantly
+  var mpNPv = Object.create(null),
+    mpNPio = null; // resolved results, so re-renders paint the card instantly
   function mpNPq(e) {
     return String(e || "").toLowerCase().replace(/\s*[(\[].*$/, "").split(" / ")[0].replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim();
   }
@@ -2512,7 +2513,7 @@
       c = document.createElement("div");
     ((c.className = "chat-np is-loading"),
       (c.innerHTML =
-        '<span class="chat-np-glow"></span><span class="chat-np-art"></span><span class="chat-np-tx"><span class="chat-np-who"></span><span class="chat-np-line"></span><span class="chat-np-line s"></span></span>'),
+        '<span class="chat-np-glow"></span><span class="chat-np-halo"></span><span class="chat-np-art"></span><span class="chat-np-tx"><span class="chat-np-who"></span><span class="chat-np-line"></span><span class="chat-np-line s"></span></span>'),
       e.classList.add("chat-np-bubble"),
       i && (i.hidden = !0),
       e.insertBefore(c, e.firstChild));
@@ -2534,13 +2535,25 @@
       var aL = (n.arts || [n.art]).filter(Boolean),
         gl = c.querySelector(".chat-np-glow");
       function ph() {
-        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19.95 2.3a.75.75 0 0 1 .55.72v12.23a3 3 0 1 1-1.5-2.6V7.3l-9 2.25v7.7a3 3 0 1 1-1.5-2.6V5.25c0-.34.23-.64.57-.73l10.5-2.62a.75.75 0 0 1 .38.4Z"/></svg>'), (gl.style.backgroundImage = ""));
+        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19.95 2.3a.75.75 0 0 1 .55.72v12.23a3 3 0 1 1-1.5-2.6V7.3l-9 2.25v7.7a3 3 0 1 1-1.5-2.6V5.25c0-.34.23-.64.57-.73l10.5-2.62a.75.75 0 0 1 .38.4Z"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""));
       }
       function nx() {
         var e = aL.shift();
-        e ? ((r.src = e), (gl.style.backgroundImage = "url(" + JSON.stringify(e) + ")")) : ph();
+        e
+          ? ((r.src = e), (gl.style.backgroundImage = c.querySelector(".chat-np-halo").style.backgroundImage = "url(" + JSON.stringify(e) + ")"))
+          : ph();
       }
       ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), a.appendChild(r), nx());
+      /* breathing glow (per dc): staggered start, runs only while on screen */
+      (c.style.setProperty("--np-delay", -(Math.random() * 3.8).toFixed(2) + "s"),
+        window.IntersectionObserver &&
+          (mpNPio ||
+            (mpNPio = new IntersectionObserver(function (e) {
+              e.forEach(function (e) {
+                e.target.classList.toggle("np-on", e.isIntersecting);
+              });
+            })),
+          mpNPio.observe(c)));
       var d = c.querySelectorAll(".chat-np-line");
       ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");
