@@ -3017,15 +3017,15 @@
         var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), lift = 0, push = 0, ox = 0, oy = 0;
         /* ambient breathing swell: three slow sines (~4.3s, 5.9s, 7.1s) at different angles */
         var amb = red ? 0 : 0.5 + 0.5 * (0.45 * Math.sin(gx * 0.021 + gy * 0.013 - T * 1.46) + 0.33 * Math.sin(-gx * 0.012 + gy * 0.024 - T * 1.06 + 1.7) + 0.22 * Math.sin(gx * 0.017 - gy * 0.009 - T * 0.88 + 4.1));
-        amb = amb * amb * 0.3;
+        var trg = red ? 0 : (1 - amb) * (1 - amb) * 0.05; amb = amb * amb * 0.6;
         for (var i = 0; i < rings.length; i++) {
           var R = rings[i], dx = gx - R.x, dy = gy - R.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, u = dist - R.r;
           var att = 1 / Math.sqrt(1 + dist / 22), crest = Math.exp(-(u * u) / 70), trough = u < 0 ? -0.3 * Math.exp(-((u + 13) * (u + 13)) / 110) : 0, h = (crest + trough) * R.s * att * 0.85;
           lift += h; push = crest * R.s * att * 2.2; ox += (dx / dist) * push; oy += (dy / dist) * push;
         }
         for (var j = 0; j < cents.length; j++) { var C = cents[j], cd = Math.hypot(gx - C.x, gy - C.y); lift += C.s * Math.exp(-(cd * cd) / 120); }
-        var sc = Math.max(0.7, Math.min(1.7, 1 + lift * 0.9 + amb * 1.15)), al = Math.max(0.05, Math.min(0.55, 0.14 * m + amb * 0.3 + Math.max(0, lift) * 0.45 + Math.min(0, lift) * 0.1));
-        var px = gx + ox, py = gy + oy - lift * 1.4 - amb * 4.5 + (gy - cy) * (lift + amb * 0.5) * 0.015;
+        var sc = Math.max(0.7, Math.min(1.7, 1 + lift * 0.9 + amb * 1.1)), al = Math.max(0.05, Math.min(0.55, 0.14 * m + amb * 0.42 - trg + Math.max(0, lift) * 0.45 + Math.min(0, lift) * 0.1));
+        var px = gx + ox, py = gy + oy - lift * 1.4 - amb * 4.5 + (gy - cy) * (lift + amb * 0.8) * 0.015;
         x.globalAlpha = al;
         x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 60 * Math.min(1, lift)) + "," + Math.round(255 - 28 * Math.min(1, lift)) + "," + Math.round(255 - 7 * Math.min(1, lift)) + ")" : "#fff"; /* toward --accent light blue #a9d7f5 */
         x.beginPath(); x.arc(px, py, 0.95 * Math.min(2.2, sc), 0, 6.2832); x.fill();
