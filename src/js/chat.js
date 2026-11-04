@@ -2898,8 +2898,11 @@
       var pct = tot ? Math.round((counts[i] / tot) * 100) : 0, on = mine.indexOf(i) !== -1;
       var b = document.createElement("button"); b.type = "button"; b.className = "chat-poll-opt" + (on ? " is-mine" : "");
       b.innerHTML = '<span class="chat-poll-bar"></span><span class="chat-poll-lbl"></span><span class="chat-poll-pct">' + (mine.length || tot ? pct + "%" : "") + "</span>";
-      b.querySelector(".chat-poll-bar").style.width = (mine.length || tot ? pct : 0) + "%";
-      b.querySelector(".chat-poll-lbl").textContent = (on ? "\u2713 " : "") + o;
+      var bar = b.querySelector(".chat-poll-bar"), w1 = (mine.length || tot ? pct : 0), w0 = (p.w && p.w[i] != null) ? p.w[i] : w1;
+      bar.style.width = w0 + "%"; w0 !== w1 && requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = w1 + "%"; }); });
+      (p.w || (p.w = []))[i] = w1;
+      b.querySelector(".chat-poll-lbl").textContent = o;
+      on && b.insertAdjacentHTML("afterbegin", '<svg class="chat-poll-ck" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.4l2.6 2.6L12 5.4"/></svg>');
       /* voter avatars, like Globe polls: shown once you've voted, 3 + "+N" (per dc) */
       if (mine.length && counts[i]) {
         var vw = document.createElement("span"); vw.className = "chat-poll-voters"; var shown = 0;
@@ -2923,7 +2926,8 @@
       });
       L.appendChild(b);
     });
-    c.querySelector(".chat-poll-ft").textContent = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 multiple answers" : "");
+    c.querySelector(".chat-poll-ft").innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span></span>';
+    c.querySelector(".chat-poll-ft span").textContent = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 Multiple answers" : "");
   }
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
