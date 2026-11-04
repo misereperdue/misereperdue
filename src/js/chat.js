@@ -6310,7 +6310,8 @@
   function toast(t) { try { window.mpHide && mpHide.toast ? mpHide.toast(t) : alert(t); } catch (_) {} }
   function hap(n) { try { window.haptic && window.haptic(n); } catch (_) {} }
   var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  fetch(API, { method: "GET" }).then(function (r) { if (r.status === 200 || r.status === 405) { window.MP_VOICE_READY = ready = true; mount(); } }).catch(function () {});
+  var prog = false, IOSW = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || (/Safari/.test(navigator.userAgent) && !/Chrome|CriOS|Chromium|Edg|Firefox|FxiOS/.test(navigator.userAgent));
+  fetch(API, { method: "GET" }).then(function (r) { if (r.status === 200 || r.status === 405) { window.MP_VOICE_READY = ready = true; mount(); r.json().then(function (j) { prog = !!(j && j.progressive); }).catch(function () {}); } }).catch(function () {});
   var MIC = '<span class="chat-mic-g"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.75 11a6.25 6.25 0 0 0 12.5 0M12 17.25V21"/></svg></span>';
   function mount() {
     if (!ready) return;
@@ -6347,7 +6348,7 @@
   }
   function bar(f) {
     var o = document.createElement("div"); o.className = "chat-vrec";
-    o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
+    o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-hint">Can\'t hear you, check mic</span><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
     var row = f.parentNode, mic = f.querySelector(".chat-mic");
     row.appendChild(o);
     if (mic) { var rr = row.getBoundingClientRect(), mr = mic.getBoundingClientRect(); o.style.transformOrigin = Math.round(mr.left + mr.width / 2 - rr.left) + "px 100%"; }
@@ -6363,7 +6364,9 @@
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return toast("Voice typing isn't supported on this browser");
     if (!localStorage.getItem("chat_token")) return toast("Log in to use voice typing");
     var inp0 = f.querySelector("input"), ca = inp0.selectionStart != null ? inp0.selectionStart : inp0.value.length, cb = inp0.selectionEnd != null ? inp0.selectionEnd : ca;
-    st = { f: f, chunks: [], t0: 0, pending: true, inp: inp0, orig: inp0.value, pre: inp0.value.slice(0, ca), post: inp0.value.slice(cb), live: "" };
+    var AC0 = window.AudioContext || window.webkitAudioContext, ac0 = null;
+    try { ac0 = new AC0(); ac0.resume && ac0.resume(); } catch (e) {} /* iOS: create + resume inside the tap, or the analyser reads flat */
+    st = { f: f, ac: ac0, sid: Math.random().toString(36).slice(2) + Date.now().toString(36), chunks: [], t0: 0, pending: true, inp: inp0, orig: inp0.value, pre: inp0.value.slice(0, ca), post: inp0.value.slice(cb), live: "" };
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (s) {
       if (!st || !st.pending) return void s.getTracks().forEach(function (t) { t.stop(); });
       st.pending = false; st.s = s; var ty = pickType();
@@ -6371,8 +6374,10 @@
       st.type = st.rec.mimeType || ty || "audio/webm";
       st.rec.ondataavailable = function (e) { e.data && e.data.size && st && st.chunks.push(e.data); };
       st.rec.start(250); st.t0 = performance.now(); st.o = bar(f); hap(12);
-      try { var AC = window.AudioContext || window.webkitAudioContext; st.ac = new AC(); st.an = st.ac.createAnalyser(); st.an.fftSize = 256; st.an.smoothingTimeConstant = 0.75; st.ac.createMediaStreamSource(s).connect(st.an); } catch (e) {}
-      st.lv = []; loop(); listen(st);
+      try { st.ac = st.ac || new (window.AudioContext || window.webkitAudioContext)(); st.ac.state === "suspended" && st.ac.resume(); st.an = st.ac.createAnalyser(); st.an.fftSize = 256; st.an.smoothingTimeConstant = 0.75; st.ac.createMediaStreamSource(s).connect(st.an); } catch (e) {}
+      st.lv = []; loop();
+      /* iOS WebKit: SpeechRecognition fights getUserMedia for the mic (flat audio, no words) - skip it there; live text comes from progressive Whisper when the Worker supports it */
+      IOSW ? prog && progressive(st) : listen(st);
     }).catch(function () { st = null; toast("Microphone access was denied. Allow it in Settings to use voice typing."); });
   }
   /* V3 dot-column waveform (per dc): timeline of smoothed levels as columns of small dots, soft fade, tapered ends */
@@ -6402,6 +6407,18 @@
     try { i.setSelectionRange(pre.length + mid.length, pre.length + mid.length); i.scrollLeft = i.scrollWidth; } catch (e) {}
     return mid;
   }
+  function progressive(s) {
+    var busy = 0;
+    s.pt = setInterval(function () {
+      if (st !== s || s.stopping || busy || !s.chunks.length) return;
+      busy = 1;
+      toWav(new Blob(s.chunks, { type: s.type.split(";")[0] })).then(function (a) {
+        if (a.rms < 0.002 || a.blob.size > 2 * 1024 * 1024) return;
+        return fetch(API, { method: "POST", headers: { "Content-Type": "audio/wav", "X-Voice-Session": s.sid, Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: a.blob })
+          .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.text && st === s && !s.stopping) { s.live = String(j.text).trim(); put(s, s.live, "live"); } });
+      }).catch(function () {}).then(function () { busy = 0; });
+    }, 3000);
+  }
   function listen(s) {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return;
     try {
@@ -6421,6 +6438,7 @@
     var el = (performance.now() - st.t0) / 1000;
     st.o.querySelector(".chat-vrec-t").textContent = Math.floor(el / 60) + ":" + ("0" + Math.floor(el % 60)).slice(-2);
     if (el >= 60) { toast("Stopped at 60 seconds"); return void stop(); }
+    if (el > 1.5 && !st.heard && (st.pk || 0) < 0.012) { st.o.classList.add("is-deaf"); } else if ((st.pk || 0) >= 0.012 && !st.heard) { st.heard = 1; st.o.classList.remove("is-deaf"); }
     var cv = st.o.querySelector(".chat-vrec-wv"), w = cv.clientWidth, h = cv.clientHeight, d = Math.min(window.devicePixelRatio || 1, 2);
     if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
     var lvl = 0, now = performance.now(), dt = Math.min(0.1, (now - (st.tl || now)) / 1000); st.tl = now;
@@ -6432,7 +6450,7 @@
   }
   function release() {
     if (!st) return;
-    st.raf && cancelAnimationFrame(st.raf); st.stopping = true;
+    st.raf && cancelAnimationFrame(st.raf); st.stopping = true; st.pt && clearInterval(st.pt);
     try { st.sr && st.sr.abort(); } catch (e) {}
     st.s && st.s.getTracks().forEach(function (t) { t.stop(); });
     try { st.ac && st.ac.close(); } catch (e) {}
@@ -6454,11 +6472,11 @@
       if (s.live && (s.pk || 0) < 0.02) return keep("");
       toWav(raw).catch(function () { return { blob: raw, rms: 1 }; }).then(function (a) {
         if (a.rms < 0.002 && s.live) return keep("");
-        if (a.rms < 0.002) return keep("Didn't catch that, try again");
+        if (a.rms < 0.002) return keep(s.heard ? "Didn't catch that, try again" : "Couldn't hear you. Check the mic isn't in use by another app.");
         var body = a.blob.size <= 2 * 1024 * 1024 ? a.blob : raw.size <= 2 * 1024 * 1024 ? raw : null;
         if (!body) return keep("Recording too long");
         function send(n) {
-          return fetch(API, { method: "POST", headers: { "Content-Type": body.type || "audio/wav", Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: body })
+          return fetch(API, { method: "POST", headers: { "Content-Type": body.type || "audio/wav", "X-Voice-Session": s.sid, Authorization: "Bearer " + localStorage.getItem("chat_token") }, body: body })
             .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status >= 500 && n < 1) return send(n + 1); if (!r.ok) throw new Error(j.error || "Couldn't transcribe, try again"); return j; }); }, function (e) { if (n < 1) return send(n + 1); throw e; });
         }
         send(0).then(function (j) {

@@ -9776,7 +9776,7 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 [data-theme="light"] .chat-mic-g { background: radial-gradient(circle at 50% 62%, rgba(59,143,196,.3), rgba(59,143,196,.06) 72%); box-shadow: inset 0 0 0 1px rgba(59,143,196,.28), inset 0 1px 1px rgba(255,255,255,.8), 0 0 10px rgba(59,143,196,.3); color: #1f5f8a; }
 .chat-mic svg { width: 17px; height: 17px; }
 .chat-mic:active { transform: scale(.9); }
-.chat-inputbar.is-rec .chat-mic-g { box-shadow: inset 0 0 0 1px rgba(255,69,58,.5), 0 0 12px rgba(255,69,58,.35); }
+.chat-inputbar.is-rec .chat-mic-g { opacity: .7; transform: scale(.94); }
 .chat-msgs { padding-bottom: calc(100px + var(--kb-shift, 0px) + var(--tray-h, 0px) + var(--pm-h, 0px) + var(--vr-h, 0px)) !important; }
 .chat-vrec { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 7px; border-radius: 999px; background: var(--menu-glass-bg); -webkit-backdrop-filter: var(--menu-glass-filter); backdrop-filter: var(--menu-glass-filter); border: 1px solid var(--menu-glass-border); box-shadow: var(--sheet-shadow, 0 10px 30px rgba(0,0,0,.35)); opacity: 0; transform: translateY(14px) scale(.6); transition: opacity .24s ease, transform .38s cubic-bezier(.2,1.1,.3,1); z-index: 3; }
 .chat-vrec.in { opacity: 1; transform: none; }
@@ -9802,3 +9802,7 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-inputbar input.is-swap { animation: chat-vrec-swap .45s ease; }
 @keyframes chat-vrec-swap { 0% { opacity: .2; filter: blur(2px); } 100% { opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .chat-vrec-dot, .chat-vrec-busy, .chat-inputbar input.is-busy, .chat-inputbar input.is-swap { animation: none; } .chat-vrec { transition: opacity .2s; transform: none; } }
+.chat-vrec-hint { display: none; flex: 1; font: 500 13px/1.2 -apple-system, system-ui, sans-serif; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-vrec.is-deaf .chat-vrec-hint { display: block; }
+.chat-vrec.is-deaf .chat-vrec-wv { display: none; }
+.chat-vrec.is-busy .chat-vrec-hint { display: none; }
