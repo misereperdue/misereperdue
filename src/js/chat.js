@@ -2900,6 +2900,19 @@
       b.innerHTML = '<span class="chat-poll-bar"></span><span class="chat-poll-lbl"></span><span class="chat-poll-pct">' + (mine.length || tot ? pct + "%" : "") + "</span>";
       b.querySelector(".chat-poll-bar").style.width = (mine.length || tot ? pct : 0) + "%";
       b.querySelector(".chat-poll-lbl").textContent = (on ? "\u2713 " : "") + o;
+      /* voter avatars, like Globe polls: shown once you've voted, 3 + "+N" (per dc) */
+      if (mine.length && counts[i]) {
+        var vw = document.createElement("span"); vw.className = "chat-poll-voters"; var shown = 0;
+        Object.keys(v).forEach(function (k) {
+          if (shown >= 3 || (window.mpHide && mpHide.is(k)) || !Array.isArray(v[k]) || v[k].indexOf(i) === -1) return;
+          var info = (Je && Je[k]) || null, sp = document.createElement("span");
+          sp.className = "poll-voter-avatar"; sp.title = info && info.username ? info.username : k;
+          try { var av = J(info && info.username ? info.username : k, info && info.avatar, "xs", info && info.hasImg ? info.imgV : void 0); av && sp.appendChild(av); } catch (_) {}
+          vw.appendChild(sp); shown++;
+        });
+        counts[i] > shown && shown && ((vw.innerHTML += '<span class="poll-voter-avatar poll-voter-more">+' + (counts[i] - shown) + "</span>"));
+        shown && b.insertBefore(vw, b.querySelector(".chat-poll-pct"));
+      }
       b.addEventListener("click", function (e) {
         e.stopPropagation();
         if (!s) return mpToast("Log in to vote");
