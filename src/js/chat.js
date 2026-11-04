@@ -1626,12 +1626,16 @@
     }
     function l() {
       var e = a.value.trim();
+      if (H.some(function (e) { return e.uploading; })) return;
       if (e || h) {
         a.value = "";
-        var t = h;
-        ((h = null), b());
+        var tL = h ? h.map(function (e) { return { id: e.id, kind: e.kind }; }) : [null];
+        ((H = []), b());
         var r = n.querySelector(".chat-send");
-        (r && (r.classList.remove("holo"), r.offsetWidth, r.classList.add("holo")),
+        r && (r.classList.remove("holo"), r.offsetWidth, r.classList.add("holo"));
+        for (var tI = 0; tI < tL.length; tI++) {
+          var t = tL[tI];
+          /* one message per photo (the Worker takes one media each); the text rides on the last */
           (function (e, t) {
             window.haptic && window.haptic(15);
             var n = "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
@@ -1641,7 +1645,7 @@
               if (s && s.username) {
                 var r =
                     "opt-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
-                  o = { id: r, user: s.username, avatar: s.avatar, text: e, ts: Date.now() };
+                  o = { id: r, user: s.username, avatar: s.avatar, text: e, ts: Date.now() + tI };
                 (t && (o.media = t),
                   (We[n] = { tempId: r, ts: o.ts }),
                   Fe(o),
@@ -1665,7 +1669,8 @@
                 .catch(function () {
                   k("Couldn't send. Check your connection and try again.");
                 });
-          })(e, t));
+          })(tI === tL.length - 1 ? e : "", t);
+        }
       }
     }
     (a.addEventListener("focus", i),
@@ -1715,69 +1720,103 @@
             function () {},
           );
       }));
-    var h = null,
+    /* Composer tray (per dc): thumbnails of every picked photo/video with a
+       remove (x) each and an upload spinner; send works with photos only. */
+    var H = [],
+      h = null,
       v = c.querySelector(".chat-attach"),
       f = c.querySelector(".chat-file"),
-      g = c.querySelector(".chat-plus");
-    function b() {
-      if (((v.innerHTML = ""), h)) {
-        if (((v.hidden = !1), h.uploading)) {
-          var t = document.createElement("span");
-          return (
-            (t.className = "lg-spin"),
-            t.setAttribute("aria-label", "Uploading"),
-            void v.appendChild(t)
-          );
-        }
-        var n;
-        ("video" === h.kind
-          ? (((n = document.createElement("span")).className = "chat-attach-vid"),
-            (n.textContent = "▶"))
-          : "file" === h.kind
-            ? (((n = document.createElement("span")).className = "chat-attach-file"),
-              (n.textContent = "📄"))
-            : ((n = document.createElement("img")),
-              /^[A-Za-z0-9]+$/.test(h.id || "") && (n.src = e + "/api/media/" + h.id),
-              (n.alt = "")),
-          v.appendChild(n));
-        var a = document.createElement("button");
-        ((a.type = "button"),
-          (a.className = "chat-attach-x"),
-          a.setAttribute("aria-label", "Remove attachment"),
-          (a.innerHTML =
-            '<svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
-          a.addEventListener("click", function () {
-            ((h = null), b());
-          }),
-          v.appendChild(a));
-      } else v.hidden = !0;
+      g = c.querySelector(".chat-plus"),
+      hSeq = 0;
+    f && f.setAttribute("multiple", "");
+    (function () {
+      var e = c.querySelector(".chat-inputrow");
+      e && v && e.appendChild(v); // tray floats just above the input and follows the keyboard
+    })();
+    function hSync() {
+      var e = H.filter(function (e) {
+        return e.id;
+      });
+      h = e.length ? e : null;
+      var t = n.querySelector(".chat-send");
+      t && t.classList.toggle("chat-send-busy", H.some(function (e) { return e.uploading; }));
     }
-    function y(e) {
-      ((h = null),
-        (v.hidden = !1),
-        (v.innerHTML = '<span class="chat-attach-err">' + x(e) + "</span>"),
+    function b() {
+      (hSync(), (v.innerHTML = ""));
+      if (!H.length) return void (v.hidden = !0);
+      v.hidden = !1;
+      H.forEach(function (t) {
+        var a = document.createElement("span");
+        a.className = "chat-tray-item" + (t.uploading ? " is-loading" : "");
+        var r;
+        ("video" === t.kind
+          ? (((r = document.createElement("span")).className = "chat-attach-vid"),
+            (r.textContent = "▶"))
+          : ((r = document.createElement("img")),
+            (r.alt = ""),
+            t.preview
+              ? (r.src = t.preview)
+              : /^[A-Za-z0-9]+$/.test(t.id || "") && (r.src = e + "/api/media/" + t.id)),
+          a.appendChild(r));
+        if (t.uploading) {
+          var o = document.createElement("span");
+          ((o.className = "lg-spin"), o.setAttribute("aria-label", "Uploading"), a.appendChild(o));
+        }
+        var i = document.createElement("button");
+        ((i.type = "button"),
+          (i.className = "chat-attach-x"),
+          i.setAttribute("aria-label", "Remove attachment"),
+          (i.innerHTML =
+            '<svg width="12" height="12" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg>'),
+          i.addEventListener("click", function (e) {
+            (e.preventDefault(),
+              (H = H.filter(function (e) {
+                return e !== t;
+              })),
+              t.preview && 0 === t.preview.indexOf("blob:") && URL.revokeObjectURL(t.preview),
+              b());
+          }),
+          a.appendChild(i),
+          v.appendChild(a));
+      });
+    }
+    function y(e, t) {
+      (t &&
+        (H = H.filter(function (e) {
+          return e !== t;
+        })),
+        b(),
+        (v.hidden = !1));
+      var n = document.createElement("span");
+      ((n.className = "chat-attach-err"),
+        (n.textContent = e),
+        v.appendChild(n),
         setTimeout(function () {
-          h || (v.hidden = !0);
+          (n.remove(), H.length || (v.hidden = !0));
         }, 2500));
     }
-    function w(e, t, n) {
-      ((h = { uploading: !0, kind: t }),
+    function w(e, t, n, a) {
+      var r = { key: ++hSeq, uploading: !0, kind: t, preview: a || (t === "image" ? e : "") };
+      (H.push(r),
         b(),
         E("/api/media", { method: "POST", body: { dataUrl: e, kind: t, filename: n || "" } })
           .then(function (e) {
-            e && e.ok
-              ? ((h = { id: e.id, kind: e.kind }), b())
-              : y((e && e.error) || "Couldn't upload.");
+            H.indexOf(r) < 0 ||
+              (e && e.ok
+                ? ((r.uploading = !1), (r.id = e.id), (r.kind = e.kind), b())
+                : y((e && e.error) || "Couldn't upload.", r));
           })
           .catch(function () {
-            y("Couldn't reach the chat server.");
+            y("Couldn't reach the chat server.", r);
           }));
     }
     (g &&
       f &&
       (f.addEventListener("change", function () {
-        var e = f.files && f.files[0];
-        if (((f.value = ""), e)) {
+        var eL = Array.prototype.slice.call(f.files || [], 0, 10);
+        f.value = "";
+        eL.forEach(function (e) {
+        if (e) {
           var t = 0 === e.type.indexOf("video/"),
             n = "image/gif" === e.type,
             a = s && (s.member || s.owner) ? 20 : 8; // matches the Worker /api/media caps
@@ -1844,6 +1883,7 @@
                 })(e)
               : y("This type of file is not supported.");
         }
+        });
       }),
       g &&
         g.addEventListener("click", function () {
@@ -2024,6 +2064,70 @@
       );
     });
   }
+  /* Photo cards (per dc): the image floats on its own with rounded corners and a
+     soft shadow, no bubble. Back-to-back photo-only messages from one person
+     (within 2 min) fan into an iMessage-style stack; tap opens full screen. */
+  function mpPhotoCard(e) {
+    if (!e || "IMG" !== e.tagName) return null;
+    var t = document.createElement("button");
+    return ((t.type = "button"), (t.className = "chat-photo-card"), t.setAttribute("aria-label", "Open photo"), t.appendChild(e), t);
+  }
+  function mpPhotoStack(e) {
+    for (var t = e.querySelectorAll(".chat-msg:not(.chat-typing-msg)"), n = null, a = 0, r = 0; r < t.length; r++) {
+      var o = t[r],
+        i = !!o.querySelector(".chat-photo-only"),
+        c = o.getAttribute("data-user") || "",
+        l = parseInt(o.getAttribute("data-ts") || "0", 10) || 0;
+      (o.classList.remove("chat-photo-stacked", "chat-photo-follow"), o.removeAttribute("data-fan"));
+      if (i && n && n.u === c && Math.abs(l - n.ts) < 12e4) {
+        (n.el.classList.add("chat-photo-stacked"),
+          o.classList.add("chat-photo-stacked", "chat-photo-follow"),
+          o.setAttribute("data-fan", String(++a % 3)),
+          (n = { el: o, u: c, ts: l }));
+      } else ((a = 0), (n = i ? { el: o, u: c, ts: l } : null));
+    }
+  }
+  function mpPhotoViewer(e, t) {
+    Ve();
+    var n = document.createElement("div");
+    ((n.className = "msg-popup chat-photo-viewer"), (n.id = "msg-popup"));
+    var a = document.createElement("div");
+    ((a.className = "chat-photo-track"),
+      e.forEach(function (e) {
+        var t = document.createElement("img");
+        ((t.src = e), (t.alt = ""), a.appendChild(t));
+      }),
+      n.appendChild(a));
+    if (e.length > 1) {
+      var r = document.createElement("div");
+      ((r.className = "chat-photo-count"), (r.textContent = e.length + " photos"), n.appendChild(r));
+    }
+    ((n.onclick = function () {
+      Ve();
+    }),
+      document.body.appendChild(n),
+      requestAnimationFrame(function () {
+        a.scrollLeft = a.clientWidth * (t || 0);
+      }));
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest(".chat-photo-card");
+    if (t) {
+      e.preventDefault();
+      var n = t.closest(".chat-msg"),
+        a = [n];
+      if (n && n.classList.contains("chat-photo-stacked")) {
+        for (var r = n; r && r.classList.contains("chat-photo-follow") && r.previousElementSibling; ) (r = r.previousElementSibling), a.unshift(r);
+        for (r = n; (r = r.nextElementSibling) && r.classList.contains("chat-photo-follow"); ) a.push(r);
+      }
+      var o = [];
+      a.forEach(function (e) {
+        var t = e && e.querySelector(".chat-photo-card img");
+        t && o.push(t.src);
+      });
+      o.length && mpPhotoViewer(o, Math.max(0, a.indexOf(n)));
+    }
+  });
   function He(t) {
     return t && t.id && /^[A-Za-z0-9]+$/.test(t.id)
       ? "video" === t.kind
@@ -2162,10 +2266,11 @@
           o.classList.contains("mine"))
         ) {
           var i = document.createElement("div");
-          i.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
-          var c = He(e.media);
-          c && i.appendChild(c);
           var l = e.embed ? Oe(e.text) : e.text;
+          i.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
+          var c = He(e.media),
+            cP = mpPhotoCard(c);
+          cP && !l ? ((i.className = "chat-bubble chat-photo-only"), i.appendChild(cP)) : !cP && c && i.appendChild(c);
           if (l) {
             var d = document.createElement("div");
             ((d.className = "chat-text"), (d.innerHTML = _e(l)), i.appendChild(d));
@@ -2177,7 +2282,11 @@
             var v = ye(e.id, e.reactions);
             v && i.appendChild(v);
           }
-          o.appendChild(i);
+          if (cP && l) {
+            ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
+            var cW = document.createElement("div");
+            ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
+          } else o.appendChild(i);
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
@@ -2208,10 +2317,12 @@
             C.appendChild(E),
             w.appendChild(C));
           var k = document.createElement("div");
-          k.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
-          var L = He(e.media);
-          L && k.appendChild(L);
           var S = e.embed ? Oe(e.text) : e.text;
+          k.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
+          var L = He(e.media),
+            LP = mpPhotoCard(L);
+          LP && !S ? ((k.className = "chat-bubble chat-photo-only"), k.appendChild(LP)) : !LP && L && k.appendChild(L);
+          LP && S && ((k.className = "chat-bubble"), o.classList.add("chat-photo-text"), w.appendChild(LP));
           if (S) {
             var M = document.createElement("div");
             ((M.className = "chat-text"), (M.innerHTML = _e(S)), k.appendChild(M));
@@ -2238,6 +2349,7 @@
             }
             a.appendChild(o);
           })(),
+          mpPhotoStack(a),
           a.querySelectorAll(".chat-typing-msg").forEach(function (e) {
             a.appendChild(e);
           }),
