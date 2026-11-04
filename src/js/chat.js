@@ -1733,6 +1733,26 @@
       var e = c.querySelector(".chat-inputrow");
       e && v && e.appendChild(v); // tray floats just above the input and follows the keyboard
     })();
+    /* Grow the list's bottom padding by the tray's real height so messages
+       aren't hidden behind it; stay pinned to the bottom if we were there. */
+    (function () {
+      if (!v || !window.ResizeObserver) return;
+      var e = -1;
+      function t() {
+        var t = v.hidden ? 0 : Math.round(v.getBoundingClientRect().height + 8);
+        if (t !== e) {
+          var n = Le(),
+            a = Se();
+          if ((n && n.style.setProperty("--tray-h", t + "px"), (e = t), a)) {
+            var r = Date.now();
+            (function o() {
+              (window.scrollTo(0, document.documentElement.scrollHeight), Date.now() - r < 320 && requestAnimationFrame(o));
+            })();
+          }
+        }
+      }
+      (new ResizeObserver(t).observe(v), new MutationObserver(t).observe(v, { attributes: !0, attributeFilter: ["hidden"] }));
+    })();
     function hSync() {
       var e = H.filter(function (e) {
         return e.id;

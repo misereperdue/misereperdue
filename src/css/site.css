@@ -3381,7 +3381,8 @@ html {
   min-height: calc(
     100vh - 140px - env(safe-area-inset-top, 0px) + var(--kb-shift, 0px)
   );
-  padding: 4px 2px calc(100px + var(--kb-shift, 0px));
+  padding: 4px 2px calc(100px + var(--kb-shift, 0px) + var(--tray-h, 0px));
+  transition: padding-bottom 0.25s ease;
 }
 .chat-msg {
   display: flex;
