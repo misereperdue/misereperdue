@@ -2707,7 +2707,7 @@
   }
   function mpNPLookup(e) {
     if (mpNP[e]) return mpNP[e];
-    var t = "mp-np3:" + e.toLowerCase();
+    var t = "mp-np4:" + e.toLowerCase();
     try {
       var n = JSON.parse(localStorage.getItem(t) || "null");
       if (n) return ((mpNPv[e] = n.r || null), (mpNP[e] = Promise.resolve(n.r || null)));
@@ -2745,6 +2745,9 @@
           });
       })
       .then(function (n) {
+        return n && (n.art || (n.arts && n.arts.length)) ? n : mpNPDz(e, n);
+      })
+      .then(function (n) {
         mpNPv[e] = n;
         try {
           localStorage.setItem(t, JSON.stringify({ r: n }));
@@ -2754,6 +2757,64 @@
       .catch(function () {
         return (delete mpNP[e], null);
       }));
+  }
+  /* Deezer fallback (same-origin proxy, functions/np-search.js): many indie
+     tracks (e.g. Lil Speedy "Pain") are on Deezer but not Apple Music. */
+  function mpNPDz(e, n) {
+    return fetch("/np-search?q=" + encodeURIComponent(e))
+      .then(function (e) {
+        return e.ok ? e.json() : [];
+      })
+      .then(function (t) {
+        var a = mpNPPick(t || [], e);
+        if (a.r && a.s >= 5 && a.r.art)
+          return { title: a.r.trackName, artist: a.r.artistName, art: a.r.art, url: (n && n.url) || "https://music.apple.com/search?term=" + encodeURIComponent(a.r.artistName + " " + a.r.trackName) };
+        if (n && a.r && a.r.art && mpNPq(a.r.artistName) === mpNPq(n.artist)) n.art = a.r.art;
+        return n;
+      })
+      .catch(function () {
+        return n;
+      });
+  }
+  /* Cover gradient (per dc): 3 vibrant colours from a 24px canvas sample, cached per cover. */
+  var mpNPgc = Object.create(null);
+  function mpNPGrad(u, cb) {
+    var k = "mp-npg:" + u;
+    if (mpNPgc[u]) return cb(mpNPgc[u]);
+    try {
+      var c0 = localStorage.getItem(k);
+      if (c0) return cb((mpNPgc[u] = c0));
+    } catch (e) {}
+    var im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = function () {
+      try {
+        var S = 24, cv = document.createElement("canvas");
+        cv.width = cv.height = S;
+        var x = cv.getContext("2d", { willReadFrequently: !0 });
+        x.drawImage(im, 0, 0, S, S);
+        var d = x.getImageData(0, 0, S, S).data, bk = {};
+        for (var i = 0; i < d.length; i += 4) {
+          var r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0, l = (mx + mn) / 510;
+          var key = (r >> 5) + "," + (g >> 5) + "," + (b >> 5), w = 0.25 + sat * 2 * (1 - Math.abs(l - 0.5));
+          (bk[key] || (bk[key] = { n: 0, r: 0, g: 0, b: 0 }), (bk[key].n += w), (bk[key].r += r * w), (bk[key].g += g * w), (bk[key].b += b * w));
+        }
+        var L = Object.keys(bk).map(function (k) { var o = bk[k]; return [o.r / o.n, o.g / o.n, o.b / o.n, o.n]; }).sort(function (a, b) { return b[3] - a[3]; }), P = [];
+        L.forEach(function (c) {
+          P.length < 3 && P.every(function (p) { return Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) + Math.abs(p[2] - c[2]) > 90; }) && P.push(c);
+        });
+        for (; P.length < 3; ) P.push(P[0] || [70, 80, 110]);
+        var f = function (c) { var m = Math.max(c[0], c[1], c[2]), s = m > 200 ? 200 / m : m < 115 && m ? 115 / m : 1; return "rgb(" + c.slice(0, 3).map(function (v) { return Math.round(v * s); }).join(",") + ")"; };
+        var gr = "radial-gradient(120% 140% at 0% 0%," + f(P[0]) + " 0%,transparent 65%),radial-gradient(120% 140% at 100% 100%," + f(P[2]) + " 0%,transparent 70%),linear-gradient(135deg," + f(P[0]) + "," + f(P[1]) + " 55%," + f(P[2]) + ")";
+        mpNPgc[u] = gr;
+        try { localStorage.setItem(k, gr); } catch (e) {}
+        cb(gr);
+      } catch (e) {
+        cb("");
+      }
+    };
+    im.onerror = function () { cb(""); };
+    im.src = u;
   }
   function mpNPArtist(e, nF) {
     var a = e.split(/\s+/);
@@ -3126,7 +3187,7 @@
       c = document.createElement("div");
     ((c.className = "chat-np is-loading"),
       (c.innerHTML =
-        '<span class="chat-np-glow"></span><span class="chat-np-halo"></span><span class="chat-np-art"></span><span class="chat-np-tx"><span class="chat-np-who"></span><span class="chat-np-line"></span><span class="chat-np-line s"></span></span>'),
+        '<span class="chat-np-grad"></span><span class="chat-np-glow"></span><span class="chat-np-halo"></span><span class="chat-np-art"></span><span class="chat-np-tx"><span class="chat-np-who"></span><span class="chat-np-line"></span><span class="chat-np-line s"></span></span>'),
       e.classList.add("chat-np-bubble"),
       i && (i.hidden = !0),
       e.insertBefore(c, e.firstChild));
@@ -3148,7 +3209,10 @@
       var aL = (n.arts || [n.art]).filter(Boolean),
         gl = c.querySelector(".chat-np-glow");
       function ph() {
-        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19.95 2.3a.75.75 0 0 1 .55.72v12.23a3 3 0 1 1-1.5-2.6V7.3l-9 2.25v7.7a3 3 0 1 1-1.5-2.6V5.25c0-.34.23-.64.57-.73l10.5-2.62a.75.75 0 0 1 .38.4Z"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""));
+        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19.95 2.3a.75.75 0 0 1 .55.72v12.23a3 3 0 1 1-1.5-2.6V7.3l-9 2.25v7.7a3 3 0 1 1-1.5-2.6V5.25c0-.34.23-.64.57-.73l10.5-2.62a.75.75 0 0 1 .38.4Z"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""), sg("linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"));
+      }
+      function sg(gr) {
+        gr && (c.style.setProperty("--np-g", gr), requestAnimationFrame(function () { c.classList.add("has-grad"); }));
       }
       function nx() {
         var e = aL.shift();
@@ -3156,17 +3220,7 @@
           ? ((r.src = e), (gl.style.backgroundImage = c.querySelector(".chat-np-halo").style.backgroundImage = "url(" + JSON.stringify(e) + ")"))
           : ph();
       }
-      ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), a.appendChild(r), nx());
-      /* breathing glow (per dc): staggered start, runs only while on screen */
-      (c.style.setProperty("--np-delay", -(Math.random() * 3.8).toFixed(2) + "s"),
-        window.IntersectionObserver &&
-          (mpNPio ||
-            (mpNPio = new IntersectionObserver(function (e) {
-              e.forEach(function (e) {
-                e.target.classList.toggle("np-on", e.isIntersecting);
-              });
-            })),
-          mpNPio.observe(c)));
+      ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), (r.onload = function () { mpNPGrad(r.src, function (gr) { sg(gr || "linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"); }); }), a.appendChild(r), nx());
       var d = c.querySelectorAll(".chat-np-line");
       ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");
