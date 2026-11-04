@@ -2871,12 +2871,14 @@
     });
     setTimeout(function () { qi.focus(); }, 60);
   }
+  /* poll card style (per dc): "p1" frosted + animated border, "p2" indigo glass, "p3" ticket */
+  var MP_POLL_STYLE = "p1";
   var mpPolls = Object.create(null);
   function mpPollRender(b, e) {
     if (!b || !e || !e.poll || !Array.isArray(e.poll.o)) return;
     var tx = b.querySelector(".chat-text"); tx && (tx.hidden = !0);
     var ex = b.querySelector(".chat-embed"); ex && ex.remove();
-    b.classList.add("chat-poll-bubble");
+    b.classList.add("chat-poll-bubble", "chat-poll-" + MP_POLL_STYLE);
     var c = document.createElement("div"); c.className = "chat-poll"; c.setAttribute("data-poll", e.id);
     b.insertBefore(c, b.firstChild);
     mpPolls[e.id] = { q: e.text, poll: e.poll };
@@ -2891,7 +2893,7 @@
     var counts = pl.o.map(function () { return 0; }), voters = 0;
     Object.keys(v).forEach(function (k) { if (window.mpHide && mpHide.is(k)) return; var a = Array.isArray(v[k]) ? v[k] : []; a.length && voters++; a.forEach(function (i) { counts[i] != null && counts[i]++; }); });
     var mine = (me && v[me]) || [], tot = counts.reduce(function (a, b) { return a + b; }, 0);
-    c.innerHTML = '<div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"></div>';
+    c.innerHTML = '<div class="chat-poll-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Poll</div><div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"></div>';
     c.querySelector(".chat-poll-q").textContent = p.q || "Poll";
     var L = c.querySelector(".chat-poll-list");
     pl.o.forEach(function (o, i) {
