@@ -9441,3 +9441,15 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .mp-hid > :not(.mp-hid-ph):not(.forum-nested):not(.forum-replies){display:none!important}
 .mp-hid-ph{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;border:1px dashed var(--stroke,rgba(127,127,127,.3));border-radius:14px;background:var(--fill);color:var(--ink);opacity:.6;font:inherit;font-size:13.5px;font-style:italic;text-align:left;cursor:pointer}
 .mp-hid-ph svg{width:16px;height:16px;flex:none}
+
+/* @mentions (per dc) */
+.chat-mention-menu{min-width:220px;max-width:min(300px,calc(100% - 8px));max-height:calc(5 * 46px + 10px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:none;opacity:1;animation:chat-mn-in .2s cubic-bezier(.3,1.3,.5,1)}
+@keyframes chat-mn-in{from{transform:translateY(6px) scale(.96);opacity:0}}
+.chat-mention-menu .chat-pmenu-row{padding:7px 10px;font-weight:500}
+.chat-mention-menu .chat-pmenu-row .chat-avatar-wrap,.chat-mention-menu .chat-pmenu-row img,.chat-mention-menu .chat-pmenu-row .chat-avatar{width:30px!important;height:30px!important;flex:none;border-radius:50%;object-fit:cover}
+.chat-mention-menu .chat-pmenu-row span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-mention-menu .chat-pmenu-row.is-sel{background:rgba(127,127,127,.18)}
+.chat-inputrow:has(> .chat-attach:not([hidden])) > .chat-mention-menu{bottom:calc(100% + 16px + var(--tray-row-h,96px))}
+.chat-mention{font-weight:600;color:#7aa7ff}
+.chat-msg.mine .chat-mention{color:inherit;text-decoration:underline;text-decoration-color:rgba(255,255,255,.45);text-underline-offset:2px}
+@media (prefers-reduced-motion:reduce){.chat-mention-menu{animation:none}}

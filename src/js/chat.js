@@ -1772,6 +1772,7 @@
     var n = c.querySelector(".chat-inputbar"),
       a = n.querySelector("input");
     a.addEventListener("input", rt);
+    mpMention(a);
     var r = 0,
       o = null;
     function i() {
@@ -2286,7 +2287,76 @@
         "</a>" +
         e.slice(t.length)
       );
-    });
+    }).replace(/(^|[\s(])@([A-Za-z0-9_.]{1,30}[A-Za-z0-9_])/g, '$1<span class="chat-mention">@$2</span>');
+  }
+  /* @mentions autocomplete (per dc): users from chat authors seen (Je) + /api/online.
+     The Worker's full user lists are owner-only, so this is client-side. */
+  var mpMnOn = null, mpMnAt = 0;
+  function mpMention(inp) {
+    var box = null, items = [], sel = 0, tok = null;
+    function me() { return (s && s.username ? s.username : "").toLowerCase(); }
+    function pool() {
+      var m = Object.create(null);
+      Object.keys(Je || {}).forEach(function (k) { var u = Je[k]; u && u.username && (m[k] = { username: u.username, avatar: u.avatar, v: u.hasImg ? u.imgV : void 0 }); });
+      (mpMnOn || []).forEach(function (u) { var n = "string" == typeof u ? u : u && u.username; if (!n) return; var k = n.toLowerCase(); m[k] || (m[k] = { username: n, avatar: u.avatar, v: u.hasAvatarImg ? u.avatarV : void 0 }); });
+      return Object.keys(m).filter(function (k) { return k !== me() && !(window.mpHide && mpHide.is(m[k].username)); }).map(function (k) { return m[k]; });
+    }
+    function loadOnline() {
+      if (Date.now() - mpMnAt < 60000) return; mpMnAt = Date.now();
+      try { E("/api/online").then(function (r) { r && r.ok && Array.isArray(r.users) && ((mpMnOn = r.users), document.activeElement === inp && update()); }).catch(function () {}); } catch (_) {}
+    }
+    function token() {
+      var v = inp.value, c = inp.selectionStart == null ? v.length : inp.selectionStart;
+      var m = /(^|\s)@([A-Za-z0-9_.]{0,30})$/.exec(v.slice(0, c));
+      return m ? { start: c - m[2].length - 1, end: c, q: m[2].toLowerCase() } : null;
+    }
+    function close() { box && box.remove(); box = null; items = []; tok = null; }
+    function pick(u) {
+      if (!tok) return;
+      var v = inp.value, after = v.slice(tok.end).replace(/^[A-Za-z0-9_.]*/, "");
+      var ins = "@" + u.username + " ";
+      inp.value = v.slice(0, tok.start) + ins + after.replace(/^ /, "");
+      var c = tok.start + ins.length; close(); inp.focus();
+      try { inp.setSelectionRange(c, c); } catch (_) {}
+      inp.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    function paint() {
+      [].forEach.call(box.children, function (b, i) { b.classList.toggle("is-sel", i === sel); i === sel && b.scrollIntoView && b.scrollIntoView({ block: "nearest" }); });
+    }
+    function update() {
+      tok = token();
+      if (!tok) return close();
+      loadOnline();
+      var q = tok.q, all = pool();
+      var pre = all.filter(function (u) { return u.username.toLowerCase().indexOf(q) === 0; });
+      var con = all.filter(function (u) { var i = u.username.toLowerCase().indexOf(q); return i > 0; });
+      pre.sort(function (a, b) { return a.username.localeCompare(b.username); });
+      items = pre.concat(con).slice(0, 30);
+      if (!items.length) return close();
+      var row = inp.closest(".chat-inputrow") || inp.parentNode;
+      if (!box) { box = document.createElement("div"); box.className = "chat-plus-menu chat-mention-menu is-in"; box.setAttribute("role", "listbox"); row.appendChild(box); }
+      box.innerHTML = ""; sel = Math.min(sel, items.length - 1);
+      items.forEach(function (u, i) {
+        var b = document.createElement("button"); b.type = "button"; b.className = "chat-pmenu-row"; b.setAttribute("role", "option");
+        try { var av = J(u.username, u.avatar, "xs", u.v); av && b.appendChild(av); } catch (_) {}
+        var t = document.createElement("span"); t.textContent = "@" + u.username; b.appendChild(t);
+        b.addEventListener("pointerdown", function (e) { e.preventDefault(); });
+        b.addEventListener("click", function (e) { e.preventDefault(); pick(u); });
+        box.appendChild(b);
+      });
+      paint();
+    }
+    inp.addEventListener("input", function () { sel = 0; update(); });
+    inp.addEventListener("click", update);
+    inp.addEventListener("keyup", function (e) { /^Arrow(Left|Right)$|^Home$|^End$/.test(e.key) && update(); });
+    inp.addEventListener("blur", function () { setTimeout(close, 120); });
+    inp.addEventListener("keydown", function (e) {
+      if (!box) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); sel = (sel + 1) % items.length; paint(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); sel = (sel - 1 + items.length) % items.length; paint(); }
+      else if ((e.key === "Enter" || e.key === "Tab") && items[sel]) { e.preventDefault(); e.stopImmediatePropagation(); pick(items[sel]); }
+      else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
+    }, true);
   }
   /* Photo cards (per dc): the image floats on its own with rounded corners and a
      soft shadow, no bubble. Back-to-back photo-only messages from one person
