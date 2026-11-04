@@ -2998,27 +2998,41 @@
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
       cv.width = W * dpr; cv.height = H * dpr; draw(performance.now());
     }
+    /* 3D height field (per dc): z from an ambient two-wave swell + tap shock rings, projected with a
+       tilted-camera perspective; dots grow/brighten toward the camera and catch a fake light on slopes. */
+    function zAt(gx, gy, t, live) {
+      var z = 0;
+      if (!red) {
+        z += 2.2 * Math.sin(gx * 0.045 + gy * 0.02 - t * 2.3) + 1.6 * Math.sin(-gx * 0.018 + gy * 0.05 - t * 2.0 + 1.3);
+        for (var i = 0; i < live.length; i++) {
+          var L = live[i], dx = gx - L.x, dy = gy - L.y, d = Math.sqrt(dx * dx + dy * dy), u = L.r - d;
+          if (u < -24) continue;
+          var damp = Math.exp(-L.a * 2.6), front = Math.exp(-(u * u) / 120);
+          var trail = u > 0 ? Math.sin(u / 7.5) * Math.exp(-u / 38) : 0;
+          z += 13 * damp * (u > 0 ? trail * 0.9 + front * 0.6 : front);
+        }
+      }
+      return z;
+    }
     function draw(now) {
       x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      var t = (now - t0) / 1000, diag = W + H, live = [];
-      waves.forEach(function (w) { var a = (now - w.t) / 1000; a < 1.6 && live.push({ x: w.x, y: w.y, a: a, r: a * w.v }); });
-      waves = waves.filter(function (w) { return (now - w.t) / 1000 < 1.6; });
+      var t = (now - t0) / 1000, live = [], cx = W / 2, F = 26, TILT = 0.72;
+      waves = waves.filter(function (w) { return (now - w.t) / 1000 < 1.3; });
+      waves.forEach(function (w) { var a = (now - w.t) / 1000; live.push({ x: w.x, y: w.y, a: a, r: a * w.v }); });
+      x.fillStyle = "#fff";
       for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) {
-        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), al = 0.14, rad = 0.95, px = gx, py = gy;
+        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45);
+        var z = zAt(gx, gy, t, live), sc = 1, al = 0.14 * m, px = gx, py = gy;
         if (!red) {
-          var ph = ((gx + gy) / diag - t / 5) % 1; ph < 0 && (ph += 1);
-          var band = Math.exp(-Math.pow((ph - 0.5) * 7, 2));
-          px += band * 0.8; py -= band * 0.8; al += band * 0.09;
-          for (var i = 0; i < live.length; i++) {
-            var L = live[i], dx = gx - L.x, dy = gy - L.y, d = Math.sqrt(dx * dx + dy * dy) || 1, del = d - L.r;
-            var env = Math.exp(-(del * del) / 260) * Math.exp(-L.a * 1.6);
-            if (env < 0.01) continue;
-            var off = 4.8 * env * Math.cos(del / 9);
-            px += (dx / d) * off; py += (dy / d) * off; al += 0.5 * env; rad += 0.9 * env;
-          }
+          var zx = zAt(gx + 2, gy, t, live) - z, zy = zAt(gx, gy + 2, t, live) - z;
+          sc = Math.max(0.6, Math.min(2, F / Math.max(F - z, 6)));
+          px = cx + (gx - cx) * sc;
+          py = gy - z * TILT;
+          var light = Math.max(-1, Math.min(1, (-zx * 0.6 - zy * 0.9) * 0.5));
+          al = Math.min(0.62, Math.max(0.03, 0.14 * m + z * 0.022 + light * 0.16));
         }
-        x.globalAlpha = Math.min(0.62, al * (al > 0.2 ? 1 : m));
-        x.beginPath(); x.arc(px, py, rad, 0, 6.2832); x.fillStyle = "#fff"; x.fill();
+        x.globalAlpha = al;
+        x.beginPath(); x.arc(px, py, 0.95 * sc, 0, 6.2832); x.fill();
       }
       x.globalAlpha = 1;
     }
@@ -3032,7 +3046,7 @@
     window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
     size();
     var api = {
-      wave: function (wx, wy) { if (red) return; waves.push({ x: wx, y: wy, t: performance.now(), v: (W + H) / 1.1 }); kick(); },
+      wave: function (wx, wy) { if (red) return; waves.push({ x: wx, y: wy, t: performance.now(), v: Math.sqrt(W * W + H * H) / 0.55 }); kick(); },
       vis: function (v) { seen = v; v && kick(); },
       kick: kick
     };
