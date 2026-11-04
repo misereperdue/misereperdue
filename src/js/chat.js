@@ -2105,7 +2105,7 @@
           if (m && !m.classList.contains("is-out")) return close();
           var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu");
-          m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><<path d="M8.2 3.9l9.6-1.2a2.6 2.6 0 0 1 2.9 2.3l1 8.3a2.6 2.6 0 0 1-2 2.9"/><rect x="2.5" y="7" width="15" height="13" rx="3"/><circle cx="7" cy="11.2" r="1.3"/><path d="M2.9 17.6l3.8-3.7a1.5 1.5 0 0 1 2.1 0l5.6 5.6"/></svg><span>Add media</span></button>' +
+          m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M20 12.5V17a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4.5"/><path d="M4.5 17l4.5-4.5 3 3 2-2 5.5 5"/><path d="M18 2.5v6M15 5.5h6"/></svg><span>Add media</span></button>' +
             '<div class="chat-pmenu-sep"></div><button type="button" role="menuitem" class="chat-pmenu-row" disabled aria-disabled="true"><svg ' + ico + '><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><span>misery.fm</span><em>Soon</em></button>';
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
