@@ -2992,43 +2992,73 @@
     host.insertBefore(cv, host.firstChild);
     var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 2500;
     function size() {
-      var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 3);
+      var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
-      cv.width = W * dpr; cv.height = H * dpr; draw(performance.now());
+      cv.width = W * dpr; cv.height = H * dpr; cam(); draw(performance.now());
     }
-    function expo(k) { return k >= 1 ? 1 : 1 - Math.pow(2, -10 * k); }
+    /* genuine 3D water surface (per dc): dots on a plane, tilted perspective camera, height-field + normal shading */
+    var PH = 0.61, CF = Math.cos(PH), SF = Math.sin(PH), F = 1, CAMY = 0, CAMZ = 0, Y0 = 0, Y1 = 1, GW = 9;
+    function cam() {
+      F = Math.max(W, 240) * 1.05; CAMZ = 150; CAMY = -CAMZ / Math.tan(PH) + 10; /* centre ray hits plane near the bottom edge */
+      var lo = 1e9, hi = -1e9;
+      for (var Y = -400; Y < 3000; Y += 4) { var sy = proj(W / 2, Y, 0); if (!sy) continue; sy = sy[1]; sy < H + 16 && sy > -16 && ((lo = Math.min(lo, Y)), (hi = Math.max(hi, Y))); }
+      Y0 = lo - GW * 2; Y1 = hi + GW * 3;
+    }
+    function proj(X, Y, Z) {
+      var vx = X - W / 2, vy = Y - CAMY, vz = Z - CAMZ, zc = vy * CF - vz * SF;
+      if (zc < 20) return null;
+      var yc = vy * SF + vz * CF;
+      return [W / 2 + F * vx / zc, H * 0.72 - F * yc / zc + 0, F / zc];
+    }
+    function unproj(sx, sy) { /* screen -> plane point (z=0) by bisection along depth */
+      var a = Y0, b = Y1;
+      for (var i = 0; i < 30; i++) { var m = (a + b) / 2, p = proj(W / 2, m, 0); p && p[1] > sy ? (a = m) : (b = m); }
+      var Y = (a + b) / 2, p2 = proj(W / 2, Y, 0); return [W / 2 + (sx - W / 2) / (p2 ? p2[2] : 1), Y];
+    }
+    var rings = [], cents = [], T = 0;
+    function hgt(X, Y) {
+      var h = 3.4 * Math.sin(X * 0.034 + Y * 0.022 - T * 1.46) + 2.4 * Math.sin(-X * 0.021 + Y * 0.038 - T * 1.06 + 1.7) + 1.6 * Math.sin(X * 0.028 - Y * 0.015 - T * 0.88 + 4.1);
+      for (var i = 0; i < rings.length; i++) {
+        var R = rings[i], dist = Math.hypot(X - R.x, Y - R.y), u = dist - R.r;
+        h += (Math.exp(-(u * u) / 90) - (u < 0 ? 0.35 * Math.exp(-((u + 15) * (u + 15)) / 140) : 0)) * R.s * 9 / Math.sqrt(1 + dist / 30);
+      }
+      for (var j = 0; j < cents.length; j++) { var C = cents[j], cd = Math.hypot(X - C.x, Y - C.y); h += C.s * 6 * Math.exp(-(cd * cd) / 160); }
+      return h;
+    }
+    function flat() {
+      for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) { x.globalAlpha = 0.14 * Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45); x.beginPath(); x.arc(gx, gy, 0.95, 0, 6.2832); x.fill(); }
+    }
     function draw(now) {
-      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-      /* calm water drop (per dc): ~80px/s rings, 3 rings 160ms apart, small centre dip, ~2.4s life */
+      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H); x.fillStyle = "#fff";
+      if (red) { flat(); x.globalAlpha = 1; return; }
+      /* calm water drop: ~80px/s rings, 3 rings 160ms apart, small centre dip, ~2.5s life */
       drops = drops.filter(function (d) { return now - d.t < DUR; });
-      var rings = [], cents = [];
+      rings = []; cents = []; T = now / 1000;
       drops.forEach(function (d) {
         var age = (now - d.t) / 1000;
         age < 0.45 && cents.push({ x: d.x, y: d.y, s: Math.sin(Math.min(1, age / 0.45) * Math.PI) * (age < 0.15 ? -0.5 : 0.6) });
         [[0, 1], [0.16, 0.62], [0.32, 0.36]].forEach(function (e) {
           var a = age - e[0]; if (a <= 0) return;
-          var r = 80 * a * (1 - 0.12 * Math.min(1, a / 2.4)) + 2;
           var fade = Math.max(0, 1 - a / (DUR / 1000 - e[0])), s0 = e[1] * Math.pow(fade, 1.4) * Math.min(1, a / 0.12);
-          s0 > 0.01 && rings.push({ x: d.x, y: d.y, r: r, s: s0 });
+          s0 > 0.01 && rings.push({ x: d.x, y: d.y, r: 80 * a * (1 - 0.12 * Math.min(1, a / 2.4)) + 2, s: s0 });
         });
       });
-      var cy = H / 2, T = now / 1000;
-      for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) {
-        var m = Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45), lift = 0, push = 0, ox = 0, oy = 0;
-        /* ambient breathing swell: three slow sines (~4.3s, 5.9s, 7.1s) at different angles */
-        var amb = red ? 0 : 0.5 + 0.5 * (0.45 * Math.sin(gx * 0.021 + gy * 0.013 - T * 1.46) + 0.33 * Math.sin(-gx * 0.012 + gy * 0.024 - T * 1.06 + 1.7) + 0.22 * Math.sin(gx * 0.017 - gy * 0.009 - T * 0.88 + 4.1));
-        var trg = red ? 0 : (1 - amb) * (1 - amb) * 0.05; amb = amb * amb * 0.6;
-        for (var i = 0; i < rings.length; i++) {
-          var R = rings[i], dx = gx - R.x, dy = gy - R.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, u = dist - R.r;
-          var att = 1 / Math.sqrt(1 + dist / 22), crest = Math.exp(-(u * u) / 70), trough = u < 0 ? -0.3 * Math.exp(-((u + 13) * (u + 13)) / 110) : 0, h = (crest + trough) * R.s * att * 0.85;
-          lift += h; push = crest * R.s * att * 2.2; ox += (dx / dist) * push; oy += (dy / dist) * push;
+      var LX = -0.45, LY = 0.55, LZ = 0.7, Ln = Math.hypot(LX, LY, LZ); LX /= Ln; LY /= Ln; LZ /= Ln;
+      for (var Y = Y1; Y >= Y0; Y -= GW) { /* far to near */
+        var e0 = proj(W / 2, Y, 0); if (!e0) continue;
+        var half = (W / 2 + 24) / e0[2], X0 = W / 2 - Math.ceil(half / GW) * GW;
+        for (var X = X0; X <= W / 2 + half; X += GW) {
+          var h = hgt(X, Y), p = proj(X, Y, h); if (!p || p[1] < -6 || p[1] > H + 6 || p[0] < -6 || p[0] > W + 6) continue;
+          var hx = (hgt(X + 2, Y) - h) / 2, hy = (hgt(X, Y + 2) - h) / 2, nn = Math.hypot(hx, hy, 1);
+          var dif = (-hx * LX - hy * LY + LZ) / nn - LZ; /* >0 facing light, <0 facing away */
+          var glint = Math.max(0, dif) * 2.2, k = p[2], depth = Math.min(1, k * 1.1);
+          var al = Math.max(0.03, Math.min(0.6, (0.13 + glint * 0.55 + Math.min(0, dif) * 0.35 + Math.max(0, h) * 0.006) * (0.45 + 0.55 * depth)));
+          var r = Math.max(0.35, Math.min(2.6, 0.95 * k * (1 + Math.max(0, h) * 0.03)));
+          x.globalAlpha = al;
+          var tint = Math.min(1, glint * 1.4) * (rings.length ? 1 : 0.35); /* toward --accent light blue #a9d7f5 */
+          x.fillStyle = tint > 0.05 ? "rgb(" + Math.round(255 - 86 * tint) + "," + Math.round(255 - 40 * tint) + "," + Math.round(255 - 10 * tint) + ")" : "#fff";
+          x.beginPath(); x.arc(p[0], p[1], r, 0, 6.2832); x.fill();
         }
-        for (var j = 0; j < cents.length; j++) { var C = cents[j], cd = Math.hypot(gx - C.x, gy - C.y); lift += C.s * Math.exp(-(cd * cd) / 120); }
-        var sc = Math.max(0.7, Math.min(1.7, 1 + lift * 0.9 + amb * 1.1)), al = Math.max(0.05, Math.min(0.55, 0.14 * m + amb * 0.42 - trg + Math.max(0, lift) * 0.45 + Math.min(0, lift) * 0.1));
-        var px = gx + ox, py = gy + oy - lift * 1.4 - amb * 4.5 + (gy - cy) * (lift + amb * 0.8) * 0.015;
-        x.globalAlpha = al;
-        x.fillStyle = lift > 0.08 ? "rgb(" + Math.round(255 - 60 * Math.min(1, lift)) + "," + Math.round(255 - 28 * Math.min(1, lift)) + "," + Math.round(255 - 7 * Math.min(1, lift)) + ")" : "#fff"; /* toward --accent light blue #a9d7f5 */
-        x.beginPath(); x.arc(px, py, 0.95 * Math.min(2.2, sc), 0, 6.2832); x.fill();
       }
       x.globalAlpha = 1;
     }
@@ -3046,7 +3076,7 @@
       drop: function (dx, dy) {
         if (red) return;
         var R = Math.max(Math.hypot(dx, dy), Math.hypot(W - dx, dy), Math.hypot(dx, H - dy), Math.hypot(W - dx, H - dy)) + 20;
-        drops.push({ x: dx, y: dy, t: performance.now(), R: R }); kick();
+        var w = unproj(dx, dy); drops.push({ x: w[0], y: w[1], t: performance.now(), R: R }); kick();
       },
       vis: function (v) { seen = v; v ? kick() : draw(performance.now()); }
     };
