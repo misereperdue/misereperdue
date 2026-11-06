@@ -4601,7 +4601,7 @@
         ) || !!navigator.standalone;
     } catch (e) {}
     ((R.textContent = B
-      ? "Get notified for mentions, replies, and VIP upgrades."
+      ? "Get notified for mentions, replies, whispers, and VIP upgrades."
       : "Download the web app to enable push notifications."),
       (R.style.cssText = "font-size:12px;opacity:.55;margin:2px 0 2px;"),
       o.appendChild(R));

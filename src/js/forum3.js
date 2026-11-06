@@ -514,6 +514,26 @@
                     k(e.ts) +
                     "</div></div>")
                 );
+              if ("whisper" === e.type || "whisper" === e.kind)
+                return (
+                  (i +=
+                    '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' +
+                    t +
+                    ';">'),
+                  (i +=
+                    '<div style="font-size:14px;color:var(--ink);"><strong>@' +
+                    w(e.from) +
+                    "</strong> whispered to you</div>"),
+                  e.preview &&
+                    (i +=
+                      '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' +
+                      w(e.preview) +
+                      "</div>"),
+                  void (i +=
+                    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
+                    k(e.ts) +
+                    "</div></div>")
+                );
               var r = C(d[String(e.from || "").toLowerCase()] || "", e.from),
                 n = r
                   ? '<span style="display:inline-block;vertical-align:middle;">' + r + "</span>"
