@@ -3371,7 +3371,8 @@ html {
 }
 #chat {
   touch-action: manipulation;
-  overscroll-behavior: none;
+  /* overscroll-behavior left alone so pull-to-refresh can run; Globe still
+     sets overscroll-behavior-y:none via html:has(#forum.on) (per dc). */
   -webkit-overflow-scrolling: touch;
 }
 #chat .chat-head,

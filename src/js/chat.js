@@ -6678,46 +6678,91 @@
       Mt(!0);
     }),
     Mt(),
-    ((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
-      window.navigator.standalone) &&
-      (function () {
-        /* Standalone pull-to-refresh (PWA only — Safari has its own).
-         * Skip only while Globe (#forum.on) is showing; pull-to-post owns that
-         * gesture. Threshold ~100px. preventDefault once locked so overscroll-
-         * behavior:none pages still feel the pull (per dc). */
+    (function () {
+        /* Pull-to-refresh on every non-Globe page (PWA + Safari).
+         * Root causes this replaces (per dc / SW 356):
+         *  - Chat is bottom-anchored so window.scrollY is never ~0 while
+         *    reading latest messages; we allow the bottom edge too.
+         *  - #chat had overscroll-behavior:none which killed Safari native PTR
+         *    while our handler only installed in standalone.
+         *  - We now walk the scrollable ancestor under the finger and listen
+         *    in the capture phase so swipe-tabs / trays can't win first. */
         var startY = null,
+          startX = 0,
           dist = 0,
           locked = 0,
           armed = 0,
           busy = 0,
           raf = 0,
           gen = 0,
+          activeScroller = null,
           THRESH = 100,
           RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
         var tip = document.createElement("div");
         tip.className = "mp-pull-indicator";
+        tip.setAttribute("aria-hidden", "true");
         tip.innerHTML =
-          '<span class="mp-pull-indicator-ico" aria-hidden="true">' +
+          '<span class="mp-pull-indicator-ico">' +
           '<svg class="mp-pull-indicator-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>' +
           '<span class="mp-pull-indicator-spin"></span></span>' +
           '<span class="mp-pull-indicator-txt">Pull to refresh</span>';
         var label = tip.querySelector(".mp-pull-indicator-txt");
-        document.body.appendChild(tip);
+        function mountTip() {
+          if (!tip.parentNode && document.body) document.body.appendChild(tip);
+        }
+        if (document.body) mountTip();
+        else document.addEventListener("DOMContentLoaded", mountTip);
 
         function onGlobe() {
           var f = document.getElementById("forum");
           return !!(f && f.classList.contains("on"));
         }
-        function atTop() {
-          var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-          return y <= 1;
-        }
         function clearStuckClaim() {
-          // Globe may have left __mpPullToPost set if a pull was aborted mid-gesture.
           if (!onGlobe() && window.__mpPullToPost) {
             try { window.__mpPullToPost = !1; } catch (e) {}
             document.documentElement.classList.remove("mp-globe-pull");
           }
+        }
+        function scrollTopOf(el) {
+          if (!el || el === window) {
+            return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          }
+          return el.scrollTop || 0;
+        }
+        function scrollMax(el) {
+          if (!el || el === window) {
+            var se = document.scrollingElement || document.documentElement;
+            return Math.max(0, (se.scrollHeight || 0) - (window.innerHeight || 0));
+          }
+          return Math.max(0, el.scrollHeight - el.clientHeight);
+        }
+        function isScrollable(el) {
+          if (!el || el === document || el === document.documentElement || el === document.body) return false;
+          try {
+            var st = getComputedStyle(el);
+            var oy = st.overflowY;
+            if (oy !== "auto" && oy !== "scroll" && oy !== "overlay") return false;
+            return el.scrollHeight > el.clientHeight + 1;
+          } catch (e) {
+            return false;
+          }
+        }
+        function scrollerFrom(target) {
+          var el = target;
+          while (el && el !== document && el !== document.documentElement) {
+            if (isScrollable(el)) return el;
+            el = el.parentElement;
+          }
+          return window;
+        }
+        // True when this scroller can start a pull-down refresh.
+        // Top edge: classic. Bottom edge: Chat (and similar) while pinned to latest.
+        function edgeAllowsPull(scroller) {
+          var top = scrollTopOf(scroller);
+          if (top <= 1) return true;
+          var max = scrollMax(scroller);
+          if (max <= 1) return true; // short page, effectively at top
+          return top >= max - 1;
         }
         function paint(p) {
           tip.style.setProperty("--ptr", String(p));
@@ -6734,10 +6779,13 @@
           }
         }
         function shiftContent(px) {
-          // Nudge scroll content only — never a fixed top bar ancestor.
           var msgs = document.querySelector("#journal.on #chat .chat-msgs");
           var panel = document.querySelector(".panel.on");
-          var el = msgs || (panel && panel.id !== "forum" ? panel.querySelector(".grid, #shop-grid, #cart-view, #product-view, .cart") || null : null);
+          var el =
+            msgs ||
+            (panel && panel.id !== "forum"
+              ? panel.querySelector(".grid, #shop-grid, #cart-view, #product-view, .cart") || null
+              : null);
           if (!el) return null;
           if (px) {
             el.style.transition = "none";
@@ -6745,110 +6793,136 @@
           } else {
             el.style.transition = RM ? "none" : "transform .3s cubic-bezier(.2,.85,.25,1.15)";
             el.style.transform = "";
-            setTimeout(function () { el.style.transition = ""; }, 320);
+            setTimeout(function () {
+              el.style.transition = "";
+            }, 320);
           }
           return el;
         }
-        document.addEventListener(
-          "touchstart",
-          function (ev) {
-            if (busy) return;
-            clearStuckClaim();
+        function isChrome(t) {
+          if (!t || !t.closest) return false;
+          // Narrow: real chrome only. Do NOT skip product-card / role=button content.
+          return !!t.closest(
+            "#nav, .nav-wrap, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
+          );
+        }
+        function onStart(ev) {
+          if (busy) return;
+          clearStuckClaim();
+          locked = 0;
+          dist = 0;
+          armed = 0;
+          activeScroller = null;
+          if (onGlobe() || window.__mpPullToPost) {
+            startY = null;
+            return;
+          }
+          if (!ev.touches || ev.touches.length !== 1) {
+            startY = null;
+            return;
+          }
+          var t = ev.target;
+          if (isChrome(t)) {
+            startY = null;
+            return;
+          }
+          var sc = scrollerFrom(t);
+          if (!edgeAllowsPull(sc)) {
+            startY = null;
+            return;
+          }
+          activeScroller = sc;
+          startY = ev.touches[0].clientY;
+          startX = ev.touches[0].clientX;
+        }
+        function onMove(ev) {
+          if (busy || null === startY) return;
+          if (onGlobe() || window.__mpPullToPost) {
+            startY = null;
             locked = 0;
             dist = 0;
-            armed = 0;
-            if (onGlobe() || window.__mpPullToPost) {
+            hide();
+            shiftContent(0);
+            return;
+          }
+          if (!ev.touches || !ev.touches.length) return;
+          var y = ev.touches[0].clientY,
+            x = ev.touches[0].clientX;
+          var dy = y - startY,
+            dx = x - startX;
+          if (!locked) {
+            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+            // Vertical pull only — leave horizontal to swipe-tabs.
+            if (!(dy > 0 && dy > Math.abs(dx) * 1.25)) {
+              locked = -1;
               startY = null;
               return;
             }
-            if (!atTop() || !ev.touches || ev.touches.length !== 1) {
+            if (!edgeAllowsPull(activeScroller || window)) {
               startY = null;
               return;
             }
-            // Ignore UI chrome that shouldn't start a page refresh.
-            var t = ev.target;
-            if (t && t.closest && t.closest("#nav, .chat-head, .chat-inputrow, .chat-inputbar, .mp-sheet, .chat-sheet, input, textarea, select, button")) {
-              startY = null;
-              return;
-            }
-            startY = ev.touches[0].clientY;
-          },
-          { passive: !0 },
-        );
-        document.addEventListener(
-          "touchmove",
-          function (ev) {
-            if (busy || null === startY) return;
-            if (onGlobe() || window.__mpPullToPost) {
-              startY = null;
-              locked = 0;
-              dist = 0;
-              hide();
-              shiftContent(0);
-              return;
-            }
-            if (!ev.touches || !ev.touches.length) return;
-            var dy = ev.touches[0].clientY - startY;
-            if (!locked) {
-              if (dy < 8) return;
-              if (!atTop()) {
-                startY = null;
-                return;
-              }
-              locked = 1;
-            }
-            if (locked !== 1) return;
-            if (ev.cancelable) ev.preventDefault();
-            dist = Math.max(0, dy);
-            // Rubber-band resistance on the content nudge.
-            var resisted = Math.min(96, dist * 0.48 + Math.pow(Math.max(0, dist - 36), 0.82) * 0.26);
-            if (RM) resisted = Math.min(48, dist * 0.3);
-            var p = Math.max(0, Math.min(1, dist / THRESH));
-            var g = ++gen;
-            if (!raf) {
-              raf = requestAnimationFrame(function () {
-                raf = 0;
-                if (g !== gen || busy || onGlobe()) return;
-                paint(p);
-                shiftContent(resisted);
-              });
-            }
-            if (p >= 1 && !armed) {
-              armed = 1;
-              try { navigator.vibrate && navigator.vibrate(10); } catch (err) {}
-            }
-            if (p < 1) armed = 0;
-          },
-          { passive: !1 },
-        );
-        function end() {
+            locked = 1;
+          }
+          if (locked !== 1) return;
+          if (ev.cancelable) ev.preventDefault();
+          dist = Math.max(0, dy);
+          var resisted = Math.min(96, dist * 0.48 + Math.pow(Math.max(0, dist - 36), 0.82) * 0.26);
+          if (RM) resisted = Math.min(48, dist * 0.3);
+          var p = Math.max(0, Math.min(1, dist / THRESH));
+          var g = ++gen;
+          if (!raf) {
+            raf = requestAnimationFrame(function () {
+              raf = 0;
+              if (g !== gen || busy || onGlobe()) return;
+              paint(p);
+              shiftContent(resisted);
+            });
+          }
+          if (p >= 1 && !armed) {
+            armed = 1;
+            try {
+              navigator.vibrate && navigator.vibrate(10);
+            } catch (err) {}
+          }
+          if (p < 1) armed = 0;
+        }
+        function onEnd() {
           if (busy) return;
           if (null === startY || locked !== 1) {
             startY = null;
             locked = 0;
+            activeScroller = null;
             hide();
             return;
           }
           var go = dist >= THRESH && !onGlobe() && !window.__mpPullToPost;
           startY = null;
           locked = 0;
+          activeScroller = null;
           if (go) {
             busy = 1;
             tip.classList.add("is-busy", "is-on", "is-armed");
             tip.style.setProperty("--ptr", "1");
             label.textContent = "Refreshing";
             shiftContent(0);
-            try { sessionStorage.setItem("mp-refreshing", "1"); } catch (e) {}
+            try {
+              sessionStorage.setItem("mp-refreshing", "1");
+            } catch (e) {}
             document.documentElement.classList.add("mp-show-splash");
             window.scrollTo(0, 0);
-            setTimeout(function () { location.reload(); }, 120);
+            setTimeout(function () {
+              location.reload();
+            }, 120);
           } else {
             shiftContent(0);
             hide();
           }
         }
-        document.addEventListener("touchend", end, { passive: !0 });
-        document.addEventListener("touchcancel", end, { passive: !0 });
+        document.addEventListener("touchstart", onStart, { passive: true, capture: true });
+        document.addEventListener("touchmove", onMove, { passive: false, capture: true });
+        document.addEventListener("touchend", onEnd, { passive: true, capture: true });
+        document.addEventListener("touchcancel", onEnd, { passive: true, capture: true });
       })(),
     (window.MPChat.catchUp = function () {
       return d && s ? ut() : Promise.resolve();
