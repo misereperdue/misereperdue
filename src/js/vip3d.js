@@ -37,14 +37,10 @@ var MPVip3D = (function () {
                   function v() {
                     var t = e.clientWidth || 300,
                       a = e.clientHeight || 375;
-                    (r.setSize(t, a, !1), (d.aspect = t / a));
-                    var halfFov = i.MathUtils.degToRad(19),
-                      tan = Math.tan(halfFov),
-                      /* card is 2.13 x 3; ~8% safe margin so it fills the frame like the mask */
-                      z = 1.08 * Math.max(1.5 / tan, 1.065 / (tan * d.aspect));
-                    (d.position.set(0, 0, z), d.updateProjectionMatrix());
+                    (r.setSize(t, a, !1), (d.aspect = t / a), d.updateProjectionMatrix());
                   }
-                  (v(),
+                  (d.position.set(0, 0, 9.4),
+                    v(),
                     window.ResizeObserver && (n = new ResizeObserver(v)).observe(e));
                   var h = new i.DirectionalLight(16777215, c ? 1.9 : 1.6);
                   (h.position.set(1.5, 3, 9),

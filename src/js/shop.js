@@ -51,8 +51,8 @@ var MPShop = (function () {
       ("misery-v_v-sleeping-mask" === t.handle || "gid://shopify/Product/8161016414310" === t.id)
     );
   }
-  var o = ["img/mask-front-light.jpg?v=3", "img/mask-back-light.jpg?v=3"],
-    i = "img/vip-card-light.jpg?v=3";
+  var o = ["img/mask-front-light.jpg?v=4", "img/mask-back-light.jpg?v=4"],
+    i = "img/vip-card-light.jpg?v=4";
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
@@ -1071,7 +1071,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=5", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=6", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
