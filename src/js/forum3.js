@@ -2041,13 +2041,21 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             w(l) +
             '" data-id="' +
             w(t.id) +
-            '"><button type="button" class="forum-thread' +
+            '">' +
+            (t.thumb
+              ? '<span class="forum-thread-bg" aria-hidden="true"><img src="' +
+                e +
+                "/api/media/" +
+                w(t.thumb) +
+                '" alt="" loading="lazy" decoding="async"></span>'
+              : "") +
+            '<button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +
             '" data-id="' +
             w(t.id) +
             '"><span class="forum-thread-main"><span class="forum-thread-title-row">' +
             (t.pinned
-              ? '<span class="forum-pin-mark" title="Pinned" aria-label="Pinned"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3a1 1 0 0 1 .8 1.6l-1.7 2.27 1.53 4.6a1 1 0 0 1-.3 1.08l-1.83 1.53 1.2 5.4a.75.75 0 0 1-1.34.6L12 16.8l-2.36 3.28a.75.75 0 0 1-1.34-.6l1.2-5.4-1.83-1.53a1 1 0 0 1-.3-1.08l1.53-4.6L7.2 4.6A1 1 0 0 1 8 3h8z"/></svg></span>'
+              ? '<span class="forum-pin-mark" title="Pinned" aria-label="Pinned"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" fill-rule="evenodd"><g transform="rotate(-32 12 13)"><ellipse cx="12" cy="7.1" rx="5.4" ry="4.8" fill="currentColor"/><ellipse cx="10.1" cy="5.6" rx="2.3" ry="1.55" fill="#fff" fill-opacity=".38"/><rect x="9.1" y="10.55" width="5.8" height="2.35" rx=".85" fill="currentColor"/><rect x="9.55" y="10.9" width="4.9" height=".7" rx=".35" fill="#fff" fill-opacity=".22"/><path d="M12 12.7v7.1" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M12 19.55l-1.55 2.15h3.1L12 19.55z" fill="currentColor"/></g></g></svg></span>'
               : "") +
             '<span class="forum-thread-title">' +
             w(t.title) +
@@ -2085,7 +2093,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 e +
                 "/api/media/" +
                 w(t.thumb) +
-                '" alt="" loading="lazy"></span>'
+                '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
             "</button>";
           var s = t.tags || [],
