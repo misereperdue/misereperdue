@@ -2011,7 +2011,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var d = t.querySelector(".forum-search-input");
       s = !(!d || document.activeElement !== d);
     } catch (e) {}
-    var u = '<div class="forum-anim">' + be();
+    var u = '<div class="forum-anim">' + be() + '<div class="forum-pull-body">';
     (n && (searchOpen = !0),
       (u += '<div class="forum-cats">'),
       (u +=
@@ -2211,7 +2211,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           (r.tag ? "No posts with #" + w(r.tag) + " yet." : "No threads yet. Start one.") +
           "</div>"),
       (u += '<div class="forum-search-empty" style="display:none;"></div>'),
-      (u += "</div>"));
+      (u += "</div></div>")); /* .forum-pull-body then .forum-anim — topbar stays outside the pull transform */
     var p = t.querySelector(".forum-cats");
     if (p) {
       l = p.scrollLeft;
@@ -2511,7 +2511,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     t._pullAborter = new AbortController();
     var sig = t._pullAborter.signal;
     var panel = document.getElementById("forum") || t;
-    var root = t.querySelector(".forum-anim") || t;
+    // Transform ONLY .forum-pull-body — never .forum-anim. The fixed glass topbar
+    // lives inside .forum-anim; a transform on that ancestor makes position:fixed
+    // re-anchor and the bar jumps / blur-pops (per dc).
+    var body = t.querySelector(".forum-pull-body") || t.querySelector(".forum-anim") || t;
     var txt = hint.querySelector(".forum-pullpost-txt");
     var THRESH = 70;
     var startY = 0, startX = 0, locked = 0, dist = 0, buzzed = 0, tracking = 0;
@@ -2525,16 +2528,29 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     function claim(on) {
       // Lets the standalone PTR in chat.js bail out while we own the gesture.
       try { window.__mpPullToPost = !!on; } catch (e) {}
-      if (on) document.documentElement.classList.add("mp-globe-pull");
-      else document.documentElement.classList.remove("mp-globe-pull");
+      if (on) {
+        document.documentElement.classList.add("mp-globe-pull");
+        body.classList.add("is-pulling");
+      } else {
+        document.documentElement.classList.remove("mp-globe-pull");
+        body.classList.remove("is-pulling");
+      }
+    }
+    function snapClear() {
+      body.style.transition = "none";
+      body.style.transform = "";
+      body.style.willChange = "";
+      // Force style flush so a following remount doesn't inherit a mid-transform layer.
+      void body.offsetWidth;
     }
     function reset() {
       claim(0);
-      root.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
-      root.style.transform = "";
+      body.style.willChange = "";
+      body.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
+      body.style.transform = "";
       setPull(0);
       setTimeout(function () {
-        root.style.transition = "";
+        body.style.transition = "";
       }, 300);
     }
     function atTop() {
@@ -2590,8 +2606,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var raw = Math.max(0, dy);
       dist = raw;
       var shift = Math.min(112, Math.pow(raw, 0.88) * 0.55);
-      root.style.transition = "none";
-      root.style.transform = "translate3d(0," + shift + "px,0)";
+      body.style.transition = "none";
+      body.style.willChange = "transform";
+      body.style.transform = "translate3d(0," + shift + "px,0)";
       setPull(dist);
       if (dist >= THRESH && !buzzed) {
         buzzed = 1;
@@ -2610,8 +2627,16 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }
       var go = dist >= THRESH;
       locked = 0;
-      reset();
-      if (go) openNewThread();
+      if (go) {
+        // Snap clear (no spring) so the fixed topbar never sees a transforming ancestor
+        // while the composer remounts the same bar.
+        claim(0);
+        snapClear();
+        setPull(0);
+        openNewThread();
+      } else {
+        reset();
+      }
     }
     // Capture on the panel so we see the gesture before swipe-tabs; touchmove
     // must be non-passive so preventDefault can stop overscroll refresh.

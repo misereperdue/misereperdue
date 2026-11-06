@@ -11083,6 +11083,17 @@ html[data-gcards="g3"] .forum-thread-more {
 }
 
 
+/* Pull body: only this moves on pull-to-post. Topbar stays a direct child of
+   .forum-anim with no transforming ancestor, so position:fixed + backdrop-filter
+   stay viewport-anchored (per dc — top bar was glitching). */
+.forum-pull-body {
+  position: relative;
+}
+.forum-pull-body.is-pulling {
+  /* compositor hint only while the finger owns the gesture */
+  will-change: transform;
+}
+
 /* Pull to post (Globe list) + hairline write a reply (thread) — C4 per dc */
 .forum-pullpost {
   display: flex;
