@@ -1049,11 +1049,13 @@
       b.remove();
       return;
     }
-    /* close: frost covers, then scale back into the tip — never opacity-animate glass */
-    b.classList.remove("is-in", "is-frosted");
+    /* close: navy cover on, content fades (~80ms), then .mp-pb-scale shrinks+fades into tip (~200ms).
+       Opacity animates the non-backdrop wrapper only — glass itself stays opacity 1 under the cover. */
+    /* is-out forces navy cover on instantly (wins over is-frosted); then fade content + scale wrap */
     b.classList.add("is-out");
-    setTimeout(function () { b.classList.add("is-gone"); }, 80);
-    setTimeout(function () { b.remove(); }, 220);
+    b.classList.remove("is-in", "is-frosted");
+    setTimeout(function () { b.classList.add("is-gone"); }, 290);
+    setTimeout(function () { b.remove(); }, 340);
   }
   function mpPBput(u) {
     if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
@@ -1174,10 +1176,13 @@
     var line = document.createElement("i");
     line.className = "mp-pb-outline";
     line.setAttribute("aria-hidden", "true");
-    b.appendChild(shp);
-    b.appendChild(line);
-    b.appendChild(frost);
-    b.appendChild(body);
+    var scale = document.createElement("div");
+    scale.className = "mp-pb-scale";
+    scale.appendChild(shp);
+    scale.appendChild(line);
+    scale.appendChild(frost);
+    scale.appendChild(body);
+    b.appendChild(scale);
     b.style.visibility = "hidden";
     b.style.pointerEvents = "none";
     b.style.transition = "none";
@@ -1211,7 +1216,7 @@
     b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
     b.style.setProperty("--stem", TH + "px");
     mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
-    b.style.willChange = "transform";
+    scale.style.willChange = "transform";
     body.style.willChange = "opacity";
     void shp.offsetWidth;
     void frost.offsetWidth;
@@ -1229,13 +1234,14 @@
           if (mpPBel !== b) return;
           b.classList.add("is-in");
           b.style.pointerEvents = "";
-          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 240);
+          /* cross-fade cover only after blur has had time to composite */
+          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 260);
           setTimeout(function () {
             if (mpPBel === b) {
-              b.style.willChange = "auto";
+              scale.style.willChange = "auto";
               body.style.willChange = "auto";
             }
-          }, 360);
+          }, 380);
         });
       });
     });

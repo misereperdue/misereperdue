@@ -10244,21 +10244,31 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   -webkit-user-select:none;
   user-select:none;
   opacity:1;
-  /* grow from the stem tip; glass opacity stays 1 — never animate backdrop-filter */
+  transform:none;
+}
+.mp-pb.is-out{pointer-events:none}
+.mp-pb.is-out.is-gone{visibility:hidden;transition:none!important}
+.mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
+/* scale+fade lives on a non-backdrop wrapper so WebKit never opacity-animates the glass itself */
+.mp-pb-scale{
+  position:relative;
+  width:100%;
   transform:scale(.6);
   transform-origin:var(--ax,50%) var(--ay,0px);
   transition:transform .3s cubic-bezier(.2,.9,.25,1.08);
+  opacity:1;
   will-change:transform;
 }
-.mp-pb.is-in{transform:scale(1)}
-.mp-pb.is-out{
-  pointer-events:none;
-  transform:scale(.6);
-  transition:transform .18s cubic-bezier(.32,.72,0,1);
+.mp-pb.is-in .mp-pb-scale{transform:scale(1)}
+.mp-pb.is-out .mp-pb-scale{
+  transform:scale(.55);
+  opacity:0;
+  /* content fades first (~80ms), then this group shrinks into the tip */
+  transition:transform .2s cubic-bezier(.45,0,1,.55) .08s,opacity .2s cubic-bezier(.45,0,1,.55) .08s;
+  will-change:transform,opacity;
 }
-.mp-pb.is-out.is-gone{visibility:hidden;transition:none!important}
-.mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
-/* one continuous glass = body + soft iOS stem (SVG mask). Tip ~12px so WebKit keeps blur. */
+.mp-pb.is-out.is-gone .mp-pb-scale{visibility:hidden;transition:none!important}
+/* one continuous glass = body + soft iOS stem (SVG mask) */
 .mp-pb-shape{
   position:absolute;
   left:0;right:0;
@@ -10271,7 +10281,6 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   mask-repeat:no-repeat;
   -webkit-mask-size:100% 100%;
   mask-size:100% 100%;
-  /* mask clips box-shadow — drop-shadow follows the masked alpha (stem included) */
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.28)) drop-shadow(0 2px 6px rgba(0,0,0,.1));
   opacity:1;
   transform:none;
@@ -10298,12 +10307,14 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   pointer-events:none;
 }
 [data-theme="light"] .mp-pb-line{stroke:rgba(0,0,0,.14)}
+/* cover = settled glass over chat navy (#111629 sampled), not neutral grey.
+   Soft gradient so the handoff to real blur is invisible. */
 .mp-pb-frost{
   position:absolute;
   left:0;right:0;
   z-index:2;
   pointer-events:none;
-  background:rgba(28,28,34,.9);
+  background:linear-gradient(165deg,#162040 0%,#111629 46%,#0c132e 100%);
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
   -webkit-mask-repeat:no-repeat;
@@ -10311,20 +10322,24 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   -webkit-mask-size:100% 100%;
   mask-size:100% 100%;
   opacity:1;
-  transition:opacity .28s cubic-bezier(.32,.72,0,1) .04s;
+  transition:opacity .32s cubic-bezier(.32,.72,0,1) .02s;
   transform:none;
 }
 .mp-pb.is-below .mp-pb-frost{top:calc(var(--stem,13px) * -1);bottom:0}
 .mp-pb.is-above .mp-pb-frost{top:0;bottom:calc(var(--stem,13px) * -1)}
-[data-theme="light"] .mp-pb-frost{background:rgba(255,255,255,.94)}
+[data-theme="light"] .mp-pb-frost{
+  background:linear-gradient(165deg,#ffffff 0%,#f7f8fc 48%,#eef2f8 100%);
+}
 .mp-pb.is-frosted .mp-pb-frost{opacity:0}
-.mp-pb.is-out .mp-pb-frost{
-  opacity:1;
-  transition:opacity .07s ease;
+/* close: navy cover snaps on in the same frame (no grey/blur flash) */
+.mp-pb.is-out .mp-pb-frost,
+.mp-pb.is-out.is-frosted .mp-pb-frost{
+  opacity:1!important;
+  transition:none!important;
 }
 .mp-pb.is-out.is-gone .mp-pb-frost{
   opacity:0;
-  transition:opacity .12s ease;
+  transition:none;
 }
 .mp-pb.is-out.is-gone .mp-pb-shape{
   visibility:hidden;
@@ -10339,10 +10354,10 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb.is-in .mp-pb-body{opacity:1}
 .mp-pb.is-out .mp-pb-body{
   opacity:0;
-  transition:opacity .14s ease;
+  transition:opacity .08s ease;
 }
 @media (prefers-reduced-motion:reduce){
-  .mp-pb,.mp-pb.is-out{transition:opacity .12s ease;transform:none}
+  .mp-pb-scale,.mp-pb.is-out .mp-pb-scale{transition:opacity .12s ease;transform:none}
   .mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease}
   .mp-pb-frost{transition:none;opacity:0}
 }
