@@ -2063,7 +2063,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to post">' +
-        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10l6 6 6-6"/></svg>' +
+        '<span class="forum-pullpost-ring" aria-hidden="true">' +
+        '<svg viewBox="0 0 24 24"><circle class="forum-pullpost-ring-track" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<circle class="forum-pullpost-ring-prog" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" pathLength="100"/></svg></span>' +
+        '<span class="forum-pullpost-ico" aria-hidden="true">' +
+        '<svg class="forum-pullpost-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>' +
+        '<svg class="forum-pullpost-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
+        "</span>" +
         '<span class="forum-pullpost-txt">Pull to post</span></button>'),
       r.tag &&
         (u +=
@@ -2488,10 +2494,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     ((r.name = "new"), Ie());
   }
   // Globe list: pull-down (or tap the hint) opens the new-thread composer (per dc).
-  // Touch listeners use AbortController so re-renders don't stack; passive:false +
-  // preventDefault once the pull is clearly downward at scrollTop<=0 so iOS rubber-
-  // band / standalone pull-to-refresh can't steal the gesture. Horizontal stays with
-  // swipe-tabs / category pills.
+  // Transform ONLY .forum-pull-body (topbar stays fixed). Visuals are transform/opacity
+  // via rAF; rubber-band resistance; arrow→plus at threshold; respects reduced-motion.
   function bindPullToPost() {
     var hint = t.querySelector("#forum-pullpost");
     if (!hint) return;
@@ -2511,22 +2515,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     t._pullAborter = new AbortController();
     var sig = t._pullAborter.signal;
     var panel = document.getElementById("forum") || t;
-    // Transform ONLY .forum-pull-body — never .forum-anim. The fixed glass topbar
-    // lives inside .forum-anim; a transform on that ancestor makes position:fixed
-    // re-anchor and the bar jumps / blur-pops (per dc).
     var body = t.querySelector(".forum-pull-body") || t.querySelector(".forum-anim") || t;
     var txt = hint.querySelector(".forum-pullpost-txt");
-    var THRESH = 70;
+    var ico = hint.querySelector(".forum-pullpost-ico");
+    var THRESH = 72;
+    var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var startY = 0, startX = 0, locked = 0, dist = 0, buzzed = 0, tracking = 0;
-    function setPull(d) {
-      dist = d;
-      hint.style.setProperty("--pull", String(Math.min(1, d / THRESH)));
-      hint.classList.toggle("is-armed", d >= THRESH);
-      hint.classList.toggle("is-pulling", d > 4);
-      if (txt) txt.textContent = d >= THRESH ? "Release to post" : "Pull to post";
-    }
+    var shift = 0, prog = 0, raf = 0, pending = 0;
+
     function claim(on) {
-      // Lets the standalone PTR in chat.js bail out while we own the gesture.
       try { window.__mpPullToPost = !!on; } catch (e) {}
       if (on) {
         document.documentElement.classList.add("mp-globe-pull");
@@ -2536,22 +2533,81 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         body.classList.remove("is-pulling");
       }
     }
+    function paint() {
+      raf = 0;
+      if (!pending) return;
+      pending = 0;
+      var p = prog;
+      hint.style.setProperty("--pull", p.toFixed(4));
+      hint.style.setProperty("--pull-rot", (RM ? 0 : p * 180).toFixed(2) + "deg");
+      hint.classList.toggle("is-armed", p >= 1);
+      hint.classList.toggle("is-pulling", p > 0.04);
+      if (txt) txt.textContent = p >= 1 ? "Release to post" : "Pull to post";
+      body.style.transform = shift ? "translate3d(0," + shift.toFixed(2) + "px,0)" : "";
+    }
+    function schedule() {
+      pending = 1;
+      if (!raf) raf = requestAnimationFrame(paint);
+    }
+    function setFromRaw(raw) {
+      dist = raw;
+      // Rubber-band: strong at first (~0.5), then eases off.
+      var resisted = Math.min(120, raw * 0.5 + Math.pow(Math.max(0, raw - 40), 0.82) * 0.28);
+      if (RM) resisted = Math.min(64, raw * 0.35);
+      shift = resisted;
+      prog = Math.max(0, Math.min(1, raw / THRESH));
+      schedule();
+      if (prog >= 1 && !buzzed) {
+        buzzed = 1;
+        hint.classList.add("is-pop");
+        try { navigator.vibrate && navigator.vibrate(10); } catch (err) {}
+        setTimeout(function () { hint.classList.remove("is-pop"); }, 280);
+      }
+      if (prog < 1) buzzed = 0;
+    }
     function snapClear() {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      pending = 0;
+      shift = 0;
+      prog = 0;
+      dist = 0;
       body.style.transition = "none";
       body.style.transform = "";
       body.style.willChange = "";
-      // Force style flush so a following remount doesn't inherit a mid-transform layer.
+      hint.style.transition = "none";
+      hint.style.setProperty("--pull", "0");
+      hint.style.setProperty("--pull-rot", "0deg");
+      hint.classList.remove("is-armed", "is-pulling", "is-pop");
+      if (txt) txt.textContent = "Pull to post";
       void body.offsetWidth;
     }
-    function reset() {
+    function springBack(then) {
       claim(0);
       body.style.willChange = "";
-      body.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
-      body.style.transform = "";
-      setPull(0);
+      if (RM) {
+        snapClear();
+        if (then) then();
+        return;
+      }
+      body.style.transition = "transform .3s cubic-bezier(.2,.85,.25,1.15)";
+      hint.style.transition = "opacity .28s ease, transform .3s cubic-bezier(.2,.85,.25,1.15)";
+      shift = 0;
+      prog = 0;
+      schedule();
+      // paint applies transform ""; keep transition on body
+      body.style.transform = "translate3d(0,0,0)";
+      requestAnimationFrame(function () {
+        body.style.transform = "";
+        hint.style.setProperty("--pull", "0");
+        hint.style.setProperty("--pull-rot", "0deg");
+        hint.classList.remove("is-armed", "is-pulling", "is-pop");
+        if (txt) txt.textContent = "Pull to post";
+      });
       setTimeout(function () {
         body.style.transition = "";
-      }, 300);
+        hint.style.transition = "";
+        if (then) then();
+      }, 320);
     }
     function atTop() {
       var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -2575,6 +2631,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       startX = e.touches[0].clientX;
       tracking = 1;
       locked = 0;
+      body.style.transition = "none";
+      hint.style.transition = "none";
     }
     function onMove(e) {
       if (!tracking || locked < 0) return;
@@ -2583,10 +2641,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var dy = y - startY, dx = x - startX;
       if (!locked) {
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        // Vertical pull at top — leave horizontal to swipe-tabs / category pills.
         if (dy > 0 && dy > Math.abs(dx) * 1.25 && atTop()) {
           locked = 1;
           claim(1);
+          body.style.willChange = "transform";
         } else {
           locked = -1;
           tracking = 0;
@@ -2597,26 +2655,11 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       if (!atTop() && dy <= 0) {
         locked = -1;
         tracking = 0;
-        reset();
+        springBack();
         return;
       }
-      // Own the gesture: block rubber-band / browser refresh / PTR.
       if (e.cancelable) e.preventDefault();
-      // Rubber-band with resistance on the visual shift; threshold tracks ~70px finger travel.
-      var raw = Math.max(0, dy);
-      dist = raw;
-      var shift = Math.min(112, Math.pow(raw, 0.88) * 0.55);
-      body.style.transition = "none";
-      body.style.willChange = "transform";
-      body.style.transform = "translate3d(0," + shift + "px,0)";
-      setPull(dist);
-      if (dist >= THRESH && !buzzed) {
-        buzzed = 1;
-        try {
-          navigator.vibrate && navigator.vibrate(10);
-        } catch (err) {}
-      }
-      if (dist < THRESH) buzzed = 0;
+      setFromRaw(Math.max(0, dy));
     }
     function onEnd() {
       tracking = 0;
@@ -2628,18 +2671,37 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var go = dist >= THRESH;
       locked = 0;
       if (go) {
-        // Snap clear (no spring) so the fixed topbar never sees a transforming ancestor
-        // while the composer remounts the same bar.
+        // Quick settle, then open composer.
         claim(0);
-        snapClear();
-        setPull(0);
-        openNewThread();
+        if (RM) {
+          snapClear();
+          openNewThread();
+          return;
+        }
+        hint.classList.add("is-armed", "is-settle");
+        body.style.transition = "transform .16s cubic-bezier(.2,.8,.2,1)";
+        body.style.transform = "translate3d(0," + Math.min(shift, 28).toFixed(2) + "px,0)";
+        setTimeout(function () {
+          snapClear();
+          hint.classList.remove("is-settle");
+          openNewThread();
+        }, 150);
       } else {
-        reset();
+        springBack();
       }
     }
-    // Capture on the panel so we see the gesture before swipe-tabs; touchmove
-    // must be non-passive so preventDefault can stop overscroll refresh.
+    // If Globe is hidden mid-pull, drop the claim so PTR elsewhere isn't stuck.
+    if (panel && !panel._pullWatch) {
+      panel._pullWatch = 1;
+      try {
+        new MutationObserver(function () {
+          if (!panel.classList.contains("on")) {
+            try { window.__mpPullToPost = !1; } catch (e) {}
+            document.documentElement.classList.remove("mp-globe-pull");
+          }
+        }).observe(panel, { attributes: !0, attributeFilter: ["class"] });
+      } catch (e) {}
+    }
     panel.addEventListener("touchstart", onStart, { passive: true, signal: sig, capture: true });
     panel.addEventListener("touchmove", onMove, { passive: false, signal: sig, capture: true });
     panel.addEventListener("touchend", onEnd, { passive: true, signal: sig, capture: true });

@@ -6490,15 +6490,24 @@ button.forum-glass-pill:active {
   white-space: nowrap;
 }
 .mp-pull-indicator {
+  --ptr: 0;
   position: fixed;
   left: 50%;
-  top: 8px;
-  transform: translate(-50%, -60px);
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  transform: translate(-50%, calc(-120% + 140% * var(--ptr))) scale(calc(0.9 + 0.12 * var(--ptr)));
   z-index: 9998;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--glass-clear-tint);
   color: var(--ink);
-  font-size: 13px;
-  padding: 8px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 9px 14px;
   border-radius: 999px;
   border: var(--glass-hairline);
   box-shadow:
@@ -6509,7 +6518,65 @@ button.forum-glass-pill:active {
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
-  transition: opacity 0.15s ease;
+  will-change: transform, opacity;
+}
+.mp-pull-indicator.is-on {
+  opacity: calc(0.35 + 0.65 * var(--ptr));
+}
+.mp-pull-indicator.is-armed {
+  opacity: 1;
+}
+.mp-pull-indicator.is-busy {
+  opacity: 1;
+}
+.mp-pull-indicator-ico {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+}
+.mp-pull-indicator-ico svg {
+  width: 14px;
+  height: 14px;
+  grid-area: 1 / 1;
+}
+.mp-pull-indicator-arrow {
+  transform: rotate(calc(var(--ptr) * 180deg));
+  transform-origin: 50% 50%;
+}
+.mp-pull-indicator-spin {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border: 1.6px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+.mp-pull-indicator.is-busy .mp-pull-indicator-arrow {
+  display: none;
+}
+.mp-pull-indicator.is-busy .mp-pull-indicator-spin {
+  display: block;
+  animation: mp-ptr-spin 0.7s linear infinite;
+}
+@keyframes mp-ptr-spin {
+  to { transform: rotate(360deg); }
+}
+.mp-pull-indicator-txt {
+  display: inline-block;
+  line-height: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mp-pull-indicator,
+  .mp-pull-indicator-arrow,
+  .mp-pull-indicator-spin {
+    transition: none !important;
+    animation: none !important;
+  }
+  .mp-pull-indicator-arrow { transform: none; }
 }
 .chat-bell,
 .forum-bell {
@@ -11094,43 +11161,125 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post (Globe list) + hairline write a reply (thread) — C4 per dc */
+/* Pull to post (Globe list) — inline icon+text, progress ring, Apple-feel (per dc) */
 .forum-pullpost {
+  --pull: 0;
+  --pull-rot: 0deg;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin: 2px 0 10px;
-  padding: 6px 8px;
+  gap: 8px;
+  width: max-content;
+  max-width: 100%;
+  margin: 4px auto 12px;
+  padding: 8px 14px;
   border: 0;
   background: transparent;
   color: inherit;
-  opacity: calc(0.34 + 0.5 * var(--pull, 0));
+  opacity: calc(0.28 + 0.62 * var(--pull));
+  transform: scale(calc(0.92 + 0.1 * var(--pull)));
+  transform-origin: 50% 50%;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
+  position: relative;
+}
+.forum-pullpost-ico {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+}
+.forum-pullpost-ico svg {
+  width: 14px;
+  height: 14px;
+  grid-area: 1 / 1;
+}
+.forum-pullpost-arrow {
+  transform: rotate(var(--pull-rot));
+  transform-origin: 50% 50%;
+  opacity: calc(1 - var(--pull));
   transition: opacity 0.12s ease;
 }
-.forum-pullpost svg {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  opacity: 0.85;
-  transform: translateY(calc(var(--pull, 0) * 4px));
+.forum-pullpost-plus {
+  opacity: var(--pull);
+  transform: scale(calc(0.7 + 0.3 * var(--pull)));
+  transition: opacity 0.12s ease;
+}
+.forum-pullpost.is-armed .forum-pullpost-arrow {
+  opacity: 0;
+}
+.forum-pullpost.is-armed .forum-pullpost-plus {
+  opacity: 1;
+  transform: scale(1);
+}
+.forum-pullpost-txt {
+  display: inline-block;
+  vertical-align: middle;
+}
+.forum-pullpost-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  pointer-events: none;
+  opacity: calc(0.15 + 0.55 * var(--pull));
+  transform: scale(calc(0.85 + 0.2 * var(--pull)));
+}
+.forum-pullpost-ring svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(-90deg);
+}
+.forum-pullpost-ring-track {
+  opacity: 0.22;
+}
+.forum-pullpost-ring-prog {
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - 100 * var(--pull));
+  opacity: 0.9;
 }
 .forum-pullpost.is-armed {
-  opacity: 0.78;
+  opacity: 0.92;
 }
-.forum-pullpost.is-pulling .forum-pullpost-txt {
-  letter-spacing: 0.16em;
+.forum-pullpost.is-pop {
+  animation: forum-pull-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.35);
+}
+.forum-pullpost.is-settle {
+  opacity: 0.5;
+  transform: scale(0.96);
+}
+@keyframes forum-pull-pop {
+  0% { transform: scale(calc(0.92 + 0.1 * var(--pull))); }
+  55% { transform: scale(1.08); }
+  100% { transform: scale(1.02); }
+}
+[data-theme="light"] .forum-pullpost {
+  opacity: calc(0.32 + 0.58 * var(--pull));
+}
+[data-theme="light"] .forum-pullpost.is-armed {
+  opacity: 0.88;
 }
 @media (prefers-reduced-motion: reduce) {
-  .forum-pullpost svg {
+  .forum-pullpost,
+  .forum-pullpost-arrow,
+  .forum-pullpost-plus,
+  .forum-pullpost-ring {
+    transition: none !important;
+    animation: none !important;
+  }
+  .forum-pullpost-arrow {
     transform: none;
   }
 }
