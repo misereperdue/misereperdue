@@ -2174,7 +2174,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-age">' +
               k(t.lastActivity) +
               '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-replies">' +
-              '<svg class="forum-thread-replies-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.25C17.5 3.25 21.55 6.75 21.55 11.2C21.55 15.55 17.55 18.95 12.15 19.05C10.7 19.08 9.35 18.85 8.15 18.42C7.35 19.85 5.7 21.05 3.55 21.55C3.28 21.62 3.02 21.35 3.15 21.1C3.9 19.65 4.5 18.4 5 17.3C3.95 15.85 3.35 14.1 3.35 11.2C3.35 6.75 7.4 3.25 12 3.25Z"/></svg> ' +
+              '<svg class="forum-thread-replies-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.25C17.5 3.25 21.55 6.75 21.55 11.2C21.55 15.55 17.55 18.95 12.15 19.05C10.7 19.08 9.35 18.85 8.15 18.42C7.65 19.25 6.7 19.95 5.75 20.1C5.52 20.15 5.35 19.98 5.45 19.78C5.85 19.1 6.2 18.5 5.55 17.55C4.3 16.05 3.35 14.1 3.35 11.2C3.35 6.75 7.4 3.25 12 3.25Z"/></svg> ' +
               (Number(t.replies) || 0) +
               "</span></span>") +
             (t.excerpt ? '<span class="forum-thread-excerpt">' + w(t.excerpt) + "</span>" : "") +
@@ -2221,7 +2221,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           } else {
             lastHtml =
               '<span class="forum-thread-last is-empty" aria-label="No comments yet">' +
-              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.25C17.5 3.25 21.55 6.75 21.55 11.2C21.55 15.55 17.55 18.95 12.15 19.05C10.7 19.08 9.35 18.85 8.15 18.42C7.35 19.85 5.7 21.05 3.55 21.55C3.28 21.62 3.02 21.35 3.15 21.1C3.9 19.65 4.5 18.4 5 17.3C3.95 15.85 3.35 14.1 3.35 11.2C3.35 6.75 7.4 3.25 12 3.25Z"/></svg></span>' +
+              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.25C17.5 3.25 21.55 6.75 21.55 11.2C21.55 15.55 17.55 18.95 12.15 19.05C10.7 19.08 9.35 18.85 8.15 18.42C7.65 19.25 6.7 19.95 5.75 20.1C5.52 20.15 5.35 19.98 5.45 19.78C5.85 19.1 6.2 18.5 5.55 17.55C4.3 16.05 3.35 14.1 3.35 11.2C3.35 6.75 7.4 3.25 12 3.25Z"/></svg></span>' +
               '<span class="forum-thread-last-body">' +
               '<span class="forum-thread-last-text forum-thread-last-empty">No comments yet</span>' +
               "</span></span>";
@@ -4573,7 +4573,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         });
     });
   }
-  /* Comment bubble glyph: shipped K3 (near-circular, soft bottom-left tail). Candidates K1–K4 in misery-notes/screenshots/comment-icon-k.png. */
+  /* Comment bubble glyph: K3 body + half-extent stem (tighter iMessage curl) per dc. Before/after: misery-notes/screenshots/comment-icon-stem.png. */
   window.MPForum = window.MPForum || {};
   window.MPForum.setCards = function (v) {
     v = String(v || "g1").toLowerCase();
