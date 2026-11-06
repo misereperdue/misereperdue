@@ -7777,6 +7777,31 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 [data-theme="light"] .dash-tag-vip { color: #8a6500; }
 [data-theme="light"] .dash-tag-ban,
 [data-theme="light"] input.dash-tag-ban { color: #d70015 !important; }
+
+/* Usernames always render lowercase (display only, per dc) */
+.chat-msg-head strong,
+.chat-user-name,
+.chat-ge-who,
+.chat-mention,
+.forum-thread-author-pill,
+.forum-author-pill-btn,
+.forum-post-head .forum-author,
+.mp-pb-name,
+.dash-urow,
+.poll-voter-avatar[title] {
+  /* title attrs handled in JS; class safety for text nodes */
+}
+.chat-msg-head strong,
+.chat-user-name,
+.chat-mention,
+.mp-pb-name,
+.mp-pb-name-t,
+.forum-author-name,
+.forum-thread-author-pill .forum-author-name,
+.forum-thread-author-name {
+  text-transform: lowercase;
+}
+
 /* ---------- Dashboard main tab declutter (per dc) ---------- */
 .dash-hero {
   display: grid;

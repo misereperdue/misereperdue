@@ -4,6 +4,12 @@
   var KEY = "mp_hidden_v1";
   function all() { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
   function vk() { return H.viewer || localStorage.getItem("mp_hide_viewer") || "anon"; }
+  function mpName(u) {
+    return (window.mpName || function (x) { return String(x == null ? "" : x).replace(/^@+/, "").toLowerCase(); })(u);
+  }
+  function mpAt(u) {
+    return (window.mpAt || function (x) { var n = mpName(x); return n ? "@" + n : ""; })(u);
+  }
   function load() { var a = all()[vk()]; return Array.isArray(a) ? a : []; }
   function save(a) { try { var o = all(); o[vk()] = a; localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
   function low(u) { return String(u || "").replace(/^@/, "").toLowerCase(); }
@@ -1206,7 +1212,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                     (l.className = "forum-mention"),
                     l.setAttribute("data-user", n[2].toLowerCase()),
                     l.setAttribute("style", "color:#6ea8ff;font-weight:600;text-decoration:none;"),
-                    (l.textContent = "@" + n[2]),
+                    (l.textContent = mpAt(n[2])),
                     i.appendChild(l),
                     (o = n.index + n[0].length));
                 }
@@ -1723,14 +1729,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               i.forEach(function (t) {
                 var o = document.createElement("button");
                 ((o.type = "button"),
-                  (o.textContent = "@" + t),
+                  (o.textContent = mpAt(t)),
                   (o.className = "forum-mention-item"),
                   o.addEventListener("click", function () {
                     var r = e.state.tr,
                       o = a.$head.pos,
                       i = o - d.length - 1;
                     (r.delete(i, o),
-                      r.insertText("@" + t + " "),
+                      r.insertText(mpAt(t) + " "),
                       e.view.dispatch(r),
                       e.view.focus(),
                       n());
@@ -2048,7 +2054,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                     (Number(r.authorPoints) || 0) +
                     "</span>"
                   : ""),
-              w(r.author) + n + "</span>") +
+              w(mpName(r.author)) + n + "</span>") +
               (i ? '<span class="forum-thread-pill-badge">' + i + "</span>" : "") +
               '</span><span class="forum-thread-meta-text">') +
             w(t.categoryName) +
@@ -3356,7 +3362,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 ? '<button type="button" class="forum-admin-btn" data-replyto="' +
                   w(e.id) +
                   '" data-replyname="' +
-                  w(e.author) +
+                  w(mpName(e.author)) +
                   '">Reply</button>'
                 : "") +
               A(e, e.id) +

@@ -1,5 +1,8 @@
 !(function () {
   var e = window.MPChat || {};
+  function mpName(u) { return (window.mpName || function (x) { return String(x == null ? "" : x).replace(/^@+/, "").toLowerCase(); })(u); }
+  function mpAt(u) { var n = mpName(u); return n ? "@" + n : ""; }
+
   function t(t, n) {
     return e.api(t, n);
   }
@@ -1106,7 +1109,7 @@
                 var i = document.createElement("div");
                 ((i.style.cssText =
                   "font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"),
-                  (i.textContent = e.username),
+                  (i.textContent = mpName(e.username)),
                   r.appendChild(i));
                 var o = document.createElement("div");
                 ((o.style.cssText = "font-size:12px;color:var(--muted);"),
@@ -1473,7 +1476,7 @@
                         return !(i() && e.username.toLowerCase() === i().username.toLowerCase());
                       })).forEach(function (e) {
                         var t = document.createElement("option");
-                        ((t.value = e.username), (t.textContent = e.username), f.appendChild(t));
+                        ((t.value = e.username), (t.textContent = mpName(e.username)), f.appendChild(t));
                       }),
                       C());
                   })
@@ -1642,7 +1645,7 @@
                 e.users.forEach(function (e) {
                   var t = document.createElement("option");
                   ((t.value = e.username),
-                    (t.textContent = e.username + " (★ " + (e.points || 0) + ")"),
+                    (t.textContent = mpName(e.username) + " (★ " + (e.points || 0) + ")"),
                     t.setAttribute("data-stars", e.points || 0),
                     o.appendChild(t));
                 }));

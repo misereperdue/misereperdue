@@ -830,7 +830,7 @@
             var p = document.createElement("div");
             if (
               ((p.className = "chat-user-name"),
-              (p.textContent = n.username),
+              (p.textContent = mpName(n.username)),
               r.appendChild(p),
               n.numId)
             ) {
@@ -871,7 +871,7 @@
               hl();
               hb.addEventListener("click", function (e) {
                 e.stopPropagation();
-                mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again"), hl()) : (mpHideUser(n.username, n.numId), gt());
+                mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast(mpAt(n.username) + " is visible again"), hl()) : (mpHideUser(n.username, n.numId), gt());
               });
               r.appendChild(hb);
             }
@@ -915,7 +915,7 @@
                     ((n.activeBadge || null) === e ? " on" : "") +
                     (a ? " has" : " not-has")),
                     (t.innerHTML = M(e)),
-                    t.setAttribute("aria-label", "Give " + e + " badge to " + n.username),
+                    t.setAttribute("aria-label", "Give " + e + " badge to " + mpName(n.username)),
                     t.addEventListener("click", function () {
                       ((t.disabled = !0),
                         E("/api/badge", {
@@ -1034,7 +1034,7 @@
       b = document.createElement("div");
     b.className = "mp-pb";
     b.setAttribute("role", "dialog");
-    b.setAttribute("aria-label", n.username + "'s profile");
+    b.setAttribute("aria-label", mpName(n.username) + "'s profile");
     b.tabIndex = -1;
     b._u = key;
     b._a = anchor;
@@ -1053,7 +1053,7 @@
     n1.className = "mp-pb-name";
     var n1t = document.createElement("span");
     n1t.className = "mp-pb-name-t";
-    n1t.textContent = n.username;
+    n1t.textContent = mpName(n.username);
     n1.appendChild(n1t);
     bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
     nm.appendChild(n1);
@@ -1108,7 +1108,7 @@
     if (!me && window.mpHide) {
       mpHide.seen(n.username, n.numId);
       btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', function () {
-        mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again")) : mpHideUser(n.username, n.numId);
+        mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast(mpAt(n.username) + " is visible again")) : mpHideUser(n.username, n.numId);
         mpPBclose();
       }, "is-danger");
     }
@@ -1235,7 +1235,7 @@
     mpHide.hide(u, id);
     window.haptic && window.haptic(12);
     mpPM.to && String(mpPM.to).toLowerCase() === String(u).toLowerCase() && mpPMStop();
-    mpHide.toast("@" + u + " is hidden", function () { mpHide.unhide(u); mpHide.toast("@" + u + " is visible again"); });
+    mpHide.toast(mpAt(u) + " is hidden", function () { mpHide.unhide(u); mpHide.toast(mpAt(u) + " is visible again"); });
   }
   function mpAvMenu(el, u) {
     var items = [];
@@ -1259,13 +1259,13 @@
           (e.preventDefault(), mpPMStop());
         }),
         t.appendChild(n)),
-        (n.querySelector(".chat-pm-txt").textContent = "Only @" + e + " can see this message"),
+        (n.querySelector(".chat-pm-txt").textContent = "Only " + mpAt(e) + " can see this message"),
         t.classList.add("chat-pm-mode"));
       var m = document.querySelector("#chat .chat-msgs"),
         b = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200;
       (m && m.style.setProperty("--pm-h", "46px"), b && setTimeout(function () { window.scrollTo(0, document.documentElement.scrollHeight); }, 30));
       var a = t.querySelector(".chat-inputbar input");
-      a && (a.setAttribute("placeholder", "Whisper to @" + e), a.focus());
+      a && (a.setAttribute("placeholder", "Whisper to " + mpAt(e)), a.focus());
     }
   }
   function mpPMStop() {
@@ -1287,7 +1287,7 @@
       var a = s && t.to && String(t.to).toLowerCase() === String(s.username).toLowerCase();
       n.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
       var r = document.createElement("span");
-      ((r.textContent = a ? "Only visible to you" : "Only visible to @" + (t.to || "")), n.appendChild(r));
+      ((r.textContent = a ? "Only visible to you" : "Only visible to " + mpAt(t.to || "")), n.appendChild(r));
       var o = e.querySelector(".chat-msg-main") || e.querySelector(".chat-photo-col") || e;
       if (o === e) {
         var i = e.querySelector(".chat-bubble");
@@ -2540,7 +2540,7 @@
         "</a>" +
         e.slice(t.length)
       );
-    }).replace(/(^|[\s(])@([A-Za-z0-9_.]{1,30}[A-Za-z0-9_])/g, '$1<span class="chat-mention">@$2</span>');
+    }).replace(/(^|[\s(])@([A-Za-z0-9_.]{1,30}[A-Za-z0-9_])/g, function (_m, a, u) { return a + '<span class="chat-mention">@' + String(u).toLowerCase() + '</span>'; });
   }
   /* @mentions autocomplete (per dc): users from chat authors seen (Je) + /api/online.
      The Worker's full user lists are owner-only, so this is client-side. */
@@ -2567,7 +2567,7 @@
     function pick(u) {
       if (!tok) return;
       var v = inp.value, after = v.slice(tok.end).replace(/^[A-Za-z0-9_.]*/, "");
-      var ins = "@" + u.username + " ";
+      var ins = mpAt(u.username) + " ";
       inp.value = v.slice(0, tok.start) + ins + after.replace(/^ /, "");
       var c = tok.start + ins.length; close(); inp.focus();
       try { inp.setSelectionRange(c, c); } catch (_) {}
@@ -2592,7 +2592,7 @@
       items.forEach(function (u, i) {
         var b = document.createElement("button"); b.type = "button"; b.className = "chat-pmenu-row"; b.setAttribute("role", "option");
         try { var av = J(u.username, u.avatar, "xs", u.v); av && b.appendChild(av); } catch (_) {}
-        var t = document.createElement("span"); t.textContent = "@" + u.username; b.appendChild(t);
+        var t = document.createElement("span"); t.textContent = mpAt(u.username); b.appendChild(t);
         b.addEventListener("pointerdown", function (e) { e.preventDefault(); });
         b.addEventListener("click", function (e) { e.preventDefault(); pick(u); });
         box.appendChild(b);
@@ -3102,6 +3102,19 @@
   }
   function mpToast(t) { try { window.mpHide && mpHide.toast ? mpHide.toast(t) : alert(t); } catch (_) {} }
   /* VIP = member badge or owner (per dc). Owner always counts. */
+  /* Display-only lowercase usernames (per dc). Does not rename accounts. */
+  function mpName(u) {
+    return String(u == null ? "" : u).replace(/^@+/, "").toLowerCase();
+  }
+  function mpAt(u) {
+    var n = mpName(u);
+    return n ? "@" + n : "";
+  }
+  try {
+    window.mpName = mpName;
+    window.mpAt = mpAt;
+  } catch (_) {}
+
   function mpIsVip() { return !!(s && (s.member || s.owner)); }
   /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
   var mpGpCache = null, mpGpAt = 0;
@@ -3136,7 +3149,7 @@
       all.slice(0, 60).forEach(function (t) {
         var b = document.createElement("button"); b.type = "button"; b.className = "chat-ge chat-gp-row";
         b.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span></span><span class="chat-ge-l2"></span></span>';
-        b.querySelector(".chat-ge-who").textContent = "@" + (t.author || "unknown") + (t.createdAt ? " \u00b7 " + mpGeAgo(t.createdAt) : "") + (t.replies ? " \u00b7 " + t.replies + (t.replies === 1 ? " reply" : " replies") : "");
+        b.querySelector(".chat-ge-who").textContent = mpAt(t.author || "unknown") + (t.createdAt ? " \u00b7 " + mpGeAgo(t.createdAt) : "") + (t.replies ? " \u00b7 " + t.replies + (t.replies === 1 ? " reply" : " replies") : "");
         b.querySelector(".chat-ge-l2").textContent = (t.title || "") + (t.excerpt ? " \u2014 " + t.excerpt : "");
         var pic = b.querySelector(".chat-ge-pic");
         if (t.thumb && /^(https?:|\/)/i.test(t.thumb)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = t.thumb; pic.appendChild(im); }
@@ -3351,7 +3364,7 @@
         var sp = keep[k];
         if (!sp) {
           var info = (Je && Je[k]) || null; sp = document.createElement("span");
-          sp.className = "poll-voter-avatar" + (red ? "" : " is-new"); sp.setAttribute("data-u", k); sp.title = info && info.username ? info.username : k;
+          sp.className = "poll-voter-avatar" + (red ? "" : " is-new"); sp.setAttribute("data-u", k); sp.title = mpName(info && info.username ? info.username : k);
           try { var av = J(info && info.username ? info.username : k, info && info.avatar, "xs", info && info.hasImg ? info.imgV : void 0); av && sp.appendChild(av); } catch (_) {}
         }
         vw.appendChild(sp);
@@ -3507,13 +3520,13 @@
       c.classList.remove("is-loading");
       if (r.locked) { who.textContent = "Globe"; l2.textContent = "Members-only post"; return; }
       if (th.author && window.mpHide && mpHide.is(th.author)) { c.classList.add("is-na"); who.textContent = "Globe"; l2.textContent = "Post made by a hidden user"; return; }
-      who.textContent = "@" + (th.author || "unknown") + (th.createdAt ? " \u00b7 " + mpGeAgo(th.createdAt) : "");
+      who.textContent = mpAt(th.author || "unknown") + (th.createdAt ? " \u00b7 " + mpGeAgo(th.createdAt) : "");
       var body = String(th.content || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
       l2.textContent = th.title ? th.title + (body ? " \u2014 " + body : "") : body;
       var img = th.thumb || ((/<img[^>]+src="([^"]+)"/i.exec(th.content || "") || [])[1]);
       if (img && /^(https?:|\/|data:image)/i.test(img)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = img; im.onerror = function () { im.remove(); }; pic.appendChild(im); }
       else { try { var av = J(th.author, th.authorAvatar, "xs", th.hasAvatarImg ? th.avatarV : void 0); av && (pic.appendChild(av), pic.classList.add("is-av")); } catch (_) {} }
-      c.setAttribute("aria-label", "Globe post by @" + th.author + ": " + (th.title || ""));
+      c.setAttribute("aria-label", "Globe post by " + mpAt(th.author) + ": " + (th.title || ""));
     });
   }
   function mpNowListening(e, t, n, a) {
@@ -3538,7 +3551,7 @@
         ((t.className = "chat-np-av"), t.removeAttribute("style"), l.insertBefore(t, l.firstChild));
       }
     }
-    ((d.textContent = (n || "Someone") + " is listening to"), l.appendChild(d));
+    ((d.textContent = (n ? mpName(n) : "Someone") + " is listening to"), l.appendChild(d));
     function g(n) {
       if (!n) return (c.remove(), e.classList.remove("chat-np-bubble"), void (i && (i.hidden = !1)));
       (s(), c.classList.remove("is-loading"));
@@ -3748,7 +3761,7 @@
           var C = document.createElement("div");
           C.className = "chat-msg-head";
           var x = document.createElement("strong");
-          ((x.textContent = e.user || "?"), C.appendChild(x));
+          ((x.textContent = mpName(e.user) || "?"), C.appendChild(x));
           var E = document.createElement("span");
           ((E.className = "chat-time"),
             (E.textContent = e.ts
@@ -4166,7 +4179,7 @@
                             if (n.username !== e.getAttribute("data-user")) {
                               e.setAttribute("data-user", n.username);
                               var a = e.querySelector(".chat-msg-head strong");
-                              a && (a.textContent = n.username);
+                              a && (a.textContent = mpName(n.username));
                             }
                             var r = e.querySelector(".chat-avatar-wrap");
                             if (r) {
@@ -4196,7 +4209,7 @@
                             if (a.username !== n) {
                               e.setAttribute("data-user", a.username);
                               var r = e.querySelector(".chat-msg-head strong");
-                              r && (r.textContent = a.username);
+                              r && (r.textContent = mpName(a.username));
                             }
                             var o = e.querySelector(".chat-avatar-wrap");
                             if (o) {
@@ -4642,7 +4655,7 @@
                       (e.setAttribute("data-user", s.username),
                         e.classList.add("mine"));
                       var n = e.querySelector(".chat-msg-head strong");
-                      n && (n.textContent = s.username);
+                      n && (n.textContent = mpName(s.username));
                       var a = e.querySelector(".chat-avatar");
                       a &&
                         (a.textContent =
