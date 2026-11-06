@@ -1046,6 +1046,8 @@
     b._a = anchor;
     b._fromCache = !!fromCache;
     b._openedAt = Date.now();
+    var body = document.createElement("div");
+    body.className = "mp-pb-body";
     var hd = document.createElement("div");
     hd.className = "mp-pb-hd";
     var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
@@ -1069,7 +1071,7 @@
     nm.appendChild(n2);
     pill && nm.insertAdjacentHTML("beforeend", pill);
     hd.appendChild(nm);
-    b.appendChild(hd);
+    body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
     st.innerHTML = '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
@@ -1086,13 +1088,13 @@
       });
       br.childNodes.length && st.appendChild(br);
     }
-    b.appendChild(st);
+    body.appendChild(st);
     /* reserve bio space so a late bio can't grow the bubble mid-open */
     var bio = document.createElement("div");
     bio.className = "mp-pb-bio" + (n.bio ? "" : " is-empty");
     if (n.bio) bio.textContent = n.bio;
     else bio.setAttribute("hidden", "");
-    b.appendChild(bio);
+    body.appendChild(bio);
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
     function btn(label, icon, run, cls) {
@@ -1118,19 +1120,19 @@
         mpPBclose();
       }, "is-danger");
     }
-    b.appendChild(ac);
+    body.appendChild(ac);
     var fp = document.createElement("button");
     fp.type = "button";
     fp.className = "mp-pb-full";
     fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
     fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
-    b.appendChild(fp);
-    /* bubble shape (per dc): one SVG outline = rounded rect + rounded tail, used as the
-       glass layer's mask and drawn again as the hairline, so the tail is seamless */
+    body.appendChild(fp);
+    /* glass shape first (backdrop-filter layer stays opacity 1); content in .mp-pb-body fades/scales */
     var shp = document.createElement("i");
     shp.className = "mp-pb-shape";
     shp.setAttribute("aria-hidden", "true");
     b.appendChild(shp);
+    b.appendChild(body);
     /* measure while fully inert: no transitions, not painted. Seat final left/top/origin BEFORE first paint. */
     b.style.visibility = "hidden";
     b.style.pointerEvents = "none";
@@ -1170,15 +1172,16 @@
       shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
     })();
     b.classList.add(below ? "is-below" : "is-above");
-    /* final seat + tip origin committed under transition:none — no left/top interpolate */
+    /* final seat + tip clip origin under transition:none — no left/top interpolate */
     b.style.left = left + "px";
     b.style.top = top + "px";
     b.style.setProperty("--ax", ax + "px");
-    b.style.transformOrigin = ax + "px " + (below ? -TH + "px" : h + TH + "px");
-    b.style.willChange = "transform, opacity";
+    /* tip of the tail (shape overhangs ±TH); clip-path + body transform-origin share these */
+    b.style.setProperty("--ay", below ? -TH + "px" : h + TH + "px");
+    b.style.willChange = "clip-path";
     void b.offsetWidth;
     mpPBel = b;
-    /* double rAF: first paint at rest pose (scale .85, opacity 0, final left/top), then ease in */
+    /* double rAF: first paint at rest (clip 0, glass ready), then expand clip + fade body */
     requestAnimationFrame(function () {
       if (mpPBel !== b) return;
       b.style.visibility = "";
