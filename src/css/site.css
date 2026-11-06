@@ -11162,7 +11162,7 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post (Globe list) — inline icon+text, progress ring, Apple-feel (per dc) */
+/* Pull to post / refresh (Globe list) — two-stage, inline icon+text (per dc) */
 .forum-pullpost {
   --pull: 0;
   --pull-rot: 0deg;
@@ -11206,13 +11206,14 @@ html[data-gcards="g3"] .forum-thread-more {
 .forum-pullpost-arrow {
   transform: rotate(var(--pull-rot));
   transform-origin: 50% 50%;
-  opacity: calc(1 - var(--pull));
+  opacity: 1;
   transition: opacity 0.12s ease;
 }
 .forum-pullpost-plus {
-  opacity: var(--pull);
-  transform: scale(calc(0.7 + 0.3 * var(--pull)));
-  transition: opacity 0.12s ease;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  grid-area: 1 / 1;
 }
 .forum-pullpost.is-armed .forum-pullpost-arrow {
   opacity: 0;
@@ -11221,10 +11222,32 @@ html[data-gcards="g3"] .forum-thread-more {
   opacity: 1;
   transform: scale(1);
 }
+.forum-pullpost-spin {
+  display: none;
+  grid-area: 1 / 1;
+  width: 14px;
+  height: 14px;
+  border: 1.6px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+.forum-pullpost.is-busy .forum-pullpost-arrow,
+.forum-pullpost.is-busy .forum-pullpost-plus {
+  opacity: 0;
+}
+.forum-pullpost.is-busy .forum-pullpost-spin {
+  display: block;
+  animation: forum-pull-spin 0.7s linear infinite;
+}
+@keyframes forum-pull-spin {
+  to { transform: rotate(360deg); }
+}
 .forum-pullpost-txt {
   display: inline-block;
   vertical-align: middle;
 }
+.forum-pullpost.is-refresh,
 .forum-pullpost.is-armed {
   opacity: 0.92;
 }
@@ -11232,8 +11255,7 @@ html[data-gcards="g3"] .forum-thread-more {
   animation: forum-pull-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.35);
 }
 .forum-pullpost.is-settle {
-  opacity: 0.5;
-  transform: scale(0.96);
+  opacity: 0.55;
 }
 @keyframes forum-pull-pop {
   0% { transform: scale(calc(0.92 + 0.1 * var(--pull))); }
@@ -11243,13 +11265,15 @@ html[data-gcards="g3"] .forum-thread-more {
 [data-theme="light"] .forum-pullpost {
   opacity: calc(0.32 + 0.58 * var(--pull));
 }
+[data-theme="light"] .forum-pullpost.is-refresh,
 [data-theme="light"] .forum-pullpost.is-armed {
   opacity: 0.88;
 }
 @media (prefers-reduced-motion: reduce) {
   .forum-pullpost,
   .forum-pullpost-arrow,
-  .forum-pullpost-plus {
+  .forum-pullpost-plus,
+  .forum-pullpost-spin {
     transition: none !important;
     animation: none !important;
   }
@@ -11257,29 +11281,33 @@ html[data-gcards="g3"] .forum-thread-more {
     transform: none;
   }
 }
-.forum-write-reply {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 12px 0 2px;
-  padding: 12px 0 2px;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
-  color: inherit;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: lowercase;
-  opacity: 0.42;
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+
+/* Smooth list ↔ composer handoff (transform/opacity only) */
+.forum-anim.forum-view-enter {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
 }
-.forum-write-reply:active {
-  opacity: 0.7;
+.forum-anim.forum-view-enter.is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform 0.36s cubic-bezier(0.2, 0.85, 0.25, 1.05),
+    opacity 0.3s ease;
 }
-[data-theme="light"] .forum-write-reply {
-  border-top-color: rgba(10, 18, 48, 0.1);
+.forum-anim.forum-view-exit {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.18s ease;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .forum-anim.forum-view-enter,
+  .forum-anim.forum-view-enter.is-in,
+  .forum-anim.forum-view-exit {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
