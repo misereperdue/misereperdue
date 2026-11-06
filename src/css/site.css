@@ -11188,7 +11188,6 @@ html[data-gcards="g3"] .forum-thread-more {
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
-  position: relative;
 }
 .forum-pullpost-ico {
   position: relative;
@@ -11225,31 +11224,6 @@ html[data-gcards="g3"] .forum-thread-more {
   display: inline-block;
   vertical-align: middle;
 }
-.forum-pullpost-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 36px;
-  height: 36px;
-  margin: -18px 0 0 -18px;
-  pointer-events: none;
-  opacity: calc(0.15 + 0.55 * var(--pull));
-  transform: scale(calc(0.85 + 0.2 * var(--pull)));
-}
-.forum-pullpost-ring svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  transform: rotate(-90deg);
-}
-.forum-pullpost-ring-track {
-  opacity: 0.22;
-}
-.forum-pullpost-ring-prog {
-  stroke-dasharray: 100;
-  stroke-dashoffset: calc(100 - 100 * var(--pull));
-  opacity: 0.9;
-}
 .forum-pullpost.is-armed {
   opacity: 0.92;
 }
@@ -11274,8 +11248,7 @@ html[data-gcards="g3"] .forum-thread-more {
 @media (prefers-reduced-motion: reduce) {
   .forum-pullpost,
   .forum-pullpost-arrow,
-  .forum-pullpost-plus,
-  .forum-pullpost-ring {
+  .forum-pullpost-plus {
     transition: none !important;
     animation: none !important;
   }

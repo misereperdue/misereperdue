@@ -2063,9 +2063,6 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to post">' +
-        '<span class="forum-pullpost-ring" aria-hidden="true">' +
-        '<svg viewBox="0 0 24 24"><circle class="forum-pullpost-ring-track" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
-        '<circle class="forum-pullpost-ring-prog" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" pathLength="100"/></svg></span>' +
         '<span class="forum-pullpost-ico" aria-hidden="true">' +
         '<svg class="forum-pullpost-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>' +
         '<svg class="forum-pullpost-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
