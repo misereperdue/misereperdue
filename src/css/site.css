@@ -10819,3 +10819,21 @@ html[data-gcards="g3"] .forum-thread-more {
     transition: none;
   }
 }
+
+/* Forum poll: no flash on tap / vote (per dc) */
+.forum-poll-opt {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  backdrop-filter: none; /* keep paint cheap; glass lives on the card */
+}
+.forum-poll {
+  -webkit-tap-highlight-color: transparent;
+}
+.forum-poll-bar {
+  transition: width .35s cubic-bezier(.3,.7,.2,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .forum-poll-bar { transition: none; }
+  .forum-poll-opt.voted { animation: none !important; }
+  .forum-poll-opt.voted .easyui-neon-beam-wrap { animation: none !important; }
+}

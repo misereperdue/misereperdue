@@ -2450,7 +2450,118 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         mpState("Couldn’t load this thread.", we, !0);
       }));
   }
+  // Update an already-mounted .forum-poll from thread.poll without touching the
+  // rest of the thread DOM (avoids vote flicker: no innerHTML, no optPop/beamIn
+  // restart, no avatar img reload, no backdrop-filter drop).
+  function Ue(thread) {
+    try {
+      if (!thread || !thread.poll || !thread.poll.options || !thread.poll.options.length) return;
+      var host = t.querySelector(".forum-poll");
+      if (!host) return;
+      var opts = thread.poll.options;
+      var total = opts.reduce(function (sum, o) {
+        return sum + (Number(o.votes) || 0);
+      }, 0);
+      var my =
+        O && thread.poll.voters ? thread.poll.voters[String(O.username).toLowerCase()] : void 0;
+      var btns = host.querySelectorAll(".forum-poll-opt");
+      opts.forEach(function (o, i) {
+        var btn = btns[i];
+        if (!btn) return;
+        var pct = total > 0 ? Math.round(((Number(o.votes) || 0) / total) * 100) : 0;
+        var mine = my === i;
+        var was = btn.classList.contains("voted");
+        btn.classList.toggle("voted", !!mine);
+        btn.style.border = "1px solid " + (mine ? "rgba(255,255,255,.12)" : "rgba(127,127,127,.25)");
+        btn.style.background = mine ? "rgba(80,140,255,.15)" : "rgba(127,127,127,.06)";
+        btn.disabled = !1;
+        var bar = btn.querySelector(".forum-poll-bar");
+        bar && (bar.style.width = pct + "%");
+        var lbl = btn.querySelector(".forum-poll-lbl");
+        if (lbl) {
+          var base = String(o.text || "");
+          lbl.textContent = base + (mine ? " ✓" : "");
+        }
+        var beam = btn.querySelector(".easyui-neon-beam-wrap");
+        if (mine && !beam) {
+          var wrap = document.createElement("span");
+          wrap.className = "easyui-neon-beam-wrap";
+          wrap.setAttribute("aria-hidden", "true");
+          wrap.innerHTML = '<span class="easyui-neon-beam"></span>';
+          // Only animate the first time this option becomes selected this session.
+          if (was) wrap.style.animation = "none";
+          btn.insertBefore(wrap, btn.firstChild);
+        } else if (!mine && beam) {
+          beam.remove();
+        } else if (mine && beam && was) {
+          // Keep existing beam; don't restart beamIn by cloning.
+        }
+        var meta = btn.querySelector(".forum-poll-meta");
+        if (meta) {
+          var voters = meta.querySelector(".forum-poll-voters");
+          var pctEl = meta.querySelector(".forum-poll-pct");
+          if (!pctEl) {
+            pctEl = document.createElement("span");
+            pctEl.className = "forum-poll-pct";
+            pctEl.style.opacity = ".7";
+            pctEl.style.marginLeft = "4px";
+            meta.appendChild(pctEl);
+          }
+          pctEl.textContent = pct + "%";
+          if (mine && thread.voterAvatars && thread.voterAvatars[i] && thread.voterAvatars[i].length) {
+            if (!voters) {
+              voters = document.createElement("span");
+              voters.className = "forum-poll-voters";
+              voters.style.display = "flex";
+              meta.insertBefore(voters, pctEl);
+            }
+            var html = "";
+            thread.voterAvatars[i].forEach(function (u, r) {
+              var inner = u.hasAvatarImg
+                ? '<img src="' +
+                  e +
+                  "/api/avatarimg/" +
+                  encodeURIComponent(u.username) +
+                  "?v=" +
+                  (Number(u.avatarV) || 0) +
+                  '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" data-fallback="img/default-avatar.jpg">'
+                : w(u.avatar || "😀");
+              html +=
+                '<span title="' +
+                w(u.username) +
+                '" class="poll-voter-avatar" data-u="' +
+                w(u.username) +
+                '" style="width:20px;height:20px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:rgba(127,127,127,.2);' +
+                (r > 0 ? "margin-left:-6px;" : "") +
+                '">' +
+                inner +
+                "</span>";
+            });
+            var shown = thread.voterAvatars[i].length,
+              more = (Number(o.votes) || 0) - shown;
+            if (more > 0)
+              html +=
+                '<span class="poll-voter-avatar poll-voter-more" style="width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:rgba(127,127,127,.35);margin-left:-6px;">+' +
+                more +
+                "</span>";
+            // Reuse existing <img> nodes with the same src when possible to avoid flicker.
+            if (voters.getAttribute("data-sig") !== html) {
+              voters.setAttribute("data-sig", html);
+              voters.innerHTML = html;
+            }
+          } else if (voters) {
+            voters.remove();
+          }
+        }
+      });
+      var ft = host.querySelector(".forum-poll-ft");
+      if (ft)
+        ft.textContent =
+          total + " vote" + (1 === total ? "" : "s") + (g() ? "" : " · Sign in to vote");
+    } catch (err) {}
+  }
   function ke() {
+
     var n = b.thread;
     if (n) {
       if (window.MPNav && MPNav.refreshTitle)
@@ -2520,17 +2631,17 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                   (a +=
                     '<span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span>'),
                 (a +=
-                  '<span style="position:absolute;left:0;top:0;bottom:0;width:' +
+                  '<span class="forum-poll-bar" style="position:absolute;left:0;top:0;bottom:0;width:' +
                   l +
                   '%;background:rgba(80,140,255,.18);"></span>'),
                 (a +=
-                  '<span class="poll-opt-content" style="display:flex;justify-content:space-between;align-items:center;"><span>' +
+                  '<span class="poll-opt-content" style="display:flex;justify-content:space-between;align-items:center;"><span class="forum-poll-lbl">' +
                   w(o.text) +
                   (s ? " ✓" : "") +
-                  '</span><span style="display:flex;align-items:center;gap:4px;">'),
+                  '</span><span class="forum-poll-meta" style="display:flex;align-items:center;gap:4px;">'),
                 s && t.voterAvatars && t.voterAvatars[i])
               ) {
-                ((a += '<span style="display:flex;">'),
+                ((a += '<span class="forum-poll-voters" style="display:flex;">'),
                   t.voterAvatars[i].forEach(function (t, r) {
                     var n = t.hasAvatarImg
                       ? '<img src="' +
@@ -2559,11 +2670,11 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                     "</span>"),
                   (a += "</span>"));
               }
-              ((a += '<span style="opacity:.7;margin-left:4px;">' + l + "%</span></span></span>"),
+              ((a += '<span class="forum-poll-pct" style="opacity:.7;margin-left:4px;">' + l + "%</span></span></span>"),
                 (a += "</button>"));
             }),
             (a +=
-              '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
+              '<div class="forum-poll-ft" style="font-size:12px;color:var(--muted);margin-top:4px;">' +
               r +
               " vote" +
               (1 === r ? "" : "s") +
@@ -2695,7 +2806,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                       t.ok && t.poll
                         ? ((b.thread.poll = t.poll),
                           t.voterAvatars && (b.thread.voterAvatars = t.voterAvatars),
-                          ke())
+                          // In-place update (per dc): never re-render the thread on vote —
+                          // that flickered (entrance anim, avatar reload, beam restart).
+                          Ue(b.thread))
                         : (alert(t.error || "Vote failed"), (e.disabled = !1));
                     })
                     .catch(function () {

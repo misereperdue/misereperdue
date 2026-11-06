@@ -3390,16 +3390,23 @@
       [].forEach.call(vw.querySelectorAll("[data-u]"), function (x) { keep[x.getAttribute("data-u")] = x; });
       var nxt = [];
       if (mine.length) Object.keys(v).forEach(function (k) { if (shown < 3 && !(window.mpHide && mpHide.is(k)) && Array.isArray(v[k]) && v[k].indexOf(i) !== -1) { nxt.push(k); shown++; } });
-      vw.innerHTML = "";
+      /* Reorder in place — never vw.innerHTML="" (that flashed avatars / more-badge). */
+      var frag = document.createDocumentFragment(), seen = Object.create(null);
       nxt.forEach(function (k) {
         var sp = keep[k];
         if (!sp) {
           var info = (Je && Je[k]) || null; sp = document.createElement("span");
           sp.className = "poll-voter-avatar" + (red ? "" : " is-new"); sp.setAttribute("data-u", k); sp.title = mpName(info && info.username ? info.username : k);
           try { var av = J(info && info.username ? info.username : k, info && info.avatar, "xs", info && info.hasImg ? info.imgV : void 0); av && sp.appendChild(av); } catch (_) {}
+        } else {
+          sp.classList.remove("is-new");
         }
-        vw.appendChild(sp);
+        seen[k] = 1;
+        frag.appendChild(sp);
       });
+      Object.keys(keep).forEach(function (k) { if (!seen[k] && keep[k].parentNode === vw) keep[k].remove(); });
+      [].forEach.call(vw.querySelectorAll(".poll-voter-more"), function (x) { x.remove(); });
+      vw.appendChild(frag);
       counts[i] > shown && shown && vw.insertAdjacentHTML("beforeend", '<span class="poll-voter-avatar poll-voter-more">+' + (counts[i] - shown) + "</span>");
     });
     var ft = c.querySelector(".chat-poll-ft span"), txt = voters + (voters === 1 ? " vote" : " votes") + (pl.multi ? " \u00b7 Multiple answers" : "");
