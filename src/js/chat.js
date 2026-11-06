@@ -685,6 +685,7 @@
       return (
         (i.className = "chat-avatar-img" + (a ? " " + a : "")),
         (i.alt = t),
+        (i.decoding = "async"),
         (i.src = window._myAvatarDataUrl),
         o.appendChild(i),
         o
@@ -694,6 +695,8 @@
       var c = document.createElement("img");
       ((c.className = "chat-avatar-img" + (a ? " " + a : "")),
         (c.alt = ""),
+        (c.decoding = "async"),
+        (c.loading = "lazy"),
         (c.src = (function (t, n) {
           return e + "/api/avatarimg/" + encodeURIComponent(t) + "?v=" + (parseInt(n, 10) || 0);
         })(t, r)),
@@ -705,6 +708,8 @@
       var l = document.createElement("img");
       ((l.className = "chat-avatar-img" + (a ? " " + a : "")),
         (l.alt = ""),
+        (l.decoding = "async"),
+        (l.loading = "lazy"),
         (l.src = "img/default-avatar.jpg"),
         o.appendChild(l));
     }

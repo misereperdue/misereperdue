@@ -43,11 +43,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
           document.head.appendChild(s);
         });
       }
-      var jobs = [
-        MP_PIN("js/dashboard-v2.js"),
-        MP_PIN("js/social-logos.js"),
-        MP_PIN("js/ph-icons.js")
-      ].map(function (src) { return loadOne(src, 0); });
+      /* Snappy boot (per dc): shop + forum first (visible tabs), defer dashboard/icons to idle */
+      var jobs = [];
       // Shop chain: shop.js renders with MP + MPShopify.
       jobs.push(Promise.all([
         loadOne(MP_PIN("js/shopify.js"), 0),
@@ -56,7 +53,18 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       // vip3d.js / mask3d.js are loaded on demand by shop.js (lazy3d).
       // Forum chain: patch after forum3.js.
       jobs.push(loadOne(MP_PIN("js/forum3.js"), 0).then(function () { return loadOne(PATCH, 0); }));
-      if (window.Promise && Promise.allSettled) Promise.allSettled(jobs);
+      function loadSecondary() {
+        return Promise.all([
+          loadOne(MP_PIN("js/dashboard-v2.js"), 0),
+          loadOne(MP_PIN("js/social-logos.js"), 0),
+          loadOne(MP_PIN("js/ph-icons.js"), 0)
+        ]);
+      }
+      var boot = (window.Promise && Promise.allSettled) ? Promise.allSettled(jobs) : Promise.all(jobs);
+      boot.then(function () {
+        var ric = window.requestIdleCallback || function (cb) { setTimeout(cb, 200); };
+        ric(function () { loadSecondary(); }, { timeout: 1500 });
+      });
     })();
   
 

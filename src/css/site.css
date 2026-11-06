@@ -91,6 +91,26 @@ textarea {
   font-family: inherit;
   color: inherit;
 }
+/* Snappier taps (per dc): kill 300ms heuristics, instant :active on chrome controls */
+button,
+a,
+[role="button"],
+.nav button,
+.product-card,
+.forum-thread,
+.mp-pb-act,
+.chat-send,
+.chat-plus {
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+}
+.nav button:active {
+  transform: scale(0.94);
+  transition: transform 0.08s ease;
+}
+.nav button.on:active {
+  transform: scale(0.96);
+}
 @view-transition {
   navigation: auto;
 }
@@ -3358,6 +3378,17 @@ html {
 #chat .chat-inputrow {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Offscreen list rows: skip layout/paint until near viewport (per dc snappy) */
+.chat-msg,
+.forum-thread,
+#shop-grid .product-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+#shop-grid .product-card {
+  contain-intrinsic-size: auto 280px;
 }
 .chat-msg-in {
   animation: chat-msg-in 0.25s ease-out;
