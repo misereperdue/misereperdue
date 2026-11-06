@@ -3110,7 +3110,7 @@
     var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : "chat-pbig-globe");
     var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
-    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs" role="tablist"><button type="button" data-s="active" class="is-on">Active</button><button type="button" data-s="new">Recent</button><button type="button" data-s="pop">Popular</button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="pulse"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.287 8.287 0 0 0 3.362-6.867 8.24 8.24 0 0 0 3 2.48Z"/><path d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 0-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
     m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
     if (!red) {
@@ -3151,18 +3151,44 @@
       });
     }
     var tabs = m.querySelector(".chat-gp-tabs"), tbs = [].slice.call(tabs.querySelectorAll("button")), red2 = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var thumb = document.createElement("span"); thumb.className = "chat-gp-thumb"; tabs.insertBefore(thumb, tabs.firstChild);
-    function place(k) { thumb.style.width = "calc((100% - 4px) / " + tbs.length + ")"; thumb.style.transform = "translateX(" + k * 100 + "%)"; }
+    var thumb = tabs.querySelector(".seg");
+    /* same seating math as #nav .seg (app.js refreshSeg) */
+    function place(k) {
+      var btn = tbs[k];
+      if (!btn || !thumb || !btn.offsetWidth) return;
+      requestAnimationFrame(function () {
+        var b = btn.getBoundingClientRect(), n = tabs.getBoundingClientRect();
+        if (!thumb.offsetWidth) {
+          thumb.style.width = btn.offsetWidth + "px";
+          thumb.style.height = btn.offsetHeight + "px";
+        } else {
+          thumb.style.width = btn.offsetWidth + "px";
+          thumb.style.height = btn.offsetHeight + "px";
+        }
+        var x = b.left - n.left - tabs.clientLeft + (b.width - thumb.offsetWidth) / 2 - thumb.offsetLeft;
+        thumb.style.transform = "translateX(" + Math.round(x * 4) / 4 + "px)";
+      });
+    }
     place(0);
     function go(k) {
       var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); });
       if (k < 0 || k >= tbs.length || k === cur) return;
-      sort = tbs[k].getAttribute("data-s"); tbs.forEach(function (x, n) { x.classList.toggle("is-on", n === k); }); place(k);
+      sort = tbs[k].getAttribute("data-s");
+      tbs.forEach(function (x, n) {
+        var on = n === k;
+        x.classList.toggle("is-on", on);
+        x.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      place(k);
       window.haptic && window.haptic(8);
       paint(); list.scrollTop = 0;
       red2 || list.animate([{ transform: "translateX(" + (k > cur ? 28 : -28) + "px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.15,.5,1)" });
     }
     tbs.forEach(function (b, k) { b.addEventListener("click", function (e) { e.stopPropagation(); go(k); }); });
+    window.addEventListener("resize", function () {
+      var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); });
+      place(cur < 0 ? 0 : cur);
+    });
     var sx = 0, sy = 0;
     list.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: !0 });
     list.addEventListener("touchend", function (e) {

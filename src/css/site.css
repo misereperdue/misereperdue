@@ -8972,6 +8972,7 @@ svg[data-hi="wiggle"].hi-play { animation-name: hi-scale; }
 svg[data-hi="fade"].hi-play { animation-name: hi-fade; }
 svg[data-hi="slide"].hi-play { animation-name: hi-slide; }
 svg[data-hi="float"].hi-play { animation-name: hi-float; }
+svg[data-hi="pulse"].hi-play { animation-name: hi-scale; }
 svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 @keyframes hi-scale { 0%, 100% { scale: 1; } 50% { scale: 1.08; } }
 @keyframes hi-rotate { 0%, 100% { rotate: 0deg; } 25% { rotate: -10deg; } 75% { rotate: 10deg; } }
@@ -9671,9 +9672,60 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-pbig-btn{width:30px;height:30px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:rgba(127,127,127,.18);color:inherit;cursor:pointer}
 .chat-pbig-btn svg{width:16px;height:16px}
 .chat-gp-q,.chat-poll-f input:not([type=checkbox]){width:100%;box-sizing:border-box;border:1px solid var(--sheet-border,rgba(127,127,127,.25));background:rgba(127,127,127,.12);color:inherit;border-radius:11px;padding:9px 12px;font:inherit;font-size:16px;outline:none}
-.chat-gp-tabs{display:flex;gap:2px;padding:2px;border-radius:10px;background:rgba(127,127,127,.14)}
-.chat-gp-tabs button{flex:1;border:0;background:none;color:inherit;font:inherit;font-size:13px;font-weight:600;padding:6px 0;border-radius:8px;opacity:.7;cursor:pointer}
-.chat-gp-tabs button.is-on{opacity:1;background:var(--sheet-bg,rgba(255,255,255,.12));box-shadow:0 1px 4px rgba(0,0,0,.2)}
+/* Globe picker sort bar: same glass + .seg droplet as the top navbar (per dc) */
+.chat-gp-tabs{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:stretch;
+  gap:2px;
+  padding:4px;
+  border-radius:999px;
+  min-height:52px;
+  box-sizing:border-box;
+}
+.chat-gp-tabs.glassbar{
+  /* glassbar recipe already supplies tint/blur/rim/shadow */
+}
+.chat-gp-tabs > .seg{
+  top:4px;
+  left:4px;
+  width:auto;
+  height:auto;
+  border-radius:999px;
+  pointer-events:none;
+  z-index:0;
+}
+.chat-gp-tabs button{
+  position:relative;
+  z-index:1;
+  flex:1 1 0;
+  min-width:0;
+  min-height:44px;
+  height:44px;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--lg-icon);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .25s ease;
+}
+.chat-gp-tabs button.is-on{
+  color:var(--lg-icon-on);
+  opacity:1;
+}
+.chat-gp-tabs button:not(.is-on){opacity:.85}
+.chat-gp-tabs button svg.mark{
+  width:22px;
+  height:22px;
+  display:block;
+}
 .chat-gp-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
 .chat-gp-row.chat-ge{width:100%;max-width:none;margin:0;border:0;font:inherit;text-align:left;cursor:pointer;box-shadow:none;background:rgba(127,127,127,.1)}
 .chat-gp-empty{padding:24px 8px;text-align:center;opacity:.6;font-size:14px}
@@ -9977,12 +10029,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 @keyframes mp-dot-wave{0%{-webkit-mask-position:100% 100%;mask-position:100% 100%}100%{-webkit-mask-position:0% 0%;mask-position:0% 0%}}
 .chat-bubble.chat-poll-q3d.is-off::after{animation-play-state:paused}
 /* Globe picker: sliding segmented thumb */
-.chat-gp-tabs{position:relative}
-.chat-gp-tabs button{position:relative;z-index:1;transition:opacity .2s}
-.chat-gp-tabs button.is-on{background:none!important;box-shadow:none!important}
-.chat-gp-thumb{position:absolute;z-index:0;left:2px;top:2px;bottom:2px;border-radius:8px;background:var(--sheet-bg,rgba(255,255,255,.14));box-shadow:0 1px 4px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .38s cubic-bezier(.3,1.3,.5,1)}
-[data-theme="light"] .chat-gp-thumb{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.14)}
-@media (prefers-reduced-motion:reduce){.chat-msg .chat-bubble.chat-poll-q3d::after{animation:none;display:none}.chat-gp-thumb,.chat-poll-ring .fg,.chat-poll-ring .dot{transition:none}.chat-poll-rip{display:none}}
+@media (prefers-reduced-motion:reduce){.chat-msg .chat-bubble.chat-poll-q3d::after{animation:none;display:none}.chat-poll-ring .fg,.chat-poll-ring .dot{transition:none}.chat-poll-rip{display:none}}
 .chat-poll{position:relative;z-index:1}
 .chat-poll-q3d .chat-poll-opt::after{content:none!important}
 .chat-poll-q3d .chat-poll-pct{display:block!important;position:relative;font-size:12px;font-weight:650;opacity:.75;min-width:32px;text-align:right}
