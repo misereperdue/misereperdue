@@ -10133,17 +10133,57 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-vrec.is-deaf .chat-vrec-hint { display: block; }
 .chat-vrec.is-deaf .chat-vrec-wv { display: none; }
 .chat-vrec.is-busy .chat-vrec-hint { display: none; }
-/* ---------- Profile bubble (per dc): compact profile popover anchored to the tapped avatar ---------- */
-.mp-pb{position:fixed;z-index:2147482000;isolation:isolate;width:min(280px,calc(100vw - 20px));padding:14px 14px 6px;border-radius:20px;color:var(--ink);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08);opacity:0;transform:scale(.86);transition:opacity .16s ease,transform .26s cubic-bezier(.2,.8,.25,1);outline:none;-webkit-user-select:none;user-select:none;contain:layout style;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.mp-pb.is-in{opacity:1;transform:translateZ(0) scale(1)}
-.mp-pb.is-out{opacity:0;transform:scale(.94);transition:opacity .12s ease,transform .12s ease;pointer-events:none}
+/* ---------- Profile bubble (per dc): appear at final seat, grow from tail tip (no left/top glide) ---------- */
+.mp-pb{
+  position:fixed;
+  z-index:2147483000;
+  isolation:isolate;
+  width:min(280px,calc(100vw - 20px));
+  padding:14px 14px 6px;
+  border-radius:20px;
+  color:var(--ink);
+  box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08);
+  opacity:0;
+  transform:scale(.85);
+  transform-origin:var(--ax,50%) 0;
+  transition:opacity .26s cubic-bezier(.32,.72,0,1),transform .26s cubic-bezier(.32,.72,0,1);
+  transition-property:opacity,transform;
+  outline:none;
+  -webkit-user-select:none;
+  user-select:none;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.mp-pb.is-in{opacity:1;transform:scale(1)}
+.mp-pb.is-out{
+  opacity:0;
+  transform:scale(.92);
+  transition:opacity .18s cubic-bezier(.32,.72,0,1),transform .18s cubic-bezier(.32,.72,0,1);
+  transition-property:opacity,transform;
+  pointer-events:none;
+}
 .mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
-/* glass layer = rect + tail in one masked shape (no seam); hairline drawn by the same path */
-.mp-pb-shape{position:absolute;left:0;right:0;top:-7px;bottom:0;z-index:-1;pointer-events:none;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%}
-.mp-pb.is-above .mp-pb-shape{top:0;bottom:-7px}
+/* glass from first paint (fades with .mp-pb opacity); z-index:0 so music card can't punch through a -1 layer */
+.mp-pb-shape{
+  position:absolute;
+  left:0;right:0;top:-7px;bottom:0;
+  z-index:0;
+  pointer-events:none;
+  background:var(--sheet-bg);
+  -webkit-backdrop-filter:var(--sheet-blur);
+  backdrop-filter:var(--sheet-blur);
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:100% 100%;
+  mask-size:100% 100%;
+  transition:none!important;
+}
+.mp-pb.is-above .mp-pb-shape{top:0;bottom:-7px;transition:none!important}
+.mp-pb>:not(.mp-pb-shape){position:relative;z-index:1}
 .mp-pb-line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke:rgba(0,0,0,.12);stroke-width:1}
 [data-theme="dark"] .mp-pb-line{stroke:rgba(255,255,255,.22)}
-[data-theme="light"] .mp-pb-shape{background:rgba(255,255,255,.72)}
+[data-theme="dark"] .mp-pb-shape{background:rgba(22,22,26,.78)}
+[data-theme="light"] .mp-pb-shape{background:rgba(255,255,255,.78)}
 .mp-pb-hd{display:flex;align-items:center;gap:12px}
 .mp-pb-hd>.chat-avatar-wrap{flex:none;width:52px;height:52px;position:relative}
 .mp-pb-hd>.chat-avatar-wrap>img,.mp-pb-hd>.chat-avatar-wrap>.chat-avatar{width:52px!important;height:52px!important;border-radius:50%;object-fit:cover;font-size:24px}
@@ -10176,8 +10216,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-act:disabled{opacity:.5}
 .mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
 .mp-pb-full svg{width:14px;height:14px}
-@media (prefers-reduced-motion:reduce){.mp-pb,.mp-pb.is-out{transition:opacity .12s ease;transform:none}}
-
+@media (prefers-reduced-motion:reduce){.mp-pb,.mp-pb.is-out{transition:opacity .12s ease;transition-property:opacity;transform:none}}
 /* ===== Globe thread cards G1–G3 (per dc) =====
    data-gcards=g1 Editorial (default) | g2 Media-first | g3 Compact magazine
    Switch: MPForum.setCards('g2') or localStorage mp-gcards. */

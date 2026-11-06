@@ -1005,9 +1005,14 @@
     if (!b) return;
     mpPBel = null;
     b._off && b._off();
+    /* fast = tear down now (no fade) so a new open never shares a frame with the old card */
+    if (fast) {
+      b.remove();
+      return;
+    }
     b.classList.remove("is-in");
     b.classList.add("is-out");
-    setTimeout(function () { b.remove(); }, fast ? 0 : 140);
+    setTimeout(function () { b.remove(); }, 200);
   }
   function mpPBput(u) {
     if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
@@ -1019,14 +1024,15 @@
   function mpPBshow(n, anchor, rq, fromCache, key) {
     if (rq !== mpPBreq || !n || !anchor || !anchor.isConnected) return;
     key = key || n.username;
-    /* already open for this user+anchor from cache: keep it (no rebuild jump) */
-    if (mpPBel && mpPBel._u === key && mpPBel._a === anchor && mpPBel._fromCache && !fromCache) {
-      mpPBel._fromCache = !1;
-      /* refresh points in place if they changed */
-      try {
-        var pts = mpPBel.querySelector(".mp-pb-pts b");
-        if (pts && n.points != null) pts.textContent = x(n.points || 0);
-      } catch (e) {}
+    /* same user+anchor already open: never rebuild (avoids left/top re-seat glide after cache→fresh) */
+    if (mpPBel && mpPBel._u === key && mpPBel._a === anchor) {
+      if (mpPBel._fromCache && !fromCache) {
+        mpPBel._fromCache = !1;
+        try {
+          var pts = mpPBel.querySelector(".mp-pb-pts b");
+          if (pts && n.points != null) pts.textContent = x(n.points || 0);
+        } catch (e) {}
+      }
       return;
     }
     mpPBclose(!0);
@@ -1125,11 +1131,12 @@
     shp.className = "mp-pb-shape";
     shp.setAttribute("aria-hidden", "true");
     b.appendChild(shp);
-    /* measure off-screen / hidden so Safari never paints a misplaced first frame */
+    /* measure while fully inert: no transitions, not painted. Seat final left/top/origin BEFORE first paint. */
     b.style.visibility = "hidden";
+    b.style.pointerEvents = "none";
+    b.style.transition = "none";
     b.style.left = "0px";
     b.style.top = "0px";
-    b.style.pointerEvents = "none";
     document.body.appendChild(b);
     var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
       r = anchor.getBoundingClientRect(),
@@ -1159,24 +1166,29 @@
         fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
         vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
         mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>') + "\")";
-      shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk;
+      shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk + ";transition:none";
       shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
     })();
     b.classList.add(below ? "is-below" : "is-above");
+    /* final seat + tip origin committed under transition:none — no left/top interpolate */
     b.style.left = left + "px";
     b.style.top = top + "px";
     b.style.setProperty("--ax", ax + "px");
     b.style.transformOrigin = ax + "px " + (below ? -TH + "px" : h + TH + "px");
     b.style.willChange = "transform, opacity";
-    /* commit geometry while still hidden, then reveal at the start pose and animate in */
     void b.offsetWidth;
-    b.style.visibility = "";
     mpPBel = b;
+    /* double rAF: first paint at rest pose (scale .85, opacity 0, final left/top), then ease in */
     requestAnimationFrame(function () {
       if (mpPBel !== b) return;
-      b.classList.add("is-in");
-      b.style.pointerEvents = "";
-      setTimeout(function () { if (mpPBel === b) b.style.willChange = "auto"; }, 280);
+      b.style.visibility = "";
+      b.style.transition = "";
+      requestAnimationFrame(function () {
+        if (mpPBel !== b) return;
+        b.classList.add("is-in");
+        b.style.pointerEvents = "";
+        setTimeout(function () { if (mpPBel === b) b.style.willChange = "auto"; }, 300);
+      });
     });
     try { b.focus({ preventScroll: !0 }); } catch (e) {}
     var out = function (e) {
