@@ -2057,20 +2057,21 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         (n ? "" : " hidden") +
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
-        '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to post">' +
+        '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to refresh or post">' +
         '<span class="forum-pullpost-ico" aria-hidden="true">' +
         '<svg class="forum-pullpost-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>' +
         '<svg class="forum-pullpost-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
         '<svg class="forum-pullpost-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
         '<span class="forum-pullpost-spin"></span>' +
         '</span>' +
-        '<span class="forum-pullpost-copy">' +
-        '<span class="forum-pullpost-txt">Pull to post</span>' +
-        '<span class="forum-pullpost-hint">+ keep pulling to post</span>' +
+        '<span class="forum-pullpost-labels" aria-hidden="true">' +
+        '<span class="forum-pullpost-txt is-on" data-s="0">Pull to refresh · post</span>' +
+        '<span class="forum-pullpost-txt" data-s="1">Release to refresh</span>' +
+        '<span class="forum-pullpost-txt" data-s="2">+ Release to post</span>' +
         '</span>' +
-        '<span class="forum-pullpost-steps" aria-hidden="true">' +
-        '<span class="forum-pullpost-dot" data-step="1"></span>' +
-        '<span class="forum-pullpost-dot" data-step="2"></span>' +
+        '<span class="forum-pullpost-track" aria-hidden="true">' +
+        '<span class="forum-pullpost-fill"></span>' +
+        '<span class="forum-pullpost-tick"></span>' +
         '</span></button>'),
       r.tag &&
         (u +=
@@ -2571,7 +2572,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }, 380);
     }, 180);
   }
-  // Globe list: two-stage pull — ~75px refresh, ~150px post (per dc).
+  // Globe list: two-stage pull — ~70px refresh, ~150px post; one-row cue (per dc).
   // Transform ONLY .forum-pull-body (topbar stays fixed). Global PTR stays off
   // on Globe via __mpPullToPost / #forum.on. Reduced-motion: snap, no springs.
 
@@ -2631,6 +2632,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       return;
     }
     setGlobeListMode(!0);
+    hint.style.setProperty("--tick", (70 / 150).toFixed(4));
     hint.addEventListener("click", function (e) {
       e.preventDefault();
       if (!listPullLive()) return;
@@ -2643,8 +2645,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     var sig = t._pullAborter.signal;
     var panel = document.getElementById("forum") || t;
     var body = t.querySelector(".forum-pull-body") || t.querySelector(".forum-anim") || t;
-    var txt = hint.querySelector(".forum-pullpost-txt");
-    var STAGE1 = 75, STAGE2 = 150;
+    var labels = hint.querySelectorAll(".forum-pullpost-txt");
+    var STAGE1 = 70, STAGE2 = 150;
+    var TICK = STAGE1 / STAGE2;
     var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var startY = 0, startX = 0, locked = 0, dist = 0, tracking = 0;
     var stage = 0, buzz1 = 0, buzz2 = 0, busy = 0;
@@ -2660,6 +2663,28 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         body.classList.remove("is-pulling");
       }
     }
+    function setLabel(st) {
+      if (!labels || !labels.length) return;
+      var want = busy ? -1 : st;
+      for (var i = 0; i < labels.length; i++) {
+        var el = labels[i];
+        var on = want >= 0 && String(el.getAttribute("data-s")) === String(want);
+        el.classList.toggle("is-on", on);
+      }
+      if (busy) {
+        /* keep stage-1 slot as busy copy */
+        for (var j = 0; j < labels.length; j++) {
+          if (labels[j].getAttribute("data-s") === "1") {
+            labels[j].textContent = "Refreshing";
+            labels[j].classList.add("is-on");
+          }
+        }
+      } else {
+        for (var k = 0; k < labels.length; k++) {
+          if (labels[k].getAttribute("data-s") === "1") labels[k].textContent = "Release to refresh";
+        }
+      }
+    }
     function paint() {
       raf = 0;
       if (!pending) return;
@@ -2667,21 +2692,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var p2 = Math.max(0, Math.min(1, dist / STAGE2));
       var p1 = Math.max(0, Math.min(1, dist / STAGE1));
       hint.style.setProperty("--pull", p2.toFixed(4));
+      hint.style.setProperty("--tick", TICK.toFixed(4));
       hint.style.setProperty("--pull-rot", (RM ? 0 : p1 * 180).toFixed(2) + "deg");
-      var hintP =
-        stage >= 2
-          ? 1
-          : stage === 1
-            ? Math.max(0, Math.min(1, (dist - STAGE1) / Math.max(1, STAGE2 - STAGE1)))
-            : 0;
-      hint.style.setProperty("--post-hint", hintP.toFixed(4));
       hint.classList.toggle("is-pulling", dist > 4);
       hint.classList.toggle("is-refresh", stage === 1);
       hint.classList.toggle("is-armed", stage >= 2);
-      if (!busy && txt) {
-        txt.textContent =
-          stage >= 2 ? "Release to post" : stage === 1 ? "Release to refresh" : "Pull to post";
-      }
+      if (!busy) setLabel(stage);
       body.style.transform = shift ? "translate3d(0," + shift.toFixed(2) + "px,0)" : "";
     }
     function schedule() {
@@ -2699,13 +2715,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           buzz1 = 1;
           hint.classList.add("is-pop");
           try { navigator.vibrate && navigator.vibrate(10); } catch (err) {}
-          setTimeout(function () { hint.classList.remove("is-pop"); }, 280);
+          setTimeout(function () { hint.classList.remove("is-pop"); }, 160);
         }
         if (next === 2 && !buzz2) {
           buzz2 = 1;
           hint.classList.add("is-pop");
           try { navigator.vibrate && navigator.vibrate(12); } catch (err) {}
-          setTimeout(function () { hint.classList.remove("is-pop"); }, 280);
+          setTimeout(function () { hint.classList.remove("is-pop"); }, 160);
         }
         if (next < 1) buzz1 = 0;
         if (next < 2) buzz2 = 0;
@@ -2727,9 +2743,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       hint.style.transition = "none";
       hint.style.setProperty("--pull", "0");
       hint.style.setProperty("--pull-rot", "0deg");
-      hint.style.setProperty("--post-hint", "0");
+      hint.style.setProperty("--tick", TICK.toFixed(4));
       hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
-      if (txt) txt.textContent = "Pull to post";
+      busy = 0;
+      setLabel(0);
       void body.offsetWidth;
     }
     function springBack(then) {
@@ -2751,9 +2768,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         body.style.transform = "";
         hint.style.setProperty("--pull", "0");
         hint.style.setProperty("--pull-rot", "0deg");
-        hint.style.setProperty("--post-hint", "0");
+        hint.style.setProperty("--tick", TICK.toFixed(4));
         hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
-        if (txt) txt.textContent = "Pull to post";
+        busy = 0;
+        setLabel(0);
       });
       setTimeout(function () {
         body.style.transition = "";
@@ -2766,7 +2784,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       claim(0);
       hint.classList.add("is-busy", "is-refresh");
       hint.classList.remove("is-armed");
-      if (txt) txt.textContent = "Refreshing";
+      setLabel(1);
       body.style.transition = RM ? "none" : "transform .22s cubic-bezier(.2,.8,.2,1)";
       body.style.transform = "translate3d(0," + Math.min(shift, 36).toFixed(2) + "px,0)";
       y("/api/forum/threads")
