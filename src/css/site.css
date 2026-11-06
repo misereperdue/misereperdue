@@ -11070,3 +11070,71 @@ html[data-gcards="g3"] .forum-thread-more {
   .forum-poll-opt.voted { animation: none !important; }
   .forum-poll-opt.voted .easyui-neon-beam-wrap { animation: none !important; }
 }
+
+
+/* Pull to post (Globe list) + hairline write a reply (thread) — C4 per dc */
+.forum-pullpost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 2px 0 10px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: calc(0.34 + 0.5 * var(--pull, 0));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+.forum-pullpost svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  opacity: 0.85;
+  transform: translateY(calc(var(--pull, 0) * 4px));
+}
+.forum-pullpost.is-armed {
+  opacity: 0.78;
+}
+.forum-pullpost.is-pulling .forum-pullpost-txt {
+  letter-spacing: 0.16em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .forum-pullpost svg {
+    transform: none;
+  }
+}
+.forum-write-reply {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 2px;
+  padding: 12px 0 2px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  opacity: 0.42;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.forum-write-reply:active {
+  opacity: 0.7;
+}
+[data-theme="light"] .forum-write-reply {
+  border-top-color: rgba(10, 18, 48, 0.1);
+}

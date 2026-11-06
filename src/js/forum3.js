@@ -1911,11 +1911,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     }
     return (
       '<div class="chat-head forum-topbar glassbar"><div class="chat-title">Forum</div><div class="chat-head-right">' +
-      (g() && "new" !== r.name
-        ? "thread" === r.name
-          ? '<button type="button" class="btn accent forum-topbar-new" id="forum-reply-top"><span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span><span class="easyui-neon-label">New reply</span></button>'
-          : '<button type="button" class="btn accent forum-topbar-new" id="forum-new-top"><span class="easyui-neon-beam-wrap" aria-hidden="true"><span class="easyui-neon-beam"></span></span><span class="easyui-neon-label">New thread</span></button>'
-        : "") +
+      "" /* pull-to-post / write-a-reply replace the neon New thread|reply CTA (per dc) */ +
       (g()
         ? ""
         : '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>') +
@@ -2058,6 +2054,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
         (n ? "" : " hidden") +
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
+      (u +=
+        '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to post">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10l6 6 6-6"/></svg>' +
+        '<span class="forum-pullpost-txt">Pull to post</span></button>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2375,9 +2375,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             ((r.tag = ""), (r.category = e.getAttribute("data-cat")), ye());
         });
       }));
-    var g = t.querySelector("#forum-tag-clear");
-    (g &&
-      g.addEventListener("click", function () {
+    var tagClear = t.querySelector("#forum-tag-clear");
+    (tagClear &&
+      tagClear.addEventListener("click", function () {
         ((r.tag = ""), ye());
       }),
       t.querySelectorAll("[data-tag]").forEach(function (e) {
@@ -2474,11 +2474,122 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         });
       }),
       ve());
-    var E = t.querySelector("#forum-new-top");
-    E &&
-      E.addEventListener("click", function () {
-        ((r.name = "new"), Ie());
-      });
+    bindPullToPost();
+  }
+  function openNewThread() {
+    if (!g()) return;
+    ((r.name = "new"), Ie());
+  }
+  // Globe list: pull-down (or tap the hint) opens the new-thread composer (per dc).
+  // Touch listeners use AbortController so re-renders don't stack; passive:false only
+  // while at scrollTop 0 and pulling down so iOS PWA overscroll / swipe-tabs stay intact.
+  function bindPullToPost() {
+    var hint = t.querySelector("#forum-pullpost");
+    if (!hint) return;
+    // ye() also declares var tagClear as "g" historically — never call g() inside ye.
+    // Auth gate lives here so the hint only appears for signed-in users (same as old CTA).
+    if (!g()) {
+      hint.remove();
+      return;
+    }
+    hint.addEventListener("click", function (e) {
+      e.preventDefault();
+      openNewThread();
+    });
+    if (t._pullAborter) {
+      try { t._pullAborter.abort(); } catch (e) {}
+    }
+    t._pullAborter = new AbortController();
+    var sig = t._pullAborter.signal;
+    var panel = document.getElementById("forum") || t;
+    var root = t.querySelector(".forum-anim") || t;
+    var txt = hint.querySelector(".forum-pullpost-txt");
+    var THRESH = 70;
+    var startY = 0, startX = 0, locked = 0, dist = 0, buzzed = 0;
+    function setPull(d) {
+      dist = d;
+      hint.style.setProperty("--pull", String(Math.min(1, d / THRESH)));
+      hint.classList.toggle("is-armed", d >= THRESH);
+      hint.classList.toggle("is-pulling", d > 4);
+      if (txt) txt.textContent = d >= THRESH ? "Release to post" : "Pull to post";
+    }
+    function reset() {
+      root.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
+      root.style.transform = "";
+      setPull(0);
+      setTimeout(function () {
+        root.style.transition = "";
+      }, 300);
+    }
+    function atTop() {
+      return (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
+    }
+    function onStart(e) {
+      locked = 0;
+      dist = 0;
+      buzzed = 0;
+      if (!e.touches || e.touches.length !== 1) return;
+      if (!atTop()) return;
+      var el = e.target;
+      if (el && el.closest) {
+        if (el.closest(".forum-cats, .forum-search, .forum-search-slot, .chat-head, #nav, .forum-thread, .forum-thread-row")) {
+          if (!el.closest("#forum-pullpost")) return;
+        }
+      }
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      locked = 0;
+    }
+    function onMove(e) {
+      if (locked < 0) return;
+      if (!e.touches || e.touches.length !== 1) return;
+      var y = e.touches[0].clientY, x = e.touches[0].clientX;
+      var dy = y - startY, dx = x - startX;
+      if (!locked) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        // Vertical pull at top — leave horizontal to swipe-tabs.
+        if (dy > 0 && dy > Math.abs(dx) * 1.25 && atTop()) locked = 1;
+        else {
+          locked = -1;
+          return;
+        }
+      }
+      if (locked !== 1) return;
+      if (!atTop() && dy <= 0) {
+        locked = -1;
+        reset();
+        return;
+      }
+      if (e.cancelable) e.preventDefault();
+      // Rubber-band with resistance on the visual shift; threshold tracks ~70px finger travel.
+      var raw = Math.max(0, dy);
+      dist = raw;
+      var shift = Math.min(112, Math.pow(raw, 0.88) * 0.55);
+      root.style.transition = "none";
+      root.style.transform = "translate3d(0," + shift + "px,0)";
+      setPull(dist);
+      if (dist >= THRESH && !buzzed) {
+        buzzed = 1;
+        try {
+          navigator.vibrate && navigator.vibrate(10);
+        } catch (err) {}
+      }
+      if (dist < THRESH) buzzed = 0;
+    }
+    function onEnd() {
+      if (locked !== 1) {
+        locked = 0;
+        return;
+      }
+      var go = dist >= THRESH;
+      locked = 0;
+      reset();
+      if (go) openNewThread();
+    }
+    panel.addEventListener("touchstart", onStart, { passive: true, signal: sig });
+    panel.addEventListener("touchmove", onMove, { passive: false, signal: sig });
+    panel.addEventListener("touchend", onEnd, { passive: true, signal: sig });
+    panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig });
   }
   function we() {
     ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
@@ -2747,6 +2858,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               "</div></div>")
           );
         })(n) +
+        (g()
+          ? '<button type="button" class="forum-write-reply" id="forum-write-reply">write a reply</button>'
+          : "") +
         W(n, !1) +
         '<div class="forum-admin forum-admin-thread">' +
         (g() ? A(n, null) : "") +
@@ -3117,7 +3231,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }
       ve();
       var p = t.querySelector("#forum-reply-top");
+      var wr = t.querySelector("#forum-write-reply");
       (p && p.addEventListener("click", q),
+        wr && wr.addEventListener("click", q),
         t.querySelectorAll("[data-replyto]").forEach(function (e) {
           e.addEventListener("click", function () {
             r.replyTo = {
