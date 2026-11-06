@@ -9821,9 +9821,10 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-vrec.is-deaf .chat-vrec-wv { display: none; }
 .chat-vrec.is-busy .chat-vrec-hint { display: none; }
 /* ---------- Profile bubble (per dc): compact profile popover anchored to the tapped avatar ---------- */
-.mp-pb{position:fixed;z-index:2147482000;isolation:isolate;width:min(280px,calc(100vw - 20px));padding:14px 14px 6px;border-radius:20px;color:var(--ink);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08);opacity:0;transform:scale(.86);transition:opacity .16s ease,transform .26s cubic-bezier(.2,.8,.25,1);outline:none;-webkit-user-select:none;user-select:none}
-.mp-pb.is-in{opacity:1;transform:none}
+.mp-pb{position:fixed;z-index:2147482000;isolation:isolate;width:min(280px,calc(100vw - 20px));padding:14px 14px 6px;border-radius:20px;color:var(--ink);box-shadow:0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08);opacity:0;transform:scale(.86);transition:opacity .16s ease,transform .26s cubic-bezier(.2,.8,.25,1);outline:none;-webkit-user-select:none;user-select:none;contain:layout style;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mp-pb.is-in{opacity:1;transform:translateZ(0) scale(1)}
 .mp-pb.is-out{opacity:0;transform:scale(.94);transition:opacity .12s ease,transform .12s ease;pointer-events:none}
+.mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
 /* glass layer = rect + tail in one masked shape (no seam); hairline drawn by the same path */
 .mp-pb-shape{position:absolute;left:0;right:0;top:-7px;bottom:0;z-index:-1;pointer-events:none;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%}
 .mp-pb.is-above .mp-pb-shape{top:0;bottom:-7px}

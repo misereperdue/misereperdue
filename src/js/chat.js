@@ -738,6 +738,7 @@
         .then(function (t) {
           if (t && t.ok && t.user) {
             var n = t.user;
+            mpPBput(n);
             gt();
             var a = document.createElement("div");
             a.className = "chat-sheet-backdrop backdrop-enter";
@@ -985,8 +986,11 @@
         .catch(function () {});
   }
   /* Profile bubble (per dc): compact profile popover anchored to the tapped avatar.
-     "Full profile" opens the old sheet (K), which keeps the larger avatar and owner tools. */
-  var mpPBel = null, mpPBreq = 0;
+     "Full profile" opens the old sheet (K), which keeps the larger avatar and owner tools.
+     Open path (per dc glitch fix): cache user, measure while visibility:hidden, set final
+     left/top/transform-origin/mask before reveal, animate opacity+scale only, delay
+     dismiss listeners so iOS momentum scroll / the opening tap can't close it. */
+  var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null);
   function mpPBclose(fast) {
     var b = mpPBel;
     if (!b) return;
@@ -996,174 +1000,217 @@
     b.classList.add("is-out");
     setTimeout(function () { b.remove(); }, fast ? 0 : 140);
   }
+  function mpPBput(u) {
+    if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
+  }
+  function mpPBget(name) {
+    var c = mpPBcache[String(name).toLowerCase()];
+    return c && Date.now() - c.t < 18e4 ? c.u : null;
+  }
+  function mpPBshow(n, anchor, rq, fromCache, key) {
+    if (rq !== mpPBreq || !n || !anchor || !anchor.isConnected) return;
+    key = key || n.username;
+    /* already open for this user+anchor from cache: keep it (no rebuild jump) */
+    if (mpPBel && mpPBel._u === key && mpPBel._a === anchor && mpPBel._fromCache && !fromCache) {
+      mpPBel._fromCache = !1;
+      /* refresh points in place if they changed */
+      try {
+        var pts = mpPBel.querySelector(".mp-pb-pts b");
+        if (pts && n.points != null) pts.textContent = x(n.points || 0);
+      } catch (e) {}
+      return;
+    }
+    mpPBclose(!0);
+    var me = !!(s && String(n.username).toLowerCase() === String(s.username).toLowerCase()),
+      b = document.createElement("div");
+    b.className = "mp-pb";
+    b.setAttribute("role", "dialog");
+    b.setAttribute("aria-label", n.username + "'s profile");
+    b.tabIndex = -1;
+    b._u = key;
+    b._a = anchor;
+    b._fromCache = !!fromCache;
+    b._openedAt = Date.now();
+    var hd = document.createElement("div");
+    hd.className = "mp-pb-hd";
+    var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
+      pill = O(n);
+    /* badge sits right of the avatar, inline after the name (per dc), not overlaid on it */
+    var bd = pill ? "" : P(n);
+    hd.appendChild(av);
+    var nm = document.createElement("div");
+    nm.className = "mp-pb-nm";
+    var n1 = document.createElement("div");
+    n1.className = "mp-pb-name";
+    var n1t = document.createElement("span");
+    n1t.className = "mp-pb-name-t";
+    n1t.textContent = n.username;
+    n1.appendChild(n1t);
+    bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
+    nm.appendChild(n1);
+    var n2 = document.createElement("div");
+    n2.className = "mp-pb-sub";
+    n2.textContent = [n.numId ? "#" + n.numId : "", n.createdAt ? "Joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }) : ""].filter(Boolean).join(" · ");
+    nm.appendChild(n2);
+    pill && nm.insertAdjacentHTML("beforeend", pill);
+    hd.appendChild(nm);
+    b.appendChild(hd);
+    var st = document.createElement("div");
+    st.className = "mp-pb-stats";
+    st.innerHTML = '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
+    if (n.badges && n.badges.length) {
+      var br = document.createElement("span");
+      br.className = "mp-pb-badges";
+      n.badges.forEach(function (e) {
+        if (A(n.username, e) && !((bd || pill) && e === N(n))) {
+          var i = document.createElement("span");
+          i.className = "mp-pb-badge" + ((n.activeBadge || null) === e ? " on" : "");
+          i.innerHTML = M(e);
+          br.appendChild(i);
+        }
+      });
+      br.childNodes.length && st.appendChild(br);
+    }
+    b.appendChild(st);
+    /* reserve bio space so a late bio can't grow the bubble mid-open */
+    var bio = document.createElement("div");
+    bio.className = "mp-pb-bio" + (n.bio ? "" : " is-empty");
+    if (n.bio) bio.textContent = n.bio;
+    else bio.setAttribute("hidden", "");
+    b.appendChild(bio);
+    var ac = document.createElement("div");
+    ac.className = "mp-pb-acts";
+    function btn(label, icon, run, cls) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "mp-pb-act" + (cls ? " " + cls : "");
+      k.innerHTML = "<svg " + MP_IC + ">" + icon + "</svg><span></span>";
+      k.querySelector("span").textContent = label;
+      k.addEventListener("click", function (e) { e.stopPropagation(); run(k); });
+      ac.appendChild(k);
+      return k;
+    }
+    if (!me && mpPM.on && s)
+      btn("Whisper", '<path d="M11 19H8l-4 2.5V17a5 5 0 0 1-1-3V9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v1"/><rect x="13.5" y="15" width="8" height="6" rx="1.6"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/>', function () { mpPBclose(); mpPMStart(n.username); });
+    me && btn("Edit", '<path d="M16.9 4.6a2 2 0 0 1 2.8 2.8L8.5 18.6 4 20l1.4-4.5z"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
+    btn("Share", '<path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>', function (k) {
+      k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
+    });
+    if (!me && window.mpHide) {
+      mpHide.seen(n.username, n.numId);
+      btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', function () {
+        mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again")) : mpHideUser(n.username, n.numId);
+        mpPBclose();
+      }, "is-danger");
+    }
+    b.appendChild(ac);
+    var fp = document.createElement("button");
+    fp.type = "button";
+    fp.className = "mp-pb-full";
+    fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
+    fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
+    b.appendChild(fp);
+    /* bubble shape (per dc): one SVG outline = rounded rect + rounded tail, used as the
+       glass layer's mask and drawn again as the hairline, so the tail is seamless */
+    var shp = document.createElement("i");
+    shp.className = "mp-pb-shape";
+    shp.setAttribute("aria-hidden", "true");
+    b.appendChild(shp);
+    /* measure off-screen / hidden so Safari never paints a misplaced first frame */
+    b.style.visibility = "hidden";
+    b.style.left = "0px";
+    b.style.top = "0px";
+    b.style.pointerEvents = "none";
+    document.body.appendChild(b);
+    var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
+      r = anchor.getBoundingClientRect(),
+      w = b.offsetWidth,
+      h = b.offsetHeight,
+      vw = document.documentElement.clientWidth,
+      vh = window.innerHeight,
+      M8 = 10,
+      TH = 7,
+      gap = 5 + TH,
+      cx = r.left + r.width / 2,
+      below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
+      left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
+      top = below ? r.bottom + gap : r.top - gap - h,
+      ax;
+    cx - left < 30 && (left = Math.max(4, cx - 30));
+    left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
+    ax = Math.max(28, Math.min(cx - left, w - 28));
+    top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
+    (function () {
+      var R = 20, T = TH, H = h, W = w, a = ax,
+        d = "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T + "L" + (a - 9) + " " + T +
+          "C" + (a - 4.5) + " " + T + " " + (a - 2.4) + " 0.4 " + a + " 0.4" +
+          "C" + (a + 2.4) + " 0.4 " + (a + 4.5) + " " + T + " " + (a + 9) + " " + T +
+          "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) + "L" + W + " " + (T + H - R) +
+          "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) + "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z",
+        fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
+        vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
+        mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>') + "\")";
+      shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk;
+      shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
+    })();
+    b.classList.add(below ? "is-below" : "is-above");
+    b.style.left = left + "px";
+    b.style.top = top + "px";
+    b.style.setProperty("--ax", ax + "px");
+    b.style.transformOrigin = ax + "px " + (below ? -TH + "px" : h + TH + "px");
+    b.style.willChange = "transform, opacity";
+    /* commit geometry while still hidden, then reveal at the start pose and animate in */
+    void b.offsetWidth;
+    b.style.visibility = "";
+    mpPBel = b;
+    requestAnimationFrame(function () {
+      if (mpPBel !== b) return;
+      b.classList.add("is-in");
+      b.style.pointerEvents = "";
+      setTimeout(function () { if (mpPBel === b) b.style.willChange = "auto"; }, 280);
+    });
+    try { b.focus({ preventScroll: !0 }); } catch (e) {}
+    var out = function (e) {
+        if (Date.now() - b._openedAt < 320) return;
+        b.contains(e.target) || (anchor.contains(e.target) ? 0 : mpPBclose());
+      },
+      esc = function (e) { "Escape" === e.key && (e.preventDefault(), mpPBclose(), anchor.focus && anchor.focus()); },
+      scr = function (e) {
+        if (Date.now() - b._openedAt < 420) return;
+        b.contains(e.target) || mpPBclose();
+      },
+      pop = function () { mpPBclose(!0); };
+    b._off = function () {
+      document.removeEventListener("pointerdown", out, !0);
+      document.removeEventListener("keydown", esc, !0);
+      window.removeEventListener("scroll", scr, !0);
+      window.removeEventListener("popstate", pop);
+      window.removeEventListener("resize", pop);
+      window.removeEventListener("hashchange", pop);
+    };
+    setTimeout(function () {
+      if (mpPBel !== b) return;
+      document.addEventListener("pointerdown", out, !0);
+      document.addEventListener("keydown", esc, !0);
+      window.addEventListener("scroll", scr, !0);
+      window.addEventListener("popstate", pop);
+      window.addEventListener("resize", pop);
+      window.addEventListener("hashchange", pop);
+    }, 320);
+  }
   function mpPB(u, anchor) {
     if (!u) return;
     if (!anchor || !anchor.isConnected) return K(u);
     if (mpPBel && mpPBel._u === u && mpPBel._a === anchor) return mpPBclose();
     mpPBclose(!0);
-    var rq = ++mpPBreq;
+    var rq = ++mpPBreq,
+      cached = mpPBget(u);
+    if (cached) mpPBshow(cached, anchor, rq, !0, u);
     E("/api/user/" + encodeURIComponent(u))
       .then(function (t) {
         if (rq !== mpPBreq || !(t && t.ok && t.user) || !anchor.isConnected) return;
-        var n = t.user,
-          me = !!(s && String(n.username).toLowerCase() === String(s.username).toLowerCase()),
-          b = document.createElement("div");
-        b.className = "mp-pb";
-        b.setAttribute("role", "dialog");
-        b.setAttribute("aria-label", n.username + "'s profile");
-        b.tabIndex = -1;
-        b._u = u;
-        b._a = anchor;
-        var hd = document.createElement("div");
-        hd.className = "mp-pb-hd";
-        var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
-          pill = O(n);
-        /* badge sits right of the avatar, inline after the name (per dc), not overlaid on it */
-        var bd = pill ? "" : P(n);
-        hd.appendChild(av);
-        var nm = document.createElement("div");
-        nm.className = "mp-pb-nm";
-        var n1 = document.createElement("div");
-        n1.className = "mp-pb-name";
-        var n1t = document.createElement("span");
-        n1t.className = "mp-pb-name-t";
-        n1t.textContent = n.username;
-        n1.appendChild(n1t);
-        bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
-        nm.appendChild(n1);
-        var n2 = document.createElement("div");
-        n2.className = "mp-pb-sub";
-        n2.textContent = [n.numId ? "#" + n.numId : "", n.createdAt ? "Joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }) : ""].filter(Boolean).join(" · ");
-        nm.appendChild(n2);
-        pill && nm.insertAdjacentHTML("beforeend", pill);
-        hd.appendChild(nm);
-        b.appendChild(hd);
-        var st = document.createElement("div");
-        st.className = "mp-pb-stats";
-        st.innerHTML = '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
-        if (n.badges && n.badges.length) {
-          var br = document.createElement("span");
-          br.className = "mp-pb-badges";
-          n.badges.forEach(function (e) {
-            if (A(n.username, e) && !((bd || pill) && e === N(n))) {
-              var i = document.createElement("span");
-              i.className = "mp-pb-badge" + ((n.activeBadge || null) === e ? " on" : "");
-              i.innerHTML = M(e);
-              br.appendChild(i);
-            }
-          });
-          br.childNodes.length && st.appendChild(br);
-        }
-        b.appendChild(st);
-        if (n.bio) {
-          var bio = document.createElement("div");
-          bio.className = "mp-pb-bio";
-          bio.textContent = n.bio;
-          b.appendChild(bio);
-        }
-        var ac = document.createElement("div");
-        ac.className = "mp-pb-acts";
-        function btn(label, icon, run, cls) {
-          var k = document.createElement("button");
-          k.type = "button";
-          k.className = "mp-pb-act" + (cls ? " " + cls : "");
-          k.innerHTML = "<svg " + MP_IC + ">" + icon + "</svg><span></span>";
-          k.querySelector("span").textContent = label;
-          k.addEventListener("click", function (e) { e.stopPropagation(); run(k); });
-          ac.appendChild(k);
-          return k;
-        }
-        if (!me && mpPM.on && s)
-          btn("Whisper", '<path d="M11 19H8l-4 2.5V17a5 5 0 0 1-1-3V9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v1"/><rect x="13.5" y="15" width="8" height="6" rx="1.6"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/>', function () { mpPBclose(); mpPMStart(n.username); });
-        me && btn("Edit", '<path d="M16.9 4.6a2 2 0 0 1 2.8 2.8L8.5 18.6 4 20l1.4-4.5z"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
-        btn("Share", '<path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>', function (k) {
-          k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
-        });
-        if (!me && window.mpHide) {
-          mpHide.seen(n.username, n.numId);
-          var hk = btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', function () {
-            mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast("@" + n.username + " is visible again")) : mpHideUser(n.username, n.numId);
-            mpPBclose();
-          }, "is-danger");
-        }
-        b.appendChild(ac);
-        var fp = document.createElement("button");
-        fp.type = "button";
-        fp.className = "mp-pb-full";
-        fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
-        fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
-        b.appendChild(fp);
-        /* bubble shape (per dc): one SVG outline = rounded rect + rounded tail, used as the
-           glass layer's mask and drawn again as the hairline, so the tail is seamless */
-        var shp = document.createElement("i");
-        shp.className = "mp-pb-shape";
-        shp.setAttribute("aria-hidden", "true");
-        b.appendChild(shp);
-        document.body.appendChild(b);
-        /* place: below by default, above when it doesn't fit; clamp to viewport + safe areas */
-        var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
-          r = anchor.getBoundingClientRect(),
-          w = b.offsetWidth,
-          h = b.offsetHeight,
-          vw = document.documentElement.clientWidth,
-          vh = window.innerHeight,
-          M8 = 10,
-          TH = 7,
-          gap = 5 + TH,
-          cx = r.left + r.width / 2,
-          below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
-          left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
-          top = below ? r.bottom + gap : r.top - gap - h,
-          ax;
-        /* keep the tail clear of the corner radius: shift the bubble (down to a 4px margin) first */
-        cx - left < 30 && (left = Math.max(4, cx - 30));
-        left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
-        ax = Math.max(28, Math.min(cx - left, w - 28));
-        top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
-        (function () {
-          var R = 20, T = TH, H = h, W = w, a = ax,
-            d = "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T + "L" + (a - 9) + " " + T +
-              "C" + (a - 4.5) + " " + T + " " + (a - 2.4) + " 0.4 " + a + " 0.4" +
-              "C" + (a + 2.4) + " 0.4 " + (a + 4.5) + " " + T + " " + (a + 9) + " " + T +
-              "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) + "L" + W + " " + (T + H - R) +
-              "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) + "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z",
-            fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
-            vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
-            mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>') + "\")";
-          shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk;
-          shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
-        })();
-        b.classList.add(below ? "is-below" : "is-above");
-        b.style.left = left + "px";
-        b.style.top = top + "px";
-        b.style.setProperty("--ax", ax + "px");
-        b.style.transformOrigin = ax + "px " + (below ? -TH + "px" : h + TH + "px");
-        mpPBel = b;
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () { b.classList.add("is-in"); });
-        });
-        try { b.focus({ preventScroll: !0 }); } catch (e) {}
-        var out = function (e) { b.contains(e.target) || (anchor.contains(e.target) ? 0 : mpPBclose()); },
-          esc = function (e) { "Escape" === e.key && (e.preventDefault(), mpPBclose(), anchor.focus && anchor.focus()); },
-          scr = function (e) { b.contains(e.target) || mpPBclose(); },
-          pop = function () { mpPBclose(!0); };
-        b._off = function () {
-          document.removeEventListener("pointerdown", out, !0);
-          document.removeEventListener("keydown", esc, !0);
-          window.removeEventListener("scroll", scr, !0);
-          window.removeEventListener("popstate", pop);
-          window.removeEventListener("resize", pop);
-          window.removeEventListener("hashchange", pop);
-        };
-        setTimeout(function () {
-          if (mpPBel !== b) return;
-          document.addEventListener("pointerdown", out, !0);
-          document.addEventListener("keydown", esc, !0);
-          window.addEventListener("scroll", scr, !0);
-          window.addEventListener("popstate", pop);
-          window.addEventListener("resize", pop);
-          window.addEventListener("hashchange", pop);
-        }, 0);
+        mpPBput(t.user);
+        mpPBshow(t.user, anchor, rq, !1, u);
       })
       .catch(function () {});
   }
