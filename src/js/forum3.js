@@ -110,15 +110,7 @@
     (-1 === ["g1", "g2", "g3"].indexOf(v) && (v = "g1"),
       document.documentElement.setAttribute("data-gcards", v));
   })();
-  /* Globe pin treatment: p1 Eyebrow (default), p2 Corner, p3 Pill. Switch: localStorage mp-gpin / MPForum.setPin. */
-  (function () {
-    var v = "p1";
-    try {
-      v = localStorage.getItem("mp-gpin") || "p1";
-    } catch (e) {}
-    (-1 === ["p1", "p2", "p3"].indexOf(v) && (v = "p1"),
-      document.documentElement.setAttribute("data-gpin", v));
-  })();
+  /* Globe pin: vertical side rail only (per dc). */
   // CSP: no inline onerror. Images with data-fallback swap to it once on error.
   document.addEventListener(
     "error",
@@ -2083,16 +2075,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 w(t.thumb) +
                 '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
+            (t.pinned
+              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true"><span class="forum-pin-rail-ch">P</span><span class="forum-pin-rail-ch">I</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">E</span><span class="forum-pin-rail-ch">D</span></span></span>'
+              : "") +
             '<button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +
             '" data-id="' +
             w(t.id) +
             '"><span class="forum-thread-main">' +
-            (t.pinned
-              ? '<span class="forum-pin-flag" title="Pinned" aria-label="Pinned">' +
-                '<svg class="forum-pin-flag-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor" transform="rotate(-28 12 12)"><path d="M8.2 3.8c0-1 1-1.9 3.8-1.9s3.8.9 3.8 1.9c0 2.2-1.5 4-3 4.7v1.4h1.3c.4 0 .7.3.7.7v.5c0 .4-.3.7-.7.7H9.9c-.4 0-.7-.3-.7-.7v-.5c0-.4.3-.7.7-.7h1.3V8.5c-1.5-.7-3-2.5-3-4.7Z"/><path d="M12 12.2c-.45 0-.85.15-.85.5 0 1.5.3 3.6.45 4.9.08.55.4 1 .4 1s.32-.45.4-1c.15-1.3.45-3.4.45-4.9 0-.35-.4-.5-.85-.5Z"/></g></svg>' +
-                '<span class="forum-pin-flag-lab">PINNED</span></span>'
-              : "") +
             '<span class="forum-thread-title-row">' +
             '<span class="forum-thread-title">' +
             w(t.title) +
@@ -4115,13 +4105,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     } catch (e) {}
     document.documentElement.setAttribute("data-gcards", v);
   };
-  window.MPForum.setPin = function (v) {
-    v = String(v || "p1").toLowerCase();
-    -1 === ["p1", "p2", "p3"].indexOf(v) && (v = "p1");
+  /* Pin style is the vertical rail only — setPin ignored (kept for console compat). */
+  window.MPForum.setPin = function () {
     try {
-      localStorage.setItem("mp-gpin", v);
+      localStorage.removeItem("mp-gpin");
     } catch (e) {}
-    document.documentElement.setAttribute("data-gpin", v);
+    document.documentElement.removeAttribute("data-gpin");
   };
   var Ne = !1;
   function He(e) {
