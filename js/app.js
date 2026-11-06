@@ -275,9 +275,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       document.querySelectorAll(".forum-notif-panel").forEach(function (p) { p.remove(); });
       // Reinforce manual scroll restoration on every view switch
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-      // Save scroll position before leaving the current view
-      var prevType = current.type === "product" ? "shop" : current.type;
-      if (prevType) viewScroll[prevType] = window.scrollY;
+      // Save scroll before leaving. Don't overwrite shop's saved Y while on a product.
+      if (current.type && current.type !== "product") viewScroll[current.type] = window.scrollY;
       current = { type: view, id: id || "" };
       var reading = view === "product";
       refreshTitle();
@@ -315,8 +314,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
           window.scrollTo(0, document.documentElement.scrollHeight);
         }
       } else {
-        window.scrollTo(0, 0);
-        
+        var y = viewScroll[view] || 0;
+        window.scrollTo(0, y);
       }
       // Switching back to chat: catch up any messages missed while on
       // another view (WS gaps don't self-heal until a fetch runs).

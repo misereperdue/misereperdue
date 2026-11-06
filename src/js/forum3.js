@@ -1947,12 +1947,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     return name ? "Search in " + name : "Search all threads";
   }
   function syncPinRails(root) {
-    var scope = root || t || document;
-    if (!scope || !scope.querySelectorAll) return;
-    var inset = 12;
-    scope.querySelectorAll(".forum-pin-rail").forEach(function (rail) {
-      rail.style.setProperty("--pin-inset", inset + "px");
-    });
+    /* PINNED is a centered word now; nothing to distribute. */
   }
   var pinRailRO = null;
   function watchPinRails(root) {
@@ -2065,10 +2060,18 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to post">' +
         '<span class="forum-pullpost-ico" aria-hidden="true">' +
         '<svg class="forum-pullpost-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>' +
+        '<svg class="forum-pullpost-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
         '<svg class="forum-pullpost-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
         '<span class="forum-pullpost-spin"></span>' +
-        "</span>" +
-        '<span class="forum-pullpost-txt">Pull to post</span></button>'),
+        '</span>' +
+        '<span class="forum-pullpost-copy">' +
+        '<span class="forum-pullpost-txt">Pull to post</span>' +
+        '<span class="forum-pullpost-hint">+ keep pulling to post</span>' +
+        '</span>' +
+        '<span class="forum-pullpost-steps" aria-hidden="true">' +
+        '<span class="forum-pullpost-dot" data-step="1"></span>' +
+        '<span class="forum-pullpost-dot" data-step="2"></span>' +
+        '</span></button>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2113,7 +2116,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
             (t.pinned
-              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true"><span class="forum-pin-rail-ch">P</span><span class="forum-pin-rail-ch">I</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">E</span><span class="forum-pin-rail-ch">D</span></span></span>'
+              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true">PINNED</span></span>'
               : "") +
             '<button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +
@@ -2485,10 +2488,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         });
       }),
       ve());
+    setGlobeListMode(!0);
     bindPullToPost();
   }
   function openNewThread(opts) {
     if (!g()) return;
+    setGlobeListMode(!1);
     opts = opts || {};
     r.name = "new";
     if (opts.smooth) openComposerSmooth();
@@ -2569,13 +2574,25 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   // Globe list: two-stage pull — ~75px refresh, ~150px post (per dc).
   // Transform ONLY .forum-pull-body (topbar stays fixed). Global PTR stays off
   // on Globe via __mpPullToPost / #forum.on. Reduced-motion: snap, no springs.
+
+  function setGlobeListMode(on) {
+    var f = document.getElementById("forum");
+    if (!f) return;
+    f.classList.toggle("is-globe-list", !!on);
+    if (!on) {
+      try { window.__mpPullToPost = !1; } catch (e) {}
+      document.documentElement.classList.remove("mp-globe-pull");
+    }
+  }
   function bindPullToPost() {
     var hint = t.querySelector("#forum-pullpost");
     if (!hint) return;
-    if (!g()) {
+    if (!g() || "list" !== r.name) {
       hint.remove();
+      setGlobeListMode(!1);
       return;
     }
+    setGlobeListMode(!0);
     hint.addEventListener("click", function (e) {
       e.preventDefault();
       openNewThread({ smooth: true });
@@ -2612,6 +2629,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var p1 = Math.max(0, Math.min(1, dist / STAGE1));
       hint.style.setProperty("--pull", p2.toFixed(4));
       hint.style.setProperty("--pull-rot", (RM ? 0 : p1 * 180).toFixed(2) + "deg");
+      var hintP =
+        stage >= 2
+          ? 1
+          : stage === 1
+            ? Math.max(0, Math.min(1, (dist - STAGE1) / Math.max(1, STAGE2 - STAGE1)))
+            : 0;
+      hint.style.setProperty("--post-hint", hintP.toFixed(4));
       hint.classList.toggle("is-pulling", dist > 4);
       hint.classList.toggle("is-refresh", stage === 1);
       hint.classList.toggle("is-armed", stage >= 2);
@@ -2664,6 +2688,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       hint.style.transition = "none";
       hint.style.setProperty("--pull", "0");
       hint.style.setProperty("--pull-rot", "0deg");
+      hint.style.setProperty("--post-hint", "0");
       hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
       if (txt) txt.textContent = "Pull to post";
       void body.offsetWidth;
@@ -2687,6 +2712,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         body.style.transform = "";
         hint.style.setProperty("--pull", "0");
         hint.style.setProperty("--pull-rot", "0deg");
+        hint.style.setProperty("--post-hint", "0");
         hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
         if (txt) txt.textContent = "Pull to post";
       });
@@ -2815,6 +2841,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig, capture: true });
   }
   function we() {
+    setGlobeListMode(!1);
     ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
       y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
         if (e.ok && e.thread)
@@ -2979,9 +3006,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           : "") +
         "</div>";
       ((o +=
-        '<article class="forum-post forum-op"><div class="forum-post-head">' +
+        '<article class="forum-post forum-op' +
+        (n.pinned ? " is-pinned" : "") +
+        '">' +
+        (n.pinned
+          ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true">PINNED</span></span>'
+          : "") +
+        '<div class="forum-post-head">' +
         E(n, !0) +
-        (n.pinned ? '<span class="forum-pin-ico" title="Pinned">📌</span>' : "") +
         '<span class="forum-post-time">' +
         k(n.createdAt) +
         '</span></div><h3 class="forum-post-title">' +
@@ -4686,6 +4718,32 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       },
       getCurrentThread: function () {
         return "thread" === r.name ? b.thread : null;
+      },
+      isGlobeList: function () {
+        return !!("list" === r.name && document.getElementById("forum") && document.getElementById("forum").classList.contains("on"));
+      },
+      refreshInPlace: function () {
+        var f = document.getElementById("forum");
+        if (!f || !f.classList.contains("on")) return null;
+        if ("thread" === r.name && r.threadId) {
+          return y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
+            if (e && e.ok && e.thread) {
+              b.thread = e.thread;
+              we();
+            } else {
+              we();
+            }
+          });
+        }
+        if ("list" === r.name) {
+          return y("/api/forum/threads").then(function (e) {
+            var list = (e && e.ok && e.threads) || [];
+            b.threads = list;
+            s = "";
+            ye();
+          });
+        }
+        return null;
       },
       onLogout: function () {
         ((O = null), (Ne = !1), Be());

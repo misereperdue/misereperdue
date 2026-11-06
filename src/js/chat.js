@@ -6699,7 +6699,7 @@
     }),
     Mt(),
     (function () {
-        /* Pull-to-refresh on every non-Globe page (PWA + Safari).
+        /* Pull-to-refresh on every non-Globe-LIST page (PWA + Safari).
          * Only arms at the TRUE top of the scroller under the finger
          * (scrollTop<=1). Never at the bottom edge — in Chat a downward
          * drag there is normal scrolling toward older messages (per dc).
@@ -6731,12 +6731,20 @@
         if (document.body) mountTip();
         else document.addEventListener("DOMContentLoaded", mountTip);
 
-        function onGlobe() {
+        function onGlobeList() {
+          /* Two-stage pull-to-post owns the gesture only on the Globe LIST.
+             Thread detail uses this PTR pill (per dc). */
           var f = document.getElementById("forum");
-          return !!(f && f.classList.contains("on"));
+          if (!(f && f.classList.contains("on"))) return !1;
+          if (f.classList.contains("is-globe-list")) return !0;
+          try {
+            if (window.MPForum && typeof MPForum.isGlobeList === "function")
+              return !!MPForum.isGlobeList();
+          } catch (e) {}
+          return !!f.querySelector("#forum-pullpost");
         }
         function clearStuckClaim() {
-          if (!onGlobe() && window.__mpPullToPost) {
+          if (!onGlobeList() && window.__mpPullToPost) {
             try { window.__mpPullToPost = !1; } catch (e) {}
             document.documentElement.classList.remove("mp-globe-pull");
           }
@@ -6820,7 +6828,7 @@
           dist = 0;
           armed = 0;
           activeScroller = null;
-          if (onGlobe() || window.__mpPullToPost) {
+          if (onGlobeList() || window.__mpPullToPost) {
             startY = null;
             return;
           }
@@ -6844,7 +6852,7 @@
         }
         function onMove(ev) {
           if (busy || null === startY) return;
-          if (onGlobe() || window.__mpPullToPost) {
+          if (onGlobeList() || window.__mpPullToPost) {
             startY = null;
             locked = 0;
             dist = 0;
@@ -6881,7 +6889,7 @@
           if (!raf) {
             raf = requestAnimationFrame(function () {
               raf = 0;
-              if (g !== gen || busy || onGlobe()) return;
+              if (g !== gen || busy || onGlobeList()) return;
               paint(p);
               shiftContent(resisted);
             });
@@ -6903,7 +6911,7 @@
             hide();
             return;
           }
-          var go = dist >= THRESH && !onGlobe() && !window.__mpPullToPost;
+          var go = dist >= THRESH && !onGlobeList() && !window.__mpPullToPost;
           startY = null;
           locked = 0;
           activeScroller = null;
@@ -6913,14 +6921,34 @@
             tip.style.setProperty("--ptr", "1");
             label.textContent = "Refreshing";
             shiftContent(0);
+            var soft = null;
             try {
-              sessionStorage.setItem("mp-refreshing", "1");
-            } catch (e) {}
-            document.documentElement.classList.add("mp-show-splash");
-            window.scrollTo(0, 0);
-            setTimeout(function () {
-              location.reload();
-            }, 120);
+              if (window.MPForum && typeof MPForum.refreshInPlace === "function")
+                soft = MPForum.refreshInPlace();
+            } catch (e) { soft = null; }
+            if (soft && typeof soft.then === "function") {
+              soft.then(function () {
+                busy = 0;
+                tip.classList.remove("is-busy", "is-armed");
+                label.textContent = "Pull to refresh";
+                hide();
+                shiftContent(0);
+              }).catch(function () {
+                try { sessionStorage.setItem("mp-refreshing", "1"); } catch (e) {}
+                document.documentElement.classList.add("mp-show-splash");
+                window.scrollTo(0, 0);
+                setTimeout(function () { location.reload(); }, 120);
+              });
+            } else {
+              try {
+                sessionStorage.setItem("mp-refreshing", "1");
+              } catch (e) {}
+              document.documentElement.classList.add("mp-show-splash");
+              window.scrollTo(0, 0);
+              setTimeout(function () {
+                location.reload();
+              }, 120);
+            }
           } else {
             shiftContent(0);
             hide();

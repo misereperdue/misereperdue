@@ -12,6 +12,7 @@ function shareProduct(t) {
 }
 var MPShop = (function () {
   "use strict";
+  var __mpShopFromList = !1;
   var t = null,
     e = null;
   // Lazy 3D: the viewer script (and three.js inside it) loads only when a
@@ -50,8 +51,8 @@ var MPShop = (function () {
       ("misery-v_v-sleeping-mask" === t.handle || "gid://shopify/Product/8161016414310" === t.id)
     );
   }
-  var o = ["img/mask-front-light.jpg?v=2", "img/mask-back-light.jpg?v=2"],
-    i = "img/vip-card-light.jpg?v=2";
+  var o = ["img/mask-front-light.jpg?v=3", "img/mask-back-light.jpg?v=3"],
+    i = "img/vip-card-light.jpg?v=3";
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
@@ -731,10 +732,11 @@ var MPShop = (function () {
               : "")),
           t.querySelectorAll("[data-product]").forEach(function (t) {
             ((t.onclick = function () {
+              __mpShopFromList = !0;
               w(t.dataset.product);
             }),
               (t.onkeydown = function (e) {
-                ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), w(t.dataset.product));
+                ("Enter" !== e.key && " " !== e.key) || (e.preventDefault(), (__mpShopFromList = !0), w(t.dataset.product));
               }));
           }),
           (function (t) {
@@ -960,6 +962,7 @@ var MPShop = (function () {
                 );
               })(s, i.name);
       ((p.innerHTML =
+        '<div class="forum-head shop-product-head"><button type="button" class="forum-back forum-glass-pill" id="shop-back">← Back</button></div>' +
         '<article class="article-card">' +
         g +
         "<h1>" +
@@ -1068,7 +1071,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=4", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=5", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -1100,6 +1103,25 @@ var MPShop = (function () {
             window.addEventListener("pointerup", z),
             window.addEventListener("pointercancel", z));
         }
+      }
+
+      var backBtn = p.querySelector("#shop-back");
+      if (backBtn) {
+        backBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          var fromList = __mpShopFromList;
+          __mpShopFromList = !1;
+          var prevHash = "";
+          try {
+            /* history.back when the previous entry is shop */
+            if (fromList && window.history.length > 1) {
+              history.back();
+              return;
+            }
+          } catch (err) {}
+          if (window.MPNav && MPNav.show) MPNav.show("shop");
+          else location.hash = "#shop";
+        });
       }
       window.MPNav && MPNav.showProduct(o);
     } else

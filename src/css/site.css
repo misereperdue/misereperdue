@@ -1704,7 +1704,7 @@ textarea {
   flex: none;
   border-radius: 6px;
   overflow: hidden;
-  animation: a2hs-bob 3.2s ease-in-out infinite;
+  /* bob → pulse: see mp-icon-pulse-loop */
 }
 .a2hs-ico img {
   display: block;
@@ -4250,10 +4250,10 @@ html {
   overflow-anchor: none;
   overscroll-behavior-y: none;
 }
-/* While Globe is showing, kill document rubber-band / iOS overscroll refresh —
- * pull-to-post owns the top-of-list gesture (per dc). Other tabs keep PTR. */
-html:has(#forum.on),
-body:has(#forum.on) {
+/* Globe LIST only: kill document rubber-band so two-stage pull owns the gesture.
+ * Thread detail keeps native/global PTR (per dc). */
+html:has(#forum.on.is-globe-list),
+body:has(#forum.on.is-globe-list) {
   overscroll-behavior-y: none;
 }
 html.mp-globe-pull,
@@ -4997,6 +4997,19 @@ button.forum-glass-pill:active {
 }
 .forum-back.forum-glass-pill {
   color: var(--accent);
+}
+/* Product detail: same back pill as thread, clear of image/title */
+.shop-product-head {
+  margin: 0 0 10px;
+  padding: 0 2px;
+  position: relative;
+  z-index: 2;
+}
+#product .shop-product-head .forum-back {
+  flex: none;
+}
+#product .article-card {
+  margin-top: 0;
 }
 .forum-author-pts {
   font-size: 12px;
@@ -9041,35 +9054,39 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 .nav button[data-view="shop"] svg {
   translate: 0 1px;
 }
-/* Heroicons Animated motions (MIT) - played once on tap/press and when a nav tab becomes active.
-   Individual transform properties so they stack on top of the active tab's scale(1.08). */
+/* SF Symbols-style pulse for every data-hi icon (per dc). No vertical bounce. */
 svg[data-hi].hi-play {
-  animation-duration: 0.45s;
-  animation-iteration-count: 2;
+  animation-name: mp-icon-pulse;
+  animation-duration: 0.52s;
+  animation-iteration-count: 1;
   animation-timing-function: ease-in-out;
   animation-fill-mode: both;
 }
-svg[data-hi="scale"].hi-play { animation-name: hi-scale; }
-svg[data-hi="rotate"].hi-play { animation-name: hi-scale; }
-svg[data-hi="shake"].hi-play { animation-name: hi-scale; }
-svg[data-hi="bounce"].hi-play { animation-name: hi-bounce; }
-svg[data-hi="wiggle"].hi-play { animation-name: hi-scale; }
-svg[data-hi="fade"].hi-play { animation-name: hi-fade; }
-svg[data-hi="slide"].hi-play { animation-name: hi-slide; }
-svg[data-hi="float"].hi-play { animation-name: hi-float; }
-svg[data-hi="pulse"].hi-play { animation-name: hi-scale; }
-svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
-@keyframes hi-scale { 0%, 100% { scale: 1; } 50% { scale: 1.08; } }
-@keyframes hi-rotate { 0%, 100% { rotate: 0deg; } 25% { rotate: -10deg; } 75% { rotate: 10deg; } }
-@keyframes hi-shake { 0%, 100% { translate: 0; } 20%, 60% { translate: -2px 0; } 40%, 80% { translate: 2px 0; } }
-@keyframes hi-bounce { 0%, 100% { translate: 0; } 50% { translate: 0 -3px; } }
-@keyframes hi-wiggle { 0%, 100% { rotate: 0deg; } 15% { rotate: -8deg; } 30% { rotate: 6deg; } 45% { rotate: -4deg; } 60% { rotate: 2deg; } 75% { rotate: -1deg; } }
-@keyframes hi-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes hi-slide { 0%, 100% { translate: 0; } 50% { translate: 3px 0; } }
-@keyframes hi-float { 0%, 100% { translate: 0; } 50% { translate: 0 -4px; } }
-@keyframes hi-rubber-band { 0%, 100% { scale: 1 1; } 30% { scale: 1.25 0.75; } 40% { scale: 0.75 1.25; } 50% { scale: 1.15 0.85; } 65% { scale: 0.95 1.05; } 75% { scale: 1.05 0.95; } }
+@keyframes mp-icon-pulse {
+  0%, 100% { opacity: 1; scale: 1; }
+  40% { opacity: 0.35; scale: 0.94; }
+  70% { opacity: 0.85; scale: 1.02; }
+}
+/* Keep old names as aliases so existing data-hi values still pulse */
+@keyframes hi-scale { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-bounce { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-float { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-fade { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-slide { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-wiggle { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-rotate { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-shake { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+@keyframes hi-rubber-band { 0%, 100% { opacity: 1; scale: 1; } 40% { opacity: 0.35; scale: 0.94; } }
+.a2hs-ico {
+  animation: mp-icon-pulse-loop 2.4s ease-in-out infinite;
+}
+@keyframes mp-icon-pulse-loop {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.94); }
+}
 @media (prefers-reduced-motion: reduce) {
-  svg[data-hi].hi-play { animation: none; }
+  svg[data-hi].hi-play,
+  .a2hs-ico { animation: none !important; }
 }
 /* Globe post editor: floating format card (per dc's reference) */
 .forum-toolbar.mp-ecard,
@@ -10607,27 +10624,21 @@ html[data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail,
   border-top-color: rgba(10, 18, 48, 0.08);
 }
 .forum-pin-rail-lab {
-  /* Full-width band label: letters span with equal end insets via space-between */
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  width: calc(100% - (var(--pin-inset, 12px) * 2));
+  display: block;
+  width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font: 700 9px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em; /* optical centre with trailing letter-spacing */
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 19px;
   color: rgba(207, 232, 248, 0.62);
   user-select: none;
   -webkit-user-select: none;
-}
-.forum-pin-rail-ch {
-  display: block;
-  font: 700 9px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  flex: none;
 }
 html[data-theme="light"] .forum-pin-rail-lab,
 [data-theme="light"] .forum-pin-rail-lab {
@@ -10641,6 +10652,28 @@ html[data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail-lab,
   color: rgba(10, 18, 48, 0.5);
 }
 /* Bottom band clearance: keep normal left padding; lift foot above the band */
+/* Thread OP: PINNED strip along the TOP edge (same band as Globe cards) */
+.forum-op.is-pinned {
+  position: relative;
+  overflow: hidden;
+  padding-top: calc(16px + var(--pin-band, 19px));
+}
+.forum-op.is-pinned > .forum-pin-rail {
+  top: 0;
+  bottom: auto;
+  border-top: 0;
+  border-bottom: 0.5px solid rgba(169, 215, 245, 0.18);
+  border-radius: 14px 14px 0 0;
+}
+html[data-theme="dark"] .forum-op.is-pinned > .forum-pin-rail,
+[data-theme="dark"] .forum-op.is-pinned > .forum-pin-rail {
+  border-bottom-color: rgba(169, 215, 245, 0.18);
+}
+html[data-theme="light"] .forum-op.is-pinned > .forum-pin-rail,
+[data-theme="light"] .forum-op.is-pinned > .forum-pin-rail {
+  border-bottom-color: rgba(10, 18, 48, 0.08);
+}
+
 .forum-thread-row.is-pinned > .forum-thread-foot {
   padding-bottom: calc(14px + var(--pin-band, 19px));
 }
@@ -11175,41 +11208,54 @@ html[data-gcards="g3"] .forum-thread-more {
   display: inline-grid;
   place-items: center;
 }
-.forum-pullpost-ico svg {
+.forum-pullpost-ico svg,
+.forum-pullpost-spin {
   width: 14px;
   height: 14px;
   grid-area: 1 / 1;
 }
-.forum-pullpost-arrow {
-  transform: rotate(var(--pull-rot));
+.forum-pullpost-ico svg {
   transform-origin: 50% 50%;
-  opacity: 1;
-  transition: opacity 0.12s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s cubic-bezier(0.2, 0.85, 0.25, 1);
 }
+.forum-pullpost-arrow {
+  opacity: 1;
+  transform: rotate(var(--pull-rot, 0deg)) scale(1);
+}
+.forum-pullpost-refresh,
 .forum-pullpost-plus {
   opacity: 0;
-  transform: scale(0.7);
-  transition: opacity 0.12s ease, transform 0.12s ease;
-  grid-area: 1 / 1;
+  transform: rotate(-40deg) scale(0.72);
 }
+.forum-pullpost.is-refresh .forum-pullpost-arrow,
 .forum-pullpost.is-armed .forum-pullpost-arrow {
   opacity: 0;
+  transform: rotate(calc(var(--pull-rot, 0deg) + 40deg)) scale(0.72);
+}
+.forum-pullpost.is-refresh .forum-pullpost-refresh {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+.forum-pullpost.is-armed .forum-pullpost-refresh {
+  opacity: 0;
+  transform: rotate(40deg) scale(0.72);
 }
 .forum-pullpost.is-armed .forum-pullpost-plus {
   opacity: 1;
-  transform: scale(1);
+  transform: rotate(0deg) scale(1);
 }
 .forum-pullpost-spin {
   display: none;
-  grid-area: 1 / 1;
-  width: 14px;
-  height: 14px;
   border: 1.6px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   opacity: 0.85;
+  box-sizing: border-box;
 }
 .forum-pullpost.is-busy .forum-pullpost-arrow,
+.forum-pullpost.is-busy .forum-pullpost-refresh,
 .forum-pullpost.is-busy .forum-pullpost-plus {
   opacity: 0;
 }
@@ -11220,9 +11266,60 @@ html[data-gcards="g3"] .forum-thread-more {
 @keyframes forum-pull-spin {
   to { transform: rotate(360deg); }
 }
+.forum-pullpost-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
 .forum-pullpost-txt {
   display: inline-block;
   vertical-align: middle;
+}
+.forum-pullpost-hint {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: calc(0.15 + 0.7 * var(--post-hint, 0));
+  transform: scale(calc(0.96 + 0.04 * var(--post-hint, 0)));
+  transform-origin: 0 50%;
+  max-height: calc(10px * var(--post-hint, 0));
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.2s ease;
+  pointer-events: none;
+}
+.forum-pullpost.is-armed .forum-pullpost-hint {
+  opacity: 0;
+  max-height: 0;
+}
+.forum-pullpost-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 2px;
+  flex: none;
+}
+.forum-pullpost-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.22;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.forum-pullpost.is-refresh .forum-pullpost-dot[data-step="1"],
+.forum-pullpost.is-armed .forum-pullpost-dot[data-step="1"],
+.forum-pullpost.is-armed .forum-pullpost-dot[data-step="2"] {
+  opacity: 0.85;
+}
+.forum-pullpost.is-refresh .forum-pullpost-dot[data-step="1"] {
+  transform: scale(1.15);
+}
+.forum-pullpost.is-armed .forum-pullpost-dot[data-step="2"] {
+  transform: scale(1.15);
 }
 .forum-pullpost.is-refresh,
 .forum-pullpost.is-armed {
@@ -11249,8 +11346,11 @@ html[data-gcards="g3"] .forum-thread-more {
 @media (prefers-reduced-motion: reduce) {
   .forum-pullpost,
   .forum-pullpost-arrow,
+  .forum-pullpost-refresh,
   .forum-pullpost-plus,
-  .forum-pullpost-spin {
+  .forum-pullpost-spin,
+  .forum-pullpost-hint,
+  .forum-pullpost-dot {
     transition: none !important;
     animation: none !important;
   }
