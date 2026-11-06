@@ -10384,45 +10384,122 @@ html:not([data-gcards]) {
   gap: 6px;
 }
 .forum-thread-row .forum-thread-title {
-  font-size: 15.5px;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: none;
+  filter: none;
+}
+/* Pin treatments — default p1 Eyebrow. Switch: MPForum.setPin('p2') / localStorage mp-gpin */
+html:not([data-gpin]) {
+  --mp-gpin: p1;
 }
 .forum-pin-mark {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  margin-top: 0;
+  display: none !important;
+}
+.forum-pin-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin: 0 0 3px;
   color: var(--accent);
-  display: inline-grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--glass-clear-tint);
-  border: var(--glass-hairline);
-  box-shadow: var(--glass-spec);
-  padding: 0;
+  max-width: 100%;
 }
-.forum-pin-mark svg {
-  width: 17px;
-  height: 17px;
+.forum-pin-flag-ico {
+  width: 9px;
+  height: 9px;
   display: block;
+  flex: none;
 }
-[data-theme="dark"] .forum-pin-mark {
+.forum-pin-flag-lab {
+  font: 700 9px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+[data-theme="dark"] .forum-pin-flag {
   color: #cfe8f8;
-  background: rgba(169, 215, 245, 0.14);
-  border-color: rgba(169, 215, 245, 0.28);
 }
-[data-theme="light"] .forum-pin-mark {
+[data-theme="light"] .forum-pin-flag {
   color: #0a1230;
+}
+/* P1 Eyebrow (default): mono PINNED above title + left accent stripe */
+html:not([data-gpin]) .forum-thread-row.is-pinned,
+html[data-gpin="p1"] .forum-thread-row.is-pinned {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* P2 Corner: chip top-right, keep slim left stripe */
+html[data-gpin="p2"] .forum-thread-row.is-pinned {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+html[data-gpin="p2"] .forum-pin-flag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 2;
+  margin: 0;
+  gap: 5px;
+  padding: 4px 8px 4px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: var(--glass-hairline);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+}
+html[data-gpin="p2"][data-theme="light"] .forum-pin-flag,
+html[data-gpin="p2"] [data-theme="light"] .forum-pin-flag {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(10, 18, 48, 0.1);
+}
+html[data-gpin="p2"] .forum-thread-row.has-thumb .forum-pin-flag {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e8f4ff;
+}
+html[data-gpin="p2"][data-theme="light"] .forum-thread-row.has-thumb .forum-pin-flag,
+html[data-gpin="p2"] [data-theme="light"] .forum-thread-row.has-thumb .forum-pin-flag {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(10, 18, 48, 0.1);
+  color: #0a1230;
+}
+html[data-gpin="p2"] .forum-thread-main {
+  padding-right: 0;
+}
+/* P3 Pill: soft pill eyebrow, no left stripe */
+html[data-gpin="p3"] .forum-thread-row.is-pinned {
+  box-shadow: none;
+}
+html[data-gpin="p3"] .forum-pin-flag {
+  gap: 5px;
+  margin: 0 0 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  background: rgba(169, 215, 245, 0.14);
+  border: 0.5px solid rgba(169, 215, 245, 0.32);
+}
+html[data-gpin="p3"][data-theme="light"] .forum-pin-flag,
+html[data-gpin="p3"] [data-theme="light"] .forum-pin-flag {
   background: rgba(10, 18, 48, 0.06);
   border-color: rgba(10, 18, 48, 0.12);
+}
+html[data-gpin="p3"] .forum-thread-row.has-thumb .forum-pin-flag {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e8f4ff;
+}
+html[data-gpin="p3"][data-theme="light"] .forum-thread-row.has-thumb .forum-pin-flag,
+html[data-gpin="p3"] [data-theme="light"] .forum-thread-row.has-thumb .forum-pin-flag {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(10, 18, 48, 0.1);
+  color: #0a1230;
 }
 .forum-pin-chip-inline,
 .forum-pin-chip {
@@ -10651,12 +10728,14 @@ html:not([data-gcards]) {
   width: 20px;
   height: 20px;
   flex: none;
-  margin-top: 0;
+  margin: 0;
   border-radius: 50%;
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(255, 255, 255, 0.08);
   color: var(--muted);
+  line-height: 0;
 }
 [data-theme="light"] .forum-thread-last-ico-wrap {
   background: rgba(10, 18, 48, 0.06);
@@ -10670,9 +10749,12 @@ html:not([data-gcards]) {
   color: var(--muted);
 }
 .forum-thread-last-ico {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   display: block;
+  flex: none;
+  /* viewBox already pads the glyph; nudge 0.5px up for optical center vs soft tail */
+  transform: translateY(-0.4px);
 }
 .forum-thread-last.is-empty {
   align-items: center;
@@ -10716,12 +10798,14 @@ html:not([data-gcards]) {
 }
 
 
-/* Readable type over blurred thumbs */
+/* Readable type over blurred thumbs — no title shadow (per dc) */
 .forum-thread-row.has-thumb .forum-thread-title {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  text-shadow: none;
+  filter: none;
 }
 [data-theme="light"] .forum-thread-row.has-thumb .forum-thread-title {
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  text-shadow: none;
+  filter: none;
 }
 .forum-thread-row.has-thumb .forum-thread-excerpt,
 .forum-thread-row.has-thumb .forum-thread-meta {
@@ -10763,7 +10847,7 @@ html[data-gcards="g2"] .forum-thread-row .forum-thread-main {
 html[data-gcards="g2"] .forum-thread-foot {
   padding: 0 10px 12px 14px;
 }
-html[data-gcards="g2"] .forum-pin-mark {
+html[data-gcards="g2"] .forum-thread-row.has-thumb .forum-pin-flag {
   display: none;
 }
 html[data-gcards="g2"] .forum-thread-row.has-thumb .forum-pin-chip {
@@ -10785,9 +10869,6 @@ html[data-gcards="g2"] .forum-thread-row.has-thumb .forum-pin-chip {
   box-shadow: var(--sheet-shadow);
   color: var(--ink);
 }
-html[data-gcards="g2"] .forum-thread-row:not(.has-thumb) .forum-pin-mark {
-  display: inline-grid;
-}
 html[data-gcards="g2"] .forum-thread-row.has-thumb > .forum-thread-more,
 html[data-gcards="g2"] .forum-thread-row.has-thumb .forum-thread-foot .forum-thread-more {
   /* keep more in foot for simplicity */
@@ -10805,7 +10886,7 @@ html[data-gcards="g3"] .forum-thread-row .forum-thread {
   gap: 12px;
 }
 html[data-gcards="g3"] .forum-thread-row .forum-thread-title {
-  font-size: 14.5px;
+  font-size: 13px;
 }
 html[data-gcards="g3"] .forum-thread-row .forum-thread-excerpt {
   -webkit-line-clamp: 1;
@@ -10831,7 +10912,7 @@ html[data-gcards="g3"] .forum-thread-last-text {
   font-size: 12px;
 }
 html[data-gcards="g3"] .forum-pin-mark {
-  display: none;
+  display: none !important;
 }
 html[data-gcards="g3"] .forum-pin-chip-inline {
   display: inline-flex;
