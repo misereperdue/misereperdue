@@ -9723,11 +9723,14 @@ svg[data-hi].hi-play {
 @media (prefers-reduced-motion:reduce){.chat-np-grad{transition:none}}
 
 /* Now listening: Apple Music powered-by crossfade (per dc) — larger mark, iOS-style crossfade */
-.chat-np-meta{position:relative;display:flex;flex-direction:column;flex:1 1 auto;width:max-content;max-width:100%;height:100%;min-width:88px;min-height:0}
-.chat-np-info{position:relative;display:flex;flex-direction:column;justify-content:space-between;flex:1 1 auto;width:max-content;max-width:100%;height:100%;min-width:0;opacity:1;transform:scale(1);filter:blur(0);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
-.chat-np-body{display:flex;flex-direction:column;gap:1px;min-width:0;flex:none;width:max-content;max-width:100%}
-.chat-np-am{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;opacity:0;pointer-events:none;transform:scale(.98);filter:blur(4px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1);max-width:100%;overflow:hidden}
-.chat-np-am-mark{display:inline-flex;align-items:baseline;gap:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.035em;line-height:1;color:#1a1a1a;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+/* Grid stack: both states share one cell → column width = max(text, mark); no clip, no width jump */
+.chat-np-meta{display:grid;grid-template:minmax(0,1fr)/max-content;align-items:stretch;justify-items:stretch;flex:1 1 auto;width:max-content;max-width:100%;height:100%;min-width:88px;min-height:0}
+.chat-np-info,.chat-np-am{grid-area:1/1}
+.chat-np-info{position:relative;display:flex;flex-direction:column;justify-content:flex-start;width:max-content;max-width:100%;height:100%;min-width:0;opacity:1;transform:scale(1);filter:blur(0);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
+.chat-np-who{margin:0;padding:0}
+.chat-np-body{display:flex;flex-direction:column;justify-content:space-between;gap:0;margin-top:2px;flex:1 1 auto;min-height:0;min-width:0;width:max-content;max-width:100%}
+.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;width:max-content;max-width:none;opacity:0;pointer-events:none;transform:scale(.98);filter:blur(4px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
+.chat-np-am-mark{display:inline-flex;align-items:baseline;gap:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.035em;line-height:1;color:#1a1a1a;white-space:nowrap;overflow:visible;flex:none}
 .chat-np-am-mark .am-g{font-size:1.05em;letter-spacing:0;margin-right:.04em;transform:translateY(.06em);display:inline-block;line-height:1}
 .chat-np-am-mark .am-w{letter-spacing:-.04em}
 .chat-np-am-mark.is-fallback{font-size:18px;letter-spacing:-.025em;gap:0}
