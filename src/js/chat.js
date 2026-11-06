@@ -6680,13 +6680,11 @@
     Mt(),
     (function () {
         /* Pull-to-refresh on every non-Globe page (PWA + Safari).
-         * Root causes this replaces (per dc / SW 356):
-         *  - Chat is bottom-anchored so window.scrollY is never ~0 while
-         *    reading latest messages; we allow the bottom edge too.
-         *  - #chat had overscroll-behavior:none which killed Safari native PTR
-         *    while our handler only installed in standalone.
-         *  - We now walk the scrollable ancestor under the finger and listen
-         *    in the capture phase so swipe-tabs / trays can't win first. */
+         * Only arms at the TRUE top of the scroller under the finger
+         * (scrollTop<=1). Never at the bottom edge — in Chat a downward
+         * drag there is normal scrolling toward older messages (per dc).
+         * Capture-phase + scrollable-ancestor walk; #chat no longer sets
+         * overscroll-behavior:none so Safari isn't blocked either. */
         var startY = null,
           startX = 0,
           dist = 0,
@@ -6729,13 +6727,6 @@
           }
           return el.scrollTop || 0;
         }
-        function scrollMax(el) {
-          if (!el || el === window) {
-            var se = document.scrollingElement || document.documentElement;
-            return Math.max(0, (se.scrollHeight || 0) - (window.innerHeight || 0));
-          }
-          return Math.max(0, el.scrollHeight - el.clientHeight);
-        }
         function isScrollable(el) {
           if (!el || el === document || el === document.documentElement || el === document.body) return false;
           try {
@@ -6755,14 +6746,10 @@
           }
           return window;
         }
-        // True when this scroller can start a pull-down refresh.
-        // Top edge: classic. Bottom edge: Chat (and similar) while pinned to latest.
+        // Only the real top. A downward drag at the bottom of Chat is
+        // "scroll toward older messages" and must never arm PTR.
         function edgeAllowsPull(scroller) {
-          var top = scrollTopOf(scroller);
-          if (top <= 1) return true;
-          var max = scrollMax(scroller);
-          if (max <= 1) return true; // short page, effectively at top
-          return top >= max - 1;
+          return scrollTopOf(scroller) <= 1;
         }
         function paint(p) {
           tip.style.setProperty("--ptr", String(p));
