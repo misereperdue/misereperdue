@@ -3816,9 +3816,10 @@
     } catch (_) {}
     var showing = !1,
       timer = null,
+      xfTimer = null,
       onScreen = !0,
       pageOn = !document.hidden,
-      stagger = (mpAmSeq++ % 8) * 420,
+      stagger = (mpAmSeq++ % 8) * 480,
       first = !0;
     function clear() {
       if (timer) {
@@ -3826,19 +3827,33 @@
         timer = null;
       }
     }
+    function xfEnd() {
+      if (xfTimer) {
+        clearTimeout(xfTimer);
+        xfTimer = null;
+      }
+      card.classList.remove("is-xf");
+    }
+    function flip() {
+      showing = !showing;
+      card.classList.add("is-xf");
+      card.classList.toggle("show-am", showing);
+      xfEnd();
+      xfTimer = setTimeout(xfEnd, 900);
+    }
     function arm() {
       clear();
       if (!onScreen || !pageOn) return;
-      var wait = showing ? 2000 : first ? 4800 + stagger : 4800;
+      var wait = showing ? 2500 : first ? 5000 + stagger : 5000;
       timer = setTimeout(function () {
         first = !1;
-        showing = !showing;
-        card.classList.toggle("show-am", showing);
+        flip();
         arm();
       }, wait);
     }
     function pauseOff() {
       clear();
+      xfEnd();
       if (showing) {
         showing = !1;
         card.classList.remove("show-am");
@@ -3862,26 +3877,50 @@
     });
     arm();
   }
+  function mpAmBuildMark() {
+    var mark = document.createElement("span");
+    var has = mpAmDetect();
+    mark.className = "chat-np-am-mark" + (has ? "" : " is-fallback");
+    if (has) {
+      var g = document.createElement("span");
+      g.className = "am-g";
+      g.textContent = "\uF8FF";
+      var w = document.createElement("span");
+      w.className = "am-w";
+      w.textContent = "music";
+      mark.appendChild(g);
+      mark.appendChild(w);
+    } else {
+      var w2 = document.createElement("span");
+      w2.className = "am-w";
+      w2.textContent = "Apple Music";
+      mark.appendChild(w2);
+    }
+    return mark;
+  }
   function mpAmWire(card) {
     if (!card || card.querySelector(".chat-np-meta")) return;
     var tx = card.querySelector(".chat-np-tx");
+    var who = card.querySelector(".chat-np-who");
     var lines = card.querySelectorAll(".chat-np-line");
     if (!tx || lines.length < 2) return;
     var meta = document.createElement("span");
     meta.className = "chat-np-meta";
     var info = document.createElement("span");
     info.className = "chat-np-info";
-    lines[0].parentNode.insertBefore(meta, lines[0]);
-    info.appendChild(lines[0]);
-    info.appendChild(lines[1]);
+    // Fill art height: who at top, title+artist at bottom; mark centers on art.
+    if (who) info.appendChild(who);
+    var body = document.createElement("span");
+    body.className = "chat-np-body";
+    body.appendChild(lines[0]);
+    body.appendChild(lines[1]);
+    info.appendChild(body);
+    tx.insertBefore(meta, tx.firstChild);
     meta.appendChild(info);
     var am = document.createElement("span");
     am.className = "chat-np-am";
     am.setAttribute("aria-hidden", "true");
-    var mark = document.createElement("span");
-    mark.className = "chat-np-am-mark" + (mpAmDetect() ? "" : " is-fallback");
-    mark.textContent = mpAmMarkText();
-    am.appendChild(mark);
+    am.appendChild(mpAmBuildMark());
     meta.appendChild(am);
     var sr = document.createElement("span");
     sr.className = "chat-np-am-sr";
@@ -3936,7 +3975,7 @@
       var d = c.querySelectorAll(".chat-np-line");
       ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");
-      ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), c.querySelector(".chat-np-tx").appendChild(u));
+      ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), (u.setAttribute("aria-hidden", "true"), a.appendChild(u)));
       mpAmWire(c);
       n.url &&
         /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url) &&
