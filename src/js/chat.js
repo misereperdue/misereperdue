@@ -129,6 +129,10 @@
     var a = { "Content-Type": "application/json" },
       tk = n.token !== void 0 ? n.token : d; // n.token: explicit token (sign-out runs after d is cleared)
     tk && (a.Authorization = "Bearer " + tk);
+    try {
+      var did = i();
+      did && (a["X-Device-Id"] = did);
+    } catch (e) {}
     var r = null,
       o = { method: n.method || "GET", headers: a, body: n.body ? JSON.stringify(n.body) : void 0 };
     try {
@@ -1516,9 +1520,9 @@
         if (t)
           if (!n || n.length < 8) C("Password must be at least 8 characters.");
           else {
-            var a = { username: t, password: n };
+            var a = { username: t, password: n, deviceId: i() };
             if ("register" === e) {
-              ((a.deviceId = i()), "dc" === t.toLowerCase() && (a.secret = y.value));
+              ("dc" === t.toLowerCase() && (a.secret = y.value));
               try {
                 document.querySelector(".cf-turnstile-wrap:not([hidden]) iframe");
                 if (window.turnstile) {
