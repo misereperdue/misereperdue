@@ -180,9 +180,13 @@ var MPShop = (function () {
   }
   function g(t) {
     return (
-      '<div role="button" tabindex="0" class="product-card" data-product="' +
+      '<div role="button" tabindex="0" class="product-card' +
+      (n(t) ? " is-vip" : a(t) ? " is-mask" : "") +
+      '" data-product="' +
       l(t.id) +
-      '"><div class="tile-wrap">' +
+      '"><div class="tile-wrap' +
+      (n(t) ? " is-vip" : a(t) ? " is-mask" : "") +
+      '">' +
       p(t) +
       '</div><div class="product-meta"><strong>' +
       l(t.name) +
@@ -1071,7 +1075,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=6", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=7", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),

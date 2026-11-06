@@ -39,7 +39,7 @@ var MPVip3D = (function () {
                       a = e.clientHeight || 375;
                     (r.setSize(t, a, !1), (d.aspect = t / a), d.updateProjectionMatrix());
                   }
-                  (d.position.set(0, 0, 9.4),
+                  (d.position.set(0, 0, 8.6),
                     v(),
                     window.ResizeObserver && (n = new ResizeObserver(v)).observe(e));
                   var h = new i.DirectionalLight(16777215, c ? 1.9 : 1.6);

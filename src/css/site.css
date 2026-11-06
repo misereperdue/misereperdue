@@ -1656,6 +1656,24 @@ textarea {
 #shop-grid .product-card img {
   aspect-ratio: 4/5;
 }
+/* VIP tile: optical size closer to the mask without cropping the card/lanyard.
+   Local light render has large side margins; contain + modest scale fills them. */
+#shop-grid .tile-wrap.is-vip {
+  background: #d8d9dd;
+}
+[data-theme="dark"] #shop-grid .tile-wrap.is-vip {
+  background: rgba(80, 140, 255, 0.08);
+}
+#shop-grid .tile-wrap.is-vip > img {
+  object-fit: contain;
+  transform: scale(1.08);
+  transform-origin: center center;
+}
+@media (prefers-reduced-motion: reduce) {
+  #shop-grid .tile-wrap.is-vip > img {
+    transform: scale(1.08);
+  }
+}
 #shop-grid .product-meta {
   margin-top: 8px;
 }
@@ -4998,10 +5016,27 @@ button.forum-glass-pill:active {
 .forum-back.forum-glass-pill {
   color: var(--accent);
 }
-/* Product detail: same back pill as thread, clear of image/title */
+/* Product detail: same back pill as thread (per dc).
+   Thread Back sits ~17px under the Globe title bar; product has no title bar,
+   so place Back ~17px under the main nav and match .forum left inset/size. */
+body.home:has(#product.on) {
+  /* Thread Back sits ~17px under the Globe title bar (forum pad 16). Product
+     has no title bar; place Back the same distance under the main nav pill.
+     Nav = safe+22, ~54 tall → safe + 22 + 54 + 17 = safe + 93. */
+  padding-top: calc(93px + env(safe-area-inset-top, 0px));
+}
+#product-view {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 72px;
+  box-sizing: border-box;
+}
 .shop-product-head {
-  margin: 0 0 10px;
-  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
   position: relative;
   z-index: 2;
 }
