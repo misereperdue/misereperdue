@@ -1943,6 +1943,39 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     });
     return name ? "Search in " + name : "Search all threads";
   }
+  function syncPinRails(root) {
+    var scope = root || t || document;
+    if (!scope || !scope.querySelectorAll) return;
+    var inset = 10,
+      letters = 6,
+      glyph = 9;
+    scope.querySelectorAll(".forum-pin-rail").forEach(function (rail) {
+      var h = rail.offsetHeight || 0;
+      if (h < 1) return;
+      var gaps = letters - 1;
+      var ls = Math.max(0, (h - inset * 2 - glyph * letters) / gaps);
+      rail.style.setProperty("--pin-ls", ls.toFixed(2) + "px");
+      rail.style.setProperty("--pin-inset", inset + "px");
+    });
+  }
+  var pinRailRO = null;
+  function watchPinRails(root) {
+    syncPinRails(root);
+    try {
+      if (typeof ResizeObserver === "undefined") return;
+      if (pinRailRO) {
+        try {
+          pinRailRO.disconnect();
+        } catch (e) {}
+      }
+      pinRailRO = new ResizeObserver(function () {
+        syncPinRails(root);
+      });
+      (root || t || document).querySelectorAll(".forum-thread-row.is-pinned").forEach(function (row) {
+        pinRailRO.observe(row);
+      });
+    } catch (e) {}
+  }
   function syncSearchPlaceholder() {
     if (!t) return;
     var inp = t.querySelector(".forum-search-input");
@@ -2076,7 +2109,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
             (t.pinned
-              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true"><span class="forum-pin-rail-ch">P</span><span class="forum-pin-rail-ch">I</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">E</span><span class="forum-pin-rail-ch">D</span></span></span>'
+              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true">PINNED</span></span>'
               : "") +
             '<button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +
@@ -2190,6 +2223,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       t.querySelectorAll(".forum-thread-row").forEach(function (e) {
         e.querySelector(".forum-thread-thumb") && e.classList.add("has-thumb");
       });
+    } catch (e) {}
+    try {
+      watchPinRails(t);
     } catch (e) {}
     (!(function () {
       var slot = t.querySelector(".forum-search-slot"),
