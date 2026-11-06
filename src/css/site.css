@@ -4438,11 +4438,17 @@ html {
   font-family: inherit;
   -webkit-appearance: none;
   appearance: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip; /* ellipsis-free single line */
 }
 .forum-search-input::placeholder {
   color: var(--muted);
   letter-spacing: 0;
-  opacity: 0.75;
+  opacity: 0.72;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 .forum-search-clear {
   flex: none;

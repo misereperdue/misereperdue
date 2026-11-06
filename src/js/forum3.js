@@ -1943,6 +1943,22 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       "</div></div>"
     );
   }
+  function searchPlaceholder() {
+    if (!r.category) return "Search all threads";
+    var name = "";
+    (b.categories || []).forEach(function (c) {
+      if (c.id === r.category) name = c.name || "";
+    });
+    return name ? "Search in " + name : "Search all threads";
+  }
+  function syncSearchPlaceholder() {
+    if (!t) return;
+    var inp = t.querySelector(".forum-search-input");
+    if (!inp) return;
+    var ph = searchPlaceholder();
+    inp.setAttribute("placeholder", ph);
+    inp.setAttribute("aria-label", ph);
+  }
   function ge() {
     if (t) {
       var e = n.trim().toLowerCase(),
@@ -1964,6 +1980,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             (i.textContent = 'No threads match "' + n.trim() + '"' + (l ? " in " + l : "") + "."),
             (i.style.display = ""));
         } else i.style.display = "none";
+      syncSearchPlaceholder();
     }
   }
   function ye() {
@@ -2013,9 +2030,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         (searchOpen ? " is-open" : "") +
         '"><div class="forum-search-inner"><div class="forum-search">' +
         '<svg class="forum-search-mag" width="15" height="15" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
-        '<input type="text" class="forum-search-input" placeholder="Search threads" value="' +
+        '<input type="text" class="forum-search-input" placeholder="' +
+        w(searchPlaceholder()) +
+        '" value="' +
         w(n) +
-        '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">' +
+        '" aria-label="' +
+        w(searchPlaceholder()) +
+        '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">' +
         '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
         (n ? "" : " hidden") +
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
@@ -2196,6 +2217,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           toggle.setAttribute("aria-expanded", searchOpen ? "true" : "false");
         }
         /* Category selection is independent of search open state */
+        syncSearchPlaceholder();
       }
       toggle &&
         toggle.addEventListener("click", function (ev) {
