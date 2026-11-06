@@ -512,27 +512,17 @@
       }
       draw();
     }
-    function __sec(title, startOpen) {
+    /* Always-expanded section (per dc: no dropdowns — show all data at once) */
+    function __sec(title) {
       var sec = document.createElement("section");
-      sec.className = "dash-sec" + (startOpen ? " is-open" : "");
-      var hd = document.createElement("button");
-      hd.type = "button";
-      hd.className = "dash-sec-hd";
-      hd.setAttribute("aria-expanded", startOpen ? "true" : "false");
+      sec.className = "dash-sec is-open";
+      var hd = document.createElement("div");
+      hd.className = "dash-sec-hd dash-sec-hd-static";
       var tx = document.createElement("span");
       tx.textContent = title;
       hd.appendChild(tx);
-      var ch = document.createElement("span");
-      ch.className = "dash-sec-chev";
-      ch.setAttribute("aria-hidden", "true");
-      ch.textContent = "›";
-      hd.appendChild(ch);
       var body = document.createElement("div");
       body.className = "dash-sec-body";
-      hd.addEventListener("click", function () {
-        var on = sec.classList.toggle("is-open");
-        hd.setAttribute("aria-expanded", on ? "true" : "false");
-      });
       sec.appendChild(hd);
       sec.appendChild(body);
       return { root: sec, body: body };
@@ -590,7 +580,7 @@
     __tc.className = "dash-caption dash-caption-tight";
     __tc.textContent = "Overview" + (o.prev ? " · vs prior 30 days in Activity" : "");
     k.appendChild(__tc);
-    var __mem = __sec("Members", !0);
+    var __mem = __sec("Members");
     k.appendChild(__mem.root);
     __overview(__mem.body);
     /* Views/Visitors 30d totals remain reachable via the Activity metric menu */
@@ -1089,7 +1079,7 @@
       });
     }
     (K(), window.addEventListener("resize", $));
-    var __nu = __sec("Newest signups", !1);
+    var __nu = __sec("Newest signups");
     k.appendChild(__nu.root);
     k.insertBefore(G, __nu.root);
     var ee = document.createElement("div");
@@ -1145,7 +1135,7 @@
           te.innerHTML =
             '<div class="dash-empty">Could not load users.</div>';
         }));
-    var __co = __sec("Countries", !1);
+    var __co = __sec("Countries");
     k.appendChild(__co.root);
     var ne = document.createElement("div");
     ne.className = "dash-sec-tools";
@@ -1162,7 +1152,7 @@
         if (!ne.childNodes.length) ne.hidden = !0;
       })(),
       __co.body.appendChild(ae));
-    var __sh = __sec("Shop", !1);
+    var __sh = __sec("Shop");
     k.appendChild(__sh.root);
     __shop(__sh.body);
     var re = document.createElement("div");

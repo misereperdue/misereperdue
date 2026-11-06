@@ -3110,7 +3110,7 @@
     var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : "chat-pbig-globe");
     var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
-    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="pulse"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.287 8.287 0 0 0 3.362-6.867 8.24 8.24 0 0 0 3 2.48Z"/><path d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 0-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
     m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
     if (!red) {
@@ -3151,27 +3151,42 @@
       });
     }
     var tabs = m.querySelector(".chat-gp-tabs"), tbs = [].slice.call(tabs.querySelectorAll("button")), red2 = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var thumb = tabs.querySelector(".seg");
-    /* same seating math as #nav .seg (app.js refreshSeg) */
-    function place(k) {
+    var thumb = tabs.querySelector(".seg"), _seated = !1;
+    /* Seat like #nav .seg (app.js refreshSeg). First paint: no transition so it doesn't
+       animate from 0 while the morph sheet is still laying out (per dc). */
+    function place(k, instant) {
       var btn = tbs[k];
-      if (!btn || !thumb || !btn.offsetWidth) return;
-      requestAnimationFrame(function () {
-        var b = btn.getBoundingClientRect(), n = tabs.getBoundingClientRect();
-        if (!thumb.offsetWidth) {
-          thumb.style.width = btn.offsetWidth + "px";
-          thumb.style.height = btn.offsetHeight + "px";
+      if (!btn || !thumb) return;
+      var run = function () {
+        /* offset* ignores parent morph transform (getBoundingClientRect does not) */
+        if (!btn.offsetWidth || !tabs.offsetWidth) return !1;
+        thumb.style.width = btn.offsetWidth + "px";
+        thumb.style.height = btn.offsetHeight + "px";
+        var x = btn.offsetLeft + (btn.offsetWidth - thumb.offsetWidth) / 2 - thumb.offsetLeft;
+        if (instant || !_seated) {
+          var prev = thumb.style.transition;
+          thumb.style.transition = "none";
+          thumb.style.transform = "translateX(" + Math.round(x * 4) / 4 + "px)";
+          void thumb.offsetWidth;
+          thumb.style.transition = prev || "";
+          _seated = !0;
         } else {
-          thumb.style.width = btn.offsetWidth + "px";
-          thumb.style.height = btn.offsetHeight + "px";
+          thumb.style.transform = "translateX(" + Math.round(x * 4) / 4 + "px)";
         }
-        var x = b.left - n.left - tabs.clientLeft + (b.width - thumb.offsetWidth) / 2 - thumb.offsetLeft;
-        thumb.style.transform = "translateX(" + Math.round(x * 4) / 4 + "px)";
-      });
+        return !0;
+      };
+      if (!run()) requestAnimationFrame(function () { run() || requestAnimationFrame(run); });
+      else requestAnimationFrame(function () { run(); });
     }
-    place(0);
+    function curIdx() { var i = tbs.findIndex(function (x) { return x.classList.contains("is-on"); }); return i < 0 ? 0 : i; }
+    place(0, !0);
+    /* after morph open (~320ms) + layout: re-seat without anim */
+    setTimeout(function () { place(curIdx(), !0); }, 340);
+    try {
+      new ResizeObserver(function () { place(curIdx(), !_seated); }).observe(tabs);
+    } catch (_) {}
     function go(k) {
-      var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); });
+      var cur = curIdx();
       if (k < 0 || k >= tbs.length || k === cur) return;
       sort = tbs[k].getAttribute("data-s");
       tbs.forEach(function (x, n) {
@@ -3179,16 +3194,13 @@
         x.classList.toggle("is-on", on);
         x.setAttribute("aria-selected", on ? "true" : "false");
       });
-      place(k);
+      place(k, !1);
       window.haptic && window.haptic(8);
       paint(); list.scrollTop = 0;
       red2 || list.animate([{ transform: "translateX(" + (k > cur ? 28 : -28) + "px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.15,.5,1)" });
     }
     tbs.forEach(function (b, k) { b.addEventListener("click", function (e) { e.stopPropagation(); go(k); }); });
-    window.addEventListener("resize", function () {
-      var cur = tbs.findIndex(function (x) { return x.classList.contains("is-on"); });
-      place(cur < 0 ? 0 : cur);
-    });
+    window.addEventListener("resize", function () { place(curIdx(), !0); });
     var sx = 0, sy = 0;
     list.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: !0 });
     list.addEventListener("touchend", function (e) {

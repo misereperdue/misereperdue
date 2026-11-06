@@ -7849,35 +7849,18 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+}
+.dash-sec-hd-static {
+  cursor: default;
+  pointer-events: none;
 }
 .dash-sec-hd > span:first-child {
   color: var(--muted);
 }
-.dash-sec-chev {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--glass-clear-tint);
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 700;
-  transform: rotate(90deg);
-  transition: transform 0.2s ease;
-}
-.dash-sec.is-open > .dash-sec-hd .dash-sec-chev {
-  transform: rotate(270deg);
-}
+.dash-sec-chev { display: none !important; }
 .dash-sec-body {
-  display: none;
-  padding: 0 0 6px;
-}
-.dash-sec.is-open > .dash-sec-body {
   display: block;
+  padding: 0 0 6px;
 }
 .dash-sec-tools {
   display: flex;
@@ -9688,6 +9671,7 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
   /* glassbar recipe already supplies tint/blur/rim/shadow */
 }
 .chat-gp-tabs > .seg{
+  /* exact navbar droplet: --lg-drop / --lg-drop-shadow, spring transform (global .seg rules) */
   top:4px;
   left:4px;
   width:auto;
@@ -9695,7 +9679,16 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
   border-radius:999px;
   pointer-events:none;
   z-index:0;
+  border:0 !important;
+  outline:0 !important;
+  background: var(--lg-drop) !important;
+  box-shadow: var(--lg-drop-shadow) !important;
 }
+.chat-gp-tabs.glassbar::before{
+  /* keep the bar rim; never let it paint onto the droplet */
+  z-index:2;
+}
+.chat-gp-tabs.seg-ready > .seg{ /* marker class unused; seating sets transition itself */ }
 .chat-gp-tabs button{
   position:relative;
   z-index:1;
