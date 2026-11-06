@@ -3111,7 +3111,7 @@
   }
   /* Polls (per dc): the Poll row only appears once the Worker advertises caps.poll. */
   function mpPollForm() {
-    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi" for="chat-poll-multi"><input type="checkbox" id="chat-poll-multi" class="chat-poll-cb"><span class="chat-poll-box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 10.4l3 3 6-6.6"/></svg></span><span class="chat-poll-mt">Allow multiple answers</span></label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
+    return '<div class="chat-poll-f"><input class="chat-poll-qi" maxlength="140" placeholder="Ask a question" autocomplete="off"><div class="chat-poll-os"></div><button type="button" class="chat-poll-add">+ Add option</button><label class="chat-poll-multi mp-check" for="chat-poll-multi"><input type="checkbox" id="chat-poll-multi" class="chat-poll-cb mp-check-cb"><span class="chat-poll-box mp-check-box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 10.4l3 3 6-6.6"/></svg></span><span class="chat-poll-mt">Allow multiple answers</span></label><button type="button" class="chat-poll-go" disabled>Send poll</button></div>';
   }
   function mpPollWire(m, close) {
     var os = m.querySelector(".chat-poll-os"), add = m.querySelector(".chat-poll-add"), go = m.querySelector(".chat-poll-go"), qi = m.querySelector(".chat-poll-qi");
@@ -5572,7 +5572,7 @@
           rcEsc(code) +
           '">' +
           rcCodeHTML(code) +
-          '</div><div class="rc-actions"><button type="button" class="btn rc-copy">Copy</button><button type="button" class="btn rc-save">Save as image</button></div><label class="rc-check"><input type="checkbox"><span>I saved my recovery code</span></label><button type="button" class="btn accent rc-continue" disabled>Continue</button>',
+          '</div><div class="rc-actions"><button type="button" class="btn rc-copy">Copy</button><button type="button" class="btn rc-save">Save as image</button></div><label class="rc-check mp-check"><input type="checkbox" class="mp-check-cb"><span class="mp-check-box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.5 10.4l3 3 6-6.6"/></svg></span><span>I saved my recovery code</span></label><button type="button" class="btn accent rc-continue" disabled>Continue</button>',
         "rc-showcode",
       ),
       cp = b.querySelector(".rc-copy"),
