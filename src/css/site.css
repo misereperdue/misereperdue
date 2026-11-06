@@ -10853,20 +10853,20 @@ html[data-gcards="g3"] .forum-thread-row.is-pinned > .forum-thread-foot {
   white-space: nowrap;
 }
 .forum-thread-replies-ico {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   display: block;
   flex: none;
-  /* Match empty-state bubble optical nudge at text size */
-  transform: translate(0.2px, -0.35px);
+  /* Tail mass down-left — slight optical nudge */
+  transform: translate(0.25px, -0.45px);
 }
 .forum-thread-last-ico {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   display: block;
   flex: none;
   /* Tail pulls mass down-left — nudge up/right for optical center in the 20px circle */
-  transform: translate(0.35px, -0.55px);
+  transform: translate(0.4px, -0.6px);
 }
 .forum-thread-last.is-empty {
   align-items: center;

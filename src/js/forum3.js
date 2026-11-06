@@ -2135,7 +2135,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-age">' +
               k(t.lastActivity) +
               '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-replies">' +
-              '<svg class="forum-thread-replies-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.05 3.35c4.55 0 8.15 2.7 8.15 6.05s-3.6 6.05-8.15 6.05c-.88 0-1.7-.1-2.45-.28l-3.4 2.4c-.48.34-1.12-.06-.98-.62l.5-2.15C4.35 13.7 3.9 12.55 3.9 9.4c0-3.35 3.6-6.05 8.15-6.05z"/></svg> ' +
+              '<svg class="forum-thread-replies-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.2C17.4 3.2 21.5 6.35 21.5 10.4C21.5 14.45 17.4 17.6 12 17.6C10.55 17.6 9.2 17.4 8.05 17.05C7.15 18.55 5.4 19.95 3.35 20.55C3.05 20.65 2.75 20.4 2.9 20.12C3.85 18.35 4.55 16.85 5.15 15.55C4.05 14.15 3.5 12.4 3.5 10.4C3.5 6.35 7.6 3.2 12 3.2Z"/></svg> ' +
               (Number(t.replies) || 0) +
               "</span></span>") +
             (t.excerpt ? '<span class="forum-thread-excerpt">' + w(t.excerpt) + "</span>" : "") +
@@ -2182,7 +2182,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           } else {
             lastHtml =
               '<span class="forum-thread-last is-empty" aria-label="No comments yet">' +
-              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.05 3.35c4.55 0 8.15 2.7 8.15 6.05s-3.6 6.05-8.15 6.05c-.88 0-1.7-.1-2.45-.28l-3.4 2.4c-.48.34-1.12-.06-.98-.62l.5-2.15C4.35 13.7 3.9 12.55 3.9 9.4c0-3.35 3.6-6.05 8.15-6.05z"/></svg></span>' +
+              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.2C17.4 3.2 21.5 6.35 21.5 10.4C21.5 14.45 17.4 17.6 12 17.6C10.55 17.6 9.2 17.4 8.05 17.05C7.15 18.55 5.4 19.95 3.35 20.55C3.05 20.65 2.75 20.4 2.9 20.12C3.85 18.35 4.55 16.85 5.15 15.55C4.05 14.15 3.5 12.4 3.5 10.4C3.5 6.35 7.6 3.2 12 3.2Z"/></svg></span>' +
               '<span class="forum-thread-last-body">' +
               '<span class="forum-thread-last-text forum-thread-last-empty">No comments yet</span>' +
               "</span></span>";
@@ -4126,6 +4126,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         });
     });
   }
+  /* iMessage bubble glyph: shipped I1 (classic filled). Swap: replace path d= in forum-thread-last-ico + forum-thread-replies-ico with I2/I3 from misery-notes/screenshots/imessage-icon.png sheet. */
   window.MPForum = window.MPForum || {};
   window.MPForum.setCards = function (v) {
     v = String(v || "g1").toLowerCase();
