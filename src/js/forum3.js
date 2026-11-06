@@ -101,6 +101,15 @@
 })();
 !(function () {
   "use strict";
+  /* Globe card direction: g1 Editorial (default), g2 Media-first, g3 Compact. Switch: localStorage mp-gcards. */
+  (function () {
+    var v = "g1";
+    try {
+      v = localStorage.getItem("mp-gcards") || "g1";
+    } catch (e) {}
+    (-1 === ["g1", "g2", "g3"].indexOf(v) && (v = "g1"),
+      document.documentElement.setAttribute("data-gcards", v));
+  })();
   // CSP: no inline onerror. Images with data-fallback swap to it once on error.
   document.addEventListener(
     "error",
@@ -2025,17 +2034,28 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               (t.excerpt || "")
             ).toLowerCase();
           u +=
-            '<div class="forum-thread-row" data-search="' +
+            '<div class="forum-thread-row' +
+            (t.thumb ? " has-thumb" : "") +
+            (t.pinned ? " is-pinned" : "") +
+            '" data-search="' +
             w(l) +
+            '" data-id="' +
+            w(t.id) +
             '"><button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +
             '" data-id="' +
             w(t.id) +
-            '"><span class="forum-thread-main"><span class="forum-thread-title">' +
+            '"><span class="forum-thread-main"><span class="forum-thread-title-row">' +
+            (t.pinned
+              ? '<span class="forum-pin-mark" title="Pinned" aria-label="Pinned"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3a1 1 0 0 1 .8 1.6l-1.7 2.27 1.53 4.6a1 1 0 0 1-.3 1.08l-1.83 1.53 1.2 5.4a.75.75 0 0 1-1.34.6L12 16.8l-2.36 3.28a.75.75 0 0 1-1.34-.6l1.2-5.4-1.83-1.53a1 1 0 0 1-.3-1.08l1.53-4.6L7.2 4.6A1 1 0 0 1 8 3h8z"/></svg></span>'
+              : "") +
+            '<span class="forum-thread-title">' +
             w(t.title) +
             "</span>" +
+            (t.pinned ? '<span class="forum-pin-chip-inline">Pinned</span>' : "") +
+            "</span>" +
             ((i = C(t.authorBadge, t.author)),
-            '<span class="forum-thread-author-pill">' +
+            '<span class="forum-thread-meta"><span class="forum-thread-who">' +
               ((o = (a = t).author || "?"),
               '<span class="forum-avatar-wrap forum-avatar-sm"><span class="forum-avatar">' +
                 (a.hasAvatarImg
@@ -2048,49 +2068,38 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                     '" alt="" data-fallback="img/default-avatar.jpg">'
                   : '<img src="img/default-avatar.jpg" alt="">') +
                 '</span></span><span class="forum-thread-author-name">') +
-              ((n =
-                void 0 !== (r = t).authorPoints && null !== r.authorPoints
-                  ? ' <span class="forum-glass-pill forum-author-pts">★ ' +
-                    (Number(r.authorPoints) || 0) +
-                    "</span>"
-                  : ""),
-              w(mpName(r.author)) + n + "</span>") +
+              w(mpName(t.author)) +
+              "</span>" +
               (i ? '<span class="forum-thread-pill-badge">' + i + "</span>" : "") +
-              '</span><span class="forum-thread-meta-text">') +
-            w(t.categoryName) +
-            (t.membersOnly ? " ⭐" : "") +
-            " · " +
-            k(t.lastActivity) +
-            " · 💬 " +
-            (Number(t.replies) || 0) +
-            "</span>" +
+              '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-age">' +
+              k(t.lastActivity) +
+              '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-replies">💬 ' +
+              (Number(t.replies) || 0) +
+              "</span></span>") +
             (t.excerpt ? '<span class="forum-thread-excerpt">' + w(t.excerpt) + "</span>" : "") +
             "</span>" +
             (t.thumb
-              ? '<img class="forum-thread-thumb" src="' +
+              ? '<span class="forum-thread-media">' +
+                (t.pinned ? '<span class="forum-pin-chip" aria-hidden="true">Pinned</span>' : "") +
+                '<img class="forum-thread-thumb" src="' +
                 e +
                 "/api/media/" +
                 w(t.thumb) +
-                '" alt="" loading="lazy">'
+                '" alt="" loading="lazy"></span>'
               : "") +
             "</button>";
-          var s = t.tags || [];
-          ((Ne || t.pinned || s.length) &&
+          var s = t.tags || [],
+            canManage = Ne || He(t.author);
+          ((s.length || canManage) &&
             (u +=
-              '<div class="forum-admin">' +
-              (t.pinned ? '<span class="forum-pin-bubble" title="Pinned">📌</span>' : "") +
+              '<div class="forum-thread-foot">' +
+              '<span class="forum-thread-tags">' +
               m(t, 2) +
-              (Ne
-                ? '<button type="button" class="forum-admin-btn" data-pin="' +
+              "</span>" +
+              (canManage
+                ? '<button type="button" class="forum-thread-more" data-more="' +
                   w(t.id) +
-                  '">' +
-                  (t.pinned ? "Unpin" : "Pin") +
-                  "</button>"
-                : "") +
-              (He(t.author)
-                ? '<button type="button" class="forum-admin-btn forum-admin-del" data-del="' +
-                  w(t.id) +
-                  '">Delete</button>'
+                  '" aria-label="More">···</button>'
                 : "") +
               "</div>"),
             (u += "</div>"));
@@ -2112,11 +2121,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     t.innerHTML = u;
     try {
       t.querySelectorAll(".forum-thread-row").forEach(function (e) {
-        var t = e.querySelector(".forum-thread-thumb");
-        t &&
-          t.src &&
-          (e.classList.add("has-thumb"),
-          e.style.setProperty("--thumb-url", 'url("' + t.src + '")'));
+        e.querySelector(".forum-thread-thumb") && e.classList.add("has-thumb");
       });
     } catch (e) {}
     (!(function () {
@@ -2272,6 +2277,51 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               }).then(function (e) {
                 e.ok && ((r.name = "list"), (r.threadId = null), Re());
               }));
+        });
+      }),
+      t.querySelectorAll(".forum-thread-more[data-more]").forEach(function (btn) {
+        btn.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          var id = btn.getAttribute("data-more"),
+            thr = null;
+          (b.threads || []).forEach(function (x) {
+            x.id === id && (thr = x);
+          });
+          if (!thr || !window.mpHide || !mpHide.menu) return;
+          var items = [];
+          Ne &&
+            items.push({
+              label: thr.pinned ? "Unpin" : "Pin",
+              run: function () {
+                y("/api/forum/thread/" + encodeURIComponent(id) + "/pin", { method: "POST" })
+                  .then(function (e) {
+                    if (e.ok) {
+                      var p = !(void 0 !== e.pinned && !e.pinned);
+                      ((b.threads || []).forEach(function (x) {
+                        x.id === id && (x.pinned = p);
+                      }),
+                        Be());
+                    }
+                  })
+                  .catch(function () {
+                    alert("Couldn't pin. Try again.");
+                  });
+              },
+            });
+          He(thr.author) &&
+            items.push({
+              label: "Delete",
+              danger: !0,
+              run: function () {
+                confirm("Delete this thread and all its replies?") &&
+                  y("/api/forum/thread/" + encodeURIComponent(id), { method: "DELETE" }).then(
+                    function (e) {
+                      e.ok && ((r.name = "list"), (r.threadId = null), Re());
+                    },
+                  );
+              },
+            });
+          items.length && mpHide.menu(btn, items);
         });
       }),
       ve());
@@ -3814,6 +3864,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         });
     });
   }
+  window.MPForum = window.MPForum || {};
+  window.MPForum.setCards = function (v) {
+    v = String(v || "g1").toLowerCase();
+    -1 === ["g1", "g2", "g3"].indexOf(v) && (v = "g1");
+    try {
+      localStorage.setItem("mp-gcards", v);
+    } catch (e) {}
+    document.documentElement.setAttribute("data-gcards", v);
+  };
   var Ne = !1;
   function He(e) {
     return (
