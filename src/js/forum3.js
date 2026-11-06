@@ -2059,7 +2059,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             w(t.id) +
             '"><span class="forum-thread-main"><span class="forum-thread-title-row">' +
             (t.pinned
-              ? '<span class="forum-pin-mark" title="Pinned" aria-label="Pinned"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" fill-rule="evenodd"><g transform="rotate(-32 12 13)"><ellipse cx="12" cy="7.1" rx="5.4" ry="4.8" fill="currentColor"/><ellipse cx="10.1" cy="5.6" rx="2.3" ry="1.55" fill="#fff" fill-opacity=".38"/><rect x="9.1" y="10.55" width="5.8" height="2.35" rx=".85" fill="currentColor"/><rect x="9.55" y="10.9" width="4.9" height=".7" rx=".35" fill="#fff" fill-opacity=".22"/><path d="M12 12.7v7.1" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M12 19.55l-1.55 2.15h3.1L12 19.55z" fill="currentColor"/></g></g></svg></span>'
+              ? '<span class="forum-pin-mark" title="Pinned" aria-label="Pinned"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor" transform="rotate(-30 12 12)"><path d="M7.6 4.2c0-1.3 1.2-2.4 4.4-2.4s4.4 1.1 4.4 2.4c0 2.6-1.7 4.7-3.5 5.5v1.7h1.6c.5 0 .9.4.9.9v.6c0 .5-.4.9-.9.9H9.5c-.5 0-.9-.4-.9-.9v-.6c0-.5.4-.9.9-.9h1.6V9.7C9.3 8.9 7.6 6.8 7.6 4.2Z"/><path d="M12 13.2c-.55 0-1 .2-1 .6 0 1.7.35 4.2.55 5.7.1.7.55 1.3.45 1.3s.35-.6.45-1.3c.2-1.5.55-4 .55-5.7 0-.4-.45-.6-1-.6Z"/></g></svg></span>'
               : "") +
             '<span class="forum-thread-title">' +
             w(t.title) +
