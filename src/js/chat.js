@@ -3217,46 +3217,32 @@
       all.slice(0, 60).forEach(function (t) {
         var b = document.createElement("button");
         b.type = "button";
-        b.className = "chat-gp-row" + (t.thumb ? " has-thumb" : "") + (t.pinned ? " is-pinned" : "");
+        b.className = "chat-gp-row" + (t.thumb ? " has-thumb" : " no-thumb") + (t.pinned ? " is-pinned" : "");
         b.setAttribute("role", "option");
         b.innerHTML =
           '<span class="chat-gp-bg" aria-hidden="true"></span>' +
           '<span class="chat-gp-body">' +
-            '<span class="chat-gp-pic"></span>' +
+            '<span class="chat-gp-pic" aria-hidden="true"></span>' +
             '<span class="chat-gp-tx">' +
               '<span class="chat-gp-title"></span>' +
               '<span class="chat-gp-meta">' +
                 '<span class="chat-gp-who"></span>' +
-                '<span class="chat-gp-m chat-gp-replies" hidden>' +
-                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 17.2V8.6A2.6 2.6 0 0 1 8.1 6h7.8A2.6 2.6 0 0 1 18.5 8.6v5.2a2.6 2.6 0 0 1-2.6 2.6H10l-4.5 3z"/></svg>' +
-                  '<span class="chat-gp-n"></span>' +
-                '</span>' +
                 '<span class="chat-gp-m chat-gp-ago" hidden>' +
                   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.25"/><path d="M12 8.2v4.1l2.6 1.6"/></svg>' +
                   '<span class="chat-gp-n"></span>' +
                 '</span>' +
-                '<span class="chat-gp-cat" hidden></span>' +
               '</span>' +
             '</span>' +
           '</span>' +
           (t.pinned ? '<span class="chat-gp-pin" aria-hidden="true"><span class="chat-gp-pin-lab">PINNED</span></span>' : "");
-        b.querySelector(".chat-gp-title").textContent = t.title || "Untitled";
+        var title = t.title || "Untitled";
+        b.querySelector(".chat-gp-title").textContent = title;
         b.querySelector(".chat-gp-who").textContent = mpAt(t.author || "unknown");
         var ago = t.createdAt ? mpGeAgo(t.createdAt) : "";
         if (ago) {
           var ag = b.querySelector(".chat-gp-ago");
           ag.hidden = !1;
           ag.querySelector(".chat-gp-n").textContent = ago;
-        }
-        if (t.replies) {
-          var rp = b.querySelector(".chat-gp-replies");
-          rp.hidden = !1;
-          rp.querySelector(".chat-gp-n").textContent = String(t.replies);
-        }
-        if (t.categoryName) {
-          var cat = b.querySelector(".chat-gp-cat");
-          cat.hidden = !1;
-          cat.textContent = String(t.categoryName);
         }
         var pic = b.querySelector(".chat-gp-pic");
         var thumbSrc = "";
@@ -3279,13 +3265,28 @@
           bim.src = thumbSrc;
           bg.appendChild(bim);
         } else {
-          try {
-            var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0);
-            av && (pic.appendChild(av), pic.classList.add("is-av"));
-          } catch (_) {}
+          /* Intentional no-image tile: category glyph or title initial — never a grey avatar. */
+          var g = document.createElement("span");
+          g.className = "chat-gp-glyph";
+          var cat = String(t.categoryName || "").trim();
+          var glyph = "";
+          if (cat) {
+            try {
+              glyph = Array.from(cat)[0] || "";
+            } catch (_) {
+              glyph = cat.charAt(0);
+            }
+          }
+          if (!glyph || glyph === "+") {
+            var letters = String(title).replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim();
+            glyph = (letters ? letters.charAt(0) : "·").toUpperCase();
+          }
+          g.textContent = glyph;
+          pic.appendChild(g);
+          pic.classList.add("is-glyph");
         }
-        b.addEventListener("click", function (e) {
-          e.stopPropagation();
+        b.addEventListener("click", function (ev) {
+          ev.stopPropagation();
           var inp = document.querySelector("#chat .chat-inputbar input"), snd = document.querySelector("#chat .chat-send");
           if (!inp || !snd) return;
           close(); inp.value = "https://misereperdue.com/t/" + t.id; inp.dispatchEvent(new Event("input", { bubbles: !0 })); snd.click();
