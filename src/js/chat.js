@@ -3224,20 +3224,23 @@
           '<span class="chat-gp-body">' +
             '<span class="chat-gp-pic" aria-hidden="true"></span>' +
             '<span class="chat-gp-tx">' +
+              '<span class="chat-gp-kicker" hidden>Pinned</span>' +
               '<span class="chat-gp-title"></span>' +
               '<span class="chat-gp-meta">' +
                 '<span class="chat-gp-who"></span>' +
-                '<span class="chat-gp-m chat-gp-ago" hidden>' +
-                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.25"/><path d="M12 8.2v4.1l2.6 1.6"/></svg>' +
-                  '<span class="chat-gp-n"></span>' +
-                '</span>' +
+                '<span class="chat-gp-m chat-gp-ago" hidden><span class="chat-gp-n"></span></span>' +
               '</span>' +
             '</span>' +
+            '<svg class="chat-gp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>' +
           '</span>' +
           (t.pinned ? '<span class="chat-gp-pin" aria-hidden="true"><span class="chat-gp-pin-lab">PINNED</span></span>' : "");
         var title = t.title || "Untitled";
         b.querySelector(".chat-gp-title").textContent = title;
         b.querySelector(".chat-gp-who").textContent = mpAt(t.author || "unknown");
+        if (t.pinned) {
+          var kick = b.querySelector(".chat-gp-kicker");
+          kick.hidden = !1;
+        }
         var ago = t.createdAt ? mpGeAgo(t.createdAt) : "";
         if (ago) {
           var ag = b.querySelector(".chat-gp-ago");
@@ -3265,23 +3268,11 @@
           bim.src = thumbSrc;
           bg.appendChild(bim);
         } else {
-          /* Intentional no-image tile: category glyph or title initial — never a grey avatar. */
+          /* Letter initial for S2 artwork / R glyph — never category emoji. */
           var g = document.createElement("span");
           g.className = "chat-gp-glyph";
-          var cat = String(t.categoryName || "").trim();
-          var glyph = "";
-          if (cat) {
-            try {
-              glyph = Array.from(cat)[0] || "";
-            } catch (_) {
-              glyph = cat.charAt(0);
-            }
-          }
-          if (!glyph || glyph === "+") {
-            var letters = String(title).replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim();
-            glyph = (letters ? letters.charAt(0) : "·").toUpperCase();
-          }
-          g.textContent = glyph;
+          var letters = String(title).replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim();
+          g.textContent = (letters ? letters.charAt(0) : "M").toUpperCase();
           pic.appendChild(g);
           pic.classList.add("is-glyph");
         }
@@ -6585,11 +6576,11 @@
     (window.MPChat = window.MPChat || {}),
     (function () {
       try {
-        var v = localStorage.getItem("mp-gprows") || "r1";
-        -1 === ["r1", "r2", "r3"].indexOf(v) && (v = "r1");
+        var v = localStorage.getItem("mp-gprows") || "s1";
+        -1 === ["s1", "s2", "s3", "r1", "r2", "r3"].indexOf(v) && (v = "s1");
         document.documentElement.setAttribute("data-gprows", v);
       } catch (_) {
-        document.documentElement.setAttribute("data-gprows", "r1");
+        document.documentElement.setAttribute("data-gprows", "s1");
       }
     })(),
     (function () {
@@ -7066,8 +7057,8 @@
       (e && !e.classList.contains("on")) || Ae();
     }),
     (window.MPChat.setGpRows = function (v) {
-      v = String(v || "r1").toLowerCase();
-      -1 === ["r1", "r2", "r3"].indexOf(v) && (v = "r1");
+      v = String(v || "s1").toLowerCase();
+      -1 === ["s1", "s2", "s3", "r1", "r2", "r3"].indexOf(v) && (v = "s1");
       try { localStorage.setItem("mp-gprows", v); } catch (_) {}
       document.documentElement.setAttribute("data-gprows", v);
     }));
