@@ -3215,13 +3215,75 @@
       list.innerHTML = "";
       if (!all.length) { list.innerHTML = '<div class="chat-gp-empty">' + (mpGpCache ? "No posts found" : "Loading…") + "</div>"; return; }
       all.slice(0, 60).forEach(function (t) {
-        var b = document.createElement("button"); b.type = "button"; b.className = "chat-ge chat-gp-row";
-        b.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span></span><span class="chat-ge-l2"></span></span>';
-        b.querySelector(".chat-ge-who").textContent = mpAt(t.author || "unknown") + (t.createdAt ? " \u00b7 " + mpGeAgo(t.createdAt) : "") + (t.replies ? " \u00b7 " + t.replies + (t.replies === 1 ? " reply" : " replies") : "");
-        b.querySelector(".chat-ge-l2").textContent = (t.title || "") + (t.excerpt ? " \u2014 " + t.excerpt : "");
-        var pic = b.querySelector(".chat-ge-pic");
-        if (t.thumb && /^(https?:|\/)/i.test(t.thumb)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = t.thumb; pic.appendChild(im); }
-        else { try { var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0); av && (pic.appendChild(av), pic.classList.add("is-av")); } catch (_) {} }
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "chat-gp-row" + (t.thumb ? " has-thumb" : "") + (t.pinned ? " is-pinned" : "");
+        b.setAttribute("role", "option");
+        b.innerHTML =
+          '<span class="chat-gp-bg" aria-hidden="true"></span>' +
+          '<span class="chat-gp-body">' +
+            '<span class="chat-gp-pic"></span>' +
+            '<span class="chat-gp-tx">' +
+              '<span class="chat-gp-title"></span>' +
+              '<span class="chat-gp-meta">' +
+                '<span class="chat-gp-who"></span>' +
+                '<span class="chat-gp-m chat-gp-replies" hidden>' +
+                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 17.2V8.6A2.6 2.6 0 0 1 8.1 6h7.8A2.6 2.6 0 0 1 18.5 8.6v5.2a2.6 2.6 0 0 1-2.6 2.6H10l-4.5 3z"/></svg>' +
+                  '<span class="chat-gp-n"></span>' +
+                '</span>' +
+                '<span class="chat-gp-m chat-gp-ago" hidden>' +
+                  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.25"/><path d="M12 8.2v4.1l2.6 1.6"/></svg>' +
+                  '<span class="chat-gp-n"></span>' +
+                '</span>' +
+                '<span class="chat-gp-cat" hidden></span>' +
+              '</span>' +
+            '</span>' +
+          '</span>' +
+          (t.pinned ? '<span class="chat-gp-pin" aria-hidden="true"><span class="chat-gp-pin-lab">PINNED</span></span>' : "");
+        b.querySelector(".chat-gp-title").textContent = t.title || "Untitled";
+        b.querySelector(".chat-gp-who").textContent = mpAt(t.author || "unknown");
+        var ago = t.createdAt ? mpGeAgo(t.createdAt) : "";
+        if (ago) {
+          var ag = b.querySelector(".chat-gp-ago");
+          ag.hidden = !1;
+          ag.querySelector(".chat-gp-n").textContent = ago;
+        }
+        if (t.replies) {
+          var rp = b.querySelector(".chat-gp-replies");
+          rp.hidden = !1;
+          rp.querySelector(".chat-gp-n").textContent = String(t.replies);
+        }
+        if (t.categoryName) {
+          var cat = b.querySelector(".chat-gp-cat");
+          cat.hidden = !1;
+          cat.textContent = String(t.categoryName);
+        }
+        var pic = b.querySelector(".chat-gp-pic");
+        var thumbSrc = "";
+        if (t.thumb) {
+          if (/^(https?:|\/|data:)/i.test(t.thumb)) thumbSrc = t.thumb;
+          else if (/^[A-Za-z0-9_-]+$/.test(t.thumb)) thumbSrc = e + "/api/media/" + t.thumb;
+        }
+        if (thumbSrc) {
+          var im = document.createElement("img");
+          im.alt = "";
+          im.loading = "lazy";
+          im.decoding = "async";
+          im.src = thumbSrc;
+          pic.appendChild(im);
+          var bg = b.querySelector(".chat-gp-bg");
+          var bim = document.createElement("img");
+          bim.alt = "";
+          bim.loading = "lazy";
+          bim.decoding = "async";
+          bim.src = thumbSrc;
+          bg.appendChild(bim);
+        } else {
+          try {
+            var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0);
+            av && (pic.appendChild(av), pic.classList.add("is-av"));
+          } catch (_) {}
+        }
         b.addEventListener("click", function (e) {
           e.stopPropagation();
           var inp = document.querySelector("#chat .chat-inputbar input"), snd = document.querySelector("#chat .chat-send");
@@ -6522,6 +6584,15 @@
     (window.MPChat = window.MPChat || {}),
     (function () {
       try {
+        var v = localStorage.getItem("mp-gprows") || "r1";
+        -1 === ["r1", "r2", "r3"].indexOf(v) && (v = "r1");
+        document.documentElement.setAttribute("data-gprows", v);
+      } catch (_) {
+        document.documentElement.setAttribute("data-gprows", "r1");
+      }
+    })(),
+    (function () {
+      try {
         var e = new URLSearchParams(location.search || "");
         if ("1" !== e.get("share")) return;
         var t = (e.get("title") || "").trim(),
@@ -6992,6 +7063,12 @@
     (window.MPChat.scrollToLatest = function () {
       var e = document.getElementById("journal");
       (e && !e.classList.contains("on")) || Ae();
+    }),
+    (window.MPChat.setGpRows = function (v) {
+      v = String(v || "r1").toLowerCase();
+      -1 === ["r1", "r2", "r3"].indexOf(v) && (v = "r1");
+      try { localStorage.setItem("mp-gprows", v); } catch (_) {}
+      document.documentElement.setAttribute("data-gprows", v);
     }));
 })();
 /* Voice typing (per dc): mic left of Send, recording bar morph, Whisper via /api/transcribe. Hidden until the Worker route is live. */

@@ -9873,9 +9873,264 @@ svg[data-hi].hi-play {
   height:22px;
   display:block;
 }
-.chat-gp-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px}
-.chat-gp-row.chat-ge{width:100%;max-width:none;margin:0;border:0;font:inherit;text-align:left;cursor:pointer;box-shadow:none;background:rgba(127,127,127,.1)}
+.chat-gp-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding:1px}
 .chat-gp-empty{padding:24px 8px;text-align:center;opacity:.6;font-size:14px}
+
+/* ===== Chat Globe menu rows R1–R3 (per dc) =====
+   data-gprows=r1 Editorial (default) | r2 Media rail | r3 Magazine wash
+   Switch: MPChat.setGpRows('r2') or localStorage mp-gprows. */
+html:not([data-gprows]) { --mp-gprows: r1; }
+.chat-gp-row{
+  position:relative;
+  display:block;
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:14px;
+  overflow:hidden;
+  font:inherit;
+  text-align:left;
+  color:var(--sheet-text,var(--ink));
+  cursor:pointer;
+  background:rgba(127,127,127,.1);
+  box-shadow:none;
+  -webkit-tap-highlight-color:transparent;
+  isolation:isolate;
+  transition:opacity .16s ease;
+}
+[data-theme="light"] .chat-gp-row{background:rgba(0,0,0,.04)}
+.chat-gp-row:active{opacity:.72}
+.chat-gp-bg{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+}
+.chat-gp-row.has-thumb .chat-gp-bg{opacity:1}
+.chat-gp-bg img{
+  position:absolute;
+  inset:-28%;
+  width:156%;
+  height:156%;
+  max-width:none;
+  object-fit:cover;
+  transform:scale(1.3);
+  filter:blur(36px);
+  -webkit-user-select:none;
+  user-select:none;
+}
+.chat-gp-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(to right, rgba(0,0,0,.42) 0%, rgba(0,0,0,.2) 55%, rgba(0,0,0,.08) 100%),
+    linear-gradient(to top, rgba(0,0,0,.28) 0%, rgba(0,0,0,.08) 45%, transparent 75%);
+}
+[data-theme="light"] .chat-gp-bg::after{
+  background:
+    linear-gradient(to right, rgba(255,255,255,.62) 0%, rgba(255,255,255,.32) 55%, rgba(255,255,255,.1) 100%),
+    linear-gradient(to top, rgba(255,255,255,.4) 0%, rgba(255,255,255,.12) 45%, transparent 75%);
+}
+.chat-gp-body{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:9px 11px;
+  min-height:58px;
+  box-sizing:border-box;
+}
+.chat-gp-row.is-pinned .chat-gp-body{padding-bottom:calc(9px + 17px)}
+.chat-gp-pic{
+  flex:none;
+  width:48px;
+  height:48px;
+  border-radius:11px;
+  overflow:hidden;
+  background:rgba(127,127,127,.18);
+  border:1px solid rgba(127,127,127,.22);
+  display:grid;
+  place-items:center;
+  position:relative;
+  box-sizing:border-box;
+}
+.chat-gp-pic.is-av{border-radius:50%}
+.chat-gp-pic > img,
+.chat-gp-pic > .chat-avatar-wrap{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  margin:0!important;
+  display:block!important;
+}
+.chat-gp-pic img,
+.chat-gp-pic .chat-avatar-img,
+.chat-gp-pic .chat-avatar{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.chat-gp-tx{
+  min-width:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.chat-gp-title{
+  font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:13.5px;
+  font-weight:600;
+  letter-spacing:-0.025em;
+  line-height:1.3;
+  color:var(--ink);
+  text-shadow:none;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  word-break:break-word;
+}
+.chat-gp-meta{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  font-size:11.5px;
+  font-weight:500;
+  color:var(--muted);
+  line-height:1.2;
+}
+.chat-gp-who{
+  flex:none;
+  max-width:42%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  opacity:.9;
+  text-transform:lowercase;
+}
+.chat-gp-m{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  flex:none;
+  opacity:.85;
+}
+.chat-gp-m svg{width:11px;height:11px;display:block;opacity:.9}
+.chat-gp-n{font-variant-numeric:tabular-nums}
+.chat-gp-cat{
+  flex:none;
+  margin-left:auto;
+  font-size:12px;
+  line-height:1;
+  opacity:.9;
+  max-width:28%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.chat-gp-pin{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  z-index:2;
+  height:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  background:rgba(169,215,245,.12);
+  border-top:.5px solid rgba(169,215,245,.18);
+}
+[data-theme="light"] .chat-gp-pin{
+  background:rgba(10,18,48,.06);
+  border-top-color:rgba(10,18,48,.08);
+}
+.chat-gp-row.has-thumb .chat-gp-pin{
+  background:rgba(0,0,0,.28);
+  border-top-color:rgba(255,255,255,.1);
+}
+[data-theme="light"] .chat-gp-row.has-thumb .chat-gp-pin{
+  background:rgba(255,255,255,.55);
+  border-top-color:rgba(10,18,48,.08);
+}
+.chat-gp-pin-lab{
+  display:block;
+  width:100%;
+  font:700 8.5px/17px ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.18em;
+  text-indent:.18em;
+  text-align:center;
+  text-transform:uppercase;
+  color:rgba(207,232,248,.62);
+  user-select:none;
+  -webkit-user-select:none;
+}
+[data-theme="light"] .chat-gp-pin-lab{color:rgba(10,18,48,.42)}
+.chat-gp-row.has-thumb .chat-gp-pin-lab{color:rgba(232,244,255,.78)}
+[data-theme="light"] .chat-gp-row.has-thumb .chat-gp-pin-lab{color:rgba(10,18,48,.5)}
+
+/* R2 Media rail — taller left media strip, no blur wash */
+html[data-gprows="r2"] .chat-gp-bg{display:none}
+html[data-gprows="r2"] .chat-gp-body{gap:12px;padding:8px 10px 8px 8px;min-height:64px}
+html[data-gprows="r2"] .chat-gp-row.is-pinned .chat-gp-body{padding-bottom:calc(8px + 17px)}
+html[data-gprows="r2"] .chat-gp-pic{
+  width:56px;
+  height:56px;
+  border-radius:12px;
+  border-width:0;
+  box-shadow:inset 0 0 0 .5px rgba(127,127,127,.25);
+}
+html[data-gprows="r2"] .chat-gp-title{-webkit-line-clamp:2;font-size:13px}
+html[data-gprows="r2"] .chat-gp-meta{gap:8px}
+html[data-gprows="r2"] .chat-gp-row{
+  background:var(--menu-glass-bg, rgba(127,127,127,.1));
+  border:.5px solid var(--menu-glass-border, rgba(127,127,127,.18));
+}
+html[data-gprows="r2"][data-theme="light"] .chat-gp-row{background:rgba(255,255,255,.72)}
+
+/* R3 Magazine — wash-forward, smaller floating thumb */
+html[data-gprows="r3"] .chat-gp-body{
+  flex-direction:row-reverse;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 12px 10px;
+  min-height:72px;
+}
+html[data-gprows="r3"] .chat-gp-row.is-pinned .chat-gp-body{padding-bottom:calc(10px + 17px)}
+html[data-gprows="r3"] .chat-gp-pic{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  margin-top:1px;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+}
+html[data-gprows="r3"] .chat-gp-title{
+  font-size:14px;
+  -webkit-line-clamp:2;
+  letter-spacing:-.03em;
+}
+html[data-gprows="r3"] .chat-gp-meta{margin-top:2px;gap:8px}
+html[data-gprows="r3"] .chat-gp-row:not(.has-thumb){
+  background:rgba(80,140,255,.1);
+}
+html[data-gprows="r3"][data-theme="light"] .chat-gp-row:not(.has-thumb){
+  background:#f2f3f7;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .chat-gp-row{transition:none}
+}
 /* Poll composer (per dc): compact, matches Q3 dots card — black gradient + faint dots, sheet glass host, light-blue accent */
 .chat-plus-menu.chat-pbig-poll{width:min(320px,calc(100vw - 20px));padding:10px;gap:0;overflow:hidden}
 .chat-pbig-poll .chat-pbig-hd{padding:0 2px 8px;margin:0}
@@ -9948,7 +10203,6 @@ svg[data-hi].hi-play {
 .chat-ge-pic>img,.chat-ge-pic>.chat-avatar-wrap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;display:block!important}
 .chat-ge-pic img,.chat-ge-pic .chat-avatar-img,.chat-ge-pic .chat-avatar{width:100%!important;height:100%!important;object-fit:cover!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;position:static!important}
 [data-theme="light"] .chat-ge{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(20,30,60,.10)}
-[data-theme="light"] .chat-gp-row.chat-ge{background:rgba(0,0,0,.04);box-shadow:none}
 /* One menu glass for every menu/popover: the profile card's look (its glass over the .45 scrim) without needing a scrim (per dc) */
 [data-theme] { --menu-glass-bg: rgba(250, 250, 252, 0.78); --menu-glass-filter: blur(24px) saturate(160%); --menu-glass-border: rgba(0, 0, 0, 0.08); }
 [data-theme="dark"] { --menu-glass-bg: rgba(13, 13, 17, 0.72); --menu-glass-border: rgba(255, 255, 255, 0.1); }
