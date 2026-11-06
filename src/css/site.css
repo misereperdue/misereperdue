@@ -10133,13 +10133,15 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-vrec.is-deaf .chat-vrec-hint { display: block; }
 .chat-vrec.is-deaf .chat-vrec-wv { display: none; }
 .chat-vrec.is-busy .chat-vrec-hint { display: none; }
-/* ---------- Profile bubble (per dc): glass from frame 1 (Safari: never opacity-animate backdrop-filter) ----------
-   Root stays opacity:1; clip-path grows from the tail tip. Shape keeps --sheet-* blur at full strength.
-   Only .mp-pb-body fades/scales — so WebKit composites backdrop-filter throughout the open. */
+/* ---------- Profile bubble (per dc): frosted from frame 1 on WebKit ----------
+   Safari lags/drops backdrop-filter during transform/clip/mask/opacity on the glass
+   layer. Keep .mp-pb-shape at full size + opacity 1 with both backdrop-filter
+   prefixes and NO mask/clip. Grow/fade only .mp-pb-body from the tip. A denser
+   .mp-pb-frost tint covers the first paints until blur composites. */
 .mp-pb{
   position:fixed;
   z-index:2147483000;
-  isolation:isolate;
+  /* no isolation:isolate — Safari can fail to sample the page behind for backdrop-filter */
   width:min(280px,calc(100vw - 20px));
   padding:14px 14px 6px;
   border-radius:20px;
@@ -10147,44 +10149,95 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   outline:none;
   -webkit-user-select:none;
   user-select:none;
-  /* always opaque — opacity on this (or ancestors) kills iOS backdrop-filter mid-animation */
   opacity:1;
-  /* grow from tip via clip, not via opacity */
-  clip-path:circle(0px at var(--ax,50%) var(--ay,0px));
-  transition:clip-path .26s cubic-bezier(.32,.72,0,1);
-  will-change:clip-path;
-}
-.mp-pb.is-in{
-  clip-path:circle(150% at var(--ax,50%) var(--ay,0px));
+  /* root does not scale/fade — that would kill Safari backdrop-filter */
+  transform:none;
 }
 .mp-pb.is-out{
-  clip-path:circle(0px at var(--ax,50%) var(--ay,0px));
-  transition:clip-path .18s cubic-bezier(.32,.72,0,1);
   pointer-events:none;
 }
 .mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
-/* glass layer: full blur + --sheet-bg from first paint; never opacity-animated */
+/* glass panel: always full size, always opacity 1, both prefixes, no mask/clip */
 .mp-pb-shape{
   position:absolute;
-  left:0;right:0;top:-7px;bottom:0;
+  left:0;right:0;top:0;bottom:0;
   z-index:0;
   pointer-events:none;
+  border-radius:20px;
   background:var(--sheet-bg);
   -webkit-backdrop-filter:var(--sheet-blur);
   backdrop-filter:var(--sheet-blur);
   box-shadow:var(--sheet-shadow,0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08));
-  -webkit-mask-repeat:no-repeat;
-  mask-repeat:no-repeat;
-  -webkit-mask-size:100% 100%;
-  mask-size:100% 100%;
+  border:var(--sheet-border,0.5px solid rgba(255,255,255,.22));
+  opacity:1;
+  transform:none;
+  transition:none!important;
+}
+/* denser frost under glass so frame 1 never looks clear/translucent; fades after blur is up */
+.mp-pb-frost{
+  position:absolute;
+  left:0;right:0;top:0;bottom:0;
+  z-index:1;
+  pointer-events:none;
+  border-radius:20px;
+  /* solid overlay above glass — covers clear/translucent first paints until blur is up */
+  background:rgba(28,28,34,.88);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  opacity:1;
+  transition:opacity .3s cubic-bezier(.32,.72,0,1) .05s;
+}
+[data-theme="light"] .mp-pb-frost{
+  background:rgba(255,255,255,.92);
+}
+.mp-pb.is-frosted .mp-pb-frost{opacity:0}
+.mp-pb.is-out .mp-pb-frost{opacity:1;transition:opacity .14s ease}
+/* tip diamond — same glass treatment, no mask */
+.mp-pb-tail{
+  position:absolute;
+  z-index:0;
+  width:14px;height:14px;
+  left:var(--ax,50%);
+  top:var(--ay,0px);
+  margin-left:-7px;
+  margin-top:-7px;
+  pointer-events:none;
+  background:var(--sheet-bg);
+  -webkit-backdrop-filter:var(--sheet-blur);
+  backdrop-filter:var(--sheet-blur);
+  border:var(--sheet-border,0.5px solid rgba(255,255,255,.22));
+  border-bottom:0;
+  border-right:0;
+  transform:rotate(45deg);
   opacity:1;
   transition:none!important;
 }
-.mp-pb.is-above .mp-pb-shape{top:0;bottom:-7px;transition:none!important}
-/* content: fade + slight scale from tip (safe — no backdrop-filter here) */
+.mp-pb.is-above .mp-pb-tail{
+  border:var(--sheet-border,0.5px solid rgba(255,255,255,.22));
+  border-top:0;
+  border-left:0;
+}
+/* matching frost on the tip so it never flashes clear */
+.mp-pb-tail::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(22,22,26,.82);
+  opacity:1;
+  transition:opacity .28s cubic-bezier(.32,.72,0,1) .08s;
+}
+[data-theme="light"] .mp-pb-tail::before{background:rgba(255,255,255,.78)}
+.mp-pb.is-frosted .mp-pb-tail::before{opacity:0}
+.mp-pb-line{
+  position:absolute;inset:0;width:100%;height:100%;
+  overflow:visible;fill:none;stroke:rgba(0,0,0,.12);stroke-width:1;
+  pointer-events:none;z-index:2;opacity:.9;
+}
+[data-theme="dark"] .mp-pb-line{stroke:rgba(255,255,255,.22)}
+/* content alone grows from the tip + fades — safe for Safari */
 .mp-pb-body{
   position:relative;
-  z-index:1;
+  z-index:2;
   opacity:0;
   transform:scale(.85);
   transform-origin:var(--ax,50%) var(--ay,0px);
@@ -10201,8 +10254,11 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   transition:opacity .18s cubic-bezier(.32,.72,0,1),transform .18s cubic-bezier(.32,.72,0,1);
   transition-property:opacity,transform;
 }
-.mp-pb-line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke:rgba(0,0,0,.12);stroke-width:1}
-[data-theme="dark"] .mp-pb-line{stroke:rgba(255,255,255,.22)}
+.mp-pb.is-out .mp-pb-shape,
+.mp-pb.is-out .mp-pb-tail{
+  opacity:0;
+  transition:opacity .18s ease!important;
+}
 .mp-pb-hd{display:flex;align-items:center;gap:12px}
 .mp-pb-hd>.chat-avatar-wrap{flex:none;width:52px;height:52px;position:relative}
 .mp-pb-hd>.chat-avatar-wrap>img,.mp-pb-hd>.chat-avatar-wrap>.chat-avatar{width:52px!important;height:52px!important;border-radius:50%;object-fit:cover;font-size:24px}
@@ -10235,7 +10291,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-act:disabled{opacity:.5}
 .mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
 .mp-pb-full svg{width:14px;height:14px}
-@media (prefers-reduced-motion:reduce){.mp-pb,.mp-pb.is-out{transition:none;clip-path:circle(150% at var(--ax,50%) var(--ay,0px))}.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}}
+@media (prefers-reduced-motion:reduce){.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}.mp-pb-frost,.mp-pb-tail::before{transition:none;opacity:0}}.mp-pb-frost{transition:none;opacity:0}}}
 /* ===== Globe thread cards G1–G3 (per dc) =====
    data-gcards=g1 Editorial (default) | g2 Media-first | g3 Compact magazine
    Switch: MPForum.setCards('g2') or localStorage mp-gcards. */

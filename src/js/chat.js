@@ -995,11 +995,22 @@
         .catch(function () {});
   }
   /* Profile bubble (per dc): compact profile popover anchored to the tapped avatar.
-     "Full profile" opens the old sheet (K), which keeps the larger avatar and owner tools.
-     Open path (per dc glitch fix): cache user, measure while visibility:hidden, set final
-     left/top/transform-origin/mask before reveal, animate opacity+scale only, delay
-     dismiss listeners so iOS momentum scroll / the opening tap can't close it. */
-  var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null);
+     WebKit: never opacity/clip/mask the backdrop-filter layer — scale from tip, fade body.
+     Pre-warm a hidden glass layer so Safari's backdrop compositor is ready on first open. */
+  var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
+  function mpPBwarm() {
+    if (mpPBwarmed) return;
+    mpPBwarmed = !0;
+    try {
+      var w = document.createElement("i");
+      w.setAttribute("aria-hidden", "true");
+      w.style.cssText = "position:fixed;left:0;top:0;width:40px;height:40px;opacity:1;pointer-events:none;z-index:-1;border-radius:12px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur)";
+      document.body.appendChild(w);
+      void w.offsetWidth;
+      void getComputedStyle(w).webkitBackdropFilter;
+      setTimeout(function () { w.remove(); }, 1200);
+    } catch (e) {}
+  }
   function mpPBclose(fast) {
     var b = mpPBel;
     if (!b) return;
@@ -1127,13 +1138,22 @@
     fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
     fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
     body.appendChild(fp);
-    /* glass shape first (backdrop-filter layer stays opacity 1); content in .mp-pb-body fades/scales */
+    /* glass layers first — NO mask/clip on backdrop-filter (Safari drops the frost otherwise).
+       frost = denser tint safety net; shape + tip diamond carry --sheet-* blur at opacity 1. */
+    var frost = document.createElement("i");
+    frost.className = "mp-pb-frost";
+    frost.setAttribute("aria-hidden", "true");
     var shp = document.createElement("i");
     shp.className = "mp-pb-shape";
     shp.setAttribute("aria-hidden", "true");
+    var tip = document.createElement("i");
+    tip.className = "mp-pb-tail";
+    tip.setAttribute("aria-hidden", "true");
     b.appendChild(shp);
+    b.appendChild(tip);
+    b.appendChild(frost);
     b.appendChild(body);
-    /* measure while fully inert: no transitions, not painted. Seat final left/top/origin BEFORE first paint. */
+    /* measure while inert; seat final left/top/origin before first paint */
     b.style.visibility = "hidden";
     b.style.pointerEvents = "none";
     b.style.transition = "none";
@@ -1158,39 +1178,34 @@
     left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
     ax = Math.max(28, Math.min(cx - left, w - 28));
     top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
-    (function () {
-      var R = 20, T = TH, H = h, W = w, a = ax,
-        d = "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T + "L" + (a - 9) + " " + T +
-          "C" + (a - 4.5) + " " + T + " " + (a - 2.4) + " 0.4 " + a + " 0.4" +
-          "C" + (a + 2.4) + " 0.4 " + (a + 4.5) + " " + T + " " + (a + 9) + " " + T +
-          "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) + "L" + W + " " + (T + H - R) +
-          "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) + "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z",
-        fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
-        vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
-        mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>') + "\")";
-      shp.style.cssText = "-webkit-mask-image:" + mk + ";mask-image:" + mk + ";transition:none";
-      shp.innerHTML = '<svg class="mp-pb-line" ' + vb + '><path' + fl + ' d="' + d + '"/></svg>';
-    })();
     b.classList.add(below ? "is-below" : "is-above");
-    /* final seat + tip clip origin under transition:none — no left/top interpolate */
     b.style.left = left + "px";
     b.style.top = top + "px";
     b.style.setProperty("--ax", ax + "px");
-    /* tip of the tail (shape overhangs ±TH); clip-path + body transform-origin share these */
-    b.style.setProperty("--ay", below ? -TH + "px" : h + TH + "px");
-    b.style.willChange = "clip-path";
-    void b.offsetWidth;
+    /* tip sits on the rim facing the avatar */
+    b.style.setProperty("--ay", below ? "0px" : h + "px");
+    b.style.willChange = "auto";
+    body.style.willChange = "transform, opacity";
+    /* force style/layout so WebKit builds the backdrop-filter layer while still hidden */
+    void shp.offsetWidth;
+    void getComputedStyle(shp).webkitBackdropFilter;
+    void getComputedStyle(shp).backdropFilter;
     mpPBel = b;
-    /* double rAF: first paint at rest (clip 0, glass ready), then expand clip + fade body */
+    /* triple rAF: let Safari composite the glass, then reveal at rest scale, then is-in */
     requestAnimationFrame(function () {
       if (mpPBel !== b) return;
-      b.style.visibility = "";
-      b.style.transition = "";
       requestAnimationFrame(function () {
         if (mpPBel !== b) return;
-        b.classList.add("is-in");
-        b.style.pointerEvents = "";
-        setTimeout(function () { if (mpPBel === b) b.style.willChange = "auto"; }, 300);
+        b.style.visibility = "";
+        b.style.transition = "";
+        requestAnimationFrame(function () {
+          if (mpPBel !== b) return;
+          b.classList.add("is-in");
+          b.style.pointerEvents = "";
+          /* denser frost stays until Safari composites backdrop-filter */
+          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 220);
+          setTimeout(function () { if (mpPBel === b) body.style.willChange = "auto"; }, 320);
+        });
       });
     });
     try { b.focus({ preventScroll: !0 }); } catch (e) {}
@@ -1226,6 +1241,7 @@
     if (!u) return;
     if (!anchor || !anchor.isConnected) return K(u);
     if (mpPBel && mpPBel._u === u && mpPBel._a === anchor) return mpPBclose();
+    mpPBwarm();
     mpPBclose(!0);
     var rq = ++mpPBreq,
       cached = mpPBget(u);
