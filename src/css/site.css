@@ -510,13 +510,13 @@ body.crop-hero-shop .hero {
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
 }
@@ -4277,20 +4277,20 @@ html {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   /* room for selected orb ring/glow/shadow; negative margin keeps layout */
-  padding: 12px 14px 14px;
-  margin: -12px -14px 8px;
-  scroll-padding-inline: 14px;
+  padding: 16px 16px 18px;
+  margin: -16px -16px 8px;
+  scroll-padding-inline: 16px;
   /* soft right fade while more content is off-screen; at-start keeps first pill unfaded */
   -webkit-mask-image: linear-gradient(
     to right,
     #000 0%,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     #000 0%,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
 }
@@ -4303,14 +4303,14 @@ html {
     to right,
     transparent 0%,
     #000 36px,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     transparent 0%,
     #000 36px,
-    #000 calc(100% - 40px),
+    #000 calc(100% - 48px),
     transparent 100%
   );
 }
