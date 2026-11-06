@@ -2134,7 +2134,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               (i ? '<span class="forum-thread-pill-badge">' + i + "</span>" : "") +
               '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-age">' +
               k(t.lastActivity) +
-              '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-replies">💬 ' +
+              '</span><span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-replies">' +
+              '<svg class="forum-thread-replies-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.05 3.35c4.55 0 8.15 2.7 8.15 6.05s-3.6 6.05-8.15 6.05c-.88 0-1.7-.1-2.45-.28l-3.4 2.4c-.48.34-1.12-.06-.98-.62l.5-2.15C4.35 13.7 3.9 12.55 3.9 9.4c0-3.35 3.6-6.05 8.15-6.05z"/></svg> ' +
               (Number(t.replies) || 0) +
               "</span></span>") +
             (t.excerpt ? '<span class="forum-thread-excerpt">' + w(t.excerpt) + "</span>" : "") +
@@ -2181,7 +2182,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           } else {
             lastHtml =
               '<span class="forum-thread-last is-empty" aria-label="No comments yet">' +
-              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 5.4h9.6c1.55 0 2.8 1.2 2.8 2.7v5.1c0 1.5-1.25 2.7-2.8 2.7H12.1L8.4 18.4c-.35.28-.85.03-.85-.4v-2.1H7.2c-1.55 0-2.8-1.2-2.8-2.7V8.1c0-1.5 1.25-2.7 2.8-2.7Z"/></svg></span>' +
+              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.05 3.35c4.55 0 8.15 2.7 8.15 6.05s-3.6 6.05-8.15 6.05c-.88 0-1.7-.1-2.45-.28l-3.4 2.4c-.48.34-1.12-.06-.98-.62l.5-2.15C4.35 13.7 3.9 12.55 3.9 9.4c0-3.35 3.6-6.05 8.15-6.05z"/></svg></span>' +
               '<span class="forum-thread-last-body">' +
               '<span class="forum-thread-last-text forum-thread-last-empty">No comments yet</span>' +
               "</span></span>";

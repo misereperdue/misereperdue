@@ -10846,13 +10846,27 @@ html[data-gcards="g3"] .forum-thread-row.is-pinned > .forum-thread-foot {
   background: rgba(10, 18, 48, 0.08);
   color: var(--muted);
 }
-.forum-thread-last-ico {
-  width: 12px;
-  height: 12px;
+.forum-thread-replies {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.forum-thread-replies-ico {
+  width: 11px;
+  height: 11px;
   display: block;
   flex: none;
-  /* viewBox already pads the glyph; nudge 0.5px up for optical center vs soft tail */
-  transform: translateY(-0.4px);
+  /* Match empty-state bubble optical nudge at text size */
+  transform: translate(0.2px, -0.35px);
+}
+.forum-thread-last-ico {
+  width: 13px;
+  height: 13px;
+  display: block;
+  flex: none;
+  /* Tail pulls mass down-left — nudge up/right for optical center in the 20px circle */
+  transform: translate(0.35px, -0.55px);
 }
 .forum-thread-last.is-empty {
   align-items: center;
