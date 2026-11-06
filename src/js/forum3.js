@@ -1946,15 +1946,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   function syncPinRails(root) {
     var scope = root || t || document;
     if (!scope || !scope.querySelectorAll) return;
-    var inset = 10,
-      letters = 6,
-      glyph = 9;
+    var inset = 12;
     scope.querySelectorAll(".forum-pin-rail").forEach(function (rail) {
-      var h = rail.offsetHeight || 0;
-      if (h < 1) return;
-      var gaps = letters - 1;
-      var ls = Math.max(0, (h - inset * 2 - glyph * letters) / gaps);
-      rail.style.setProperty("--pin-ls", ls.toFixed(2) + "px");
       rail.style.setProperty("--pin-inset", inset + "px");
     });
   }
@@ -2109,7 +2102,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
             (t.pinned
-              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true">PINNED</span></span>'
+              ? '<span class="forum-pin-rail" aria-label="Pinned"><span class="forum-pin-rail-lab" aria-hidden="true"><span class="forum-pin-rail-ch">P</span><span class="forum-pin-rail-ch">I</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">N</span><span class="forum-pin-rail-ch">E</span><span class="forum-pin-rail-ch">D</span></span></span>'
               : "") +
             '<button type="button" class="forum-thread' +
             (t.thumb ? " has-thumb" : "") +

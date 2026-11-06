@@ -10504,7 +10504,7 @@ html:not([data-gcards]) {
   text-shadow: none;
   filter: none;
 }
-/* Pin indicator — vertical side rail only (per dc). No pill / setPin styles. */
+/* Pin indicator — bottom band (per dc). No left stripe / pill / setPin. */
 .forum-pin-mark,
 .forum-pin-flag,
 .forum-pin-flag-ico,
@@ -10514,9 +10514,11 @@ html:not([data-gcards]) {
 .forum-pin-rail {
   position: absolute;
   left: 0;
-  top: 0;
+  right: 0;
   bottom: 0;
-  width: 17px;
+  top: auto;
+  width: auto;
+  height: 19px;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -10524,42 +10526,52 @@ html:not([data-gcards]) {
   pointer-events: none;
   box-sizing: border-box;
   background: rgba(169, 215, 245, 0.12);
-  border-right: 0.5px solid rgba(169, 215, 245, 0.18);
-  --pin-ls: 0.2em;
-  --pin-inset: 10px;
+  border-top: 0.5px solid rgba(169, 215, 245, 0.18);
+  --pin-ls: 0px;
+  --pin-inset: 12px;
+  --pin-band: 19px;
 }
 html[data-theme="dark"] .forum-pin-rail,
 [data-theme="dark"] .forum-pin-rail {
   background: rgba(169, 215, 245, 0.12);
-  border-right: 0.5px solid rgba(169, 215, 245, 0.18);
+  border-top-color: rgba(169, 215, 245, 0.18);
 }
 html[data-theme="light"] .forum-pin-rail,
 [data-theme="light"] .forum-pin-rail {
   background: rgba(10, 18, 48, 0.06);
-  border-right: 0.5px solid rgba(10, 18, 48, 0.08);
+  border-top-color: rgba(10, 18, 48, 0.08);
 }
 .forum-thread-row.has-thumb .forum-pin-rail {
   background: rgba(0, 0, 0, 0.28);
-  border-right-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 html[data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail,
 [data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail {
   background: rgba(255, 255, 255, 0.55);
-  border-right-color: rgba(10, 18, 48, 0.08);
+  border-top-color: rgba(10, 18, 48, 0.08);
 }
 .forum-pin-rail-lab {
-  /* Single run, 90° CCW (bottom→top): vertical-rl + rotate 180 */
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font: 700 9px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: var(--pin-ls, 0.2em);
-  text-transform: uppercase;
+  /* Full-width band label: letters span with equal end insets via space-between */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(100% - (var(--pin-inset, 12px) * 2));
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   color: rgba(207, 232, 248, 0.62);
   user-select: none;
   -webkit-user-select: none;
-  max-height: calc(100% - (var(--pin-inset, 10px) * 2));
-  box-sizing: border-box;
-  text-align: center;
+}
+.forum-pin-rail-ch {
+  display: block;
+  font: 700 9px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  flex: none;
 }
 html[data-theme="light"] .forum-pin-rail-lab,
 [data-theme="light"] .forum-pin-rail-lab {
@@ -10572,31 +10584,21 @@ html[data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail-lab,
 [data-theme="light"] .forum-thread-row.has-thumb .forum-pin-rail-lab {
   color: rgba(10, 18, 48, 0.5);
 }
-/* Shift content so left column clears the rail; right edge unchanged */
-.forum-thread-row.is-pinned > .forum-thread {
-  padding-left: 31px;
-}
+/* Bottom band clearance: keep normal left padding; lift foot above the band */
 .forum-thread-row.is-pinned > .forum-thread-foot {
-  padding-left: 31px;
-}
-html[data-gcards="g3"] .forum-thread-row.is-pinned > .forum-thread {
-  padding-left: 29px;
-}
-html[data-gcards="g3"] .forum-thread-row.is-pinned > .forum-thread-foot {
-  padding-left: 29px;
-}
-html[data-gcards="g2"] .forum-thread-row.is-pinned > .forum-thread {
-  padding-left: 0;
-}
-html[data-gcards="g2"] .forum-thread-row.is-pinned .forum-thread-main {
-  padding-left: 31px;
+  padding-bottom: calc(14px + var(--pin-band, 19px));
 }
 html[data-gcards="g2"] .forum-thread-row.is-pinned > .forum-thread-foot {
-  padding-left: 31px;
+  padding-bottom: calc(12px + var(--pin-band, 19px));
+}
+html[data-gcards="g3"] .forum-thread-row.is-pinned > .forum-thread-foot {
+  padding-bottom: calc(10px + var(--pin-band, 19px));
 }
 .forum-thread-row.is-pinned {
   box-shadow: none !important;
+  --pin-band: 19px;
 }
+
 .forum-pin-chip-inline,
 .forum-pin-chip {
   display: none;
