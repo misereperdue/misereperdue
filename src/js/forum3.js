@@ -2056,20 +2056,46 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
         (n ? "" : " hidden") +
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
-      (u +=
-        '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Pull to refresh or post">' +
-        '<span class="forum-pullpost-seg" aria-hidden="true">' +
-        '<span class="forum-pullpost-thumb"></span>' +
-        '<span class="forum-pullpost-chip" data-chip="1">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
-        '<span>Refresh</span></span>' +
-        '<span class="forum-pullpost-chip" data-chip="2">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
-        '<span>Post</span></span>' +
-        '</span>' +
-        '<span class="forum-pullpost-busy" aria-hidden="true">' +
-        '<span class="forum-pullpost-spin"></span><span>Refreshing</span>' +
-        '</span></button>'),
+      (u += (function () {
+        var pullStyle = "q1";
+        try {
+          var ps = localStorage.getItem("mp-pull-style");
+          if (ps === "p2" || ps === "q1") pullStyle = ps;
+        } catch (e) {}
+        var busy =
+          '<span class="forum-pullpost-busy" aria-hidden="true">' +
+          '<span class="forum-pullpost-spin"></span><span>Refreshing</span></span>';
+        if (pullStyle === "p2") {
+          return (
+            '<button type="button" class="forum-pullpost forum-pullpost--p2" id="forum-pullpost" data-style="p2" aria-label="Pull to refresh or post">' +
+            '<span class="forum-pullpost-seg" aria-hidden="true">' +
+            '<span class="forum-pullpost-thumb"></span>' +
+            '<span class="forum-pullpost-chip" data-chip="1">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
+            '<span>Refresh</span></span>' +
+            '<span class="forum-pullpost-chip" data-chip="2">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
+            '<span>Post</span></span></span>' +
+            busy +
+            "</button>"
+          );
+        }
+        return (
+          '<button type="button" class="forum-pullpost forum-pullpost--q1" id="forum-pullpost" data-style="q1" aria-label="Pull to refresh or post">' +
+          '<span class="forum-pullpost-q1" aria-hidden="true">' +
+          '<span class="forum-pullpost-labs">' +
+          '<span class="forum-pullpost-lab" data-lab="0">Pull</span>' +
+          '<span class="forum-pullpost-lab" data-lab="1">Refresh</span>' +
+          '<span class="forum-pullpost-lab" data-lab="2">Post</span>' +
+          "</span>" +
+          '<span class="forum-pullpost-track">' +
+          '<span class="forum-pullpost-fill"></span>' +
+          '<span class="forum-pullpost-tick"></span>' +
+          "</span></span>" +
+          busy +
+          "</button>"
+        );
+      })()),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2569,7 +2595,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }, 380);
     }, 180);
   }
-  // Globe list: two-stage pull — ~70px refresh, ~150px post; segmented Refresh|Post (per dc).
+  // Globe list: two-stage pull — ~70px refresh, ~150px post; Q1 text+track (P2 via mp-pull-style).
   // Transform ONLY .forum-pull-body (topbar stays fixed). Global PTR stays off
   // on Globe via __mpPullToPost / #forum.on. Reduced-motion: snap, no springs.
 
