@@ -3774,6 +3774,122 @@
       c.setAttribute("aria-label", "Globe post by " + mpAt(th.author) + ": " + (th.title || ""));
     });
   }
+
+  /* Apple Music powered-by crossfade (per dc): title/artist <-> live text
+     mark (U+F8FF + "music" on Apple fonts; "Apple Music" fallback). No scraped assets. */
+  var mpAmHasGlyph = null, mpAmSeq = 0;
+  function mpAmDetect() {
+    if (mpAmHasGlyph != null) return mpAmHasGlyph;
+    try {
+      var ua = navigator.userAgent || "";
+      var plat = navigator.platform || "";
+      var uaDataPlat = (navigator.userAgentData && navigator.userAgentData.platform) || "";
+      // Prefer platform / userAgentData; ignore a spoofed Macintosh UA on Linux/Win (e.g. Playwright WebKit).
+      var nonAppleHost = /Linux|Win|Android/i.test(plat) || /Linux|Windows|Android/i.test(String(uaDataPlat));
+      var apple =
+        /^(Mac|iPhone|iPad|iPod)/i.test(plat) ||
+        /^(macOS|iOS)/i.test(String(uaDataPlat)) ||
+        (!nonAppleHost && /\b(iPhone|iPad|Macintosh)\b/.test(ua));
+      var c = document.createElement("canvas");
+      var ctx = c.getContext("2d");
+      if (!ctx) return (mpAmHasGlyph = !!apple);
+      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
+      var wLogo = ctx.measureText("\uF8FF").width;
+      var wTofu = ctx.measureText("\uFFFE").width;
+      var wAlt = ctx.measureText("\uF8FE").width;
+      // Real Apple glyph is wide and distinct from .notdef / empty PUA
+      var distinct = wLogo > 8 && Math.abs(wLogo - wTofu) > 1.5 && Math.abs(wLogo - wAlt) > 0.75;
+      mpAmHasGlyph = !!(apple && distinct);
+    } catch (_) {
+      mpAmHasGlyph = !1;
+    }
+    return mpAmHasGlyph;
+  }
+  function mpAmMarkText() {
+    return mpAmDetect() ? "\uF8FFmusic" : "Apple Music";
+  }
+  function mpAmStart(card) {
+    if (!card || card._mpAmOn) return;
+    card._mpAmOn = !0;
+    try {
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    } catch (_) {}
+    var showing = !1,
+      timer = null,
+      onScreen = !0,
+      pageOn = !document.hidden,
+      stagger = (mpAmSeq++ % 8) * 420,
+      first = !0;
+    function clear() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+    function arm() {
+      clear();
+      if (!onScreen || !pageOn) return;
+      var wait = showing ? 2000 : first ? 4800 + stagger : 4800;
+      timer = setTimeout(function () {
+        first = !1;
+        showing = !showing;
+        card.classList.toggle("show-am", showing);
+        arm();
+      }, wait);
+    }
+    function pauseOff() {
+      clear();
+      if (showing) {
+        showing = !1;
+        card.classList.remove("show-am");
+      }
+    }
+    try {
+      var io = new IntersectionObserver(
+        function (ents) {
+          onScreen = !!(ents[0] && ents[0].isIntersecting);
+          onScreen && pageOn ? arm() : pauseOff();
+        },
+        { threshold: 0.2 }
+      );
+      io.observe(card);
+    } catch (_) {
+      onScreen = !0;
+    }
+    document.addEventListener("visibilitychange", function () {
+      pageOn = !document.hidden;
+      pageOn && onScreen ? arm() : pauseOff();
+    });
+    arm();
+  }
+  function mpAmWire(card) {
+    if (!card || card.querySelector(".chat-np-meta")) return;
+    var tx = card.querySelector(".chat-np-tx");
+    var lines = card.querySelectorAll(".chat-np-line");
+    if (!tx || lines.length < 2) return;
+    var meta = document.createElement("span");
+    meta.className = "chat-np-meta";
+    var info = document.createElement("span");
+    info.className = "chat-np-info";
+    lines[0].parentNode.insertBefore(meta, lines[0]);
+    info.appendChild(lines[0]);
+    info.appendChild(lines[1]);
+    meta.appendChild(info);
+    var am = document.createElement("span");
+    am.className = "chat-np-am";
+    am.setAttribute("aria-hidden", "true");
+    var mark = document.createElement("span");
+    mark.className = "chat-np-am-mark" + (mpAmDetect() ? "" : " is-fallback");
+    mark.textContent = mpAmMarkText();
+    am.appendChild(mark);
+    meta.appendChild(am);
+    var sr = document.createElement("span");
+    sr.className = "chat-np-am-sr";
+    sr.textContent = "Powered by Apple Music";
+    tx.appendChild(sr);
+    mpAmStart(card);
+  }
+
   function mpNowListening(e, t, n, a) {
     var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
     if (!r || /^\+\d/.test(String(t).trim())) return;
@@ -3821,6 +3937,7 @@
       ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");
       ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), c.querySelector(".chat-np-tx").appendChild(u));
+      mpAmWire(c);
       n.url &&
         /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url) &&
         (c.setAttribute("role", "link"),
