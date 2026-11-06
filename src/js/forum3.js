@@ -130,9 +130,13 @@
     a = !1,
     o = !1,
     i = 0,
-    l = 0;
+    l = 0,
+    searchOpen = !1;
   try {
     l = parseInt(sessionStorage.getItem("mp-forum-cat-scroll") || "0", 10) || 0;
+  } catch (e) {}
+  try {
+    searchOpen = sessionStorage.getItem("mp-forum-search-open") === "1";
   } catch (e) {}
   var s = "",
     d = "",
@@ -1961,10 +1965,17 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       s = !(!d || document.activeElement !== d);
     } catch (e) {}
     var u = '<div class="forum-anim">' + be();
-    ((u += '<div class="forum-cats">'),
+    (n && (searchOpen = !0),
+      (u += '<div class="forum-cats">'),
+      (u +=
+        '<button type="button" class="forum-cat forum-cat-search' +
+        (searchOpen ? " on" : "") +
+        '" data-search-toggle="1" aria-label="Search" aria-expanded="' +
+        (searchOpen ? "true" : "false") +
+        '" title="Search"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'),
       (u +=
         '<button type="button" class="forum-cat' +
-        ("" === r.category ? " on" : "") +
+        ("" === r.category && !searchOpen ? " on" : "") +
         '" data-cat="">All</button>'),
       b.categories.forEach(function (e) {
         var t = "";
@@ -1988,24 +1999,17 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             "</button>"));
       }),
       (u += "</div>"),
-      (function () {
-        var e = "";
-        if (r.category) {
-          var t = null;
-          (b.categories.forEach(function (e) {
-            e.id === r.category && (t = e);
-          }),
-            t && (e = t.name));
-        }
-        u +=
-          '<div class="forum-search"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg><input type="text" class="forum-search-input" placeholder="' +
-          w(e ? "Search in " + e : "Search all threads") +
-          '" value="' +
-          w(n) +
-          '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="forum-search-clear" aria-label="Clear search"' +
-          (n && s ? "" : ' style="display:none"') +
-          '><svg width="12" height="12" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div>';
-      })(),
+      (u +=
+        '<div class="forum-search-slot' +
+        (searchOpen ? " is-open" : "") +
+        '"><div class="forum-search-inner"><div class="forum-search">' +
+        '<svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+        '<input type="text" class="forum-search-input" placeholder="Search threads" value="' +
+        w(n) +
+        '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">' +
+        '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
+        (n ? "" : ' hidden') +
+        '><svg width="12" height="12" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2125,17 +2129,23 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               '<span class="forum-thread-last-text">' +
               w(lr.text) +
               "</span></span></span>";
+          } else {
+            lastHtml =
+              '<span class="forum-thread-last is-empty" aria-label="No comments yet">' +
+              '<span class="forum-thread-last-ico-wrap"><svg class="forum-thread-last-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.2 18.6 3.8 21.2a.7.7 0 0 0 1 .85l3.4-1.55A8.6 8.6 0 1 0 5.2 18.6Z"/></svg></span>' +
+              '<span class="forum-thread-last-body">' +
+              '<span class="forum-thread-last-text forum-thread-last-empty">No comments yet</span>' +
+              "</span></span>";
           }
-          ((lastHtml || canManage) &&
-            (u +=
-              '<div class="forum-thread-foot">' +
-              lastHtml +
-              (canManage
-                ? '<button type="button" class="forum-thread-more" data-more="' +
-                  w(t.id) +
-                  '" aria-label="More">···</button>'
-                : "") +
-              "</div>"),
+          (u +=
+            '<div class="forum-thread-foot">' +
+            lastHtml +
+            (canManage
+              ? '<button type="button" class="forum-thread-more" data-more="' +
+                w(t.id) +
+                '" aria-label="More">···</button>'
+              : "") +
+            "</div>",
             (u += "</div>"));
         }),
         (u += "</div>"))
@@ -2159,6 +2169,43 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       });
     } catch (e) {}
     (!(function () {
+      var slot = t.querySelector(".forum-search-slot"),
+        toggle = t.querySelector("[data-search-toggle]");
+      function setOpen(on) {
+        searchOpen = !!on;
+        try {
+          sessionStorage.setItem("mp-forum-search-open", searchOpen ? "1" : "0");
+        } catch (e) {}
+        if (slot) slot.classList.toggle("is-open", searchOpen);
+        if (toggle) {
+          toggle.classList.toggle("on", searchOpen);
+          toggle.setAttribute("aria-expanded", searchOpen ? "true" : "false");
+        }
+        /* All pill: selected only when no category and search closed */
+        var allBtn = t.querySelector('.forum-cat[data-cat=""]');
+        allBtn && allBtn.classList.toggle("on", "" === r.category && !searchOpen);
+      }
+      toggle &&
+        toggle.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          setOpen(!searchOpen);
+          if (searchOpen) {
+            var inp = t.querySelector(".forum-search-input");
+            inp &&
+              requestAnimationFrame(function () {
+                try {
+                  inp.focus();
+                } catch (e) {}
+              });
+          } else {
+            /* collapsing clears query so the list resets */
+            n = "";
+            var inp2 = t.querySelector(".forum-search-input");
+            inp2 && (inp2.value = "");
+            ge();
+          }
+        });
       var e = t.querySelector(".forum-search-input");
       if (e) {
         var r = t.querySelector(".forum-search-clear");
@@ -2181,7 +2228,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               e.preventDefault();
             }),
             r.addEventListener("click", function () {
-              ((n = ""), (e.value = ""), d(), ge(), e.focus());
+              ((n = ""), (e.value = ""), d(), ge(), setOpen(!1));
             })),
           o ||
             ((o = !0),
@@ -2207,6 +2254,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           s)
         ) {
           try {
+            searchOpen = !0;
+            slot && slot.classList.add("is-open");
             e.focus();
             var l = Math.min(i, e.value.length);
             e.setSelectionRange(l, l);
@@ -2215,7 +2264,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         }
       }
       function d() {
-        r && (r.style.display = n && a ? "" : "none");
+        r && (n ? r.removeAttribute("hidden") : r.setAttribute("hidden", ""));
       }
     })(),
       ge());
@@ -2256,6 +2305,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     ("list" === r.name && window.scrollTo(0, 0),
       t.querySelectorAll(".forum-cat").forEach(function (e) {
         e.addEventListener("click", function () {
+          if (e.getAttribute("data-search-toggle")) return;
           e.getAttribute("data-locked") ||
             ((r.tag = ""), (r.category = e.getAttribute("data-cat")), ye());
         });

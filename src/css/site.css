@@ -4277,8 +4277,8 @@ html {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   /* room for selected orb ring/glow/shadow; negative margin keeps layout */
-  padding: 16px 16px 18px;
-  margin: -16px -16px 8px;
+  padding: 12px 16px 14px;
+  margin: -12px -16px 0;
   scroll-padding-inline: 16px;
   /* soft right fade while more content is off-screen; at-start keeps first pill unfaded */
   -webkit-mask-image: linear-gradient(
@@ -4334,154 +4334,92 @@ html {
   -webkit-mask-image: none;
   mask-image: none;
 }
+/* Search: icon pill toggles a basic drop-down field (per dc) */
+.forum-cat-search {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+.forum-cat-search svg {
+  display: block;
+}
+.forum-search-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin: 0 0 12px;
+  transition: grid-template-rows 0.22s ease;
+}
+.forum-search-slot.is-open {
+  grid-template-rows: 1fr;
+}
+.forum-search-inner {
+  min-height: 0;
+  overflow: hidden;
+}
 .forum-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 12px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    rgba(30, 40, 90, 0.55),
-    rgba(15, 20, 50, 0.65)
-  );
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  backdrop-filter: blur(20px) saturate(1.6);
-  border: 1px solid rgba(140, 160, 255, 0.22);
-  box-shadow:
-    0 4px 24px rgba(60, 80, 220, 0.18),
-    0 1px 8px rgba(0, 0, 0, 0.25),
-    inset 0 1px 1px rgba(255, 255, 255, 0.12),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.15);
-  color: #aab4e8;
-  transition:
-    box-shadow 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.2s ease;
-}
-@property --glow-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-.forum-search {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: var(--glass-hairline);
+  color: var(--muted);
   position: relative;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
 }
-@keyframes forumSearchOrbit {
-  to {
-    --glow-angle: 360deg;
-  }
-}
-.forum-search::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 999px;
-  padding: 2px;
-  background: conic-gradient(
-    from var(--glow-angle),
-    transparent 0,
-    rgba(150, 170, 255, 0.9) 8%,
-    rgba(150, 170, 255, 0.15) 16%,
-    transparent 24%
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  filter: blur(0.5px);
-}
-@keyframes forumSearchOrbit {
-  to {
-    --glow-angle: 360deg;
-  }
-}
-.forum-search:focus-within::after {
-  opacity: 1;
-  animation: forumSearchOrbit 2.4s linear infinite;
-}
-.forum-search:focus-within {
-  border-color: rgba(140, 160, 255, 0.5);
-  transform: translateY(-1px);
-}
-.forum-search:focus-within::after {
-  opacity: 1;
-  animation: forumSearchOrbit 2.4s linear infinite;
+[data-theme="light"] .forum-search {
+  background: rgba(10, 18, 48, 0.045);
+  border: var(--glass-hairline);
+  color: var(--muted);
+  box-shadow: none;
 }
 .forum-search svg {
   flex: none;
-  filter: drop-shadow(0 0 4px rgba(140, 160, 255, 0.4));
-}
-.forum-search-input::placeholder {
-  color: #8a94c8;
-  letter-spacing: 0.3px;
+  opacity: 0.7;
+  filter: none;
 }
 .forum-search-input {
   flex: 1;
   min-width: 0;
   border: 0;
-  background: 0 0;
+  background: transparent;
   outline: 0;
-  font-size: 12px;
+  font-size: 16px; /* iOS: avoid focus zoom */
+  line-height: 1.25;
   color: var(--ink);
   padding: 0;
-}
-.forum-search-input {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: inherit;
 }
 .forum-search-input::placeholder {
   color: var(--muted);
-}
-[data-theme="light"] .forum-search {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.78),
-    rgba(233, 236, 247, 0.68)
-  );
-  border-color: rgba(10, 18, 48, 0.14);
-  box-shadow:
-    0 4px 24px rgba(30, 50, 120, 0.08),
-    0 1px 8px rgba(10, 18, 48, 0.06),
-    inset 0 1px 1px rgba(255, 255, 255, 0.7),
-    inset 0 -1px 1px rgba(10, 18, 48, 0.05);
-  color: #5a6aa8;
-}
-[data-theme="light"] .forum-search:focus-within {
-  border-color: rgba(80, 110, 220, 0.45);
-}
-[data-theme="light"] .forum-search::after {
-  background: conic-gradient(
-    from var(--glow-angle),
-    transparent 0,
-    rgba(80, 110, 255, 0.85) 8%,
-    rgba(80, 110, 255, 0.15) 16%,
-    transparent 24%
-  );
-}
-[data-theme="light"] .forum-search svg {
-  filter: drop-shadow(0 0 4px rgba(120, 140, 220, 0.35));
+  letter-spacing: 0;
+  opacity: 0.85;
 }
 .forum-search-clear {
   flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: var(--fill);
-  color: var(--ink);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
   cursor: pointer;
   padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
+}
+.forum-search-clear:active {
+  color: var(--ink);
+}
+.forum-search-clear[hidden] {
+  display: none !important;
 }
 .forum-search-empty {
   padding: 24px 12px;
@@ -4530,7 +4468,7 @@ html {
 .forum-threads {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 .forum-thread {
   display: flex;
@@ -10291,7 +10229,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-act:disabled{opacity:.5}
 .mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
 .mp-pb-full svg{width:14px;height:14px}
-@media (prefers-reduced-motion:reduce){.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}.mp-pb-frost,.mp-pb-tail::before{transition:none;opacity:0}}.mp-pb-frost{transition:none;opacity:0}}}
+@media (prefers-reduced-motion:reduce){.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}.mp-pb-frost,.mp-pb-tail::before{transition:none;opacity:0}}
 /* ===== Globe thread cards G1–G3 (per dc) =====
    data-gcards=g1 Editorial (default) | g2 Media-first | g3 Compact magazine
    Switch: MPForum.setCards('g2') or localStorage mp-gcards. */
@@ -10299,7 +10237,7 @@ html:not([data-gcards]) {
   --mp-gcards: g1;
 }
 .forum-threads {
-  gap: 10px;
+  gap: 12px;
 }
 .forum-thread-row {
   position: relative;
@@ -10663,6 +10601,45 @@ html:not([data-gcards]) {
 .forum-thread-foot .forum-thread-more {
   margin-top: 4px;
 }
+.forum-thread-last-ico-wrap {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+[data-theme="light"] .forum-thread-last-ico-wrap {
+  background: rgba(10, 18, 48, 0.06);
+}
+.forum-thread-row.has-thumb .forum-thread-last-ico-wrap {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.78);
+}
+[data-theme="light"] .forum-thread-row.has-thumb .forum-thread-last-ico-wrap {
+  background: rgba(10, 18, 48, 0.08);
+  color: var(--muted);
+}
+.forum-thread-last-ico {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+.forum-thread-last.is-empty {
+  align-items: center;
+  min-height: 38px;
+}
+.forum-thread-last-empty {
+  -webkit-line-clamp: 1;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
 .forum-thread-more {
   flex: none;
   width: 32px;
@@ -10827,4 +10804,18 @@ html[data-gcards="g3"] .forum-thread-more {
   height: 28px;
   border-radius: 8px;
   font-size: 15px;
+}
+/* Globe list rhythm: 12px bands between topbar / pills / search / cards */
+.forum > .forum-anim > .forum-topbar,
+.forum .forum-anim > .chat-head.forum-topbar {
+  margin-bottom: 4px;
+}
+.forum-tagbar {
+  margin: 0 0 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forum-search-slot {
+    transition: none;
+  }
 }
