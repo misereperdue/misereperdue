@@ -3186,118 +3186,300 @@
 
   function mpIsVip() { return !!(s && (s.member || s.owner)); }
 
-  /* Globe embed composer preview (per dc): pick a row → preview in place of the
-     message bar → Send posts the same URL payload as before, Cancel discards. */
-  var mpGpDraft = null;
+  /* Globe embed composer preview (per dc): FLIP from tapped row into the
+     message-bar slot (same radius/height/width as .chat-inputbar). X occupies
+     the + slot; Send occupies the send slot. */
+  var mpGpDraft = null, mpGpBusy = !1, mpGpFlyer = null, mpGpAnim = null, mpGpResize = null;
+  function mpGpReduced() {
+    return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
   function mpGpThumbUrl(thumb) {
     if (!thumb) return "";
     if (/^(https?:|\/|data:)/i.test(thumb)) return thumb;
     if (/^[A-Za-z0-9_-]+$/.test(thumb)) return e + "/api/media/" + thumb;
     return "";
   }
-  function mpGpClearPreview() {
-    mpGpDraft = null;
+  function mpGpMeasure() {
     var row = document.querySelector("#chat .chat-inputrow");
-    if (!row) return;
-    row.classList.remove("is-gp-prev");
-    var p = row.querySelector(".chat-gp-prev");
-    if (!p) return;
-    var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (red) { p.remove(); return; }
-    p.classList.remove("is-in");
-    p.classList.add("is-out");
-    setTimeout(function () { p.parentNode && p.remove(); }, 220);
+    var plus = row && row.querySelector(".chat-plus");
+    var bar = row && row.querySelector(".chat-inputbar");
+    var send = bar && bar.querySelector(".chat-send");
+    if (!row || !bar) return null;
+    var bcs = getComputedStyle(bar);
+    return {
+      row: row,
+      plus: plus,
+      bar: bar,
+      send: send,
+      rowR: row.getBoundingClientRect(),
+      plusR: plus ? plus.getBoundingClientRect() : null,
+      barR: bar.getBoundingClientRect(),
+      sendR: send ? send.getBoundingClientRect() : null,
+      radius: bcs.borderRadius,
+      height: bar.offsetHeight,
+      padL: bcs.paddingLeft,
+      padR: bcs.paddingRight,
+      padT: bcs.paddingTop,
+      padB: bcs.paddingBottom,
+      gap: getComputedStyle(row).gap || "8px",
+    };
   }
-  function mpGpShowPreview(t) {
-    if (!t || !t.id) return;
-    mpGpClearPreview();
-    var row = document.querySelector("#chat .chat-inputrow");
-    if (!row) return;
-    mpGpDraft = { id: t.id, title: t.title || "", author: t.author || "", thumb: t.thumb || "", createdAt: t.createdAt || 0 };
-    var prev = document.createElement("div");
-    prev.className = "chat-gp-prev";
-    prev.setAttribute("role", "group");
-    prev.setAttribute("aria-label", "Globe post preview");
-    prev.innerHTML =
-      '<button type="button" class="chat-gp-prev-x" aria-label="Cancel">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
-      '</button>' +
-      '<div class="chat-ge chat-gp-prev-card" aria-hidden="true">' +
-        '<span class="chat-ge-pic"></span>' +
-        '<span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span>' +
-        '<svg class="chat-ge-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>' +
-        '</span><span class="chat-ge-l2"></span></span>' +
-      '</div>' +
-      '<button type="button" class="chat-send chat-gp-prev-send" aria-label="Send">' +
-        '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg>' +
-      '</button>';
-    var who = prev.querySelector(".chat-ge-who");
-    var l2 = prev.querySelector(".chat-ge-l2");
-    var pic = prev.querySelector(".chat-ge-pic");
-    who.textContent = mpAt(t.author || "unknown") + (t.createdAt ? " · " + mpGeAgo(t.createdAt) : "");
-    l2.textContent = t.title || (t.excerpt || "Globe post");
+  function mpGpKillFlyer() {
+    if (mpGpAnim) {
+      try { mpGpAnim.cancel(); } catch (_) {}
+      mpGpAnim = null;
+    }
+    if (mpGpFlyer && mpGpFlyer.parentNode) mpGpFlyer.parentNode.removeChild(mpGpFlyer);
+    mpGpFlyer = null;
+  }
+  function mpGpUnbindResize() {
+    if (!mpGpResize) return;
+    window.removeEventListener("resize", mpGpResize);
+    window.visualViewport && window.visualViewport.removeEventListener("resize", mpGpResize);
+    mpGpResize = null;
+  }
+  function mpGpApplyBarMetrics(card, m) {
+    if (!card || !m) return;
+    card.style.height = m.height + "px";
+    card.style.borderRadius = m.radius;
+    card.style.boxSizing = "border-box";
+    if (m.padL) card.style.paddingLeft = m.padL;
+    if (m.padR) card.style.paddingRight = m.padR;
+    if (m.padT) card.style.paddingTop = m.padT;
+    if (m.padB) card.style.paddingBottom = m.padB;
+  }
+  function mpGpBuildCard(t) {
+    var card = document.createElement("div");
+    card.className = "chat-gp-prev-card";
+    card.setAttribute("aria-hidden", "true");
+    card.innerHTML =
+      '<span class="chat-gp-prev-pic"></span>' +
+      '<span class="chat-gp-prev-tx">' +
+        '<span class="chat-gp-prev-who"></span>' +
+        '<span class="chat-gp-prev-title"></span>' +
+      '</span>';
+    card.querySelector(".chat-gp-prev-who").textContent =
+      mpAt(t.author || "unknown") + (t.createdAt ? " · " + mpGeAgo(t.createdAt) : "");
+    card.querySelector(".chat-gp-prev-title").textContent = t.title || t.excerpt || "Globe post";
+    var pic = card.querySelector(".chat-gp-prev-pic");
     var srcThumb = mpGpThumbUrl(t.thumb);
     if (srcThumb) {
       var im = document.createElement("img");
       im.alt = "";
-      im.loading = "lazy";
+      im.draggable = !1;
       im.src = srcThumb;
-      im.onerror = function () { im.remove(); };
+      im.onerror = function () { im.remove(); pic.classList.add("is-glyph"); pic.textContent = (t.title || "G").replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim().charAt(0).toUpperCase() || "G"; };
       pic.appendChild(im);
     } else {
       try {
         var av = J(t.author, t.authorAvatar, "xs", t.hasAvatarImg ? t.avatarV : void 0);
         if (av) { pic.appendChild(av); pic.classList.add("is-av"); }
         else {
-          var g = document.createElement("span");
-          g.className = "chat-gp-prev-glyph";
-          var letters = String(t.title || "G").replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim();
-          g.textContent = (letters ? letters.charAt(0) : "G").toUpperCase();
-          pic.appendChild(g);
           pic.classList.add("is-glyph");
+          var letters = String(t.title || "G").replace(/[^A-Za-z0-9\u00C0-\u024F]+/g, " ").trim();
+          pic.textContent = (letters ? letters.charAt(0) : "G").toUpperCase();
         }
       } catch (_) {
         pic.classList.add("is-glyph");
         pic.textContent = "G";
       }
     }
-    prev.querySelector(".chat-gp-prev-x").addEventListener("click", function (ev) {
+    return card;
+  }
+  function mpGpClearPreview(opts) {
+    opts = opts || {};
+    mpGpBusy = !1;
+    mpGpDraft = null;
+    mpGpKillFlyer();
+    mpGpUnbindResize();
+    var row = document.querySelector("#chat .chat-inputrow");
+    if (!row) return;
+    row.classList.remove("is-gp-prev", "is-gp-prev-pending", "is-gp-sending");
+    var p = row.querySelector(".chat-gp-prev");
+    if (!p) return;
+    if (opts.instant || mpGpReduced()) { p.remove(); return; }
+    p.classList.remove("is-in");
+    p.classList.add("is-out");
+    setTimeout(function () { p.parentNode && p.remove(); }, 240);
+  }
+  function mpGpMountSettled(t, m) {
+    var row = m.row;
+    var existing = row.querySelector(".chat-gp-prev");
+    existing && existing.remove();
+    var prev = document.createElement("div");
+    prev.className = "chat-gp-prev is-in";
+    prev.setAttribute("role", "group");
+    prev.setAttribute("aria-label", "Globe post preview");
+    var x = document.createElement("button");
+    x.type = "button";
+    x.className = "chat-gp-prev-x";
+    x.setAttribute("aria-label", "Cancel");
+    x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    if (m.plus) {
+      x.style.width = m.plus.offsetWidth + "px";
+      x.style.height = m.plus.offsetHeight + "px";
+    }
+    var card = mpGpBuildCard(t);
+    mpGpApplyBarMetrics(card, m);
+    var snd = document.createElement("button");
+    snd.type = "button";
+    snd.className = "chat-send chat-gp-prev-send";
+    snd.setAttribute("aria-label", "Send");
+    snd.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg>';
+    /* Send lives inside the pill (same as the real composer). */
+    card.appendChild(snd);
+    prev.appendChild(x);
+    prev.appendChild(card);
+    x.addEventListener("click", function (ev) {
       ev.preventDefault();
       ev.stopPropagation();
+      if (mpGpBusy) return;
       window.haptic && window.haptic(8);
       mpGpClearPreview();
     });
-    function doSend() {
+    function doSend(ev) {
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      if (mpGpBusy || !mpGpDraft) return;
       var inp = document.querySelector("#chat .chat-inputbar input");
-      var snd = document.querySelector("#chat .chat-send");
-      if (!inp || !snd || !mpGpDraft) return;
+      var realSend = document.querySelector("#chat .chat-inputbar .chat-send");
+      if (!inp || !realSend) return;
       var url = "https://misereperdue.com/t/" + mpGpDraft.id;
+      var draft = mpGpDraft;
+      mpGpBusy = !0;
+      row.classList.add("is-gp-sending");
       inp.value = url;
       try { inp.dispatchEvent(new Event("input", { bubbles: !0 })); } catch (_) {}
-      mpGpDraft = null;
-      row.classList.remove("is-gp-prev");
-      prev.remove();
       window.haptic && window.haptic(15);
-      snd.click();
+      /* Quick send: fade preview, restore bar, fire real send. On failure, restore preview. */
+      var red = mpGpReduced();
+      function fire() {
+        mpGpDraft = null;
+        row.classList.remove("is-gp-prev", "is-gp-prev-pending", "is-gp-sending");
+        prev.remove();
+        mpGpUnbindResize();
+        mpGpBusy = !1;
+        try { realSend.click(); } catch (_) {}
+      }
+      if (red) return fire();
+      prev.classList.add("is-sending");
+      setTimeout(fire, 180);
+      /* If the toast/error path fires soon after, re-offer the draft. */
+      setTimeout(function () {
+        try {
+          var err = document.querySelector(".mp-toast, .chat-attach-err");
+          if (err && /couldn|fail|try again|connection/i.test(err.textContent || "")) {
+            mpGpShowPreview(draft, null);
+          }
+        } catch (_) {}
+      }, 900);
     }
-    prev.querySelector(".chat-gp-prev-send").addEventListener("click", function (ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      doSend();
-    });
-    prev.querySelector(".chat-gp-prev-send").addEventListener("touchstart", function (ev) {
-      ev.preventDefault();
-      doSend();
-    }, { passive: !1 });
+    snd.addEventListener("click", doSend);
+    /* Use click only — touchstart+click double-fired send on some WebKit builds. */
     row.appendChild(prev);
     row.classList.add("is-gp-prev");
-    var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (red) prev.classList.add("is-in");
-    else requestAnimationFrame(function () { requestAnimationFrame(function () { prev.classList.add("is-in"); }); });
+    mpGpResize = function () {
+      if (!mpGpDraft) return;
+      var nm = mpGpMeasure();
+      nm && mpGpApplyBarMetrics(card, nm);
+    };
+    window.addEventListener("resize", mpGpResize);
+    window.visualViewport && window.visualViewport.addEventListener("resize", mpGpResize);
+  }
+  function mpGpShowPreview(t, fromRect) {
+    if (!t || !t.id) return;
+    if (mpGpDraft && mpGpDraft.id === t.id && document.querySelector("#chat .chat-gp-prev")) return;
+    /* Detach handlers before kill so cancel doesn't clobber the new draft. */
+    if (mpGpAnim) {
+      try { mpGpAnim.onfinish = null; mpGpAnim.oncancel = null; } catch (_) {}
+    }
+    mpGpKillFlyer();
+    /* Blur keyboard so the bar is in its resting rect. */
+    try {
+      var ae = document.activeElement;
+      ae && ae.blur && ae.blur();
+    } catch (_) {}
+    var m = mpGpMeasure();
+    if (!m) { mpGpBusy = !1; return; }
+    mpGpClearPreview({ instant: !0 });
+    mpGpDraft = {
+      id: t.id,
+      title: t.title || "",
+      author: t.author || "",
+      authorAvatar: t.authorAvatar,
+      hasAvatarImg: t.hasAvatarImg,
+      avatarV: t.avatarV,
+      thumb: t.thumb || "",
+      createdAt: t.createdAt || 0,
+      excerpt: t.excerpt || "",
+    };
+    var red = mpGpReduced();
+    var dest = m.barR;
+    if (red || !fromRect || !dest.width) {
+      mpGpMountSettled(mpGpDraft, m);
+      return;
+    }
+    mpGpBusy = !0;
+    /* FLIP flyer: place at DESTINATION size, invert with transform only (GPU). */
+    var flyer = document.createElement("div");
+    flyer.className = "chat-gp-flyer";
+    flyer.setAttribute("aria-hidden", "true");
+    var flyerCard = mpGpBuildCard(mpGpDraft);
+    flyer.appendChild(flyerCard);
+    document.body.appendChild(flyer);
+    mpGpFlyer = flyer;
+    var x0 = fromRect.left, y0 = fromRect.top, w0 = Math.max(1, fromRect.width), h0 = Math.max(1, fromRect.height);
+    var x1 = dest.left, y1 = dest.top, w1 = Math.max(1, dest.width), h1 = Math.max(1, dest.height);
+    var r1 = (parseFloat(m.radius) || (h1 / 2));
+    flyer.style.left = x1 + "px";
+    flyer.style.top = y1 + "px";
+    flyer.style.width = w1 + "px";
+    flyer.style.height = h1 + "px";
+    flyer.style.borderRadius = r1 + "px";
+    flyer.style.transformOrigin = "top left";
+    flyer.style.zIndex = "2147483000";
+    flyer.style.pointerEvents = "none";
+    flyer.style.overflow = "hidden";
+    flyerCard.style.width = "100%";
+    flyerCard.style.height = "100%";
+    flyerCard.style.borderRadius = "inherit";
+    var dx = x0 - x1, dy = y0 - y1, sx = w0 / w1, sy = h0 / h1;
+    flyer.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ")";
+    flyer.style.opacity = "1";
+    void flyer.offsetWidth;
+    var anim = flyer.animate(
+      [
+        { transform: "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ")", opacity: 0.92, offset: 0 },
+        { transform: "translate(" + dx * 0.28 + "px," + dy * 0.22 + "px) scale(" + (1 + (sx - 1) * 0.28) + "," + (1 + (sy - 1) * 0.28) + ")", opacity: 1, offset: 0.62 },
+        { transform: "translate(0px,0px) scale(1,1)", opacity: 1, offset: 1 },
+      ],
+      {
+        duration: 420,
+        easing: "cubic-bezier(.22,.9,.28,1)",
+        fill: "forwards",
+      }
+    );
+    mpGpAnim = anim;
+    m.row.classList.add("is-gp-prev-pending");
+    function finish(ok) {
+      mpGpAnim = null;
+      m.row.classList.remove("is-gp-prev-pending");
+      mpGpKillFlyer();
+      mpGpBusy = !1;
+      if (!ok) {
+        /* Cancelled mid-flight (route change, + reopen, etc.): drop draft, restore bar. */
+        if (mpGpDraft) { mpGpDraft = null; }
+        return;
+      }
+      if (!mpGpDraft) return;
+      var m2 = mpGpMeasure() || m;
+      mpGpMountSettled(mpGpDraft, m2);
+    }
+    anim.onfinish = function () { finish(!0); };
+    anim.oncancel = function () { finish(!1); };
   }
   try {
     window.MPChat = window.MPChat || {};
-    window.MPChat.clearGlobePreview = mpGpClearPreview;
+    window.MPChat.clearGlobePreview = function () { mpGpClearPreview({ instant: !0 }); };
   } catch (_) {}
 
   /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
@@ -3395,8 +3577,18 @@
         }
         b.addEventListener("click", function (ev) {
           ev.stopPropagation();
+          ev.preventDefault();
+          if (mpGpBusy || mpGpDraft) return;
+          mpGpBusy = !0;
+          var from = b.getBoundingClientRect();
           close();
-          mpGpShowPreview(t);
+          /* Let the sheet start closing, then FLIP into the bar.
+             Defer one more frame after blur/keyboard so dest rect is resting. */
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              mpGpShowPreview(t, from);
+            });
+          });
         });
         list.appendChild(b);
       });
@@ -7336,9 +7528,14 @@
     }));
 
   (function () {
-    function wipe() { try { mpGpClearPreview(); } catch (_) {} }
+    function wipe() { try { mpGpClearPreview({ instant: !0 }); } catch (_) {} }
     window.addEventListener("hashchange", wipe);
-    document.addEventListener("visibilitychange", function () { if (document.hidden) wipe(); });
+    window.addEventListener("popstate", wipe);
+    window.addEventListener("pagehide", wipe);
+    /* Mid-animation: kill flyer on hide so it can't stick above other UI; keep draft if still in chat. */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) mpGpKillFlyer();
+    });
     var obs = null;
     try {
       obs = new MutationObserver(function () {

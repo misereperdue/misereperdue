@@ -9828,49 +9828,57 @@ svg[data-hi].hi-play {
 .chat-ge.is-loading .chat-ge-l2{height:1em;width:70%;border-radius:4px;background:rgba(127,127,127,.2)}
 .chat-ge.is-na .chat-ge-l2{opacity:.65;font-style:italic}
 
-/* Globe embed composer preview (per dc): replaces message bar until Send/Cancel */
-.chat-inputrow.is-gp-prev{
-  gap:8px;
+/* Globe embed composer preview (per dc): pill matches .chat-inputbar exactly;
+   X sits in the + slot; Send sits where the real send sits (inside the pill). */
+.chat-inputrow.is-gp-prev,
+.chat-inputrow.is-gp-prev-pending{
+  position: fixed; /* already fixed; keep stacking context */
 }
 .chat-inputrow.is-gp-prev > .chat-attach,
-.chat-inputrow.is-gp-prev > .chat-pm-chip{
+.chat-inputrow.is-gp-prev > .chat-pm-chip,
+.chat-inputrow.is-gp-prev-pending > .chat-attach,
+.chat-inputrow.is-gp-prev-pending > .chat-pm-chip{
   display:none!important;
 }
+.chat-inputrow.is-gp-prev .chat-mic,
+.chat-inputrow.is-gp-prev-pending .chat-mic,
+.chat-inputrow.is-gp-prev .chat-rec,
+.chat-inputrow.is-gp-prev-pending .chat-rec{
+  visibility:hidden!important;
+  pointer-events:none!important;
+  opacity:0!important;
+}
+/* Keep + and inputbar in layout (same geometry) but invisible while preview shows */
 .chat-inputrow.is-gp-prev > .chat-plus,
 .chat-inputrow.is-gp-prev > .chat-inputbar{
-  opacity:0;
-  transform:scale(.96);
+  visibility:hidden;
   pointer-events:none;
-  max-width:0;
-  width:0;
-  min-width:0;
-  margin:0;
-  padding:0;
-  border:0;
-  overflow:hidden;
-  flex:0 0 0;
-  transition:opacity .2s ease, transform .2s ease;
+  opacity:0;
+  transition:opacity .2s ease;
+}
+.chat-inputrow.is-gp-prev-pending > .chat-plus,
+.chat-inputrow.is-gp-prev-pending > .chat-inputbar{
+  opacity:0;
+  transition:opacity .28s ease;
+  pointer-events:none;
 }
 .chat-gp-prev{
-  flex:1;
-  min-width:0;
+  position:absolute;
+  inset:0;
   display:flex;
   align-items:center;
-  gap:8px;
-  opacity:0;
-  transform:scale(.96);
-  transition:opacity .22s ease, transform .22s cubic-bezier(.32,.72,0,1);
-  will-change:opacity, transform;
-}
-.chat-gp-prev.is-in{
-  opacity:1;
-  transform:none;
-}
-.chat-gp-prev.is-out{
-  opacity:0;
-  transform:scale(.96);
+  gap:inherit;
+  z-index:2;
   pointer-events:none;
+  opacity:0;
+  transition:opacity .2s ease;
 }
+.chat-gp-prev.is-in{opacity:1}
+.chat-gp-prev.is-out{opacity:0;pointer-events:none}
+.chat-gp-prev.is-sending{opacity:0;transition:opacity .16s ease}
+.chat-gp-prev-x,
+.chat-gp-prev-send,
+.chat-gp-prev-card{pointer-events:auto}
 .chat-gp-prev-x{
   flex:none;
   width:38px;
@@ -9894,45 +9902,115 @@ svg[data-hi].hi-play {
 }
 .chat-gp-prev-x svg{width:16px;height:16px;display:block}
 .chat-gp-prev-x:active{opacity:.72}
-.chat-gp-prev-card.chat-ge{
+/* The pill — mirrors .chat-inputbar (radius/height applied from measured styles) */
+.chat-gp-prev-card{
   flex:1;
   min-width:0;
-  width:auto;
-  max-width:none;
-  margin:0;
-  pointer-events:none;
-  background:var(--sheet-bg,var(--glass-regular-tint));
-  border:1px solid var(--sheet-border,rgba(127,127,127,.2));
-  -webkit-backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));
-  backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));
-  box-shadow:var(--sheet-shadow,var(--shadow));
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 6px 6px 12px;
+  box-sizing:border-box;
+  border:var(--glass-hairline);
+  border-radius:999px;
+  background:var(--glass-regular-tint);
+  -webkit-backdrop-filter:var(--glass-regular);
+  backdrop-filter:var(--glass-regular);
+  box-shadow:none;
+  overflow:hidden;
+  color:var(--ink);
 }
-.chat-gp-prev-card.chat-ge:active{transform:none}
-.chat-gp-prev-card .chat-ge-pic.is-glyph,
-.chat-gp-prev-card .chat-ge-pic.is-av{
+.chat-gp-prev-pic{
+  flex:none;
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  overflow:hidden;
   background:rgba(127,127,127,.14);
+  display:grid;
+  place-items:center;
+  position:relative;
 }
-.chat-gp-prev-card .chat-ge-pic.is-av{border-radius:50%}
-.chat-gp-prev-glyph{
-  font:700 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+.chat-gp-prev-pic.is-av{border-radius:50%}
+.chat-gp-prev-pic.is-glyph{
+  font:700 13px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   color:var(--muted);
-  user-select:none;
+}
+.chat-gp-prev-pic > img,
+.chat-gp-prev-pic > .chat-avatar-wrap,
+.chat-gp-prev-pic > .chat-avatar-img,
+.chat-gp-prev-pic > .chat-avatar{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+  border:0!important;
+  border-radius:0!important;
+  margin:0!important;
+}
+.chat-gp-prev-pic > .chat-avatar-wrap{
+  position:absolute;inset:0;
+}
+.chat-gp-prev-tx{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:1px;
+  padding-right:4px;
+}
+.chat-gp-prev-who{
+  font:500 11px/1.2 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-transform:lowercase;
+}
+.chat-gp-prev-title{
+  font:600 14px/1.25 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  color:var(--ink);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  letter-spacing:-.01em;
 }
 .chat-gp-prev-send{
-  /* reuses .chat-send look; keep primary */
   flex:none;
+  margin-left:auto;
   transition:opacity .16s ease;
 }
 .chat-gp-prev-send:active{
   opacity:.72;
-  transform:none; /* opacity pulse, not bounce — override .chat-send:active scale */
+  transform:none;
 }
+/* FLIP flyer (fixed, GPU) */
+.chat-gp-flyer{
+  position:fixed;
+  left:0;top:0;
+  z-index:2147483000;
+  pointer-events:none;
+  overflow:hidden;
+  will-change:transform,opacity;
+  box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.chat-gp-flyer .chat-gp-prev-card{
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  padding:8px 10px;
+}
+.chat-gp-flyer .chat-gp-prev-send{display:none}
 @media (prefers-reduced-motion:reduce){
   .chat-gp-prev,
   .chat-inputrow.is-gp-prev > .chat-plus,
-  .chat-inputrow.is-gp-prev > .chat-inputbar{
+  .chat-inputrow.is-gp-prev > .chat-inputbar,
+  .chat-inputrow.is-gp-prev-pending > .chat-plus,
+  .chat-inputrow.is-gp-prev-pending > .chat-inputbar{
     transition:none;
   }
+  .chat-gp-flyer{display:none!important}
 }
 
 /* + menu morph: Globe picker + poll composer (per dc) */
