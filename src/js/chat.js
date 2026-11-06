@@ -1021,9 +1021,12 @@
       b.remove();
       return;
     }
-    b.classList.remove("is-in");
+    /* close: frost covers glass first (keeps look frosted), body fades/scales to tip,
+       then frost fades — never opacity-animate the backdrop-filter layer */
+    b.classList.remove("is-in", "is-frosted");
     b.classList.add("is-out");
-    setTimeout(function () { b.remove(); }, 200);
+    setTimeout(function () { b.classList.add("is-gone"); }, 90);
+    setTimeout(function () { b.remove(); }, 300);
   }
   function mpPBput(u) {
     if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
@@ -1138,8 +1141,9 @@
     fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
     fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
     body.appendChild(fp);
-    /* glass layers first — NO mask/clip on backdrop-filter (Safari drops the frost otherwise).
-       frost = denser tint safety net; shape + tip diamond carry --sheet-* blur at opacity 1. */
+    /* glass body (rounded rect) + tip triangle with SAME backdrop-filter/tint.
+       Tip is under the body rim so only the outer triangle shows — no path clip on body
+       (WebKit drops blur on path protrusions). */
     var frost = document.createElement("i");
     frost.className = "mp-pb-frost";
     frost.setAttribute("aria-hidden", "true");
@@ -1149,8 +1153,13 @@
     var tip = document.createElement("i");
     tip.className = "mp-pb-tail";
     tip.setAttribute("aria-hidden", "true");
-    b.appendChild(shp);
+    var tipFrost = document.createElement("i");
+    tipFrost.className = "mp-pb-tail-frost";
+    tipFrost.setAttribute("aria-hidden", "true");
+    tip.appendChild(tipFrost);
+    /* tip first so body paints over the overlap (no double-tint seam) */
     b.appendChild(tip);
+    b.appendChild(shp);
     b.appendChild(frost);
     b.appendChild(body);
     /* measure while inert; seat final left/top/origin before first paint */
@@ -1182,14 +1191,16 @@
     b.style.left = left + "px";
     b.style.top = top + "px";
     b.style.setProperty("--ax", ax + "px");
-    /* tip sits on the rim facing the avatar */
     b.style.setProperty("--ay", below ? "0px" : h + "px");
     b.style.willChange = "auto";
     body.style.willChange = "transform, opacity";
-    /* force style/layout so WebKit builds the backdrop-filter layer while still hidden */
+    /* force style/layout so WebKit builds backdrop-filter on body + tip while hidden */
     void shp.offsetWidth;
+    void tip.offsetWidth;
     void getComputedStyle(shp).webkitBackdropFilter;
     void getComputedStyle(shp).backdropFilter;
+    void getComputedStyle(tip).webkitBackdropFilter;
+    void getComputedStyle(tip).backdropFilter;
     mpPBel = b;
     /* triple rAF: let Safari composite the glass, then reveal at rest scale, then is-in */
     requestAnimationFrame(function () {
