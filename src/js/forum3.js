@@ -2493,7 +2493,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   }
   function openNewThread(opts) {
     if (!g()) return;
-    setGlobeListMode(!1);
+    killPullToPost();
     opts = opts || {};
     r.name = "new";
     if (opts.smooth) openComposerSmooth();
@@ -2584,17 +2584,56 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       document.documentElement.classList.remove("mp-globe-pull");
     }
   }
+  /* Tear down list pull listeners whenever we leave the Globe LIST.
+     setGlobeListMode(false) alone left touch handlers on #forum, so a pull
+     on a thread page still fired openNewThread (per dc). */
+  function killPullToPost() {
+    if (t && t._pullAborter) {
+      try { t._pullAborter.abort(); } catch (e) {}
+      t._pullAborter = null;
+    }
+    setGlobeListMode(!1);
+    try {
+      var leftover = t && t.querySelector("#forum-pullpost");
+      if (leftover) leftover.remove();
+      var body = t && (t.querySelector(".forum-pull-body") || t.querySelector(".forum-anim"));
+      if (body) {
+        body.classList.remove("is-pulling");
+        body.style.transform = "";
+        body.style.transition = "";
+        body.style.willChange = "";
+        body.style.opacity = "";
+      }
+    } catch (e) {}
+  }
+  function listPullLive() {
+    /* Live route check — never trust a stale class alone. */
+    if ("list" !== r.name) return !1;
+    if (r.threadId) return !1;
+    var f = document.getElementById("forum");
+    if (!(f && f.classList.contains("on"))) return !1;
+    if (!f.classList.contains("is-globe-list")) return !1;
+    /* Composer / new-thread view is not the list. */
+    if (f.querySelector("#forum-title, .forum-compose, #forum-new")) return !1;
+    /* Thread detail mounted (deep link / race). */
+    if (f.querySelector(".forum-post, .forum-replies, #forum-reply, #forum-back")) return !1;
+    return !0;
+  }
   function bindPullToPost() {
     var hint = t.querySelector("#forum-pullpost");
-    if (!hint) return;
     if (!g() || "list" !== r.name) {
-      hint.remove();
-      setGlobeListMode(!1);
+      if (hint) hint.remove();
+      killPullToPost();
+      return;
+    }
+    if (!hint) {
+      killPullToPost();
       return;
     }
     setGlobeListMode(!0);
     hint.addEventListener("click", function (e) {
       e.preventDefault();
+      if (!listPullLive()) return;
       openNewThread({ smooth: true });
     });
     if (t._pullAborter) {
@@ -2756,11 +2795,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       buzz2 = 0;
       tracking = 0;
       claim(0);
+      /* Bail unless the Globe LIST is the live view right now (per dc). */
+      if (!listPullLive()) return;
+      if (!hint || !hint.isConnected) return;
+      if (!body || !body.isConnected) return;
       if (!e.touches || e.touches.length !== 1) return;
       if (!atTop()) return;
       var el = e.target;
       if (el && el.closest) {
-        if (el.closest(".forum-cats, .forum-search, .forum-search-slot, .chat-head, #nav, .forum-thread, .forum-thread-row")) {
+        if (el.closest(".forum-cats, .forum-search, .forum-search-slot, .chat-head, #nav, .forum-thread, .forum-thread-row, .forum-post, .forum-replies, .forum-compose")) {
           if (!el.closest("#forum-pullpost")) return;
         }
       }
@@ -2774,6 +2817,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     }
     function onMove(e) {
       if (busy || !tracking || locked < 0) return;
+      if (!listPullLive() || !hint.isConnected || !body.isConnected) {
+        locked = -1;
+        tracking = 0;
+        claim(0);
+        return;
+      }
       if (!e.touches || e.touches.length !== 1) return;
       var y = e.touches[0].clientY, x = e.touches[0].clientX;
       var dy = y - startY, dx = x - startX;
@@ -2809,6 +2858,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }
       var st = stage;
       locked = 0;
+      /* Re-check live route before acting — thread/composer must never post. */
+      if (!listPullLive() || !hint.isConnected) {
+        claim(0);
+        springBack();
+        return;
+      }
       if (st >= 2) {
         claim(0);
         if (RM) {
@@ -2828,9 +2883,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       panel._pullWatch = 1;
       try {
         new MutationObserver(function () {
-          if (!panel.classList.contains("on")) {
+          if (!panel.classList.contains("on") || !panel.classList.contains("is-globe-list")) {
             try { window.__mpPullToPost = !1; } catch (e) {}
             document.documentElement.classList.remove("mp-globe-pull");
+            if (t && t._pullAborter && (!panel.classList.contains("on") || "list" !== r.name)) {
+              try { t._pullAborter.abort(); } catch (err) {}
+              t._pullAborter = null;
+            }
           }
         }).observe(panel, { attributes: !0, attributeFilter: ["class"] });
       } catch (e) {}
@@ -2841,7 +2900,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig, capture: true });
   }
   function we() {
-    setGlobeListMode(!1);
+    killPullToPost();
     ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
       y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
         if (e.ok && e.thread)
@@ -4331,6 +4390,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       i());
   }
   function Ie() {
+    killPullToPost();
     X();
     var n =
       be() +
