@@ -4247,6 +4247,17 @@ html {
   margin: 0 auto;
   padding: 16px 16px 72px;
   overflow-anchor: none;
+  overscroll-behavior-y: none;
+}
+/* While Globe is showing, kill document rubber-band / iOS overscroll refresh —
+ * pull-to-post owns the top-of-list gesture (per dc). Other tabs keep PTR. */
+html:has(#forum.on),
+body:has(#forum.on) {
+  overscroll-behavior-y: none;
+}
+html.mp-globe-pull,
+html.mp-globe-pull body {
+  overscroll-behavior-y: none;
 }
 .poll-voter-avatar {
   border: 1px solid #888;

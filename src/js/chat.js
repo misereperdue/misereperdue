@@ -6681,9 +6681,18 @@
     ((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
       window.navigator.standalone) &&
       (function () {
+        /* Standalone pull-to-refresh. Skip while Globe (#forum.on) is showing —
+         * pull-to-post owns that gesture and the two used to fight (per dc). */
         var e = null,
           t = 0,
           n = document.createElement("div");
+        function onGlobe() {
+          var f = document.getElementById("forum");
+          return !!(f && f.classList.contains("on"));
+        }
+        function hide() {
+          ((n.style.transform = "translate(-50%,-60px)"), (n.style.opacity = "0"));
+        }
         ((n.className = "mp-pull-indicator"),
           (n.style.cssText =
             "position:fixed;left:50%;top:8px;transform:translate(-50%,-60px);z-index:9998;opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .15s ease;"));
@@ -6694,6 +6703,10 @@
           document.addEventListener(
             "touchstart",
             function (n) {
+              if (onGlobe() || window.__mpPullToPost) {
+                e = null;
+                return;
+              }
               0 === window.scrollY && n.touches && 1 === n.touches.length
                 ? ((e = n.touches[0].clientY), (t = 0))
                 : (e = null);
@@ -6703,20 +6716,26 @@
           document.addEventListener(
             "touchmove",
             function (r) {
-              if (null !== e && r.touches && r.touches.length)
+              if (null === e) return;
+              if (onGlobe() || window.__mpPullToPost) {
+                e = null;
+                hide();
+                return;
+              }
+              if (r.touches && r.touches.length)
                 if ((t = r.touches[0].clientY - e) > 0) {
                   var o = Math.min(t, 100);
                   ((n.style.transform = "translate(-50%," + (o - 52) + "px)"),
                     (n.style.opacity = t > 40 ? "1" : "0.5"),
                     (a.textContent = t > 180 ? "↻ Release to refresh" : "↓ Pull to refresh"));
-                } else ((n.style.transform = "translate(-50%,-60px)"), (n.style.opacity = "0"));
+                } else hide();
             },
             { passive: !0 },
           ),
           document.addEventListener(
             "touchend",
             function () {
-              if (null !== e && t > 180) {
+              if (null !== e && t > 180 && !onGlobe() && !window.__mpPullToPost) {
                 try {
                   sessionStorage.setItem("mp-refreshing", "1");
                 } catch (e) {}
@@ -6726,10 +6745,7 @@
                     location.reload();
                   }, 50));
               }
-              ((e = null),
-                (t = 0),
-                (n.style.transform = "translate(-50%,-60px)"),
-                (n.style.opacity = "0"));
+              ((e = null), (t = 0), hide());
             },
             { passive: !0 },
           ));

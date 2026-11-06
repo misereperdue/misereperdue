@@ -692,10 +692,17 @@
   document._notifHideWired ||
     ((document._notifHideWired = !0),
     document.addEventListener("visibilitychange", function () {
-      document.hidden &&
+      if (document.hidden) {
         document.querySelectorAll(".forum-notif-panel").forEach(function (e) {
           e.remove();
         });
+        return;
+      }
+      // Quiet refetch when returning — Globe list no longer has pull-to-refresh (per dc).
+      try {
+        var f = document.getElementById("forum");
+        if (f && f.classList.contains("on") && "list" === r.name) p();
+      } catch (e) {}
     }));
   var N = !1;
   function H() {
@@ -2481,8 +2488,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     ((r.name = "new"), Ie());
   }
   // Globe list: pull-down (or tap the hint) opens the new-thread composer (per dc).
-  // Touch listeners use AbortController so re-renders don't stack; passive:false only
-  // while at scrollTop 0 and pulling down so iOS PWA overscroll / swipe-tabs stay intact.
+  // Touch listeners use AbortController so re-renders don't stack; passive:false +
+  // preventDefault once the pull is clearly downward at scrollTop<=0 so iOS rubber-
+  // band / standalone pull-to-refresh can't steal the gesture. Horizontal stays with
+  // swipe-tabs / category pills.
   function bindPullToPost() {
     var hint = t.querySelector("#forum-pullpost");
     if (!hint) return;
@@ -2505,7 +2514,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     var root = t.querySelector(".forum-anim") || t;
     var txt = hint.querySelector(".forum-pullpost-txt");
     var THRESH = 70;
-    var startY = 0, startX = 0, locked = 0, dist = 0, buzzed = 0;
+    var startY = 0, startX = 0, locked = 0, dist = 0, buzzed = 0, tracking = 0;
     function setPull(d) {
       dist = d;
       hint.style.setProperty("--pull", String(Math.min(1, d / THRESH)));
@@ -2513,7 +2522,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       hint.classList.toggle("is-pulling", d > 4);
       if (txt) txt.textContent = d >= THRESH ? "Release to post" : "Pull to post";
     }
+    function claim(on) {
+      // Lets the standalone PTR in chat.js bail out while we own the gesture.
+      try { window.__mpPullToPost = !!on; } catch (e) {}
+      if (on) document.documentElement.classList.add("mp-globe-pull");
+      else document.documentElement.classList.remove("mp-globe-pull");
+    }
     function reset() {
+      claim(0);
       root.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
       root.style.transform = "";
       setPull(0);
@@ -2522,12 +2538,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }, 300);
     }
     function atTop() {
-      return (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
+      var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      return y <= 0;
     }
     function onStart(e) {
       locked = 0;
       dist = 0;
       buzzed = 0;
+      tracking = 0;
+      claim(0);
       if (!e.touches || e.touches.length !== 1) return;
       if (!atTop()) return;
       var el = e.target;
@@ -2538,28 +2557,34 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
+      tracking = 1;
       locked = 0;
     }
     function onMove(e) {
-      if (locked < 0) return;
+      if (!tracking || locked < 0) return;
       if (!e.touches || e.touches.length !== 1) return;
       var y = e.touches[0].clientY, x = e.touches[0].clientX;
       var dy = y - startY, dx = x - startX;
       if (!locked) {
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        // Vertical pull at top — leave horizontal to swipe-tabs.
-        if (dy > 0 && dy > Math.abs(dx) * 1.25 && atTop()) locked = 1;
-        else {
+        // Vertical pull at top — leave horizontal to swipe-tabs / category pills.
+        if (dy > 0 && dy > Math.abs(dx) * 1.25 && atTop()) {
+          locked = 1;
+          claim(1);
+        } else {
           locked = -1;
+          tracking = 0;
           return;
         }
       }
       if (locked !== 1) return;
       if (!atTop() && dy <= 0) {
         locked = -1;
+        tracking = 0;
         reset();
         return;
       }
+      // Own the gesture: block rubber-band / browser refresh / PTR.
       if (e.cancelable) e.preventDefault();
       // Rubber-band with resistance on the visual shift; threshold tracks ~70px finger travel.
       var raw = Math.max(0, dy);
@@ -2577,8 +2602,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       if (dist < THRESH) buzzed = 0;
     }
     function onEnd() {
+      tracking = 0;
       if (locked !== 1) {
         locked = 0;
+        claim(0);
         return;
       }
       var go = dist >= THRESH;
@@ -2586,10 +2613,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       reset();
       if (go) openNewThread();
     }
-    panel.addEventListener("touchstart", onStart, { passive: true, signal: sig });
-    panel.addEventListener("touchmove", onMove, { passive: false, signal: sig });
-    panel.addEventListener("touchend", onEnd, { passive: true, signal: sig });
-    panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig });
+    // Capture on the panel so we see the gesture before swipe-tabs; touchmove
+    // must be non-passive so preventDefault can stop overscroll refresh.
+    panel.addEventListener("touchstart", onStart, { passive: true, signal: sig, capture: true });
+    panel.addEventListener("touchmove", onMove, { passive: false, signal: sig, capture: true });
+    panel.addEventListener("touchend", onEnd, { passive: true, signal: sig, capture: true });
+    panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig, capture: true });
   }
   function we() {
     ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
