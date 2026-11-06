@@ -11226,7 +11226,7 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post / refresh (Globe list) — Q1 text morph + track (default);
+/* Pull to post / refresh (Globe list) — Q1: ~70px Post, ~150px Refresh (per dc);
    P2 segmented kept behind .forum-pullpost--p2 / localStorage mp-pull-style=p2 */
 .forum-pullpost {
   --pull: 0;
@@ -11334,22 +11334,29 @@ html[data-gcards="g3"] .forum-thread-more {
 }
 .forum-pullpost-tick {
   position: absolute;
-  left: 46.67%; /* STAGE1/STAGE2 = 70/150 */
   top: 50%;
   width: 5px;
   height: 5px;
   margin: -2.5px 0 0 -2.5px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--ink) 32%, transparent);
+  /* ring matches page bg so the dot reads cleanly on the track */
   box-shadow: 0 0 0 2px var(--bg, #0a1230);
   transition: background 0.16s ease, opacity 0.16s ease;
   pointer-events: none;
 }
-.forum-pullpost--q1.is-refresh .forum-pullpost-tick,
-.forum-pullpost--q1.is-armed .forum-pullpost-tick {
+.forum-pullpost-tick[data-tick="1"] {
+  left: 46.67%; /* STAGE1/STAGE2 = 70/150 — Post */
+}
+.forum-pullpost-tick[data-tick="2"] {
+  left: 100%; /* STAGE2 end — Refresh */
+}
+.forum-pullpost--q1.is-refresh .forum-pullpost-tick[data-tick="1"],
+.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="1"],
+.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="2"] {
   background: var(--accent, #5b7cfa);
 }
-.forum-pullpost--q1.is-armed .forum-pullpost-tick {
+.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="1"] {
   opacity: 0.55;
 }
 

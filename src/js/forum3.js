@@ -2067,30 +2067,31 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           '<span class="forum-pullpost-spin"></span><span>Refreshing</span></span>';
         if (pullStyle === "p2") {
           return (
-            '<button type="button" class="forum-pullpost forum-pullpost--p2" id="forum-pullpost" data-style="p2" aria-label="Pull to refresh or post">' +
+            '<button type="button" class="forum-pullpost forum-pullpost--p2" id="forum-pullpost" data-style="p2" aria-label="Pull to post or refresh">' +
             '<span class="forum-pullpost-seg" aria-hidden="true">' +
             '<span class="forum-pullpost-thumb"></span>' +
             '<span class="forum-pullpost-chip" data-chip="1">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
-            '<span>Refresh</span></span>' +
-            '<span class="forum-pullpost-chip" data-chip="2">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
-            '<span>Post</span></span></span>' +
+            '<span>Post</span></span>' +
+            '<span class="forum-pullpost-chip" data-chip="2">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
+            '<span>Refresh</span></span></span>' +
             busy +
             "</button>"
           );
         }
         return (
-          '<button type="button" class="forum-pullpost forum-pullpost--q1" id="forum-pullpost" data-style="q1" aria-label="Pull to refresh or post">' +
+          '<button type="button" class="forum-pullpost forum-pullpost--q1" id="forum-pullpost" data-style="q1" aria-label="Pull to post or refresh">' +
           '<span class="forum-pullpost-q1" aria-hidden="true">' +
           '<span class="forum-pullpost-labs">' +
           '<span class="forum-pullpost-lab" data-lab="0">Pull</span>' +
-          '<span class="forum-pullpost-lab" data-lab="1">Refresh</span>' +
-          '<span class="forum-pullpost-lab" data-lab="2">Post</span>' +
+          '<span class="forum-pullpost-lab" data-lab="1">Post</span>' +
+          '<span class="forum-pullpost-lab" data-lab="2">Refresh</span>' +
           "</span>" +
           '<span class="forum-pullpost-track">' +
           '<span class="forum-pullpost-fill"></span>' +
-          '<span class="forum-pullpost-tick"></span>' +
+          '<span class="forum-pullpost-tick" data-tick="1"></span>' +
+          '<span class="forum-pullpost-tick" data-tick="2"></span>' +
           "</span></span>" +
           busy +
           "</button>"
@@ -2595,7 +2596,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }, 380);
     }, 180);
   }
-  // Globe list: two-stage pull — ~70px refresh, ~150px post; Q1 text+track (P2 via mp-pull-style).
+  // Globe list: two-stage pull — ~70px post, ~150px refresh; Q1 text+track (P2 via mp-pull-style).
   // Transform ONLY .forum-pull-body (topbar stays fixed). Global PTR stays off
   // on Globe via __mpPullToPost / #forum.on. Reduced-motion: snap, no springs.
 
@@ -2879,16 +2880,18 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         return;
       }
       if (st >= 2) {
+        /* Stage 2 = refresh (per dc). */
+        doRefresh();
+      } else if (st === 1) {
+        /* Stage 1 = post / new thread (per dc). */
         claim(0);
         if (RM) {
           snapClear();
           openNewThread({ smooth: false });
           return;
         }
-        hint.classList.add("is-armed", "is-settle");
+        hint.classList.add("is-refresh", "is-settle");
         openNewThread({ smooth: true });
-      } else if (st === 1) {
-        doRefresh();
       } else {
         springBack();
       }
