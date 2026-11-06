@@ -2096,14 +2096,40 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
                 '" alt="" loading="lazy" decoding="async"></span>'
               : "") +
             "</button>";
-          var s = t.tags || [],
-            canManage = Ne || He(t.author);
-          ((s.length || canManage) &&
+          var canManage = Ne || He(t.author),
+            lr = t.lastReply || null,
+            lastHtml = "";
+          if (lr && lr.author && lr.text) {
+            var lrBadge = C(lr.authorBadge, lr.author),
+              lrName = mpName(lr.author);
+            lastHtml =
+              '<span class="forum-thread-last">' +
+              '<span class="forum-avatar-wrap forum-avatar-sm"><span class="forum-avatar">' +
+              (lr.hasAvatarImg
+                ? '<img src="' +
+                  e +
+                  "/api/avatarimg/" +
+                  encodeURIComponent(lr.author) +
+                  "?v=" +
+                  (lr.avatarV || 0) +
+                  '" alt="" data-fallback="img/default-avatar.jpg" loading="lazy" decoding="async">'
+                : '<img src="img/default-avatar.jpg" alt="" loading="lazy" decoding="async">') +
+              '</span></span><span class="forum-thread-last-body">' +
+              '<span class="forum-thread-last-who"><span class="forum-thread-last-name">' +
+              w(lrName) +
+              "</span>" +
+              (lrBadge ? '<span class="forum-thread-pill-badge">' + lrBadge + "</span>" : "") +
+              '<span class="forum-thread-dot" aria-hidden="true">·</span><span class="forum-thread-last-age">' +
+              k(lr.createdAt) +
+              "</span></span>" +
+              '<span class="forum-thread-last-text">' +
+              w(lr.text) +
+              "</span></span></span>";
+          }
+          ((lastHtml || canManage) &&
             (u +=
               '<div class="forum-thread-foot">' +
-              '<span class="forum-thread-tags">' +
-              m(t, 2) +
-              "</span>" +
+              lastHtml +
               (canManage
                 ? '<button type="button" class="forum-thread-more" data-more="' +
                   w(t.id) +
