@@ -3339,7 +3339,9 @@
     var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var cv = document.createElement("canvas"); cv.className = "chat-poll-cv"; cv.setAttribute("aria-hidden", "true");
     host.insertBefore(cv, host.firstChild);
-    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 2500;
+    var x = cv.getContext("2d"), W = 0, H = 0, dpr = 1, drops = [], seen = !0, raf = 0, last = 0, G = 8, DUR = 2500, light = !1;
+    function theme() { light = document.documentElement.getAttribute("data-theme") === "light"; }
+    theme();
     function size() {
       var r = host.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
@@ -3375,10 +3377,11 @@
       return h;
     }
     function flat() {
-      for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) { x.globalAlpha = 0.14 * Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45); x.beginPath(); x.arc(gx, gy, 0.95, 0, 6.2832); x.fill(); }
+      x.fillStyle = light ? "#0a1230" : "#a9d7f5";
+      for (var gy = 4; gy < H; gy += G) for (var gx = 4; gx < W; gx += G) { x.globalAlpha = (light ? 0.12 : 0.16) * Math.max(0.18, 1 - ((gx / W) + (gy / H)) * 0.45); x.beginPath(); x.arc(gx, gy, 0.95, 0, 6.2832); x.fill(); }
     }
     function draw(now) {
-      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H); x.fillStyle = "#fff";
+      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H); x.fillStyle = light ? "#0a1230" : "#fff";
       if (red) { flat(); x.globalAlpha = 1; return; }
       /* calm water drop: ~80px/s rings, 3 rings 160ms apart, small centre dip, ~2.5s life */
       drops = drops.filter(function (d) { return now - d.t < DUR; });
@@ -3405,7 +3408,14 @@
           var r = Math.max(0.35, Math.min(2.6, 0.95 * k * (1 + Math.max(0, h) * 0.03)));
           x.globalAlpha = al;
           var tint = Math.min(1, glint * 1.4) * (rings.length ? 1 : 0.35); /* toward --accent light blue #a9d7f5 */
-          x.fillStyle = tint > 0.05 ? "rgb(" + Math.round(255 - 86 * tint) + "," + Math.round(255 - 40 * tint) + "," + Math.round(255 - 10 * tint) + ")" : "#fff";
+          if (light) {
+            /* ink navy dots that lift toward accent blue */
+            x.fillStyle = tint > 0.05
+              ? "rgb(" + Math.round(10 + (79 - 10) * tint) + "," + Math.round(18 + (140 - 18) * tint) + "," + Math.round(48 + (255 - 48) * tint) + ")"
+              : "rgba(10,18,48," + (0.35 + 0.45 * Math.min(1, al * 2)).toFixed(3) + ")";
+          } else {
+            x.fillStyle = tint > 0.05 ? "rgb(" + Math.round(255 - 86 * tint) + "," + Math.round(255 - 40 * tint) + "," + Math.round(255 - 10 * tint) + ")" : "#fff";
+          }
           x.beginPath(); x.arc(p[0], p[1], r, 0, 6.2832); x.fill();
         }
       }
@@ -3420,6 +3430,12 @@
     function kick() { !raf && seen && !document.hidden && (drops.length || !red) && (raf = requestAnimationFrame(loop)); }
     document.addEventListener("visibilitychange", kick);
     window.ResizeObserver ? new ResizeObserver(size).observe(host) : setTimeout(size, 50);
+    try {
+      new MutationObserver(function () {
+        var was = light; theme();
+        if (was !== light) draw(performance.now());
+      }).observe(document.documentElement, { attributes: !0, attributeFilter: ["data-theme"] });
+    } catch (_) {}
     size(); kick();
     return {
       drop: function (dx, dy) {

@@ -3380,16 +3380,7 @@ html {
   -webkit-user-select: none;
 }
 
-/* Offscreen list rows: skip layout/paint until near viewport (per dc snappy) */
-.chat-msg,
-.forum-thread,
-#shop-grid .product-card {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 96px;
-}
-#shop-grid .product-card {
-  contain-intrinsic-size: auto 280px;
-}
+/* content-visibility removed: it implied paint containment and clipped reactions/badges/sparkles (per dc) */
 .chat-msg-in {
   animation: chat-msg-in 0.25s ease-out;
 }
@@ -9520,8 +9511,10 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-plus-menu.chat-pbig-poll{width:min(320px,calc(100vw - 20px));padding:10px;gap:0;overflow:hidden}
 .chat-pbig-poll .chat-pbig-hd{padding:0 2px 8px;margin:0}
 .chat-pbig-poll .chat-pbig-hd b{font-size:14px;letter-spacing:.02em}
-.chat-poll-f{display:flex;flex-direction:column;gap:8px;position:relative;isolation:isolate;padding:12px 12px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(145deg,#1d1d1f 0%,#0b0b0c 55%,#000 100%);color:#f5f5f7;box-shadow:0 10px 28px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07);overflow:hidden}
-.chat-poll-f::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(rgba(255,255,255,.14) .9px,transparent 1.3px) 0 0/8px 8px;-webkit-mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%)}
+.chat-poll-f{display:flex;flex-direction:column;gap:8px;position:relative;isolation:isolate;padding:12px 12px 10px;border-radius:18px;border:1px solid rgba(169,215,245,.14);background:linear-gradient(145deg,#0d1b40 0%,#070f29 55%,#040a1f 100%);color:#f5f5f7;box-shadow:0 10px 28px rgba(0,0,0,.35),inset 0 1px 0 rgba(169,215,245,.1);overflow:hidden}
+.chat-poll-f::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(rgba(169,215,245,.22) .9px,transparent 1.3px) 0 0/8px 8px;-webkit-mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%)}
+[data-theme="light"] .chat-poll-f{border:1px solid rgba(10,18,48,.1);background:linear-gradient(160deg,#ffffff 0%,#f3f6fb 48%,#e6eef8 100%);color:#0a1230;box-shadow:0 12px 28px rgba(10,18,48,.12),inset 0 1px 0 #fff}
+[data-theme="light"] .chat-poll-f::before{background:radial-gradient(rgba(10,18,48,.14) .9px,transparent 1.3px) 0 0/8px 8px}
 .chat-poll-qi-wrap{display:flex;flex-direction:column;gap:4px;margin:0}
 .chat-poll-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.55;padding:0 2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .chat-poll-os{display:flex;flex-direction:column;gap:6px}
@@ -9552,6 +9545,22 @@ svg[data-hi="rubber-band"].hi-play { animation-name: hi-scale; }
 .chat-poll-f .chat-poll-qi:focus,.chat-pbig-poll .chat-poll-qi:focus{border-color:rgba(169,215,245,.55)!important;background:rgba(169,215,245,.08)!important}
 .chat-poll-f .chat-poll-qi::placeholder{color:rgba(245,245,247,.4)}
 @media (prefers-reduced-motion:reduce){.chat-poll-o.is-in,.chat-poll-o.is-out{animation:none}}
+/* Poll composer light mode controls (per dc) */
+[data-theme="light"] .chat-poll-f .chat-poll-qi,[data-theme="light"] .chat-pbig-poll .chat-poll-qi{border-color:rgba(10,18,48,.12)!important;background:rgba(255,255,255,.85)!important;color:#0a1230!important;box-shadow:inset 0 1px 0 #fff}
+[data-theme="light"] .chat-poll-f .chat-poll-qi:focus,[data-theme="light"] .chat-pbig-poll .chat-poll-qi:focus{border-color:rgba(79,140,255,.55)!important;background:#fff!important}
+[data-theme="light"] .chat-poll-f .chat-poll-qi::placeholder{color:rgba(10,18,48,.4)}
+[data-theme="light"] .chat-poll-lbl{opacity:.55;color:#0a1230}
+[data-theme="light"] .chat-poll-o{border-color:rgba(10,18,48,.12);background:rgba(255,255,255,.75);box-shadow:inset 0 1px 0 #fff}
+[data-theme="light"] .chat-poll-o input{color:#0a1230!important}
+[data-theme="light"] .chat-poll-o input::placeholder{color:rgba(10,18,48,.4)}
+[data-theme="light"] .chat-poll-o:focus-within{border-color:rgba(79,140,255,.55);background:rgba(79,140,255,.06)}
+[data-theme="light"] .chat-poll-o-dot{background:#4f8cff;box-shadow:0 0 0 3px rgba(79,140,255,.16)}
+[data-theme="light"] .chat-poll-rm{background:rgba(10,18,48,.06);color:rgba(10,18,48,.65)}
+[data-theme="light"] .chat-poll-add{border-color:rgba(79,140,255,.4);background:rgba(79,140,255,.06);color:#3a6cf0}
+[data-theme="light"] .chat-poll-f .chat-poll-multi{color:#0a1230}
+[data-theme="light"] .chat-poll-f .mp-check-box,[data-theme="light"] .chat-poll-f .chat-poll-box{border-color:rgba(10,18,48,.28);background:rgba(10,18,48,.05);box-shadow:inset 0 1px 0 #fff}
+[data-theme="light"] .chat-pbig-poll .chat-pbig-hd{color:var(--ink)}
+
 .chat-poll{width:min(250px,70vw);display:flex;flex-direction:column;gap:6px}
 .chat-poll-q{font-weight:650;font-size:15px;line-height:1.3}
 .chat-poll-list{display:flex;flex-direction:column;gap:5px}
@@ -9728,16 +9737,26 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-q4 .chat-poll-ft{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.08em;font-size:10px}
 .chat-poll-q4 .chat-poll-bar{justify-self:start}
 /* Q3 pattern variants (per dc): black gradient card + white stripes / dots, black in both themes */
-.chat-msg .chat-bubble.chat-poll-q3s,.chat-msg .chat-bubble.chat-poll-q3d{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(255,255,255,.1)!important;border-radius:20px!important;background:linear-gradient(145deg,#1d1d1f 0%,#0b0b0c 55%,#000 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 10px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07)!important;color:#f5f5f7!important}
+/* Q3 poll card themes (per dc): dark = site navy (--bg #070f29), light = airy pale glass */
+.chat-msg .chat-bubble.chat-poll-q3s,.chat-msg .chat-bubble.chat-poll-q3d{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(169,215,245,.14)!important;border-radius:20px!important;background:linear-gradient(145deg,#0d1b40 0%,#070f29 55%,#040a1f 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:0 10px 28px rgba(0,0,0,.4),inset 0 1px 0 rgba(169,215,245,.1)!important;color:#f5f5f7!important}
 .chat-msg .chat-bubble.chat-poll-q3s::before,.chat-msg .chat-bubble.chat-poll-q3d::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;-webkit-mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%);mask-image:linear-gradient(135deg,#000 0%,rgba(0,0,0,.55) 45%,transparent 85%)}
-.chat-msg .chat-bubble.chat-poll-q3s::before{background:repeating-linear-gradient(135deg,rgba(255,255,255,.075) 0 1px,transparent 1px 7px)}
-.chat-msg .chat-bubble.chat-poll-q3d::before{background:radial-gradient(rgba(255,255,255,.14) .9px,transparent 1.3px) 0 0/8px 8px}
-.chat-poll-q3s .chat-poll-ring .fg,.chat-poll-q3d .chat-poll-ring .fg{stroke:rgba(255,255,255,.85)}
-.chat-poll-q3s .chat-poll-ring .bg,.chat-poll-q3d .chat-poll-ring .bg{stroke:rgba(255,255,255,.16)}
-.chat-poll-q3s .is-mine .chat-poll-ring .fg,.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#5b9bff}
-.chat-poll-q3s .chat-poll-opt,.chat-poll-q3d .chat-poll-opt{border-bottom-color:rgba(255,255,255,.1)!important}
-[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3s,[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3d{box-shadow:0 10px 24px rgba(0,0,0,.22)!important}
-.chat-poll-q3s .chat-poll-voters .poll-voter-avatar,.chat-poll-q3d .chat-poll-voters .poll-voter-avatar{border-color:#111!important}
+.chat-msg .chat-bubble.chat-poll-q3s::before{background:repeating-linear-gradient(135deg,rgba(169,215,245,.1) 0 1px,transparent 1px 7px)}
+.chat-msg .chat-bubble.chat-poll-q3d::before{background:radial-gradient(rgba(169,215,245,.22) .9px,transparent 1.3px) 0 0/8px 8px}
+.chat-poll-q3s .chat-poll-ring .fg,.chat-poll-q3d .chat-poll-ring .fg{stroke:rgba(245,245,247,.85)}
+.chat-poll-q3s .chat-poll-ring .bg,.chat-poll-q3d .chat-poll-ring .bg{stroke:rgba(169,215,245,.22)}
+.chat-poll-q3s .is-mine .chat-poll-ring .fg,.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#a9d7f5}
+.chat-poll-q3s .chat-poll-opt,.chat-poll-q3d .chat-poll-opt{border-bottom-color:rgba(169,215,245,.12)!important}
+.chat-poll-q3s .chat-poll-voters .poll-voter-avatar,.chat-poll-q3d .chat-poll-voters .poll-voter-avatar{border-color:#070f29!important}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3s,[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3d{border:1px solid rgba(10,18,48,.1)!important;background:linear-gradient(160deg,#ffffff 0%,#f3f6fb 48%,#e6eef8 100%)!important;box-shadow:0 12px 28px rgba(10,18,48,.12),inset 0 1px 0 #fff!important;color:#0a1230!important}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3s::before{background:repeating-linear-gradient(135deg,rgba(10,18,48,.08) 0 1px,transparent 1px 7px)}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3d::before{background:radial-gradient(rgba(10,18,48,.14) .9px,transparent 1.3px) 0 0/8px 8px}
+[data-theme="light"] .chat-poll-q3s .chat-poll-ring .fg,[data-theme="light"] .chat-poll-q3d .chat-poll-ring .fg{stroke:rgba(10,18,48,.55)}
+[data-theme="light"] .chat-poll-q3s .chat-poll-ring .bg,[data-theme="light"] .chat-poll-q3d .chat-poll-ring .bg{stroke:rgba(10,18,48,.12)}
+[data-theme="light"] .chat-poll-q3s .is-mine .chat-poll-ring .fg,[data-theme="light"] .chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#a9d7f5}
+[data-theme="light"] .chat-poll-q3s .chat-poll-opt,[data-theme="light"] .chat-poll-q3d .chat-poll-opt{border-bottom-color:rgba(10,18,48,.08)!important}
+[data-theme="light"] .chat-poll-q3s .chat-poll-voters .poll-voter-avatar,[data-theme="light"] .chat-poll-q3d .chat-poll-voters .poll-voter-avatar{border-color:#fff!important}
+[data-theme="light"] .chat-poll-q3d .chat-poll-pct,[data-theme="light"] .chat-poll-q3s .chat-poll-pct,[data-theme="light"] .chat-poll-q3d .chat-poll-ft,[data-theme="light"] .chat-poll-q3s .chat-poll-ft{opacity:.7;color:#0a1230}
+[data-theme="light"] .chat-poll-q3d .chat-poll-opt:active{background-color:rgba(10,18,48,.05)!important}
 
 .chat-msg .chat-bubble.chat-poll-q3s{border-radius:20px!important}
 .chat-poll-q3s .chat-poll-opt{background:none!important;border:0!important;box-shadow:none!important;padding:0 4px;min-height:36px;border-bottom:1px solid rgba(127,127,127,.15)!important;border-radius:0}
@@ -9747,7 +9766,8 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
 .chat-poll-ring .bg{stroke:rgba(127,127,127,.25)}
 .chat-poll-ring .fg{stroke:rgba(200,205,220,.85);transition:stroke-dasharray .6s cubic-bezier(.25,1.3,.45,1)}
-.chat-poll-q3s .is-mine .chat-poll-ring .fg{stroke:#4f8cff}
+.chat-poll-q3s .is-mine .chat-poll-ring .fg{stroke:#a9d7f5}
+[data-theme="light"] .chat-poll-q3s .is-mine .chat-poll-ring .fg{stroke:#a9d7f5}
 [data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
 .chat-poll-q3s .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
 .chat-poll-q3s .is-mine .chat-poll-lbl{font-weight:650}
@@ -9760,7 +9780,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
 .chat-poll-ring .bg{stroke:rgba(127,127,127,.25)}
 .chat-poll-ring .fg{stroke:rgba(200,205,220,.85);transition:stroke-dasharray .6s cubic-bezier(.25,1.3,.45,1)}
-.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#4f8cff}
+.chat-poll-q3d .is-mine .chat-poll-ring .fg{stroke:#a9d7f5}
 [data-theme="light"] .chat-poll-ring .fg{stroke:#8a90a0}
 .chat-poll-q3d .chat-poll-opt::after{content:attr(data-pct);position:relative;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;opacity:.75;min-width:30px;text-align:right}
 .chat-poll-q3d .is-mine .chat-poll-lbl{font-weight:650}
@@ -9782,7 +9802,8 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-rip{position:absolute;z-index:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;pointer-events:none;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 0 18px rgba(91,155,255,.45),inset 0 0 12px rgba(255,255,255,.25);animation:mp-rip .95s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes mp-rip{to{transform:scale(22);opacity:0;border-width:.2px}}
 /* ambient dot wave: brighter dot layer revealed by a drifting soft band */
-.chat-msg .chat-bubble.chat-poll-q3d::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(rgba(255,255,255,.26) 1px,transparent 1.5px) 0 0/8px 8px;-webkit-mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);-webkit-mask-size:300% 300%;mask-size:300% 300%;animation:mp-dot-wave 5s ease-in-out infinite;opacity:.55}
+.chat-msg .chat-bubble.chat-poll-q3d::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(rgba(169,215,245,.32) 1px,transparent 1.5px) 0 0/8px 8px;-webkit-mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);mask-image:linear-gradient(115deg,transparent 30%,#000 45%,transparent 60%);-webkit-mask-size:300% 300%;mask-size:300% 300%;animation:mp-dot-wave 5s ease-in-out infinite;opacity:.5}
+[data-theme="light"] .chat-msg .chat-bubble.chat-poll-q3d::after{background:radial-gradient(rgba(10,18,48,.18) 1px,transparent 1.5px) 0 0/8px 8px;opacity:.45}
 @keyframes mp-dot-wave{0%{-webkit-mask-position:100% 100%;mask-position:100% 100%}100%{-webkit-mask-position:0% 0%;mask-position:0% 0%}}
 .chat-bubble.chat-poll-q3d.is-off::after{animation-play-state:paused}
 /* Globe picker: sliding segmented thumb */
@@ -9798,7 +9819,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 
 /* calmer rings (per dc): no size change, smooth sweep, gentle selected state */
 .chat-poll-q3d .chat-poll-opt,.chat-poll-q3d .chat-poll-opt:active{transform:none!important;transition:background-color .2s ease}
-.chat-poll-q3d .chat-poll-opt:active{background-color:rgba(255,255,255,.06)!important}
+[data-theme="dark"] .chat-poll-q3d .chat-poll-opt:active{background-color:rgba(169,215,245,.08)!important}
 .chat-poll-q3d .chat-poll-ring{transform:none!important;animation:none!important}
 .chat-poll-q3d .chat-poll-ring .bg,.chat-poll-q3d .chat-poll-ring .fg{transform:rotate(-90deg);transform-box:fill-box;transform-origin:center}
 .chat-poll-q3d .chat-poll-ring .fg{transition:stroke-dasharray .55s cubic-bezier(.22,1,.36,1),stroke .3s ease}
@@ -9826,7 +9847,8 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-rip{display:none!important}
 .chat-poll-q3d .chat-poll-list{margin:0 -8px;gap:4px}
 .chat-poll-q3d .chat-poll-opt{padding:6px 8px!important;border-radius:12px!important;min-height:40px;box-sizing:border-box;background:transparent!important;transition:background-color .25s ease}
-.chat-poll-q3d .chat-poll-opt:active{background:rgba(255,255,255,.07)!important}
+[data-theme="dark"] .chat-poll-q3d .chat-poll-opt:active{background:rgba(169,215,245,.1)!important}
+[data-theme="light"] .chat-poll-q3d .chat-poll-opt:active{background:rgba(10,18,48,.05)!important}
 .chat-poll-q3d .chat-poll-opt.is-mine{background:rgba(91,155,255,.12)!important}
 .chat-poll-q3d .chat-poll-opt.is-mine:active{background:rgba(91,155,255,.18)!important}
 .chat-msg .chat-bubble.chat-poll-q3d{max-width:none!important}
