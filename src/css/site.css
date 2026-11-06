@@ -9801,6 +9801,114 @@ svg[data-hi].hi-play {
 .chat-ge-l2{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .chat-ge.is-loading .chat-ge-l2{height:1em;width:70%;border-radius:4px;background:rgba(127,127,127,.2)}
 .chat-ge.is-na .chat-ge-l2{opacity:.65;font-style:italic}
+
+/* Globe embed composer preview (per dc): replaces message bar until Send/Cancel */
+.chat-inputrow.is-gp-prev{
+  gap:8px;
+}
+.chat-inputrow.is-gp-prev > .chat-attach,
+.chat-inputrow.is-gp-prev > .chat-pm-chip{
+  display:none!important;
+}
+.chat-inputrow.is-gp-prev > .chat-plus,
+.chat-inputrow.is-gp-prev > .chat-inputbar{
+  opacity:0;
+  transform:scale(.96);
+  pointer-events:none;
+  max-width:0;
+  width:0;
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  overflow:hidden;
+  flex:0 0 0;
+  transition:opacity .2s ease, transform .2s ease;
+}
+.chat-gp-prev{
+  flex:1;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  opacity:0;
+  transform:scale(.96);
+  transition:opacity .22s ease, transform .22s cubic-bezier(.32,.72,0,1);
+  will-change:opacity, transform;
+}
+.chat-gp-prev.is-in{
+  opacity:1;
+  transform:none;
+}
+.chat-gp-prev.is-out{
+  opacity:0;
+  transform:scale(.96);
+  pointer-events:none;
+}
+.chat-gp-prev-x{
+  flex:none;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:0;
+  padding:0;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  background:rgba(128,128,128,.32);
+  color:#fff;
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .16s ease;
+}
+[data-theme="light"] .chat-gp-prev-x{
+  background:rgba(120,120,128,.25);
+  color:#111;
+}
+.chat-gp-prev-x svg{width:16px;height:16px;display:block}
+.chat-gp-prev-x:active{opacity:.72}
+.chat-gp-prev-card.chat-ge{
+  flex:1;
+  min-width:0;
+  width:auto;
+  max-width:none;
+  margin:0;
+  pointer-events:none;
+  background:var(--sheet-bg,var(--glass-regular-tint));
+  border:1px solid var(--sheet-border,rgba(127,127,127,.2));
+  -webkit-backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));
+  backdrop-filter:var(--sheet-blur,blur(20px) saturate(1.6));
+  box-shadow:var(--sheet-shadow,var(--shadow));
+}
+.chat-gp-prev-card.chat-ge:active{transform:none}
+.chat-gp-prev-card .chat-ge-pic.is-glyph,
+.chat-gp-prev-card .chat-ge-pic.is-av{
+  background:rgba(127,127,127,.14);
+}
+.chat-gp-prev-card .chat-ge-pic.is-av{border-radius:50%}
+.chat-gp-prev-glyph{
+  font:700 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  color:var(--muted);
+  user-select:none;
+}
+.chat-gp-prev-send{
+  /* reuses .chat-send look; keep primary */
+  flex:none;
+  transition:opacity .16s ease;
+}
+.chat-gp-prev-send:active{
+  opacity:.72;
+  transform:none; /* opacity pulse, not bounce — override .chat-send:active scale */
+}
+@media (prefers-reduced-motion:reduce){
+  .chat-gp-prev,
+  .chat-inputrow.is-gp-prev > .chat-plus,
+  .chat-inputrow.is-gp-prev > .chat-inputbar{
+    transition:none;
+  }
+}
+
 /* + menu morph: Globe picker + poll composer (per dc) */
 .chat-plus-menu.chat-pbig{
   width:min(360px,calc(100vw - 24px));
