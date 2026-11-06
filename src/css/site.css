@@ -7777,6 +7777,133 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
 [data-theme="light"] .dash-tag-vip { color: #8a6500; }
 [data-theme="light"] .dash-tag-ban,
 [data-theme="light"] input.dash-tag-ban { color: #d70015 !important; }
+/* ---------- Dashboard main tab declutter (per dc) ---------- */
+.dash-hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.dash-hero-tile {
+  padding: 12px 12px 10px;
+  border-radius: 16px;
+  background: var(--glass-clear-tint);
+  border: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+[data-theme="light"] .dash-hero-tile {
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(10, 18, 48, 0.04);
+}
+.dash-hero-tile:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.dash-hero-num {
+  font-size: 22px;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-hero-lbl {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.dash-hero-sub {
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.75;
+}
+.dash-caption-tight {
+  margin: 0 0 12px !important;
+  text-align: left;
+  opacity: 0.85;
+}
+.dash-sec {
+  margin: 0 0 10px;
+  border-radius: 16px;
+  background: transparent;
+}
+.dash-sec-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dash-sec-hd > span:first-child {
+  color: var(--muted);
+}
+.dash-sec-chev {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--glass-clear-tint);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+.dash-sec.is-open > .dash-sec-hd .dash-sec-chev {
+  transform: rotate(270deg);
+}
+.dash-sec-body {
+  display: none;
+  padding: 0 0 6px;
+}
+.dash-sec.is-open > .dash-sec-body {
+  display: block;
+}
+.dash-sec-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 6px;
+}
+.dash-box-quiet {
+  border: 0;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: 4px;
+}
+.dash-mini-row {
+  gap: 6px !important;
+  margin-bottom: 8px !important;
+}
+.dash-chart {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+[data-theme="light"] .dash-chart {
+  box-shadow: inset 0 1px 0 #fff;
+}
+.dash-label {
+  margin-top: 8px;
+}
 /* ---------- Dashboard tweaks (per dc) ---------- */
 /* Dashboard: destructive Clear in the "Clear all chat messages?" confirm. */
 .mp-dialog-actions .mp-dialog-grant.mp-dialog-danger,

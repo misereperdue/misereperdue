@@ -329,36 +329,32 @@
       var d = o.since && o.since[key];
       return d ? new Date(d + "T12:00:00Z").toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "";
     }
-    function __overview() {
+    function __overview(parent) {
+      parent = parent || k;
       var sm = o.summary;
       if (!sm) return;
       var days = o.days || [],
         today = days[0] || {},
         act7 = days.slice(0, 7).reduce(function (a, d) {
           return a + (d.active || 0);
-        }, 0),
-        mc = sm.memberCountries || {},
-        ncc = Object.keys(mc).length,
-        lb = document.createElement("div");
-      lb.className = "dash-label";
-      lb.textContent = "Members";
-      k.appendChild(lb);
+        }, 0);
       var r = __row();
+      r.className = (r.className ? r.className + " " : "") + "dash-mini-row";
       __tile(r, "Members", sm.members || 0);
       __tile(r, "VIP", sm.vip || 0);
       __tile(r, "Active today", today.active || 0, "active", null);
-      __tile(r, "Countries", ncc);
-      k.appendChild(r);
+      parent.appendChild(r);
       var st = __since("active");
-      k.appendChild(
+      parent.appendChild(
         __cap(
-          "Active = signed-in members who opened the site, per UTC day · 7-day avg " +
+          "Active · 7-day avg " +
             (act7 / 7).toFixed(1) +
-            (st ? " · recording since " + st : ""),
+            (st ? " · since " + st : ""),
         ),
       );
     }
-    function __shop() {
+    function __shop(parent) {
+      parent = parent || k;
       if (!(o.v >= 2)) return;
       var con = o.shop && o.shop.connected,
         pv = o.prev || {},
@@ -381,11 +377,7 @@
           } catch (e) {
             return "$" + Math.round(v);
           }
-        },
-        lb = document.createElement("div");
-      lb.className = "dash-label";
-      lb.textContent = "Shop";
-      k.appendChild(lb);
+        };
       var r = __row();
       if (con) {
         var ord = tot("orders"),
@@ -395,10 +387,10 @@
       }
       __tile(r, "Cart adds", tot("cartAdds"), "cartAdds", pv.cartAdds);
       __tile(r, "Globe views", tot("globeViews"), "globeViews", pv.globeViews);
-      k.appendChild(r);
+      parent.appendChild(r);
       var a = __since("cartAdds"),
         g = __since("globeViews");
-      k.appendChild(
+      parent.appendChild(
         __cap(
           "Last 30 days" +
             (con
@@ -406,7 +398,7 @@
               : o.shop && o.shop.error
                 ? " · Shopify error: " + o.shop.error
                 : " · orders show once Shopify is connected") +
-            (a || g ? " · counters since " + (a || g) : " · cart adds and Globe views are new counters"),
+            (a || g ? " · since " + (a || g) : ""),
         ),
       );
     }
@@ -520,41 +512,88 @@
       }
       draw();
     }
-    var M = document.createElement("div");
-    M.style.cssText = "display:flex;gap:8px;margin-bottom:12px;";
+    function __sec(title, startOpen) {
+      var sec = document.createElement("section");
+      sec.className = "dash-sec" + (startOpen ? " is-open" : "");
+      var hd = document.createElement("button");
+      hd.type = "button";
+      hd.className = "dash-sec-hd";
+      hd.setAttribute("aria-expanded", startOpen ? "true" : "false");
+      var tx = document.createElement("span");
+      tx.textContent = title;
+      hd.appendChild(tx);
+      var ch = document.createElement("span");
+      ch.className = "dash-sec-chev";
+      ch.setAttribute("aria-hidden", "true");
+      ch.textContent = "›";
+      hd.appendChild(ch);
+      var body = document.createElement("div");
+      body.className = "dash-sec-body";
+      hd.addEventListener("click", function () {
+        var on = sec.classList.toggle("is-open");
+        hd.setAttribute("aria-expanded", on ? "true" : "false");
+      });
+      sec.appendChild(hd);
+      sec.appendChild(body);
+      return { root: sec, body: body };
+    }
     var z = o.days.reduce(function (e, t) {
       return e + (t.forumPosts || 0) + (t.forumReplies || 0);
     }, 0);
     var __pv = o.prev || null;
-    ([
-      { label: "Views", value: o.totalViews, k: "views", pv: __pv && __pv.views },
-      { label: "Visitors", value: o.totalVisitors, k: "visitors", pv: __pv && __pv.visitors },
-      { label: "Posts", value: z, k: "posts", pv: __pv && __pv.posts },
-      { label: "Users", value: o.totalNewUsers || 0, k: "newUsers", pv: __pv && __pv.newUsers },
+    var __today = (o.days && o.days[0]) || {};
+    var __salesTot = (o.days || []).reduce(function (a, d) { return a + (__val(d, "revenue") || 0); }, 0);
+    var __salesFmt = (function (v) {
+      try {
+        return new Intl.NumberFormat(void 0, {
+          style: "currency",
+          currency: (o.shop && o.shop.currency) || "CAD",
+          currencyDisplay: "narrowSymbol",
+          notation: v >= 1e4 ? "compact" : "standard",
+          maximumFractionDigits: v >= 1e4 ? 1 : 0,
+        }).format(v);
+      } catch (e) {
+        return "$" + Math.round(v);
+      }
+    })(__salesTot);
+    var __online = "number" == typeof window.MPOnlineCount ? window.MPOnlineCount : null;
+    /* Headline stats (per dc): online, today's visitors, messages, signups, sales */
+    var __hero = document.createElement("div");
+    __hero.className = "dash-hero";
+    [
+      { label: "Online", value: __online != null ? __online : "—", raw: __online != null },
+      { label: "Visitors today", value: __today.visitors || 0, raw: !0 },
+      { label: "Messages", value: z, raw: !0, sub: "30 days" },
+      { label: "Signups", value: o.totalNewUsers || 0, raw: !0, sub: "30 days" },
+      { label: "Sales", value: __salesFmt, raw: !1, sub: "30 days" },
     ].forEach(function (e) {
       var t = document.createElement("div");
-      t.style.cssText =
-        "flex:1 1 0;min-width:0;text-align:center;padding:10px 4px;border-radius:16px;background:var(--glass-clear-tint);border:var(--glass-hairline);";
+      t.className = "dash-hero-tile";
       var n = document.createElement("div");
-      ((n.style.cssText =
-        "font-size:18px;font-weight:700;white-space:nowrap;letter-spacing:-0.02em;"),
-        t.appendChild(n));
+      n.className = "dash-hero-num";
+      t.appendChild(n);
       var a = document.createElement("div");
-      ((a.style.cssText = "font-size:12px;color:var(--muted);margin-top:4px;"),
-        (a.textContent = e.label),
-        t.appendChild(a),
-        __tileExtras(t, e.k, e.value, e.pv),
-        M.appendChild(t),
-        s(n, e.value));
-    }),
-      (function () {
-        var __tc = document.createElement("div");
-        ((__tc.className = "dash-caption"), (__tc.style.cssText = "margin:-4px 0 8px;"),
-          (__tc.textContent = "Totals · Last 30 days" + (o.prev ? " · change vs prior 30" : "")),
-          k.appendChild(__tc));
-      })(),
-      /* C-M11: totals cover the 30 days the server returns */ k.appendChild(M));
-    __overview();
+      a.className = "dash-hero-lbl";
+      a.textContent = e.label;
+      t.appendChild(a);
+      if (e.sub) {
+        var u = document.createElement("div");
+        u.className = "dash-hero-sub";
+        u.textContent = e.sub;
+        t.appendChild(u);
+      }
+      __hero.appendChild(t);
+      e.raw && typeof e.value === "number" ? s(n, e.value) : (n.textContent = String(e.value));
+    });
+    k.appendChild(__hero);
+    var __tc = document.createElement("div");
+    __tc.className = "dash-caption dash-caption-tight";
+    __tc.textContent = "Overview" + (o.prev ? " · vs prior 30 days in Activity" : "");
+    k.appendChild(__tc);
+    var __mem = __sec("Members", !0);
+    k.appendChild(__mem.root);
+    __overview(__mem.body);
+    /* Views/Visitors 30d totals remain reachable via the Activity metric menu */
     var S = "views",
       P = {
         views: "Views",
@@ -690,8 +729,9 @@
     var Y = document.createElement("div");
     ((Y.className = "dash-month"), (Y.style.display = "none"), O.appendChild(Y));
     var _ = document.createElement("div");
-    ((_.style.cssText =
-      "position:relative;height:262px;margin:0 0 12px;background:var(--glass-clear-tint);border:var(--glass-hairline);border-radius:20px;padding:16px;overflow:hidden;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);"),
+    ((_.className = "dash-chart"),
+      (_.style.cssText =
+      "position:relative;height:240px;margin:0 0 8px;background:var(--glass-clear-tint);border:0;border-radius:18px;padding:14px;overflow:hidden;"),
       k.appendChild(_));
     var __utc = document.createElement("div");
     ((__utc.className = "dash-caption"), (__utc.style.cssText = "margin:-4px 0 6px;"),
@@ -1049,15 +1089,15 @@
       });
     }
     (K(), window.addEventListener("resize", $));
+    var __nu = __sec("Newest signups", !1);
+    k.appendChild(__nu.root);
+    k.insertBefore(G, __nu.root);
     var ee = document.createElement("div");
-    ((ee.className = "dash-label"),
-      (ee.textContent = "Newest Users"),
-      k.appendChild(ee));
+    ee.hidden = !0;
     var te = document.createElement("div");
-    ((te.className = "dash-box"),
+    ((te.className = "dash-box dash-box-quiet"),
       (te.innerHTML = '<div class="dash-empty">Loading...</div>'),
-      k.appendChild(te),
-      k.insertBefore(G, ee),
+      __nu.body.appendChild(te),
       t("/api/users/recent")
         .then(function (e) {
           e && e.ok && e.users
@@ -1105,16 +1145,26 @@
           te.innerHTML =
             '<div class="dash-empty">Could not load users.</div>';
         }));
+    var __co = __sec("Countries", !1);
+    k.appendChild(__co.root);
     var ne = document.createElement("div");
-    ((ne.className = "dash-label"),
-      (ne.textContent = "Countries"),
-      k.appendChild(ne));
+    ne.className = "dash-sec-tools";
+    __co.body.appendChild(ne);
     var ae = document.createElement("div");
-    ((ae.className = "dash-box"),
-    (ae.style.padding = "6px 14px"),
+    ((ae.className = "dash-box dash-box-quiet"),
+      (ae.style.padding = "2px 4px 6px"),
       __countries(ae, ne),
-      k.appendChild(ae),
-      __shop());
+      /* __countries writes "Countries" + Visitors/Members toggle into ne; drop the duplicate title */
+      (function () {
+        var first = ne.firstChild;
+        if (first && first.nodeType === 1 && first.tagName === "SPAN" && /countries/i.test(first.textContent || ""))
+          first.remove();
+        if (!ne.childNodes.length) ne.hidden = !0;
+      })(),
+      __co.body.appendChild(ae));
+    var __sh = __sec("Shop", !1);
+    k.appendChild(__sh.root);
+    __shop(__sh.body);
     var re = document.createElement("div");
     re.className = "dash-actions";
     var ie = document.createElement("button");
