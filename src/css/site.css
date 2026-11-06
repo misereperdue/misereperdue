@@ -4334,22 +4334,49 @@ html {
   -webkit-mask-image: none;
   mask-image: none;
 }
-/* Search: icon pill toggles a basic drop-down field (per dc) */
+/* Search: circular icon pill + iOS-style field (per dc) */
 .forum-cat-search {
   width: 36px;
   min-width: 36px;
-  padding: 0;
-  display: inline-grid;
-  place-items: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  line-height: 0;
+  box-sizing: border-box;
 }
 .forum-cat-search svg {
   display: block;
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+/* Open = subtle fill only — never the category orb (.on) */
+.forum-cat-search.is-open,
+.forum-cat-search.on,
+[data-theme="light"] .forum-cat-search.is-open,
+[data-theme="light"] .forum-cat-search.on,
+[data-theme="dark"] .forum-cat-search.is-open,
+[data-theme="dark"] .forum-cat-search.on {
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  color: var(--ink) !important;
+}
+[data-theme="light"] .forum-cat-search.is-open,
+[data-theme="light"] .forum-cat-search.on {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: var(--ink) !important;
 }
 .forum-search-slot {
   display: grid;
   grid-template-rows: 0fr;
-  margin: 0 0 12px;
-  transition: grid-template-rows 0.22s ease;
+  margin: 0;
+  transition: grid-template-rows 0.24s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .forum-search-slot.is-open {
   grid-template-rows: 1fr;
@@ -4362,28 +4389,41 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.07);
-  border: var(--glass-hairline);
+  box-sizing: border-box;
+  height: 36px;
+  margin: 0 0 12px;
+  padding: 0 10px 0 12px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0;
   color: var(--muted);
   position: relative;
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  transform: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.forum-search-slot.is-open .forum-search {
+  opacity: 1;
+  transform: translateY(0);
 }
 [data-theme="light"] .forum-search {
-  background: #ebebf0;
-  border: 1px solid rgba(10, 18, 48, 0.16);
-  color: var(--muted);
+  background: rgba(0, 0, 0, 0.05);
+  border: 0;
   box-shadow: none;
+  color: var(--muted);
 }
-.forum-search svg {
+.forum-search-mag,
+.forum-search > svg {
   flex: none;
-  opacity: 0.7;
-  filter: none;
+  width: 15px;
+  height: 15px;
+  opacity: 0.55;
+  color: var(--muted);
 }
 .forum-search-input {
   flex: 1;
@@ -4392,31 +4432,43 @@ html {
   background: transparent;
   outline: 0;
   font-size: 16px; /* iOS: avoid focus zoom */
-  line-height: 1.25;
+  line-height: 1.2;
   color: var(--ink);
   padding: 0;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .forum-search-input::placeholder {
   color: var(--muted);
   letter-spacing: 0;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 .forum-search-clear {
   flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   border: 0;
-  background: transparent;
-  color: var(--muted);
+  background: rgba(128, 128, 128, 0.28);
+  color: var(--ink);
   cursor: pointer;
   padding: 0;
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  opacity: 0.85;
+}
+.forum-search-clear svg {
+  display: block;
+  width: 10px;
+  height: 10px;
+  opacity: 0.9;
 }
 .forum-search-clear:active {
-  color: var(--ink);
+  opacity: 1;
+  transform: scale(0.94);
 }
 .forum-search-clear[hidden] {
   display: none !important;
@@ -10944,8 +10996,12 @@ html[data-gcards="g3"] .forum-thread-more {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .forum-search-slot {
-    transition: none;
+  .forum-search-slot,
+  .forum-search {
+    transition: none !important;
+  }
+  .forum-search {
+    transform: none;
   }
 }
 

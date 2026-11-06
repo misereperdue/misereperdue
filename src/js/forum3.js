@@ -1978,13 +1978,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       (u += '<div class="forum-cats">'),
       (u +=
         '<button type="button" class="forum-cat forum-cat-search' +
-        (searchOpen ? " on" : "") +
+        (searchOpen ? " is-open" : "") +
         '" data-search-toggle="1" aria-label="Search" aria-expanded="' +
         (searchOpen ? "true" : "false") +
-        '" title="Search"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'),
+        '" title="Search"><svg width="15" height="15" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'),
       (u +=
         '<button type="button" class="forum-cat' +
-        ("" === r.category && !searchOpen ? " on" : "") +
+        ("" === r.category ? " on" : "") +
         '" data-cat="">All</button>'),
       b.categories.forEach(function (e) {
         var t = "";
@@ -2012,13 +2012,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '<div class="forum-search-slot' +
         (searchOpen ? " is-open" : "") +
         '"><div class="forum-search-inner"><div class="forum-search">' +
-        '<svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+        '<svg class="forum-search-mag" width="15" height="15" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
         '<input type="text" class="forum-search-input" placeholder="Search threads" value="' +
         w(n) +
-        '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">' +
+        '" aria-label="Search threads" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">' +
         '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
-        (n ? "" : ' hidden') +
-        '><svg width="12" height="12" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
+        (n ? "" : " hidden") +
+        '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2183,6 +2183,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     (!(function () {
       var slot = t.querySelector(".forum-search-slot"),
         toggle = t.querySelector("[data-search-toggle]");
+      var searchFocusTimer = 0;
       function setOpen(on) {
         searchOpen = !!on;
         try {
@@ -2190,31 +2191,41 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         } catch (e) {}
         if (slot) slot.classList.toggle("is-open", searchOpen);
         if (toggle) {
-          toggle.classList.toggle("on", searchOpen);
+          toggle.classList.toggle("is-open", searchOpen);
+          toggle.classList.remove("on"); /* never steal category orb */
           toggle.setAttribute("aria-expanded", searchOpen ? "true" : "false");
         }
-        /* All pill: selected only when no category and search closed */
-        var allBtn = t.querySelector('.forum-cat[data-cat=""]');
-        allBtn && allBtn.classList.toggle("on", "" === r.category && !searchOpen);
+        /* Category selection is independent of search open state */
       }
       toggle &&
         toggle.addEventListener("click", function (ev) {
           ev.preventDefault();
           ev.stopPropagation();
-          setOpen(!searchOpen);
-          if (searchOpen) {
-            var inp = t.querySelector(".forum-search-input");
-            inp &&
-              requestAnimationFrame(function () {
+          if (searchFocusTimer) {
+            clearTimeout(searchFocusTimer);
+            searchFocusTimer = 0;
+          }
+          var willOpen = !searchOpen;
+          setOpen(willOpen);
+          if (willOpen) {
+            /* focus only after open transition (~240ms) to avoid iOS scroll jump */
+            searchFocusTimer = setTimeout(function () {
+              searchFocusTimer = 0;
+              var inp = t.querySelector(".forum-search-input");
+              if (inp && searchOpen) {
                 try {
-                  inp.focus();
-                } catch (e) {}
-              });
+                  inp.focus({ preventScroll: true });
+                } catch (e) {
+                  try {
+                    inp.focus();
+                  } catch (e2) {}
+                }
+              }
+            }, 250);
           } else {
-            /* collapsing clears query so the list resets */
             n = "";
             var inp2 = t.querySelector(".forum-search-input");
-            inp2 && (inp2.value = "");
+            inp2 && (inp2.value = "", inp2.blur());
             ge();
           }
         });
