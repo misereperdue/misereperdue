@@ -995,9 +995,12 @@
         .catch(function () {});
   }
   /* Profile bubble (per dc): compact profile popover anchored to the tapped avatar.
-     WebKit: never opacity/clip/mask the backdrop-filter layer — scale from tip, fade body.
-     Pre-warm a hidden glass layer so Safari's backdrop compositor is ready on first open. */
+     One SVG outline = rounded body + soft iOS stem (mask on a single glass layer) so
+     backdrop-filter / tint / hairline cover body and stem together — no diamond seam.
+     Tip is ~12px tall so WebKit keeps blur on the protrusion. Open: scale from tip
+     (glass opacity stays 1), frost from frame 1, fade content only. */
   var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
+  var MP_PB_STEM = 13, MP_PB_RADIUS = 20;
   function mpPBwarm() {
     if (mpPBwarmed) return;
     mpPBwarmed = !0;
@@ -1011,22 +1014,46 @@
       setTimeout(function () { w.remove(); }, 1200);
     } catch (e) {}
   }
+  /* soft iOS stem: rounded tip + concave shoulders flowing into the body edge */
+  function mpPBstemPath(W, H, ax, T, R) {
+    var hw = 14, tipR = 1.8;
+    return (
+      "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T +
+      "L" + (ax - hw) + " " + T +
+      "C" + (ax - hw + 3.6) + " " + T + " " + (ax - 4.6) + " " + (tipR + 0.3) + " " + (ax - tipR * 0.2) + " " + tipR +
+      "A" + tipR + " " + tipR + " 0 0 1 " + (ax + tipR * 0.2) + " " + tipR +
+      "C" + (ax + 4.6) + " " + (tipR + 0.3) + " " + (ax + hw - 3.6) + " " + T + " " + (ax + hw) + " " + T +
+      "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) +
+      "L" + W + " " + (T + H - R) + "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) +
+      "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z"
+    );
+  }
+  function mpPBapplyMask(shp, frost, line, W, H, ax, T, below) {
+    var d = mpPBstemPath(W, H, ax, T, MP_PB_RADIUS),
+      fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
+      vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
+      mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")";
+    shp.style.webkitMaskImage = mk;
+    shp.style.maskImage = mk;
+    frost.style.webkitMaskImage = mk;
+    frost.style.maskImage = mk;
+    /* hairline is a sibling (unmasked) so the full stroke rings the stem tip */
+    line.innerHTML = '<svg class="mp-pb-line" ' + vb + "><path" + fl + ' d="' + d + '"/></svg>';
+  }
   function mpPBclose(fast) {
     var b = mpPBel;
     if (!b) return;
     mpPBel = null;
     b._off && b._off();
-    /* fast = tear down now (no fade) so a new open never shares a frame with the old card */
     if (fast) {
       b.remove();
       return;
     }
-    /* close: frost covers glass first (keeps look frosted), body fades/scales to tip,
-       then frost fades — never opacity-animate the backdrop-filter layer */
+    /* close: frost covers, then scale back into the tip — never opacity-animate glass */
     b.classList.remove("is-in", "is-frosted");
     b.classList.add("is-out");
-    setTimeout(function () { b.classList.add("is-gone"); }, 90);
-    setTimeout(function () { b.remove(); }, 300);
+    setTimeout(function () { b.classList.add("is-gone"); }, 80);
+    setTimeout(function () { b.remove(); }, 220);
   }
   function mpPBput(u) {
     if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
@@ -1038,7 +1065,6 @@
   function mpPBshow(n, anchor, rq, fromCache, key) {
     if (rq !== mpPBreq || !n || !anchor || !anchor.isConnected) return;
     key = key || n.username;
-    /* same user+anchor already open: never rebuild (avoids left/top re-seat glide after cache→fresh) */
     if (mpPBel && mpPBel._u === key && mpPBel._a === anchor) {
       if (mpPBel._fromCache && !fromCache) {
         mpPBel._fromCache = !1;
@@ -1066,7 +1092,6 @@
     hd.className = "mp-pb-hd";
     var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
       pill = O(n);
-    /* badge sits right of the avatar, inline after the name (per dc), not overlaid on it */
     var bd = pill ? "" : P(n);
     hd.appendChild(av);
     var nm = document.createElement("div");
@@ -1103,7 +1128,6 @@
       br.childNodes.length && st.appendChild(br);
     }
     body.appendChild(st);
-    /* reserve bio space so a late bio can't grow the bubble mid-open */
     var bio = document.createElement("div");
     bio.className = "mp-pb-bio" + (n.bio ? "" : " is-empty");
     if (n.bio) bio.textContent = n.bio;
@@ -1141,28 +1165,19 @@
     fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
     fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
     body.appendChild(fp);
-    /* glass body (rounded rect) + tip triangle with SAME backdrop-filter/tint.
-       Tip is under the body rim so only the outer triangle shows — no path clip on body
-       (WebKit drops blur on path protrusions). */
     var frost = document.createElement("i");
     frost.className = "mp-pb-frost";
     frost.setAttribute("aria-hidden", "true");
     var shp = document.createElement("i");
     shp.className = "mp-pb-shape";
     shp.setAttribute("aria-hidden", "true");
-    var tip = document.createElement("i");
-    tip.className = "mp-pb-tail";
-    tip.setAttribute("aria-hidden", "true");
-    var tipFrost = document.createElement("i");
-    tipFrost.className = "mp-pb-tail-frost";
-    tipFrost.setAttribute("aria-hidden", "true");
-    tip.appendChild(tipFrost);
-    /* tip first so body paints over the overlap (no double-tint seam) */
-    b.appendChild(tip);
+    var line = document.createElement("i");
+    line.className = "mp-pb-outline";
+    line.setAttribute("aria-hidden", "true");
     b.appendChild(shp);
+    b.appendChild(line);
     b.appendChild(frost);
     b.appendChild(body);
-    /* measure while inert; seat final left/top/origin before first paint */
     b.style.visibility = "hidden";
     b.style.pointerEvents = "none";
     b.style.transition = "none";
@@ -1176,13 +1191,14 @@
       vw = document.documentElement.clientWidth,
       vh = window.innerHeight,
       M8 = 10,
-      TH = 7,
+      TH = MP_PB_STEM,
       gap = 5 + TH,
       cx = r.left + r.width / 2,
       below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
       left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
       top = below ? r.bottom + gap : r.top - gap - h,
       ax;
+    /* keep stem clear of the corner radius */
     cx - left < 30 && (left = Math.max(4, cx - 30));
     left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
     ax = Math.max(28, Math.min(cx - left, w - 28));
@@ -1191,18 +1207,18 @@
     b.style.left = left + "px";
     b.style.top = top + "px";
     b.style.setProperty("--ax", ax + "px");
-    b.style.setProperty("--ay", below ? "0px" : h + "px");
-    b.style.willChange = "auto";
-    body.style.willChange = "transform, opacity";
-    /* force style/layout so WebKit builds backdrop-filter on body + tip while hidden */
+    /* transform-origin at the stem tip (outside the padding box) */
+    b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
+    b.style.setProperty("--stem", TH + "px");
+    mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
+    b.style.willChange = "transform";
+    body.style.willChange = "opacity";
     void shp.offsetWidth;
-    void tip.offsetWidth;
+    void frost.offsetWidth;
     void getComputedStyle(shp).webkitBackdropFilter;
     void getComputedStyle(shp).backdropFilter;
-    void getComputedStyle(tip).webkitBackdropFilter;
-    void getComputedStyle(tip).backdropFilter;
     mpPBel = b;
-    /* triple rAF: let Safari composite the glass, then reveal at rest scale, then is-in */
+    /* triple rAF: composite glass under frost at scale .6, then spring open */
     requestAnimationFrame(function () {
       if (mpPBel !== b) return;
       requestAnimationFrame(function () {
@@ -1213,15 +1229,19 @@
           if (mpPBel !== b) return;
           b.classList.add("is-in");
           b.style.pointerEvents = "";
-          /* denser frost stays until Safari composites backdrop-filter */
-          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 220);
-          setTimeout(function () { if (mpPBel === b) body.style.willChange = "auto"; }, 320);
+          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 240);
+          setTimeout(function () {
+            if (mpPBel === b) {
+              b.style.willChange = "auto";
+              body.style.willChange = "auto";
+            }
+          }, 360);
         });
       });
     });
     try { b.focus({ preventScroll: !0 }); } catch (e) {}
     var out = function (e) {
-        if (Date.now() - b._openedAt < 320) return;
+        if (Date.now() - b._openedAt < 340) return;
         b.contains(e.target) || (anchor.contains(e.target) ? 0 : mpPBclose());
       },
       esc = function (e) { "Escape" === e.key && (e.preventDefault(), mpPBclose(), anchor.focus && anchor.focus()); },
@@ -1246,7 +1266,7 @@
       window.addEventListener("popstate", pop);
       window.addEventListener("resize", pop);
       window.addEventListener("hashchange", pop);
-    }, 320);
+    }, 340);
   }
   function mpPB(u, anchor) {
     if (!u) return;

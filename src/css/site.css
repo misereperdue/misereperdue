@@ -10222,114 +10222,92 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
   z-index:2147483000;
   width:min(280px,calc(100vw - 20px));
   padding:14px 14px 6px;
-  border-radius:20px;
   color:var(--ink);
   outline:none;
   -webkit-user-select:none;
   user-select:none;
   opacity:1;
-  transform:none;
+  /* grow from the stem tip; glass opacity stays 1 — never animate backdrop-filter */
+  transform:scale(.6);
+  transform-origin:var(--ax,50%) var(--ay,0px);
+  transition:transform .3s cubic-bezier(.2,.9,.25,1.08);
+  will-change:transform;
 }
-.mp-pb.is-out{pointer-events:none}
+.mp-pb.is-in{transform:scale(1)}
+.mp-pb.is-out{
+  pointer-events:none;
+  transform:scale(.6);
+  transition:transform .18s cubic-bezier(.32,.72,0,1);
+}
+.mp-pb.is-out.is-gone{visibility:hidden;transition:none!important}
 .mp-pb-bio.is-empty,[hidden].mp-pb-bio{display:none}
+/* one continuous glass = body + soft iOS stem (SVG mask). Tip ~12px so WebKit keeps blur. */
 .mp-pb-shape{
   position:absolute;
-  left:0;right:0;top:0;bottom:0;
+  left:0;right:0;
   z-index:0;
   pointer-events:none;
-  border-radius:20px;
   background:var(--sheet-bg);
   -webkit-backdrop-filter:var(--sheet-blur);
   backdrop-filter:var(--sheet-blur);
-  box-shadow:var(--sheet-shadow,0 18px 48px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08));
-  border:var(--sheet-border,0.5px solid rgba(255,255,255,.22));
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:100% 100%;
+  mask-size:100% 100%;
+  /* mask clips box-shadow — drop-shadow follows the masked alpha (stem included) */
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.28)) drop-shadow(0 2px 6px rgba(0,0,0,.1));
   opacity:1;
   transform:none;
   transition:none!important;
 }
-/* hide the body edge that crosses the tip so the diamond reads continuous */
-.mp-pb.is-above .mp-pb-shape{border-bottom-color:transparent}
-.mp-pb.is-below .mp-pb-shape{border-top-color:transparent}
-/* tip: large glass diamond; body paints over the inner half (no double-tint) */
-.mp-pb-tail{
+.mp-pb.is-below .mp-pb-shape{top:calc(var(--stem,13px) * -1);bottom:0}
+.mp-pb.is-above .mp-pb-shape{top:0;bottom:calc(var(--stem,13px) * -1)}
+.mp-pb-outline{
   position:absolute;
-  z-index:0;
-  width:24px;
-  height:24px;
-  left:var(--ax,50%);
-  margin-left:-12px;
-  pointer-events:none;
-  background:var(--sheet-bg);
-  -webkit-backdrop-filter:var(--sheet-blur);
-  backdrop-filter:var(--sheet-blur);
-  border:var(--sheet-border,0.5px solid rgba(255,255,255,.22));
-  border-radius:5px;
-  transform:rotate(45deg);
-  opacity:1;
-  transition:none!important;
-}
-.mp-pb.is-above .mp-pb-tail{
-  top:auto;
-  bottom:-12px; /* center on bottom edge → ~8.5px tip protrudes */
-  border-top:0;
-  border-left:0; /* outer edges only (bottom+right after rotate = visible sides) */
-}
-.mp-pb.is-below .mp-pb-tail{
-  top:-12px;
-  bottom:auto;
-  border-bottom:0;
-  border-right:0;
-}
-/* tip frost = real child (Safari drops ::before over backdrop-filter) */
-.mp-pb-tail-frost{
-  position:absolute;
-  inset:0;
-  border-radius:inherit;
-  background:rgba(28,28,34,.88);
-  opacity:1;
-  transition:opacity .28s cubic-bezier(.32,.72,0,1) .05s;
-  pointer-events:none;
-  -webkit-backdrop-filter:none;
-  backdrop-filter:none;
-}
-[data-theme="light"] .mp-pb-tail-frost{background:rgba(255,255,255,.92)}
-.mp-pb.is-frosted .mp-pb-tail-frost{opacity:0}
-.mp-pb.is-out .mp-pb-tail-frost{
-  opacity:1;
-  transition:opacity .08s ease;
-}
-.mp-pb.is-out.is-gone .mp-pb-tail-frost{
-  opacity:0;
-  transition:opacity .16s ease;
-}
-.mp-pb.is-out.is-gone .mp-pb-tail{
-  visibility:hidden;
-  transition:none!important;
-}
-.mp-pb-frost{
-  position:absolute;
-  left:0;right:0;top:0;bottom:0;
+  left:0;right:0;
   z-index:1;
   pointer-events:none;
-  border-radius:20px;
-  background:rgba(28,28,34,.88);
+  opacity:1;
+  transform:none;
+  transition:none!important;
+}
+.mp-pb.is-below .mp-pb-outline{top:calc(var(--stem,13px) * -1);bottom:0}
+.mp-pb.is-above .mp-pb-outline{top:0;bottom:calc(var(--stem,13px) * -1)}
+.mp-pb.is-out.is-gone .mp-pb-outline{visibility:hidden}
+.mp-pb-line{
+  position:absolute;inset:0;width:100%;height:100%;
+  overflow:visible;fill:none;
+  stroke:rgba(255,255,255,.22);stroke-width:1;
+  pointer-events:none;
+}
+[data-theme="light"] .mp-pb-line{stroke:rgba(0,0,0,.14)}
+.mp-pb-frost{
+  position:absolute;
+  left:0;right:0;
+  z-index:2;
+  pointer-events:none;
+  background:rgba(28,28,34,.9);
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:100% 100%;
+  mask-size:100% 100%;
   opacity:1;
-  transition:opacity .28s cubic-bezier(.32,.72,0,1) .05s;
+  transition:opacity .28s cubic-bezier(.32,.72,0,1) .04s;
   transform:none;
 }
-.mp-pb.is-above .mp-pb-frost{border-bottom-left-radius:0;border-bottom-right-radius:0}
-.mp-pb.is-below .mp-pb-frost{border-top-left-radius:0;border-top-right-radius:0}
-[data-theme="light"] .mp-pb-frost{background:rgba(255,255,255,.92)}
+.mp-pb.is-below .mp-pb-frost{top:calc(var(--stem,13px) * -1);bottom:0}
+.mp-pb.is-above .mp-pb-frost{top:0;bottom:calc(var(--stem,13px) * -1)}
+[data-theme="light"] .mp-pb-frost{background:rgba(255,255,255,.94)}
 .mp-pb.is-frosted .mp-pb-frost{opacity:0}
 .mp-pb.is-out .mp-pb-frost{
   opacity:1;
-  transition:opacity .08s ease;
+  transition:opacity .07s ease;
 }
 .mp-pb.is-out.is-gone .mp-pb-frost{
   opacity:0;
-  transition:opacity .16s ease;
+  transition:opacity .12s ease;
 }
 .mp-pb.is-out.is-gone .mp-pb-shape{
   visibility:hidden;
@@ -10337,21 +10315,20 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 }
 .mp-pb-body{
   position:relative;
-  z-index:2;
+  z-index:3;
   opacity:0;
-  transform:scale(.85);
-  transform-origin:var(--ax,50%) var(--ay,0px);
-  transition:opacity .26s cubic-bezier(.32,.72,0,1),transform .26s cubic-bezier(.32,.72,0,1);
-  transition-property:opacity,transform;
+  transition:opacity .28s cubic-bezier(.2,.9,.25,1.08);
 }
-.mp-pb.is-in .mp-pb-body{opacity:1;transform:scale(1)}
+.mp-pb.is-in .mp-pb-body{opacity:1}
 .mp-pb.is-out .mp-pb-body{
   opacity:0;
-  transform:scale(.92);
-  transition:opacity .18s cubic-bezier(.32,.72,0,1),transform .18s cubic-bezier(.32,.72,0,1);
-  transition-property:opacity,transform;
+  transition:opacity .14s ease;
 }
-@media (prefers-reduced-motion:reduce){.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}.mp-pb-frost,.mp-pb-tail-frost{transition:none;opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .mp-pb,.mp-pb.is-out{transition:opacity .12s ease;transform:none}
+  .mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease}
+  .mp-pb-frost{transition:none;opacity:0}
+}
 .mp-pb-hd{display:flex;align-items:center;gap:12px}
 .mp-pb-hd>.chat-avatar-wrap{flex:none;width:52px;height:52px;position:relative}
 .mp-pb-hd>.chat-avatar-wrap>img,.mp-pb-hd>.chat-avatar-wrap>.chat-avatar{width:52px!important;height:52px!important;border-radius:50%;object-fit:cover;font-size:24px}
@@ -10384,7 +10361,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-act:disabled{opacity:.5}
 .mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
 .mp-pb-full svg{width:14px;height:14px}
-@media (prefers-reduced-motion:reduce){.mp-pb-body,.mp-pb.is-out .mp-pb-body{transition:opacity .12s ease;transform:none}.mp-pb-frost{transition:none;opacity:0}}
+
 /* ===== Globe thread cards G1–G3 (per dc) =====
    data-gcards=g1 Editorial (default) | g2 Media-first | g3 Compact magazine
    Switch: MPForum.setCards('g2') or localStorage mp-gcards. */
