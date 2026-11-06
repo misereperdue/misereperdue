@@ -4272,19 +4272,67 @@ html {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 8px;
+  overflow-y: hidden; /* pair with padding so orb glow isn't paint-clipped */
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* room for selected orb ring/glow/shadow; negative margin keeps layout */
+  padding: 12px 14px 14px;
+  margin: -12px -14px 8px;
+  scroll-padding-inline: 14px;
+  /* soft right fade while more content is off-screen; at-start keeps first pill unfaded */
   -webkit-mask-image: linear-gradient(
     to right,
-    #000 calc(100% - 36px),
+    #000 0%,
+    #000 calc(100% - 40px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
-    #000 calc(100% - 36px),
+    #000 0%,
+    #000 calc(100% - 40px),
     transparent 100%
   );
+}
+.forum-cats::-webkit-scrollbar {
+  display: none;
+}
+/* scrolled past the start: fade both edges */
+.forum-cats:not(.at-start):not(.at-end) {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 36px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 36px,
+    #000 calc(100% - 40px),
+    transparent 100%
+  );
+}
+/* at the end (and not the start): fade only the left */
+.forum-cats.at-end:not(.at-start) {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 36px,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 36px,
+    #000 100%
+  );
+}
+/* everything fits (or exactly at both ends): no fade */
+.forum-cats.at-start.at-end {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .forum-search {
   display: flex;
@@ -8752,13 +8800,8 @@ input.dash-tag-ban { font-size: 16px; font-weight: 700; color: #ff6b6b !importan
   box-shadow: var(--orb-shadow);
   color: var(--orb-ink);
 }
-/* Globe category chips: milky capsules, the selected one becomes the orb pill */
-.forum-cats {
-  padding-top: 4px;
-  padding-bottom: 12px;
-  padding-inline: 4px;
-  margin-inline: -4px;
-}
+/* Globe category chips: milky capsules, the selected one becomes the orb pill.
+   Scroller padding/mask for orb glow lives on the base .forum-cats rule (per dc). */
 .forum-cat,
 [data-theme="light"] .forum-cat {
   background: var(--orb-chip);

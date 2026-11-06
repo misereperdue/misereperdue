@@ -2181,13 +2181,26 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         requestAnimationFrame(function () {
           v.scrollLeft = l;
         })),
-      v.addEventListener(
-        "scroll",
-        function () {
-          l = v.scrollLeft;
-        },
-        { passive: !0 },
-      )),
+      (function (el) {
+        function edges() {
+          var max = el.scrollWidth - el.clientWidth;
+          var x = el.scrollLeft;
+          var eps = 2;
+          el.classList.toggle("at-start", x <= eps);
+          el.classList.toggle("at-end", max <= eps || x >= max - eps);
+        }
+        edges();
+        requestAnimationFrame(edges);
+        el.addEventListener(
+          "scroll",
+          function () {
+            l = el.scrollLeft;
+            edges();
+          },
+          { passive: !0 },
+        );
+        window.addEventListener("resize", edges, { passive: !0 });
+      })(v)),
       S(t),
       L(t),
       R(),
@@ -3833,7 +3846,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         card(line(92) + line(86) + line(64) + '<span class="forum-skel-media"></span>') +
         "</div>";
     else {
-      u += '<div class="forum-cats" aria-hidden="true"><span class="forum-cat on">All</span>';
+      u += '<div class="forum-cats at-start at-end" aria-hidden="true"><span class="forum-cat on">All</span>';
       for (i = 0; i < 5; i++) u += '<span class="forum-cat forum-skel-chip">&nbsp;</span>';
       u +=
         '</div><div class="forum-search" aria-hidden="true"><svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg><span class="forum-search-input forum-skel-ph">Search all threads</span></div><div class="forum-threads" role="status" aria-label="Loading threads">';
