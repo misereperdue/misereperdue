@@ -12,6 +12,7 @@ export async function onRequest({ next }) {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   const nonce = btoa(String.fromCharCode(...bytes));
   const headers = new Headers(res.headers);
+  headers.set("X-MP-Release", "profile-cards-431");
   headers.set("Content-Security-Policy", CSP.replace("script-src 'self'", "script-src 'self' 'nonce-" + nonce + "'"));
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
