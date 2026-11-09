@@ -37,7 +37,10 @@ var MPVip3D = (function () {
                   function v() {
                     var t = e.clientWidth || 300,
                       a = e.clientHeight || 375;
-                    (r.setSize(t, a, !1), (d.aspect = t / a), d.updateProjectionMatrix());
+                    (r.setSize(t, a, !1), (d.aspect = t / a));
+                    // Frame the full card + lanyard around their shared center.
+                    d.position.set(0, 0.68, Math.max(4.9, 3 / d.aspect) / (2 * Math.tan(19 * Math.PI / 180)));
+                    d.updateProjectionMatrix();
                   }
                   (d.position.set(0, 0, 8.6),
                     v(),

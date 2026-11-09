@@ -68,6 +68,9 @@
     ((d.className = "msg-popup"), (d.id = "msg-popup"), (d.style.animation = "none"));
     var l = document.createElement("div");
     (l.className = "msg-popup-inner dashboard-sheet");
+    ["pointerdown", "focusin", "keydown"].forEach(function (event) {
+      l.addEventListener(event, function () { l.dataset.interacted = "1"; }, { once: true });
+    });
     var __dw = document.createElement("div");
     __dw.className = "dashboard-sheet-wrap";
     var __dp = document.createElement("div");
@@ -1189,71 +1192,80 @@
       function e() {
         (delete A.dataset.loaded, se());
       }
-      function n(e) {
-        Array.prototype.forEach.call(e.children, function (n) {
-          var a = n.querySelector(".cat-grip");
-          if (a) {
-            var r = null;
-            (a.addEventListener("pointerdown", function (e) {
-              e.preventDefault();
-              try {
-                a.setPointerCapture(e.pointerId);
-              } catch (e) {}
-              ((r = { startY: e.clientY }),
-                (n.style.transition = "none"),
-                (n.style.position = "relative"),
-                (n.style.zIndex = "50"),
-                (n.style.boxShadow = "0 12px 28px rgba(0,0,0,.4)"),
-                (a.style.cursor = "grabbing"));
-            }),
-              a.addEventListener("pointermove", function (t) {
-                if (r) {
-                  t.preventDefault();
-                  var a = t.clientY - r.startY;
-                  n.style.transform = "translateY(" + a + "px)";
-                  for (
-                    var i = Array.prototype.slice.call(e.children),
-                      o = i.indexOf(n),
-                      s = n.offsetTop + a + n.offsetHeight / 2,
-                      d = 0;
-                    d < i.length;
-                    d++
-                  )
-                    if (d !== o) {
-                      var l = i[d],
-                        c = l.offsetTop + l.offsetHeight / 2;
-                      if ((d < o && s < c) || (d > o && s > c)) {
-                        var p = n.offsetTop;
-                        (d < o ? e.insertBefore(n, l) : e.insertBefore(n, l.nextSibling),
-                          (r.startY += n.offsetTop - p));
-                        break;
-                      }
-                    }
-                }
-              }),
-              a.addEventListener("pointerup", i),
-              a.addEventListener("pointercancel", i));
-          }
-          function i() {
-            r &&
-              ((r = null),
-              (n.style.transform = ""),
-              (n.style.transition = ""),
-              (n.style.position = ""),
-              (n.style.zIndex = ""),
-              (n.style.boxShadow = ""),
-              (a.style.cursor = "grab"),
-              t("/api/forum/categories/reorder", {
-                method: "POST",
-                body: {
-                  order: Array.prototype.map.call(e.children, function (e) {
-                    return e.getAttribute("data-cat-id");
-                  }),
-                },
-              }).then(function (e) {
-                e.ok || alert(e.error || "Reorder failed");
-              }));
-          }
+      function n(list) {
+        var drag = null, saving = false;
+        function order() { return Array.from(list.children).map(function (row) { return row.dataset.catId; }); }
+        function restore(ids) {
+          ids.forEach(function (id) {
+            var row = Array.from(list.children).find(function (row) { return row.dataset.catId === id; });
+            if (row) list.appendChild(row);
+          });
+        }
+        function save(before) {
+          var after = order();
+          if (after.join("|") === before.join("|")) return;
+          saving = true;
+          list.setAttribute("aria-busy", "true");
+          t("/api/forum/categories/reorder", { method:"POST", body:{ order:after } })
+            .then(function (result) { if (!result.ok) throw new Error(result.error || "Reorder failed"); })
+            .catch(function (error) { restore(before); alert(error.message || "Reorder failed"); })
+            .finally(function () { saving = false; list.removeAttribute("aria-busy"); });
+        }
+        function finish(event) {
+          if (!drag || event.pointerId !== drag.id) return;
+          var current = drag; drag = null;
+          document.removeEventListener("pointermove", move, true);
+          document.removeEventListener("pointerup", finish, true);
+          document.removeEventListener("pointercancel", finish, true);
+          current.row.style.transform = "";
+          current.row.style.position = "";
+          current.row.style.zIndex = "";
+          current.row.style.boxShadow = "";
+          current.grip.style.cursor = "grab";
+          current.row.classList.remove("is-dragging");
+          if (event.type === "pointercancel") restore(current.before);
+          else save(current.before);
+        }
+        function move(event) {
+          if (!drag || event.pointerId !== drag.id) return;
+          event.preventDefault();
+          var row = drag.row, desiredTop = event.clientY - drag.offset;
+          // Compare viewport coordinates throughout, including when the sheet
+          // is scrolled. Reapply translation immediately after moving the DOM.
+          row.style.transform = "";
+          var next = Array.from(list.children).find(function (other) {
+            if (other === row) return false;
+            var box = other.getBoundingClientRect();
+            return event.clientY < box.top + box.height / 2;
+          });
+          if (next) { if (row.nextElementSibling !== next) list.insertBefore(row, next); }
+          else if (row !== list.lastElementChild) list.appendChild(row);
+          row.style.transform = "translateY(" + (desiredTop - row.getBoundingClientRect().top) + "px)";
+        }
+        Array.from(list.children).forEach(function (row) {
+          var grip = row.querySelector(".cat-grip");
+          if (!grip) return;
+          grip.setAttribute("role", "button"); grip.tabIndex = 0;
+          grip.setAttribute("aria-label", "Reorder " + row.querySelector("input").value);
+          grip.addEventListener("pointerdown", function (event) {
+            if (drag || saving || (event.pointerType === "mouse" && event.button !== 0)) return;
+            event.preventDefault();
+            drag = { id:event.pointerId, row:row, grip:grip, before:order(), offset:event.clientY-row.getBoundingClientRect().top };
+            row.style.position = "relative"; row.style.zIndex = "50";
+            row.style.boxShadow = "0 12px 28px rgba(0,0,0,.25)";
+            row.classList.add("is-dragging"); grip.style.cursor = "grabbing";
+            document.addEventListener("pointermove", move, { capture:true, passive:false });
+            document.addEventListener("pointerup", finish, true);
+            document.addEventListener("pointercancel", finish, true);
+          });
+          grip.addEventListener("keydown", function (event) {
+            if (saving || drag || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+            event.preventDefault();
+            var before = order(), sibling = event.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+            if (!sibling) return;
+            list.insertBefore(row, event.key === "ArrowUp" ? sibling : sibling.nextElementSibling);
+            grip.focus({ preventScroll:true }); save(before);
+          });
         });
       }
       ((A.dataset.loaded = "1"),
@@ -2107,6 +2119,7 @@
           _cached &&
           JSON.stringify(_cached.stats) !== JSON.stringify(o.stats) &&
           Date.now() - _openedAt < 8000 &&
+          !sh.dataset.interacted &&
           !document.querySelector(".mp-dialog-back, .dash-avatar-picker")
         ) {
           var st = sh.scrollTop,
