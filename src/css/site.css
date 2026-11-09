@@ -11908,7 +11908,10 @@ html[data-gcards="g3"] .forum-thread-more {
 /* Official Apple Music launch film excerpt (source recorded with asset). */
 .chat-np-am-mark { width:112px;max-width:100%;height:38px;display:flex;align-items:center;justify-content:center;transform:translateX(-3px); }
 .chat-np-am { mix-blend-mode:screen; }
-.chat-np-official { display:block;width:100%;height:100%;object-fit:contain;pointer-events:none; }
+.chat-np-am-mark { position:relative; }
+.chat-np-official,.chat-np-official-still { display:block;width:100%;height:100%;object-fit:contain;pointer-events:none; }
+.chat-np-official { position:absolute;inset:0;opacity:0; }
+.chat-np-official.is-playing { opacity:1; }
 .forum-notif-panel { box-sizing:border-box;max-height:min(400px,calc(100dvh - 160px));overscroll-behavior:contain; }
 .forum-replying-to { align-self:flex-start;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--stroke);border-radius:12px;background:var(--fill);margin-bottom:0; }
 .forum-replying-to b { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
