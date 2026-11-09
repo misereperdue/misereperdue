@@ -1021,6 +1021,31 @@
      (glass opacity stays 1), frost from frame 1, fade content only. */
   var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
   var MP_PB_STEM = 13, MP_PB_RADIUS = 20;
+  /* Opt-in tap-anchored popover (dc testing): ?pop=2 turns it on for this browser/PWA, ?pop=0 off.
+     Off by default; the shipped popover below is unchanged when the flag is off. */
+  var mpPop2 = (function () {
+    try {
+      var m = /[?&]pop=(\d)/.exec(location.search);
+      if (m) m[1] === "2" ? localStorage.setItem("mp-pop", "2") : localStorage.removeItem("mp-pop");
+      return localStorage.getItem("mp-pop") === "2";
+    } catch (e) { return !1; }
+  })(), mpPBtap2 = null;
+  if (mpPop2) {
+    document.documentElement.setAttribute("data-pop", "2");
+    /* the finger's last position: touchend (changedTouches) on iOS, click/pointerup elsewhere;
+       viewport (client) coords, the same space as getBoundingClientRect */
+    var mpPBnote = function (x, y) { if (isFinite(x) && isFinite(y) && (x || y)) mpPBtap2 = { x: x, y: y, t: Date.now() }; };
+    document.addEventListener("touchend", function (e) { var t = e.changedTouches && e.changedTouches[0]; t && mpPBnote(t.clientX, t.clientY); }, { capture: !0, passive: !0 });
+    document.addEventListener("pointerup", function (e) { mpPBnote(e.clientX, e.clientY); }, { capture: !0, passive: !0 });
+    document.addEventListener("click", function (e) { e.detail && mpPBnote(e.clientX, e.clientY); }, { capture: !0, passive: !0 });
+  }
+  function mpPBinsets() {
+    var q = document.createElement("div"), cs, v;
+    q.style.cssText = "position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)";
+    document.body.appendChild(q); cs = getComputedStyle(q);
+    v = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+    q.remove(); return v;
+  }
   function mpPBwarm() {
     if (mpPBwarmed) return;
     mpPBwarmed = !0;
@@ -1228,6 +1253,22 @@
     left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
     ax = Math.max(28, Math.min(cx - left, w - 28));
     top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
+    if (mpPop2) (function () {
+      /* anchor at the tap point, inside the visible viewport minus safe areas, flip above/below */
+      var vv = window.visualViewport, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0,
+        VW = vv ? vv.width : vw, VH = vv ? vv.height : vh, ins = mpPBinsets(), M = 10,
+        tp = mpPBtap2, tx = r.left + r.width / 2, ty = r.top + r.height / 2;
+      if (tp && Date.now() - tp.t < 1500 && tp.x >= r.left - 16 && tp.x <= r.right + 16 && tp.y >= r.top - 16 && tp.y <= r.bottom + 16) { tx = tp.x; ty = tp.y; }
+      var minX = ox + ins.l + M, maxX = ox + VW - ins.r - M, minY = oy + ins.t + M, maxY = oy + VH - ins.b - M,
+        /* stem tip just past the tapped element, never more than 28px from the finger */
+        tipB = Math.min(r.bottom, ty + 28) + 4, tipA = Math.max(r.top, ty - 28) - 4,
+        fitsB = tipB + TH + h <= maxY, fitsA = tipA - TH - h >= minY;
+      below = fitsB || (!fitsA && maxY - tipB >= tipA - minY);
+      top = Math.max(minY, Math.min(below ? tipB + TH : tipA - TH - h, maxY - h));
+      left = w > maxX - minX ? minX + (maxX - minX - w) / 2 : Math.max(minX, Math.min(tx - w / 2, maxX - w));
+      ax = Math.max(26, Math.min(tx - left, w - 26));
+      b._tap = { x: tx, y: ty };
+    })();
     b.classList.add(below ? "is-below" : "is-above");
     b.style.left = left + "px";
     b.style.top = top + "px";
@@ -1235,6 +1276,11 @@
     /* transform-origin at the stem tip (outside the padding box) */
     b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
     b.style.setProperty("--stem", TH + "px");
+    if (mpPop2) {
+      /* a transformed/offset containing block would shift position:fixed: measure and correct */
+      var got = b.getBoundingClientRect(), dx = left - got.left, dy = top - got.top;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { b.style.left = left + dx + "px"; b.style.top = top + dy + "px"; }
+    }
     mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
     scale.style.willChange = "transform";
     body.style.willChange = "opacity";
