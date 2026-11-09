@@ -11826,7 +11826,7 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post: larger chevron above the label, morphing to plus with the pull. */
+/* Etched pull cue: compact spacing and matching text/chevron stroke weight. */
 .forum-pullpost {
   --pull: 0;
   position: relative;
@@ -11834,21 +11834,25 @@ html[data-gcards="g3"] .forum-thread-more {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0;
   min-height: 44px;
   width: max-content;
-  margin: 10px auto 14px;
-  padding: 8px 4px;
+  margin: 0 auto 12px;
+  padding: 0 4px;
   border: 0;
   background: none;
   box-shadow: none;
   color: var(--muted);
-  font: 600 13px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  letter-spacing: -.01em;
+  font: 600 11.5px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 16px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 -1px 0 rgba(0,0,0,.12);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color .18s;
 }
+[data-theme="dark"] .forum-pullpost { color:#919bb3;text-shadow:0 -1px 0 rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.12); }
 .forum-pullpost:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .forum-pullpost-indicator { width: 26px; height: 26px; flex: none; transform: translateY(calc(var(--pull) * 2px)); }
 .forum-pullpost::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 2px; height: 1px; border-radius: 1px; background: currentColor; opacity: calc(var(--pull) * .4); transform: scaleX(var(--pull)); transform-origin: 50% 50%; pointer-events: none; }

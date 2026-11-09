@@ -18,6 +18,21 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — etched uppercase pull-to-post cue
+
+Branch: `codex/etched-pull-cue`.
+
+- Matched the chevron optically to the label with rounded 1.4px SVG strokes.
+- Uppercase PULL TO POST / RELEASE TO POST, 11.5px semibold lettering with .12em
+  tracking and a subtle inset highlight/shadow tuned for both themes.
+- Removed the extra 10px top margin and 8px vertical padding. Cue stays a 44px
+  touch target, follows the category rail without an extra gap, and leaves 12px
+  before the first post. Fixed topbar positioning is preserved.
+- Validation: source/build/site checks; phone screenshots at 390×844 and 360×780
+  in both themes, layout bounds and simulated touch pull confirming plus morph
+  and armed state. No page errors or account writes. Hosted release checks follow.
+- Pins: site 800, forum3 1174, SW 390. No backend changes.
+
 ## 2026-11-09 — Apple Music playback glitch
 
 Branch: `codex/music-animation-playback`.
