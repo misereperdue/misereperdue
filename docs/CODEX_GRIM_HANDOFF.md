@@ -18,6 +18,36 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Misery FM v2: studio, listener sheet, live top bar (Grim, Worker 2348f56d)
+
+dc ([pt501u]): make the FM menu far richer for him and for listeners. The Worker deploy was approved,
+and all 15 bindings were kept. See `worker/misery-chat/src/README.md` for the server routes.
+
+- **Client** is now its own file: `src/js/misery-fm.js` → `js/misery-fm.js` (pinned in
+  index.html after chat.js, and in the SW SHELL). It exposes `window.MPFM = {open,isLive,setMe,state}`.
+  chat.js only opens it from the + menu row and passes `hello` to `MPFM.setMe`; the old
+  `fm*` code in chat.js is gone.
+- **Every page (Shop, Globe, Chat, product, cart) when live:** the visible top bar (`.chat-head` in
+  the active panel, else `.nav`) gets `.fm-on`, an animated dotted SVG ring (`.fm-ring`) and
+  a 4 s crossfade to "[emblem] MISERY FM • IS LIVE". Tapping it FLIP-morphs the bar into a
+  now-playing card (`.fm-morph`: cover, title/artist with E badge, progress, Listen, Studio/Open, X).
+  The status comes from `/api/fm/ws`, not chat. Static shop.html/globe.html are untouched.
+- **Sheet** (`.fm-sheet`, --sheet-* glass plus a `--fm-veil` tint): hero cover (tag art or generated),
+  visualizer (analyser on desktop; the 10 Hz loudness map on iOS), progress, reactions, Up Next,
+  Recently played, DJ note. Owner tabs: Now (transport, seek, shuffle/repeat, Go Live/Stop),
+  Queue (uploads with ID3/M4A tag reading, progress, drag reorder, play now/next, edit),
+  Station (note, scheduled go-live, crossfade 0–6 s, stats).
+- **Edit sheet** per song: title, artist, album, cover replace/remove, explicit, year, genre, notes.
+- **iOS caveats:** the audio is not routed through Web Audio (that would stop lock-screen play), so
+  there is no live analyser; `volume` is read-only, so the slider is hidden and crossfade
+  can't fade (it hard-switches at the same point). ID3 v2.2 is not parsed. Durations come from the client.
+- **Overrides:** generic `.nav svg`/`.nav button` rules beat the FM ring, so `.fm-on .fm-hb svg.fm-ring`
+  uses `!important`, and the dot is a `span[role=button]`. The `.fm-sheet` is `overflow:clip` plus scroll
+  reset, so focusing inputs can't shift the edit layer.
+- **Tests:** `tools/test-misery-fm.cjs` evals the real Worker fm code with mocked R2/DO in the
+  browser. It runs owner dark+light, listener dark+light and reduced motion, and covers every
+  control, sync after pause/seek, and every page type live/off. Screenshots go to `/tmp/mp-misery-fm/`.
+
 ## 2026-11-09 — Misery FM: owner-run live radio (Grim, PR #50, Worker version 4e07045e)
 
 dc approved the Worker deploy and R2. **No mic or recording**: dc uploads audio files

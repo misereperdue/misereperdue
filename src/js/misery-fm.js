@@ -1,0 +1,1037 @@
+/* Misery FM (dc, 2026-11-09): owner-run live radio on every page. No mic, no recording.
+   State lives in the chat Durable Object; this module keeps its own small socket (/api/fm/ws) so Shop,
+   Globe, product and cart pages light up the top bar the moment the station goes live, without loading chat.
+   Every listener derives the same position from startedAt (or pos while paused); iOS needs a tap to start audio.
+   Pieces: state + socket, player (2 elements for crossfade, Media Session, heartbeat), top-bar live state + morph,
+   chat live bar, listener sheet / owner studio, edit sheet, uploads (ID3/M4A tags, cover, loudness map). */
+(function () {
+  "use strict";
+  var API = "https://api.misereperdue.com", WSU = "wss://api.misereperdue.com/api/fm/ws";
+  var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: !1 };
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var VOLOK = (function () { try { var a = document.createElement("audio"); a.volume = 0.5; return a.volume === 0.5 && !IOS; } catch (e) { return !1; } })();
+  var EMO = ["\u{1F525}", "\u2764\uFE0F", "\u{1F62D}", "\u{1F64C}", "\u{1F480}", "\u{1F3B6}"];
+  var S = null, off = 0, me = null, meP = null, ws = null, wsT = 0, wsN = 0, hideT = 0, pollT = 0;
+  var on = !1, vol = 1, A = [], act = 0, hbT = 0, tickT = 0, tickN = 0, fadeT = 0, actx = null, waves = {}, lastReact = 0, sentE = {};
+  var sheet = null, tab = "now", morph = null, hb = null, phT = 0, edit = null, ups = [], drag = null, dirty = !1;
+  try { vol = Math.max(0, Math.min(1, +(localStorage.getItem("mp-fm-vol") || 1))); } catch (e) {}
+
+  /* ---------- helpers ---------- */
+  function tok() { try { return localStorage.getItem("chat_token") || ""; } catch (e) { return ""; } }
+  function dev() { try { return localStorage.getItem("chat_device") || ""; } catch (e) { return ""; } }
+  function hdr(isJson) {
+    var h = {}, t = tok(), d = dev();
+    isJson && (h["Content-Type"] = "application/json");
+    t && (h.Authorization = "Bearer " + t);
+    d && (h["X-Device-Id"] = d);
+    return h;
+  }
+  function api(p, body) {
+    var o = body === void 0 ? { headers: hdr() } : { method: "POST", headers: hdr(!0), body: JSON.stringify(body) };
+    return fetch(API + p, o).then(function (r) { return r.json().catch(function () { return { ok: !1, error: "HTTP " + r.status }; }); }, function () { return { ok: !1, error: "Network error" }; });
+  }
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function fmt(s) { s = Math.max(0, Math.floor(+s || 0)); var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = ("0" + (s % 60)).slice(-2); return h ? h + ":" + ("0" + m).slice(-2) + ":" + x : m + ":" + x; }
+  function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; }
+  function q(sel, root) { return (root || document).querySelector(sel); }
+  function live() { return !!(S && S.live && S.list && S.list.length); }
+  function owner() { return !!(me && me.owner); }
+  function now() { return Date.now() + off; }
+  function durOf(t) { return Math.max(1, +(t && t.dur) || 180); }
+  function eff(t) { return Math.max(1, durOf(t) - ((S && S.xf) || 0)); }
+  function byId(id) { for (var i = 0; S && i < S.list.length; i++) if (S.list[i].id === id) return S.list[i]; return null; }
+  function artUrl(t) { return t && t.art ? API + "/api/fm/art/" + encodeURIComponent(t.art) : ""; }
+  var EMB = '<svg class="fm-emb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 7.6a4.8 4.8 0 0 1 6.8 0M6.1 5.1a8.3 8.3 0 0 1 11.8 0"/><circle cx="12" cy="10.1" r="1.1" fill="currentColor" stroke="none"/><path d="M3.6 13.3c2.4 2.7 5.3 4 8.4 4s6-1.3 8.4-4M7 16.1l-1.2 2.2M10.2 17.2l-.4 2.4M13.8 17.2l.4 2.4M17 16.1l1.2 2.2"/></svg>';
+  var LOGO = '<span class="fm-logo" role="img" aria-label="Misery FM">' + EMB + '<span class="fm-word" aria-hidden="true">MISERY<b>FM</b></span></span>';
+  function E(t) { return t && t.explicit ? '<span class="fm-e" role="img" aria-label="Explicit" title="Explicit">E</span>' : ""; }
+  function art(t, cls) {
+    cls = "fm-art " + (cls || "");
+    if (t && t.art) return '<span class="' + cls + '"><img src="' + esc(artUrl(t)) + '" alt="" decoding="async"></span>';
+    var h = hash((t && (t.id + (t.title || ""))) || "fm");
+    return '<span class="' + cls + ' fm-gen" style="--h1:' + (h % 360) + ";--h2:" + ((h >>> 9) % 360) + '">' + EMB + "</span>";
+  }
+  function sub(t) { return [t.artist, t.album, t.year].filter(Boolean).map(esc).join(" · "); }
+  var ICO = {
+    play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>', pause: '<path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="2.6"/>',
+    vol: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10"/>', mute: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+    next: '<path d="M6 6v12l8.5-6zM18 6v12"/>', prev: '<path d="M18 6v12L9.5 12zM6 6v12"/>', restart: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4"/>',
+    shuffle: '<path d="M4 7h3.5c4.5 0 4.5 10 9 10H20M4 17h3.5c1.6 0 2.6-1.2 3.4-2.8M13.1 9.8C13.9 8.2 14.9 7 16.5 7H20M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5"/>',
+    repeat: '<path d="M5 11V9a3 3 0 0 1 3-3h11M16 3l3 3-3 3M19 13v2a3 3 0 0 1-3 3H5M8 21l-3-3 3-3"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
+    grip: '<path d="M8 7h8M8 12h8M8 17h8"/>', plus: '<path d="M12 5v14M5 12h14"/>', ear: '<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.6"/><path d="M10 9.5a2 2 0 0 1 4 0"/>',
+    next1: '<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', expand: '<path d="M7 10l5 5 5-5"/>'
+  };
+  function ico(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICO[k] + "</svg>"; }
+
+  /* ---------- timeline (same rules as the Worker's fmAdvance / fmStep) ---------- */
+  function calc() {
+    if (!live()) return null;
+    var L = S.list, ix = {}, i = S.idx >= L.length ? 0 : S.idx, up = (S.upNext || []).slice(), el;
+    L.forEach(function (t, k) { ix[t.id] = k; });
+    if (S.paused) el = S.pos || 0;
+    else {
+      el = (now() - S.startedAt) / 1e3;
+      for (var n = 0; n < 50 && el >= eff(L[i]); n++) {
+        if (!up.length || ix[up[0]] == null) { el = Math.min(el, durOf(L[i])); break; }
+        el -= eff(L[i]); i = ix[up.shift()];
+      }
+    }
+    var tr = L[i], d = durOf(tr);
+    return { i: i, tr: tr, t: Math.max(0, Math.min(el, d)), d: d, up: up.map(function (id) { return L[ix[id]]; }).filter(Boolean), paused: !!S.paused };
+  }
+
+  /* ---------- state + socket ---------- */
+  function set(fm) {
+    if (!fm || !Array.isArray(fm.list)) return;
+    if (S && fm.v < S.v && fm.now && S.now && fm.now <= S.now) return;
+    S = fm;
+    if (fm.now) off = fm.now - Date.now();
+    if (!live() && on) listen(!1);
+    if (!live() && morph) closeMorph(!0);
+    render();
+    sync();
+  }
+  function refresh() { return api("/api/fm/state").then(function (r) { r && r.ok && set(r.fm); }); }
+  function connect() {
+    if (ws || document.hidden || !window.WebSocket) return;
+    try { ws = new WebSocket(WSU); } catch (e) { ws = null; return; }
+    ws.onopen = function () { wsN = 0; clearInterval(pollT); pollT = 0; };
+    ws.onmessage = function (ev) {
+      var m;
+      try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === "fm") set(m.fm);
+      else if (m.t === "fml" && S) { S.listeners = m.n; paint(); }
+      else if (m.t === "fmr") { var k = m.e + "|"; if (me && m.u && m.u === me.username) return; if (!m.u && sentE[k] && Date.now() - sentE[k] < 2e3) return; float(m.e); }
+    };
+    ws.onclose = function () {
+      ws = null;
+      if (document.hidden && !on) return;
+      wsN++;
+      clearTimeout(wsT);
+      wsT = setTimeout(connect, Math.min(3e4, 1e3 * Math.pow(2, wsN)));
+      if (wsN > 2 && !pollT) { refresh(); pollT = setInterval(refresh, 3e4); }
+    };
+  }
+  document.addEventListener("visibilitychange", function () {
+    clearTimeout(hideT);
+    if (document.hidden) hideT = setTimeout(function () { if (document.hidden && ws && !on) ws.close(); }, 6e4);
+    else { connect(); refresh(); }
+  });
+  function getMe() {
+    if (meP) return meP;
+    if (!tok()) { me = null; return (meP = Promise.resolve(null)); }
+    meP = api("/api/me").then(function (r) { me = (r && r.user) || null; return me; });
+    return meP;
+  }
+
+  /* ---------- player ---------- */
+  function el(k) {
+    if (A[k]) return A[k];
+    var a = document.createElement("audio");
+    a.className = "fm-audio";
+    a.preload = "auto";
+    a.setAttribute("playsinline", "");
+    if (!IOS) a.crossOrigin = "anonymous";
+    a._f = 1;
+    a.addEventListener("loadedmetadata", function () { var c = calc(); if (A[act] === a && c && c.tr.id === a._id) seek(a, c.t); });
+    a.addEventListener("ended", function () { setTimeout(sync, 300); });
+    document.body.appendChild(a);
+    A[k] = a;
+    graph(a);
+    return a;
+  }
+  function graph(a) {
+    // Real-time analyser where it is safe (not iOS: routing a media element through Web Audio stops
+    // lock-screen playback there). iOS uses the uploaded loudness map instead.
+    if (IOS || !actx || a._g) return;
+    try { var s = actx.createMediaElementSource(a); a._g = actx.createGain(); s.connect(a._g); a._g.connect(actx._an); } catch (e) {}
+  }
+  function seek(a, t) { try { if (Math.abs(a.currentTime - t) > 0.25) a.currentTime = t; } catch (e) {} }
+  function applyVol() {
+    A.forEach(function (a) {
+      if (!a) return;
+      var v = Math.max(0, Math.min(1, vol * a._f));
+      if (a._g) a._g.gain.value = v;
+      else if (VOLOK) a.volume = v;
+    });
+  }
+  function fade(a, to, secs, stopAfter) {
+    a._fd = { from: a._f, to: to, t0: Date.now(), d: Math.max(0.2, secs) * 1e3, stop: stopAfter };
+    if (!fadeT) fadeT = setInterval(function () {
+      var any = !1;
+      A.forEach(function (x) {
+        if (!x || !x._fd) return;
+        var f = x._fd, k = Math.min(1, (Date.now() - f.t0) / f.d);
+        x._f = f.from + (f.to - f.from) * k;
+        if (k >= 1) { x._fd = null; if (f.stop) { x.pause(); x._id = ""; } } else any = !0;
+      });
+      applyVol();
+      if (!any) { clearInterval(fadeT); fadeT = 0; }
+    }, 80);
+  }
+  function sync() {
+    var c = calc(), a = A[act];
+    if (!on || !c || c.paused) {
+      A.forEach(function (x) { x && !x.paused && x.pause(); });
+      media(c);
+      return;
+    }
+    if (!a || a._id !== c.tr.id) {
+      var old = a, xf = S.xf || 0;
+      act = a ? 1 - act : 0;
+      a = el(act);
+      a._id = c.tr.id;
+      a._fd = null;
+      if (old && !old.paused && xf > 0 && (VOLOK || old._g)) { fade(old, 0, Math.min(xf, Math.max(0.3, (old.duration || 0) - old.currentTime || xf)), !0); a._f = 0; fade(a, 1, xf); }
+      else { if (old) { old.pause(); old._id = ""; } a._f = 1; }
+      a.src = API + "/api/fm/audio/" + encodeURIComponent(c.tr.id);
+      wave(c.tr);
+    } else if (a.readyState > 0 && Math.abs(a.currentTime - c.t) > 1.5 && c.t < c.d - 0.5) seek(a, c.t);
+    if (a.paused && c.t < c.d - 0.3) {
+      var p = a.play();
+      p && p.catch && p.catch(function (e) { if (e && e.name === "NotAllowedError") listen(!1); });
+    }
+    applyVol();
+    media(c);
+  }
+  function listen(v) {
+    v = !!v && live();
+    if (v === on) { if (v) sync(); return; }
+    on = v;
+    clearInterval(hbT); hbT = 0;
+    if (on) {
+      if (!IOS && !actx && (window.AudioContext || window.webkitAudioContext)) {
+        try { actx = new (window.AudioContext || window.webkitAudioContext)(); actx._an = actx.createAnalyser(); actx._an.fftSize = 128; actx._an.smoothingTimeConstant = 0.78; actx._an.connect(actx.destination); A.forEach(function (a) { a && graph(a); }); } catch (e) { actx = null; }
+      }
+      actx && actx.state === "suspended" && actx.resume();
+      sync();
+      // iOS unlocks each <audio> on a tap: prime the second element now so crossfades/track changes can start it later.
+      var b = el(1 - act), a = A[act];
+      if (a && !b._id && !b._primed) { b._primed = 1; b.muted = !0; b.src = a.src; var pb = b.play(); pb && pb.then ? pb.then(function () { b.pause(); b.muted = !1; }, function () { b.muted = !1; }) : (b.muted = !1); }
+      api("/api/fm/listen", { on: !0 });
+      hbT = setInterval(function () { api("/api/fm/listen", { on: !0 }); }, 3e4);
+    } else {
+      A.forEach(function (x) { x && x.pause(); });
+      api("/api/fm/listen", { on: !1 });
+    }
+    media(calc());
+    render();
+  }
+  var msKey = "";
+  function media(c) {
+    if (!("mediaSession" in navigator)) return;
+    var m = navigator.mediaSession;
+    try {
+      if (c && on) {
+        var k = c.tr.id + "|" + c.tr.title + "|" + c.tr.artist + "|" + c.tr.art;
+        if (k !== msKey && window.MediaMetadata) {
+          msKey = k;
+          m.metadata = new MediaMetadata({ title: c.tr.title || "Misery FM", artist: c.tr.artist || "Misery FM", album: c.tr.album || "Misery FM · Live",
+            artwork: c.tr.art ? [{ src: artUrl(c.tr), sizes: "600x600", type: "image/jpeg" }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }, { src: "/img/icon-512.png", sizes: "512x512", type: "image/png" }] });
+        }
+        m.playbackState = c.paused ? "paused" : "playing";
+        m.setPositionState && m.setPositionState({ duration: c.d, position: Math.min(c.t, c.d), playbackRate: 1 });
+      } else m.playbackState = "paused";
+    } catch (e) {}
+  }
+  try {
+    var MS = navigator.mediaSession;
+    if (MS && MS.setActionHandler) {
+      MS.setActionHandler("play", function () { listen(!0); });
+      MS.setActionHandler("pause", function () { listen(!1); });
+      MS.setActionHandler("nexttrack", function () { owner() && ctl({ action: "skip" }); });
+      MS.setActionHandler("previoustrack", function () { owner() && ctl({ action: "prev" }); });
+    }
+  } catch (e) {}
+  function wave(t) {
+    if (!t || !t.wave || waves[t.id]) return;
+    waves[t.id] = "loading";
+    fetch(API + "/api/fm/wave/" + encodeURIComponent(t.id)).then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { waves[t.id] = b ? new Uint8Array(b) : null; }, function () { waves[t.id] = null; });
+  }
+
+  /* ---------- top bar: dotted ring + "MISERY FM IS LIVE" crossfade, tap to morph ---------- */
+  function topBar() {
+    var p = q(".panel.on"), h = p && p.querySelector(".chat-head");
+    if (h && h.getClientRects().length) return h;
+    var n = q(".nav");
+    return n && n.getClientRects().length ? n : null;
+  }
+  function deco() {
+    if (morph) return;
+    var bar = live() ? topBar() : null;
+    if (hb && hb !== bar) undeco(hb);
+    if (!bar) return;
+    if (!bar._fm) {
+      bar._fm = 1;
+      if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
+      var o = document.createElement("span");
+      o.className = "fm-hb";
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true"><rect/></svg><span class="fm-hb-in" aria-hidden="true">' + LOGO + '<span class="fm-hb-is"><i></i>IS LIVE</span></span><span class="fm-hb-dot" role="button" tabindex="0" aria-label="Misery FM is live: open now playing"><i></i></span>';
+      bar.appendChild(o);
+      bar.classList.add("fm-on");
+      bar.addEventListener("click", barTap, !0);
+      o.querySelector(".fm-hb-dot").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMorph(bar); } });
+      hb = bar;
+    }
+    // size the dotted ring to the bar (SVG rect needs pixel geometry for Safari)
+    var r = bar.getBoundingClientRect(), svg = bar.querySelector(".fm-ring"), rect = svg && svg.firstChild;
+    if (rect && (svg._w !== r.width || svg._h !== r.height)) {
+      svg._w = r.width; svg._h = r.height;
+      var rad = Math.min(parseFloat(getComputedStyle(bar).borderTopLeftRadius) || 22, r.height / 2);
+      svg.setAttribute("viewBox", "0 0 " + r.width + " " + r.height);
+      rect.setAttribute("x", 1.5); rect.setAttribute("y", 1.5); rect.setAttribute("width", Math.max(0, r.width - 3)); rect.setAttribute("height", Math.max(0, r.height - 3));
+      rect.setAttribute("rx", Math.max(0, rad - 1.5));
+    }
+    if (!phT && !RM.matches) phT = setInterval(function () { hb && hb.classList.toggle("is-fm"); }, 4e3);
+    if (RM.matches && phT) { clearInterval(phT); phT = 0; hb && hb.classList.remove("is-fm"); }
+  }
+  function undeco(bar) {
+    if (!bar) return;
+    bar._fm = 0;
+    bar.classList.remove("fm-on", "is-fm", "fm-away");
+    var o = bar.querySelector(":scope > .fm-hb");
+    o && o.remove();
+    if (bar._fmPos) { bar.style.position = ""; bar._fmPos = 0; }
+    bar.removeEventListener("click", barTap, !0);
+    if (hb === bar) { hb = null; clearInterval(phT); phT = 0; }
+  }
+  function barTap(e) {
+    if (!live()) return;
+    var bar = e.currentTarget, hit = e.target.closest(".fm-hb-dot, button, a, input, select, textarea, [role=button], [role=tab], label");
+    if (bar.classList.contains("is-fm") || (hit && hit.classList.contains("fm-hb-dot")) || !hit) {
+      e.preventDefault(); e.stopPropagation();
+      openMorph(bar);
+    }
+  }
+
+  /* ---------- morph: the top bar itself grows into a now-playing bar (FLIP, transform + opacity) ---------- */
+  function morphHTML() {
+    var c = calc();
+    if (!c) return "";
+    return '<div class="fm-m-in"><div class="fm-m-row">' + art(c.tr, "fm-m-art") +
+      '<div class="fm-m-tx"><span class="fm-m-live"><i></i>' + (c.paused ? "PAUSED" : "LIVE") + '</span><b class="fm-m-t">' + esc(c.tr.title || "Untitled") + "</b>" + E(c.tr) + '<small class="fm-m-a">' + sub(c.tr) + "</small></div>" +
+      '<button type="button" class="fm-m-x" data-a="collapse" aria-label="Back to the top bar">' + ico("x") + "</button></div>" +
+      '<div class="fm-m-pg"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-pbar"><i style="transform:scaleX(' + (c.t / c.d).toFixed(4) + ')"></i></span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div>" +
+      (S.note ? '<p class="fm-m-note">' + esc(S.note) + "</p>" : "") +
+      '<div class="fm-m-act"><button type="button" class="fm-btn fm-listen' + (on ? " is-on" : "") + '" data-a="listen">' + ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen") + "</span></button>" +
+      '<button type="button" class="fm-btn" data-a="sheet">' + (owner() ? "Studio" : "Open player") + '</button><span class="fm-lc">' + ico("ear") + (S.listeners || 0) + "</span></div></div>";
+  }
+  function openMorph(bar) {
+    if (morph || !live()) return;
+    bar = bar || hb || topBar();
+    if (!bar) return;
+    getMe();
+    var r = bar.getBoundingClientRect(), cs = getComputedStyle(bar), w = Math.min(innerWidth - 16, Math.max(r.width, 340));
+    morph = document.createElement("div");
+    morph.className = "fm-morph";
+    morph.setAttribute("role", "dialog");
+    morph.setAttribute("aria-label", "Misery FM now playing");
+    morph.style.cssText = "left:" + Math.round((innerWidth - w) / 2) + "px;top:" + Math.round(r.top) + "px;width:" + Math.round(w) + "px";
+    morph.innerHTML = morphHTML();
+    morph._bar = bar;
+    document.body.appendChild(morph);
+    morph.addEventListener("click", onAct);
+    var r2 = morph.getBoundingClientRect();
+    bar.classList.add("fm-away");
+    if (RM.matches) morph.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+    else {
+      morph.animate([{ transform: "translate(" + (r.left - r2.left) + "px," + (r.top - r2.top) + "px) scale(" + r.width / r2.width + "," + r.height / r2.height + ")", borderRadius: cs.borderTopLeftRadius, opacity: 0.9 }, { transform: "none", opacity: 1 }], { duration: 440, easing: "cubic-bezier(.2,.85,.25,1)" });
+      var inn = q(".fm-m-in", morph);
+      inn && inn.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 0, offset: 0.3 }, { opacity: 1, transform: "none" }], { duration: 440, easing: "ease-out" });
+    }
+    setTimeout(function () { document.addEventListener("pointerdown", outside, !0); }, 0);
+    document.addEventListener("keydown", escKey);
+    document.documentElement.classList.add("fm-morphing");
+  }
+  function outside(e) { if (morph && !morph.contains(e.target) && !(sheet && sheet.contains(e.target))) closeMorph(); }
+  function escKey(e) { if (e.key === "Escape") { if (edit) closeEdit(); else if (sheet) closeSheet(); else if (morph) closeMorph(); } }
+  function closeMorph(instant) {
+    if (!morph) return;
+    var m = morph, bar = m._bar;
+    morph = null;
+    document.documentElement.classList.remove("fm-morphing");
+    document.removeEventListener("pointerdown", outside, !0);
+    var done = function () { m.remove(); bar && bar.classList.remove("fm-away"); deco(); };
+    if (instant || !bar || !bar.isConnected) return done();
+    var r = bar.getBoundingClientRect(), r2 = m.getBoundingClientRect();
+    bar.classList.remove("fm-away");
+    var an = RM.matches ? m.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160 })
+      : m.animate([{ transform: "none", opacity: 1 }, { transform: "translate(" + (r.left - r2.left) + "px," + (r.top - r2.top) + "px) scale(" + r.width / r2.width + "," + r.height / r2.height + ")", borderRadius: getComputedStyle(bar).borderTopLeftRadius, opacity: 0 }], { duration: 360, easing: "cubic-bezier(.3,0,.2,1)" });
+    an.onfinish = done;
+  }
+
+  /* ---------- chat live bar under the chat header ---------- */
+  function chatBar() {
+    var c = q("#chat"), head = c && c.querySelector(".chat-head"), bar = c && c.querySelector(".fm-bar");
+    if (!c || !head) return;
+    var cc = calc();
+    if (!bar && cc) {
+      bar = document.createElement("div");
+      bar.className = "fm-bar glassbar";
+      bar.setAttribute("role", "region");
+      bar.setAttribute("aria-label", "Misery FM live");
+      bar.innerHTML = '<span class="fm-live"><i></i><b>LIVE</b></span><button type="button" class="fm-bar-np" data-a="sheet" aria-label="Open Misery FM"><b></b><span class="fm-bar-e"></span><small></small></button><button type="button" class="fm-bar-btn" data-a="listen"></button><span class="fm-bar-pg" aria-hidden="true"><i></i></span>';
+      bar.addEventListener("click", onAct);
+      head.parentNode.insertBefore(bar, head.nextSibling);
+    }
+    if (!bar) return;
+    bar.hidden = !cc;
+    c.classList.toggle("chat-has-fm", !!cc);
+    if (!cc) return;
+    q(".fm-live b", bar).textContent = cc.paused ? "PAUSED" : "LIVE";
+    bar.classList.toggle("is-paused", cc.paused);
+    q(".fm-bar-np b", bar).textContent = cc.tr.title || "Untitled";
+    q(".fm-bar-e", bar).innerHTML = E(cc.tr);
+    q(".fm-bar-np small", bar).textContent = cc.tr.artist || "";
+    var b = q(".fm-bar-btn", bar), k = on ? "on" : "off";
+    if (b._k !== k) { b._k = k; b.innerHTML = ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen") + "</span>"; b.setAttribute("aria-label", on ? "Mute Misery FM" : "Listen to Misery FM"); b.setAttribute("aria-pressed", on ? "true" : "false"); }
+    bar.classList.toggle("is-on", on);
+    q(".fm-bar-pg i", bar).style.transform = "scaleX(" + (cc.t / cc.d).toFixed(4) + ")";
+  }
+
+  /* ---------- floating reactions (everyone sees them) ---------- */
+  function float(e) {
+    if (EMO.indexOf(e) < 0) return;
+    var box = q(".fm-floats");
+    if (!box) { box = document.createElement("div"); box.className = "fm-floats"; box.setAttribute("aria-hidden", "true"); document.body.appendChild(box); }
+    if (box.childElementCount > 24) box.firstChild.remove();
+    var s = document.createElement("span"), anchor = sheet && q(".fm-reacts", sheet), r = anchor ? anchor.getBoundingClientRect() : null;
+    s.className = "fm-float";
+    s.textContent = e;
+    var x = r ? r.left + Math.random() * r.width : innerWidth - 40 - Math.random() * 60, y = r ? r.top : innerHeight - 120;
+    s.style.left = Math.round(x) + "px";
+    s.style.top = Math.round(y) + "px";
+    s.style.setProperty("--dx", Math.round((Math.random() - 0.5) * 70) + "px");
+    s.style.setProperty("--rot", Math.round((Math.random() - 0.5) * 40) + "deg");
+    box.appendChild(s);
+    setTimeout(function () { s.remove(); }, RM.matches ? 1300 : 2600);
+  }
+  function react(e) {
+    if (Date.now() - lastReact < 650) return;
+    lastReact = Date.now();
+    sentE[e + "|"] = Date.now();
+    float(e);
+    api("/api/fm/react", { e: e }).then(function (r) { r && !r.ok && r.error && toast(r.error === "slow down" ? "Easy, one at a time" : r.error); });
+  }
+
+  /* ---------- visualizer: analyser (non-iOS) > uploaded loudness map > idle ---------- */
+  var vizRaf = 0, vizBars = [];
+  function viz() {
+    vizRaf = 0;
+    var cv = sheet && q(".fm-viz", sheet);
+    if (!cv || !cv.isConnected) return;
+    var dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight, N = 28;
+    if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    var g = cv.getContext("2d"), c = calc(), t = performance.now() / 1e3, lv = [], src = "idle";
+    if (on && c && !c.paused && actx && actx._an && actx.state === "running") {
+      var fd = new Uint8Array(actx._an.frequencyBinCount);
+      actx._an.getByteFrequencyData(fd);
+      for (var i = 0; i < N; i++) { var a0 = Math.floor(Math.pow(i / N, 1.6) * (fd.length - 2)), a1 = Math.max(a0 + 1, Math.floor(Math.pow((i + 1) / N, 1.6) * (fd.length - 2))), sm = 0; for (var j = a0; j < a1; j++) sm += fd[j]; lv.push(sm / (a1 - a0) / 255); }
+      src = "analyser";
+    } else if (c && !c.paused && waves[c.tr.id] && waves[c.tr.id].length) {
+      var wv = waves[c.tr.id], pt = c.t * 10, k0 = Math.min(wv.length - 1, Math.floor(pt)), amp = wv[k0] / 255;
+      for (var b = 0; b < N; b++) { var wob = 0.55 + 0.45 * Math.sin(b * 1.9 + t * 7.3 + Math.sin(t * 2.1 + b)), tilt = 1 - Math.abs(b - N * 0.35) / N; lv.push(Math.max(0.04, amp * wob * (0.6 + 0.6 * tilt))); }
+      src = on ? "map" : "map-idle";
+    } else for (var n = 0; n < N; n++) lv.push(0.08 + 0.07 * (1 + Math.sin(t * 1.6 + n * 0.55)) * (c && !c.paused ? 1 : 0.5));
+    cv.setAttribute("data-src", src);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    var bw = W / N, col = getComputedStyle(cv).color;
+    g.fillStyle = col;
+    for (var m = 0; m < N; m++) {
+      var v = vizBars[m] = (vizBars[m] || 0) * 0.6 + Math.min(1, lv[m]) * 0.4, bh = Math.max(2, v * H);
+      g.globalAlpha = 0.35 + 0.6 * v;
+      var x = m * bw + bw * 0.2, w = bw * 0.6, y = H - bh;
+      g.beginPath();
+      g.roundRect ? g.roundRect(x, y, w, bh, Math.min(w / 2, 3)) : g.rect(x, y, w, bh);
+      g.fill();
+    }
+    g.globalAlpha = 1;
+    if (!RM.matches && !document.hidden) vizRaf = requestAnimationFrame(viz);
+  }
+  function vizStart() { if (!vizRaf) vizRaf = requestAnimationFrame(viz); }
+
+  /* ---------- sheet: listener view + owner studio (Now / Queue / Station) ---------- */
+  function when(ts) {
+    var d = new Date(ts), t = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), td = new Date();
+    return (d.toDateString() === td.toDateString() ? "today" : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })) + " at " + t;
+  }
+  function li(t, extra, cls) {
+    return '<li class="fm-li ' + (cls || "") + '" data-id="' + esc(t.id) + '">' + art(t, "fm-sm") + '<span class="fm-li-t"><span class="fm-li-1"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + "</span><small>" + (sub(t) || "&nbsp;") + "</small></span>" + (extra || "") + "</li>";
+  }
+  function histHTML() {
+    var H = (S && S.hist) || [];
+    if (!H.length) return "";
+    return '<h3 class="fm-h">Recently played</h3><ol class="fm-list fm-hist">' + H.slice(0, 6).map(function (h) {
+      var ago = Math.max(1, Math.round((now() - h.at) / 6e4));
+      return li(h, '<span class="fm-ago">' + (ago < 60 ? ago + "m" : Math.round(ago / 60) + "h") + "</span>");
+    }).join("") + "</ol>";
+  }
+  function heroHTML(c, o) {
+    if (!c) {
+      return '<div class="fm-hero is-off"><div class="fm-cover">' + art(null, "fm-big") + '<canvas class="fm-viz" aria-hidden="true"></canvas></div><div class="fm-ttl"><b>Off air</b></div><div class="fm-sub">' +
+        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + "</div>" + (S && S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
+    }
+    var t = c.tr;
+    return '<div class="fm-hero"><div class="fm-cover">' + art(t, "fm-big") + '<canvas class="fm-viz" aria-hidden="true"></canvas>' + (c.paused ? '<span class="fm-paused">' + ico("pause") + "Paused</span>" : '<span class="fm-onair"><i></i>LIVE</span>') + "</div>" +
+      '<div class="fm-ttl"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + (o ? '<button type="button" class="fm-ib" data-a="edit" data-id="' + esc(t.id) + '" aria-label="Edit this song">' + ico("edit") + "</button>" : "") + "</div>" +
+      '<div class="fm-sub">' + (sub(t) || "Misery FM") + "</div>" + (t.genre ? '<span class="fm-chip">' + esc(t.genre) + "</span>" : "") + (t.notes ? '<p class="fm-tnote">' + esc(t.notes) + "</p>" : "") +
+      (S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") +
+      '<div class="fm-prog">' + (o ? '<input type="range" class="fm-scrub" min="0" max="' + Math.floor(c.d) + '" step="1" value="' + Math.floor(c.t) + '" aria-label="Seek the station">' : '<span class="fm-pbar fm-pbar-l"><i></i></span>') +
+      '<div class="fm-times"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div></div></div>";
+  }
+  function listenHTML() {
+    return '<div class="fm-lis"><button type="button" class="fm-btn fm-listen fm-wide' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '">' + ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen live") + "</span></button>" +
+      (VOLOK ? '<label class="fm-vol">' + ico("vol") + '<input type="range" min="0" max="1" step="0.01" value="' + vol + '" data-a="vol" aria-label="Volume"></label>' : "") + "</div>";
+  }
+  function nowHTML() {
+    var c = calc(), o = owner(), h = heroHTML(c, o);
+    if (o) {
+      if (c) {
+        h += '<div class="fm-tp" role="group" aria-label="Station controls"><button type="button" class="fm-ib fm-lg" data-a="prev" aria-label="Previous">' + ico("prev") + '</button><button type="button" class="fm-ib fm-lg" data-a="restart" aria-label="Restart song">' + ico("restart") + "</button>" +
+          '<button type="button" class="fm-pp" data-a="' + (c.paused ? "resume" : "pause") + '" aria-label="' + (c.paused ? "Resume the station" : "Pause the station for everyone") + '">' + ico(c.paused ? "play" : "pause") + "</button>" +
+          '<button type="button" class="fm-ib fm-lg" data-a="skip" aria-label="Skip">' + ico("next") + "</button></div>" +
+          '<div class="fm-modes"><button type="button" class="fm-tog' + (S.shuffle ? " is-on" : "") + '" data-a="shuffle" aria-pressed="' + !!S.shuffle + '">' + ico("shuffle") + "<span>Shuffle</span></button>" +
+          '<button type="button" class="fm-tog' + (S.repeat !== "off" ? " is-on" : "") + '" data-a="repeat" aria-label="Repeat: ' + S.repeat + '">' + ico("repeat") + (S.repeat === "one" ? '<em class="fm-one">1</em>' : "") + "<span>" + { all: "Repeat all", one: "Repeat one", off: "Repeat off" }[S.repeat] + "</span></button>" +
+          '<button type="button" class="fm-tog fm-stop" data-a="stop">Stop</button></div>';
+      } else h += '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S && S.list.length ? "" : " disabled") + ">Go Live</button></div>" + (S && S.list.length ? "" : '<p class="fm-hint">Add songs in Queue first.</p>');
+    }
+    if (c) {
+      h += listenHTML();
+      h += '<div class="fm-reacts" role="group" aria-label="Send a reaction">' + EMO.map(function (e) { return '<button type="button" data-a="react" data-e="' + e + '" aria-label="React ' + e + '">' + e + "</button>"; }).join("") + "</div>";
+      if (c.up.length) h += '<h3 class="fm-h">Up next' + (S.shuffle ? " · shuffled" : "") + '</h3><ol class="fm-list">' + c.up.slice(0, 3).map(function (t) { return li(t, '<span class="fm-dur">' + fmt(t.dur) + "</span>"); }).join("") + "</ol>";
+    }
+    return h + histHTML();
+  }
+  function queueHTML() {
+    var c = calc(), L = S.list, Q = S.q || [];
+    var h = '<div class="fm-upl"><button type="button" class="fm-btn fm-primary fm-wide" data-a="add">' + ico("plus") + "<span>Add songs</span></button>" +
+      '<input class="fm-file" type="file" accept=".mp3,.m4a,.aac,audio/mpeg,audio/mp4,audio/aac,audio/x-m4a" multiple hidden>' +
+      '<p class="fm-hint">MP3, M4A or AAC up to 25 MB each. Title, artist, album, year, genre, explicit, cover art and length are read from the file.</p>' +
+      (ups.length ? '<ul class="fm-ups">' + ups.map(function (u) { return '<li class="' + (u.err ? "is-err" : u.done ? "is-done" : "") + '"><span><b>' + esc(u.name) + "</b><small>" + esc(u.st) + '</small></span><span class="fm-upbar"><i style="transform:scaleX(' + (u.p || 0).toFixed(3) + ')"></i></span></li>'; }).join("") + "</ul>" : "") + "</div>";
+    if (!L.length) return h + '<p class="fm-empty">No songs yet.</p>';
+    var tot = L.reduce(function (s, t) { return s + durOf(t); }, 0);
+    h += '<h3 class="fm-h">Library · ' + L.length + (L.length === 1 ? " song" : " songs") + " · " + fmt(tot) + '<small>Drag to reorder</small></h3><ol class="fm-list fm-q">';
+    h += L.map(function (t, i) {
+      var cur = c && c.i === i, qn = Q.indexOf(t.id);
+      return li(t, (qn >= 0 ? '<span class="fm-chip fm-chip-q">Next' + (qn ? " " + (qn + 1) : "") + "</span>" : "") + '<span class="fm-dur">' + fmt(t.dur) + "</span>" +
+        '<button type="button" class="fm-ib" data-a="playnow" aria-label="Play ' + esc(t.title) + ' now">' + ico(cur ? "restart" : "play") + "</button>" +
+        '<button type="button" class="fm-ib" data-a="playnext" aria-label="Play ' + esc(t.title) + ' next">' + ico("next1") + "</button>" +
+        '<button type="button" class="fm-ib" data-a="edit" aria-label="Edit ' + esc(t.title) + '">' + ico("more") + "</button>", cur ? "is-cur" : "")
+        .replace('<li class="fm-li', '<li class="fm-li fm-qi').replace(/(<li [^>]*>)/, '$1<button type="button" class="fm-drag" aria-label="Reorder ' + esc(t.title) + ' (arrow keys)">' + ico("grip") + "</button>");
+    }).join("");
+    return h + "</ol>";
+  }
+  function pad(n) { return ("0" + n).slice(-2); }
+  function localIn(ts) { if (!ts) return ""; var d = new Date(ts); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function stationHTML() {
+    var st = S.stats || {}, c = calc(), up = c && st.since ? fmt((now() - st.since) / 1e3) : "–";
+    return '<label class="fm-f"><span>DJ note for listeners</span><textarea class="fm-note-in" maxlength="140" rows="2" placeholder="Say something to everyone listening">' + esc(S.note) + "</textarea></label>" +
+      '<div class="fm-row"><button type="button" class="fm-btn fm-primary" data-a="note">Post note</button><button type="button" class="fm-btn" data-a="noteclr"' + (S.note ? "" : " disabled") + ">Clear</button></div>" +
+      '<label class="fm-f"><span>Scheduled go-live</span><input type="datetime-local" class="fm-sched-in" value="' + localIn(S.sched) + '"></label>' +
+      '<div class="fm-row"><button type="button" class="fm-btn" data-a="sched">Schedule</button><button type="button" class="fm-btn" data-a="schedclr"' + (S.sched ? "" : " disabled") + ">Clear</button></div>" +
+      (S.sched ? '<p class="fm-hint">Goes live ' + esc(when(S.sched)) + " automatically.</p>" : "") +
+      '<label class="fm-f"><span>Crossfade <b class="fm-xf-v">' + (S.xf || 0) + ' s</b></span><input type="range" min="0" max="6" step="0.5" value="' + (S.xf || 0) + '" data-a="xf" aria-label="Crossfade seconds"></label>' +
+      '<h3 class="fm-h">Session</h3><dl class="fm-stats">' +
+      [["Listening now", S.listeners || 0], ["Peak", st.peak || 0], ["Songs played", st.played || 0], ["Reactions", st.reacts || 0], ["On air for", up], ["Library", S.list.length + " songs"]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
+      '<div class="fm-row">' + (live() ? '<button type="button" class="fm-btn fm-danger fm-wide" data-a="stop">Stop the station</button>' : '<button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>") + "</div>";
+  }
+  /* Placeholder until the first state arrives (or if the station API is down), so the sheet is never blank. */
+  var BLANK = { live: !1, paused: !1, pos: 0, idx: 0, startedAt: 0, v: -1, now: 0, list: [], q: [], upNext: [], hist: [], listeners: 0, shuffle: !1, repeat: "all", xf: 0, note: "", sched: 0, stats: { since: 0, played: 0, peak: 0, reacts: 0 } };
+  function renderSheet() {
+    if (!sheet) return;
+    if (!S) { S = BLANK; try { renderSheet(); } finally { S = null; } return; }
+    var ae = document.activeElement, body = q(".fm-sh-body", sheet);
+    if (drag || (ae && sheet.contains(ae) && /^(TEXTAREA|SELECT)$|^INPUT$/.test(ae.tagName) && ae.type !== "range" && ae.type !== "file" && !edit)) { dirty = !0; return; }
+    dirty = !1;
+    if (!owner() && tab !== "now") tab = "now";
+    sheet.querySelectorAll(".fm-tab").forEach(function (b) { var s = b.getAttribute("data-tab") === tab; b.classList.toggle("is-on", s); b.setAttribute("aria-selected", s); });
+    var st = body.scrollTop;
+    body.innerHTML = tab === "queue" ? queueHTML() : tab === "station" ? stationHTML() : nowHTML();
+    body.scrollTop = st;
+    sheet.setAttribute("data-tab", tab);
+    vizStart();
+  }
+  function lockScroll(v) {
+    var b = document.body, de = document.documentElement;
+    if (v) { lockScroll.y = window.scrollY; b.style.top = -lockScroll.y + "px"; de.classList.add("fm-lock"); }
+    else { de.classList.remove("fm-lock"); b.style.top = ""; window.scrollTo(0, lockScroll.y || 0); }
+  }
+  function openSheet(t) {
+    if (t) tab = t;
+    if (morph) closeMorph(!0);
+    if (sheet) { renderSheet(); return; }
+    getMe().then(function () {
+      if (sheet) return;
+      if (!S) refresh();
+      var back = document.createElement("div");
+      back.className = "fm-scrim";
+      sheet = document.createElement("div");
+      sheet.className = "fm-sheet";
+      sheet.setAttribute("role", "dialog");
+      sheet.setAttribute("aria-modal", "true");
+      sheet.setAttribute("aria-label", "Misery FM");
+      sheet._back = back;
+      sheet.innerHTML = '<div class="fm-grab" aria-hidden="true"></div><div class="fm-sh-hd">' + LOGO + '<span class="fm-lc" aria-live="polite"></span><button type="button" class="fm-ib" data-a="close" aria-label="Close">' + ico("x") + "</button></div>" +
+        (owner() ? '<div class="fm-tabs glassbar" role="tablist" aria-label="Studio">' + [["now", "Now"], ["queue", "Queue"], ["station", "Station"]].map(function (x) { return '<button type="button" role="tab" class="fm-tab" data-a="tab" data-tab="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>" : "") +
+        '<div class="fm-sh-body"></div>';
+      document.body.appendChild(back);
+      document.body.appendChild(sheet);
+      sheet.addEventListener("scroll", function () { if (sheet.scrollTop) sheet.scrollTop = 0; });
+      lockScroll(!0);
+      back.addEventListener("click", closeSheet);
+      back.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: !1 });
+      sheet.addEventListener("click", onAct);
+      sheet.addEventListener("input", onInput);
+      sheet.addEventListener("change", onChange);
+      sheet.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
+      sheet.addEventListener("pointerdown", dragStart);
+      sheet.addEventListener("keydown", dragKey);
+      swipe(sheet);
+      document.addEventListener("keydown", escKey);
+      renderSheet();
+      paint();
+      if (RM.matches) { back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 }); sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 }); }
+      else { back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); sheet.animate([{ transform: "translateY(100%)" }, { transform: "none" }], { duration: 420, easing: "cubic-bezier(.2,.85,.25,1)" }); }
+      var cl = q('[data-a="close"]', sheet);
+      cl && cl.focus({ preventScroll: !0 });
+    });
+  }
+  function closeSheet() {
+    if (!sheet) return;
+    var sh = sheet, back = sh._back;
+    sheet = null;
+    closeEdit(!0);
+    document.removeEventListener("keydown", escKey);
+    var an = RM.matches ? sh.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 }) : sh.animate([{ transform: getComputedStyle(sh).transform === "none" ? "none" : getComputedStyle(sh).transform }, { transform: "translateY(105%)" }], { duration: 300, easing: "cubic-bezier(.4,0,.6,1)" });
+    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: RM.matches ? 150 : 300 });
+    an.onfinish = function () { sh.remove(); back.remove(); };
+    lockScroll(!1);
+  }
+  function swipe(sh) {
+    var y0 = 0, dy = 0, live2 = !1;
+    sh.addEventListener("pointerdown", function (e) {
+      if (!e.target.closest(".fm-grab, .fm-sh-hd") || e.target.closest("button")) return;
+      live2 = !0; y0 = e.clientY; dy = 0;
+      try { sh.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    sh.addEventListener("pointermove", function (e) { if (!live2) return; dy = Math.max(0, e.clientY - y0); sh.style.transform = dy ? "translateY(" + dy + "px)" : ""; });
+    var end = function () { if (!live2) return; live2 = !1; if (dy > 110) closeSheet(); else { sh.style.transform = ""; } };
+    sh.addEventListener("pointerup", end);
+    sh.addEventListener("pointercancel", end);
+  }
+
+  /* ---------- drag to reorder (touch-friendly handle, arrow keys too) ---------- */
+  function dragStart(e) {
+    var h = e.target.closest(".fm-drag");
+    if (!h || !owner()) return;
+    e.preventDefault();
+    var row = h.closest("li"), list = row.parentNode, rows = [].slice.call(list.children), from = rows.indexOf(row), r0 = row.getBoundingClientRect();
+    var step = rows[1] ? rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top : r0.height;
+    drag = { row: row, rows: rows, from: from, to: from, y0: e.clientY, step: step, id: row.getAttribute("data-id") };
+    row.classList.add("is-drag");
+    try { h.setPointerCapture(e.pointerId); } catch (_) {}
+    h.addEventListener("pointermove", dragMove);
+    h.addEventListener("pointerup", dragEnd);
+    h.addEventListener("pointercancel", dragEnd);
+  }
+  function dragMove(e) {
+    if (!drag) return;
+    var dy = e.clientY - drag.y0, to = Math.max(0, Math.min(drag.rows.length - 1, drag.from + Math.round(dy / drag.step)));
+    drag.to = to;
+    drag.row.style.transform = "translateY(" + dy + "px)";
+    drag.rows.forEach(function (r, k) {
+      if (r === drag.row) return;
+      var s = drag.from < to && k > drag.from && k <= to ? -drag.step : to < drag.from && k >= to && k < drag.from ? drag.step : 0;
+      r.style.transform = s ? "translateY(" + s + "px)" : "";
+    });
+  }
+  function dragEnd(e) {
+    var h = e.currentTarget;
+    h.removeEventListener("pointermove", dragMove);
+    h.removeEventListener("pointerup", dragEnd);
+    h.removeEventListener("pointercancel", dragEnd);
+    if (!drag) return;
+    var d = drag;
+    drag = null;
+    d.rows.forEach(function (r) { r.style.transform = ""; });
+    d.row.classList.remove("is-drag");
+    if (d.to !== d.from) moveTo(d.id, d.to);
+    else if (dirty) renderSheet();
+  }
+  function moveTo(id, to) {
+    var L = S.list, at = L.findIndex(function (t) { return t.id === id; });
+    if (at < 0) return;
+    var cur = L[S.idx], t = L.splice(at, 1)[0];
+    L.splice(to, 0, t);
+    S.idx = Math.max(0, L.indexOf(cur));
+    renderSheet();
+    ctl({ action: "move", id: id, to: to });
+  }
+  function dragKey(e) {
+    var h = e.target.closest && e.target.closest(".fm-drag");
+    if (!h || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+    var id = h.closest("li").getAttribute("data-id"), at = S.list.findIndex(function (t) { return t.id === id; }), to = at + (e.key === "ArrowUp" ? -1 : 1);
+    if (to < 0 || to >= S.list.length) return;
+    moveTo(id, to);
+    var nh = sheet && sheet.querySelector('li[data-id="' + CSS.escape(id) + '"] .fm-drag');
+    nh && nh.focus();
+  }
+
+  /* ---------- actions ---------- */
+  function ctl(body) {
+    return api("/api/fm/control", body).then(function (r) { if (r && r.ok) set(r.fm); else toast((r && r.error) || "Something went wrong"); return r; });
+  }
+  function toast(t) {
+    var el2 = q(".fm-toast");
+    if (!el2) { el2 = document.createElement("div"); el2.className = "fm-toast"; el2.setAttribute("role", "status"); document.body.appendChild(el2); }
+    el2.textContent = t;
+    el2.classList.add("is-on");
+    clearTimeout(toast.t);
+    toast.t = setTimeout(function () { el2.classList.remove("is-on"); }, 2600);
+  }
+  function confirmFM(msg, ok, cb, danger) {
+    var cf = document.createElement("div");
+    cf.className = "fm-cf-back";
+    cf.innerHTML = '<div class="fm-cf" role="alertdialog" aria-modal="true" aria-label="' + esc(msg) + '"><p>' + esc(msg) + '</p><div class="fm-row"><button type="button" class="fm-btn" data-c="0">Cancel</button><button type="button" class="fm-btn ' + (danger ? "fm-danger" : "fm-primary") + '" data-c="1">' + esc(ok) + "</button></div></div>";
+    document.body.appendChild(cf);
+    cf.addEventListener("click", function (e) { var b = e.target.closest("[data-c]"); if (!b && e.target !== cf) return; e.stopPropagation(); cf.remove(); b && b.getAttribute("data-c") === "1" && cb(); });
+    var y = q('[data-c="1"]', cf);
+    y && y.focus();
+  }
+  function onAct(e) {
+    var b = e.target.closest("[data-a]");
+    if (!b || b.disabled) return;
+    var a = b.getAttribute("data-a"), row = b.closest("[data-id]"), id = b.getAttribute("data-id") || (row && row.getAttribute("data-id"));
+    if (a === "vol" || a === "xf" || a === "noop") return;
+    e.stopPropagation();
+    if (a === "listen") listen(!on);
+    else if (a === "sheet") openSheet("now");
+    else if (a === "collapse") closeMorph();
+    else if (a === "close") closeSheet();
+    else if (a === "tab") { tab = b.getAttribute("data-tab"); renderSheet(); }
+    else if (a === "react") react(b.getAttribute("data-e"));
+    else if (a === "prev" || a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
+    else if (a === "shuffle") ctl({ action: "shuffle", on: !S.shuffle });
+    else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
+    else if (a === "golive") confirmFM("Go live now? Everyone on the site will see Misery FM is live.", "Go Live", function () { ctl({ action: "live" }); });
+    else if (a === "stop") confirmFM("Stop Misery FM for everyone?", "Stop", function () { ctl({ action: "stop" }); }, !0);
+    else if (a === "add") { var f = q(".fm-file", sheet); f && f.click(); }
+    else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
+    else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
+    else if (a === "edit") openEdit(id);
+    else if (a === "note") { var n = q(".fm-note-in", sheet); ctl({ action: "note", text: n ? n.value : "" }).then(function (r) { r && r.ok && toast("Note posted"); }); }
+    else if (a === "noteclr") ctl({ action: "note", text: "" });
+    else if (a === "sched") {
+      var si = q(".fm-sched-in", sheet), ts = si && si.value ? new Date(si.value).getTime() : 0;
+      if (!ts || ts < Date.now()) return toast("Pick a time in the future");
+      ctl({ action: "sched", at: ts }).then(function (r) { r && r.ok && toast("Scheduled for " + when(ts)); });
+    } else if (a === "schedclr") ctl({ action: "sched", at: 0 });
+    else if (a === "edclose") closeEdit();
+    else if (a === "edsave") saveEdit();
+    else if (a === "cover") { var ci = q(".fm-cover-in", edit); ci && ci.click(); }
+    else if (a === "coverdel") ctl({ action: "artdel", id: edit._id }).then(function (r) { r && r.ok && fillEdit(); });
+    else if (a === "remove") { var t = byId(id); confirmFM("Remove “" + ((t && t.title) || "this song") + "” from Misery FM?", "Remove", function () { closeEdit(); ctl({ action: "remove", id: id }); }, !0); }
+  }
+  function onInput(e) {
+    var a = e.target.getAttribute("data-a");
+    if (a === "vol") { vol = +e.target.value; try { localStorage.setItem("mp-fm-vol", vol); } catch (_) {} applyVol(); }
+    else if (a === "xf") { var v = q(".fm-xf-v", sheet); v && (v.textContent = e.target.value + " s"); }
+    else if (e.target.classList.contains("fm-scrub")) { e.target._busy = 1; var c = calc(); if (c) { q(".fm-el", sheet).textContent = fmt(+e.target.value); q(".fm-rem", sheet).textContent = "-" + fmt(c.d - e.target.value); } }
+  }
+  function onChange(e) {
+    var tg = e.target, a = tg.getAttribute("data-a");
+    if (a === "xf") ctl({ action: "xf", sec: +tg.value });
+    else if (tg.classList.contains("fm-scrub")) { tg._busy = 0; ctl({ action: "seek", pos: +tg.value }); }
+    else if (tg.classList.contains("fm-file")) { addFiles(tg.files); tg.value = ""; }
+    else if (tg.classList.contains("fm-cover-in")) { var f = tg.files && tg.files[0]; tg.value = ""; f && coverUpload(edit._id, f); }
+  }
+
+  /* ---------- edit sheet (per song) ---------- */
+  function openEdit(id) {
+    var t = byId(id);
+    if (!t || !owner()) return;
+    if (!sheet) { openSheet("queue"); setTimeout(function () { openEdit(id); }, 450); return; }
+    closeEdit(!0);
+    edit = document.createElement("div");
+    edit.className = "fm-edit";
+    edit.setAttribute("role", "dialog");
+    edit.setAttribute("aria-label", "Edit song");
+    edit._id = id;
+    edit.addEventListener("click", onAct);
+    edit.addEventListener("change", onChange);
+    sheet.appendChild(edit);
+    fillEdit();
+    RM.matches ? edit.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 }) : edit.animate([{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.85,.25,1)" });
+    var f = q('[name="title"]', edit);
+    f && f.focus({ preventScroll: !0 });
+  }
+  function fld(n, label, v, attrs) { return '<label class="fm-f"><span>' + label + '</span><input name="' + n + '" value="' + esc(v || "") + '" ' + (attrs || "") + "></label>"; }
+  function fillEdit() {
+    if (!edit) return;
+    var t = byId(edit._id);
+    if (!t) return closeEdit();
+    var keep = {};
+    edit.querySelectorAll("[name]").forEach(function (i) { keep[i.name] = i.type === "checkbox" ? i.checked : i.value; });
+    var v = function (k) { return k in keep ? keep[k] : t[k]; };
+    edit.innerHTML = '<div class="fm-ed-hd"><b>Edit song</b><button type="button" class="fm-ib" data-a="edclose" aria-label="Close">' + ico("x") + "</button></div>" +
+      '<div class="fm-ed-body"><div class="fm-ed-art">' + art(t, "fm-ed-cover") + '<div class="fm-ed-artb"><button type="button" class="fm-btn" data-a="cover">' + (t.art ? "Replace cover" : "Upload cover") + "</button>" +
+      (t.art ? '<button type="button" class="fm-btn fm-ghost" data-a="coverdel">Remove cover</button>' : "") + '<input class="fm-cover-in" type="file" accept="image/*" hidden><small class="fm-hint">Square JPEG/PNG works best.</small></div></div>' +
+      fld("title", "Song name", v("title"), 'maxlength="120" autocomplete="off"') + fld("artist", "Artist", v("artist"), 'maxlength="120" autocomplete="off"') + fld("album", "Album", v("album"), 'maxlength="120" autocomplete="off"') +
+      '<div class="fm-f2">' + fld("year", "Year", v("year"), 'inputmode="numeric" maxlength="4" pattern="[0-9]*"') + fld("genre", "Genre", v("genre"), 'maxlength="40" autocomplete="off"') + "</div>" +
+      '<label class="fm-f"><span>Track notes</span><textarea name="notes" maxlength="280" rows="2" placeholder="Shown to listeners under the song">' + esc(v("notes") || "") + "</textarea></label>" +
+      '<label class="fm-sw"><input type="checkbox" name="explicit"' + (v("explicit") ? " checked" : "") + '><span class="fm-sw-k" aria-hidden="true"></span><span>Explicit</span><span class="fm-e" aria-hidden="true">E</span></label>' +
+      '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="edsave">Save</button></div>' +
+      '<div class="fm-row fm-ed-more" data-id="' + esc(t.id) + '"><button type="button" class="fm-btn" data-a="playnow">' + ico("play") + 'Play now</button><button type="button" class="fm-btn" data-a="playnext">' + ico("next1") + 'Play next</button><button type="button" class="fm-btn fm-danger" data-a="remove">Remove</button></div></div>';
+  }
+  function saveEdit() {
+    var b = { action: "edit", id: edit._id };
+    edit.querySelectorAll("[name]").forEach(function (i) { b[i.name] = i.type === "checkbox" ? i.checked : i.value; });
+    ctl(b).then(function (r) { if (r && r.ok) { toast("Saved"); closeEdit(); } });
+  }
+  function closeEdit(instant) {
+    if (!edit) return;
+    var e2 = edit;
+    edit = null;
+    if (instant || RM.matches) return e2.remove();
+    e2.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(16px)" }], { duration: 200 }).onfinish = function () { e2.remove(); };
+    setTimeout(function () { dirty && renderSheet(); }, 220);
+  }
+
+  /* ---------- tags: ID3v2.3/2.4 (MP3) and MP4 atoms (M4A/AAC) ---------- */
+  function txt(b, enc) {
+    try {
+      if (enc === 0) return new TextDecoder("latin1").decode(b);
+      if (enc === 3) return new TextDecoder("utf-8").decode(b);
+      if (enc === 1) return new TextDecoder(b[0] === 0xfe ? "utf-16be" : "utf-16le").decode(b[0] === 0xff || b[0] === 0xfe ? b.subarray(2) : b);
+      if (enc === 2) return new TextDecoder("utf-16be").decode(b);
+    } catch (e) {}
+    return "";
+  }
+  function clean(s) { return String(s || "").replace(/\u0000+$/g, "").split("\u0000")[0].trim(); }
+  function id3(u) {
+    var o = {};
+    if (u[0] !== 0x49 || u[1] !== 0x44 || u[2] !== 0x33) return o;
+    var v = u[3], ss = function (p) { return (u[p] << 21) | (u[p + 1] << 14) | (u[p + 2] << 7) | u[p + 3]; }, end = 10 + ss(6), p = 10;
+    if (v < 3) return o;
+    if (u[5] & 0x40) p += v === 4 ? ss(10) : ((u[10] << 24) | (u[11] << 16) | (u[12] << 8) | u[13]) + 4;
+    end = Math.min(end, u.length);
+    while (p + 10 < end) {
+      var id = String.fromCharCode(u[p], u[p + 1], u[p + 2], u[p + 3]), sz = v === 4 ? ss(p + 4) : ((u[p + 4] << 24) | (u[p + 5] << 16) | (u[p + 6] << 8) | u[p + 7]) >>> 0;
+      if (!/^[A-Z0-9]{4}$/.test(id) || sz <= 0 || p + 10 + sz > end) break;
+      var d = u.subarray(p + 10, p + 10 + sz), enc = d[0];
+      if (id === "APIC") {
+        var k = 1; while (k < d.length && d[k]) k++;
+        var mime = new TextDecoder("latin1").decode(d.subarray(1, k)) || "image/jpeg", pt = d[k + 1]; k += 2;
+        if (enc === 1 || enc === 2) { while (k + 1 < d.length && (d[k] || d[k + 1])) k += 2; k += 2; } else { while (k < d.length && d[k]) k++; k++; }
+        if (!o.pic || pt === 3) o.pic = new Blob([d.subarray(k)], { type: /png/i.test(mime) ? "image/png" : "image/jpeg" });
+      } else if (id === "TXXX") {
+        var s = txt(d.subarray(1), enc).split("\u0000").filter(function (x) { return x !== ""; });
+        if (s[0] && /ITUNESADVISORY|EXPLICIT/i.test(s[0]) && /^(1|4|explicit|yes|true)$/i.test((s[1] || "").trim())) o.explicit = !0;
+      } else if (id.charAt(0) === "T") {
+        var val = clean(txt(d.subarray(1), enc));
+        if (id === "TIT2") o.title = val; else if (id === "TPE1") o.artist = val; else if (id === "TALB") o.album = val;
+        else if (id === "TYER" || id === "TDRC" || id === "TORY") o.year = o.year || (val.match(/\d{4}/) || [""])[0];
+        else if (id === "TCON") o.genre = val.replace(/^\(\d+\)/, "").trim() || "";
+        else if (id === "TLEN") o.dur = (+val || 0) / 1e3;
+      }
+      p += 10 + sz;
+    }
+    return o;
+  }
+  function mp4(u) {
+    var o = {}, dv = new DataView(u.buffer, u.byteOffset, u.byteLength);
+    var name = function (p) { return String.fromCharCode(u[p], u[p + 1], u[p + 2], u[p + 3]); };
+    function walk(s, e, path) {
+      for (var p = s; p + 8 <= e;) {
+        var sz = dv.getUint32(p), ty = name(p + 4), h = 8;
+        if (sz === 1) { sz = dv.getUint32(p + 12) + dv.getUint32(p + 8) * 4294967296; h = 16; } else if (sz === 0) sz = e - p;
+        if (sz < 8 || p + sz > e) break;
+        var cs = p + h, ce = p + sz;
+        if (ty === "moov" || ty === "udta" || ty === "ilst" || ty === "trak" || ty === "mdia") walk(cs, ce, path + "/" + ty);
+        else if (ty === "meta") walk(cs + 4, ce, path + "/meta");
+        else if (ty === "mvhd") { var ver = u[cs], ts = dv.getUint32(cs + (ver ? 20 : 12)), du = ver ? dv.getUint32(cs + 24) * 4294967296 + dv.getUint32(cs + 28) : dv.getUint32(cs + 16); if (ts) o.dur = du / ts; }
+        else if (/\/ilst$/.test(path)) {
+          var dp = cs; if (name(dp + 4) !== "data") { p += sz; continue; }
+          var dsz = dv.getUint32(dp), kind = dv.getUint32(dp + 8) & 0xffffff, pl = u.subarray(dp + 16, dp + dsz);
+          var str = function () { return clean(new TextDecoder("utf-8").decode(pl)); };
+          if (ty === "\u00a9nam") o.title = str(); else if (ty === "\u00a9ART") o.artist = str(); else if (ty === "aART" && !o.artist) o.artist = str();
+          else if (ty === "\u00a9alb") o.album = str(); else if (ty === "\u00a9day") o.year = (str().match(/\d{4}/) || [""])[0];
+          else if (ty === "\u00a9gen") o.genre = str(); else if (ty === "rtng") o.explicit = pl[0] === 1 || pl[0] === 4;
+          else if (ty === "covr" && !o.pic) o.pic = new Blob([pl], { type: kind === 14 ? "image/png" : "image/jpeg" });
+        }
+        p += sz;
+      }
+    }
+    try { walk(0, u.length, ""); } catch (e) {}
+    return o;
+  }
+  function tags(buf) { var u = new Uint8Array(buf); return u[0] === 0x49 && u[1] === 0x44 && u[2] === 0x33 ? id3(u) : name4(u, 4) === "ftyp" ? mp4(u) : {}; }
+  function name4(u, p) { return String.fromCharCode(u[p], u[p + 1], u[p + 2], u[p + 3]); }
+  // Decode once on the owner's phone: exact length + a 10 Hz loudness map the visualizer follows on iOS.
+  function analyse(buf) {
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return Promise.resolve(null);
+    var ctx;
+    try { ctx = new C(); } catch (e) { return Promise.resolve(null); }
+    return new Promise(function (res) {
+      var done = function (v) { try { ctx.close(); } catch (e) {} res(v); };
+      try {
+        var pr = ctx.decodeAudioData(buf.slice(0), function (ab) { done(ab); }, function () { done(null); });
+        pr && pr.catch && pr.catch(function () { done(null); });
+      } catch (e) { done(null); }
+    }).then(function (ab) {
+      if (!ab) return null;
+      var ch = ab.getChannelData(0), ch2 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : null, win = Math.floor(ab.sampleRate / 10), n = Math.min(36000, Math.floor(ch.length / win)), rms = new Float32Array(n), mx = 1e-6;
+      for (var i = 0; i < n; i++) { var s = 0; for (var j = i * win, e = j + win; j < e; j += 4) { var x = ch2 ? (ch[j] + ch2[j]) / 2 : ch[j]; s += x * x; } rms[i] = Math.sqrt(s / (win / 4)); if (rms[i] > mx) mx = rms[i]; }
+      var w = new Uint8Array(n);
+      for (var k = 0; k < n; k++) w[k] = Math.round(255 * Math.pow(rms[k] / mx, 0.8));
+      return { dur: ab.duration, wave: w };
+    });
+  }
+  function metaDur(f) {
+    return new Promise(function (res) {
+      var u = URL.createObjectURL(f), a = new Audio(), fin = function (v) { try { URL.revokeObjectURL(u); } catch (e) {} res(v); };
+      a.preload = "metadata"; a.onloadedmetadata = function () { fin(isFinite(a.duration) ? a.duration : 0); }; a.onerror = function () { fin(0); };
+      setTimeout(function () { fin(0); }, 8e3);
+      a.src = u;
+    });
+  }
+  function square(blob, size) {
+    return new Promise(function (res) {
+      var u = URL.createObjectURL(blob), img = new Image();
+      img.onload = function () {
+        try {
+          var s = Math.min(img.naturalWidth, img.naturalHeight), cv = document.createElement("canvas");
+          cv.width = cv.height = size || 600;
+          cv.getContext("2d").drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, cv.width, cv.height);
+          cv.toBlob(function (b) { URL.revokeObjectURL(u); res(b); }, "image/jpeg", 0.88);
+        } catch (e) { URL.revokeObjectURL(u); res(null); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(u); res(blob.size <= 3 * 1024 * 1024 && /jpeg|png|webp/.test(blob.type) ? blob : null); };
+      img.src = u;
+    });
+  }
+  function xhr(path, body, type, prog) {
+    return new Promise(function (res) {
+      var x = new XMLHttpRequest(), h = hdr();
+      x.open("POST", API + path);
+      for (var k in h) x.setRequestHeader(k, h[k]);
+      x.setRequestHeader("Content-Type", type);
+      x.upload && (x.upload.onprogress = function (e) { e.lengthComputable && prog && prog(e.loaded / e.total); });
+      x.onload = function () { var j; try { j = JSON.parse(x.responseText); } catch (e) { j = { ok: !1, error: "HTTP " + x.status }; } res(j); };
+      x.onerror = function () { res({ ok: !1, error: "Network error" }); };
+      // ArrayBuffer bodies (not Blob): same bytes, and every engine reports them reliably
+      (body && body.arrayBuffer && !(body instanceof ArrayBuffer) ? body.arrayBuffer() : Promise.resolve(body)).then(function (b) { x.send(b); }, function () { res({ ok: !1, error: "Could not read the file" }); });
+    });
+  }
+  function coverUpload(id, file) {
+    toast("Uploading cover…");
+    return square(file, 600).then(function (b) {
+      if (!b) { toast("That image could not be read"); return; }
+      return xhr("/api/fm/art?id=" + encodeURIComponent(id), b, b.type || "image/jpeg").then(function (r) { if (r.ok) { set(r.fm); fillEdit(); toast("Cover updated"); } else toast(r.error || "Cover upload failed"); });
+    });
+  }
+  var OKT = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 }, EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", mp4: "audio/mp4" };
+  var upBusy = !1;
+  function addFiles(files) {
+    [].slice.call(files || []).forEach(function (f) { ups.unshift({ f: f, name: f.name, st: "Waiting…", p: 0 }); });
+    ups = ups.slice(0, 30);
+    renderSheet();
+    pump();
+  }
+  function upPaint() { if (sheet && tab === "queue" && !drag) { var box = q(".fm-ups", sheet); box ? (box.outerHTML = queueHTML().match(/<ul class="fm-ups">[\s\S]*?<\/ul>/)[0]) : renderSheet(); } }
+  function pump() {
+    if (upBusy) return;
+    var u = ups.filter(function (x) { return x.f && !x.done && !x.err && !x.run; }).pop();
+    if (!u) return;
+    upBusy = !0; u.run = 1;
+    var f = u.f, ext = String(f.name || "").split(".").pop().toLowerCase(), type = OKT[String(f.type).toLowerCase()] ? String(f.type).toLowerCase() : EXT[ext];
+    var fin = function (st, err) { u.st = st; u.err = !!err; u.done = !err; u.f = null; upBusy = !1; upPaint(); pump(); };
+    if (!type) return fin("MP3, M4A or AAC only", 1);
+    if (f.size > 25 * 1024 * 1024) return fin("Over 25 MB", 1);
+    u.st = "Reading tags…"; upPaint();
+    var tg = {}, an = null, raw = null;
+    f.arrayBuffer().then(function (buf) {
+      raw = buf;
+      tg = tags(buf);
+      u.st = "Measuring…"; upPaint();
+      return analyse(buf);
+    }).then(function (r) {
+      an = r;
+      return an && an.dur ? an.dur : tg.dur || metaDur(f);
+    }).then(function (dur) {
+      var base = String(f.name || "Untitled").replace(/\.[^.]+$/, "").replace(/_/g, " ").trim(), sp = base.split(/\s+[-–—]\s+/);
+      var meta = { title: tg.title || (sp.length > 1 ? sp.slice(1).join(" - ") : base), artist: tg.artist || (sp.length > 1 ? sp[0] : ""), album: tg.album || "", year: tg.year || "", genre: tg.genre || "", explicit: tg.explicit ? "1" : "", dur: Math.round((+dur || 0) * 1e3) / 1e3 };
+      var qs = Object.keys(meta).filter(function (k) { return meta[k] !== ""; }).map(function (k) { return k + "=" + encodeURIComponent(String(meta[k]).slice(0, 120)); }).join("&");
+      u.name = meta.title + (meta.artist ? " · " + meta.artist : "");
+      u.st = "Uploading 0%"; upPaint();
+      return xhr("/api/fm/upload?" + qs, raw, type, function (p) { u.p = p * 0.92; u.st = "Uploading " + Math.round(p * 100) + "%"; var bar = sheet && sheet.querySelector(".fm-ups li:nth-child(" + (ups.indexOf(u) + 1) + ") .fm-upbar i"); bar ? (bar.style.transform = "scaleX(" + u.p.toFixed(3) + ")", bar.parentNode.previousSibling.lastChild.textContent = u.st) : 0; });
+    }).then(function (r) {
+      if (!r || !r.ok) return fin((r && r.error) || "Upload failed", 1);
+      set(r.fm);
+      var id = r.id, extra = [];
+      if (tg.pic) { u.st = "Adding cover…"; upPaint(); extra.push(square(tg.pic, 600).then(function (b) { return b && xhr("/api/fm/art?id=" + id, b, b.type || "image/jpeg"); })); }
+      if (an && an.wave && an.wave.length) extra.push(xhr("/api/fm/wave?id=" + id, an.wave, "application/octet-stream"));
+      return Promise.all(extra).then(function (rs) {
+        rs.forEach(function (x) { x && x.ok && x.fm && set(x.fm); });
+        u.p = 1;
+        fin("Added" + (tg.pic ? " with cover" : "") + (tg.title ? " · tags read" : ""));
+      });
+    }).catch(function () { fin("Could not read this file", 1); });
+  }
+
+  /* ---------- render / paint / tick ---------- */
+  var lastKey = "";
+  function menuPill() {
+    document.querySelectorAll(".chat-pmenu-row.chat-misery-fm em").forEach(function (em) { em.textContent = live() ? "LIVE" : ""; em.className = live() ? "chat-fm-pill" : ""; });
+  }
+  function render() {
+    var c = calc();
+    lastKey = c ? c.tr.id + "|" + c.paused + "|" + on : "";
+    deco();
+    chatBar();
+    menuPill();
+    if (morph) { var inn = q(".fm-m-in", morph); if (inn) inn.outerHTML = morphHTML(); }
+    renderSheet();
+    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = live() ? ico("ear") + (S.listeners || 0) + " listening" : ""); }
+    if (live() && !tickT) tickT = setInterval(tick, 1e3);
+    if (!live() && tickT && !sheet) { clearInterval(tickT); tickT = 0; }
+  }
+  function paint() {
+    var c = calc();
+    [morph, sheet].forEach(function (root) {
+      if (!root || !c) return;
+      var e1 = q(".fm-el", root), e2 = q(".fm-rem", root), sc = q(".fm-scrub", root), pb = q(".fm-pbar i", root);
+      if (sc && !sc._busy) { sc.value = Math.floor(c.t); sc.style.setProperty("--p", (c.t / c.d * 100).toFixed(2) + "%"); }
+      if (!sc || !sc._busy) { e1 && (e1.textContent = fmt(c.t)); e2 && (e2.textContent = "-" + fmt(c.d - c.t)); }
+      pb && (pb.style.transform = "scaleX(" + (c.t / c.d).toFixed(4) + ")");
+    });
+    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = live() ? ico("ear") + (S.listeners || 0) + " listening" : ""); }
+    if (morph) { var ml = q(".fm-lc", morph); ml && (ml.innerHTML = ico("ear") + ((S && S.listeners) || 0)); }
+    chatBar();
+  }
+  function tick() {
+    tickN++;
+    var c = calc(), k = c ? c.tr.id + "|" + c.paused + "|" + on : "";
+    if (k !== lastKey) { render(); sync(); }
+    else { paint(); deco(); }
+    if (tickN % 5 === 0) sync();
+    if (RM.matches && sheet) viz();
+    if (c && !c.paused && !S.paused && (now() - S.startedAt) / 1e3 > durOf(c.tr) + 4 && tickN % 10 === 0) refresh();
+  }
+  window.addEventListener("resize", function () { hb && (q(".fm-ring", hb)._w = 0); deco(); });
+  window.addEventListener("hashchange", function () { setTimeout(deco, 60); setTimeout(deco, 400); });
+  document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
+
+  window.MPFM = {
+    open: function () { openSheet("now"); },
+    isLive: live,
+    setMe: function (u) { me = u || null; meP = Promise.resolve(me); sheet && renderSheet(); },
+    state: function () { return S; },
+    _calc: calc
+  };
+  function init() { connect(); refresh(); }
+  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", init) : init();
+})();
