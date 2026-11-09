@@ -845,3 +845,19 @@ Branch: `codex/live-globe-pull-post`.
   `border-image: var(--mp-div-in) 1`, so no divider is added where there was none
   (Globe thread rows intentionally stay borderless; `.mp-tbar` keeps its card border).
 - Test: `MP_PLAYWRIGHT=... node tools/test-dividers.cjs` (WebKit + Chromium, dark + light).
+
+## Misery FM menu + top bar, t516u/t517u (Grim, Nov 9 2026)
+
+- The FM menu is now a + chat menu sub-panel: `chat.js` `mpMorph(m, "fm", close)` morphs the same
+  menu element (same size animation as Music/Polls/Globe) and calls `MPFM.mount(m, {back, close})`.
+  The header is the + menu sub-panel header (Back, real logo `assets/misery-fm-logo.svg`, live status,
+  Close). The standalone `openSheet()` (fallback, `MPFM.open`) uses the same frame. Both carry `.fm-root`.
+- Station tab: grouped compact rows (`.fm-sr`: icon, label + status, control) under Broadcast /
+  DJ note / Session labels, with the shared divider token.
+- Top bar: the "is live" phase shows the real logo + text in the top bar's own typography (copied from
+  the bar's text, or the chat header title for the icon-only main nav). Now playing: the whole bar is
+  the progress fill (`.fm-m-fill`); tapping the bar (anything but Listen) returns to the normal bar;
+  it no longer opens the FM menu (that lives in the + menu).
+- Live checks: never fetch an exact `?v=N` pin before the probe shows the new SW. Cloudflare caches
+  pinned assets as immutable, so an early fetch pins the old file under the new URL (happened to
+  css 826 at one edge; superseded by 827).

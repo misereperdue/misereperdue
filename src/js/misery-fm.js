@@ -42,7 +42,6 @@
   function byId(id) { for (var i = 0; S && i < S.list.length; i++) if (S.list[i].id === id) return S.list[i]; return null; }
   function artUrl(t) { return t && t.art ? API + "/api/fm/art/" + encodeURIComponent(t.art) : ""; }
   var EMB = '<svg class="fm-emb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 7.6a4.8 4.8 0 0 1 6.8 0M6.1 5.1a8.3 8.3 0 0 1 11.8 0"/><circle cx="12" cy="10.1" r="1.1" fill="currentColor" stroke="none"/><path d="M3.6 13.3c2.4 2.7 5.3 4 8.4 4s6-1.3 8.4-4M7 16.1l-1.2 2.2M10.2 17.2l-.4 2.4M13.8 17.2l.4 2.4M17 16.1l1.2 2.2"/></svg>';
-  var LOGO = '<span class="fm-logo" role="img" aria-label="Misery FM">' + EMB + '<span class="fm-word" aria-hidden="true">MISERY<b>FM</b></span></span>';
   function E(t) { return t && t.explicit ? '<span class="fm-e" role="img" aria-label="Explicit" title="Explicit">E</span>' : ""; }
   function art(t, cls) {
     cls = "fm-art " + (cls || "");
@@ -59,7 +58,10 @@
     repeat: '<path d="M5 11V9a3 3 0 0 1 3-3h11M16 3l3 3-3 3M19 13v2a3 3 0 0 1-3 3H5M8 21l-3-3 3-3"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>', back: '<path d="M15 18l-6-6 6-6"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
     grip: '<path d="M8 7h8M8 12h8M8 17h8"/>', plus: '<path d="M12 5v14M5 12h14"/>', ear: '<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.6"/><path d="M10 9.5a2 2 0 0 1 4 0"/>',
-    next1: '<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', expand: '<path d="M7 10l5 5 5-5"/>'
+    next1: '<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', expand: '<path d="M7 10l5 5 5-5"/>',
+    radio: '<circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', msg: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z"/>',
+    xf: '<path d="M3 17c4 0 5-10 9-10M12 7c4 0 5 10 9 10M3 7c4 0 5 10 9 10M12 17c4 0 5-10 9-10" stroke-width="1.6"/>', send: '<path d="M12 19V5M6 11l6-6 6 6"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
   };
   function ico(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICO[k] + "</svg>"; }
 
@@ -266,17 +268,34 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true">' + LOGO + '<span class="fm-hb-is">IS LIVE</span></span><span class="fm-hb-np"></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live</span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "Misery FM is live. Tap the bar for now playing.");
       bar.addEventListener("click", barTap, !0);
-      o.querySelector(".fm-hb-np").addEventListener("click", onAct);
+      o.querySelector(".fm-hb-np").addEventListener("click", npTap);
       hb = bar;
     }
     ring(bar);
+    if (!bar._fmTy) typo(bar, bar.querySelector(":scope > .fm-hb"));
     if (!phT && !RM.matches) phT = setInterval(function () { hb && !morph && hb.classList.toggle("is-fm"); }, 4e3);
     if (RM.matches && phT) { clearInterval(phT); phT = 0; hb && hb.classList.remove("is-fm"); }
+  }
+  /* dc (t517u): "is live" uses the top bar's own typography (font, size, weight, case, spacing),
+     copied from a real text item in that bar, so it never looks out of place. */
+  function typo(bar, o) {
+    var src = null;
+    bar.querySelectorAll(".chat-title, a, button, h1, h2, span").forEach(function (n) {
+      if (src || n.closest(".fm-hb") || !n.getClientRects().length || !/\S/.test(n.textContent) || n.children.length > 2) return;
+      src = n;
+    });
+    // icon-only bars (the main nav) use the site's top bar title style: the chat header title
+    src = src || q(".chat-head .chat-title");
+    var x = o.querySelector(".fm-hb-in"), cs = src && getComputedStyle(src);
+    if (!x || !cs || !parseFloat(cs.fontSize)) return;
+    bar._fmTy = 1;
+    ["fontFamily", "fontSize", "fontWeight", "letterSpacing", "textTransform", "fontStyle"].forEach(function (k) { x.style[k] = cs[k]; });
+    x.style.setProperty("--fm-fs", cs.fontSize);
   }
   /* Dotted outline on the bar's own rounded shape. The rect sits half a stroke inside the edge (never
      clipped), uses the bar's real corner radius, and the dot pitch divides the perimeter exactly, so
@@ -301,13 +320,14 @@
     var o = svg.parentNode, bt = parseFloat(cs.borderTopWidth) || 0, bl = parseFloat(cs.borderLeftWidth) || 0;
     o.style.top = o.style.bottom = -bt + "px"; o.style.left = o.style.right = -bl + "px";
     o.style.setProperty("--fm-r", rad + "px");
+    o.style.setProperty("--fm-R", (parseFloat(cs.borderTopLeftRadius) || h / 2) + "px");
     if (rect._an) { rect._an.cancel(); rect._an = null; }
     if (!RM.matches && rect.animate) rect._an = rect.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -pitch }], { duration: 1600, iterations: Infinity });
   }
   function undeco(bar) {
     if (!bar) return;
     if (morph === bar) closeMorph(!0);
-    bar._fm = 0;
+    bar._fm = 0; bar._fmTy = 0;
     bar.classList.remove("fm-on", "is-fm", "is-np");
     bar.removeAttribute("aria-description");
     var o = bar.querySelector(":scope > .fm-hb");
@@ -332,11 +352,12 @@
   function morphHTML() {
     var c = calc();
     if (!c) return '<div class="fm-m-in"></div>';
-    return '<div class="fm-m-in"><button type="button" class="fm-m-x" data-a="collapse" aria-label="Back">' + ico("back") + "</button>" +
-      '<button type="button" class="fm-m-np" data-a="sheet" aria-label="Open the Misery FM player">' + art(c.tr, "fm-m-art") +
-      '<span class="fm-m-tx"><span class="fm-m-1"><b class="fm-m-t">' + esc(c.tr.title || "Untitled") + "</b>" + E(c.tr) + '</span><small class="fm-m-a">' + esc(c.tr.artist || (c.paused ? "Paused" : "Misery FM")) + "</small></span></button>" +
-      '<button type="button" class="fm-m-l fm-listen' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '" aria-label="' + (on ? "Mute" : "Listen live") + '">' + ico(on ? "mute" : "play") + "</button>" +
-      '<span class="fm-m-pg fm-pbar" aria-hidden="true"><i style="transform:scaleX(' + (c.t / c.d).toFixed(4) + ')"></i></span></div>';
+    // dc (t517u): the whole bar is the progress bar; tapping it (anywhere but Listen) returns to the normal bar
+    return '<div class="fm-m-in"><span class="fm-m-fill fm-pbar" aria-hidden="true"><i style="transform:scaleX(' + (c.t / c.d).toFixed(4) + ')"></i></span>' +
+      '<button type="button" class="fm-m-x" data-a="collapse" aria-label="Back to the top bar">' + ico("back") + "</button>" +
+      '<span class="fm-m-np">' + art(c.tr, "fm-m-art") +
+      '<span class="fm-m-tx"><span class="fm-m-1"><b class="fm-m-t">' + esc(c.tr.title || "Untitled") + "</b>" + E(c.tr) + '</span><small class="fm-m-a">' + esc(c.tr.artist || (c.paused ? "Paused" : "Misery FM")) + "</small></span></span>" +
+      '<button type="button" class="fm-m-l fm-listen' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '" aria-label="' + (on ? "Mute" : "Listen live") + '">' + ico(on ? "mute" : "play") + "</button></div>";
   }
   function openMorph(bar) {
     if (morph || !live()) return;
@@ -356,6 +377,11 @@
     document.addEventListener("keydown", escKey);
     window.addEventListener("resize", closeMorphNow);
     document.documentElement.classList.add("fm-morphing");
+  }
+  function npTap(e) {
+    if (e.target.closest('[data-a="listen"]')) return onAct(e);
+    e.preventDefault(); e.stopPropagation();
+    closeMorph();
   }
   function closeMorphNow() { closeMorph(!0); }
   function outside(e) { if (morph && !morph.contains(e.target) && !(sheet && sheet.contains(e.target))) closeMorph(); }
@@ -522,17 +548,28 @@
   }
   function pad(n) { return ("0" + n).slice(-2); }
   function localIn(ts) { if (!ts) return ""; var d = new Date(ts); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  /* dc (t516u): Station reworked into grouped compact rows (icon, label + status, control),
+     the same row rhythm and dividers as the + chat menu. */
+  function srow(icon, label, sub, ctrl, cls) {
+    return '<div class="fm-sr' + (cls ? " " + cls : "") + '"><span class="fm-sr-i">' + ico(icon) + '</span><span class="fm-sr-t"><b>' + label + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>" + (ctrl || "") + "</div>";
+  }
   function stationHTML() {
-    var st = S.stats || {}, c = calc(), up = c && st.since ? fmt((now() - st.since) / 1e3) : "–";
-    return '<label class="fm-f"><span>DJ note for listeners</span><textarea class="fm-note-in" maxlength="140" rows="2" placeholder="Say something to everyone listening">' + esc(S.note) + "</textarea></label>" +
-      '<div class="fm-row"><button type="button" class="fm-btn fm-primary" data-a="note">Post note</button><button type="button" class="fm-btn" data-a="noteclr"' + (S.note ? "" : " disabled") + ">Clear</button></div>" +
-      '<label class="fm-f"><span>Scheduled go-live</span><input type="datetime-local" class="fm-sched-in" value="' + localIn(S.sched) + '"></label>' +
-      '<div class="fm-row"><button type="button" class="fm-btn" data-a="sched">Schedule</button><button type="button" class="fm-btn" data-a="schedclr"' + (S.sched ? "" : " disabled") + ">Clear</button></div>" +
-      (S.sched ? '<p class="fm-hint">Goes live ' + esc(when(S.sched)) + " automatically.</p>" : "") +
-      '<label class="fm-f"><span>Crossfade <b class="fm-xf-v">' + (S.xf || 0) + ' s</b></span><input type="range" min="0" max="6" step="0.5" value="' + (S.xf || 0) + '" data-a="xf" aria-label="Crossfade seconds"></label>' +
+    var st = S.stats || {}, c = calc(), lv = live(), up = c && st.since ? fmt((now() - st.since) / 1e3) : "–";
+    var air = lv ? '<button type="button" class="fm-pill fm-pill-stop" data-a="stop">Stop</button>' : '<button type="button" class="fm-pill fm-pill-go" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>";
+    return '<h3 class="fm-h">Broadcast</h3><div class="fm-grp">' +
+      srow("radio", lv ? (c && c.paused ? "Paused" : "On air") : "Off air", lv ? (S.listeners || 0) + " listening · " + up : S.list.length ? S.list.length + (S.list.length === 1 ? " song" : " songs") + " ready" : "Add songs in Queue first", air, lv ? "is-live" : "") +
+      srow("xf", "Crossfade", '<span class="fm-xf-v">' + (S.xf || 0) + " s</span>", '<input type="range" class="fm-sr-range" min="0" max="6" step="0.5" value="' + (S.xf || 0) + '" data-a="xf" aria-label="Crossfade seconds">') +
+      srow("clock", "Scheduled go-live", S.sched ? "Goes live " + esc(when(S.sched)) : "Not scheduled",
+        '<span class="fm-sr-c"><input type="datetime-local" class="fm-sched-in" value="' + localIn(S.sched) + '" aria-label="Go-live time">' +
+        '<button type="button" class="fm-sr-b" data-a="sched" aria-label="Schedule">' + ico("check") + "</button>" +
+        (S.sched ? '<button type="button" class="fm-sr-b" data-a="schedclr" aria-label="Clear schedule">' + ico("x") + "</button>" : "") + "</span>", "fm-sr-sched") +
+      "</div>" +
+      '<h3 class="fm-h">DJ note</h3><div class="fm-grp">' +
+      '<div class="fm-sr fm-sr-note"><span class="fm-sr-i">' + ico("msg") + '</span><input class="fm-note-in" maxlength="140" enterkeyhint="send" placeholder="Say something to everyone listening" value="' + esc(S.note) + '" aria-label="DJ note for listeners">' +
+      '<button type="button" class="fm-sr-b fm-sr-send" data-a="note" aria-label="Post note">' + ico("send") + "</button>" +
+      (S.note ? '<button type="button" class="fm-sr-b" data-a="noteclr" aria-label="Clear note">' + ico("x") + "</button>" : "") + "</div></div>" +
       '<h3 class="fm-h">Session</h3><dl class="fm-stats">' +
-      [["Listening", S.listeners || 0], ["Peak", st.peak || 0], ["Played", st.played || 0], ["Reactions", st.reacts || 0], ["On air", up], ["Library", S.list.length]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
-      '<div class="fm-row">' + (live() ? '<button type="button" class="fm-btn fm-danger fm-wide" data-a="stop">Stop the station</button>' : '<button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>") + "</div>";
+      [["Listening", S.listeners || 0], ["Peak", st.peak || 0], ["Played", st.played || 0], ["Reactions", st.reacts || 0], ["On air", up], ["Library", S.list.length]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>";
   }
   /* Placeholder until the first state arrives (or if the station API is down), so the sheet is never blank. */
   var BLANK = { live: !1, paused: !1, pos: 0, idx: 0, startedAt: 0, v: -1, now: 0, list: [], q: [], upNext: [], hist: [], listeners: 0, shuffle: !1, repeat: "all", xf: 0, note: "", sched: 0, stats: { since: 0, played: 0, peak: 0, reacts: 0 } };
@@ -543,11 +580,14 @@
     if (drag || (ae && sheet.contains(ae) && /^(TEXTAREA|SELECT)$|^INPUT$/.test(ae.tagName) && ae.type !== "range" && ae.type !== "file" && !edit)) { dirty = !0; return; }
     dirty = !1;
     if (!owner() && tab !== "now") tab = "now";
+    tabsSync();
+    var swap = sheet.getAttribute("data-tab") && sheet.getAttribute("data-tab") !== tab, h0 = swap ? sheet.offsetHeight : 0;
     sheet.querySelectorAll(".fm-tab").forEach(function (b) { var s = b.getAttribute("data-tab") === tab; b.classList.toggle("is-on", s); b.setAttribute("aria-selected", s); });
     var st = body.scrollTop;
     body.innerHTML = tab === "queue" ? queueHTML() : tab === "station" ? stationHTML() : nowHTML();
     body.scrollTop = st;
     sheet.setAttribute("data-tab", tab);
+    if (swap && !RM.matches && sheet.animate) { var h1 = sheet.offsetHeight; h1 !== h0 && sheet.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 260, easing: "cubic-bezier(.22,.8,.25,1)" }); }
     vizStart();
   }
   function lockScroll(v) {
@@ -592,22 +632,15 @@
       sheet.setAttribute("aria-modal", "true");
       sheet.setAttribute("aria-label", "Misery FM");
       sheet._back = back;
-      sheet.className = "fm-sheet fm-c";
-      sheet.innerHTML = '<div class="fm-sh-hd"><div class="fm-hd-t"><b>Misery <span>FM</span></b><span class="fm-lc" aria-live="polite"></span></div><button type="button" class="fm-ib fm-x" data-a="close" aria-label="Close">' + ico("x") + "</button></div>" +
-        (owner() ? '<div class="fm-tabs" role="tablist" aria-label="Studio">' + [["now", "Now"], ["queue", "Queue"], ["station", "Station"]].map(function (x) { return '<button type="button" role="tab" class="fm-tab" data-a="tab" data-tab="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>" : "") +
-        '<div class="fm-sh-body"></div>';
+      sheet.className = "fm-sheet fm-c fm-root";
+      sheet.innerHTML = frameHTML();
       document.body.appendChild(back);
       document.body.appendChild(sheet);
       sheet.addEventListener("scroll", function () { if (sheet.scrollTop) sheet.scrollTop = 0; });
       lockScroll(!0);
       back.addEventListener("click", closeSheet);
       back.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: !1 });
-      sheet.addEventListener("click", onAct);
-      sheet.addEventListener("input", onInput);
-      sheet.addEventListener("change", onChange);
-      sheet.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
-      sheet.addEventListener("pointerdown", dragStart);
-      sheet.addEventListener("keydown", dragKey);
+      wire(sheet);
       swipe(sheet);
       document.addEventListener("keydown", escKey);
       renderSheet();
@@ -621,8 +654,65 @@
       cl && cl.focus({ preventScroll: !0 });
     });
   }
+  /* dc (t516u): the FM menu is a + menu sub-panel. Same header as the Music picker (Back, title, Close),
+     with the real Misery FM logo as the title. */
+  var SV = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  function frameHTML() {
+    return '<div class="chat-pbig-hd fm-sh-hd"><button type="button" class="chat-pbig-btn fm-back" data-a="back" aria-label="Back"><svg ' + SV + '><path d="M15 5l-7 7 7 7"/></svg></button>' +
+      '<div class="fm-hd-t"><span class="fm-hd-logo" role="img" aria-label="Misery FM"></span><span class="fm-lc" aria-live="polite"></span></div>' +
+      '<button type="button" class="chat-pbig-btn fm-x" data-a="close" aria-label="Close"><svg ' + SV + '><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fm-sh-body"></div>';
+  }
+  function tabsSync() {
+    var tb = q(".fm-tabs", sheet);
+    if (owner() && !tb) {
+      tb = document.createElement("div"); tb.className = "fm-tabs"; tb.setAttribute("role", "tablist"); tb.setAttribute("aria-label", "Studio");
+      tb.innerHTML = [["now", "Now"], ["queue", "Queue"], ["station", "Station"]].map(function (x) { return '<button type="button" role="tab" class="fm-tab" data-a="tab" data-tab="' + x[0] + '">' + x[1] + "</button>"; }).join("");
+      q(".fm-sh-hd", sheet).after(tb);
+    } else if (!owner() && tb) tb.remove();
+  }
+  function wire(el) {
+    el.addEventListener("click", onAct);
+    el.addEventListener("input", onInput);
+    el.addEventListener("change", onChange);
+    el.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
+    el.addEventListener("pointerdown", dragStart);
+    el.addEventListener("keydown", dragKey);
+    el.addEventListener("keydown", noteKey);
+  }
+  /* Mounted inside the + chat menu: chat.js morphs the menu exactly as for Music / Polls / Globe and
+     hands the menu element over. o = { back, close } from chat.js. */
+  function mount(m, o) {
+    if (sheet && !sheet._mnt) closeSheet();
+    if (morph) closeMorph(!0);
+    sheet = m; m._mnt = o || {};
+    m.classList.add("fm-c", "fm-root", "fm-mnt");
+    m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Misery FM");
+    m.innerHTML = frameHTML();
+    wire(m);
+    m._dispose = function () { unmount(m); };
+    m._esc = function () { if (edit) { closeEdit(); return !0; } return !1; };
+    if (!S) refresh();
+    fitMnt();
+    renderSheet(); paint();
+    window.addEventListener("resize", fitMnt);
+    if (!tickT) tickT = setInterval(tick, 1e3);
+    getMe().then(function () { sheet === m && renderSheet(); });
+  }
+  function fitMnt() {
+    if (!sheet || !sheet._mnt) return;
+    var row = sheet.parentNode, r = row && row.getBoundingClientRect(), top = 0, vh = window.innerHeight;
+    document.querySelectorAll(".panel.on .chat-head, .nav").forEach(function (h) { var hr = h.getBoundingClientRect(); if (hr.height && hr.bottom > top && hr.bottom < vh / 2) top = hr.bottom; });
+    sheet.style.setProperty("--fm-mh", Math.max(260, Math.min(540, (r ? r.top : vh) - 8 - top - 12)) + "px");
+  }
+  function unmount(m) {
+    if (sheet !== m) return;
+    closeEdit(!0);
+    sheet = null;
+    window.removeEventListener("resize", fitMnt);
+  }
   function closeSheet() {
     if (!sheet) return;
+    if (sheet._mnt) { var mo = sheet._mnt; unmount(sheet); mo.close && mo.close(); return; }
     var sh = sheet, back = sh._back;
     sheet = null;
     closeEdit(!0);
@@ -734,6 +824,7 @@
     else if (a === "sheet") openSheet("now");
     else if (a === "collapse") closeMorph();
     else if (a === "close") closeSheet();
+    else if (a === "back") { if (sheet && sheet._mnt && sheet._mnt.back) { var bo = sheet._mnt; unmount(sheet); bo.back(); } else closeSheet(); }
     else if (a === "tab") { tab = b.getAttribute("data-tab"); renderSheet(); }
     else if (a === "react") react(b.getAttribute("data-e"));
     else if (a === "prev" || a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
@@ -764,6 +855,7 @@
     else if (a === "xf") { var v = q(".fm-xf-v", sheet); v && (v.textContent = e.target.value + " s"); }
     else if (e.target.classList.contains("fm-scrub")) { e.target._busy = 1; var c = calc(); if (c) { q(".fm-el", sheet).textContent = fmt(+e.target.value); q(".fm-rem", sheet).textContent = "-" + fmt(c.d - e.target.value); } }
   }
+  function noteKey(e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("fm-note-in")) { e.preventDefault(); var b = q('[data-a="note"]', sheet); b && b.click(); } }
   function onChange(e) {
     var tg = e.target, a = tg.getAttribute("data-a");
     if (a === "xf") ctl({ action: "xf", sec: +tg.value });
@@ -1073,7 +1165,11 @@
       var e1 = q(".fm-el", root), e2 = q(".fm-rem", root), sc = q(".fm-scrub", root), pb = q(".fm-pbar i", root);
       if (sc && !sc._busy) { sc.value = Math.floor(c.t); sc.style.setProperty("--p", (c.t / c.d * 100).toFixed(2) + "%"); }
       if (!sc || !sc._busy) { e1 && (e1.textContent = fmt(c.t)); e2 && (e2.textContent = "-" + fmt(c.d - c.t)); }
-      pb && (pb.style.transform = "scaleX(" + (c.t / c.d).toFixed(4) + ")");
+      if (pb) {
+        var pv = c.t / c.d;
+        if (pb._v != null && pv < pb._v - 0.002) { pb.style.transition = "none"; void pb.offsetWidth; } else pb.style.transition = "";
+        pb._v = pv; pb.style.transform = "scaleX(" + pv.toFixed(4) + ")";
+      }
     });
     if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
     if (morph) { var ml = q(".fm-lc", morph); ml && (ml.innerHTML = ico("ear") + ((S && S.listeners) || 0)); }
@@ -1094,6 +1190,7 @@
 
   window.MPFM = {
     open: function () { openSheet("now"); },
+    mount: mount,
     isLive: live,
     setMe: function (u) { me = u || null; meP = Promise.resolve(me); sheet && renderSheet(); },
     state: function () { return S; },
