@@ -11,3 +11,8 @@ The official-icon MP4 uses 0.3–1.7 seconds of the same film, cropped to its
 Picker refinement v2 retains the same 0.3–1.7s official film excerpt, using a
 360px crop centered at (240,426) and 224px output. Start and final stills match
 the film framing so playback and its resting state do not jump.
+
+Loop v1 (picker footer): frames 0–22 of official-icon.mp4 (the glass icon before
+it collapses), scaled to 112px, played forward then reversed without duplicate
+end frames, H.264 → official-icon-loop.mp4. official-icon-still.webp is frame 8
+at 112px. All films are luma-keyed to alpha in a canvas at runtime (chat.js).
