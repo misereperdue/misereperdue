@@ -1426,5 +1426,20 @@ var MPShop = (function () {
       };
     I.addEventListener ? I.addEventListener("change", j) : I.addListener && I.addListener(j);
   }
+  /* Product pages: content scrolls UNDER the sky like Chat/Globe (per dc). Back rests just
+     under the nav, above the sky, and fades out as it scrolls up into the header band. */
+  (function () {
+    var fr = 0;
+    function fadeBack() {
+      fr = 0;
+      var head = document.querySelector("#product.on .shop-product-head");
+      if (!head) return;
+      var rest = parseFloat(getComputedStyle(document.body).paddingTop) || 93,
+        o = Math.max(0, Math.min(1, (head.getBoundingClientRect().top - (rest - 30)) / 30));
+      head.style.opacity = o >= 1 ? "" : o.toFixed(3);
+      head.style.pointerEvents = o < 0.5 ? "none" : "";
+    }
+    addEventListener("scroll", function () { fr || (fr = requestAnimationFrame(fadeBack)); }, { passive: true });
+  })();
   return { mountDecorativeGlobe:function(cv,compact){return mountGlobe(cv,{decorative:true,compact:!!compact});}, renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q };
 })();
