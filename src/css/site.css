@@ -11989,3 +11989,6 @@ body.home:has(#shop.on) .hero,
 body.home:has(#product.on) .hero { z-index:1; }
 body.home:has(#shop.on) > .page,
 body.home:has(#product.on) > .page { position:relative;z-index:2;isolation:isolate; }
+
+/* Product Back stays parked beneath the navigation while the page scrolls. */
+#product .shop-product-head { position:sticky;top:calc(env(safe-area-inset-top, 0px) + 93px);z-index:3; }
