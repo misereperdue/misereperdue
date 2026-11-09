@@ -27,7 +27,7 @@ for(const theme of ['dark','light']){
  if(theme==='dark')await p.screenshot({path:`${OUT}/empty.png`});
  await pick('First song');await open();await pick('Second song');await open();await pick('First song');
  await open();
- assert.equal(await menu.locator('.chat-music-status').textContent(),'RECENT');
+ assert.equal(await menu.locator('.chat-music-status').textContent(),'RECENT');assert.equal(await menu.locator('.chat-music-branding').count(),1,'Apple Music footer missing on recents');
  assert.deepEqual(await menu.locator('.chat-music-track strong').allTextContents(),['First song','Second song'],'recent order/dedupe');
  assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('mp-music-recent-v1:tester')).length),2,'stored per user (lowercased)');
  if(theme==='dark')await p.screenshot({path:`${OUT}/recent.png`});
