@@ -3960,7 +3960,7 @@
       who.textContent = mpAt(th.author || "unknown") + (th.createdAt ? " \u00b7 " + mpGeAgo(th.createdAt) : "");
       var body = String(th.content || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
       l2.textContent = th.title ? th.title + (body ? " \u2014 " + body : "") : body;
-      var img = th.thumb || ((/<img[^>]+src="([^"]+)"/i.exec(th.content || "") || [])[1]);
+      var img = mpGpThumbUrl(th.thumb);
       if (img && /^(https?:|\/|data:image)/i.test(img)) { var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.src = img; im.onerror = function () { im.remove(); }; pic.appendChild(im); }
       else { try { var av = J(th.author, th.authorAvatar, "xs", th.hasAvatarImg ? th.avatarV : void 0); av && (pic.appendChild(av), pic.classList.add("is-av")); } catch (_) {} }
       c.setAttribute("aria-label", "Globe post by " + mpAt(th.author) + ": " + (th.title || ""));

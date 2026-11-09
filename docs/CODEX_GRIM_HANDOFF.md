@@ -18,6 +18,50 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Globe threading, incremental live replies and embed thumbnails
+
+Branch: `codex/globe-live-replies`.
+
+Requested by dc: add a `|_` connector beside the comment-preview box on Globe
+cards; fix hiding replies; animate live replies into place; use post thumbnails
+in Globe embeds, falling back to the author avatar only when no thumbnail exists.
+
+- Added a small rounded elbow to the left of each card's comment preview.
+- Root cause of collapse flicker: Show/Hide used `Ce()` → full `ke()` remount,
+  with an artificial spinner delay. They now patch keyed reply nodes directly.
+  Collapses animate height/opacity; rapid re-expansion cancels pending removal.
+  Existing reply cards, original post and composer retain their DOM identities.
+- Live events and polling now reconcile thread replies by id and payload instead
+  of rebuilding the page. New replies animate into place; unchanged cards are
+  untouched. Edits/deletions patch affected cards. Expanded/collapsed state stays.
+  A focused draft no longer blocks incoming replies. Reply edits, selected text
+  and playing media are protected; deferred card updates retry after interaction.
+- Added explicit reader/composer scroll anchoring because `.forum` opts out of
+  native anchoring. It follows layout changes for the insertion animation and
+  stops on navigation/scroll input. Show/Hide handles its own collapse positioning.
+- Existing reply renderer, action handlers, content gates, link unfurling and
+  image-carousel enhancements were extracted into reusable helpers. New live
+  replies keep the same actions/media and member-content gating as initial load.
+- Successful sends clear only the unchanged submitted draft, then fetch/patch
+  replies. Text typed during an in-flight send is preserved; stale responses
+  cannot clear another thread's draft. Ordered read epochs also discard stale
+  snapshots arriving after a newer response. No thread skeleton on send or live update.
+- Embed bug: bare thumbnail ids failed the old URL test and fell back to avatar.
+  `mpGlobeEmbed` now uses the same thumbnail URL normalizer as composer previews.
+  An inline content image no longer substitutes for a missing explicit thumbnail.
+- Permanent regression suite: `node tools/test-globe-replies.cjs`, with Playwright
+  and Chromium available (`npm install --no-save playwright` if needed). APIs and
+  WebSockets are mocked; artifacts go to `/tmp/mp-globe-replies-test` or
+  `MP_TEST_ARTIFACTS`. Tools are excluded from public Pages output.
+- Validation passed: 390×844 dark/light browser suite (collapse/rapid toggles,
+  draft preservation, instant/nested/own/polled replies, animation, scroll
+  anchoring, edits/deletions, thumbnail fallback); 360×780 dark authenticated
+  and light signed-out checks plus 1440×900 dark, covering gating, reduced motion,
+  new carousel/link previews and no overflow. No page exceptions or production
+  API writes. `npm run check`, `npm run verify`, `git diff --check` passed.
+- Pins: site 795, chat 399, forum3 1170, SW 385. No Worker change/deploy needed.
+  Release after CI and preview pass under dc's standing authorization.
+
 ## 2026-11-09 — centered provider mark and chevron-to-plus pull
 
 Branch: `codex/music-center-pull-morph`.
