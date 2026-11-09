@@ -2137,10 +2137,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Create a post">' +
-        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="forum-pullpost-stroke-a" d="M5 10Q11 14 12 14"/><path class="forum-pullpost-stroke-b" d="M12 14Q13 14 19 10"/></svg>' +
+        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="forum-pullpost-stroke-a" d="M5 10Q11 14 12 14"/><path class="forum-pullpost-stroke-b" d="M12 14Q13 14 19 10"/></svg>' +
         '<span class="forum-pullpost-labels" aria-hidden="true">' +
-        '<span class="forum-pullpost-idle">Pull to post</span>' +
-        '<span class="forum-pullpost-ready">Release to post</span></span></button>'),
+        '<span class="forum-pullpost-idle">PULL TO POST</span>' +
+        '<span class="forum-pullpost-ready">RELEASE TO POST</span></span></button>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
