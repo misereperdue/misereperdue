@@ -18,6 +18,45 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — afternoon fixes: popover revert, product header, pill stretch, recent songs, crossfade (Grim, PRs #31–#38)
+
+- **CI note:** `pull_request` runs of `check.yml` fail before any job starts
+  ("workflow file issue"), even after the repo went public again; push runs on
+  main pass. Until that's understood, Grim runs the same workflow by
+  `gh workflow run check.yml --ref <branch>` on the PR head and merges only after
+  it and Cloudflare Pages pass. The repo was briefly private today; no note or
+  commit here explains why.
+- **#31 revert of #29 (popover tap anchoring):** dc said the profile popover
+  stopped working on his iPhone. WebKit iPhone emulation couldn't reproduce it,
+  so #29 was reverted to the last known-good popover. A redo (anchored at the
+  tap point) is queued but needs validation on a real device first.
+  `tools/test-profile-tap-touch.cjs` taps with real touch events in WebKit.
+- **#32 product Back not sticky:** Back scrolls with the page and rests 17px
+  under the nav.
+- **#33 product content under the sky:** the #23 rule lifting `.page` above
+  `.hero` now applies to the Shop grid only. On product pages the content goes
+  under the sky like Chat/Globe; Back (z 28) stays above the sky at rest and
+  fades over 30px as it rises (`shop.js`). Test: `tools/test-product-under-header.cjs`.
+- **#35 gradual fade (dark):** the dark sky on product pages gets the same eased
+  64px mask as the light sky (nav bottom to sky bottom), so content fades out
+  instead of cutting off hard.
+- **#34 Globe pull, pill rubber stretch:** `--cat-pull` (0..1) on
+  `.forum-pull-body` scales pills from the top (up to 1.2 tall, 0.95 wide),
+  per-pill `--k`/`--kd` for a centre-out stagger, labels wrapped in
+  `.forum-cat-in` and counter-scaled, overshoot spring back. Reduced motion is static.
+- **#36/#38 recent songs:** when the search is empty the picker shows
+  `localStorage["mp-music-recent-v1:<user>"]` (newest first, deduped by
+  trackId, max 10, recorded on pick) under RECENT, plus the Apple Music footer
+  (#38). With none: "No recently played songs" with the waveform. Test:
+  `tools/test-music-recent.cjs`.
+- **#37 now-listening crossfade:** 450ms opacity/transform with
+  cubic-bezier(.4,0,.2,1). The incoming side starts at once and the outgoing
+  side 60ms later, with a 2px slide. `will-change` applies only while `.is-xf`
+  is set (cleared at 560ms), and the film frame is keyed and composited before
+  the fade-in. Hold durations unchanged. Test: `tools/test-np-crossfade.cjs`.
+- vip3d: the membership card only *looked* fixed while scrolling because that
+  page can scroll ~65px. No vip3d change.
+
 ## 2026-11-09 — dc's six fixes (Grim, PRs #25–#30)
 
 1. **Product Back vs nav (#25)**: `#product .shop-product-head` is sticky at

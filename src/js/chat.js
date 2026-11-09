@@ -3690,7 +3690,7 @@
     function idle() {
       var recent = mpMusicRecent();
       if (!recent.length) { status.textContent = ""; return state("No recently played songs", "Choose a song to share."); }
-      list.innerHTML = ""; menu.classList.add("has-results"); menu.classList.add("is-recent"); fit();
+      list.innerHTML = ""; menu.classList.add("has-results"); menu.classList.add("is-recent"); fit(); mountBrand();
       status.textContent = "RECENT";
       rows(recent);
     }
