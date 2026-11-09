@@ -90,6 +90,7 @@ PAGE = """<!DOCTYPE html>
 <title>{page_title}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{url}">
+<link rel="icon" href="/favicon.ico?v=17" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=17"><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-eyes-96.png?v=17"><link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-eyes-192.png?v=17"><link rel="apple-touch-icon" href="/img/app-icon-tint-180.png?v=23">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Mis&egrave;re Perdue">
 <meta property="og:title" content="{page_title}">
@@ -174,6 +175,7 @@ STATIC_HEAD = """<!DOCTYPE html>
 <title>{title}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{url}">
+<link rel="icon" href="/favicon.ico?v=17" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=17"><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-eyes-96.png?v=17"><link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-eyes-192.png?v=17"><link rel="apple-touch-icon" href="/img/app-icon-tint-180.png?v=23">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mis&egrave;re Perdue">
 <meta property="og:title" content="{title}">
