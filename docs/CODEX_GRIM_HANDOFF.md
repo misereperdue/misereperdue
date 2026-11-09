@@ -18,6 +18,14 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Pages publication recovery
+
+- Fresh Function bundle with X-MP-Release: music-footer-400 on HTML responses.
+  This gives public verification independent of control-plane deployment status
+  and avoids reusing the unchanged Function artifact from failed publications.
+- CSP nonce generation, streaming response body and static-asset routing remain
+  unchanged. Final music assets are site809/chat409/SW400 from main b3e2d871.
+
 ## 2026-11-09 — compact music attribution
 
 - Replaced the large central Powered by/logo stack with a quiet horizontal
