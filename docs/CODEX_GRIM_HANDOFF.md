@@ -18,6 +18,20 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — actual header height consistency
+
+- Previous header fix covered width only. Removed route-specific sky crops:
+  light Shop/Bag used a 40px solid sky and 90px fade while Chat used 90px
+  and a 156px canvas; dark Shop/Bag also faded out much earlier.
+- Every main route now uses Chat's existing sky height, canvas and fade, with
+  safe-area offsets preserved. The shared sky now sits below the chrome but
+  above scrolling content; removed Globe’s extra opaque underlay that hid its
+  sky early. Shop/Bag first content sits below the shared 156px fade.
+- tools/test-header-height.cjs asserts full hero/canvas/fade/nav geometry and
+  masks across actual Chat/Globe/Shop/Bag/product routes, plus Chat/Globe titlebar
+  height and position. Covers both phone sizes and desktop in both themes.
+- Pins: site808, SW398. No JavaScript or backend behavior changes.
+
 ## 2026-11-09 — music picker finesse
 
 - One official branding video per picker: retain playback position across state

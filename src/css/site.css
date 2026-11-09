@@ -344,7 +344,8 @@ a,
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 27;
+  pointer-events: none;
   height: calc(140px + env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: var(--bg);
@@ -389,75 +390,24 @@ body {
   contain: strict;
   will-change: transform;
   transform: translateZ(0);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 52%,
-    transparent 88%
-  );
-  mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 88%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
-/* Light mode header (per dc 13:10): the pale overcast sky again (not night),
-   with a clean, long eased fade into the page that ends above the first
-   content (Shop gets 40px more room). The hero box is the solid pale-sky part
-   (iOS Safari 26 tints the status bar from a fixed element's background-color
-   at the top edge), the canvas overflows below it for the fade; no white
-   layer over the top. */
+/* One sky height and fade on every route, using Chat's geometry.
+   The light canvas extends below the solid status-bar tint for an eased fade. */
 [data-theme="light"] body.home .hero {
   --sky-ext: 30px;
-  height: calc(70px + env(safe-area-inset-top, 0px));
+  height: calc(90px + env(safe-area-inset-top, 0px));
   overflow: visible;
   background: #b7c3d3;
   pointer-events: none;
   -webkit-mask-image: none;
   mask-image: none;
 }
-[data-theme="light"] .hero-rain {
-  --sky-ext: 30px;
-  background: linear-gradient(#b7c3d3, #cdd6e2 55%, #dfe5ee);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 70px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 81px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 92px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 103px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 114px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 124px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 135px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 146px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 157px),
-    transparent calc(env(safe-area-inset-top, 0px) + 168px)
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 70px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 81px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 92px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 103px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 114px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 124px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 135px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 146px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 157px),
-    transparent calc(env(safe-area-inset-top, 0px) + 168px)
-  );
-}
-[data-theme="light"] .hero-rain {
+[data-theme="light"] body.home .hero-rain {
   bottom: auto;
-  height: calc(170px + env(safe-area-inset-top, 0px));
-}
-[data-theme="light"] body:has(#journal.on) .hero,
-[data-theme="light"] body:has(#forum.on) .hero {
-  height: calc(90px + env(safe-area-inset-top, 0px));
-}
-[data-theme="light"] body:has(#journal.on) .hero-rain,
-[data-theme="light"] body:has(#forum.on) .hero-rain {
   height: calc(156px + env(safe-area-inset-top, 0px));
-}
-[data-theme="light"] body:has(#journal.on) .hero-rain,
-[data-theme="light"] body:has(#forum.on) .hero-rain {
+  background: linear-gradient(#b7c3d3, #cdd6e2 55%, #dfe5ee);
   --sky-ext: 16px;
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -488,12 +438,6 @@ body {
     transparent calc(env(safe-area-inset-top, 0px) + 154px)
   );
 }
-/* Chat + Globe: keep the weather visible behind the glass top bar */
-body:has(#journal.on) .hero-rain,
-body:has(#forum.on) .hero-rain {
-  -webkit-mask-image: none;
-  mask-image: none;
-}
 .hero-fade {
   position: absolute;
   inset: 0;
@@ -501,113 +445,25 @@ body:has(#forum.on) .hero-rain {
   background: linear-gradient(
     to bottom,
     transparent 0,
-    transparent 36%,
-    var(--bg) 78%
+    transparent 58%,
+    var(--bg) 100%
   );
 }
-body.crop-hero-auth .hero,
-body.crop-hero-shop .hero {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 calc(100% - 48px),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 calc(100% - 48px),
-    transparent 100%
-  );
-}
+
 body.crop-hero-auth {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
 }
 body.crop-hero-shop {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
 }
-/* Shop + Bag spacing (per dc): the first content sits 16px under the nav
-   pill (nav = safe area + 22px, 52px tall, so content starts at safe area +
-   90px), the same in light and dark, like the stacked bars on Chat/Globe.
-   The sky fades out (eased, mostly behind the nav pill) and is fully gone
-   by the first content. Canvas sizes are untouched so the clouds/moon keep
-   their layout; only the masks and the light hero box (status-bar tint)
-   change. #shop-grid has margin-top:-10px, #cart-lines margin-top:4px. */
+/* Keep first Shop/Bag content below the shared sky fade (156px). */
 body.home:has(#shop.on) {
-  padding-top: calc(100px + env(safe-area-inset-top, 0px));
+  padding-top: calc(166px + env(safe-area-inset-top, 0px));
 }
 body.home:has(#cart.on) {
-  padding-top: calc(86px + env(safe-area-inset-top, 0px));
+  padding-top: calc(152px + env(safe-area-inset-top, 0px));
 }
-body.home:has(#shop.on) .hero,
-body.home:has(#cart.on) .hero {
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 40px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
-    transparent calc(env(safe-area-inset-top, 0px) + 90px)
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 40px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
-    transparent calc(env(safe-area-inset-top, 0px) + 90px)
-  );
-}
-[data-theme="light"] body.home:has(#shop.on) .hero,
-[data-theme="light"] body.home:has(#cart.on) .hero {
-  height: calc(40px + env(safe-area-inset-top, 0px));
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-[data-theme="light"] body.home:has(#shop.on) .hero-rain,
-[data-theme="light"] body.home:has(#cart.on) .hero-rain {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 40px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
-    transparent calc(env(safe-area-inset-top, 0px) + 90px)
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 calc(env(safe-area-inset-top, 0px) + 40px),
-    rgba(0, 0, 0, 0.95) calc(env(safe-area-inset-top, 0px) + 46px),
-    rgba(0, 0, 0, 0.84) calc(env(safe-area-inset-top, 0px) + 51px),
-    rgba(0, 0, 0, 0.68) calc(env(safe-area-inset-top, 0px) + 57px),
-    rgba(0, 0, 0, 0.5) calc(env(safe-area-inset-top, 0px) + 62px),
-    rgba(0, 0, 0, 0.33) calc(env(safe-area-inset-top, 0px) + 68px),
-    rgba(0, 0, 0, 0.19) calc(env(safe-area-inset-top, 0px) + 73px),
-    rgba(0, 0, 0, 0.09) calc(env(safe-area-inset-top, 0px) + 79px),
-    rgba(0, 0, 0, 0.03) calc(env(safe-area-inset-top, 0px) + 84px),
-    transparent calc(env(safe-area-inset-top, 0px) + 90px)
-  );
-}
+
 [data-theme="light"] .hero video.sharp {
   filter: invert(1) hue-rotate(188deg) saturate(2.4) contrast(1.08);
 }
@@ -615,19 +471,6 @@ body.home:has(#cart.on) .hero {
   filter: invert(1) hue-rotate(188deg) saturate(2.1) contrast(1.05) blur(6px);
 }
 [data-theme="light"] .hero-fade {
-  background: none;
-}
-body:has(#journal.on) .hero-fade,
-body:has(#forum.on) .hero-fade {
-  background: linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 58%,
-    var(--bg) 100%
-  );
-}
-[data-theme="light"] body:has(#journal.on) .hero-fade,
-[data-theme="light"] body:has(#forum.on) .hero-fade {
   background: none;
 }
 [data-theme="light"] .nav a,
@@ -11983,7 +11826,7 @@ html[data-gcards="g3"] .forum-thread-more {
 @media(prefers-reduced-motion:reduce){.chat-np.is-loading *{animation:none!important}.forum-pullpost-indicator{transition:none}}
 
 /* Content stays below the fixed Globe chrome, even with transformed media. */
-#forum.on::before { content:"";position:fixed;top:calc(env(safe-area-inset-top,0px) + 76px);left:0;right:0;height:78px;background:linear-gradient(var(--bg) 86%,transparent);z-index:27;pointer-events:none; }
+/* The shared sky occludes scrolling content; no route-specific opaque underlay. */
 .forum .forum-topbar { z-index:29;isolation:isolate; }
 .forum-pull-body { isolation:isolate;z-index:0; }
 .forum-replies { position:relative;isolation:isolate; }
@@ -12015,8 +11858,7 @@ html[data-gcards="g3"] .forum-thread-more {
 
 .chat-music-choice { color:var(--music-accent);border-color:color-mix(in srgb,var(--music-accent) 25%,transparent); }
 
-/* Smooth sky-to-header fade, without the previous opaque upper edge. */
-#forum.on::before { top:calc(env(safe-area-inset-top,0px) + 54px);height:100px;background:linear-gradient(transparent,var(--bg) 28%,var(--bg) 72%,transparent); }
+/* Smooth pull feedback beneath the shared sky fade. */
 .forum-pullpost .forum-pullpost-idle { opacity:var(--pull-idle,1);transform:none; }
 .forum-pullpost .forum-pullpost-ready { opacity:var(--pull-ready,0);transform:none; }
 .forum-pullpost.is-armed .forum-pullpost-idle { opacity:0;transform:none; }
