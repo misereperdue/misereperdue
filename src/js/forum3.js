@@ -2093,11 +2093,11 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         (searchOpen ? " is-open" : "") +
         '" data-search-toggle="1" aria-label="Search" aria-expanded="' +
         (searchOpen ? "true" : "false") +
-        '" title="Search"><svg width="15" height="15" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>'),
+        '" title="Search"><span class="forum-cat-in"><svg width="15" height="15" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span></button>'),
       (u +=
         '<button type="button" class="forum-cat' +
         ("" === r.category ? " on" : "") +
-        '" data-cat="">All</button>'),
+        '" data-cat=""><span class="forum-cat-in">All</span></button>'),
       b.categories.forEach(function (e) {
         var t = "";
         ((e.ownerOnly || e.locked) &&
@@ -2113,11 +2113,11 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             '"' +
             (e.locked ? ' data-locked="1"' : "") +
             (e.name ? "" : ' aria-label="Locked category"') +
-            ">" +
+            '><span class="forum-cat-in">' +
             w(e.name || "") +
             (e.membersOnly ? " ⭐" : "") +
             (e.name ? t : t.replace(/^ /, "")) +
-            "</button>"));
+            "</span></button>"));
       }),
       (u += "</div>"),
       (u +=
@@ -2754,6 +2754,17 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       morphIcon(p2);
       if (!busy) setStage(stage);
       body.style.transform = shift ? "translate3d(0," + shift.toFixed(2) + "px,0)" : "";
+      /* category pills stretch like rubber with the finger (per dc); static under reduced motion */
+      if (!RM) body.style.setProperty("--cat-pull", p2.toFixed(4));
+    }
+    function catWeights() {
+      /* stagger: pills near the centre stretch most and spring back first */
+      var vw = window.innerWidth || 390;
+      body.querySelectorAll(".forum-cats .forum-cat").forEach(function (c) {
+        var r = c.getBoundingClientRect(), d = Math.min(1, Math.abs(r.left + r.width / 2 - vw / 2) / (vw / 2));
+        c.style.setProperty("--k", (1 - 0.4 * d).toFixed(3));
+        c.style.setProperty("--kd", Math.round(d * 70) + "ms");
+      });
     }
     function schedule() {
       pending = 1;
@@ -2789,6 +2800,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       body.style.transform = "";
       body.style.willChange = "";
       body.style.opacity = "";
+      body.style.setProperty("--cat-pull", "0");
       hint.style.transition = "none";
       hint.style.setProperty("--pull", "0");
       morphIcon(0);
@@ -2802,7 +2814,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       if(RM){snapClear();if(then)then();return;}
       var from=Math.min(1,dist/POST_THRESHOLD),start=performance.now();
       if(raf){cancelAnimationFrame(raf);raf=0;}pending=0;busy=1;
-      body.style.transition="transform .28s cubic-bezier(.2,.8,.2,1)";body.style.transform="";
+      body.style.transition="transform .28s cubic-bezier(.2,.8,.2,1)";body.style.transform="";body.style.setProperty("--cat-pull","0");
       hint.classList.remove("is-armed","is-pulling","is-pop");
       function settle(now){
         if(!hint.isConnected){busy=0;return;}
@@ -2863,6 +2875,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         if (dy > 0 && dy > Math.abs(dx) * 1.25 && atTop()) {
           locked = 1;
           claim(1);
+          catWeights();
           body.style.willChange = "transform";
         } else {
           locked = -1;
