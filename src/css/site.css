@@ -9716,7 +9716,7 @@ svg[data-hi].hi-play {
 .chat-np.has-grad .chat-np-grad{opacity:1}
 .chat-np.has-grad .chat-np-glow{opacity:.22;transition:opacity .6s}
 .chat-np.has-grad{border-color:rgba(255,255,255,.18);background:transparent}
-.chat-np.has-grad .chat-np-line{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.chat-np.has-grad .chat-np-line{color:#fff;text-shadow:none}
 .chat-np.has-grad .chat-np-line.s,.chat-np.has-grad .chat-np-who{color:rgba(255,255,255,.82)}
 .chat-np.has-grad .chat-np-eq i{background:#fff}
 .chat-np.has-grad.no-art .chat-np-art{color:#fff;background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.22)}
@@ -9731,7 +9731,7 @@ svg[data-hi].hi-play {
 .chat-np-who > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .chat-np-info .chat-np-line{width:100%;max-width:100%;text-align:left;flex:none}
 .chat-np-body{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;margin-top:0;flex:none;min-height:0;min-width:0;width:100%;max-width:100%}
-.chat-np-am{position:relative;display:flex;align-items:center;justify-content:flex-start;justify-self:stretch;align-self:stretch;width:100%;min-width:0;max-width:100%;opacity:0;pointer-events:none;transform:translateY(3px);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
+.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:stretch;width:100%;min-width:0;max-width:100%;opacity:0;pointer-events:none;transform:translateY(3px);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
 .chat-np-am-mark{display:inline-flex;align-items:center;gap:1px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;font-weight:600;font-size:20px;letter-spacing:-.035em;line-height:1;color:#1a1a1a;white-space:nowrap;flex:none}
 .chat-np-am-mark .am-g{display:block;width:18px;height:22px;flex:none;overflow:visible}
 .chat-np-am-mark .am-w{letter-spacing:-.04em}
@@ -9742,7 +9742,8 @@ svg[data-hi].hi-play {
 .chat-np.show-am .chat-np-am{transition-delay:.04s}
 .chat-np:not(.show-am) .chat-np-info{transition-delay:.04s}
 [data-theme="dark"] .chat-np-am-mark{color:#fff}
-.chat-np.has-grad .chat-np-am-mark{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.22)}
+.chat-np.has-grad .chat-np-am-mark{color:#fff;text-shadow:none}
+.chat-np-tx,.chat-np-tx *{text-shadow:none;filter:none}
 .chat-np-am-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 /* has-grad EQ already white; keep white on non-grad too for cover overlay */
 .chat-np.has-grad .chat-np-eq i{background:#fff;opacity:.85}
@@ -11819,14 +11820,15 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post: text + chevron; finger-driven travel and a soft ready cue. */
+/* Pull to post: larger chevron above the label, morphing to plus with the pull. */
 .forum-pullpost {
   --pull: 0;
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 4px;
   min-height: 44px;
   width: max-content;
   margin: 10px auto 14px;
@@ -11842,10 +11844,10 @@ html[data-gcards="g3"] .forum-thread-more {
   transition: color .18s;
 }
 .forum-pullpost:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-.forum-pullpost-indicator { width: 14px; height: 14px; flex: none; transform: translateY(calc(var(--pull) * 4px)) scale(calc(1 + var(--pull) * .12)); }
-.forum-pullpost::after { content: ""; position: absolute; left: 21px; right: 4px; bottom: 7px; height: 1px; border-radius: 1px; background: currentColor; opacity: calc(var(--pull) * .4); transform: scaleX(var(--pull)); transform-origin: 50% 50%; pointer-events: none; }
+.forum-pullpost-indicator { width: 26px; height: 26px; flex: none; transform: translateY(calc(var(--pull) * 2px)); }
+.forum-pullpost::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 2px; height: 1px; border-radius: 1px; background: currentColor; opacity: calc(var(--pull) * .4); transform: scaleX(var(--pull)); transform-origin: 50% 50%; pointer-events: none; }
 .forum-pullpost.is-pop .forum-pullpost-indicator { animation: forum-chevron-ready .45s cubic-bezier(.2,.7,.2,1); }
-@keyframes forum-chevron-ready { 0%,100% { transform: translateY(4px) scale(1.12); } 45% { transform: translateY(8px) scale(1.12); } }
+@keyframes forum-chevron-ready { 0%,100% { transform: translateY(2px) scale(1); } 45% { transform: translateY(2px) scale(1.1); } }
 .forum-pullpost-labels { position: relative; display: grid; align-items: center; }
 .forum-pullpost-labels > span { grid-area: 1 / 1; transition: opacity .18s, transform .22s cubic-bezier(.2,.7,.2,1); }
 .forum-pullpost-ready { opacity: 0; transform: translateY(3px); }
