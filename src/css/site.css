@@ -12042,3 +12042,38 @@ html[data-gcards="g3"] .forum-thread-more {
 .nav .split { margin-inline:-6px;flex:none; }
 .nav #cart-btn,.nav #post-btn { padding:0;flex-shrink:0; }
 .chat-ge-globe { width:22px;height:22px;color:var(--accent); }
+
+/* Globe artwork belongs to the whole embed, below the readable content. */
+.chat-ge { position:relative;isolation:isolate;overflow:hidden; }
+.chat-ge-globe { position:absolute;inset:0;width:100%;height:100%;opacity:.3;z-index:-1;pointer-events:none; }
+.chat-ge-pic,.chat-ge-tx { position:relative;z-index:1; }
+/* All notification surfaces use the same menu-glass tokens. */
+.forum-notif-panel,[data-theme="light"] .forum-notif-panel { background:var(--menu-glass-bg)!important;background-image:none!important;-webkit-backdrop-filter:var(--menu-glass-filter)!important;backdrop-filter:var(--menu-glass-filter)!important;border:1px solid var(--menu-glass-border)!important; }
+/* A compact, readable reply target with a properly seated cancel control. */
+.forum-replying-to { width:fit-content;max-width:100%;min-height:36px;padding:5px 6px 5px 11px;gap:7px;border-radius:12px;font:500 11.5px/1.3 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:var(--fill);color:var(--muted); }
+.forum-replying-to b { font-weight:650; }
+.forum-replying-to button { margin:0 0 0 3px;padding:0;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--ink) 6%,transparent);font-size:17px; }
+.forum-replying-to button:focus-visible { outline:2px solid var(--accent);outline-offset:2px; }
+/* Music library: quiet idle branding, pill search and artwork-led result cards. */
+.chat-plus-menu.chat-pbig-music { gap:12px;padding:14px 12px 12px;transition:height .22s cubic-bezier(.2,.8,.2,1),opacity .18s; }
+.chat-pbig-music .chat-pbig-hd b { margin-right:auto;margin-left:4px;font-size:17px; }
+.chat-music-heading > svg { display:none; }
+.chat-music-search { border-radius:999px;background:color-mix(in srgb,var(--ink) 5%,transparent);border-color:color-mix(in srgb,var(--ink) 9%,transparent);padding-inline:14px; }
+.chat-music-search > svg { color:var(--muted); }
+.chat-music-status { margin:0 5px;color:var(--music-accent);font-size:9px; }
+.chat-music-results > li + li { margin-top:6px; }
+.chat-music-track { gap:11px;min-height:82px;padding:9px;border-color:color-mix(in srgb,var(--ink) 7%,transparent);background:color-mix(in srgb,var(--ink) 3%,transparent);border-radius:15px; }
+.chat-music-art { width:52px;height:52px;border-radius:11px; }
+.chat-music-copy { gap:4px; }
+.chat-music-copy strong { font-size:13.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
+.chat-music-choice { width:25px;height:25px;border:0;background:color-mix(in srgb,var(--music-accent) 11%,transparent); }
+.chat-music-powered { font-size:9px;letter-spacing:.12em;text-transform:uppercase; }
+.chat-music-detail { font-size:11px; }
+.chat-music-official { border-radius:20px; }
+.chat-gp-flyer .chat-send { flex:none; }
+@media(prefers-reduced-motion:reduce){.chat-plus-menu.chat-pbig-music{transition:none}}
+
+/* One navigation length across routes, including cart/product states. */
+.nav,.nav.glassbar { width:min(247px,calc(100vw - 32px));box-sizing:border-box; }
+.nav button,.nav a { flex:1 1 0;min-width:44px;width:auto; }
+.chat-head,#forum .chat-head.forum-topbar { width:min(760px,calc(100% - 32px)); }
