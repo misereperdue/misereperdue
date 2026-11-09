@@ -18,6 +18,38 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — dc's six fixes (Grim, PRs #25–#30)
+
+1. **Product Back vs nav (#25)**: `#product .shop-product-head` is sticky at
+   safe-area + 93px under the nav (z 3). `tools/test-shop-header-spacing.cjs`
+   checks scrolls 40/120/400.
+2. **Stale favicon/app icon (#26)**: live files matched the repo; staleness is
+   client caching. Bumped favicon `?v=17`, apple-touch/manifest `?v=23`, added
+   root `apple-touch-icon(-precomposed).png` (were 404), added icon links to
+   globe/shop/offline/p/t pages and the product/sitemap templates. iOS home
+   screen icons only refresh on remove + re-add. Email avatar: BIMI record has
+   no `a=` (no VMC/CMC), so Gmail/Apple Mail won't show it; options are a
+   VMC/CMC or a Google Account profile photo for dc@. No DNS changed.
+3. **Drag to spin pill (#27)**: one shared `.vip-3d-hint` placement (top/right
+   12px, 6px 10px, 11px) for every viewer. vip3d camera fit untouched, no
+   image trims. Test: `tools/test-spin-hint.cjs`.
+4. **Globe pills pull (#28)**: `.forum-cats` removed from the pull-start
+   exclusions in `forum3.js`; the pills move with the list, the top bar stays.
+   Test: `tools/test-globe-cats-pull.cjs`.
+5. **Profile mini popover (#29)**: anchors to the last tap inside the anchor
+   (1.5s window, else anchor centre); flips above/below by room; 12px
+   horizontal clamp; stem `--ax` clamped 18px in from the corners with
+   adaptive stem corners; ResizeObserver re-places to stop jitter. Navy cover,
+   padding and the grow-from-tip animation kept. Test:
+   `tools/test-profile-popover.cjs` (7 edge cases).
+6. **Owner delete X (#30)**: thin rounded-stroke X (1.6 stroke, 19px), soft red
+   glow on hover/focus-visible and on touch press (`is-press` via pointer
+   events; sticky hover suppressed under `hover:none`). Owner guard and the
+   delete behaviour unchanged. Test: `tools/test-owner-delete-x.cjs`.
+
+All tests use local assets with mocked APIs/WebSockets. No Worker, DNS or
+secret changes.
+
 ## 2026-11-09 — transparent Apple Music films, looping footer icon, live EQ (Grim)
 
 Branch: `grim/music-logo-loop-transparent`. Finishes dc's request Codex ran out

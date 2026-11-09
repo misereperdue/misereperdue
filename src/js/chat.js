@@ -2007,7 +2007,9 @@
           if (!s || !s.owner) return;
           var divider=document.createElement("span");divider.className="chat-react-divider";divider.setAttribute("role","separator");o.appendChild(divider);
           var button=document.createElement("button");button.type="button";button.className="chat-react-delete";button.setAttribute("aria-label","Delete message");
-          button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg>';
+          button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+          /* iOS: show the soft glow while the finger is down (no :hover on touch). */
+          var press=function(on){button.classList.toggle("is-press",on);};button.addEventListener("pointerdown",function(){press(true);});["pointerup","pointercancel","pointerleave"].forEach(function(type){button.addEventListener(type,function(){press(false);});});
           button.addEventListener("click",function(event){event.stopPropagation();if(button.disabled)return;button.disabled=true;E("/api/delete",{method:"POST",body:{id:n}}).then(function(result){if(!result||!result.ok)throw new Error(result&&result.error||"Couldn’t delete message");Ze(n);Ue=Ue.filter(function(message){return message.id!==n;});xe();}).catch(function(error){button.disabled=false;mpToast(error.message);});});o.appendChild(button);
         })(), document.body.appendChild(o));
       var i = e.getBoundingClientRect(),
