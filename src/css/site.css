@@ -12077,3 +12077,32 @@ html[data-gcards="g3"] .forum-thread-more {
 .nav,.nav.glassbar { width:min(247px,calc(100vw - 32px));box-sizing:border-box; }
 .nav button,.nav a { flex:1 1 0;min-width:44px;width:auto; }
 .chat-head,#forum .chat-head.forum-topbar { width:min(760px,calc(100% - 32px)); }
+
+/* Music picker refinement: calm branding, one continuous film, clean library rows. */
+.chat-plus-menu.chat-pbig-music { gap:11px;padding:16px 13px 13px;border-radius:20px; }
+.chat-pbig-music .chat-pbig-hd { padding:0 1px; }
+.chat-pbig-music .chat-pbig-hd b { margin-left:5px; }
+.chat-music-heading { flex-direction:column;align-items:flex-start;gap:4px;font-size:17px;letter-spacing:-.02em; }
+.chat-music-heading small { font-size:10px;font-weight:450;letter-spacing:0;color:var(--muted); }
+.chat-music-search { min-height:44px;border-radius:13px;background:color-mix(in srgb,var(--ink) 4%,transparent); }
+.chat-music-search > svg { width:17px;height:17px;color:var(--music-accent);opacity:.85; }
+.chat-music-q::placeholder { font-size:13px; }
+.chat-music-status { font-weight:600;letter-spacing:.08em; }
+.chat-music-empty { gap:12px;padding:16px!important; }
+.chat-music-branding { position:relative;isolation:isolate;gap:11px; }
+.chat-music-branding::before { content:"";position:absolute;inset:20px -32px -12px;background:radial-gradient(ellipse,rgba(250,36,60,.09),transparent 68%);z-index:-1;pointer-events:none; }
+.chat-music-powered { font-size:10px;letter-spacing:.025em;text-transform:none;opacity:.8; }
+.chat-music-orb { position:relative;display:block;width:112px;height:112px;margin:0; }
+.chat-music-poster,.chat-music-official { position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;border-radius:25px; }
+.chat-music-official { opacity:0; }
+.chat-music-branding.is-playing:not(.is-finished) .chat-music-official { opacity:1; }
+.chat-music-detail { font-size:11px;line-height:1.45;max-width:210px; }
+.chat-music-results > li + li { margin-top:2px; }
+.chat-music-track { min-height:76px;padding:9px 5px;border-color:transparent;background:none;border-radius:12px;gap:11px; }
+.chat-music-track:not(:disabled):hover,.chat-music-track:focus-visible { background:color-mix(in srgb,var(--music-accent) 6%,transparent); }
+.chat-music-art { width:50px;height:50px;border-radius:10px; }
+.chat-music-copy { gap:3px; }
+.chat-music-copy strong { font-size:13px;font-weight:650;letter-spacing:-.01em; }
+.chat-music-album { font-size:9px;opacity:.65; }
+.chat-music-choice { width:26px;height:26px;background:color-mix(in srgb,var(--music-accent) 8%,transparent); }
+@media(prefers-reduced-motion:reduce){.chat-music-branding .chat-music-official{display:none}}

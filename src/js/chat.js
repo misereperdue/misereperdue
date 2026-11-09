@@ -3598,7 +3598,7 @@
     var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
-    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">' + mpMusicIcon() + 'Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music<small>Share a song</small></span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
     if(kind === "music")m.style.height="340px";
     m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "fm" ? '<div class="chat-fm-preview"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><p>Listen to music live with others. Coming soon.</p></div>' : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
@@ -3619,14 +3619,25 @@
   }
   function mpMusicWire(menu, close) {
     var input = menu.querySelector(".chat-music-q"), list = menu.querySelector(".chat-music-results"), status = menu.querySelector(".chat-music-status"),
-      timer = null, controller = null, epoch = 0, dead = false;
+      timer = null, controller = null, epoch = 0, dead = false, branding = null;
+    function mountBrand() {
+      if (!branding) {
+        branding=document.createElement('span');branding.className='chat-music-branding';
+        branding.innerHTML='<span class="chat-music-powered">Powered by</span><span class="chat-music-orb"><img class="chat-music-poster" src="/assets/apple-music/official-icon-start.webp?v=2" alt="Apple Music"><video class="chat-music-official" muted playsinline preload="auto" poster="/assets/apple-music/official-icon-start.webp?v=2" src="/assets/apple-music/official-icon.mp4?v=2" aria-hidden="true"></video></span>';
+        var film=branding.querySelector('video'),poster=branding.querySelector('img');film.muted=true;film.playsInline=true;
+        if(mpGpReduced())poster.src='/assets/apple-music/official-icon.webp?v=2';
+        film.addEventListener('playing',function(){branding.classList.add('is-playing');});
+        film.addEventListener('ended',function(){branding.dataset.completed='1';poster.onload=function(){branding.classList.add('is-finished');};poster.src='/assets/apple-music/official-icon.webp?v=2';if(poster.complete&&poster.naturalWidth)branding.classList.add('is-finished');});
+        film.addEventListener('error',function(){branding.classList.remove('is-playing');});
+      }
+      list.querySelector('.chat-music-brand-slot').replaceWith(branding);
+      var film=branding.querySelector('video');
+      if(!mpGpReduced()&&!branding.dataset.completed){var playing=film.play();if(playing)playing.catch(function(){});}
+    }
     function state(title, detail, retry) {
       menu.classList.remove("has-results");fit();
-      list.querySelectorAll("video").forEach(function(video){video.pause();});
-      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-branding"><span class="chat-music-powered">Powered by</span><span class="chat-music-orb">' + mpMusicIcon() + '</span></span><strong></strong><span class="chat-music-detail"></span></li>';
-      var orb=list.querySelector(".chat-music-orb");
-      orb.innerHTML='<video class="chat-music-official" muted playsinline preload="metadata" poster="/assets/apple-music/official-icon.webp?v=1" src="/assets/apple-music/official-icon.mp4?v=1" aria-hidden="true"></video>';
-      var film=orb.firstChild;film.muted=true;film.playsInline=true;if(!mpGpReduced()){var playing=film.play();if(playing)playing.catch(function(){});}
+      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-brand-slot"></span><strong></strong><span class="chat-music-detail"></span></li>';
+      mountBrand();
       list.querySelector("strong").textContent = title;
       list.querySelector("strong").hidden = !title;
       list.querySelector(".chat-music-detail").textContent = detail;
@@ -3637,6 +3648,7 @@
     }
     function invalidate() { epoch++; clearTimeout(timer); if (controller) controller.abort(); list.removeAttribute("aria-busy"); }
     function render(tracks) {
+      if(branding)branding.querySelector("video").pause();
       list.innerHTML = "";
       var seen = Object.create(null);
       tracks = tracks.filter(function (track) {
@@ -3713,7 +3725,7 @@
       });
     }
     function dispose() {
-      if (dead) return; dead = true; list.querySelectorAll("video").forEach(function(video){video.pause();}); invalidate(); cancelAnimationFrame(sizeFrame);
+      if (dead) return; dead = true; if(branding)branding.querySelector("video").pause(); invalidate(); cancelAnimationFrame(sizeFrame);
       window.removeEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.removeEventListener("resize", fit); window.visualViewport.removeEventListener("scroll", fit); }
       observer.disconnect();
     }
