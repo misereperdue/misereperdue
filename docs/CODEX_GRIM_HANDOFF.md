@@ -18,6 +18,19 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — shop content beneath navigation
+
+- Earlier shared-header change raised decorative sky to z27 and pushed Shop
+  content to y156. That hid product Back at y93 while leaving an 80px gap
+  beneath the navigation on the grid.
+- Shop now begins 16px beneath the nav; Shop/Product content sits above the
+  decorative sky and below navigation. Sky heights/fades remain shared with
+  Chat; Chat/Globe scroll occlusion and Bag spacing are unchanged.
+- Added catalog-backed browser regression checks for actual promo/actions,
+  product Back hit testing, return navigation and scrolling nav layering,
+  across both phone sizes and desktop, light/dark. No real catalog/cart writes.
+- Pins: site810, SW401. Music JS remains409.
+
 ## 2026-11-09 — compact music attribution
 
 - Replaced the large central Powered by/logo stack with a quiet horizontal
