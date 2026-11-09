@@ -2077,7 +2077,7 @@
       (Ue = []),
       (m = 0),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" data-hi="wiggle"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add photo or video"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 4.5v15m7.5-7.5h-15"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
+        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" data-hi="wiggle"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add to chat"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 4.5v15m7.5-7.5h-15"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
       window.MPForum && MPForum.updateBellBadge)
     )
       try {
@@ -2427,18 +2427,21 @@
           mpGpClearPreview();
           var row = g.parentNode, m = row.querySelector(".chat-plus-menu");
           function close() {
-            var mm = row.querySelector(".chat-plus-menu");
+            var mm = m;
             g.classList.remove("is-open"); g.setAttribute("aria-expanded", "false");
-            document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0);
+            document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("hashchange", close);
+            if (mm && mm._dispose) mm._dispose();
             if (mm) { mm.classList.remove("is-in"); mm.classList.add("is-out"); setTimeout(function () { mm.remove(); }, 180); }
           }
           function out(e) { if (!e.target.closest(".chat-plus-menu,.chat-plus")) close(); }
           function esc(e) { if (e.key === "Escape") { e.preventDefault(); close(); g.focus(); } }
-          if (m && !m.classList.contains("is-out")) return close();
+          if (m && !m.classList.contains("is-out")) return m._close ? m._close() : close();
+          if (m) m.remove();
           var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
-          m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu");
+          m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu"); m._close = close;
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M20 12.5V17a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4.5"/><path d="M4.5 17l4.5-4.5 3 3 2-2 5.5 5"/><path d="M18 2.5v6M15 5.5h6"/></svg><span>Add media</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span>Globe</span></button>' +
+            '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="music">' + mpMusicIcon() + '<span>Music</span></button>' +
             (window.mpPollOn
               ? mpIsVip()
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span></button>'
@@ -2447,13 +2450,14 @@
             '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" disabled aria-disabled="true" aria-label="Misery FM — coming soon"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><em>Soon</em></button>';
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
+          m.querySelector('[data-act="music"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "music", close); });
           var pq = m.querySelector('[data-act="poll"]');
           pq && pq.addEventListener("click", function (e) { e.stopPropagation(); if (!mpIsVip()) return mpToast("Polls are a VIP perk"); mpMorph(m, "poll", close); });
           var plk = m.querySelector('[data-act="poll-locked"]');
           plk && plk.addEventListener("click", function (e) { e.stopPropagation(); mpToast("Polls are a VIP perk"); });
           row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
           requestAnimationFrame(function () { m.classList.add("is-in"); });
-          document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0);
+          document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("hashchange", close);
         })),
       window.__olderScrollWired ||
         ((window.__olderScrollWired = !0),
@@ -3014,14 +3018,76 @@
   function mpNPq(e) {
     return String(e || "").toLowerCase().replace(/\s*[(\[].*$/, "").split(" / ")[0].replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim();
   }
-  function mpNPSearch(e) {
-    return fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e))
+  function mpNPSearch(e, options) {
+    options = options || {};
+    return fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e) + (options.country ? "&country=" + encodeURIComponent(options.country) : ""), { signal:options.signal })
       .then(function (e) {
+        if (!e.ok) throw new Error("Catalog unavailable");
         return e.json();
       })
       .then(function (e) {
         return (e && e.results) || [];
       });
+  }
+  function mpMusicIcon() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="17" rx="3" ry="2.5"/><ellipse cx="17" cy="15" rx="3" ry="2.5"/></svg>';
+  }
+  // Shared URLs carry the song ID, never a fuzzy artist/title match.
+  function mpMusicRef(text) {
+    try {
+      var raw = String(text || "").trim().replace(/&amp;/g, "&");
+      if (!/^https:\/\/(music|itunes)\.apple\.com\/[^\s]+$/.test(raw)) return null;
+      var url = new URL(raw), id = url.searchParams.get("i");
+      if (!id && /\/song\//.test(url.pathname)) id = (url.pathname.match(/\/(?:id)?(\d+)\/?$/) || [])[1];
+      if (!/^\d{1,18}$/.test(id || "")) return null;
+      var country = (url.pathname.match(/^\/([a-z]{2})\//i) || [])[1] || "ca";
+      return { id:id, country:country.toLowerCase(), key:"apple:" + country.toLowerCase() + ":" + id, url:url.href };
+    } catch (_) { return null; }
+  }
+  var mpMusicAlbums = Object.create(null);
+  function mpMusicSearch(query, signal) {
+    var words = mpNPq(query).split(" ").filter(Boolean);
+    function score(track) {
+      var title = mpNPq(track.trackName), artist = mpNPq(track.artistName), album = mpNPq(track.collectionName);
+      return words.reduce(function (total, word) { return total + (title.includes(word) ? 5 : artist.includes(word) ? 4 : album.includes(word) ? 1 : 0); }, 0);
+    }
+    function rank(tracks) { return tracks.sort(function (a, b) { return score(b) - score(a); }); }
+    return mpNPSearch(query, { signal:signal, country:"ca" }).then(function (tracks) {
+      // Search can omit an album's explicit version even when its song lookup
+      // is available. Check two relevant albums if no result matches all words.
+      var exact = tracks.some(function (track) { var text = mpNPq(track.trackName + " " + track.artistName); return words.every(function (word) { return text.includes(word); }); });
+      if (exact || words.length < 2) return rank(tracks);
+      var albums = [];
+      rank(tracks).forEach(function (track) { var id = String(track.collectionId || ""); if (/^\d+$/.test(id) && albums.indexOf(id) < 0 && albums.length < 2) albums.push(id); });
+      return Promise.all(albums.map(function (id) {
+        if (mpMusicAlbums[id]) return mpMusicAlbums[id];
+        return fetch("https://itunes.apple.com/lookup?id=" + id + "&entity=song&country=ca&limit=200", { signal:signal })
+          .then(function (response) { if (!response.ok) throw new Error("Catalog unavailable"); return response.json(); })
+          .then(function (data) { return (mpMusicAlbums[id] = (data.results || []).filter(function (track) { return !!track.trackId; })); })
+          .catch(function (error) { if (error.name === "AbortError") throw error; return []; });
+      })).then(function (extra) { return rank(tracks.concat.apply(tracks, extra)); });
+    });
+  }
+  function mpMusicRemember(ref, result) {
+    mpNPv[ref.key] = result;
+    mpNP[ref.key] = Promise.resolve(result);
+    try { localStorage.setItem("mp-music-v1:" + ref.key, JSON.stringify(result)); } catch (_) {}
+    return result;
+  }
+  function mpMusicLookup(ref) {
+    if (mpNP[ref.key]) return mpNP[ref.key];
+    try {
+      var cached = JSON.parse(localStorage.getItem("mp-music-v1:" + ref.key) || "null");
+      if (cached && cached.title && cached.artist && mpMusicRef(cached.url)?.key === ref.key) return Promise.resolve(mpMusicRemember(ref, cached));
+    } catch (_) {}
+    return (mpNP[ref.key] = fetch("https://itunes.apple.com/lookup?id=" + ref.id + "&entity=song&country=" + ref.country)
+      .then(function (response) { if (!response.ok) throw new Error("Catalog unavailable"); return response.json(); })
+      .then(function (data) {
+        var track = (data.results || []).find(function (track) { return String(track.trackId) === ref.id && track.trackName && track.artistName; });
+        if (!track) { delete mpNP[ref.key]; return null; }
+        var result = mpNPOut(track); result.url = ref.url;
+        return mpMusicRemember(ref, result);
+      }).catch(function () { delete mpNP[ref.key]; return null; }));
   }
   function mpNPPick(e, t) {
     var n = " " + mpNPq(t) + " ",
@@ -3508,9 +3574,9 @@
     mpGpClearPreview();
     var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
-    m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : "chat-pbig-globe");
-    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
-    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : "chat-pbig-globe");
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "music" ? '<span class="chat-music-heading">' + mpMusicIcon() + 'Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
     m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
     if (!red) {
@@ -3518,7 +3584,129 @@
       m.style.transformOrigin = "0 100%";
       m.animate([{ transform: "scale(" + (r0.width / r1.width) + "," + (r0.height / r1.height) + ")", opacity: .6 }, { transform: "none", opacity: 1 }], { duration: 320, easing: "cubic-bezier(.3,1.25,.5,1)" });
     }
-    kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
+    if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); mpMusicWire(m, close); }
+    else kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
+  }
+  function mpMusicForm() {
+    return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
+      '<p class="chat-music-status" role="status" aria-live="polite">APPLE MUSIC</p><ul class="chat-music-results" aria-label="Songs"></ul>' +
+      '<div class="chat-music-footer"><span class="chat-music-selection">Pick a song to share</span><button type="button" class="chat-music-send" disabled>Send song<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-5 5 5-5 5 5"/></svg></button></div>';
+  }
+  function mpMusicWire(menu, close) {
+    var input = menu.querySelector(".chat-music-q"), list = menu.querySelector(".chat-music-results"), status = menu.querySelector(".chat-music-status"),
+      send = menu.querySelector(".chat-music-send"), selection = menu.querySelector(".chat-music-selection"), chosen = null, timer = null, controller = null, epoch = 0, dead = false, busy = false;
+    function state(title, detail, retry) {
+      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-orb">' + mpMusicIcon() + '</span><strong></strong><span class="chat-music-detail"></span></li>';
+      list.querySelector("strong").textContent = title;
+      list.querySelector(".chat-music-detail").textContent = detail;
+      if (retry) {
+        var button = document.createElement("button"); button.type = "button"; button.className = "chat-music-retry"; button.textContent = "Try again";
+        button.addEventListener("click", search); list.firstChild.appendChild(button);
+      }
+    }
+    function reset() { chosen = null; send.disabled = true; selection.textContent = "Pick a song to share"; }
+    function invalidate() { epoch++; clearTimeout(timer); if (controller) controller.abort(); list.removeAttribute("aria-busy"); }
+    function render(tracks) {
+      list.innerHTML = "";
+      var seen = Object.create(null);
+      tracks = tracks.filter(function (track) {
+        var ref = mpMusicRef(track.trackViewUrl);
+        if (!ref || seen[ref.key] || !track.trackName || !track.artistName) return false;
+        seen[ref.key] = true; return true;
+      }).slice(0, 50);
+      status.textContent = tracks.length ? tracks.length + " SONGS · APPLE MUSIC" : "APPLE MUSIC";
+      if (!tracks.length) return state("No songs found", "Try another title, artist, or album.");
+      tracks.forEach(function (track) {
+        var item = document.createElement("li"), button = document.createElement("button"), ref = mpMusicRef(track.trackViewUrl), result = mpNPOut(track);
+        button.type = "button"; button.className = "chat-music-track"; button.setAttribute("aria-pressed", "false");
+        button.innerHTML = '<span class="chat-music-art">' + mpMusicIcon() + '</span><span class="chat-music-copy"><strong></strong><span class="chat-music-artist"></span><span class="chat-music-album"></span></span><span class="chat-music-choice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></span>';
+        button.querySelector("strong").textContent = track.trackName;
+        button.querySelector(".chat-music-artist").textContent = track.artistName;
+        var seconds = Math.floor((Number(track.trackTimeMillis) || 0) / 1000);
+        button.querySelector(".chat-music-album").textContent = (track.collectionName || "") + (seconds ? " · " + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") : "") + (track.trackExplicitness === "explicit" ? " · E" : "");
+        if (/^https:\/\//.test(result.art || "")) {
+          var image = document.createElement("img"); image.src = result.art; image.alt = ""; image.loading = "lazy"; image.decoding = "async";
+          image.addEventListener("error", function () { image.remove(); }); button.querySelector(".chat-music-art").appendChild(image);
+        }
+        button.addEventListener("click", function () {
+          if (busy) return;
+          list.querySelectorAll(".chat-music-track").forEach(function (row) { row.setAttribute("aria-pressed", row === button ? "true" : "false"); });
+          chosen = { ref:ref, result:result }; selection.textContent = result.title + " · " + result.artist; send.disabled = false;
+        });
+        item.appendChild(button); list.appendChild(item);
+      });
+    }
+    function search() {
+      if (dead || busy) return;
+      invalidate(); reset();
+      var query = input.value.trim(), version = epoch;
+      if (query.length < 2) { status.textContent = "APPLE MUSIC"; state("Find your next repeat.", "Search the songs you love. Share one in chat."); return; }
+      controller = new AbortController(); status.textContent = "SEARCHING APPLE MUSIC…"; list.setAttribute("aria-busy", "true");
+      state("Finding your sound…", "Searching Apple Music");
+      mpMusicSearch(query, controller.signal).then(function (tracks) {
+        if (dead || version !== epoch || !menu.isConnected) return;
+        list.removeAttribute("aria-busy"); render(tracks);
+      }).catch(function (error) {
+        if (dead || version !== epoch || error.name === "AbortError") return;
+        list.removeAttribute("aria-busy"); status.textContent = "APPLE MUSIC";
+        state("Couldn’t reach the catalog", "Your search is still here. Give it another try.", true);
+      });
+    }
+    input.addEventListener("input", function () {
+      invalidate(); reset();
+      if (input.value.trim().length < 2) return search();
+      status.textContent = "SEARCHING APPLE MUSIC…"; state("Finding your sound…", "Searching Apple Music");
+      timer = setTimeout(search, 280);
+    });
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") { event.preventDefault(); search(); }
+      if (event.key === "ArrowDown") { var first = list.querySelector("button.chat-music-track"); if (first) { event.preventDefault(); first.focus(); } }
+    });
+    send.addEventListener("click", function () {
+      if (!chosen || busy || dead) return;
+      busy = true; send.disabled = true; input.disabled = true; send.firstChild.textContent = "Sending…";
+      list.querySelectorAll("button").forEach(function (button) { button.disabled = true; });
+      var song = chosen; mpMusicRemember(song.ref, song.result);
+      if (!song.cid) song.cid = "music-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+      E("/api/send", { method:"POST", body:{ text:song.ref.url, cid:song.cid, to:mpPM.to || void 0 } })
+        .then(function (response) {
+          if (!response || !response.ok) throw new Error(response && response.error || "Couldn’t send. Try again.");
+          if (response.message) Fe(response.message);
+          if (typeof response.points === "number") te(response.points);
+          Ne(true); if (window.haptic) window.haptic(15);
+          if (!dead && menu.isConnected) close();
+        }).catch(function (error) {
+          if (dead) return;
+          busy = false; send.disabled = false; input.disabled = false; send.firstChild.textContent = "Send song";
+          list.querySelectorAll("button").forEach(function (button) { button.disabled = false; });
+          status.textContent = error.message || "Couldn’t send. Try again.";
+        });
+    });
+    var sizeFrame = 0;
+    function fit() {
+      cancelAnimationFrame(sizeFrame);
+      sizeFrame = requestAnimationFrame(function () {
+        if (dead || !menu.isConnected) return;
+        var viewport = window.visualViewport, top = viewport ? viewport.offsetTop : 0;
+        var parent = menu.parentElement.getBoundingClientRect();
+        var bottom = Math.min(parent.top - 8, top + (viewport ? viewport.height : window.innerHeight) - 12);
+        var space = bottom - top - 16;
+        // The search input owns the keyboard, so the ordinary chat input's
+        // keyboard lift may be inactive. Anchor directly to the visible viewport.
+        menu.style.bottom = Math.max(parent.height + 8, parent.bottom - bottom) + "px";
+        menu.classList.toggle("is-compact", space < 300);
+        menu.style.height = Math.min(460, Math.max(140, space)) + "px";
+      });
+    }
+    function dispose() {
+      if (dead) return; dead = true; invalidate(); cancelAnimationFrame(sizeFrame);
+      window.removeEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.removeEventListener("resize", fit); window.visualViewport.removeEventListener("scroll", fit); }
+      observer.disconnect();
+    }
+    var observer = new MutationObserver(function () { if (!menu.isConnected) dispose(); });
+    observer.observe(menu.parentElement, { childList:true }); menu._dispose = dispose;
+    window.addEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.addEventListener("resize", fit); window.visualViewport.addEventListener("scroll", fit); }
+    search(); fit(); input.focus({ preventScroll:true });
   }
   function mpGpWire(m, close) {
     var sort = "active", list = m.querySelector(".chat-gp-list"), q = m.querySelector(".chat-gp-q");
@@ -4139,10 +4327,10 @@
   }
 
   function mpNowListening(e, t, n, a) {
-    var r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
-    if (!r || /^\+\d/.test(String(t).trim())) return;
+    var ref = mpMusicRef(t), r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
+    if (!ref && (!r || /^\+\d/.test(String(t).trim()))) return;
     if (e.querySelector(".chat-np")) return;
-    var o = r[1].replace(/&amp;/g, "&").trim(),
+    var o = ref ? ref.key : r[1].replace(/&amp;/g, "&").trim(),
       i = e.querySelector(".chat-text"),
       c = document.createElement("div");
     ((c.className = "chat-np is-loading"),
@@ -4151,6 +4339,8 @@
       e.classList.add("chat-np-bubble"),
       i && (i.hidden = !0),
       e.insertBefore(c, e.firstChild));
+    var originalEmbeds = ref ? Array.from(e.querySelectorAll(".chat-embed,.chat-embed-badge")) : [];
+    originalEmbeds.forEach(function (node) { node.style.display = "none"; });
     var l = c.querySelector(".chat-np-who"),
       d = document.createElement("span");
     function s() {
@@ -4162,7 +4352,8 @@
     }
     ((d.textContent = (n ? mpName(n) : "Someone") + " is listening to"), l.appendChild(d));
     function g(n) {
-      if (!n) return (c.remove(), e.classList.remove("chat-np-bubble"), void (i && (i.hidden = !1)));
+      if (!n) { originalEmbeds.forEach(function (node) { node.style.display = ""; }); c.remove(); e.classList.remove("chat-np-bubble"); if (i) i.hidden = false; return; }
+      originalEmbeds.forEach(function (node) { node.remove(); });
       (s(), c.classList.remove("is-loading"));
       var a = c.querySelector(".chat-np-art"),
         r = document.createElement("img");
@@ -4186,14 +4377,17 @@
       var u = document.createElement("span");
       ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), (u.setAttribute("aria-hidden", "true"), a.appendChild(u)));
       mpAmWire(c);
-      n.url &&
-        /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url) &&
-        (c.setAttribute("role", "link"),
-        c.addEventListener("click", function (e) {
-          (e.stopPropagation(), document.querySelector(".chat-react-picker") || window.open(n.url, "_blank", "noopener"));
-        }));
+      if (n.url && /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url)) {
+        c.setAttribute("role", "link"); c.tabIndex = 0;
+        function openSong(event) {
+          event.stopPropagation();
+          if (!document.querySelector(".chat-react-picker")) window.open(n.url, "_blank", "noopener");
+        }
+        c.addEventListener("click", openSong);
+        c.addEventListener("keydown", function (event) { if (event.key === "Enter") { event.preventDefault(); openSong(event); } });
+      }
     }
-    o in mpNPv ? g(mpNPv[o]) : mpNPLookup(o).then(function (e) {
+    o in mpNPv ? g(mpNPv[o]) : (ref ? mpMusicLookup(ref) : mpNPLookup(o)).then(function (e) {
       g(e);
     });
   }
@@ -4358,7 +4552,7 @@
             ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
             var cW = document.createElement("div");
             ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
-          } else (!e.media && mpNowListening(i, l, e.user, o), mpGlobeEmbed(i, e.text), mpPollRender(i, e), o.appendChild(i));
+          } else (!e.media && mpNowListening(i, mpMusicRef(e.text) ? e.text : l, e.user, o), mpGlobeEmbed(i, e.text), mpPollRender(i, e), o.appendChild(i));
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
@@ -4406,7 +4600,7 @@
             var N = ye(e.id, e.reactions);
             N && k.appendChild(N);
           }
-          (!e.media && mpNowListening(k, S, e.user, o), mpGlobeEmbed(k, e.text), mpPollRender(k, e), w.appendChild(k), o.appendChild(w));
+          (!e.media && mpNowListening(k, mpMusicRef(e.text) ? e.text : S, e.user, o), mpGlobeEmbed(k, e.text), mpPollRender(k, e), w.appendChild(k), o.appendChild(w));
         }
         if (
           (e.ts && Date.now() - e.ts < 2e3 && o.classList.add("chat-msg-in"),
