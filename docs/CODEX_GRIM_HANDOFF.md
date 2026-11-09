@@ -18,6 +18,28 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — shared headers and picker/layout redesign
+
+Branch: `codex/header-picker-layout`.
+
+- Fixed nav width at 247px on every route, reserving cart space; flex tabs stay
+  at least 44px. Chat/Globe title bars share the same 760px/viewport-minus-32 rule.
+- Music picker: compact 340px idle layout, expands to 460px for results, pill
+  search, artwork-led cards, clearer add controls and aligned header. Retains
+  official branding, no autofocus, keyboard sizing and exact-ID sharing.
+- Chat Globe canvas now fills the embed background (no standalone icon), keeps
+  thumbnails/text above it, and retains lazy renderer readiness and no pins.
+- Shared Globe/music drop animates container bounds without scaling text or art;
+  includes a visual Send seat to avoid a landing layout shift. Mobile picks wait
+  for keyboard dismissal and use an epoch guard so cancellation/navigation wins.
+- Reply-target bubble has consistent typography, sizing and inset cancel control.
+  Notification tray uses the same menu background, border and blur tokens.
+- Validation: site/build verification and mocked music/reply/layout suites across
+  both phone sizes/themes. Tests cover landing geometry, background globe bounds,
+  fixed header lengths through cart/product routes, notification glass equality,
+  and reply cancellation. No real account writes. Hosted checks at release.
+- Pins: site806, chat406, SW396. No Worker changes.
+
 ## 2026-11-09 — music branding, cart rhythm and embedded globe
 
 - Preserve official artist casing in music composer previews (override the
