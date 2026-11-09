@@ -3,7 +3,7 @@
 const{chromium}=require('playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),FIX=path.join(__dirname,'fixtures/music-rank.json'),REC=!!process.env.MP_RECORD;
 const T={'.html':'text/html','.css':'text/css','.js':'application/javascript','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.woff2':'font/woff2'};
-const KEEP=['trackId','trackName','artistName','collectionName','collectionId','trackExplicitness','trackViewUrl'];
+const KEEP=['trackId','artistId','trackName','artistName','collectionName','collectionId','trackExplicitness','trackViewUrl'];
 const fold=s=>String(s).normalize('NFD').replace(/\p{M}+/gu,'').toLowerCase();
 // [query, top-1 title (exact, '' = any), top-1 artist contains, top-N all by artist]
 const CASES=[
@@ -20,7 +20,11 @@ const CASES=[
  ['birds of a','BIRDS OF A FEATHER','billie eilish'],
  ['pink pony','Pink Pony Club','chappell roan'],
  ['apt rose','APT.','rose'],
- ['blinding lights remix',/remix/i,'']
+ ['blinding lights remix',/remix/i,''],
+ ['future some more','','future',3],
+ ['some more future','','future',3],
+ ['drake hotline bling','Hotline Bling','drake'],
+ ['the weeknd starboy',/^Starboy/,'the weeknd']
 ];
 (async()=>{const fix=REC?{}:JSON.parse(fs.readFileSync(FIX,'utf8')),miss=[];
  const browser=await chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
