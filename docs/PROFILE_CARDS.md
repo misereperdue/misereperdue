@@ -31,3 +31,8 @@ WebKit binary, so Chromium phone emulation is the current verification limit.
 
 Rollback: revert website PR; backend fields may remain harmlessly in user rows.
 Backend rollback uses the recorded previous live Worker version, no data purge.
+
+Publication follow-up: Pages reported successful profile deployments while the
+public module path returned 404 and root still served the prior shell. A fresh
+middleware bundle adds X-MP-Release: profile-cards-431 for public verification;
+nonce/CSP, streamed HTML body, asset routing and application code are unchanged.
