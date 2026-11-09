@@ -18,6 +18,30 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — official Apple animation and overlay repairs
+
+Branch: `codex/official-music-overlays`.
+
+- Replaced the local glass imitation with the actual Apple Music launch film's
+  wordmark excerpt. Source and derivation are in `assets/apple-music/SOURCE.md`.
+  Local muted MP4 (~36KB), still poster, and screen blending retain the official
+  animation without a black rectangle. Existing crossfade and reduced-motion
+  behavior remain; the mark pauses when hidden.
+- Notification tray mounts immediately, anchors to the visible Chat header,
+  and ignores stale asynchronous results after close/navigation. Bell toggle,
+  outside click and Escape close it. Notification thread links navigate to Globe.
+  The legacy mount patch now also avoids hidden headers.
+- Fixed both copies of `mpHide.menu` (Chat loads first): same-trigger toggle,
+  listener cleanup, viewport clamping, Escape/focus, and scrolling within menus.
+  Live Globe updates defer while `.mp-ctx-menu` is open so the trigger stays put.
+- Thread reply-to labels now use a compact bordered bubble with cancel control.
+- Checks: site sanity/build verification and phone browser tests in both themes
+  for actual video playback, notification request races/toggle/position, menu
+  scrolling/toggle/live updates, and reply bubble/cancel. APIs/WebSockets mocked;
+  no real account data writes. Preview and production release verified separately.
+- Pins: site 797, chat 400, forum3 1172, mount patch 1079, SW 387.
+  No Worker/backend changes.
+
 ## 2026-11-09 — glass music treatment, iOS pull cue and VIP checkout
 
 Branch: `codex/glass-music-vip-checkout`.

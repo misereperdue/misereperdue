@@ -11899,10 +11899,11 @@ html[data-gcards="g3"] .forum-thread-more {
 .forum-reply-node > .forum-post { margin-bottom: 12px; }
 .forum-reply-node .forum-thread-tail { overflow-anchor: auto; }
 
-/* Optical centering and a crisp liquid-glass reflection; no text shadows. */
-.chat-np-am-mark { position:relative; transform:translateX(-4px); }
-.chat-np-am-mark .am-w { color:transparent; background:linear-gradient(115deg,#fff 0%,#aab6c5 24%,#fff 37%,#d9e5f2 48%,#fff 59%,#9caabd 76%,#fff 100%); background-size:250% 100%; background-clip:text; -webkit-background-clip:text; }
-.chat-np.show-am .am-w { animation:mp-music-glass 2.5s ease-in-out both; }
-@keyframes mp-music-glass { from { background-position:100% 50%; } to { background-position:0% 50%; } }
-[data-theme="light"] .chat-np:not(.has-grad) .am-w { background-image:linear-gradient(115deg,#152033,#71849c 30%,#172239 48%,#899db5 60%,#152033); }
-@media(prefers-reduced-motion:reduce) { .chat-np.show-am .am-w { animation:none; } }
+/* Official Apple Music launch film excerpt (source recorded with asset). */
+.chat-np-am-mark { width:112px;max-width:100%;height:38px;display:flex;align-items:center;justify-content:center;transform:translateX(-3px); }
+.chat-np-am { mix-blend-mode:screen; }
+.chat-np-official { display:block;width:100%;height:100%;object-fit:contain;pointer-events:none; }
+.forum-notif-panel { box-sizing:border-box;max-height:min(400px,calc(100dvh - 160px));overscroll-behavior:contain; }
+.forum-replying-to { align-self:flex-start;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--stroke);border-radius:12px;background:var(--fill);margin-bottom:0; }
+.forum-replying-to b { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.forum-replying-to button { flex:none; }
