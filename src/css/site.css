@@ -456,9 +456,10 @@ body.crop-hero-auth {
 body.crop-hero-shop {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
 }
-/* Keep first Shop/Bag content below the shared sky fade (156px). */
+/* Shop cards begin 16px below the 54px navigation pill. The sky remains
+   the same height as Chat, behind the cards rather than covering them. */
 body.home:has(#shop.on) {
-  padding-top: calc(166px + env(safe-area-inset-top, 0px));
+  padding-top: calc(102px + env(safe-area-inset-top, 0px));
 }
 body.home:has(#cart.on) {
   padding-top: calc(152px + env(safe-area-inset-top, 0px));
@@ -11964,3 +11965,9 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-idle-wave i:nth-child(2),.chat-music-idle-wave i:nth-child(4) { height:22px; }
 .chat-music-idle-wave i:nth-child(3) { height:30px; }
 .chat-pbig-music.is-compact .chat-music-branding { display:none; }
+
+/* Retail content may overlap the decorative sky, never the navigation. */
+body.home:has(#shop.on) .hero,
+body.home:has(#product.on) .hero { z-index:1; }
+body.home:has(#shop.on) > .page,
+body.home:has(#product.on) > .page { position:relative;z-index:2;isolation:isolate; }
