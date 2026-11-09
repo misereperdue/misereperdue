@@ -3056,16 +3056,39 @@
   var mpMusicAlbums = Object.create(null);
   function mpMusicSearch(query, signal) {
     var fold = function (text) { return mpNPq(text).normalize("NFD").replace(/\p{M}+/gu, ""); },
-      words = fold(query).split(" ").filter(Boolean),
-      junk = /\b(karaoke|originally performed|tribute|instrumental|cover|lullaby|8 bit|ringtone|string quartet|made famous)\b/;
+      words = fold(query).split(" ").filter(Boolean), last = words[words.length - 1] || "",
+      asked = " " + words.join(" ") + " ",
+      /* covers/karaoke and alternate versions sink unless the query asks for them */
+      junk = /\b(karaoke|originally performed|tribute|cover|instrumental|lullaby|8 bit|ringtone|string quartet|made famous|kidz bop|in the style of|rendition)\b/,
+      variant = /\b(remix|mix|version|live|acoustic|slowed|sped up|reverb|edit|session|demo|extended|rework|bootleg|nightcore|workout|bpm)\b/,
+      pop = Object.create(null);
+    function lower(text) { return String(text || "").normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase(); }
+    function flat(text) { return lower(text).replace(/[^\p{L}\p{N} ]+/gu, " ").split(" ").filter(Boolean); }
+    function primary(track) { return fold(String(track.artistName || "").split(/\s*(?:&|,|\bx\b|\bfeat\.?|\bwith\b)\s*/i)[0]); }
+    function core(track) { return fold(String(track.trackName || "").split(/\s+-\s+/)[0]); }
+    /* whole words, except the last query word may be a prefix (still typing) */
+    function hit(tokens, word) { return tokens.some(function (t) { return t === word || (word === last && word.length > 1 && t.indexOf(word) === 0); }); }
+    function unasked(re, text) { var m = text.match(new RegExp(re.source, "g")) || []; return m.some(function (w) { return asked.indexOf(" " + w + " ") < 0; }); }
     function score(track) {
-      var title = fold(track.trackName), artist = fold(track.artistName), album = fold(track.collectionName), total;
-      var inTitle = 0, inArtist = 0;
-      total = words.reduce(function (sum, word) { return sum + (title.includes(word) ? (inTitle = 5) : artist.includes(word) ? (inArtist = 4) : album.includes(word) ? 1 : 0); }, 0);
-      /* "artist + title" queries: a track matching both beats a title that merely contains every word */
-      if (inTitle && inArtist) total += 2;
-      /* originals before karaoke/cover/instrumental uploads unless the query asks for them */
-      if (junk.test(String(track.trackName + " " + track.artistName + " " + track.collectionName).toLowerCase()) && !junk.test(words.join(" "))) total -= 3;
+      var title = core(track).split(" "), full = flat(track.trackName), artist = fold(track.artistName).split(" "),
+        main = primary(track).split(" "), album = flat(track.collectionName), total = 0, inTitle = 0, inArtist = 0;
+      words.forEach(function (w) {
+        if (hit(title, w)) { total += 5; inTitle++; }
+        else if (hit(full, w)) total += 4;
+        else if (hit(artist, w)) { total += 5; inArtist++; }
+        else if (hit(album, w)) total += 1;
+      });
+      if (inTitle && inArtist) total += 3;
+      /* the query names the artist: songs BY them beat songs titled after them */
+      if (words.every(function (w) { return hit(main, w); })) total += main.every(function (t) { return words.indexOf(t) >= 0; }) ? 8 : 4;
+      /* the whole title asked for (minus the artist words) */
+      if (inTitle && title.every(function (t) { return words.indexOf(t) >= 0 || (t.indexOf(last) === 0 && last.length > 1); })) total += 4;
+      else if (inTitle && (" " + title.join(" ")).indexOf(" " + words.filter(function (w) { return !hit(main, w) || hit(title, w); }).join(" ")) === 0) total += 2;
+      var text = lower(track.trackName + " " + track.artistName + " " + track.collectionName);
+      if (unasked(junk, text)) total -= 8;
+      if (unasked(variant, lower(String(track.trackName).replace(/^[^(\[-]*/, "")))) total -= 4;
+      /* the artist Apple keeps returning for this query is the original */
+      if ((pop[primary(track)] || 0) >= 6) total += 3;
       return total;
     }
     /* score first, then Apple's own relevance order (best position across storefronts) */
@@ -3081,6 +3104,7 @@
       [both[0], both[1]].forEach(function (list, store) {
         list.forEach(function (t, i) {
           if (!t || !t.trackId) return;
+          pop[primary(t)] = (pop[primary(t)] || 0) + 1;
           var pos = i + store * 0.5, key = songKey(t), had = byKey[key];
           if (had) { had._mpPos = Math.min(had._mpPos, pos); return; }
           if (ids[t.trackId]) return;
