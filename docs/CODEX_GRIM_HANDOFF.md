@@ -18,6 +18,31 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — cover alignment, vector Apple mark and animated chevron
+
+Branch: `codex/music-chevron-menu-refine`.
+
+- dc's latest direction supersedes centered music text: keep the listening,
+  song and artist lines tightly grouped, but left-align them beside the cover.
+  The Apple Music mark uses the same left edge so it sits closer to the art.
+- Replaced the platform-specific Apple private-use font glyph with an inline
+  vector Apple silhouette plus “music”. Removed font detection and the blurred
+  scale transition; the crossfade now uses opacity and a small vertical slide.
+  This avoids font fallback/missing glyphs and keeps the icon shape stable.
+- Pull-to-post keeps plain text, now with a down chevron. Its travel and a fine
+  underline follow pull progress; crossing the 80px threshold adds a short
+  downward cue and a release-label slide/crossfade. Reduced motion is static.
+- Menu divider is an inset hairline with softly faded ends. The unchanged dc
+  FM SVG mask is reduced from 108×24 to 90×20, matching the option icon height.
+- Pins: site 793, chat 398, forum3 1168, service worker 383.
+- Checks: site sanity, built/source verification and whitespace checks. Mocked
+  browser coverage includes short/long music text, left alignment, settled
+  provider-mark alignment, crossfade size stability, vector rendering, logo
+  height, divider gradient, pull progress/threshold/composer and reduced motion.
+  Phone sizes: 390×844 and 360×780, both themes; desktop: 1440×900 dark.
+- No Worker code or data changes. Release under dc's standing authorization
+  once CI and preview checks pass; verify production after merge.
+
 ## 2026-11-09 — dc's follow-up design refinements
 
 Branch: `codex/chat-music-menu-polish`. Released in PR #2 after dc approved;

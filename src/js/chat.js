@@ -3967,39 +3967,8 @@
     });
   }
 
-  /* Apple Music powered-by crossfade (per dc): title/artist <-> live text
-     mark (U+F8FF + "music" on Apple fonts; "Apple Music" fallback). No scraped assets. */
-  var mpAmHasGlyph = null, mpAmSeq = 0;
-  function mpAmDetect() {
-    if (mpAmHasGlyph != null) return mpAmHasGlyph;
-    try {
-      var ua = navigator.userAgent || "";
-      var plat = navigator.platform || "";
-      var uaDataPlat = (navigator.userAgentData && navigator.userAgentData.platform) || "";
-      // Prefer platform / userAgentData; ignore a spoofed Macintosh UA on Linux/Win (e.g. Playwright WebKit).
-      var nonAppleHost = /Linux|Win|Android/i.test(plat) || /Linux|Windows|Android/i.test(String(uaDataPlat));
-      var apple =
-        /^(Mac|iPhone|iPad|iPod)/i.test(plat) ||
-        /^(macOS|iOS)/i.test(String(uaDataPlat)) ||
-        (!nonAppleHost && /\b(iPhone|iPad|Macintosh)\b/.test(ua));
-      var c = document.createElement("canvas");
-      var ctx = c.getContext("2d");
-      if (!ctx) return (mpAmHasGlyph = !!apple);
-      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
-      var wLogo = ctx.measureText("\uF8FF").width;
-      var wTofu = ctx.measureText("\uFFFE").width;
-      var wAlt = ctx.measureText("\uF8FE").width;
-      // Real Apple glyph is wide and distinct from .notdef / empty PUA
-      var distinct = wLogo > 8 && Math.abs(wLogo - wTofu) > 1.5 && Math.abs(wLogo - wAlt) > 0.75;
-      mpAmHasGlyph = !!(apple && distinct);
-    } catch (_) {
-      mpAmHasGlyph = !1;
-    }
-    return mpAmHasGlyph;
-  }
-  function mpAmMarkText() {
-    return mpAmDetect() ? "\uF8FFmusic" : "Apple Music";
-  }
+  /* Apple Music crossfade: vector Apple mark avoids platform font/PUA glitches. */
+  var mpAmSeq = 0;
   function mpAmStart(card) {
     if (!card || card._mpAmOn) return;
     card._mpAmOn = !0;
@@ -4071,23 +4040,8 @@
   }
   function mpAmBuildMark() {
     var mark = document.createElement("span");
-    var has = mpAmDetect();
-    mark.className = "chat-np-am-mark" + (has ? "" : " is-fallback");
-    if (has) {
-      var g = document.createElement("span");
-      g.className = "am-g";
-      g.textContent = "\uF8FF";
-      var w = document.createElement("span");
-      w.className = "am-w";
-      w.textContent = "music";
-      mark.appendChild(g);
-      mark.appendChild(w);
-    } else {
-      var w2 = document.createElement("span");
-      w2.className = "am-w";
-      w2.textContent = "Apple Music";
-      mark.appendChild(w2);
-    }
+    mark.className = "chat-np-am-mark";
+    mark.innerHTML = '<svg class="am-g" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.62 7.59 9.16 7.31c1.35.07 2.29.77 3.08.83 1.18-.24 2.31-.96 3.57-.87 1.51.12 2.64.72 3.39 1.8-3.1 1.86-2.36 5.95.48 7.1-.57 1.5-1.31 2.99-2.64 4.12zM12.03 7.25C11.88 5.02 13.69 3.18 15.77 3c.29 2.58-2.34 4.5-3.74 4.25z"/></svg><span class="am-w">music</span>';
     return mark;
   }
   function mpAmWire(card) {
@@ -4100,7 +4054,7 @@
     meta.className = "chat-np-meta";
     var info = document.createElement("span");
     info.className = "chat-np-info";
-    // Keep listening, title and artist together; both crossfade states share one centered cell.
+    // Keep the compact text and provider mark aligned to the cover-side edge.
     if (who) info.appendChild(who);
     var body = document.createElement("span");
     body.className = "chat-np-body";
