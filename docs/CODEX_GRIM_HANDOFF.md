@@ -18,6 +18,25 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — glass music treatment, iOS pull cue and VIP checkout
+
+Branch: `codex/glass-music-vip-checkout`.
+
+- Music mark: 4px optical left correction; lightweight animated glass-style
+  reflection on the existing vector/text mark. This is a local treatment,
+  not an official Apple animation asset. No text shadows; reduced motion static.
+- Pull cue: rounded 3px strokes and 13px semibold system/SF-style text,
+  retaining the chevron-to-plus morph and 80px threshold.
+- Checkout: nonempty carts containing only recognized membership products may
+  checkout before the drop. Mixed, unknown and other carts retain the countdown.
+  Both the button state and checkout click handler use the same predicate.
+  Existing Shopify metadata and account behavior are unchanged.
+- Checks passed: build/source verification, site sanity, whitespace; cart gate
+  tests for VIP-only, mixed, empty and unknown lines; mocked phone browser
+  tests for music optical alignment, stable crossfade, shadows, pull morph,
+  reduced motion and both themes. No real checkout or production API writes.
+- Pins: site 796, forum3 1171, shop 105, SW 386; chat unchanged at 399.
+
 ## 2026-11-09 — Globe threading, incremental live replies and embed thumbnails
 
 Branch: `codex/globe-live-replies`.

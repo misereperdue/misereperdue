@@ -11837,8 +11837,8 @@ html[data-gcards="g3"] .forum-thread-more {
   background: none;
   box-shadow: none;
   color: var(--muted);
-  font: 500 11px ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: .02em;
+  font: 600 13px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  letter-spacing: -.01em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color .18s;
@@ -11898,3 +11898,11 @@ html[data-gcards="g3"] .forum-thread-more {
 .forum-reply-node { display: flow-root; }
 .forum-reply-node > .forum-post { margin-bottom: 12px; }
 .forum-reply-node .forum-thread-tail { overflow-anchor: auto; }
+
+/* Optical centering and a crisp liquid-glass reflection; no text shadows. */
+.chat-np-am-mark { position:relative; transform:translateX(-4px); }
+.chat-np-am-mark .am-w { color:transparent; background:linear-gradient(115deg,#fff 0%,#aab6c5 24%,#fff 37%,#d9e5f2 48%,#fff 59%,#9caabd 76%,#fff 100%); background-size:250% 100%; background-clip:text; -webkit-background-clip:text; }
+.chat-np.show-am .am-w { animation:mp-music-glass 2.5s ease-in-out both; }
+@keyframes mp-music-glass { from { background-position:100% 50%; } to { background-position:0% 50%; } }
+[data-theme="light"] .chat-np:not(.has-grad) .am-w { background-image:linear-gradient(115deg,#152033,#71849c 30%,#172239 48%,#899db5 60%,#152033); }
+@media(prefers-reduced-motion:reduce) { .chat-np.show-am .am-w { animation:none; } }

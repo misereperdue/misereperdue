@@ -242,16 +242,23 @@ var MPShop = (function () {
    * still before CD_END) it reads "At midnight". From CD_END on it is enabled
    * and reads "Checkout". Refreshed when the bag renders, on tab return, and
    * by one setTimeout armed for the next day rollover (no per-second timer). */
-  var coTimer = null;
+  var coTimer = null, cartCatalogLoading = null;
+  function vipOnlyCart() {
+    var cart = MP.readCart();
+    return cart.length > 0 && cart.every(function (line) {
+      var product = MP.PRODUCTS[line.id];
+      return product && n(product) && Number(line.qty) > 0;
+    });
+  }
   function checkoutLocked() {
-    return Date.now() < CD_END;
+    return Date.now() < CD_END && !vipOnlyCart();
   }
   function checkoutGate() {
     if (coTimer) (clearTimeout(coTimer), (coTimer = null));
     var b = document.getElementById("checkout-btn");
     if (!b) return;
     var ms = CD_END - Date.now();
-    if (ms <= 0) {
+    if (!checkoutLocked()) {
       if (b.classList.contains("is-soon")) {
         b.classList.remove("is-soon");
         b.disabled = !1;
@@ -1327,6 +1334,10 @@ var MPShop = (function () {
       e = document.getElementById("cart-total");
     if (t) {
       var n = MP.readCart();
+      // A direct visit to the bag may precede the first catalog load.
+      if (n.length && n.some(function (line) { return !MP.PRODUCTS[line.id]; }) && !cartCatalogLoading) {
+        cartCatalogLoading = m().then(checkoutGate).finally(function () { cartCatalogLoading = null; });
+      }
       if (!n.length) return ((t.innerHTML = '<p class="empty">Bag is empty.</p>'), void z(0));
       var a = 0;
       ((t.innerHTML = n
