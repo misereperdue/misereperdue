@@ -468,9 +468,9 @@ var MPShop = (function () {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
       // Big, zoomed-in globe bleeding off the right/bottom edges; text overlays on the left.
-      var R = Math.max(H * 0.95, W * 0.36),
-        cx = W - R * 0.62,
-        cy = H * 0.78;
+      var R = options.compact ? Math.min(W,H)*.44 : Math.max(H * 0.95, W * 0.36),
+        cx = options.compact ? W/2 : W - R * 0.62,
+        cy = options.compact ? H/2 : H * 0.78;
       // halo behind the globe
       var halo = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 1.9);
       halo.addColorStop(0, rgba(0.16));
@@ -1426,5 +1426,5 @@ var MPShop = (function () {
       };
     I.addEventListener ? I.addEventListener("change", j) : I.addListener && I.addListener(j);
   }
-  return { mountDecorativeGlobe:function(cv){return mountGlobe(cv,{decorative:true});}, renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q };
+  return { mountDecorativeGlobe:function(cv,compact){return mountGlobe(cv,{decorative:true,compact:!!compact});}, renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q };
 })();
