@@ -3029,7 +3029,7 @@
   }
   function mpNPSearch(e, options) {
     options = options || {};
-    return fetch("https://itunes.apple.com/search?media=music&entity=song&limit=" + (options.limit || 25) + "&term=" + encodeURIComponent(e) + (options.country ? "&country=" + encodeURIComponent(options.country) : ""), { signal:options.signal })
+    return fetch("https://itunes.apple.com/search?entity=song&limit=" + (options.limit || 25) + "&term=" + encodeURIComponent(e) + (options.country ? "&country=" + encodeURIComponent(options.country) : ""), { signal:options.signal })
       .then(function (e) {
         if (!e.ok) throw new Error("Catalog unavailable");
         return e.json();
