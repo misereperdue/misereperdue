@@ -18,6 +18,18 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — music branding, cart rhythm and embedded globe
+
+- Preserve official artist casing in music composer previews (override the
+  username-only lowercase style using the is-music card class).
+- Remove Apple Music text beneath search; keep result counts/error status.
+  Add Powered by above the official icon film; remove its circular frame.
+- Balance cart separation by compensating the flex gaps around the divider.
+- Globe chat embeds use an independently rotating compact canvas globe via the
+  existing decorative shop renderer; no pins fetched/drawn. Thumbnails retained.
+- Pins: site805, chat405, shop108, SW395. Build/site and mocked browser checks;
+  no backend changes or real account writes. Notes for Grim.
+
 ## 2026-11-09 — music/reaction/pull refinements
 
 - Hide featured-artist suffixes in embed and composer titles only; retain exact

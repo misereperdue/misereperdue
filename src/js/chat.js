@@ -3346,7 +3346,7 @@
   }
   function mpGpBuildCard(t) {
     var card = document.createElement("div");
-    card.className = "chat-gp-prev-card";
+    card.className = "chat-gp-prev-card" + (t.kind === "music" ? " is-music" : "");
     card.setAttribute("aria-hidden", "true");
     card.innerHTML =
       '<span class="chat-gp-prev-pic"></span>' +
@@ -3614,7 +3614,7 @@
   }
   function mpMusicForm() {
     return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
-      '<p class="chat-music-status" role="status" aria-live="polite">APPLE MUSIC</p><ul class="chat-music-results" aria-label="Songs"></ul>' +
+      '<p class="chat-music-status" role="status" aria-live="polite"></p><ul class="chat-music-results" aria-label="Songs"></ul>' +
       '';
   }
   function mpMusicWire(menu, close) {
@@ -3622,7 +3622,7 @@
       timer = null, controller = null, epoch = 0, dead = false;
     function state(title, detail, retry) {
       list.querySelectorAll("video").forEach(function(video){video.pause();});
-      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-orb">' + mpMusicIcon() + '</span><strong></strong><span class="chat-music-detail"></span></li>';
+      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-branding"><span class="chat-music-powered">Powered by</span><span class="chat-music-orb">' + mpMusicIcon() + '</span></span><strong></strong><span class="chat-music-detail"></span></li>';
       var orb=list.querySelector(".chat-music-orb");
       orb.innerHTML='<video class="chat-music-official" muted playsinline preload="metadata" poster="/assets/apple-music/official-icon.webp?v=1" src="/assets/apple-music/official-icon.mp4?v=1" aria-hidden="true"></video>';
       var film=orb.firstChild;film.muted=true;film.playsInline=true;if(!mpGpReduced()){var playing=film.play();if(playing)playing.catch(function(){});}
@@ -3643,7 +3643,7 @@
         if (!ref || seen[ref.key] || !track.trackName || !track.artistName) return false;
         seen[ref.key] = true; return true;
       }).slice(0, 50);
-      status.textContent = tracks.length ? tracks.length + " SONGS · APPLE MUSIC" : "APPLE MUSIC";
+      status.textContent = tracks.length ? tracks.length + " SONGS" : "";
       if (!tracks.length) return state("No songs found", "Try another title, artist, or album.");
       tracks.forEach(function (track) {
         var item = document.createElement("li"), button = document.createElement("button"), ref = mpMusicRef(track.trackViewUrl), result = mpNPOut(track);
@@ -3671,22 +3671,22 @@
       if (dead) return;
       invalidate();
       var query = input.value.trim(), version = epoch;
-      if (query.length < 2) { status.textContent = "APPLE MUSIC"; state("", "Choose a song to share."); return; }
-      controller = new AbortController(); status.textContent = "SEARCHING APPLE MUSIC…"; list.setAttribute("aria-busy", "true");
+      if (query.length < 2) { status.textContent = ""; state("", "Choose a song to share."); return; }
+      controller = new AbortController(); status.textContent = "SEARCHING…"; list.setAttribute("aria-busy", "true");
       state("Finding your sound…", "Searching Apple Music");
       mpMusicSearch(query, controller.signal).then(function (tracks) {
         if (dead || version !== epoch || !menu.isConnected) return;
         list.removeAttribute("aria-busy"); render(tracks);
       }).catch(function (error) {
         if (dead || version !== epoch || error.name === "AbortError") return;
-        list.removeAttribute("aria-busy"); status.textContent = "APPLE MUSIC";
+        list.removeAttribute("aria-busy"); status.textContent = "";
         state("Couldn’t reach the catalog", "Your search is still here. Give it another try.", true);
       });
     }
     input.addEventListener("input", function () {
       invalidate();
       if (input.value.trim().length < 2) return search();
-      status.textContent = "SEARCHING APPLE MUSIC…"; state("Finding your sound…", "Searching Apple Music");
+      status.textContent = "SEARCHING…"; state("Finding your sound…", "Searching Apple Music");
       timer = setTimeout(search, 280);
     });
     input.addEventListener("keydown", function (event) {
@@ -4153,6 +4153,14 @@
       vis: function (v) { seen = v; v ? kick() : draw(performance.now()); }
     };
   }
+  var mpGeGlobeQueue=[];
+  function mpGeMountGlobe(card){
+    if(!card.isConnected)return;
+    if(!window.MPShop || !MPShop.mountDecorativeGlobe){mpGeGlobeQueue=mpGeGlobeQueue.filter(function(el){return el.isConnected;});mpGeGlobeQueue.push(card);return;}
+    var icon=card.querySelector('svg.chat-ge-ico');if(!icon)return;
+    var canvas=document.createElement('canvas');canvas.className='chat-ge-ico chat-ge-globe';canvas.setAttribute('aria-hidden','true');icon.replaceWith(canvas);MPShop.mountDecorativeGlobe(canvas,true);
+  }
+  document.addEventListener('load',function(event){if(event.target.tagName==='SCRIPT'&&/\/js\/shop\.js(?:\?|$)/.test(event.target.src)){var cards=mpGeGlobeQueue;mpGeGlobeQueue=[];cards.forEach(mpGeMountGlobe);}},true);
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
     var m = MP_GE_RE.exec(String(t));
@@ -4167,6 +4175,7 @@
     var tx = b.querySelector(".chat-text");
     if (only) { b.classList.add("chat-ge-bubble"); tx && (tx.hidden = !0); b.insertBefore(c, b.firstChild); }
     else { tx && (tx.innerHTML = _e(rest)); tx ? tx.insertAdjacentElement("afterend", c) : b.appendChild(c); }
+    requestAnimationFrame(function(){mpGeMountGlobe(c);});
     var who = c.querySelector(".chat-ge-who"), l2 = c.querySelector(".chat-ge-l2"), pic = c.querySelector(".chat-ge-pic");
     function fail() { c.classList.remove("is-loading"); c.classList.add("is-na"); who.textContent = "Globe"; l2.textContent = "Post unavailable"; }
     var pr = mpGeCache[id] || (mpGeCache[id] = E("/api/forum/thread/" + encodeURIComponent(id) + "?limit=1").catch(function () { delete mpGeCache[id]; return null; }));

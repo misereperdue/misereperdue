@@ -2,6 +2,7 @@
 // Requires Playwright (npm install --no-save playwright) and Chromium.
 // Run: node tools/test-globe-replies.cjs
 const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const ORIGIN=process.env.MP_TEST_ORIGIN||'https://misereperdue.com';
 const ROOT=path.resolve(__dirname,'..'),OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-globe-replies-test';fs.mkdirSync(OUT,{recursive:true});
 (async()=>{const browser=await chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),headless:true,args:['--no-sandbox']});
 for(const theme of ['dark','light']){
@@ -20,10 +21,12 @@ if(u.pathname==='/api/me')data={ok:true,user};else if(u.pathname==='/api/forum/c
 else if(u.pathname==='/api/forum/thread/t1/replies'&&r.request().method()==='POST'){let body=r.request().postDataJSON();th={...th,replies:[...th.replies,reply('own','Own reply sent',body.parentId)]};await new Promise(resolve=>setTimeout(resolve,500));data={ok:true};}
 else if(u.pathname==='/api/forum/thread/t1')data={ok:true,thread:th};else if(u.pathname==='/api/forum/thread/t2')data={ok:true,thread:fallback};else if(u.pathname==='/api/messages')data={messages,badges:{}};else if(u.pathname==='/api/ws-ticket')data={ticket:'test'};else if(u.pathname==='/api/online')data={users:[user],count:1};else if(u.pathname==='/api/notifications')data={notifications:[],unread:0};else if(u.pathname==='/api/forum/tags')data={tags:[]};
 await r.fulfill({json:data,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'}});return;}
+if(process.env.MP_TEST_ORIGIN&&u.origin===ORIGIN){await r.continue();return;}
 if(u.hostname!=='misereperdue.com'){await r.fulfill({json:{data:{products:{edges:[]}}}});return;}
+if(u.pathname==='/js/shop.js')await new Promise(resolve=>setTimeout(resolve,350));
 let f=path.join(ROOT,u.pathname==='/'?'index.html':decodeURIComponent(u.pathname));if(!fs.existsSync(f)){await r.fulfill({status:404,body:''});return;}
 await r.fulfill({path:f,contentType:({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'})[path.extname(f)]||'application/octet-stream'});});
-const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto('https://misereperdue.com/#globe');await p.locator('.forum-thread-connector').waitFor();await p.waitForTimeout(1000);await p.screenshot({path:OUT+'/thread-elbow-'+theme+'.png'});
+const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(ORIGIN+'/#globe');await p.locator('.forum-thread-connector').waitFor();await p.waitForTimeout(1000);await p.screenshot({path:OUT+'/thread-elbow-'+theme+'.png'});
 await p.locator('.forum-thread[data-id="t1"]').click();await p.locator('.forum-replybox').waitFor();await p.waitForTimeout(700);
 const editor=()=>p.locator('#forum-reply').count().then(n=>n?p.locator('#forum-reply'):p.locator('#forum-reply-editor [contenteditable=true]'));
 await (await editor()).fill('Keep this draft');
@@ -54,7 +57,9 @@ th={...th,replies:[...th.replies,reply('c4','Nested above the reader','r1')]};ws
 th={...th,replies:th.replies.map(r=>r.id==='r2'?{...r,content:'Updated live reply'}:r)};ws.send(JSON.stringify({t:'forum',kind:'reply',threadId:'t1'}));await p.getByText('Updated live reply',{exact:true}).waitFor({timeout:2500});assert.equal(await p.locator('[data-reply-key="r2"]').getAttribute('data-sentinel'),'keep');
 th={...th,replies:th.replies.filter(r=>r.id!=='r2')};ws.send(JSON.stringify({t:'forum',kind:'reply',threadId:'t1'}));await p.locator('[data-reply-key="r2"]').waitFor({state:'detached',timeout:2500});assert(await p.evaluate(()=>keep.box===document.querySelector('.forum-replybox')));
 // Explicit thumbnails win; content images do not substitute for a missing thumbnail.
-await p.goto('https://misereperdue.com/#journal');await p.locator('.chat-ge').first().waitFor();await p.waitForTimeout(1200);
+await p.goto(ORIGIN+'/#journal');await p.locator('.chat-ge').first().waitFor();await p.waitForTimeout(1200);
+assert.equal(await p.locator('canvas.chat-ge-globe').count(),2);const globe=p.locator('canvas.chat-ge-globe').first();const frame=await globe.evaluate(el=>el.toDataURL());await p.waitForTimeout(100);assert.notEqual(await globe.evaluate(el=>el.toDataURL()),frame,'embed globe does not spin');
+const navSpacing=await p.evaluate(()=>{const nav=document.querySelector('.nav'),split=nav.querySelector('.split'),cart=document.querySelector('#cart-btn');split.style.display='block';cart.classList.remove('hidden');const a=nav.querySelector('[data-view="journal"]').getBoundingClientRect(),b=cart.getBoundingClientRect();return b.left-a.right;});assert(navSpacing>=10&&navSpacing<=16,'cart spacing is uneven');
 const thumb=p.locator('.chat-ge[href="/#globe/t1"] .chat-ge-pic');assert.equal(await thumb.locator(':scope > img').getAttribute('src'),'https://api.misereperdue.com/api/media/thumb123');assert.equal(await thumb.evaluate(el=>el.classList.contains('is-av')),false);
 assert(await p.locator('.chat-ge[href="/#globe/t2"] .chat-ge-pic').evaluate(el=>el.classList.contains('is-av')),'missing thumbnail should use avatar');await p.screenshot({path:OUT+'/embed-thumbnail-'+theme+'.png'});
 assert.equal(errors.length,0,errors.join('\n'));console.log(JSON.stringify({theme,passed:'collapse, rapid toggle, drafts, instant/nested/own/polled replies, animation, DOM identity, thumbnail fallback',errors}));await c.close();}
