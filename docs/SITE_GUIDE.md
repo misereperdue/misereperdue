@@ -216,7 +216,7 @@ Muse's commits are titled "<what> per dc: <detail>; <pins bumped>". Keep that st
 5. **Check**: `npm run check && npm run verify`. These must pass; the warnings explain themselves.
 6. **Mock-render on phones first**: headless Chrome at 390×844 and 360×780 (touch, DPR 3), dark **and** light, then desktop. Use the screenshot script (`/workspace/tools/shoot.mjs` on the bot box; it can serve local files under the real domain so the API works). Compare against current production screenshots, and look at the splash, shop grid, auth tabs and forum.
 7. **Push the branch and open a PR.** GitHub Actions `check` runs, and Cloudflare Pages builds a preview at `https://<branch-with-dashes>.misereperdue.pages.dev`. Verify the preview on phone viewports: every page loads, no new console errors, assets load. Remember the API rejects `pages.dev` origins (see §5).
-8. **Merge to `main`** only when the preview is clean and dc has OK'd the change. Pages deploys in about 15 s.
+8. **Merge to `main`** once the relevant checks pass and the preview is clean. On 2026-11-09 dc gave standing permission: "You may merge and deploy changes once checks pass automatically." For changes dc requests, no separate merge confirmation is needed unless dc later asks to review first, pause, or keep work local. Tool-level approval controls still apply. Pages deploys in about 15 s.
 9. **Verify production on phone viewports**: hard-load, confirm the new `sw.js?v=` is active (DevTools → Application → Service Workers, or `navigator.serviceWorker.controller.scriptURL`), and confirm the cache name is `mp-shell-v<N>`.
 10. **If something breaks**: revert the merge commit on `main` (Pages redeploys), or roll back in Cloudflare → Pages → Deployments → "Rollback to this deployment".
 

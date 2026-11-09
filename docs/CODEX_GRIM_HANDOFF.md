@@ -8,9 +8,20 @@ Use separate feature branches; fetch current main and check overlapping changes
 before shipping. Keep the mobile design and dc's existing visual choices.
 This file is shared context, not a direct message to the other assistant.
 
+## Standing merge and deployment permission — 2026-11-09
+
+dc explicitly authorized: “You may merge and deploy changes once checks pass
+automatically.” For changes dc requests, use a feature branch/PR, complete the
+relevant checks and preview verification, then merge and verify production
+without asking dc to approve the merge again. Respect any later request to
+pause, review first, or keep work local. This permission covers release of
+requested work; it does not expand the requested scope. Tool-level approval
+controls still apply.
+
 ## 2026-11-09 — dc's follow-up design refinements
 
-Branch: `codex/chat-music-menu-polish`.
+Branch: `codex/chat-music-menu-polish`. Released in PR #2 after dc approved;
+production deployment and UI smoke checks passed.
 
 - Pull-to-post now uses **basic text and a down arrow**, per dc. This supersedes
   the earlier glass pill/ring design below. The single 80px post threshold,
