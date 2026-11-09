@@ -9624,7 +9624,7 @@ svg[data-hi].hi-play {
 .chat-plus-menu .chat-pmenu-row:not(:disabled):active{background:rgba(127,127,127,.18);transform:scale(.97)}
 .chat-plus-menu .chat-pmenu-row:disabled{opacity:.4;cursor:default;pointer-events:none}
 .chat-plus-menu .chat-pmenu-row em{margin-left:auto;font-style:normal;font-size:11px;opacity:.8}
-.chat-plus-menu .chat-pmenu-sep{height:1px;margin:6px 12px;border-radius:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,currentColor 16%,transparent) 15%,color-mix(in srgb,currentColor 16%,transparent) 85%,transparent);flex:none}
+.chat-plus-menu .chat-pmenu-sep,.mp-divider{height:1px;margin:6px 12px;border-radius:1px;background:var(--mp-div);flex:none}
 .chat-plus-menu .chat-misery-fm-logo{display:block;width:90px;height:20px;flex:none;background:currentColor;-webkit-mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat;mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat}
 .chat-plus-menu .chat-pmenu-row.chat-misery-fm:disabled{opacity:.65}
 @media (prefers-reduced-motion:reduce){.chat-plus-menu,.chat-plus svg{transition:none}}
@@ -12432,3 +12432,29 @@ html.fm-lock #chat .fm-bar,html.fm-morphing #chat .fm-bar{visibility:hidden}
 .mp-profile-song-results button span { color:var(--muted);font-size:11px; }
 .mp-profile-edit-status { margin:0;font-size:12px;line-height:1.4;color:var(--muted); }
 @media(prefers-reduced-motion:reduce){.mp-profile-photo{transition:none}}
+/* ===== Shared divider (dc, 2026-11-09): every divider uses the main/chat + menu divider.
+   1px, 16% of the text colour, 15% fade at each end, inset 12px when it spans a row edge.
+   Use .mp-divider for a divider element, or the tokens below. Borders use border-image so
+   later colour overrides (light theme etc.) cannot drift from the shared style. ===== */
+:root{
+  --mp-div-c:color-mix(in srgb,var(--ink) 16%,transparent);
+  --mp-div:linear-gradient(90deg,transparent,var(--mp-div-c) 15%,var(--mp-div-c) 85%,transparent);
+  --mp-div-v:linear-gradient(180deg,transparent,var(--mp-div-c) 15%,var(--mp-div-c) 85%,transparent);
+  --mp-div-in:linear-gradient(90deg,transparent 12px,var(--mp-div-c) calc(12px + (100% - 24px) * .15),var(--mp-div-c) calc(100% - 12px - (100% - 24px) * .15),transparent calc(100% - 12px));
+}
+/* top-edge dividers */
+/* only the image changes: elements whose border is removed elsewhere (width 0/none) stay divider-free */
+.actions,.comment,#cart-total .trow.grand,.forum-sig,.dash-box > .dash-urow + .dash-urow,.ord-foot,.chat-gp-pin,.chat-music-footer,.chat-music-branding{border-image:var(--mp-div-in) 1}
+.chat-gp-pin,.ord-foot,.dash-box > .dash-urow + .dash-urow{border-top-width:1px}
+/* bottom-edge dividers */
+.forum-toolbar:not(.mp-tbar),.sig-bubble .forum-toolbar:not(.mp-tbar),.forum-embedbar,html[data-gprows="s3"] .chat-gp-row{border-image:var(--mp-div-in) 1}
+html[data-gprows="s3"] .chat-gp-row,.forum-toolbar:not(.mp-tbar),.sig-bubble .forum-toolbar:not(.mp-tbar),.forum-embedbar{border-bottom-width:1px}
+/* poll rows reset borders with border:0!important, so the shared image needs !important too */
+.chat-poll-q3 .chat-poll-opt,.chat-poll-q3s .chat-poll-opt,.chat-poll-q3d .chat-poll-opt{border-image:var(--mp-div-in) 1!important}
+/* inset list hairline after the thumb column */
+html:not([data-gprows]) .chat-gp-row + .chat-gp-row .chat-gp-body::before,html[data-gprows="s1"] .chat-gp-row + .chat-gp-row .chat-gp-body::before,html:not([data-gprows])[data-theme="light"] .chat-gp-row + .chat-gp-row .chat-gp-body::before,html[data-gprows="s1"][data-theme="light"] .chat-gp-row + .chat-gp-row .chat-gp-body::before{height:1px;background:var(--mp-div)}
+/* "or" rules: fade toward the outer edge */
+.rc-or::before,.rc-or::after{height:1px;background:linear-gradient(90deg,transparent,var(--mp-div-c) 30%)}
+.rc-or::after{background:linear-gradient(270deg,transparent,var(--mp-div-c) 30%)}
+/* vertical dividers */
+.mp-tbar .mp-tb-sep,.chat-react-divider{width:1px;background:var(--mp-div-v)}
