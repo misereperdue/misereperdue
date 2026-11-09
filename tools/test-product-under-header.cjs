@@ -30,5 +30,7 @@ for(const theme of ['dark','light']){
    if(y===0&&sel==='#shop-back'){assert(shows,'Back must be visible at rest');assert.equal(await p.evaluate(()=>{const b=document.querySelector('#shop-back').getBoundingClientRect();return document.elementFromPoint(b.x+b.width/2,b.y+b.height/2).closest('#shop-back')?1:0;}),1,'Back not tappable at rest');}
    else if(r.y+r.h<=band+0.5||y>0)assert(!shows,`${theme}: ${sel} paints over the header band at scroll ${y}`);
   }}
+ // Bag/checkout shares the same dark sky fade (light already fades through its rain mask).
+ await p.goto(ORIGIN+'/#cart');await p.locator('#cart.on').waitFor();const m=await p.evaluate(()=>getComputedStyle(document.querySelector('.hero')).webkitMaskImage||getComputedStyle(document.querySelector('.hero')).maskImage);if(theme==='dark')assert(/linear-gradient/.test(m),'bag page lost the sky fade');
  console.log(JSON.stringify({kind:KIND,theme,passed:'Back visible at rest, Back and Drag to spin hidden under the header band at 30/80/200'}));await c.close();}
 await browser.close();})().catch(e=>{console.error(e);process.exit(1)});

@@ -12011,9 +12011,10 @@ body.home:has(#shop.on) > .page { position:relative;z-index:2;isolation:isolate;
 .forum-pull-body.is-pulling .forum-cat-in { transition:none; }
 @media (prefers-reduced-motion:reduce){ .forum-pull-body .forum-cat,.forum-cat-in { transform:none; } }
 
-/* Product pages (dark): content fades gradually under the sky instead of cutting off at its
+/* Product and bag/checkout pages (dark): content fades gradually under the sky instead of cutting off at its
    bottom edge, matching the light sky's eased 64px fade (per dc). Light already fades. */
-html:not([data-theme="light"]) body.home:has(#product.on) .hero {
+html:not([data-theme="light"]) body.home:has(#product.on) .hero,
+html:not([data-theme="light"]) body.home:has(#cart.on) .hero {
   -webkit-mask-image: linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 76px),rgba(0,0,0,.95) calc(env(safe-area-inset-top,0px) + 83px),rgba(0,0,0,.84) calc(env(safe-area-inset-top,0px) + 90px),rgba(0,0,0,.68) calc(env(safe-area-inset-top,0px) + 97px),rgba(0,0,0,.5) calc(env(safe-area-inset-top,0px) + 104px),rgba(0,0,0,.33) calc(env(safe-area-inset-top,0px) + 112px),rgba(0,0,0,.19) calc(env(safe-area-inset-top,0px) + 119px),rgba(0,0,0,.09) calc(env(safe-area-inset-top,0px) + 126px),rgba(0,0,0,.03) calc(env(safe-area-inset-top,0px) + 133px),transparent calc(env(safe-area-inset-top,0px) + 140px));
   mask-image: linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 76px),rgba(0,0,0,.95) calc(env(safe-area-inset-top,0px) + 83px),rgba(0,0,0,.84) calc(env(safe-area-inset-top,0px) + 90px),rgba(0,0,0,.68) calc(env(safe-area-inset-top,0px) + 97px),rgba(0,0,0,.5) calc(env(safe-area-inset-top,0px) + 104px),rgba(0,0,0,.33) calc(env(safe-area-inset-top,0px) + 112px),rgba(0,0,0,.19) calc(env(safe-area-inset-top,0px) + 119px),rgba(0,0,0,.09) calc(env(safe-area-inset-top,0px) + 126px),rgba(0,0,0,.03) calc(env(safe-area-inset-top,0px) + 133px),transparent calc(env(safe-area-inset-top,0px) + 140px));
 }
