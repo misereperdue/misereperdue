@@ -1021,6 +1021,16 @@
      (glass opacity stays 1), frost from frame 1, fade content only. */
   var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
   var MP_PB_STEM = 13, MP_PB_RADIUS = 20;
+  /* Last tap: the popover anchors to where the finger landed on the element. */
+  var mpPBtap = null;
+  try {
+    document.addEventListener("pointerdown", function (e) { mpPBtap = { x: e.clientX, y: e.clientY, t: Date.now(), el: e.target }; }, { capture: !0, passive: !0 });
+  } catch (e) {}
+  function mpPBpoint(anchor, r) {
+    var tp = mpPBtap;
+    if (tp && Date.now() - tp.t < 1500 && tp.el && anchor.contains(tp.el) && tp.x >= r.left - 1 && tp.x <= r.right + 1) return tp.x;
+    return r.left + r.width / 2;
+  }
   function mpPBwarm() {
     if (mpPBwarmed) return;
     mpPBwarmed = !0;
@@ -1036,14 +1046,17 @@
   }
   /* soft iOS stem: rounded tip + concave shoulders flowing into the body edge */
   function mpPBstemPath(W, H, ax, T, R) {
-    var hw = 14, tipR = 1.8;
+    var hw = 14, tipR = 1.8,
+      /* near a screen edge the stem may sit close to a corner: shrink only that
+         corner so the stem can stay on the tap point (iOS does the same) */
+      RL = Math.max(4, Math.min(R, ax - hw)), RR = Math.max(4, Math.min(R, W - ax - hw));
     return (
-      "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T +
+      "M0 " + (T + RL) + "A" + RL + " " + RL + " 0 0 1 " + RL + " " + T +
       "L" + (ax - hw) + " " + T +
       "C" + (ax - hw + 3.6) + " " + T + " " + (ax - 4.6) + " " + (tipR + 0.3) + " " + (ax - tipR * 0.2) + " " + tipR +
       "A" + tipR + " " + tipR + " 0 0 1 " + (ax + tipR * 0.2) + " " + tipR +
       "C" + (ax + 4.6) + " " + (tipR + 0.3) + " " + (ax + hw - 3.6) + " " + T + " " + (ax + hw) + " " + T +
-      "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) +
+      "L" + (W - RR) + " " + T + "A" + RR + " " + RR + " 0 0 1 " + W + " " + (T + RR) +
       "L" + W + " " + (T + H - R) + "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) +
       "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z"
     );
@@ -1065,6 +1078,7 @@
     if (!b) return;
     mpPBel = null;
     b._off && b._off();
+    b._ro && b._ro.disconnect();
     if (fast) {
       b.remove();
       return;
@@ -1210,32 +1224,45 @@
     b.style.top = "0px";
     document.body.appendChild(b);
     var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
-      r = anchor.getBoundingClientRect(),
-      w = b.offsetWidth,
-      h = b.offsetHeight,
-      vw = document.documentElement.clientWidth,
-      vh = window.innerHeight,
-      M8 = 10,
-      TH = MP_PB_STEM,
-      gap = 5 + TH,
-      cx = r.left + r.width / 2,
-      below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
-      left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
-      top = below ? r.bottom + gap : r.top - gap - h,
-      ax;
-    /* keep stem clear of the corner radius */
-    cx - left < 30 && (left = Math.max(4, cx - 30));
-    left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
-    ax = Math.max(28, Math.min(cx - left, w - 28));
-    top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
-    b.classList.add(below ? "is-below" : "is-above");
-    b.style.left = left + "px";
-    b.style.top = top + "px";
-    b.style.setProperty("--ax", ax + "px");
-    /* transform-origin at the stem tip (outside the padding box) */
-    b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
-    b.style.setProperty("--stem", TH + "px");
-    mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
+      TH = MP_PB_STEM, M = 12, tapX = mpPBpoint(anchor, anchor.getBoundingClientRect()), tapDX = tapX - anchor.getBoundingClientRect().left, lastW = 0, lastH = 0;
+    function place() {
+      var r = anchor.getBoundingClientRect(),
+        w = b.offsetWidth,
+        h = b.offsetHeight,
+        vw = document.documentElement.clientWidth,
+        vh = window.innerHeight,
+        gap = 5 + TH,
+        cx = Math.max(r.left, Math.min(r.left + tapDX, r.right)),
+        roomBelow = vh - M - r.bottom - gap,
+        roomAbove = r.top - gap - M - sat,
+        below = h <= roomBelow || (h > roomAbove && roomBelow >= roomAbove),
+        left = Math.max(M, Math.min(cx - w / 2, vw - w - M)),
+        top = below ? r.bottom + gap : r.top - gap - h,
+        /* stem follows the tap, even when the body is clamped at the 12px margin */
+        ax = Math.max(18, Math.min(cx - left, w - 18));
+      if (w > vw - 2 * M) left = Math.max(4, (vw - w) / 2);
+      top = Math.max(M + sat, Math.min(top, vh - h - M));
+      lastW = w; lastH = h;
+      b.classList.toggle("is-below", below);
+      b.classList.toggle("is-above", !below);
+      b.style.left = left + "px";
+      b.style.top = top + "px";
+      b.style.setProperty("--ax", ax + "px");
+      /* transform-origin at the stem tip (outside the padding box) */
+      b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
+      b.style.setProperty("--stem", TH + "px");
+      mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
+    }
+    place();
+    /* late content (avatar/badges) changing size must not shift the open card */
+    try {
+      var ro = new ResizeObserver(function () {
+        if (!b.isConnected || b.classList.contains("is-out")) return;
+        if (b.offsetWidth !== lastW || b.offsetHeight !== lastH) place();
+      });
+      ro.observe(b);
+      b._ro = ro;
+    } catch (e) {}
     scale.style.willChange = "transform";
     body.style.willChange = "opacity";
     void shp.offsetWidth;
