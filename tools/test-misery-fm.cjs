@@ -11,6 +11,13 @@ const SRC=ROOT+'/worker/misery-chat/src/',top=fs.readFileSync(SRC+'fm.js','utf8'
 const methods=d.slice(d.indexOf('  /* ---------- Misery FM ---------- */'),d.lastIndexOf('\n}')).replace(/\n  fmCast\(obj\) \{[\s\S]*?\n  \}\n/,'\n');
 const json=(x,st)=>new Response(JSON.stringify(x),{status:st||200,headers:{'Content-Type':'application/json'}}),err=(m,st)=>json({ok:false,error:m},st||400);
 const COVER=fs.readFileSync(ROOT+'/tools/fixtures/fm-cover.jpg'),COVER2=fs.readFileSync(ROOT+'/tools/fixtures/fm-cover2.png');
+const FX=n=>fs.readFileSync(ROOT+'/tools/fixtures/'+n);
+// iOS: the page is hidden while the Files picker is open and the sheet re-renders on return.
+// Open the real file chooser, force a state broadcast + re-render, THEN deliver the files.
+async function pick(p,srv,tapSel,files){const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.locator(tapSel).tap()]);
+ await p.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'visible'});document.dispatchEvent(new Event('visibilitychange'));});
+ srv.r.fmCast({t:'fm',fm:srv.r.fmPublic(await srv.r.fmGet())});await p.waitForTimeout(250);await fc.setFiles(files);}
+const toastIs=(p,re)=>p.waitForFunction(src=>{const t=document.querySelector('.fm-toast.is-on');return t&&new RegExp(src).test(t.textContent);},re.source,{timeout:20000}).catch(async e=>{console.log('TOAST?',await p.evaluate(()=>({t:(document.querySelector('.fm-toast')||{}).textContent,ups:[...document.querySelectorAll('.fm-ups li')].map(l=>l.textContent)})));throw e;});
 const wav=(()=>{const n=8000*300,b=Buffer.alloc(44+n,128);b.write('RIFF',0);b.writeUInt32LE(36+n,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(8000,28);b.writeUInt16LE(1,32);b.writeUInt16LE(8,34);b.write('data',36);b.writeUInt32LE(n,40);return b;})();
 function mkServer(){const objs=new Map(),bucket={put:async(k,b,o)=>{objs.set(k,{b:Buffer.from(b instanceof ArrayBuffer?new Uint8Array(b):b),ct:o&&o.httpMetadata&&o.httpMetadata.contentType})},delete:async k=>objs.delete(k),
   get:async k=>{const x=objs.get(k);return x?{size:x.b.length,body:x.b,httpEtag:'"e"',writeHttpMetadata:h=>h.set('Content-Type',x.ct||'application/octet-stream')}:null}};
@@ -107,16 +114,38 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await p.locator(`.fm-q li[data-id="${B}"] [data-a="edit"]`).tap();await p.waitForSelector('.fm-edit');await p.waitForTimeout(400);
  assert.equal(await p.inputValue('.fm-edit [name="title"]'),'Pink + White');assert.equal(await p.inputValue('.fm-edit [name="album"]'),'Blonde');
  await p.fill('.fm-edit [name="title"]','Pink + White (Live)');await p.fill('.fm-edit [name="genre"]','Soul');await p.fill('.fm-edit [name="notes"]','Recorded at the Blonded session.');await p.locator('.fm-edit .fm-sw').tap();
- await p.locator('.fm-edit .fm-cover-in').setInputFiles({name:'cover.png',mimeType:'image/png',buffer:COVER2});await p.waitForFunction(id=>{const t=MPFM.state().list.find(x=>x.id===id);return t&&t.art;},B,{timeout:8000});
+ await pick(p,srv,'.fm-edit [data-a="cover"]',{name:'cover.png',mimeType:'image/png',buffer:COVER2});await p.waitForFunction(id=>{const t=MPFM.state().list.find(x=>x.id===id);return t&&t.art;},B,{timeout:8000});
  await p.waitForSelector('.fm-edit img');await p.waitForTimeout(300);await shot(p,'owner-dark-edit');
  await p.locator('.fm-edit [data-a="edsave"]').tap();await p.waitForTimeout(500);
  let tb=(await srv.r.fmGet()).list.find(t=>t.id===B);assert.deepEqual([tb.title,tb.genre,tb.notes,tb.explicit,!!tb.art],['Pink + White (Live)','Soul','Recorded at the Blonded session.',true,true]);
  assert.equal(await p.locator(`.fm-q li[data-id="${B}"] .fm-e`).count(),1,'E badge in queue');
  await p.locator(`.fm-q li[data-id="${B}"] [data-a="edit"]`).tap();await p.waitForSelector('.fm-edit [data-a="coverdel"]');await p.locator('.fm-edit [data-a="coverdel"]').tap();await p.waitForTimeout(500);assert.equal((await srv.r.fmGet()).list.find(t=>t.id===B).art,'');
  await p.locator('.fm-edit [data-a="edclose"]').tap();await p.waitForTimeout(300);
- await p.locator('.fm-sheet .fm-file').setInputFiles({name:'track01.mp3',mimeType:'audio/mpeg',buffer:id3()});
+ await pick(p,srv,'.fm-sheet [data-a="add"]',{name:'track01.mp3',mimeType:'audio/mpeg',buffer:id3()});
  await p.waitForFunction(()=>/Added/.test((document.querySelector('.fm-ups li small')||{}).textContent||''),null,{timeout:15000});
  const nt=(await srv.r.fmGet()).list.at(-1);assert.deepEqual([nt.title,nt.artist,nt.album,nt.year,nt.genre,nt.explicit,nt.dur,!!nt.art],['Mask Off','Future','FUTURE','2017','Trap',true,204,true],'ID3 tags '+JSON.stringify(nt));
+ // dc's iOS repro: real MP3 from Files with an EMPTY MIME type, no length tag, and an <audio> element that never loads metadata
+ await p.evaluate(()=>{window.__A=window.Audio;window.Audio=function(){return {set src(v){},preload:''};};});
+ const n0=(await srv.r.fmGet()).list.length;
+ await pick(p,srv,'.fm-sheet [data-a="add"]',{name:'Real Artist - Real Song.mp3',mimeType:'',buffer:FX('fm-real.mp3')});
+ await p.waitForSelector('.fm-ups li');await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+1,{timeout:25000});await toastIs(p,/Real Song · Real Artist added to the queue/);
+ let L=(await srv.r.fmGet()).list;assert.equal(L.length,n0+1,'mp3 with empty type added');let rt=L.at(-1);
+ assert.deepEqual([rt.title,rt.artist,rt.type],['Real Song','Real Artist','audio/mpeg'],'empty-type mp3 '+JSON.stringify(rt));assert(Math.abs(rt.dur-4)<0.6,'decode fallback duration '+rt.dur);
+ assert.equal(srv.objs.get('t/'+rt.id).ct,'audio/mpeg');assert(srv.objs.get('t/'+rt.id).b.length===FX('fm-real.mp3').length,'exact bytes stored');
+ await p.waitForFunction(id=>MPFM.state().list.some(t=>t.id===id)&&!!document.querySelector(`.fm-q li[data-id="${id}"]`),rt.id,{timeout:8000});
+ await p.evaluate(()=>{window.Audio=window.__A;});
+ // M4A as iOS reports it (audio/x-m4a) and an odd MP3 type (audio/mpeg3): both normalised for the Worker
+ await pick(p,srv,'.fm-sheet [data-a="add"]',[{name:'memo.m4a',mimeType:'audio/x-m4a',buffer:FX('fm-real.m4a')},{name:'odd.mp3',mimeType:'audio/mpeg3',buffer:FX('fm-real.mp3')}]);
+ await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+3,{timeout:20000});await toastIs(p,/2 songs added to the queue/);
+ L=(await srv.r.fmGet()).list;assert.deepEqual(L.slice(-2).map(t=>t.type).sort(),['audio/mp4','audio/mpeg'],'normalised types');
+ // a WAV is refused with a visible reason, and a lost owner session says so
+ await p.evaluate(()=>{const t=document.querySelector('.fm-toast');t&&t.classList.remove('is-on');});await pick(p,srv,'.fm-sheet [data-a="add"]',{name:'voice.wav',mimeType:'',buffer:FX('fm-real.wav')});await toastIs(p,/MP3, M4A or AAC only/);
+ await p.evaluate(()=>localStorage.setItem('chat_token','fan-tok'));
+ await pick(p,srv,'.fm-sheet [data-a="add"]',{name:'again.mp3',mimeType:'',buffer:FX('fm-real.mp3')});await toastIs(p,/Not signed in as the station owner/);
+ await p.evaluate(()=>localStorage.setItem('chat_token','owner-tok'));
+ assert.equal((await srv.r.fmGet()).list.length,n0+3,'no track from refused uploads');
+ await shot(p,'owner-dark-upload-ios');
+ await p.locator('.fm-sheet .fm-sh-body').evaluate(b=>b.scrollTop=0);
  await shot(p,'owner-dark-queue');
  // station: note, schedule, crossfade, stats
  await p.locator('.fm-sheet [data-tab="station"]').tap();await p.waitForTimeout(300);

@@ -18,6 +18,36 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 17:00 ET — dc: Grim keeps shipping live (override of PR #51 rule 8)
+
+dc decided at 4:55 PM ET on Nov 9: Grim keeps shipping his requests live (merge plus Pages/Worker deploy
+once checks pass) without asking first, even after PR #51's AGENTS.md lands. This overrides rule 8
+("no production deployments/merges without explicit approval") for Grim only. Everything else in AGENTS.md
+still applies: task branches off fresh main, rebase and re-test before merging, and never clobber
+the other agent's pin bumps.
+
+## 2026-11-09 — Misery FM: iOS "adding tracks doesn't work" (Grim)
+
+- **Root cause:** the `<input type=file>` was inside the re-rendered sheet body. On iOS the page goes
+  hidden while the Files picker is open. On return the state refresh/broadcast re-rendered the sheet,
+  replacing the input, so `change` fired on a detached node and never reached the sheet's delegated
+  listener. The picked song was silently dropped: no upload row, no error.
+  `setInputFiles` in Playwright is instant, which is why the old test missed it.
+- **Fix:** pickers are persistent `#fm-pick-audio` / `#fm-pick-img` inputs on `<body>` with their own
+  listeners. `accept="audio/*,.mp3,.m4a,.aac,.mp4"`.
+  - **Types:** the extension is trusted over `file.type`, since iOS gives `""` or `audio/mpeg3`. The type is
+    normalised to audio/mpeg|mp4|aac for the Worker.
+  - **Duration:** comes from tags, else `<audio>` metadata (6 s timeout), else a decode (20 s timeout), else
+    the server's 180 s default.
+  - **Upload first:** raw bytes go up first, and the waveform decode happens afterwards (skipped for files
+    over 12 MB on iOS, for memory).
+  - **Errors:** the XHR has a 5 min timeout, and every failure shows a toast (wrong type, lost owner session,
+    network, timeout).
+- **Test:** `tools/test-misery-fm.cjs` opens the real file chooser, forces hidden→visible plus a
+  state broadcast, then delivers files: a real MP3 with an empty type and a stalled `<audio>`, an M4A as
+  audio/x-m4a, an MP3 as audio/mpeg3, a WAV (refused) and a non-owner token (refused).
+  Fixtures: `tools/fixtures/fm-real.*`.
+
 ## 2026-11-09 — Misery FM v2: studio, listener sheet, live top bar (Grim, Worker 2348f56d)
 
 dc ([pt501u]): make the FM menu far richer for him and for listeners. The Worker deploy was approved,

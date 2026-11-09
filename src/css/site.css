@@ -12235,3 +12235,5 @@ html.fm-lock #chat .fm-bar,html.fm-morphing #chat .fm-bar{visibility:hidden}
 [data-theme="light"]{--fm-solid:#f5f7fb}
 .fm-sheet .fm-edit{background:var(--fm-solid);-webkit-backdrop-filter:none;backdrop-filter:none}
 .fm-sheet{overflow:clip}
+/* FM file pickers live outside the sheet (iOS re-render safety); visually hidden but clickable */
+.fm-pick{position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
