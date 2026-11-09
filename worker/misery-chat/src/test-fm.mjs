@@ -1,0 +1,30 @@
+// Node logic test for the Misery FM Worker excerpts (mock R2 + DO storage). node worker/misery-chat/src/test-fm.mjs
+import fs from 'fs';import assert from 'assert/strict';
+const rd=f=>fs.readFileSync(new URL('./'+f,import.meta.url),'utf8'),d=rd('fm_do.js');
+const methods=d.slice(d.indexOf('  /* ---------- Misery FM ---------- */'),d.lastIndexOf('\n}'));
+const top=rd('fm.js');
+const json=(d,st)=>new Response(JSON.stringify(d),{status:st||200,headers:{'Content-Type':'application/json'}}),err=(m,st)=>json({ok:false,error:m},st||400);
+const objs=new Map();
+const bucket={put:async(k,b,o)=>{objs.set(k,{b:new Uint8Array(b),o})},delete:async k=>objs.delete(k),get:async(k,opt)=>{const x=objs.get(k);if(!x)return null;const size=x.b.length;let range=null,body=x.b;
+ if(opt&&opt.range){const m=/bytes=(\d*)-(\d*)/.exec(opt.range.get('Range'));const st=+m[1],en=m[2]?+m[2]:size-1;range={offset:st,length:en-st+1};body=x.b.slice(st,en+1);}
+ return{size,range,body,httpEtag:'"e"',writeHttpMetadata:h=>h.set('Content-Type',x.o.httpMetadata.contentType)};}};
+const C=new Function('json','err','bucket',top+'\nreturn class R{constructor(){this.state={storage:{m:new Map(),get:async k=>this.state.storage.m.get(k),put:async(k,v)=>this.state.storage.m.set(k,v),setAlarm:async t=>{this.alarmAt=t},deleteAlarm:async()=>{this.alarmAt=null}}};this.env={FM_BUCKET:bucket};this.sent=[];this.user=null}broadcast(o){this.sent.push(o)}async bearerUser(){return this.user}\n'+methods+'};\n;')(json,err,bucket);
+const fmAudio=new Function('json','err',top+';return fmAudio;')(json,err);
+const r=new C();const call=async(p,init={})=>{const q=new Request('https://x'+p,init);const res=await r.fmRoute(q,p.split('?')[0]);return [res.status,await res.json()];};
+let [st,b]=await call('/api/fm/state');assert.equal(b.fm.live,false);
+r.user={username:'x',owner:false};[st]=await call('/api/fm/upload?title=A',{method:'POST',headers:{'Content-Type':'audio/mpeg'},body:new Uint8Array(10)});assert.equal(st,403);
+r.user={username:'dc',owner:true};
+[st]=await call('/api/fm/upload',{method:'POST',headers:{'Content-Type':'text/plain'},body:'x'});assert.equal(st,415);
+[st,b]=await call('/api/fm/upload?title=One&artist=dc&dur=10',{method:'POST',headers:{'Content-Type':'audio/mpeg'},body:new Uint8Array(1000).fill(7)});assert.equal(st,200);const id1=b.id;
+[st,b]=await call('/api/fm/upload?title=Two&dur=20',{method:'POST',headers:{'Content-Type':'audio/mp4'},body:new Uint8Array(500)});const id2=b.id;
+[st,b]=await call('/api/fm/control',{method:'POST',body:JSON.stringify({action:'live'})});assert.equal(b.fm.live,true);assert.equal(b.fm.idx,0);assert(r.alarmAt>Date.now()+9000);
+const fm=await r.fmGet();fm.startedAt-=12000;[st,b]=await call('/api/fm/state');assert.equal(b.fm.idx,1,'auto-advance');
+fm.startedAt-=25000;await r.alarm();assert.equal(r.sent.at(-1).fm.idx,0,'alarm loops playlist');
+[st,b]=await call('/api/fm/control',{method:'POST',body:JSON.stringify({action:'skip'})});assert.equal(b.fm.idx,1);
+[st,b]=await call('/api/fm/control',{method:'POST',body:JSON.stringify({action:'move',id:id2,dir:-1})});assert.equal(b.fm.list[0].id,id2);assert.equal(b.fm.idx,0,'idx follows playing track');
+[st,b]=await call('/api/fm/control',{method:'POST',body:JSON.stringify({action:'remove',id:id2})});assert.equal(b.fm.list.length,1);assert.equal(b.fm.idx,0);
+[st,b]=await call('/api/fm/control',{method:'POST',body:JSON.stringify({action:'stop'})});assert.equal(b.fm.live,false);assert.equal(r.alarmAt,null);
+let a=await fmAudio(new Request('https://x/api/fm/audio/'+id1,{headers:{Range:'bytes=100-199'}}),{FM_BUCKET:bucket});assert.equal(a.status,206);assert.equal(a.headers.get('content-range'),'bytes 100-199/1000');assert.equal((await a.arrayBuffer()).byteLength,100);
+a=await fmAudio(new Request('https://x/api/fm/audio/'+id1),{FM_BUCKET:bucket});assert.equal(a.status,200);assert.equal(a.headers.get('content-type'),'audio/mpeg');assert.equal(a.headers.get('accept-ranges'),'bytes');
+assert.equal(objs.has('t/'+id2),false,'removed file deleted');
+console.log('fm worker logic ok; broadcasts',r.sent.length);

@@ -11844,7 +11844,6 @@ html[data-gcards="g3"] .forum-thread-more {
 .forum-pullpost.is-pulling .forum-pullpost-labels > span { transition:none; }
 .forum-pullpost-stroke-a,.forum-pullpost-stroke-b { transition:d .28s cubic-bezier(.2,.8,.2,1); }
 .forum-pullpost.is-pulling path { transition:none; }
-.chat-plus-menu.chat-pbig-fm { height:240px; }
 .chat-fm-preview .chat-misery-fm-logo { flex:none; }
 .chat-np.is-loading { min-width:210px;min-height:64px;box-sizing:border-box; }
 .chat-np.is-loading .chat-np-tx { display:flex;flex-direction:column;justify-content:center;gap:7px; }
@@ -12018,3 +12017,48 @@ html:not([data-theme="light"]) body.home:has(#cart.on) .hero {
   -webkit-mask-image: linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 76px),rgba(0,0,0,.95) calc(env(safe-area-inset-top,0px) + 83px),rgba(0,0,0,.84) calc(env(safe-area-inset-top,0px) + 90px),rgba(0,0,0,.68) calc(env(safe-area-inset-top,0px) + 97px),rgba(0,0,0,.5) calc(env(safe-area-inset-top,0px) + 104px),rgba(0,0,0,.33) calc(env(safe-area-inset-top,0px) + 112px),rgba(0,0,0,.19) calc(env(safe-area-inset-top,0px) + 119px),rgba(0,0,0,.09) calc(env(safe-area-inset-top,0px) + 126px),rgba(0,0,0,.03) calc(env(safe-area-inset-top,0px) + 133px),transparent calc(env(safe-area-inset-top,0px) + 140px));
   mask-image: linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 76px),rgba(0,0,0,.95) calc(env(safe-area-inset-top,0px) + 83px),rgba(0,0,0,.84) calc(env(safe-area-inset-top,0px) + 90px),rgba(0,0,0,.68) calc(env(safe-area-inset-top,0px) + 97px),rgba(0,0,0,.5) calc(env(safe-area-inset-top,0px) + 104px),rgba(0,0,0,.33) calc(env(safe-area-inset-top,0px) + 112px),rgba(0,0,0,.19) calc(env(safe-area-inset-top,0px) + 119px),rgba(0,0,0,.09) calc(env(safe-area-inset-top,0px) + 126px),rgba(0,0,0,.03) calc(env(safe-area-inset-top,0px) + 133px),transparent calc(env(safe-area-inset-top,0px) + 140px));
 }
+
+/* Misery FM (dc, 2026-11-09): live bar under the chat header + owner/listener panel in the + menu. */
+.chat-fm-bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 146px);left:0;right:0;margin-inline:auto;width:max-content;max-width:min(520px,calc(100% - 32px));z-index:28;display:flex;align-items:center;gap:10px;padding:6px 6px 6px 10px;border-radius:999px;box-sizing:border-box}
+.chat-fm-bar[hidden]{display:none}
+.chat-fm-live{flex:none;display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:#e5484d;color:#fff;font-size:10.5px;font-weight:750;letter-spacing:.08em;line-height:1.2}
+.chat-fm-live::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:chatFmPulse 1.6s ease-in-out infinite}
+@keyframes chatFmPulse{50%{opacity:.35}}
+.chat-fm-np{min-width:0;flex:1 1 auto;display:flex;align-items:baseline;gap:6px;font-size:13.5px;white-space:nowrap;overflow:hidden}
+.chat-fm-np b{font-weight:650;overflow:hidden;text-overflow:ellipsis}
+.chat-fm-np span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.chat-fm-np span:empty{display:none}
+.chat-fm-play{flex:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:999px;background:rgba(127,127,127,.2);color:inherit;font:inherit;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chat-fm-play svg{width:16px;height:16px}
+.chat-fm-bar.is-on .chat-fm-play{background:rgba(229,72,77,.16);color:#e5484d}
+.chat-fm-audio{display:none}
+.chat-plus-menu .chat-pmenu-row em.chat-fm-pill{opacity:1;padding:2px 7px;border-radius:999px;background:#e5484d;color:#fff;font-size:10px;font-weight:750;letter-spacing:.08em}
+.chat-plus-menu.chat-pbig-fm{max-height:calc(100dvh - 160px)}
+.chat-pbig-fm .chat-pbig-hd .chat-misery-fm-logo{width:112px;height:24px}
+.chat-fm-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.chat-fm-body > .chat-fm-btn{flex:none;min-height:44px}
+.chat-fm-now{margin:0;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(127,127,127,.12);font-size:13.5px;min-width:0}
+.chat-fm-now > span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-fm-now.is-off{color:var(--muted)}
+.chat-fm-ctl{display:flex;gap:8px;flex-wrap:wrap}
+.chat-fm-btn{flex:1 1 0;min-width:84px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;background:rgba(127,127,127,.18);color:inherit;font:inherit;font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chat-fm-btn svg{width:16px;height:16px}
+.chat-fm-btn.is-primary{background:#e5484d;color:#fff}
+.chat-fm-btn.is-stop{background:rgba(229,72,77,.16);color:#e5484d}
+.chat-fm-btn:disabled{opacity:.45;cursor:default}
+.chat-fm-btn:active:not(:disabled),.chat-fm-ib:active:not(:disabled){opacity:.72}
+.chat-fm-msg{margin:0;min-height:16px;font-size:12px;color:var(--muted)}
+.chat-fm-msg:empty{display:none}
+.chat-fm-note{margin:4px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.chat-fm-list{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:2px;-webkit-overflow-scrolling:touch}
+.chat-fm-list li{display:flex;align-items:center;gap:4px;padding:4px;border-radius:12px}
+.chat-fm-list li.is-cur{background:rgba(229,72,77,.12)}
+.chat-fm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:0 4px}
+.chat-fm-t b,.chat-fm-t small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-fm-t b{font-size:13.5px;font-weight:600}
+.chat-fm-t small{font-size:11.5px;color:var(--muted)}
+.chat-fm-ib{flex:none;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:50%;padding:0;background:transparent;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.chat-fm-ib svg{width:16px;height:16px}
+.chat-fm-ib:disabled{opacity:.28;cursor:default}
+.chat-fm-list li.is-cur .chat-fm-ib[data-fm="play"]{color:#e5484d}
+@media (prefers-reduced-motion:reduce){.chat-fm-live::before{animation:none}}

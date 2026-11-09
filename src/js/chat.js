@@ -2501,7 +2501,7 @@
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span></button>'
                 : '<button type="button" role="menuitem" class="chat-pmenu-row is-locked" data-act="poll-locked" aria-disabled="true"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span><em>VIP</em></button>'
               : '') +
-            '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" aria-label="Misery FM"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><em>Soon</em></button>';
+            '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" aria-label="Misery FM"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><em' + (fmLive() ? ' class="chat-fm-pill">LIVE' : ">") + "</em></button>";
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
           m.querySelector('[data-act="music"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "music", close); });
@@ -2641,7 +2641,7 @@
   function Ie() {
     if (((Pe = 0), c))
       for (
-        var e = c.querySelector(".chat-head"),
+        var e = c.querySelector(".chat-fm-bar:not([hidden])") || c.querySelector(".chat-head"),
           t = c.querySelector(".chat-inputrow"),
           n = e ? e.getBoundingClientRect().bottom : 120,
           a = t ? t.getBoundingClientRect().top : window.innerHeight - 90,
@@ -3741,7 +3741,8 @@
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
     var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music<small>Share a song</small></span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
     if(kind === "music")m.style.height="340px";
-    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "fm" ? '<div class="chat-fm-preview"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><p>Listen to music live with others. Coming soon.</p></div>' : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    if (kind === "fm") m.style.height = fmOwner() ? "min(440px, calc(100dvh - 290px - env(safe-area-inset-top, 0px)))" : "176px";
+    m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "fm" ? "" : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="scale"><path d="M20.25 8.511C21.134 8.795 21.75 9.639 21.75 10.608v4.286c0 1.136-.847 2.1-1.98 2.193-.339.027-.679.052-1.02.072V20.25L15.75 17.25c-1.354 0-2.694-.055-4.02-.163-.298-.025-.576-.11-.825-.242M20.25 8.511A3.38 3.38 0 0 0 19.774 8.416C18.447 8.306 17.105 8.25 15.75 8.25c-1.355 0-2.697.056-4.024.166C10.595 8.51 9.75 9.473 9.75 10.608v4.286c0 .837.46 1.581 1.155 1.951M20.25 8.511V6.637c0-1.621-1.152-3.027-2.76-3.235A48.1 48.1 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402C3.402 3.611 2.25 5.016 2.25 6.637v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M12 6v6h4.5"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M2.25 18 9 11.25l4.306 4.306A11.95 11.95 0 0 1 19.12 10.038l2.741-1.22M21.86 8.817l-5.941-2.28M21.86 8.817l-2.28 5.941"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
     m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
     if (!red) {
@@ -3750,8 +3751,195 @@
       m.animate([{ width:r0.width + "px", height:r0.height + "px", opacity:.8 }, { width:r1.width + "px", height:r1.height + "px", opacity:1 }], { duration:320, easing:"cubic-bezier(.22,.8,.25,1)" });
     }
     if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); mpMusicWire(m, close); }
-    else if (kind === "fm") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Misery FM"); m.querySelector(".chat-pbig-hd b").textContent = ""; }
+    else if (kind === "fm") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Misery FM"); m.querySelector(".chat-pbig-hd b").innerHTML = '<span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span>'; fmWire(m, close); }
     else kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
+  }
+  /* Misery FM (dc, 2026-11-09): owner-run live radio. The chat DO holds the playlist, index,
+     startedAt and live flag and broadcasts { t:"fm" }; every listener derives the same position
+     from startedAt (clock offset from fm.now) and seeks there. iOS needs a tap before audio starts. */
+  var fmS = null, fmOff = 0, fmA = null, fmOn = !1, fmCur = "", fmTimer = 0, fmPanel = null, fmBusy = !1;
+  var FM_OK = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 };
+  var FM_EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac" };
+  function fmOwner() { return !!(s && s.owner); }
+  function fmLive() { return !!(fmS && fmS.live && fmS.list && fmS.list.length); }
+  function fmCalc() {
+    if (!fmLive()) return null;
+    var L = fmS.list, i = fmS.idx >= L.length ? 0 : fmS.idx, el = Date.now() + fmOff - fmS.startedAt;
+    for (var n = 0; n < 2000; n++) { var d = Math.max(1, Number(L[i].dur) || 180) * 1e3; if (el < d) break; el -= d; i = (i + 1) % L.length; }
+    return { i: i, t: Math.max(0, el / 1e3), tr: L[i] };
+  }
+  function fmTime(sec) { sec = Math.round(Number(sec) || 0); return Math.floor(sec / 60) + ":" + ("0" + (sec % 60)).slice(-2); }
+  function fmIco(k) {
+    var p = { play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>', pause: '<path d="M8 5v14M16 5v14"/>', mute: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', skip: '<path d="M6 5.5v13l9-6.5zM18 5v14"/>' }[k];
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+  }
+  function fmSet(fm) {
+    if (!fm || !Array.isArray(fm.list)) return;
+    if (fmS && fm.v < fmS.v && fm.now <= fmS.now) return;
+    fmS = fm;
+    if (fm.now) fmOff = fm.now - Date.now();
+    fmRender();
+    fmSync();
+  }
+  function fmFetch() { return E("/api/fm/state").then(function (r) { r && r.ok && fmSet(r.fm); }).catch(function () {}); }
+  function fmEl() {
+    if (fmA) return fmA;
+    fmA = document.createElement("audio");
+    fmA.className = "chat-fm-audio";
+    fmA.preload = "auto";
+    fmA.setAttribute("playsinline", "");
+    fmA.addEventListener("loadedmetadata", function () { var c0 = fmCalc(); if (c0 && c0.tr.id === fmCur) try { fmA.currentTime = c0.t; } catch (_) {} });
+    fmA.addEventListener("ended", function () { setTimeout(fmSync, 400); });
+    document.body.appendChild(fmA);
+    try {
+      var ms = navigator.mediaSession;
+      ms && ms.setActionHandler && (ms.setActionHandler("play", function () { fmListen(!0); }), ms.setActionHandler("pause", function () { fmListen(!1); }));
+    } catch (_) {}
+    return fmA;
+  }
+  function fmMeta(tr) {
+    try {
+      if (!("mediaSession" in navigator) || !window.MediaMetadata) return;
+      navigator.mediaSession.metadata = new MediaMetadata({ title: tr.title || "Misery FM", artist: tr.artist || "Misery FM", album: "Misery FM · Live", artwork: [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }] });
+    } catch (_) {}
+  }
+  function fmSync() {
+    var c0 = fmCalc();
+    if (!fmOn || !c0) {
+      if (fmA && !fmA.paused) fmA.pause();
+      if (!c0 && fmOn) { fmOn = !1; fmRender(); }
+      return;
+    }
+    var a = fmEl();
+    if (fmCur !== c0.tr.id) {
+      fmCur = c0.tr.id;
+      a.src = e + "/api/fm/audio/" + encodeURIComponent(c0.tr.id);
+      fmMeta(c0.tr);
+    } else if (a.readyState > 0 && Math.abs(a.currentTime - c0.t) > 1.5 && !(a.duration && c0.t > a.duration - 0.5)) {
+      try { a.currentTime = c0.t; } catch (_) {}
+    }
+    if (a.paused && !(a.duration && c0.t > a.duration - 0.5)) {
+      var pr = a.play();
+      pr && pr.catch && pr.catch(function (er) { if (er && er.name === "NotAllowedError") { fmOn = !1; fmRender(); } });
+    }
+    try { navigator.mediaSession && (navigator.mediaSession.playbackState = "playing"); } catch (_) {}
+  }
+  function fmListen(on) {
+    fmOn = !!on && fmLive();
+    clearInterval(fmTimer); fmTimer = 0;
+    if (fmOn) { fmTimer = setInterval(fmSync, 5e3); fmSync(); }
+    else if (fmA) { fmA.pause(); try { navigator.mediaSession && (navigator.mediaSession.playbackState = "paused"); } catch (_) {} }
+    fmRender();
+  }
+  document.addEventListener("visibilitychange", function () { "visible" === document.visibilityState && fmS && fmFetch(); });
+  function fmRender() {
+    if (c) {
+      var head = c.querySelector(".chat-head"), bar = c.querySelector(".chat-fm-bar");
+      if (head && !bar) {
+        bar = document.createElement("div");
+        bar.className = "chat-fm-bar glassbar";
+        bar.setAttribute("role", "region");
+        bar.setAttribute("aria-label", "Misery FM");
+        bar.innerHTML = '<span class="chat-fm-live">LIVE</span><span class="chat-fm-np"><b></b><span></span></span><button type="button" class="chat-fm-play"></button>';
+        bar.querySelector(".chat-fm-play").addEventListener("click", function (ev) { ev.stopPropagation(); fmListen(!fmOn); });
+        head.parentNode.insertBefore(bar, head.nextSibling);
+      }
+      if (bar) {
+        var c0 = fmCalc();
+        bar.hidden = !c0;
+        c.classList.toggle("chat-has-fm", !!c0);
+        if (c0) {
+          bar.querySelector(".chat-fm-np b").textContent = c0.tr.title || "Untitled";
+          bar.querySelector(".chat-fm-np span").textContent = c0.tr.artist ? c0.tr.artist : "";
+          var b = bar.querySelector(".chat-fm-play");
+          b.innerHTML = fmIco(fmOn ? "mute" : "play") + "<span>" + (fmOn ? "Mute" : "Listen") + "</span>";
+          b.setAttribute("aria-pressed", fmOn ? "true" : "false");
+          b.setAttribute("aria-label", fmOn ? "Mute Misery FM" : "Listen to Misery FM");
+          bar.classList.toggle("is-on", fmOn);
+        }
+      }
+    }
+    document.querySelectorAll(".chat-pmenu-row.chat-misery-fm em").forEach(function (em) { em.textContent = fmLive() ? "LIVE" : ""; em.className = fmLive() ? "chat-fm-pill" : ""; });
+    if (fmPanel && fmPanel.isConnected) fmPanelRender(fmPanel);
+  }
+  function fmPanelRender(m) {
+    var box = m.querySelector(".chat-fm-body");
+    if (!box) return;
+    var c0 = fmCalc(), L = (fmS && fmS.list) || [], own = fmOwner(), msg = box.querySelector(".chat-fm-msg"), keep = msg ? msg.textContent : "";
+    var now = c0 ? '<p class="chat-fm-now"><span class="chat-fm-live">LIVE</span><span><b>' + x(c0.tr.title || "Untitled") + "</b>" + (c0.tr.artist ? " · " + x(c0.tr.artist) : "") + "</span></p>" : '<p class="chat-fm-now is-off">Off air' + (own ? " · " + L.length + (L.length === 1 ? " song" : " songs") : "") + "</p>";
+    var h = now;
+    if (!own) {
+      h += c0 ? '<button type="button" class="chat-fm-btn ' + (fmOn ? "is-stop" : "is-primary") + '" data-fm="listen">' + fmIco(fmOn ? "mute" : "play") + (fmOn ? "Mute" : "Listen live") + "</button>" : '<p class="chat-fm-note">Nothing playing right now. When dc goes live, a bar appears at the top of chat.</p>';
+    } else {
+      h += '<div class="chat-fm-ctl">' + (c0 ? '<button type="button" class="chat-fm-btn is-stop" data-fm="stop">Stop</button><button type="button" class="chat-fm-btn" data-fm="skip">' + fmIco("skip") + "Skip</button>" : '<button type="button" class="chat-fm-btn is-primary" data-fm="live"' + (L.length ? "" : " disabled") + ">Go Live</button>") + '<button type="button" class="chat-fm-btn" data-fm="upload">Add songs</button><input class="chat-fm-file" type="file" accept=".mp3,.m4a,.aac,audio/mpeg,audio/mp4,audio/aac,audio/x-m4a" multiple hidden></div>';
+      h += '<p class="chat-fm-msg" role="status" aria-live="polite">' + x(keep) + "</p>";
+      h += L.length ? '<ol class="chat-fm-list" aria-label="Playlist">' + L.map(function (t, i) {
+        var cur = c0 && c0.i === i;
+        return '<li class="' + (cur ? "is-cur" : "") + '" data-id="' + x(t.id) + '"><button type="button" class="chat-fm-ib" data-fm="play" aria-label="Play ' + x(t.title) + ' now">' + fmIco(cur ? "pause" : "play") + '</button><span class="chat-fm-t"><b>' + x(t.title || "Untitled") + "</b><small>" + (t.artist ? x(t.artist) + " · " : "") + fmTime(t.dur) + "</small></span>" +
+          '<button type="button" class="chat-fm-ib" data-fm="up" aria-label="Move up"' + (i ? "" : " disabled") + ">" + fmIco("up") + '</button><button type="button" class="chat-fm-ib" data-fm="down" aria-label="Move down"' + (i < L.length - 1 ? "" : " disabled") + ">" + fmIco("down") + '</button><button type="button" class="chat-fm-ib" data-fm="remove" aria-label="Remove ' + x(t.title) + '">' + fmIco("x") + "</button></li>";
+      }).join("") + "</ol>" : '<p class="chat-fm-note">Add MP3 or M4A songs from your phone (25 MB max each), then tap Go Live. Everyone in chat hears the same song at the same moment.</p>';
+    }
+    box.innerHTML = h;
+  }
+  function fmCtl(body) {
+    if (fmBusy) return;
+    fmBusy = !0;
+    E("/api/fm/control", { method: "POST", body: body }).then(function (r) { fmBusy = !1; r && r.ok ? fmSet(r.fm) : fmMsg((r && r.error) || "Something went wrong"); }).catch(function () { fmBusy = !1; fmMsg("Network error. Try again."); });
+  }
+  function fmMsg(t) { var p = fmPanel && fmPanel.querySelector(".chat-fm-msg"); p ? (p.textContent = t) : mpToast(t); }
+  function fmDur(f) {
+    return new Promise(function (res) {
+      var u = URL.createObjectURL(f), a = new Audio(), done = function (v) { try { URL.revokeObjectURL(u); } catch (_) {} res(v); };
+      a.preload = "metadata";
+      a.onloadedmetadata = function () { done(isFinite(a.duration) ? a.duration : 0); };
+      a.onerror = function () { done(0); };
+      setTimeout(function () { done(0); }, 8e3);
+      a.src = u;
+    });
+  }
+  function fmUpload(files) {
+    files = [].slice.call(files || []);
+    if (!files.length) return;
+    var n = 0, next = function () {
+      var f = files.shift();
+      if (!f) { n && fmMsg("Added " + n + (n === 1 ? " song." : " songs.")); return; }
+      var ext = String(f.name || "").split(".").pop().toLowerCase(), type = FM_OK[String(f.type).toLowerCase()] ? String(f.type).toLowerCase() : FM_EXT[ext];
+      if (!type) { fmMsg(f.name + ": MP3, M4A or AAC only"); return next(); }
+      if (f.size > 25 * 1024 * 1024) { fmMsg(f.name + ": over 25 MB"); return next(); }
+      var base = String(f.name || "Untitled").replace(/\.[^.]+$/, "").replace(/_/g, " ").trim(), sp = base.split(/\s+[-–—]\s+/), artist = sp.length > 1 ? sp.shift() : "", title = sp.join(" - ") || "Untitled";
+      fmMsg("Uploading " + title + "…");
+      fmDur(f).then(function (dur) {
+        var hd = { "Content-Type": type }, did = i();
+        d && (hd.Authorization = "Bearer " + d);
+        did && (hd["X-Device-Id"] = did);
+        return fetch(e + "/api/fm/upload?title=" + encodeURIComponent(title.slice(0, 120)) + "&artist=" + encodeURIComponent(artist.slice(0, 120)) + "&dur=" + (Math.round(dur * 1e3) / 1e3), { method: "POST", headers: hd, body: f }).then(function (r) { return r.json(); });
+      }).then(function (r) {
+        if (r && r.ok) { n++; fmSet(r.fm); } else fmMsg(title + ": " + ((r && r.error) || "upload failed"));
+        next();
+      }).catch(function () { fmMsg(title + ": network error"); next(); });
+    };
+    next();
+  }
+  function fmWire(m, close) {
+    fmPanel = m;
+    var body = document.createElement("div");
+    body.className = "chat-fm-body";
+    m.appendChild(body);
+    fmPanelRender(m);
+    fmS || fmFetch();
+    body.addEventListener("change", function (ev) { if (ev.target.classList.contains("chat-fm-file")) { fmUpload(ev.target.files); ev.target.value = ""; } });
+    body.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-fm]");
+      if (!b || b.disabled) return;
+      ev.stopPropagation();
+      var k = b.getAttribute("data-fm"), li = b.closest("li"), id = li && li.getAttribute("data-id");
+      if (k === "listen") { fmListen(!fmOn); fmOn && close(); }
+      else if (k === "upload") body.querySelector(".chat-fm-file").click();
+      else if (k === "live" || k === "stop" || k === "skip") fmCtl({ action: k });
+      else if (k === "play") { var c0 = fmCalc(); c0 && c0.tr.id === id ? fmCtl({ action: "stop" }) : fmCtl({ action: "play", id: id }); }
+      else if (k === "up" || k === "down") fmCtl({ action: "move", id: id, dir: k === "up" ? -1 : 1 });
+      else if (k === "remove") confirm("Remove this song from Misery FM?") && fmCtl({ action: "remove", id: id });
+    });
   }
   function mpMusicForm() {
     return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
@@ -5232,7 +5420,8 @@
                 t.you && te((s = rcKeep(t.you)).points || 0),
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
                 t.messages && t.messages.forEach(Fe),
-                followHello && Ne(!0));
+                followHello && Ne(!0),
+                fmFetch());
             } else if ("badge" === t.t && t.user) {
               t.badge ? (T[t.user] = t.badge) : delete T[t.user];
               var i = '.chat-msg[data-user="' + CSS.escape(t.user) + '"]';
@@ -5395,6 +5584,7 @@
                     })
                     .catch(function () {}));
             } else if ("poll" === t.t && t.id && t.poll) mpPollUpdate(t.id, t.poll);
+            else if ("fm" === t.t && t.fm) fmSet(t.fm);
             else if ("reaction" === t.t && t.id)
               (De[t.id] && (De[t.id].reactions = t.reactions || {}), we(t.id, t.reactions || {}));
             else if ("forum" === t.t)
