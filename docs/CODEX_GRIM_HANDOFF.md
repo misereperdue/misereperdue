@@ -26,7 +26,7 @@ controls still apply.
 - Footer persists through search/results; idle state has a small waveform.
   Official video lifecycle and reduced motion fallback preserved. Compact
   keyboard layout hides attribution so search/results remain usable.
-- Pins: site809, chat408, SW399. Music browser checks cover footer bounds.
+- Pins: site809, chat409, SW400. Music browser checks cover footer bounds.
 
 ## 2026-11-09 — actual header height consistency
 
