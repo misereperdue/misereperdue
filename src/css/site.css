@@ -12444,7 +12444,7 @@ html.fm-lock #chat .fm-bar,html.fm-morphing #chat .fm-bar{visibility:hidden}
 }
 /* top-edge dividers */
 /* only the image changes: elements whose border is removed elsewhere (width 0/none) stay divider-free */
-.actions,.comment,#cart-total .trow.grand,.forum-sig,.dash-box > .dash-urow + .dash-urow,.ord-foot,.chat-gp-pin,.mp-pb-full,.chat-music-footer,.chat-music-branding{border-image:var(--mp-div-in) 1}
+.actions,.comment,#cart-total .trow.grand,.forum-sig,.dash-box > .dash-urow + .dash-urow,.ord-foot,.chat-gp-pin,.chat-music-footer,.chat-music-branding{border-image:var(--mp-div-in) 1}
 .chat-gp-pin,.ord-foot,.dash-box > .dash-urow + .dash-urow{border-top-width:1px}
 /* bottom-edge dividers */
 .forum-toolbar:not(.mp-tbar),.sig-bubble .forum-toolbar:not(.mp-tbar),.forum-embedbar,html[data-gprows="s3"] .chat-gp-row{border-image:var(--mp-div-in) 1}

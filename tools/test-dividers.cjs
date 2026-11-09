@@ -11,7 +11,6 @@ const T=[
  ['Cart grand total','<div id="cart-total"><div class="trow grand">Total $40</div></div>','#cart-total .trow.grand','top'],
  ['Orders footer','<div class="ord-foot">Order #12</div>','.ord-foot','top'],
  ['Dashboard rows','<div class="dash-box"><div class="dash-urow">Row A</div><div class="dash-urow">Row B</div></div>','.dash-urow + .dash-urow','top'],
- ['Profile full button','<button class="mp-pb-full">View full profile</button>','.mp-pb-full','top'],
  ['Music picker footer','<div class="chat-music-footer">Powered by Deezer</div>','.chat-music-footer','top'],
  ['Music branding','<div class="chat-music-branding">Deezer</div>','.chat-music-branding','top'],
  ['Music now-playing pin','<div style="position:relative;height:30px"><div class="chat-gp-pin" style="display:block">Pinned</div></div>','.chat-gp-pin','top'],
