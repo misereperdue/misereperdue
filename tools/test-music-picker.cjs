@@ -13,6 +13,8 @@ for(const[theme,width,height]of[['dark',390,844],['light',390,844],['dark',360,7
  await context.route('**/*',async route=>{const u=new URL(route.request().url());
   if(u.hostname==='itunes.apple.com'){
    if(u.pathname==='/lookup'){lookups.push(u.searchParams.get('id'));if(u.searchParams.get('id')==='123')await new Promise(r=>setTimeout(r,650));await route.fulfill({json:{results:u.searchParams.get('id')==='100'?[nights,other]:[nights]}});return;}
+   /* iOS Safari: Apple 301s media=music searches to musics://, which CORS blocks (SW 418 outage) */
+   if(u.searchParams.has('media')){await route.fulfill({status:301,headers:{location:'musics://itunes.apple.com'+u.pathname+u.search}});return;}
    const q=u.searchParams.get('term');searches.push(q);if(q==='slow'){await new Promise(r=>setTimeout(r,700));}if(failSearch){failSearch--;await route.fulfill({status:503,json:{error:'offline'}});return;}
    await route.fulfill({json:{results:q==='empty'?[]:q==='frank nights'?[other]:q==='fresh'?[track(126,'Fresh song','New artist')]:[nights,other,track(125,'<img src=x onerror=alert(1)>','Safe artist'),nights]}});return;
   }
