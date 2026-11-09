@@ -3987,7 +3987,7 @@
     });
   }
 
-  /* Apple Music crossfade: vector Apple mark avoids platform font/PUA glitches. */
+  /* Official Apple Music excerpt: play once, then hold the final wordmark. */
   var mpAmSeq = 0;
   function mpAmStart(card) {
     if (!card || card._mpAmOn) return;
@@ -4001,7 +4001,8 @@
       onScreen = !0,
       pageOn = !document.hidden,
       stagger = (mpAmSeq++ % 8) * 480,
-      first = !0;
+      first = !0,
+      playbackEpoch = 0;
     function clear() {
       if (timer) {
         clearTimeout(timer);
@@ -4015,17 +4016,38 @@
       }
       card.classList.remove("is-xf");
     }
-    function flip() {
+    async function flip() {
+      var epoch = ++playbackEpoch;
+      var video = card.querySelector(".chat-np-official");
+      if (!showing && video) {
+        video.classList.remove("is-playing");
+        try {
+          video.currentTime = 0;
+          // Keep the text visible until playback has a decoded frame. If iOS
+          // blocks autoplay or loading is slow, use the official final still.
+          var playing = video.play();
+          var started = await Promise.race([
+            Promise.resolve(playing).then(function () { return true; }, function () { return false; }),
+            new Promise(function (resolve) { setTimeout(function () { resolve(false); }, 1500); })
+          ]);
+          if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
+          if (started && video.requestVideoFrameCallback) {
+            await new Promise(function (resolve) {
+              var timeout = setTimeout(resolve, 250);
+              video.requestVideoFrameCallback(function () { clearTimeout(timeout); resolve(); });
+            });
+          }
+          if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
+          if (started && video.readyState >= 2) video.classList.add("is-playing");
+          else video.pause();
+        } catch (_) { video.pause(); }
+      } else if (video) video.pause();
+      if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
       showing = !showing;
+      xfEnd();
       card.classList.add("is-xf");
       card.classList.toggle("show-am", showing);
-      var video = card.querySelector(".chat-np-official");
-      if (video) {
-        if (showing) { video.currentTime = 0; var playing = video.play(); if (playing) playing.catch(function () {}); }
-        else video.pause();
-      }
-      xfEnd();
-      xfTimer = setTimeout(xfEnd, 900);
+      xfTimer = setTimeout(xfEnd, 650);
     }
     function arm() {
       clear();
@@ -4033,11 +4055,11 @@
       var wait = showing ? 2500 : first ? 5000 + stagger : 5000;
       timer = setTimeout(function () {
         first = !1;
-        flip();
-        arm();
+        flip().then(function () { if (onScreen && pageOn && card.isConnected) arm(); });
       }, wait);
     }
     function pauseOff() {
+      playbackEpoch++;
       var video = card.querySelector(".chat-np-official");
       if (video) video.pause();
       clear();
@@ -4068,13 +4090,18 @@
   function mpAmBuildMark() {
     var mark = document.createElement("span");
     mark.className = "chat-np-am-mark";
+    var poster = document.createElement("img");
+    poster.className = "chat-np-official-still";
+    poster.src = "/assets/apple-music/official-wordmark.webp?v=2";
+    poster.alt = "";
+    mark.appendChild(poster);
     var video = document.createElement("video");
     video.className = "chat-np-official";
     video.muted = true;
     video.playsInline = true;
-    video.loop = true;
-    video.preload = "none";
-    video.poster = "/assets/apple-music/official-wordmark.webp?v=1";
+    video.loop = false;
+    video.preload = "auto";
+    video.poster = "/assets/apple-music/official-wordmark.webp?v=2";
     video.src = "/assets/apple-music/official-wordmark.mp4?v=1";
     video.setAttribute("aria-hidden", "true");
     mark.appendChild(video);

@@ -18,6 +18,23 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Apple Music playback glitch
+
+Branch: `codex/music-animation-playback`.
+
+- The 1.835s official excerpt was looping during the 2.5s logo slot, visibly
+  jumping from its finished wordmark back to the opening refraction. Disable
+  looping: play once and hold the final frame until crossfading back to text.
+- Preload the small clip, keep text visible while starting playback, and reveal
+  video only after a decoded frame. Autoplay rejection/slow startup uses the
+  official final still. Epoch guards discard pending playback after leaving view.
+- Corrected transition hint cleanup (it previously removed `is-xf` immediately
+  after adding it). Still poster now uses the clean final film frame, query v2.
+- Validation: build/source verification, site checks; phone browser checks of
+  full timed playback in both themes, final-frame hold/no loop, text return,
+  and blocked-autoplay still fallback. APIs mocked; hosted release checks follow.
+- Pins: site 799, chat 401, SW 389. No backend changes.
+
 ## 2026-11-09 — action circles, shallow chevron and faded moon
 
 Branch: `codex/menu-circles-soft-moon`.
