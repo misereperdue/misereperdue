@@ -1090,6 +1090,7 @@
     if (!b) return;
     mpPBel = null;
     b._off && b._off();
+    window.MPProfiles && MPProfiles.dispose(b);
     if (fast) {
       b.remove();
       return;
@@ -1115,6 +1116,8 @@
     if (mpPBel && mpPBel._u === key && mpPBel._a === anchor) {
       if (mpPBel._fromCache && !fromCache) {
         mpPBel._fromCache = !1;
+        Object.assign(mpPBel._profile, n);
+        window.MPProfiles && MPProfiles.refresh(mpPBel, mpPBel._profile);
         try {
           var pts = mpPBel.querySelector(".mp-pb-pts b");
           if (pts && n.points != null) pts.textContent = x(n.points || 0);
@@ -1130,6 +1133,7 @@
     b.setAttribute("aria-label", mpName(n.username) + "'s profile");
     b.tabIndex = -1;
     b._u = key;
+    b._profile = n;
     b._a = anchor;
     b._fromCache = !!fromCache;
     b._openedAt = Date.now();
@@ -1210,7 +1214,16 @@
     fp.type = "button";
     fp.className = "mp-pb-full";
     fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
-    fp.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); K(n.username); });
+    fp.setAttribute("aria-expanded", "false");
+    fp.addEventListener("click", function (event) {
+      event.stopPropagation();
+      if (!window.MPProfiles) return;
+      MPProfiles.toggle(b, n, {origin:e, me:me,
+        edit:function(){mpPBclose(!0);mpProfileSheet(!0);setTimeout(function(){var field=document.querySelector('.mp-profile-editor');field&&field.scrollIntoView({block:'start',behavior:'smooth'});},350);},
+        manage:!me&&s&&s.owner?function(){mpPBclose(!0);K(n.username);}:null,
+        mask:function(w,h,ax,below){mpPBapplyMask(shp,frost,line,w,h,ax,MP_PB_STEM,below);}
+      });
+    });
     body.appendChild(fp);
     var frost = document.createElement("i");
     frost.className = "mp-pb-frost";
@@ -5853,6 +5866,9 @@
           });
     };
     I.addEventListener("blur", H);
+    window.MPProfiles && MPProfiles.editor(o, s, {origin:"https://api.misereperdue.com", api:E, search:mpMusicSearch, normalize:mpNPOut,
+      saved:function(user){s=rcKeep(user);mpPBput(s);window.MPAuthUser=s;}
+    });
     var j = document.createElement("div");
     ((j.className = "chat-pw-title"),
       (j.textContent = "Notifications"),
