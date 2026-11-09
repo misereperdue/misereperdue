@@ -60,27 +60,31 @@ async function ctx(browser,{role,theme,reduced}){
  const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|WebSocket/.test(m.text()))errors.push('console: '+m.text());});
  return {c,p,srv,errors};}
 const shot=async(p,name,clip)=>{await p.evaluate(()=>{document.querySelectorAll('.fm-sheet,.fm-sh-body,.fm-edit,.fm-edit *').forEach(b=>{if(b.scrollTop)b.scrollTop=0;});});await p.waitForTimeout(120);const f=`${OUT}/${name}.png`;await p.screenshot(clip?{path:f,clip}:{path:f});shots[name]=f;};
-const hbState=p=>p.evaluate(()=>{const b=document.querySelector('.fm-on');if(!b)return null;const r=b.getBoundingClientRect(),rc=b.querySelector('.fm-ring rect');return{cls:b.className,w:r.width,h:r.height,rw:+rc.getAttribute('width'),anim:getComputedStyle(rc).animationName,txt:b.querySelector('.fm-hb-in').innerText.replace(/\s+/g,' ')};});
+const hbState=p=>p.evaluate(()=>{const b=document.querySelector('.fm-on');if(!b)return null;const r=b.getBoundingClientRect(),o=b.querySelector(':scope>.fm-hb').getBoundingClientRect(),svg=b.querySelector('.fm-ring'),rc=svg.firstChild,sw=+rc.getAttribute('stroke-width'),rw=+rc.getAttribute('width'),rh=+rc.getAttribute('height'),rx=+rc.getAttribute('rx'),pitch=parseFloat(rc.style.strokeDasharray.split(/[ ,]+/)[1]),per=2*(rw+rh)-(8-2*Math.PI)*rx;return{cls:b.className,w:b.offsetWidth,h:b.offsetHeight,ov:[o.left-r.left,o.top-r.top,o.width-r.width,o.height-r.height].map(v=>Math.round(v*10)/10),svgw:+svg.getAttribute('width'),rw,rh,rx,sw,n:per/pitch,pitch,expR:Math.min(parseFloat(getComputedStyle(b).borderTopLeftRadius)-sw/2,rh/2,rw/2),anims:rc.getAnimations().length,dot:!!b.querySelector('.fm-hb-dot,.fm-hb-is i'),txt:b.querySelector('.fm-hb-in').innerText.replace(/\s+/g,' ')};});
+// dotted outline: covers the exact border box, half-stroke inset (never clipped), bar's own radius, dots divide the perimeter evenly
+const ringOk=(h,where)=>{assert(h,where+': no live bar');assert.deepEqual(h.ov,[0,0,0,0],where+' ring must cover the border box '+JSON.stringify(h));assert.equal(h.svgw,h.w,where);assert(Math.abs(h.rw-(h.w-h.sw))<0.01&&Math.abs(h.rh-(h.h-h.sw))<0.01,where+' rect inset');assert(Math.abs(h.n-Math.round(h.n))<0.001&&h.pitch>4&&h.pitch<8,where+' even dots '+h.n);assert(Math.abs(h.rx-h.expR)<0.01,where+' radius '+JSON.stringify(h));assert(!h.dot,where+' red dot must be gone');};
+const box=(p,sel)=>p.evaluate(s=>{const b=document.querySelector(s),r=b.getBoundingClientRect(),cs=getComputedStyle(b);return[r.left,r.top,r.width,r.height].map(v=>Math.round(v*100)/100).join('|')+'|'+cs.borderTopLeftRadius;},sel);
+const npOpen=async(p,sel,how)=>{const b0=await box(p,sel);await how();await p.waitForSelector(sel+'.is-np');await p.waitForTimeout(650);assert.equal(await box(p,sel),b0,'morph changed the bar box ('+sel+')');};
 async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);await p.waitForTimeout(900);}
 (async()=>{const browser=await pw.webkit.launch();
 // ---------- owner, dark: everything ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'owner',theme:'dark'}),S=await seed(srv),[A,B,C,D]=S.ids;
  await p.goto(ORIGIN+'/#shop');await p.waitForSelector('.nav.fm-on',{timeout:15000});
- let h=await hbState(p);assert(h&&/nav/.test(h.cls)&&Math.abs(h.rw-(h.w-3))<1.5,'shop: nav ring '+JSON.stringify(h));assert.match(h.txt,/MISERY\s*FM\s*IS LIVE/);assert.equal(h.anim,'fmDash');
+ let h=await hbState(p);ringOk(h,'shop');assert(/nav/.test(h.cls));assert.match(h.txt,/MISERY\s*FM\s*IS LIVE/);assert.equal(h.anims,1,'dots drift');
  await p.waitForTimeout(1200);await shot(p,'owner-dark-shop-collapsed',{x:0,y:0,width:390,height:200});
  await p.waitForSelector('.nav.fm-on.is-fm',{timeout:5000});await p.waitForTimeout(700);await shot(p,'owner-dark-shop-islive',{x:0,y:0,width:390,height:200});
  // other page types
- for(const pg of ['forum','journal','cart']){await openPanel(p,pg);const hs=await hbState(p);assert(hs,pg+': no live top bar');assert.equal(/chat-head/.test(hs.cls),pg!=='cart',pg+' targets '+hs.cls);}
+ for(const pg of ['forum','journal','cart']){await openPanel(p,pg);const hs=await hbState(p);ringOk(hs,pg);assert.equal(/chat-head/.test(hs.cls),pg!=='cart',pg+' targets '+hs.cls);}
  await p.evaluate(()=>{location.hash='#product';});await p.waitForTimeout(700);assert(await hbState(p),'product: no live top bar');
  // chat: morph the chat header
- await openPanel(p,'journal');await p.waitForSelector('#chat .fm-bar:not([hidden])');
- await p.locator('#journal .chat-head .chat-title').tap();await p.waitForSelector('.fm-morph');await p.waitForTimeout(600);
- const m=await p.evaluate(()=>{const e=document.querySelector('.fm-morph'),r=e.getBoundingClientRect();return{t:e.querySelector('.fm-m-t').textContent,img:!!e.querySelector('.fm-m-art img'),top:r.top,h:r.height,away:!!document.querySelector('.chat-head.fm-away'),pg:e.querySelector('.fm-pbar i').style.transform};});
- assert.equal(m.t,'Blinding Lights');assert(m.img&&m.away&&m.h>120,'morph '+JSON.stringify(m));await shot(p,'owner-dark-morphed',{x:0,y:0,width:390,height:360});
- await p.locator('.fm-morph [data-a="collapse"]').tap();await p.waitForTimeout(600);assert.equal(await p.locator('.fm-morph').count(),0);assert.equal(await p.locator('.chat-head.fm-away').count(),0);
+ await openPanel(p,'journal');await p.waitForSelector('#journal .chat-head.fm-on');assert.equal(await p.locator('#chat .fm-bar').count(),0,'separate now playing pill must be gone');
+ await npOpen(p,'#journal .chat-head',()=>p.locator('#journal .chat-head .chat-title').tap());
+ const m=await p.evaluate(()=>{const b=document.querySelector('#journal .chat-head'),e=b.querySelector('.fm-hb-np');return{t:e.querySelector('.fm-m-t').textContent,img:!!e.querySelector('.fm-m-art img'),op:getComputedStyle(e).opacity,title:getComputedStyle(b.querySelector('.chat-title')).opacity,pg:e.querySelector('.fm-pbar i').style.transform,btns:[...e.querySelectorAll('[data-a]')].map(x=>x.dataset.a).join()};});
+ assert.equal(m.t,'Blinding Lights');assert(m.img&&m.op==='1'&&m.title==='0'&&/scaleX/.test(m.pg)&&m.btns==='collapse,sheet,listen','morph '+JSON.stringify(m));await shot(p,'owner-dark-morphed',{x:0,y:0,width:390,height:260});
+ {const b0=await box(p,'#journal .chat-head');await p.locator('#journal .chat-head [data-a="collapse"]').tap();await p.waitForTimeout(600);assert.equal(await p.locator('.is-np').count(),0);assert.equal(await box(p,'#journal .chat-head'),b0,'back changed the bar box');}
  await shot(p,'owner-dark-back',{x:0,y:0,width:390,height:260});
  // studio via morph → sheet
- await p.locator('#journal .chat-head .chat-title').tap();await p.waitForSelector('.fm-morph [data-a="sheet"]');await p.locator('.fm-morph [data-a="sheet"]').tap();
+ await npOpen(p,'#journal .chat-head',()=>p.locator('#journal .chat-head .chat-title').tap());await p.locator('#journal .chat-head [data-a="sheet"]').tap();
  await p.waitForSelector('.fm-sheet .fm-tabs');await p.waitForTimeout(700);
  // listen: plays the right song at the right spot
  await p.locator('.fm-sheet [data-a="listen"]').tap();
@@ -91,7 +95,7 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await shot(p,'owner-dark-now');
  // pause for everyone → audio pauses; resume from the same spot
  await p.locator('.fm-sheet [data-a="pause"]').tap();await p.waitForTimeout(500);let st=await srv.r.fmGet();assert(st.paused);const pos=st.pos;
- assert.equal((await au()).paused,true,'audio did not pause');assert.equal(await p.locator('#chat .fm-bar .fm-live b').textContent(),'PAUSED');
+ assert.equal((await au()).paused,true,'audio did not pause');assert.equal(await p.locator('.fm-sheet .fm-paused').count(),1,'sheet shows paused');
  await p.waitForTimeout(2200);await p.locator('.fm-sheet [data-a="resume"]').tap();await p.waitForTimeout(1200);a1=await au();assert(!a1.paused&&Math.abs(a1.t-pos)<2.5,'resume spot '+pos+' '+JSON.stringify(a1));
  // seek (scrub) → audio jumps
  await p.evaluate(()=>{const s=document.querySelector('.fm-scrub');s.value=150;s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(1200);
@@ -153,10 +157,10 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await p.evaluate(()=>{const s=document.querySelector('.fm-sheet input[data-a="xf"]');s.value=3;s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(400);assert.equal((await srv.r.fmGet()).xf,3);
  const later=new Date(Date.now()+3*3600e3),pad=n=>String(n).padStart(2,'0');await p.fill('.fm-sched-in',`${later.getFullYear()}-${pad(later.getMonth()+1)}-${pad(later.getDate())}T${pad(later.getHours())}:${pad(later.getMinutes())}`);
  await p.locator('.fm-sheet [data-a="sched"]').tap();await p.waitForTimeout(400);assert(Math.abs((await srv.r.fmGet()).sched-later.getTime())<61e3,'schedule');
- assert.match(await p.locator('.fm-stats').innerText(),/Listening now[\s\S]*1[\s\S]*Songs played/);await shot(p,'owner-dark-station');
+ assert.match(await p.locator('.fm-stats').innerText(),/Listening[\s\S]*1[\s\S]*Played/);await shot(p,'owner-dark-station');
  // stop (confirm) → every live bar off immediately
  await p.locator('.fm-sheet [data-a="stop"]').last().tap();await p.locator('.fm-cf [data-c="1"]').tap();await p.waitForTimeout(500);
- assert.equal((await srv.r.fmGet()).live,false);assert.equal(await p.locator('.fm-on').count(),0,'top bar still live');assert.equal(await p.locator('#chat .fm-bar:not([hidden])').count(),0);
+ assert.equal((await srv.r.fmGet()).live,false);assert.equal(await p.locator('.fm-on').count(),0,'top bar still live');assert.equal(await p.locator('.fm-hb').count(),0);
  assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.fm-audio')].every(a=>a.paused)),true);
  // go live again with confirm from the Station tab
  await p.locator('.fm-sheet [data-a="golive"]').tap();await p.locator('.fm-cf [data-c="1"]').tap();await p.waitForTimeout(500);assert((await srv.r.fmGet()).live);
@@ -164,23 +168,23 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
 // ---------- owner, light ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'owner',theme:'light'});await seed(srv);
  await p.goto(ORIGIN+'/#shop');await p.waitForSelector('.nav.fm-on');await p.waitForTimeout(1200);await shot(p,'owner-light-shop-collapsed',{x:0,y:0,width:390,height:200});
- await p.locator('.fm-hb-dot').tap();await p.waitForSelector('.fm-morph');await p.waitForTimeout(600);await shot(p,'owner-light-morphed',{x:0,y:0,width:390,height:360});
- await p.locator('.fm-morph [data-a="sheet"]').tap();await p.waitForSelector('.fm-sheet .fm-tabs');await p.waitForTimeout(700);await shot(p,'owner-light-now');
+ ringOk(await hbState(p),'light shop');await p.waitForSelector('.nav.fm-on.is-fm',{timeout:6000});await npOpen(p,'.nav',()=>p.locator('.nav').tap({position:{x:60,y:20}}));await shot(p,'owner-light-morphed',{x:0,y:0,width:390,height:200});
+ await p.locator('.nav [data-a="sheet"]').tap();await p.waitForSelector('.fm-sheet .fm-tabs');await p.waitForTimeout(700);await shot(p,'owner-light-now');
  await p.locator('.fm-sheet [data-tab="queue"]').tap();await p.waitForTimeout(300);await shot(p,'owner-light-queue');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'owner',theme:'light',passed:'shop live bar, dot opens morph, studio now/queue'}));await c.close();}
 // ---------- listeners ----------
 for(const theme of ['dark','light']){const {c,p,srv,errors}=await ctx(browser,{role:'listener',theme}),S=await seed(srv);
- await p.goto(ORIGIN+'/#journal');await p.waitForSelector('#chat .fm-bar:not([hidden])',{timeout:15000});await p.waitForTimeout(500);
- const hs=await hbState(p);assert(hs&&/chat-head/.test(hs.cls));
- const bar=await p.evaluate(()=>{const b=document.querySelector('#chat .fm-bar'),h=document.querySelector('#journal .chat-head').getBoundingClientRect(),r=b.getBoundingClientRect();return{top:r.top,hb:h.bottom,txt:b.innerText,pg:b.querySelector('.fm-bar-pg i').style.transform};});
- assert(bar.top>=bar.hb&&/LIVE[\s\S]*Blinding Lights/.test(bar.txt)&&/scaleX\(0\.2/.test(bar.pg),'chat bar '+JSON.stringify(bar));
+ await p.goto(ORIGIN+'/#journal');await p.waitForSelector('#journal .chat-head.fm-on',{timeout:15000});await p.waitForTimeout(500);
+ const hs=await hbState(p);ringOk(hs,'chat');assert(/chat-head/.test(hs.cls));
+ assert.equal(await p.locator('#chat .fm-bar').count(),0,'separate now playing pill must be gone');
+
  await shot(p,`listener-${theme}-chat-collapsed`,{x:0,y:0,width:390,height:260});
  // morph from the chat header → Listen inside → back
- await p.locator('#journal .chat-head .chat-title').tap();await p.waitForSelector('.fm-morph');await p.waitForTimeout(600);await shot(p,`listener-${theme}-morphed`,{x:0,y:0,width:390,height:360});
- await p.locator('.fm-morph [data-a="listen"]').tap();await p.waitForFunction(()=>[...document.querySelectorAll('.fm-audio')].some(a=>!a.paused&&a.currentTime>30),null,{timeout:8000});
- await p.locator('.fm-morph [data-a="collapse"]').tap();await p.waitForTimeout(500);await shot(p,`listener-${theme}-back`,{x:0,y:0,width:390,height:260});
+ await npOpen(p,'#journal .chat-head',()=>p.locator('#journal .chat-head .chat-title').tap());await shot(p,`listener-${theme}-morphed`,{x:0,y:0,width:390,height:260});
+ await p.locator('#journal .chat-head [data-a="listen"]').tap();await p.waitForFunction(()=>[...document.querySelectorAll('.fm-audio')].some(a=>!a.paused&&a.currentTime>30),null,{timeout:8000});
+ {const b0=await box(p,'#journal .chat-head');await p.locator('#journal .chat-head [data-a="collapse"]').tap();await p.waitForTimeout(600);assert.equal(await box(p,'#journal .chat-head'),b0);}await p.waitForTimeout(500);await shot(p,`listener-${theme}-back`,{x:0,y:0,width:390,height:260});
  // sheet: listener view, no owner controls
- await p.locator('#chat .fm-bar-np').tap();await p.waitForSelector('.fm-sheet');await p.waitForTimeout(800);
+ await npOpen(p,'#journal .chat-head',()=>p.locator('#journal .chat-head .chat-title').tap());await p.locator('#journal .chat-head [data-a="sheet"]').tap();await p.waitForSelector('.fm-sheet');await p.waitForTimeout(800);
  const v=await p.evaluate(()=>{const s=document.querySelector('.fm-sheet');return{tabs:!!s.querySelector('.fm-tabs'),owner:s.querySelectorAll('[data-a="pause"],[data-a="skip"],.fm-scrub,[data-a="edit"],.fm-file').length,up:s.querySelectorAll('.fm-list:not(.fm-hist) li').length,hist:s.querySelectorAll('.fm-hist li').length,note:(s.querySelector('.fm-note')||{}).textContent,img:!!s.querySelector('.fm-cover img'),viz:s.querySelector('.fm-viz').getAttribute('data-src'),lc:s.querySelector('.fm-lc').textContent};});
  assert(!v.tabs&&v.owner===0&&v.up===3&&v.hist>=3&&v.img&&/midnight/.test(v.note)&&/1 listening/.test(v.lc),'listener sheet '+JSON.stringify(v));assert.match(v.viz,/map/,'iOS visualizer should follow the loudness map');
  // owner pauses from another device → this listener pauses; seek → this listener jumps
@@ -189,21 +193,21 @@ for(const theme of ['dark','light']){const {c,p,srv,errors}=await ctx(browser,{r
  const t2=await p.evaluate(()=>{const a=[...document.querySelectorAll('.fm-audio')].find(x=>!x.paused);return a&&a.currentTime;});assert(t2&&Math.abs(t2-121)<2.5,'listener seek sync '+t2);
  // owner edits the song → listeners see it live (title + E badge in sheet, bar)
  await S.ctl({action:'edit',id:S.ids[0],title:'Blinding Lights (Remix)',explicit:true});await p.waitForTimeout(500);
- assert.equal(await p.locator('.fm-sheet .fm-ttl b').innerText(),'Blinding Lights (Remix)');assert.equal(await p.locator('.fm-sheet .fm-ttl .fm-e').count(),1);assert.equal(await p.locator('#chat .fm-bar .fm-e').count(),1);
+ assert.equal(await p.locator('.fm-sheet .fm-ttl b').innerText(),'Blinding Lights (Remix)');assert.equal(await p.locator('.fm-sheet .fm-ttl .fm-e').count(),1);
  await p.locator('.fm-sheet [data-a="react"]').nth(1).tap();await p.waitForTimeout(250);await shot(p,`listener-${theme}-sheet`);
  // off air: other pages turn off immediately
  await p.locator('.fm-sheet [data-a="close"]').tap();await p.waitForTimeout(500);await openPanel(p,'shop');assert(await hbState(p));
  await S.ctl({action:'stop'});await p.waitForTimeout(400);assert.equal(await p.locator('.fm-on').count(),0,'shop still live after stop');
  for(const pg of ['forum','journal','cart']){await openPanel(p,pg);assert.equal(await p.locator('.fm-on').count(),0,pg+' live while off');}
- assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'listener',theme,passed:'chat bar + mini progress, morph+listen+back, sheet (no owner controls, up next, history, DJ note, cover, map visualizer), pause/seek sync from owner, live edit + E badge, reaction, stop clears every page'}));await c.close();}
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'listener',theme,passed:'no separate pill, even dotted ring, in-bar morph+listen+back (box locked), sheet (no owner controls, up next, history, DJ note, cover, map visualizer), pause/seek sync from owner, live edit + E badge, reaction, stop clears every page'}));await c.close();}
 // ---------- reduced motion ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'listener',theme:'dark',reduced:true});await seed(srv);
  await p.goto(ORIGIN+'/#forum');await p.waitForSelector('.fm-on');await p.waitForTimeout(5000);
- const h=await hbState(p);assert(h&&!/is-fm/.test(h.cls)&&h.anim==='none','reduced motion must stay static '+JSON.stringify(h));assert(await p.locator('.fm-hb-dot').isVisible());
+ const h=await hbState(p);assert(h&&!/is-fm/.test(h.cls)&&h.anims===0,'reduced motion must stay static '+JSON.stringify(h));ringOk(h,'reduced');
  await shot(p,'reduced-globe',{x:0,y:0,width:390,height:200});
- await p.locator('.fm-hb-dot').tap();await p.waitForSelector('.fm-morph');const an=await p.evaluate(()=>document.querySelector('.fm-morph').getAnimations().map(a=>Object.keys(a.effect.getKeyframes()[0]).filter(k=>!/offset|easing|composite|computedOffset/.test(k)).join()));
- assert.deepEqual(an,['opacity'],'reduced motion morph should only crossfade '+an);
- await p.locator('.fm-morph [data-a="sheet"]').tap();await p.waitForSelector('.fm-sheet');await p.locator('.fm-sheet [data-a="react"]').first().tap();
+ await npOpen(p,'#forum .chat-head',()=>p.locator('#forum .chat-head .chat-title').tap());const an=await p.evaluate(()=>{const n=document.querySelector('.fm-on .fm-hb-np');return{tp:getComputedStyle(n).transitionProperty,tf:getComputedStyle(n).transform};});
+ assert(an.tp==='opacity'&&an.tf==='none','reduced motion morph should only crossfade '+JSON.stringify(an));
+ await p.locator('.fm-on [data-a="sheet"]').tap();await p.waitForSelector('.fm-sheet');await p.locator('.fm-sheet [data-a="react"]').first().tap();
  assert.equal(await p.evaluate(()=>getComputedStyle(document.querySelector('.fm-float')).animationName),'fmFade');
  assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'listener',theme:'dark',reduced:true,passed:'static ring + dot, no crossfade cycling, morph = opacity only, reactions fade'}));await c.close();}
 await browser.close();fs.writeFileSync(OUT+'/shots.json',JSON.stringify(shots,null,1));})().catch(e=>{console.error(e);process.exit(1)});

@@ -18,6 +18,37 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Misery FM live top bar, t514u (Grim)
+
+- **Pill and dot removed:** the separate chat now-playing pill (`.fm-bar`) is gone (`chatBar()` only
+  cleans up old nodes), and so are the red corner dot and the "IS LIVE" dot.
+- **Morph stays inside the bar:** `openMorph()` locks the bar's width and height inline, adds `.is-np`,
+  crossfades the bar's own children out and `.fm-hb-np` in (transform+opacity; reduced motion = opacity only).
+  The now-playing layer has back, cover+title/artist+E (opens the full sheet), Listen, and a 2px progress line.
+  The bar's box (left/top/width/height/radius) is asserted unchanged in tests.
+- **Dotted outline:** `ring()` sizes the overlay to the bar's border box (negative border insets) and
+  draws an SVG rect half a stroke inside the edge with the bar's computed radius. The dash pitch is
+  perimeter/round(perimeter/6), so the dots divide the outline evenly. The dots drift via WAAPI, and are
+  static under reduced motion.
+- **Opening it:** tap the bar while it shows MISERY FM IS LIVE, or tap any non-interactive part of it
+  (e.g. the Chat/Globe title).
+
+## 2026-11-09 — Misery FM compact layout (Grim)
+
+dc: "Keep it more compact instead of the new card look." The FM sheet is now a + menu style panel
+(`.fm-sheet.fm-c`) using the Music picker's exact metrics.
+- **Panel:** width min(360px, 100vw−24px), padding 16/13/13, radius 20, gap 11. The header has a 17px
+  "Misery FM" title, a 10px live/listener subtitle and a 30px round close button.
+- **Rows and labels:** 9px red uppercase section labels; rows use the + menu divider gradient.
+- **Placement:** above the composer on Chat (`place()` anchors to `.chat-plus`'s row), bottom-centred on other
+  pages, and never taller than the space below the top bar (`--fm-mh`). It grows out of the + button
+  (scale+opacity; reduced motion = opacity).
+- **Now tab:** a now-playing row (50px cover with a live/paused dot, title/artist/E, edit, 36px Listen), an 18px
+  visualizer strip, a 3px progress/scrub line, the DJ note, a 32px icon transport (shuffle, prev, restart,
+  pause 40px, skip, repeat, Stop pill), reactions, then Up Next and Recently played (40px art rows).
+- **Owner tabs:** a small segmented control. Queue is a pill "Add songs" with dense 46px rows; Station has
+  compact fields and a 3×2 stats grid. Every feature and test hook (`data-a`, class names) is unchanged.
+
 ## 2026-11-09 17:00 ET — dc: Grim keeps shipping live (override of PR #51 rule 8)
 
 dc decided at 4:55 PM ET on Nov 9: Grim keeps shipping his requests live (merge plus Pages/Worker deploy

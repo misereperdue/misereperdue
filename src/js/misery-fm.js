@@ -57,7 +57,7 @@
     next: '<path d="M6 6v12l8.5-6zM18 6v12"/>', prev: '<path d="M18 6v12L9.5 12zM6 6v12"/>', restart: '<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4"/>',
     shuffle: '<path d="M4 7h3.5c4.5 0 4.5 10 9 10H20M4 17h3.5c1.6 0 2.6-1.2 3.4-2.8M13.1 9.8C13.9 8.2 14.9 7 16.5 7H20M17.5 4.5 20 7l-2.5 2.5M17.5 14.5 20 17l-2.5 2.5"/>',
     repeat: '<path d="M5 11V9a3 3 0 0 1 3-3h11M16 3l3 3-3 3M19 13v2a3 3 0 0 1-3 3H5M8 21l-3-3 3-3"/>',
-    x: '<path d="M6 6l12 12M18 6 6 18"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
+    x: '<path d="M6 6l12 12M18 6 6 18"/>', back: '<path d="M15 18l-6-6 6-6"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
     grip: '<path d="M8 7h8M8 12h8M8 17h8"/>', plus: '<path d="M12 5v14M5 12h14"/>', ear: '<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.6"/><path d="M10 9.5a2 2 0 0 1 4 0"/>',
     next1: '<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', expand: '<path d="M7 10l5 5 5-5"/>'
   };
@@ -266,29 +266,50 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true"><rect/></svg><span class="fm-hb-in" aria-hidden="true">' + LOGO + '<span class="fm-hb-is"><i></i>IS LIVE</span></span><span class="fm-hb-dot" role="button" tabindex="0" aria-label="Misery FM is live: open now playing"><i></i></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true">' + LOGO + '<span class="fm-hb-is">IS LIVE</span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
+      bar.setAttribute("aria-description", "Misery FM is live. Tap the bar for now playing.");
       bar.addEventListener("click", barTap, !0);
-      o.querySelector(".fm-hb-dot").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMorph(bar); } });
+      o.querySelector(".fm-hb-np").addEventListener("click", onAct);
       hb = bar;
     }
-    // size the dotted ring to the bar (SVG rect needs pixel geometry for Safari)
-    var r = bar.getBoundingClientRect(), svg = bar.querySelector(".fm-ring"), rect = svg && svg.firstChild;
-    if (rect && (svg._w !== r.width || svg._h !== r.height)) {
-      svg._w = r.width; svg._h = r.height;
-      var rad = Math.min(parseFloat(getComputedStyle(bar).borderTopLeftRadius) || 22, r.height / 2);
-      svg.setAttribute("viewBox", "0 0 " + r.width + " " + r.height);
-      rect.setAttribute("x", 1.5); rect.setAttribute("y", 1.5); rect.setAttribute("width", Math.max(0, r.width - 3)); rect.setAttribute("height", Math.max(0, r.height - 3));
-      rect.setAttribute("rx", Math.max(0, rad - 1.5));
-    }
-    if (!phT && !RM.matches) phT = setInterval(function () { hb && hb.classList.toggle("is-fm"); }, 4e3);
+    ring(bar);
+    if (!phT && !RM.matches) phT = setInterval(function () { hb && !morph && hb.classList.toggle("is-fm"); }, 4e3);
     if (RM.matches && phT) { clearInterval(phT); phT = 0; hb && hb.classList.remove("is-fm"); }
+  }
+  /* Dotted outline on the bar's own rounded shape. The rect sits half a stroke inside the edge (never
+     clipped), uses the bar's real corner radius, and the dot pitch divides the perimeter exactly, so
+     the dots are evenly spaced all the way round with no seam or doubled dot. */
+  function ring(bar) {
+    var svg = bar.querySelector(":scope > .fm-hb > .fm-ring"), rect = svg && svg.firstChild;
+    if (!rect) return;
+    var w = bar.offsetWidth, h = bar.offsetHeight;
+    if (!w || !h || (svg._w === w && svg._h === h && svg._rm === RM.matches)) return;
+    svg._rm = RM.matches;
+    svg._w = w; svg._h = h;
+    var sw = 1.5, i = sw / 2, rw = w - sw, rh = h - sw, cs = getComputedStyle(bar);
+    var rad = Math.max(0, Math.min((parseFloat(cs.borderTopLeftRadius) || h / 2) - i, rh / 2, rw / 2));
+    var per = 2 * (rw + rh) - (8 - 2 * Math.PI) * rad, n = Math.max(8, Math.round(per / 6)), pitch = per / n;
+    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+    svg.setAttribute("width", w); svg.setAttribute("height", h);
+    rect.setAttribute("x", i); rect.setAttribute("y", i); rect.setAttribute("width", rw); rect.setAttribute("height", rh);
+    rect.setAttribute("rx", rad); rect.setAttribute("ry", rad);
+    rect.setAttribute("stroke-width", sw);
+    rect.style.strokeDasharray = "0 " + pitch.toFixed(4);
+    // cover the bar's border box exactly (the overlay is positioned inside the border otherwise)
+    var o = svg.parentNode, bt = parseFloat(cs.borderTopWidth) || 0, bl = parseFloat(cs.borderLeftWidth) || 0;
+    o.style.top = o.style.bottom = -bt + "px"; o.style.left = o.style.right = -bl + "px";
+    o.style.setProperty("--fm-r", rad + "px");
+    if (rect._an) { rect._an.cancel(); rect._an = null; }
+    if (!RM.matches && rect.animate) rect._an = rect.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -pitch }], { duration: 1600, iterations: Infinity });
   }
   function undeco(bar) {
     if (!bar) return;
+    if (morph === bar) closeMorph(!0);
     bar._fm = 0;
-    bar.classList.remove("fm-on", "is-fm", "fm-away");
+    bar.classList.remove("fm-on", "is-fm", "is-np");
+    bar.removeAttribute("aria-description");
     var o = bar.querySelector(":scope > .fm-hb");
     o && o.remove();
     if (bar._fmPos) { bar.style.position = ""; bar._fmPos = 0; }
@@ -297,97 +318,69 @@
   }
   function barTap(e) {
     if (!live()) return;
-    var bar = e.currentTarget, hit = e.target.closest(".fm-hb-dot, button, a, input, select, textarea, [role=button], [role=tab], label");
-    if (bar.classList.contains("is-fm") || (hit && hit.classList.contains("fm-hb-dot")) || !hit) {
+    var bar = e.currentTarget;
+    if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
+    var hit = e.target.closest("button, a, input, select, textarea, [role=button], [role=tab], label");
+    if (bar.classList.contains("is-fm") || !hit) {
       e.preventDefault(); e.stopPropagation();
       openMorph(bar);
     }
   }
 
-  /* ---------- morph: the top bar itself grows into a now-playing bar (FLIP, transform + opacity) ---------- */
+  /* ---------- morph: the bar keeps its exact shape and size; only its content crossfades
+     into now playing (transform + opacity) and back ---------- */
   function morphHTML() {
     var c = calc();
-    if (!c) return "";
-    return '<div class="fm-m-in"><div class="fm-m-row">' + art(c.tr, "fm-m-art") +
-      '<div class="fm-m-tx"><span class="fm-m-live"><i></i>' + (c.paused ? "PAUSED" : "LIVE") + '</span><b class="fm-m-t">' + esc(c.tr.title || "Untitled") + "</b>" + E(c.tr) + '<small class="fm-m-a">' + sub(c.tr) + "</small></div>" +
-      '<button type="button" class="fm-m-x" data-a="collapse" aria-label="Back to the top bar">' + ico("x") + "</button></div>" +
-      '<div class="fm-m-pg"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-pbar"><i style="transform:scaleX(' + (c.t / c.d).toFixed(4) + ')"></i></span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div>" +
-      (S.note ? '<p class="fm-m-note">' + esc(S.note) + "</p>" : "") +
-      '<div class="fm-m-act"><button type="button" class="fm-btn fm-listen' + (on ? " is-on" : "") + '" data-a="listen">' + ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen") + "</span></button>" +
-      '<button type="button" class="fm-btn" data-a="sheet">' + (owner() ? "Studio" : "Open player") + '</button><span class="fm-lc">' + ico("ear") + (S.listeners || 0) + "</span></div></div>";
+    if (!c) return '<div class="fm-m-in"></div>';
+    return '<div class="fm-m-in"><button type="button" class="fm-m-x" data-a="collapse" aria-label="Back">' + ico("back") + "</button>" +
+      '<button type="button" class="fm-m-np" data-a="sheet" aria-label="Open the Misery FM player">' + art(c.tr, "fm-m-art") +
+      '<span class="fm-m-tx"><span class="fm-m-1"><b class="fm-m-t">' + esc(c.tr.title || "Untitled") + "</b>" + E(c.tr) + '</span><small class="fm-m-a">' + esc(c.tr.artist || (c.paused ? "Paused" : "Misery FM")) + "</small></span></button>" +
+      '<button type="button" class="fm-m-l fm-listen' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '" aria-label="' + (on ? "Mute" : "Listen live") + '">' + ico(on ? "mute" : "play") + "</button>" +
+      '<span class="fm-m-pg fm-pbar" aria-hidden="true"><i style="transform:scaleX(' + (c.t / c.d).toFixed(4) + ')"></i></span></div>';
   }
   function openMorph(bar) {
     if (morph || !live()) return;
     bar = bar || hb || topBar();
-    if (!bar) return;
+    if (!bar || !bar._fm) return;
     getMe();
-    var r = bar.getBoundingClientRect(), cs = getComputedStyle(bar), w = Math.min(innerWidth - 16, Math.max(r.width, 340));
-    morph = document.createElement("div");
-    morph.className = "fm-morph";
-    morph.setAttribute("role", "dialog");
-    morph.setAttribute("aria-label", "Misery FM now playing");
-    morph.style.cssText = "left:" + Math.round((innerWidth - w) / 2) + "px;top:" + Math.round(r.top) + "px;width:" + Math.round(w) + "px";
-    morph.innerHTML = morphHTML();
-    morph._bar = bar;
-    document.body.appendChild(morph);
-    morph.addEventListener("click", onAct);
-    var r2 = morph.getBoundingClientRect();
-    bar.classList.add("fm-away");
-    if (RM.matches) morph.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
-    else {
-      morph.animate([{ transform: "translate(" + (r.left - r2.left) + "px," + (r.top - r2.top) + "px) scale(" + r.width / r2.width + "," + r.height / r2.height + ")", borderRadius: cs.borderTopLeftRadius, opacity: 0.9 }, { transform: "none", opacity: 1 }], { duration: 440, easing: "cubic-bezier(.2,.85,.25,1)" });
-      var inn = q(".fm-m-in", morph);
-      inn && inn.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 0, offset: 0.3 }, { opacity: 1, transform: "none" }], { duration: 440, easing: "ease-out" });
-    }
+    var np = bar.querySelector(":scope > .fm-hb > .fm-hb-np");
+    np.innerHTML = morphHTML();
+    np.setAttribute("role", "group");
+    np.setAttribute("aria-label", "Misery FM now playing");
+    morph = bar;
+    // lock the bar's box so nothing about its shape, size or position can move while morphed
+    bar.style.width = bar.offsetWidth + "px"; bar.style.height = bar.offsetHeight + "px";
+    bar.classList.remove("is-fm");
+    bar.classList.add("is-np");
     setTimeout(function () { document.addEventListener("pointerdown", outside, !0); }, 0);
     document.addEventListener("keydown", escKey);
+    window.addEventListener("resize", closeMorphNow);
     document.documentElement.classList.add("fm-morphing");
   }
+  function closeMorphNow() { closeMorph(!0); }
   function outside(e) { if (morph && !morph.contains(e.target) && !(sheet && sheet.contains(e.target))) closeMorph(); }
   function escKey(e) { if (e.key === "Escape") { if (edit) closeEdit(); else if (sheet) closeSheet(); else if (morph) closeMorph(); } }
   function closeMorph(instant) {
     if (!morph) return;
-    var m = morph, bar = m._bar;
+    var bar = morph;
     morph = null;
     document.documentElement.classList.remove("fm-morphing");
     document.removeEventListener("pointerdown", outside, !0);
-    var done = function () { m.remove(); bar && bar.classList.remove("fm-away"); deco(); };
-    if (instant || !bar || !bar.isConnected) return done();
-    var r = bar.getBoundingClientRect(), r2 = m.getBoundingClientRect();
-    bar.classList.remove("fm-away");
-    var an = RM.matches ? m.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160 })
-      : m.animate([{ transform: "none", opacity: 1 }, { transform: "translate(" + (r.left - r2.left) + "px," + (r.top - r2.top) + "px) scale(" + r.width / r2.width + "," + r.height / r2.height + ")", borderRadius: getComputedStyle(bar).borderTopLeftRadius, opacity: 0 }], { duration: 360, easing: "cubic-bezier(.3,0,.2,1)" });
-    an.onfinish = done;
+    window.removeEventListener("resize", closeMorphNow);
+    bar.classList.remove("is-np");
+    var np = bar.querySelector(":scope > .fm-hb > .fm-hb-np"), fin = function () { if (!bar.classList.contains("is-np")) { np && (np.innerHTML = ""); bar.style.width = ""; bar.style.height = ""; } };
+    if (instant) fin(); else setTimeout(fin, 380);
+    deco();
   }
 
   /* ---------- chat live bar under the chat header ---------- */
   function chatBar() {
-    var c = q("#chat"), head = c && c.querySelector(".chat-head"), bar = c && c.querySelector(".fm-bar");
-    if (!c || !head) return;
-    var cc = calc();
-    if (!bar && cc) {
-      bar = document.createElement("div");
-      bar.className = "fm-bar glassbar";
-      bar.setAttribute("role", "region");
-      bar.setAttribute("aria-label", "Misery FM live");
-      bar.innerHTML = '<span class="fm-live"><i></i><b>LIVE</b></span><button type="button" class="fm-bar-np" data-a="sheet" aria-label="Open Misery FM"><b></b><span class="fm-bar-e"></span><small></small></button><button type="button" class="fm-bar-btn" data-a="listen"></button><span class="fm-bar-pg" aria-hidden="true"><i></i></span>';
-      bar.addEventListener("click", onAct);
-      head.parentNode.insertBefore(bar, head.nextSibling);
-    }
-    if (!bar) return;
-    bar.hidden = !cc;
-    c.classList.toggle("chat-has-fm", !!cc);
-    if (!cc) return;
-    q(".fm-live b", bar).textContent = cc.paused ? "PAUSED" : "LIVE";
-    bar.classList.toggle("is-paused", cc.paused);
-    q(".fm-bar-np b", bar).textContent = cc.tr.title || "Untitled";
-    q(".fm-bar-e", bar).innerHTML = E(cc.tr);
-    q(".fm-bar-np small", bar).textContent = cc.tr.artist || "";
-    var b = q(".fm-bar-btn", bar), k = on ? "on" : "off";
-    if (b._k !== k) { b._k = k; b.innerHTML = ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen") + "</span>"; b.setAttribute("aria-label", on ? "Mute Misery FM" : "Listen to Misery FM"); b.setAttribute("aria-pressed", on ? "true" : "false"); }
-    bar.classList.toggle("is-on", on);
-    q(".fm-bar-pg i", bar).style.transform = "scaleX(" + (cc.t / cc.d).toFixed(4) + ")";
+    // dc (t514u): no separate now-playing pill; the live top bar is the only surface
+    var c = q("#chat"), bar = c && c.querySelector(".fm-bar");
+    bar && bar.remove();
+    c && c.classList.remove("chat-has-fm");
   }
+
 
   /* ---------- floating reactions (everyone sees them) ---------- */
   function float(e) {
@@ -467,32 +460,39 @@
       return li(h, '<span class="fm-ago">' + (ago < 60 ? ago + "m" : Math.round(ago / 60) + "h") + "</span>");
     }).join("") + "</ol>";
   }
+  /* Compact layout (dc, 2026-11-09: "keep it more compact"): same panel, header, rows and dividers as the + menu's Music picker. */
   function heroHTML(c, o) {
     if (!c) {
-      return '<div class="fm-hero is-off"><div class="fm-cover">' + art(null, "fm-big") + '<canvas class="fm-viz" aria-hidden="true"></canvas></div><div class="fm-ttl"><b>Off air</b></div><div class="fm-sub">' +
-        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + "</div>" + (S && S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
+      return '<div class="fm-hero is-off"><div class="fm-np"><div class="fm-cover">' + art(null, "fm-big") + '</div><div class="fm-np-tx"><div class="fm-ttl"><b>Off air</b></div><div class="fm-sub">' +
+        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + '</div></div></div><canvas class="fm-viz" aria-hidden="true"></canvas>' +
+        (S && S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
     }
     var t = c.tr;
-    return '<div class="fm-hero"><div class="fm-cover">' + art(t, "fm-big") + '<canvas class="fm-viz" aria-hidden="true"></canvas>' + (c.paused ? '<span class="fm-paused">' + ico("pause") + "Paused</span>" : '<span class="fm-onair"><i></i>LIVE</span>') + "</div>" +
-      '<div class="fm-ttl"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + (o ? '<button type="button" class="fm-ib" data-a="edit" data-id="' + esc(t.id) + '" aria-label="Edit this song">' + ico("edit") + "</button>" : "") + "</div>" +
-      '<div class="fm-sub">' + (sub(t) || "Misery FM") + "</div>" + (t.genre ? '<span class="fm-chip">' + esc(t.genre) + "</span>" : "") + (t.notes ? '<p class="fm-tnote">' + esc(t.notes) + "</p>" : "") +
-      (S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") +
+    return '<div class="fm-hero"><div class="fm-np"><div class="fm-cover">' + art(t, "fm-big") + (c.paused ? '<span class="fm-paused" aria-label="Paused">' + ico("pause") + "</span>" : '<span class="fm-onair" aria-label="Live"><i></i></span>') + "</div>" +
+      '<div class="fm-np-tx"><div class="fm-ttl"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + "</div>" +
+      '<div class="fm-sub">' + (sub(t) || "Misery FM") + "</div>" + (t.genre ? '<span class="fm-chip">' + esc(t.genre) + "</span>" : "") + "</div>" +
+      (o ? '<button type="button" class="fm-ib" data-a="edit" data-id="' + esc(t.id) + '" aria-label="Edit this song">' + ico("edit") + "</button>" : "") +
+      '<button type="button" class="fm-ib fm-listen' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '" aria-label="' + (on ? "Mute" : "Listen live") + '">' + ico(on ? "mute" : "play") + "</button></div>" +
+      '<canvas class="fm-viz" aria-hidden="true"></canvas>' +
       '<div class="fm-prog">' + (o ? '<input type="range" class="fm-scrub" min="0" max="' + Math.floor(c.d) + '" step="1" value="' + Math.floor(c.t) + '" aria-label="Seek the station">' : '<span class="fm-pbar fm-pbar-l"><i></i></span>') +
-      '<div class="fm-times"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div></div></div>";
+      '<div class="fm-times"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div></div>" +
+      (t.notes ? '<p class="fm-tnote">' + esc(t.notes) + "</p>" : "") +
+      (S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
   }
   function listenHTML() {
-    return '<div class="fm-lis"><button type="button" class="fm-btn fm-listen fm-wide' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '">' + ico(on ? "mute" : "play") + "<span>" + (on ? "Mute" : "Listen live") + "</span></button>" +
-      (VOLOK ? '<label class="fm-vol">' + ico("vol") + '<input type="range" min="0" max="1" step="0.01" value="' + vol + '" data-a="vol" aria-label="Volume"></label>' : "") + "</div>";
+    return VOLOK && on ? '<label class="fm-vol">' + ico("vol") + '<input type="range" min="0" max="1" step="0.01" value="' + vol + '" data-a="vol" aria-label="Volume"></label>' : "";
   }
   function nowHTML() {
     var c = calc(), o = owner(), h = heroHTML(c, o);
     if (o) {
       if (c) {
-        h += '<div class="fm-tp" role="group" aria-label="Station controls"><button type="button" class="fm-ib fm-lg" data-a="prev" aria-label="Previous">' + ico("prev") + '</button><button type="button" class="fm-ib fm-lg" data-a="restart" aria-label="Restart song">' + ico("restart") + "</button>" +
+        h += '<div class="fm-tp" role="group" aria-label="Station controls">' +
+          '<button type="button" class="fm-ib fm-tog' + (S.shuffle ? " is-on" : "") + '" data-a="shuffle" aria-pressed="' + !!S.shuffle + '" aria-label="Shuffle">' + ico("shuffle") + "</button>" +
+          '<button type="button" class="fm-ib fm-lg" data-a="prev" aria-label="Previous">' + ico("prev") + "</button>" +
+          '<button type="button" class="fm-ib fm-lg" data-a="restart" aria-label="Restart song">' + ico("restart") + "</button>" +
           '<button type="button" class="fm-pp" data-a="' + (c.paused ? "resume" : "pause") + '" aria-label="' + (c.paused ? "Resume the station" : "Pause the station for everyone") + '">' + ico(c.paused ? "play" : "pause") + "</button>" +
-          '<button type="button" class="fm-ib fm-lg" data-a="skip" aria-label="Skip">' + ico("next") + "</button></div>" +
-          '<div class="fm-modes"><button type="button" class="fm-tog' + (S.shuffle ? " is-on" : "") + '" data-a="shuffle" aria-pressed="' + !!S.shuffle + '">' + ico("shuffle") + "<span>Shuffle</span></button>" +
-          '<button type="button" class="fm-tog' + (S.repeat !== "off" ? " is-on" : "") + '" data-a="repeat" aria-label="Repeat: ' + S.repeat + '">' + ico("repeat") + (S.repeat === "one" ? '<em class="fm-one">1</em>' : "") + "<span>" + { all: "Repeat all", one: "Repeat one", off: "Repeat off" }[S.repeat] + "</span></button>" +
+          '<button type="button" class="fm-ib fm-lg" data-a="skip" aria-label="Skip">' + ico("next") + "</button>" +
+          '<button type="button" class="fm-ib fm-tog' + (S.repeat !== "off" ? " is-on" : "") + '" data-a="repeat" aria-label="Repeat: ' + S.repeat + '">' + ico("repeat") + (S.repeat === "one" ? '<em class="fm-one">1</em>' : "") + "</button>" +
           '<button type="button" class="fm-tog fm-stop" data-a="stop">Stop</button></div>';
       } else h += '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S && S.list.length ? "" : " disabled") + ">Go Live</button></div>" + (S && S.list.length ? "" : '<p class="fm-hint">Add songs in Queue first.</p>');
     }
@@ -505,8 +505,7 @@
   }
   function queueHTML() {
     var c = calc(), L = S.list, Q = S.q || [];
-    var h = '<div class="fm-upl"><button type="button" class="fm-btn fm-primary fm-wide" data-a="add">' + ico("plus") + "<span>Add songs</span></button>" +
-      '<p class="fm-hint">MP3, M4A or AAC up to 25 MB each. Title, artist, album, year, genre, explicit, cover art and length are read from the file.</p>' +
+    var h = '<div class="fm-upl"><button type="button" class="fm-add" data-a="add">' + ico("plus") + "<span>Add songs</span><small>MP3, M4A, AAC · 25 MB</small></button>" +
       (ups.length ? '<ul class="fm-ups">' + ups.map(function (u) { return '<li class="' + (u.err ? "is-err" : u.done ? "is-done" : "") + '"><span><b>' + esc(u.name) + "</b><small>" + esc(u.st) + '</small></span><span class="fm-upbar"><i style="transform:scaleX(' + (u.p || 0).toFixed(3) + ')"></i></span></li>'; }).join("") + "</ul>" : "") + "</div>";
     if (!L.length) return h + '<p class="fm-empty">No songs yet.</p>';
     var tot = L.reduce(function (s, t) { return s + durOf(t); }, 0);
@@ -532,7 +531,7 @@
       (S.sched ? '<p class="fm-hint">Goes live ' + esc(when(S.sched)) + " automatically.</p>" : "") +
       '<label class="fm-f"><span>Crossfade <b class="fm-xf-v">' + (S.xf || 0) + ' s</b></span><input type="range" min="0" max="6" step="0.5" value="' + (S.xf || 0) + '" data-a="xf" aria-label="Crossfade seconds"></label>' +
       '<h3 class="fm-h">Session</h3><dl class="fm-stats">' +
-      [["Listening now", S.listeners || 0], ["Peak", st.peak || 0], ["Songs played", st.played || 0], ["Reactions", st.reacts || 0], ["On air for", up], ["Library", S.list.length + " songs"]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
+      [["Listening", S.listeners || 0], ["Peak", st.peak || 0], ["Played", st.played || 0], ["Reactions", st.reacts || 0], ["On air", up], ["Library", S.list.length]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" +
       '<div class="fm-row">' + (live() ? '<button type="button" class="fm-btn fm-danger fm-wide" data-a="stop">Stop the station</button>' : '<button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>") + "</div>";
   }
   /* Placeholder until the first state arrives (or if the station API is down), so the sheet is never blank. */
@@ -556,6 +555,28 @@
     if (v) { lockScroll.y = window.scrollY; b.style.top = -lockScroll.y + "px"; de.classList.add("fm-lock"); }
     else { de.classList.remove("fm-lock"); b.style.top = ""; window.scrollTo(0, lockScroll.y || 0); }
   }
+  function lcText() {
+    var c = calc();
+    if (!live()) return S && S.sched ? "Offline · scheduled" : "Offline";
+    return (c && c.paused ? "Paused" : '<i class="fm-lc-dot"></i>Live') + " · " + ((S && S.listeners) || 0) + " listening";
+  }
+  /* Same spot as the + menu panels: above the composer on Chat, bottom-centred elsewhere. */
+  function place() {
+    if (!sheet) return;
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight, w = Math.min(360, vw - 24), plus = null;
+    document.querySelectorAll(".chat-plus").forEach(function (b) { var r = b.getBoundingClientRect(); if (r.width && r.bottom > 0 && r.top < vh) plus = b; });
+    var row = plus && plus.parentNode, r = row && row.getBoundingClientRect(), left, bottom;
+    if (r && r.width) { left = Math.max(12, Math.min(r.left, vw - w - 12)); bottom = Math.max(12, vh - r.top + 8); sheet.classList.add("is-anch"); }
+    else { left = (vw - w) / 2; bottom = 0; sheet.classList.remove("is-anch"); }
+    sheet.style.setProperty("--fm-l", left + "px");
+    sheet.style.setProperty("--fm-w", w + "px");
+    sheet.style.setProperty("--fm-b", bottom + "px");
+    // never grow over the page's top bar (like the Music panel, which stays below the chat header)
+    var top = 0;
+    document.querySelectorAll(".panel.on .chat-head, .nav").forEach(function (h) { var hr = h.getBoundingClientRect(); if (hr.height && hr.bottom > top && hr.bottom < vh / 2) top = hr.bottom; });
+    var room = vh - (bottom || 12) - top - 10 - (bottom ? 0 : (parseFloat(getComputedStyle(sheet).getPropertyValue("--fm-sab")) || 0));
+    sheet.style.setProperty("--fm-mh", Math.max(260, Math.min(560, room)) + "px");
+  }
   function openSheet(t) {
     if (t) tab = t;
     if (morph) closeMorph(!0);
@@ -571,8 +592,9 @@
       sheet.setAttribute("aria-modal", "true");
       sheet.setAttribute("aria-label", "Misery FM");
       sheet._back = back;
-      sheet.innerHTML = '<div class="fm-grab" aria-hidden="true"></div><div class="fm-sh-hd">' + LOGO + '<span class="fm-lc" aria-live="polite"></span><button type="button" class="fm-ib" data-a="close" aria-label="Close">' + ico("x") + "</button></div>" +
-        (owner() ? '<div class="fm-tabs glassbar" role="tablist" aria-label="Studio">' + [["now", "Now"], ["queue", "Queue"], ["station", "Station"]].map(function (x) { return '<button type="button" role="tab" class="fm-tab" data-a="tab" data-tab="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>" : "") +
+      sheet.className = "fm-sheet fm-c";
+      sheet.innerHTML = '<div class="fm-sh-hd"><div class="fm-hd-t"><b>Misery <span>FM</span></b><span class="fm-lc" aria-live="polite"></span></div><button type="button" class="fm-ib fm-x" data-a="close" aria-label="Close">' + ico("x") + "</button></div>" +
+        (owner() ? '<div class="fm-tabs" role="tablist" aria-label="Studio">' + [["now", "Now"], ["queue", "Queue"], ["station", "Station"]].map(function (x) { return '<button type="button" role="tab" class="fm-tab" data-a="tab" data-tab="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>" : "") +
         '<div class="fm-sh-body"></div>';
       document.body.appendChild(back);
       document.body.appendChild(sheet);
@@ -590,8 +612,11 @@
       document.addEventListener("keydown", escKey);
       renderSheet();
       paint();
-      if (RM.matches) { back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 }); sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 }); }
-      else { back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); sheet.animate([{ transform: "translateY(100%)" }, { transform: "none" }], { duration: 420, easing: "cubic-bezier(.2,.85,.25,1)" }); }
+      place();
+      window.addEventListener("resize", place);
+      // grows out of the + button like the other + menu panels
+      if (RM.matches) sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
+      else sheet.animate([{ transform: "scale(.7)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "cubic-bezier(.3,1.25,.5,1)" });
       var cl = q('[data-a="close"]', sheet);
       cl && cl.focus({ preventScroll: !0 });
     });
@@ -602,8 +627,8 @@
     sheet = null;
     closeEdit(!0);
     document.removeEventListener("keydown", escKey);
-    var an = RM.matches ? sh.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 }) : sh.animate([{ transform: getComputedStyle(sh).transform === "none" ? "none" : getComputedStyle(sh).transform }, { transform: "translateY(105%)" }], { duration: 300, easing: "cubic-bezier(.4,0,.6,1)" });
-    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: RM.matches ? 150 : 300 });
+    window.removeEventListener("resize", place);
+    var an = RM.matches ? sh.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 }) : sh.animate([{ transform: getComputedStyle(sh).transform === "none" ? "none" : getComputedStyle(sh).transform, opacity: 1 }, { transform: "scale(.7)", opacity: 0 }], { duration: 170, easing: "cubic-bezier(.4,0,.6,1)" });
     an.onfinish = function () { sh.remove(); back.remove(); };
     lockScroll(!1);
   }
@@ -1037,7 +1062,7 @@
     menuPill();
     if (morph) { var inn = q(".fm-m-in", morph); if (inn) inn.outerHTML = morphHTML(); }
     renderSheet();
-    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = live() ? ico("ear") + (S.listeners || 0) + " listening" : ""); }
+    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
     if (live() && !tickT) tickT = setInterval(tick, 1e3);
     if (!live() && tickT && !sheet) { clearInterval(tickT); tickT = 0; }
   }
@@ -1050,7 +1075,7 @@
       if (!sc || !sc._busy) { e1 && (e1.textContent = fmt(c.t)); e2 && (e2.textContent = "-" + fmt(c.d - c.t)); }
       pb && (pb.style.transform = "scaleX(" + (c.t / c.d).toFixed(4) + ")");
     });
-    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = live() ? ico("ear") + (S.listeners || 0) + " listening" : ""); }
+    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
     if (morph) { var ml = q(".fm-lc", morph); ml && (ml.innerHTML = ico("ear") + ((S && S.listeners) || 0)); }
     chatBar();
   }
