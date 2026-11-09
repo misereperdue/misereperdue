@@ -3648,7 +3648,6 @@
     }
     function invalidate() { epoch++; clearTimeout(timer); if (controller) controller.abort(); list.removeAttribute("aria-busy"); }
     function render(tracks) {
-      if(branding)branding.querySelector("video").pause();
       list.innerHTML = "";
       var seen = Object.create(null);
       tracks = tracks.filter(function (track) {
