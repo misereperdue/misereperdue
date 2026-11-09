@@ -177,18 +177,19 @@
     );
   }
   // Events deliver instant updates; polling also covers signed-out visitors,
-  // missed broadcasts and suspended mobile sockets. Never remount an editor.
-  var liveRequest = null;
+  // missed broadcasts and suspended mobile sockets. Background reply updates preserve editors.
+  var liveRequest = null, threadReadIssued = 0, threadReadApplied = 0;
   function liveBlocked() {
     var active = document.activeElement;
     var selection = window.getSelection && window.getSelection();
     return !t || document.hidden || !document.querySelector("#forum.on") ||
-      (r.name !== "list" && r.name !== "thread") || $() ||
+      (r.name !== "list" && r.name !== "thread") || (r.name === "list" && $()) ||
+      (r.name === "thread" && !!t.querySelector(".forum-skel")) ||
       window.__mpPullToPost || t.querySelector(".is-pulling, .is-settle, .forum-view-enter") ||
-      (active && t.contains(active) && active.matches("input, textarea, select, [contenteditable=true]")) ||
-      !!(selection && !selection.isCollapsed && t.contains(selection.anchorNode)) ||
+      (r.name === "list" && active && t.contains(active) && active.matches("input, textarea, select, [contenteditable=true]")) ||
+      (r.name === "list" && !!(selection && !selection.isCollapsed && t.contains(selection.anchorNode))) ||
       !!document.querySelector(".chat-pmenu, .forum-copy-dialog-back") ||
-      Array.from(t.querySelectorAll("video, audio")).some(function (m) { return !m.paused; });
+      (r.name === "list" && Array.from(t.querySelectorAll("video, audio")).some(function (m) { return !m.paused; }));
   }
   function livePaint(render) {
     // Keep the first visible card/reply at the same screen position if rows
@@ -213,6 +214,7 @@
   function liveSync() {
     if (liveRequest || liveBlocked()) return liveRequest;
     var route = r.name, id = r.threadId, token = g();
+    var readEpoch = route === "thread" ? ++threadReadIssued : 0;
     var url = route === "thread" ? "/api/forum/thread/" + encodeURIComponent(id) : "/api/forum/threads";
     liveRequest = y(url).then(function (e) {
       if (!e || !e.ok || liveBlocked() || route !== r.name || id !== r.threadId || token !== g()) return;
@@ -222,11 +224,11 @@
         s = "list";
         livePaint(ye);
       } else if (route === "thread" && e.thread) {
+        if (readEpoch < threadReadApplied) return;
+        threadReadApplied = readEpoch;
         // Locked responses must go through the existing access-control view.
         if (e.locked) { we(); return; }
-        if (JSON.stringify(e.thread) === JSON.stringify(b.thread)) return;
-        b.thread = e.thread;
-        livePaint(ke);
+        applyThreadUpdate(e.thread);
       }
     }).catch(function () {
       // Keep the current content on transient failures; next tick catches up.
@@ -2253,7 +2255,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           }
           (u +=
             '<div class="forum-thread-foot">' +
-            lastHtml +
+            '<span class="forum-thread-connector" aria-hidden="true"></span>' + lastHtml +
             (canManage
               ? '<button type="button" class="forum-thread-more" data-more="' +
                 w(t.id) +
@@ -2913,10 +2915,16 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     panel.addEventListener("touchend", onEnd, { passive: true, signal: sig, capture: true });
     panel.addEventListener("touchcancel", function () { tracking = 0; locked = 0; springBack(); }, { passive: true, signal: sig, capture: true });
   }
+  function threadReadCurrent(id, token, epoch) {
+    return r.name === "thread" && r.threadId === id && token === g() && epoch >= threadReadApplied;
+  }
   function we() {
+    var threadId = r.threadId, token = g(), readEpoch = ++threadReadIssued;
     killPullToPost();
     ((t.querySelector(".forum-skel") ? 0 : mpSkel(!0)),
-      y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
+      y("/api/forum/thread/" + encodeURIComponent(threadId)).then(function (e) {
+        if (!threadReadCurrent(threadId, token, readEpoch)) return;
+        threadReadApplied = readEpoch;
         if (e.ok && e.thread)
           if (e.locked) {
             var r = e.privateLock ? "🔒" : "⭐",
@@ -2946,7 +2954,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           } else ((b.thread = e.thread), ke());
         else mpState("Thread not found.", null, !0);
       }, function () {
-        mpState("Couldn’t load this thread.", we, !0);
+        if (threadReadCurrent(threadId, token, readEpoch)) mpState("Couldn’t load this thread.", we, !0);
       }));
   }
   // Update an already-mounted .forum-poll from thread.poll without touching the
@@ -3059,6 +3067,725 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           total + " vote" + (1 === total ? "" : "s") + (g() ? "" : " · Sign in to vote");
     } catch (err) {}
   }
+  function enhancePostLinks(root) {
+          if (!g()) return;
+          var e = root.querySelectorAll(".forum-post-body"),
+            r = {};
+          e.forEach(function (e) {
+            e.querySelectorAll('a[href^="http"]').forEach(function (t) {
+              var n = t.getAttribute("href");
+              if (
+                n &&
+                !r[n] &&
+                !t.querySelector("img") &&
+                -1 === n.indexOf("/api/media/") &&
+                ((r[n] = !0), !e.querySelector('.forum-linkcard[href="' + CSS.escape(n) + '"]'))
+              ) {
+                var a = document.createElement("div");
+                e.appendChild(a);
+                var o = function (e) {
+                  if (e && e.title) {
+                    var r = (t.textContent || "").trim();
+                    if (/^https?:\/\//i.test(r))
+                      ((t.style.display = "none"),
+                        (d = t.closest("p")) &&
+                          !d.textContent.trim() &&
+                          (d.style.display = "none"));
+                    var o = document.createElement("a");
+                    o.className = "forum-linkcard";
+                    var i = e.url || n;
+                    if (/^https?:\/\//i.test(i)) {
+                      if (
+                        ((o.href = i),
+                        (o.target = "_blank"),
+                        (o.rel = "noopener noreferrer"),
+                        e.thumb && /^https?:\/\//i.test(e.thumb))
+                      ) {
+                        var l = document.createElement("img");
+                        ((l.src = e.thumb),
+                          (l.loading = "lazy"),
+                          (l.alt = ""),
+                          (l.referrerPolicy = "no-referrer"),
+                          o.appendChild(l));
+                      }
+                      var s = document.createElement("span");
+                      s.className = "forum-linkcard-tx";
+                      var d,
+                        c = document.createElement("span");
+                      ((c.className = "forum-linkcard-t"),
+                        (c.textContent = e.title),
+                        ((d = document.createElement("span")).className = "forum-linkcard-p"),
+                        (d.textContent = e.provider || ""),
+                        s.appendChild(c),
+                        s.appendChild(d),
+                        o.appendChild(s),
+                        a.replaceWith(o));
+                    } else a.remove();
+                  } else a.remove();
+                };
+                xe[n]
+                  ? o(xe[n])
+                  : y("/api/unfurl?url=" + encodeURIComponent(n))
+                      .then(function (e) {
+                        var t = e && e.ok ? e.embed : null;
+                        ((xe[n] = t), o(t));
+                      })
+                      .catch(function () {
+                        a.remove();
+                      });
+              }
+            });
+          });
+  }
+
+  function enhancePostCarousels(root) {
+      try {
+        !(function () {
+          function e(e) {
+            if (!e || 1 !== e.nodeType) return null;
+            if ("IMG" === e.tagName) return [e];
+            if (e.classList && e.classList.contains("forum-linkcard")) return null;
+            if (
+              "P" !== e.tagName &&
+              "DIV" !== e.tagName &&
+              "FIGURE" !== e.tagName &&
+              "A" !== e.tagName
+            )
+              return null;
+            for (var t = [], r = e.childNodes, n = 0; n < r.length; n++) {
+              var a = r[n];
+              if (3 !== a.nodeType) {
+                if (1 !== a.nodeType) return null;
+                if ("IMG" !== a.tagName) {
+                  if ("BR" !== a.tagName) {
+                    if ("A" === a.tagName) {
+                      for (var o = a.childNodes, i = null, l = 0; l < o.length; l++) {
+                        var s = o[l];
+                        if (3 !== s.nodeType) {
+                          if (1 !== s.nodeType || "IMG" !== s.tagName || null !== i) {
+                            i = !1;
+                            break;
+                          }
+                          i = s;
+                        } else if (s.textContent.trim()) {
+                          i = !1;
+                          break;
+                        }
+                      }
+                      if (i) {
+                        t.push(i);
+                        continue;
+                      }
+                      return null;
+                    }
+                    return null;
+                  }
+                } else t.push(a);
+              } else if (a.textContent.trim()) return null;
+            }
+            return t.length ? t : null;
+          }
+          function r(e) {
+            if (!e || 1 !== e.nodeType) return !1;
+            if ("P" !== e.tagName && "DIV" !== e.tagName) return !1;
+            for (var t = e.childNodes, r = 0; r < t.length; r++) {
+              var n = t[r];
+              if (3 !== n.nodeType) {
+                if (1 !== n.nodeType || "BR" !== n.tagName) return !1;
+              } else if (n.textContent.trim()) return !1;
+            }
+            return !0;
+          }
+          root.querySelectorAll(".forum-post-body").forEach(function (t) {
+            for (var n = Array.prototype.slice.call(t.children), a = 0; a < n.length;) {
+              for (var o = [], i = []; a < n.length;) {
+                var l = n[a];
+                if (o.length && r(l)) (i.push(l), a++);
+                else {
+                  var s = e(l);
+                  if (!s) break;
+                  (o.push({ el: l, imgs: s }), a++);
+                }
+              }
+              var d = 0;
+              if (
+                (o.forEach(function (e) {
+                  d += e.imgs.length;
+                }),
+                d >= 2)
+              ) {
+                var c = document.createElement("div");
+                c.className = "forum-carousel";
+                var u = document.createElement("div");
+                ((u.className = "forum-carousel-track"),
+                  c.appendChild(u),
+                  t.insertBefore(c, o[0].el),
+                  o.forEach(function (e) {
+                    e.imgs.forEach(function (e) {
+                      var t = document.createElement("div");
+                      ((t.className = "forum-carousel-slide"), t.appendChild(e), u.appendChild(t));
+                    });
+                  }),
+                  o.forEach(function (e) {
+                    -1 === e.imgs.indexOf(e.el) && e.el.remove();
+                  }),
+                  i.forEach(function (e) {
+                    e.remove();
+                  }),
+                  Ee(c, u, d));
+              } else a++;
+            }
+          });
+        })();
+      } catch (e) {
+        window.console && console.warn("carousel", e);
+      }
+  }
+
+  function replyMarkup(thread) {
+    var children = Object.create(null), replies = thread.replies || [];
+    replies.forEach(function (reply) {
+      if (reply.parentId) (children[reply.parentId] || (children[reply.parentId] = [])).push(reply);
+    });
+    return replies.filter(function (reply) { return !reply.parentId; }).map(function (reply) {
+      return renderReply(reply, 0, children);
+    }).join("");
+  }
+  function replyPayload(reply, thread) {
+    var me = O && String(O.username).toLowerCase();
+    var participated = me && (thread.replies || []).some(function (r) { return String(r.author).toLowerCase() === me; });
+    return JSON.stringify(reply) + "|" + [me || "", !!(O && O.member), !!Ne, !!participated].join(":");
+  }
+  function stampReplyNodes(root, thread) {
+    var byId = Object.create(null);
+    (thread.replies || []).forEach(function (reply) { byId[reply.id] = reply; });
+    root.querySelectorAll(".forum-reply-node[data-reply-key]").forEach(function (node) {
+      node._replyPayload = replyPayload(byId[node.getAttribute("data-reply-key")], thread);
+    });
+    var op = root.querySelector(".forum-op");
+    if (op) op._threadContentStamp = replyPayload({ content: thread.content, rich: thread.rich }, thread);
+  }
+  function replyProtected(node) {
+    if (!node) return false;
+    var selection = window.getSelection && getSelection();
+    return !!node.querySelector("textarea, .forum-editor") || node.contains(document.activeElement) ||
+      !!(selection && !selection.isCollapsed && node.contains(selection.anchorNode)) ||
+      Array.from(node.querySelectorAll("video, audio")).some(function (media) { return !media.paused; });
+  }
+  function animateReply(node, removing) {
+    var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || !node.animate || node.getBoundingClientRect().bottom < 110) {
+      if (removing) node.remove();
+      return;
+    }
+    if (node._replyAnimation) {
+      if (removing && node._replyRemoving) return;
+      var old = node._replyAnimation;
+      node._replyAnimation = null;
+      old.cancel();
+    }
+    node._replyRemoving = !!removing;
+    var height = node.getBoundingClientRect().height;
+    node.style.overflow = "hidden";
+    var frames = [{ height: "0px", opacity: 0, transform: "translateY(8px)" },
+      { height: height + "px", opacity: 1, transform: "translateY(0)" }];
+    if (removing) frames.reverse();
+    var animation = node.animate(frames, { duration: removing ? 180 : 260, easing: "cubic-bezier(.2,.7,.2,1)" });
+    node._replyAnimation = animation;
+    animation.finished.then(function () {
+      if (node._replyAnimation !== animation) return;
+      node._replyAnimation = null;
+      node.style.overflow = "";
+      if (removing) node.remove();
+    }).catch(function () {});
+  }
+  var replyReconcilePending = false;
+  function reconcileReplies(host, fresh) {
+    var old = Object.create(null);
+    Array.from(host.children).forEach(function (node) {
+      if (node.hasAttribute("data-reply-key")) old[node.getAttribute("data-reply-key")] = node;
+    });
+    var cursor = host.firstElementChild;
+    Array.from(fresh.children).forEach(function (next) {
+      var key = next.getAttribute("data-reply-key");
+      if (!key) return;
+      var node = old[key];
+      delete old[key];
+      if (!node) {
+        node = next;
+        host.insertBefore(node, cursor);
+        S(node); L(node); wireReplyControls(node); enhancePostLinks(node); enhancePostCarousels(node);
+        animateReply(node, false);
+      } else {
+        if (node._replyRemoving && node._replyAnimation) {
+          var animation = node._replyAnimation;
+          node._replyAnimation = null;
+          node._replyRemoving = false;
+          animation.cancel();
+          node.style.overflow = "";
+        }
+        if (node !== cursor) host.insertBefore(node, cursor);
+        var article = node.firstElementChild;
+        if (node._replyPayload !== next._replyPayload && replyProtected(article)) replyReconcilePending = true;
+        if (node._replyPayload !== next._replyPayload && !replyProtected(article)) {
+          article.replaceWith(next.firstElementChild);
+          node._replyPayload = next._replyPayload;
+          S(node); L(node); wireReplyControls(node); enhancePostLinks(node); enhancePostCarousels(node);
+        }
+        var tail = node.querySelector(":scope > .forum-thread-tail");
+        var nextTail = next.querySelector(":scope > .forum-thread-tail");
+        if (nextTail && tail) {
+          reconcileReplies(tail.querySelector(":scope > .forum-children"), nextTail.querySelector(":scope > .forum-children"));
+          var button = tail.querySelector(":scope > .forum-show-replies");
+          var nextButton = nextTail.querySelector(":scope > .forum-show-replies");
+          if (button && nextButton && button.getAttribute("data-showreplies") === nextButton.getAttribute("data-showreplies") &&
+              button.getAttribute("data-hidereplies") === nextButton.getAttribute("data-hidereplies")) {
+            if (button.textContent !== nextButton.textContent) button.textContent = nextButton.textContent;
+          } else {
+            if (button) button.remove();
+            if (nextButton) tail.appendChild(nextButton);
+          }
+        } else if (nextTail) {
+          node.appendChild(nextTail);
+          S(nextTail); L(nextTail); wireReplyControls(nextTail); enhancePostLinks(nextTail); enhancePostCarousels(nextTail);
+          animateReply(nextTail, false);
+        } else if (tail) {
+          if (replyProtected(tail)) replyReconcilePending = true;
+          else animateReply(tail, true);
+        }
+        wireReplyControls(node);
+      }
+      cursor = node.nextElementSibling;
+    });
+    Object.keys(old).forEach(function (key) {
+      if (!replyProtected(old[key])) animateReply(old[key], true);
+      else replyReconcilePending = true;
+    });
+  }
+  var replyScrollIntent = 0, replyScrollEpoch = 0;
+  ["touchstart", "touchmove", "wheel", "pointerdown", "keydown"].forEach(function (name) {
+    document.addEventListener(name, function (event) {
+      if (name === "keydown" && event.target.closest && event.target.closest("input, textarea, [contenteditable=true]")) return;
+      replyScrollIntent++;
+    }, { passive: true });
+  });
+  function preserveReplyAnchor(anchor, offset, intent, epoch, id) {
+    // The forum opts out of native scroll anchoring. Follow an existing card
+    // through the insertion animation, stopping immediately on user input.
+    var until = performance.now() + 320;
+    function keep() {
+      if (!anchor.isConnected || epoch !== replyScrollEpoch || intent !== replyScrollIntent ||
+          r.name !== "thread" || r.threadId !== id || !document.querySelector("#forum.on")) return;
+      var node = anchor.closest(".forum-reply-node");
+      if (node && node._replyRemoving) return;
+      var delta = anchor.getBoundingClientRect().top - offset;
+      if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+      if (performance.now() < until) requestAnimationFrame(keep);
+    }
+    keep();
+  }
+  function patchReplies(thread, preserveScroll) {
+    var host = t && t.querySelector(".forum-replies");
+    if (!host) return;
+    var viewStamp = replyPayload(thread.replies || [], thread) + JSON.stringify(r.showNested);
+    if (host._replyViewStamp === viewStamp && !replyReconcilePending) return;
+    replyReconcilePending = false;
+    var epoch = ++replyScrollEpoch, intent = replyScrollIntent;
+    var composer = t.querySelector(".forum-replybox");
+    var anchor = preserveScroll !== false && window.scrollY > 8 &&
+      ((composer && composer.contains(document.activeElement) && composer.getBoundingClientRect().top < innerHeight && composer) ||
+       Array.from(host.querySelectorAll("[data-reply-id]")).find(function (node) {
+         return node.getBoundingClientRect().top >= 110 && !node.closest(".forum-reply-node")._replyRemoving;
+       }));
+    var offset = anchor && anchor.getBoundingClientRect().top;
+    var fresh = document.createElement("div");
+    fresh.innerHTML = replyMarkup(thread);
+    gateForumContent(fresh, thread);
+    stampReplyNodes(fresh, thread);
+    reconcileReplies(host, fresh);
+    host._replyViewStamp = viewStamp;
+    if (anchor) preserveReplyAnchor(anchor, offset, intent, epoch, r.threadId);
+    B();
+  }
+  function applyThreadUpdate(thread) {
+    b.thread = thread;
+    // Keep the original post, playback, scroll position and editor mounted.
+    var op = t && t.querySelector(".forum-op");
+    var body = op && op.querySelector(".forum-post-body");
+    var stamp = replyPayload({ content: thread.content, rich: thread.rich }, thread);
+    if (body && op._threadContentStamp !== stamp && !replyProtected(op)) {
+      body.innerHTML = G(thread);
+      gateForumContent(body, thread);
+      op._threadContentStamp = stamp;
+      enhancePostLinks(op); enhancePostCarousels(op);
+      B();
+    }
+    var title = op && op.querySelector(".forum-post-title");
+    if (title && title.textContent !== thread.title) title.textContent = thread.title;
+    Ue(thread);
+    patchReplies(thread);
+  }
+  function toggleReplies(id, show, button) {
+    r.showNested[id] = show;
+    var parent = button && button.closest(".forum-reply-node");
+    patchReplies(b.thread, false);
+    if (!show && parent && parent.getBoundingClientRect().top < 110) {
+      window.scrollTo({ top: Math.max(0, window.scrollY + parent.getBoundingClientRect().top - 150),
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+  }
+  function refreshThreadReplies() {
+    var id = r.threadId, token = g();
+    if (r.name !== "thread" || !id) return Promise.resolve();
+    var readEpoch = ++threadReadIssued;
+    return y("/api/forum/thread/" + encodeURIComponent(id)).then(function (response) {
+      if (r.name !== "thread" || r.threadId !== id || token !== g()) return;
+      if (response && response.ok && response.thread) {
+        if (readEpoch < threadReadApplied) return;
+        threadReadApplied = readEpoch;
+        if (response.locked) we();
+        else applyThreadUpdate(response.thread);
+      }
+    }).catch(function () {});
+  }
+
+  function renderReply(e, t, s) {
+      var n = s[e.id] || [],
+        a = !!r.showNested[e.id],
+        o =
+          '<div class="forum-reply-node" data-reply-key="' + w(e.id) + '"><article data-reply-id="' + w(e.id) + '" class="forum-post' +
+          (t > 0 ? " forum-nested" : "") +
+          '"><div class="forum-post-head">' +
+          E(e, !0) +
+          '<span class="forum-post-time">' +
+          k(e.createdAt) +
+          '</span></div><div class="forum-post-body">' +
+          G(e) +
+          "</div>" +
+          (g() || Ne
+            ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
+              (g()
+                ? '<button type="button" class="forum-admin-btn" data-replyto="' +
+                  w(e.id) +
+                  '" data-replyname="' +
+                  w(mpName(e.author)) +
+                  '">Reply</button>'
+                : "") +
+              A(e, e.id) +
+              (Ne
+                ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' +
+                  w(e.id) +
+                  '">Delete</button>'
+                : He(e.author)
+                  ? '<button type="button" class="forum-admin-btn" data-editreply="' +
+                    w(e.id) +
+                    '">Edit</button><button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' +
+                    w(e.id) +
+                    '">Delete</button>'
+                  : "") +
+              "</div>"
+            : "");
+      if (((o += "</article>"), n.length && t >= 10))
+        n.forEach(function (e) {
+          o += renderReply(e, t, s);
+        });
+      else if (n.length) {
+        var i = a ? n : n.slice(0, 1);
+        ((o += '<div class="forum-thread-tail"><div class="forum-children">'),
+          i.forEach(function (e) {
+            o += renderReply(e, t + 1, s);
+          }),
+          (o += "</div>"),
+          !a && n.length > 1
+            ? (o +=
+                '<button type="button" class="forum-show-replies" data-showreplies="' +
+                w(e.id) +
+                '">Show more replies (' +
+                (n.length - 1) +
+                " more)</button>")
+            : a &&
+              (o +=
+                '<button type="button" class="forum-show-replies" data-hidereplies="' +
+                w(e.id) +
+                '">Hide replies</button>'),
+          (o += "</div>"));
+      }
+      return o + "</div>";
+    }
+
+  function focusReplyBox() {
+      var e = t.querySelector(".forum-replybox");
+      (e && e.scrollIntoView({ behavior: "smooth", block: "center" }),
+        setTimeout(function () {
+          if (Y) Y.commands.focus();
+          else {
+            var e = t.querySelector("#forum-reply");
+            e && e.focus();
+          }
+        }, 350));
+    }
+  function cancelReplyTarget() {
+      r.replyTo = null;
+      var e = t.querySelector(".forum-replybox");
+      if (e) {
+        var n = e.querySelector(".forum-replying-to");
+        n && n.remove();
+      }
+    }
+
+  function gateForumContent(root, e) {
+          if (e && root) {
+            var r = "";
+            try {
+              r = O ? String(O.username).toLowerCase() : "";
+            } catch (e) {}
+            var n = !(!O || (!O.member && !Ne)),
+              a = {};
+            ((e.replies || []).forEach(function (e) {
+              e.author && (a[String(e.author).toLowerCase()] = 1);
+            }),
+              root.querySelectorAll(".mp-locked").forEach(function (e) {
+                var t = e.getAttribute("data-mode") || "reply",
+                  o = (e.getAttribute("data-author") || "").toLowerCase();
+                Ne ||
+                  (r && r === o) ||
+                  ("member" === t ? n : r && a[r]) ||
+                  (e.setAttribute("data-gated", "1"),
+                  (e.innerHTML =
+                    '<div class="mp-locked-note"><span aria-hidden="true">🔒</span><span>' +
+                    w(
+                      "member" === t
+                        ? "This hidden content is only available to VIPs"
+                        : "This hidden content becomes available once you reply to this thread",
+                    ) +
+                    "</span></div>"));
+              }));
+          }
+        }
+
+  function wireReplyControls(root) {
+        root.querySelectorAll("[data-replyto]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            r.replyTo = {
+              id: e.getAttribute("data-replyto"),
+              name: e.getAttribute("data-replyname"),
+            };
+            var n = t.querySelector(".forum-replybox");
+            if (n) {
+              var a = n.querySelector(".forum-replying-to");
+              (a ||
+                (((a = document.createElement("div")).className = "forum-replying-to"),
+                n.insertBefore(a, n.firstChild)),
+                (a.innerHTML =
+                  "Replying to <b>" +
+                  w(r.replyTo.name) +
+                  '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">×</button>'),
+                a.querySelector("#forum-cancel-reply").addEventListener("click", cancelReplyTarget),
+                focusReplyBox());
+            }
+          });
+        }),
+        root.querySelectorAll("[data-showreplies]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            var t = e.getAttribute("data-showreplies");
+            ((e.innerHTML = '<span class="forum-spinner"></span>'),
+              (e.disabled = !0),
+              toggleReplies(t, true, e));
+          });
+        }),
+        root.querySelectorAll("[data-hidereplies]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            toggleReplies(e.getAttribute("data-hidereplies"), false, e);
+          });
+        });
+        root.querySelectorAll("[data-star]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            if (!e.disabled) {
+              e.disabled = !0;
+              var t = e.getAttribute("data-star") || null;
+              y("/api/forum/thread/" + encodeURIComponent(r.threadId) + "/star", {
+                method: "POST",
+                body: { replyId: t },
+              })
+                .then(function (r) {
+                  if (r.ok) {
+                    (e.classList.add("given"),
+                      (e.innerHTML = "★ " + r.stars),
+                      O && (O.points = r.myPoints));
+                    var n = document.getElementById("forum-points");
+                    if ((n && (n.textContent = r.myPoints), b.thread)) {
+                      var a = t
+                        ? (b.thread.replies || []).find(function (e) {
+                            return e.id === t;
+                          })
+                        : b.thread;
+                      (a &&
+                        ((a.stars = r.stars),
+                        (a.authorPoints = r.authorPoints),
+                        Array.isArray(a.starredBy) || (a.starredBy = []),
+                        O && a.starredBy.push(O.username.toLowerCase())),
+                        !t &&
+                          b.threads &&
+                          (b.threads || []).forEach(function (e) {
+                            e.id === b.thread.id &&
+                              ((e.stars = r.stars),
+                              (e.authorPoints = r.authorPoints),
+                              Array.isArray(e.starredBy) || (e.starredBy = []),
+                              O &&
+                                -1 === e.starredBy.indexOf(O.username.toLowerCase()) &&
+                                e.starredBy.push(O.username.toLowerCase()));
+                          }));
+                    }
+                  } else ((e.disabled = !1), alert(r.error || "Couldn't give a star"));
+                })
+                .catch(function () {
+                  e.disabled = !1;
+                });
+            }
+          });
+        }),
+        root.querySelectorAll("[data-delreply]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            confirm("Delete this reply?") &&
+              y(
+                "/api/forum/thread/" +
+                  encodeURIComponent(r.threadId) +
+                  "/replies/" +
+                  encodeURIComponent(e.getAttribute("data-delreply")),
+                { method: "DELETE" },
+              )
+                .then(function (e) {
+                  e.ok && refreshThreadReplies();
+                })
+                .catch(function () {
+                  alert("Couldn't delete. Try again.");
+                });
+          });
+        }),
+        root.querySelectorAll("[data-editreply]").forEach(function (e) {
+          if (e.dataset.replyWired) return;
+          e.dataset.replyWired = "1";
+          e.addEventListener("click", function () {
+            var t = e.getAttribute("data-editreply"),
+              n = e.closest("article"),
+              a = n ? n.querySelector(".forum-post-body") : null;
+            if (a && !a.querySelector("textarea") && !a.querySelector(".forum-editor")) {
+              var o = null;
+              if (b.thread && b.thread.replies)
+                for (var i = 0; i < b.thread.replies.length; i++)
+                  if (b.thread.replies[i].id === t) {
+                    o = b.thread.replies[i];
+                    break;
+                  }
+              var l = !(!o || !o.rich),
+                s = a.innerHTML,
+                d = a.textContent || "";
+              if (((a.innerHTML = ""), l)) {
+                var c = document.createElement("div");
+                ((c.className = "forum-editor"),
+                  (c.innerHTML =
+                    re({ embed: !0, member: j(), lock: !1 }) +
+                    '<div class="forum-editor-mount"></div>'),
+                  a.appendChild(c),
+                  ((f = document.createElement("div")).style.cssText =
+                    "display:flex;gap:8px;margin-top:8px;"),
+                  ((m = document.createElement("button")).type = "button"),
+                  (m.className = "forum-admin-btn"),
+                  (m.textContent = "Save"),
+                  ((p = document.createElement("button")).type = "button"),
+                  (p.className = "forum-admin-btn"),
+                  (p.textContent = "Cancel"),
+                  f.appendChild(m),
+                  f.appendChild(p),
+                  a.appendChild(f));
+                var u = null;
+                (he(c, "Edit reply…", s).then(function (e) {
+                  u = e;
+                }),
+                  p.addEventListener("click", function () {
+                    we();
+                  }),
+                  m.addEventListener("click", function () {
+                    if (u && !u.isEmpty) {
+                      var e = u.getHTML();
+                      ((m.disabled = !0),
+                        y(
+                          "/api/forum/thread/" +
+                            encodeURIComponent(r.threadId) +
+                            "/replies/" +
+                            encodeURIComponent(t),
+                          { method: "PUT", body: { content: e, rich: !0 } },
+                        )
+                          .then(function (e) {
+                            e && e.ok
+                              ? we()
+                              : (alert("Couldn't save. Try again."), (m.disabled = !1));
+                          })
+                          .catch(function () {
+                            (alert("Couldn't save. Try again."), (m.disabled = !1));
+                          }));
+                    } else alert("Reply cannot be empty.");
+                  }));
+              } else {
+                var f,
+                  m,
+                  p,
+                  h = document.createElement("textarea");
+                ((h.value = d.trim()),
+                  (h.style.cssText =
+                    "width:100%;min-height:80px;padding:8px;border-radius:8px;border:1px solid rgba(128,128,128,.3);background:transparent;color:inherit;font:inherit;resize:vertical;"),
+                  ((f = document.createElement("div")).style.cssText =
+                    "display:flex;gap:8px;margin-top:8px;"),
+                  ((m = document.createElement("button")).type = "button"),
+                  (m.className = "forum-admin-btn"),
+                  (m.textContent = "Save"),
+                  ((p = document.createElement("button")).type = "button"),
+                  (p.className = "forum-admin-btn"),
+                  (p.textContent = "Cancel"),
+                  f.appendChild(m),
+                  f.appendChild(p),
+                  a.appendChild(h),
+                  a.appendChild(f),
+                  h.focus(),
+                  p.addEventListener("click", function () {
+                    we();
+                  }),
+                  m.addEventListener("click", function () {
+                    var e = h.value.trim();
+                    e &&
+                      ((m.disabled = !0),
+                      y(
+                        "/api/forum/thread/" +
+                          encodeURIComponent(r.threadId) +
+                          "/replies/" +
+                          encodeURIComponent(t),
+                        { method: "PUT", body: { content: e } },
+                      )
+                        .then(function (e) {
+                          e && e.ok
+                            ? we()
+                            : (alert("Couldn't save. Try again."), (m.disabled = !1));
+                        })
+                        .catch(function () {
+                          (alert("Couldn't save. Try again."), (m.disabled = !1));
+                        }));
+                  }));
+              }
+            }
+          });
+        });
+  }
+
   function ke() {
 
     var n = b.thread;
@@ -3223,7 +3950,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           e.parentId && (s[e.parentId] = s[e.parentId] || []).push(e);
         }),
         l.forEach(function (e) {
-          o += M(e, 0);
+          o += renderReply(e, 0, s);
         }),
         (o += "</div>"),
         g())
@@ -3241,37 +3968,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           '<div class="forum-editor-mount"></div></div><button type="button" class="btn accent" id="forum-send">Reply</button></div>';
       } else o += '<div class="forum-signin">Sign in to join the discussion.</div>';
       ((t.innerHTML = '<div class="forum-anim">' + o + "</div>"),
+        stampReplyNodes(t, n),
         S(t),
         L(t),
-        (function (e) {
-          if (e && t) {
-            var r = "";
-            try {
-              r = O ? String(O.username).toLowerCase() : "";
-            } catch (e) {}
-            var n = !(!O || (!O.member && !Ne)),
-              a = {};
-            ((e.replies || []).forEach(function (e) {
-              e.author && (a[String(e.author).toLowerCase()] = 1);
-            }),
-              t.querySelectorAll(".mp-locked").forEach(function (e) {
-                var t = e.getAttribute("data-mode") || "reply",
-                  o = (e.getAttribute("data-author") || "").toLowerCase();
-                Ne ||
-                  (r && r === o) ||
-                  ("member" === t ? n : r && a[r]) ||
-                  (e.setAttribute("data-gated", "1"),
-                  (e.innerHTML =
-                    '<div class="mp-locked-note"><span aria-hidden="true">🔒</span><span>' +
-                    w(
-                      "member" === t
-                        ? "This hidden content is only available to VIPs"
-                        : "This hidden content becomes available once you reply to this thread",
-                    ) +
-                    "</span></div>"));
-              }));
-          }
-        })(b.thread),
+        gateForumContent(t, b.thread),
         t.querySelectorAll(".forum-poll-opt").forEach(function (e) {
           e.addEventListener("click", function () {
             if (g()) {
@@ -3383,392 +4083,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             }
           });
         })(),
-        (function () {
-          if (!g()) return;
-          var e = t.querySelectorAll(".forum-post-body"),
-            r = {};
-          e.forEach(function (e) {
-            e.querySelectorAll('a[href^="http"]').forEach(function (t) {
-              var n = t.getAttribute("href");
-              if (
-                n &&
-                !r[n] &&
-                !t.querySelector("img") &&
-                -1 === n.indexOf("/api/media/") &&
-                ((r[n] = !0), !e.querySelector('.forum-linkcard[href="' + CSS.escape(n) + '"]'))
-              ) {
-                var a = document.createElement("div");
-                e.appendChild(a);
-                var o = function (e) {
-                  if (e && e.title) {
-                    var r = (t.textContent || "").trim();
-                    if (/^https?:\/\//i.test(r))
-                      ((t.style.display = "none"),
-                        (d = t.closest("p")) &&
-                          !d.textContent.trim() &&
-                          (d.style.display = "none"));
-                    var o = document.createElement("a");
-                    o.className = "forum-linkcard";
-                    var i = e.url || n;
-                    if (/^https?:\/\//i.test(i)) {
-                      if (
-                        ((o.href = i),
-                        (o.target = "_blank"),
-                        (o.rel = "noopener noreferrer"),
-                        e.thumb && /^https?:\/\//i.test(e.thumb))
-                      ) {
-                        var l = document.createElement("img");
-                        ((l.src = e.thumb),
-                          (l.loading = "lazy"),
-                          (l.alt = ""),
-                          (l.referrerPolicy = "no-referrer"),
-                          o.appendChild(l));
-                      }
-                      var s = document.createElement("span");
-                      s.className = "forum-linkcard-tx";
-                      var d,
-                        c = document.createElement("span");
-                      ((c.className = "forum-linkcard-t"),
-                        (c.textContent = e.title),
-                        ((d = document.createElement("span")).className = "forum-linkcard-p"),
-                        (d.textContent = e.provider || ""),
-                        s.appendChild(c),
-                        s.appendChild(d),
-                        o.appendChild(s),
-                        a.replaceWith(o));
-                    } else a.remove();
-                  } else a.remove();
-                };
-                xe[n]
-                  ? o(xe[n])
-                  : y("/api/unfurl?url=" + encodeURIComponent(n))
-                      .then(function (e) {
-                        var t = e && e.ok ? e.embed : null;
-                        ((xe[n] = t), o(t));
-                      })
-                      .catch(function () {
-                        a.remove();
-                      });
-              }
-            });
-          });
-        })());
-      try {
-        !(function () {
-          function e(e) {
-            if (!e || 1 !== e.nodeType) return null;
-            if ("IMG" === e.tagName) return [e];
-            if (e.classList && e.classList.contains("forum-linkcard")) return null;
-            if (
-              "P" !== e.tagName &&
-              "DIV" !== e.tagName &&
-              "FIGURE" !== e.tagName &&
-              "A" !== e.tagName
-            )
-              return null;
-            for (var t = [], r = e.childNodes, n = 0; n < r.length; n++) {
-              var a = r[n];
-              if (3 !== a.nodeType) {
-                if (1 !== a.nodeType) return null;
-                if ("IMG" !== a.tagName) {
-                  if ("BR" !== a.tagName) {
-                    if ("A" === a.tagName) {
-                      for (var o = a.childNodes, i = null, l = 0; l < o.length; l++) {
-                        var s = o[l];
-                        if (3 !== s.nodeType) {
-                          if (1 !== s.nodeType || "IMG" !== s.tagName || null !== i) {
-                            i = !1;
-                            break;
-                          }
-                          i = s;
-                        } else if (s.textContent.trim()) {
-                          i = !1;
-                          break;
-                        }
-                      }
-                      if (i) {
-                        t.push(i);
-                        continue;
-                      }
-                      return null;
-                    }
-                    return null;
-                  }
-                } else t.push(a);
-              } else if (a.textContent.trim()) return null;
-            }
-            return t.length ? t : null;
-          }
-          function r(e) {
-            if (!e || 1 !== e.nodeType) return !1;
-            if ("P" !== e.tagName && "DIV" !== e.tagName) return !1;
-            for (var t = e.childNodes, r = 0; r < t.length; r++) {
-              var n = t[r];
-              if (3 !== n.nodeType) {
-                if (1 !== n.nodeType || "BR" !== n.tagName) return !1;
-              } else if (n.textContent.trim()) return !1;
-            }
-            return !0;
-          }
-          t.querySelectorAll(".forum-post-body").forEach(function (t) {
-            for (var n = Array.prototype.slice.call(t.children), a = 0; a < n.length;) {
-              for (var o = [], i = []; a < n.length;) {
-                var l = n[a];
-                if (o.length && r(l)) (i.push(l), a++);
-                else {
-                  var s = e(l);
-                  if (!s) break;
-                  (o.push({ el: l, imgs: s }), a++);
-                }
-              }
-              var d = 0;
-              if (
-                (o.forEach(function (e) {
-                  d += e.imgs.length;
-                }),
-                d >= 2)
-              ) {
-                var c = document.createElement("div");
-                c.className = "forum-carousel";
-                var u = document.createElement("div");
-                ((u.className = "forum-carousel-track"),
-                  c.appendChild(u),
-                  t.insertBefore(c, o[0].el),
-                  o.forEach(function (e) {
-                    e.imgs.forEach(function (e) {
-                      var t = document.createElement("div");
-                      ((t.className = "forum-carousel-slide"), t.appendChild(e), u.appendChild(t));
-                    });
-                  }),
-                  o.forEach(function (e) {
-                    -1 === e.imgs.indexOf(e.el) && e.el.remove();
-                  }),
-                  i.forEach(function (e) {
-                    e.remove();
-                  }),
-                  Ee(c, u, d));
-              } else a++;
-            }
-          });
-        })();
-      } catch (e) {
-        window.console && console.warn("carousel", e);
-      }
+        enhancePostLinks(t));
+      enhancePostCarousels(t);
       ve();
       var p = t.querySelector("#forum-reply-top");
       (p && p.addEventListener("click", q),
-        t.querySelectorAll("[data-replyto]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            r.replyTo = {
-              id: e.getAttribute("data-replyto"),
-              name: e.getAttribute("data-replyname"),
-            };
-            var n = t.querySelector(".forum-replybox");
-            if (n) {
-              var a = n.querySelector(".forum-replying-to");
-              (a ||
-                (((a = document.createElement("div")).className = "forum-replying-to"),
-                n.insertBefore(a, n.firstChild)),
-                (a.innerHTML =
-                  "Replying to <b>" +
-                  w(r.replyTo.name) +
-                  '</b><button type="button" id="forum-cancel-reply" aria-label="Cancel reply">×</button>'),
-                a.querySelector("#forum-cancel-reply").addEventListener("click", P),
-                q());
-            }
-          });
-        }),
-        t.querySelectorAll("[data-showreplies]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            var t = e.getAttribute("data-showreplies");
-            ((e.innerHTML = '<span class="forum-spinner"></span>'),
-              (e.disabled = !0),
-              setTimeout(function () {
-                ((r.showNested[t] = !0), Ce());
-              }, 350));
-          });
-        }),
-        t.querySelectorAll("[data-hidereplies]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            ((r.showNested[e.getAttribute("data-hidereplies")] = !1), Ce());
-          });
-        }));
+        wireReplyControls(t));
       var x = t.querySelector("#forum-cancel-reply");
       (x && x.addEventListener("click", P),
-        t.querySelectorAll("[data-star]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            if (!e.disabled) {
-              e.disabled = !0;
-              var t = e.getAttribute("data-star") || null;
-              y("/api/forum/thread/" + encodeURIComponent(r.threadId) + "/star", {
-                method: "POST",
-                body: { replyId: t },
-              })
-                .then(function (r) {
-                  if (r.ok) {
-                    (e.classList.add("given"),
-                      (e.innerHTML = "★ " + r.stars),
-                      O && (O.points = r.myPoints));
-                    var n = document.getElementById("forum-points");
-                    if ((n && (n.textContent = r.myPoints), b.thread)) {
-                      var a = t
-                        ? (b.thread.replies || []).find(function (e) {
-                            return e.id === t;
-                          })
-                        : b.thread;
-                      (a &&
-                        ((a.stars = r.stars),
-                        (a.authorPoints = r.authorPoints),
-                        Array.isArray(a.starredBy) || (a.starredBy = []),
-                        O && a.starredBy.push(O.username.toLowerCase())),
-                        !t &&
-                          b.threads &&
-                          (b.threads || []).forEach(function (e) {
-                            e.id === b.thread.id &&
-                              ((e.stars = r.stars),
-                              (e.authorPoints = r.authorPoints),
-                              Array.isArray(e.starredBy) || (e.starredBy = []),
-                              O &&
-                                -1 === e.starredBy.indexOf(O.username.toLowerCase()) &&
-                                e.starredBy.push(O.username.toLowerCase()));
-                          }));
-                    }
-                  } else ((e.disabled = !1), alert(r.error || "Couldn't give a star"));
-                })
-                .catch(function () {
-                  e.disabled = !1;
-                });
-            }
-          });
-        }),
-        t.querySelectorAll("[data-delreply]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            confirm("Delete this reply?") &&
-              y(
-                "/api/forum/thread/" +
-                  encodeURIComponent(r.threadId) +
-                  "/replies/" +
-                  encodeURIComponent(e.getAttribute("data-delreply")),
-                { method: "DELETE" },
-              )
-                .then(function (e) {
-                  e.ok && we();
-                })
-                .catch(function () {
-                  alert("Couldn't delete. Try again.");
-                });
-          });
-        }),
-        t.querySelectorAll("[data-editreply]").forEach(function (e) {
-          e.addEventListener("click", function () {
-            var t = e.getAttribute("data-editreply"),
-              n = e.closest("article"),
-              a = n ? n.querySelector(".forum-post-body") : null;
-            if (a && !a.querySelector("textarea") && !a.querySelector(".forum-editor")) {
-              var o = null;
-              if (b.thread && b.thread.replies)
-                for (var i = 0; i < b.thread.replies.length; i++)
-                  if (b.thread.replies[i].id === t) {
-                    o = b.thread.replies[i];
-                    break;
-                  }
-              var l = !(!o || !o.rich),
-                s = a.innerHTML,
-                d = a.textContent || "";
-              if (((a.innerHTML = ""), l)) {
-                var c = document.createElement("div");
-                ((c.className = "forum-editor"),
-                  (c.innerHTML =
-                    re({ embed: !0, member: j(), lock: !1 }) +
-                    '<div class="forum-editor-mount"></div>'),
-                  a.appendChild(c),
-                  ((f = document.createElement("div")).style.cssText =
-                    "display:flex;gap:8px;margin-top:8px;"),
-                  ((m = document.createElement("button")).type = "button"),
-                  (m.className = "forum-admin-btn"),
-                  (m.textContent = "Save"),
-                  ((p = document.createElement("button")).type = "button"),
-                  (p.className = "forum-admin-btn"),
-                  (p.textContent = "Cancel"),
-                  f.appendChild(m),
-                  f.appendChild(p),
-                  a.appendChild(f));
-                var u = null;
-                (he(c, "Edit reply…", s).then(function (e) {
-                  u = e;
-                }),
-                  p.addEventListener("click", function () {
-                    we();
-                  }),
-                  m.addEventListener("click", function () {
-                    if (u && !u.isEmpty) {
-                      var e = u.getHTML();
-                      ((m.disabled = !0),
-                        y(
-                          "/api/forum/thread/" +
-                            encodeURIComponent(r.threadId) +
-                            "/replies/" +
-                            encodeURIComponent(t),
-                          { method: "PUT", body: { content: e, rich: !0 } },
-                        )
-                          .then(function (e) {
-                            e && e.ok
-                              ? we()
-                              : (alert("Couldn't save. Try again."), (m.disabled = !1));
-                          })
-                          .catch(function () {
-                            (alert("Couldn't save. Try again."), (m.disabled = !1));
-                          }));
-                    } else alert("Reply cannot be empty.");
-                  }));
-              } else {
-                var f,
-                  m,
-                  p,
-                  h = document.createElement("textarea");
-                ((h.value = d.trim()),
-                  (h.style.cssText =
-                    "width:100%;min-height:80px;padding:8px;border-radius:8px;border:1px solid rgba(128,128,128,.3);background:transparent;color:inherit;font:inherit;resize:vertical;"),
-                  ((f = document.createElement("div")).style.cssText =
-                    "display:flex;gap:8px;margin-top:8px;"),
-                  ((m = document.createElement("button")).type = "button"),
-                  (m.className = "forum-admin-btn"),
-                  (m.textContent = "Save"),
-                  ((p = document.createElement("button")).type = "button"),
-                  (p.className = "forum-admin-btn"),
-                  (p.textContent = "Cancel"),
-                  f.appendChild(m),
-                  f.appendChild(p),
-                  a.appendChild(h),
-                  a.appendChild(f),
-                  h.focus(),
-                  p.addEventListener("click", function () {
-                    we();
-                  }),
-                  m.addEventListener("click", function () {
-                    var e = h.value.trim();
-                    e &&
-                      ((m.disabled = !0),
-                      y(
-                        "/api/forum/thread/" +
-                          encodeURIComponent(r.threadId) +
-                          "/replies/" +
-                          encodeURIComponent(t),
-                        { method: "PUT", body: { content: e } },
-                      )
-                        .then(function (e) {
-                          e && e.ok
-                            ? we()
-                            : (alert("Couldn't save. Try again."), (m.disabled = !1));
-                        })
-                        .catch(function () {
-                          (alert("Couldn't save. Try again."), (m.disabled = !1));
-                        }));
-                  }));
-              }
-            }
-          });
-        }),
         t.querySelectorAll("[data-pin]").forEach(function (e) {
           e.addEventListener("click", function () {
             var t = e.getAttribute("data-pin");
@@ -4077,15 +4399,26 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           var i = T.innerHTML;
           T.innerHTML = '<span class="forum-spinner"></span>';
           var l = { content: e, rich: n };
+          var sentThreadId = r.threadId, sentToken = g(), sentEditor = Y;
+          var sentTextarea = t.querySelector("#forum-reply");
+          var sentDraft = sentEditor ? sentEditor.getHTML() : (sentTextarea && sentTextarea.value);
+          var sentParent = r.replyTo && r.replyTo.id;
           (r.replyTo && (l.parentId = r.replyTo.id),
-            y("/api/forum/thread/" + encodeURIComponent(r.threadId) + "/replies", {
+            y("/api/forum/thread/" + encodeURIComponent(sentThreadId) + "/replies", {
               method: "POST",
               body: l,
             })
-              .then(function (e) {
-                e.ok
-                  ? (r.replyTo && (r.showNested[r.replyTo.id] = !0), (r.replyTo = null), we())
-                  : ((T.disabled = !1), (T.innerHTML = i), alert(e.error || "Failed"));
+              .then(function (response) {
+                T.disabled = !1;
+                T.innerHTML = i;
+                if (r.name !== "thread" || r.threadId !== sentThreadId || sentToken !== g()) return;
+                if (!response.ok) return alert(response.error || "Failed");
+                if (sentParent) r.showNested[sentParent] = !0;
+                // Do not erase anything typed while the send was in flight.
+                if (sentEditor && Y === sentEditor && sentEditor.getHTML() === sentDraft) sentEditor.commands.clearContent();
+                else if (!sentEditor && sentTextarea && sentTextarea.value === sentDraft) sentTextarea.value = "";
+                if ((r.replyTo && r.replyTo.id) === sentParent) cancelReplyTarget();
+                refreshThreadReplies();
               })
               .catch(function (e) {
                 ((T.disabled = !1),
@@ -4094,88 +4427,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               }));
         });
     }
-    function M(e, t) {
-      var n = s[e.id] || [],
-        a = !!r.showNested[e.id],
-        o =
-          '<article class="forum-post' +
-          (t > 0 ? " forum-nested" : "") +
-          '"><div class="forum-post-head">' +
-          E(e, !0) +
-          '<span class="forum-post-time">' +
-          k(e.createdAt) +
-          '</span></div><div class="forum-post-body">' +
-          G(e) +
-          "</div>" +
-          (g() || Ne
-            ? '<div class="forum-admin forum-admin-thread forum-reply-actions">' +
-              (g()
-                ? '<button type="button" class="forum-admin-btn" data-replyto="' +
-                  w(e.id) +
-                  '" data-replyname="' +
-                  w(mpName(e.author)) +
-                  '">Reply</button>'
-                : "") +
-              A(e, e.id) +
-              (Ne
-                ? '<button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' +
-                  w(e.id) +
-                  '">Delete</button>'
-                : He(e.author)
-                  ? '<button type="button" class="forum-admin-btn" data-editreply="' +
-                    w(e.id) +
-                    '">Edit</button><button type="button" class="forum-admin-btn forum-admin-del" data-delreply="' +
-                    w(e.id) +
-                    '">Delete</button>'
-                  : "") +
-              "</div>"
-            : "");
-      if (((o += "</article>"), n.length && t >= 10))
-        n.forEach(function (e) {
-          o += M(e, t);
-        });
-      else if (n.length) {
-        var i = a ? n : n.slice(0, 1);
-        ((o += '<div class="forum-thread-tail"><div class="forum-children">'),
-          i.forEach(function (e) {
-            o += M(e, t + 1);
-          }),
-          (o += "</div>"),
-          !a && n.length > 1
-            ? (o +=
-                '<button type="button" class="forum-show-replies" data-showreplies="' +
-                w(e.id) +
-                '">Show more replies (' +
-                (n.length - 1) +
-                " more)</button>")
-            : a &&
-              (o +=
-                '<button type="button" class="forum-show-replies" data-hidereplies="' +
-                w(e.id) +
-                '">Hide replies</button>'),
-          (o += "</div>"));
-      }
-      return o;
-    }
-    function q() {
-      var e = t.querySelector(".forum-replybox");
-      (e && e.scrollIntoView({ behavior: "smooth", block: "center" }),
-        setTimeout(function () {
-          if (Y) Y.commands.focus();
-          else {
-            var e = t.querySelector("#forum-reply");
-            e && e.focus();
-          }
-        }, 350));
-    }
-    function P() {
-      r.replyTo = null;
-      var e = t.querySelector(".forum-replybox");
-      if (e) {
-        var n = e.querySelector(".forum-replying-to");
-        n && n.remove();
-      }
-    }
+    function q() { focusReplyBox(); }
+    function P() { cancelReplyTarget(); }
   }
   function Ee(e, t, r) {
     var n = 0,
@@ -4785,16 +5038,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       refreshInPlace: function () {
         var f = document.getElementById("forum");
         if (!f || !f.classList.contains("on")) return null;
-        if ("thread" === r.name && r.threadId) {
-          return y("/api/forum/thread/" + encodeURIComponent(r.threadId)).then(function (e) {
-            if (e && e.ok && e.thread) {
-              b.thread = e.thread;
-              we();
-            } else {
-              we();
-            }
-          });
-        }
+        if ("thread" === r.name && r.threadId) return refreshThreadReplies();
         if ("list" === r.name) {
           return y("/api/forum/threads").then(function (e) {
             var list = (e && e.ok && e.threads) || [];

@@ -11892,3 +11892,9 @@ html[data-gcards="g3"] .forum-thread-more {
     opacity: 1 !important;
   }
 }
+
+/* Globe: preview elbow and incremental reply layout. */
+.forum-thread-connector { flex: none; align-self: flex-start; width: 12px; height: 17px; margin: -4px -2px 0 3px; border-left: 1.5px solid color-mix(in srgb, var(--ink) 30%, transparent); border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 30%, transparent); border-bottom-left-radius: 6px; }
+.forum-reply-node { display: flow-root; }
+.forum-reply-node > .forum-post { margin-bottom: 12px; }
+.forum-reply-node .forum-thread-tail { overflow-anchor: auto; }
