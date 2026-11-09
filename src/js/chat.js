@@ -3619,6 +3619,24 @@
       '<p class="chat-music-status" role="status" aria-live="polite"></p><ul class="chat-music-results" aria-label="Songs"></ul>' +
       '';
   }
+  /* Recently picked songs, per user, most recent first, deduped by track id, max 10 (per dc). */
+  function mpMusicRecentKey() { return "mp-music-recent-v1:" + String((s && s.username) || "guest").toLowerCase(); }
+  function mpMusicRecent() {
+    try {
+      var list = JSON.parse(localStorage.getItem(mpMusicRecentKey()) || "[]");
+      return Array.isArray(list) ? list.filter(function (t) { return t && t.trackName && t.artistName && mpMusicRef(t.trackViewUrl); }).slice(0, 10) : [];
+    } catch (e) { return []; }
+  }
+  function mpMusicRecentAdd(track) {
+    try {
+      var id = String(track.trackId || (mpMusicRef(track.trackViewUrl) || {}).key || ""), keep = {};
+      if (!id) return;
+      ["trackId", "trackName", "artistName", "collectionName", "trackViewUrl", "artworkUrl100", "artworkUrl60", "previewUrl", "trackTimeMillis", "trackExplicitness"].forEach(function (k) { if (track[k] != null) keep[k] = track[k]; });
+      var list = mpMusicRecent().filter(function (t) { return String(t.trackId || (mpMusicRef(t.trackViewUrl) || {}).key || "") !== id; });
+      list.unshift(keep);
+      localStorage.setItem(mpMusicRecentKey(), JSON.stringify(list.slice(0, 10)));
+    } catch (e) {}
+  }
   function mpMusicWire(menu, close) {
     var input = menu.querySelector(".chat-music-q"), list = menu.querySelector(".chat-music-results"), status = menu.querySelector(".chat-music-status"),
       timer = null, controller = null, epoch = 0, dead = false, branding = null, brandIO = null, brandRun = function () {};
@@ -3667,6 +3685,16 @@
       menu.classList.toggle("has-results",tracks.length>0);fit();
       status.textContent = tracks.length ? tracks.length + " SONGS" : "";
       if (!tracks.length) return state("No songs found", "Try another title, artist, or album.");
+      rows(tracks);
+    }
+    function idle() {
+      var recent = mpMusicRecent();
+      if (!recent.length) { status.textContent = ""; return state("No recently played songs", "Choose a song to share."); }
+      list.innerHTML = ""; menu.classList.add("has-results"); menu.classList.add("is-recent"); fit();
+      status.textContent = "RECENT";
+      rows(recent);
+    }
+    function rows(tracks) {
       tracks.forEach(function (track) {
         var item = document.createElement("li"), button = document.createElement("button"), ref = mpMusicRef(track.trackViewUrl), result = mpNPOut(track);
         button.type = "button"; button.className = "chat-music-track"; button.setAttribute("aria-label", "Add " + track.trackName + " by " + track.artistName);
@@ -3683,6 +3711,7 @@
           if (dead || mpGpBusy) return;
           var from = button.getBoundingClientRect();
           mpMusicRemember(ref, result);
+          mpMusicRecentAdd(track);
           close();
           mpGpShowPreview({id:ref.key,kind:"music",url:ref.url,title:result.title,artist:result.artist,thumb:result.art,song:result},from);
         });
@@ -3693,7 +3722,8 @@
       if (dead) return;
       invalidate();
       var query = input.value.trim(), version = epoch;
-      if (query.length < 2) { status.textContent = ""; state("", "Choose a song to share."); return; }
+      menu.classList.remove("is-recent");
+      if (query.length < 2) return idle();
       controller = new AbortController(); status.textContent = "SEARCHING…"; list.setAttribute("aria-busy", "true");
       state("Finding your sound…", "Searching Apple Music");
       mpMusicSearch(query, controller.signal).then(function (tracks) {
