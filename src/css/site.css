@@ -1342,7 +1342,6 @@ textarea {
   aspect-ratio: 4/5;
 }
 .vip-3d:not(.mask-3d) { aspect-ratio:1; }
-.vip-3d:not(.mask-3d) .vip-3d-hint { left:auto;right:12px;top:12px;bottom:auto;padding:6px 10px;font-size:11px; }
 .vip-3d.mask-3d {
   aspect-ratio: 3/2;
 }
@@ -1365,20 +1364,23 @@ textarea {
   height: 100%;
   object-fit: contain;
 }
+/* One shared placement for every 3D product viewer (VIP card, mask, any new one). */
 .vip-3d-hint {
   position: absolute;
-  left: 14px;
-  bottom: 14px;
+  top: 12px;
+  right: 12px;
+  left: auto;
+  bottom: auto;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: rgba(10, 18, 48, 0.38);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 550;
   letter-spacing: 0.04em;
   pointer-events: none;
