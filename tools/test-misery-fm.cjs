@@ -60,8 +60,9 @@ async function ctx(browser,{role,theme,reduced}){
  const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|WebSocket/.test(m.text()))errors.push('console: '+m.text());});
  return {c,p,srv,errors};}
 const shot=async(p,name,clip)=>{await p.evaluate(()=>{document.querySelectorAll('.fm-root,.fm-sh-body,.fm-edit,.fm-edit *').forEach(b=>{if(b.scrollTop)b.scrollTop=0;});});await p.waitForTimeout(120);const f=`${OUT}/${name}.png`;await p.screenshot(clip?{path:f,clip}:{path:f});shots[name]=f;};
-const hbState=p=>p.evaluate(()=>{const b=document.querySelector('.fm-on');if(!b)return null;const r=b.getBoundingClientRect(),o=b.querySelector(':scope>.fm-hb').getBoundingClientRect(),svg=b.querySelector('.fm-ring'),rc=svg.firstChild,sw=+rc.getAttribute('stroke-width'),rw=+rc.getAttribute('width'),rh=+rc.getAttribute('height'),rx=+rc.getAttribute('rx'),pitch=parseFloat(rc.style.strokeDasharray.split(/[ ,]+/)[1]),per=2*(rw+rh)-(8-2*Math.PI)*rx;return{cls:b.className,w:b.offsetWidth,h:b.offsetHeight,ov:[o.left-r.left,o.top-r.top,o.width-r.width,o.height-r.height].map(v=>Math.round(v*10)/10),svgw:+svg.getAttribute('width'),rw,rh,rx,sw,n:per/pitch,pitch,expR:Math.min(parseFloat(getComputedStyle(b).borderTopLeftRadius)-sw/2,rh/2,rw/2),anims:rc.getAnimations().length,dot:!!b.querySelector('.fm-hb-dot,.fm-hb-is i'),txt:b.querySelector('.fm-hb-in').innerText.replace(/\s+/g,' '),logo:(()=>{const l=b.querySelector('.fm-hb-in .fm-hb-logo'),cs=l&&getComputedStyle(l);return !!cs&&/misery-fm-logo\.svg/.test(cs.webkitMaskImage||cs.maskImage)&&l.offsetWidth>40;})(),
- typo:(()=>{const is=getComputedStyle(b.querySelector('.fm-hb-is')),src=[...b.querySelectorAll('.chat-title, a, button, h1, h2, span')].find(n=>!n.closest('.fm-hb')&&n.getClientRects().length&&/\S/.test(n.textContent)&&n.children.length<=2)||document.querySelector('.chat-head .chat-title'),cs=src&&getComputedStyle(src);return cs?['fontFamily','fontSize','fontWeight','letterSpacing','textTransform'].filter(k=>is[k]!==cs[k]).join():'nosrc';})()};});
+const hbState=p=>p.evaluate(()=>{const b=document.querySelector('.fm-on');if(!b)return null;const r=b.getBoundingClientRect(),o=b.querySelector(':scope>.fm-hb').getBoundingClientRect(),svg=b.querySelector('.fm-ring'),rc=svg.firstChild,sw=+rc.getAttribute('stroke-width'),rw=+rc.getAttribute('width'),rh=+rc.getAttribute('height'),rx=+rc.getAttribute('rx'),pitch=parseFloat(rc.style.strokeDasharray.split(/[ ,]+/)[1]),per=2*(rw+rh)-(8-2*Math.PI)*rx;return{cls:b.className,w:b.offsetWidth,h:b.offsetHeight,ov:[o.left-r.left,o.top-r.top,o.width-r.width,o.height-r.height].map(v=>Math.round(v*10)/10),svgw:+svg.getAttribute('width'),rw,rh,rx,sw,n:per/pitch,pitch,expR:Math.min(parseFloat(getComputedStyle(b).borderTopLeftRadius)-sw/2,rh/2,rw/2),anims:rc.getAnimations().length,dot:!!b.querySelector('.fm-hb-dot,.fm-hb-is i:not(.fm-bl)'),txt:b.querySelector('.fm-hb-in').innerText.replace(/\s+/g,' '),logo:(()=>{const l=b.querySelector('.fm-hb-in .fm-hb-logo'),cs=l&&getComputedStyle(l);return !!cs&&/misery-fm-logo\.svg/.test(cs.webkitMaskImage||cs.maskImage)&&l.offsetWidth>40;})(),
+ typo:(()=>{const is=getComputedStyle(b.querySelector('.fm-hb-is')),src=[...b.querySelectorAll('.chat-title, a, button, h1, h2, span')].find(n=>!n.closest('.fm-hb')&&n.getClientRects().length&&/\S/.test(n.textContent)&&n.children.length<=2)||document.querySelector('.chat-head .chat-title'),cs=src&&getComputedStyle(src);return cs?['fontFamily','fontSize','letterSpacing','textTransform'].filter(k=>is[k]!==cs[k]).join():'nosrc';})(),
+ stroke:(()=>{const x=b.querySelector('.fm-hb-in'),lg=x.querySelector('.fm-hb-logo').getBoundingClientRect(),bl=x.querySelector('.fm-bl').getBoundingClientRect();return{want:+x.dataset.stem,w:getComputedStyle(x.querySelector('.fm-hb-is')).fontWeight,base:Math.round(Math.abs(bl.top-(lg.top+lg.height*130/160))*10)/10};})()};});
 // dotted outline: covers the exact border box, half-stroke inset (never clipped), bar's own radius, dots divide the perimeter evenly
 const ringOk=(h,where)=>{assert(h,where+': no live bar');assert.deepEqual(h.ov,[0,0,0,0],where+' ring must cover the border box '+JSON.stringify(h));assert.equal(h.svgw,h.w,where);assert(Math.abs(h.rw-(h.w-h.sw))<0.01&&Math.abs(h.rh-(h.h-h.sw))<0.01,where+' rect inset');assert(Math.abs(h.n-Math.round(h.n))<0.001&&h.pitch>4&&h.pitch<8,where+' even dots '+h.n);assert(Math.abs(h.rx-h.expR)<0.01,where+' radius '+JSON.stringify(h));assert(!h.dot,where+' red dot must be gone');};
 const box=(p,sel)=>p.evaluate(s=>{const b=document.querySelector(s),r=b.getBoundingClientRect(),cs=getComputedStyle(b);return[r.left,r.top,r.width,r.height].map(v=>Math.round(v*100)/100).join('|')+'|'+cs.borderTopLeftRadius;},sel);
@@ -76,9 +77,9 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
 // ---------- owner, dark: everything ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'owner',theme:'dark'}),S=await seed(srv),[A,B,C,D]=S.ids;
  await p.goto(ORIGIN+'/#shop');await p.waitForSelector('.nav.fm-on',{timeout:15000});
- let h=await hbState(p);ringOk(h,'shop');assert(/nav/.test(h.cls));assert.match(h.txt,/^\s*is live\s*$/i);assert(h.logo,'real Misery FM logo in the IS LIVE phase');assert.equal(h.typo,'','"is live" must use the top bar typography');assert.equal(h.anims,1,'dots drift');
+ let h=await hbState(p);ringOk(h,'shop');assert(/nav/.test(h.cls));assert.match(h.txt,/^\s*is live\s*$/i);assert(h.logo,'real Misery FM logo in the IS LIVE phase');assert.equal(h.typo,'','"is live" must use the top bar typography');assert(h.stroke.want>1&&+h.stroke.w>=300&&h.stroke.base<=1.5,'"is live" stroke/baseline vs logo '+JSON.stringify(h.stroke));assert.equal(h.anims,1,'dots drift');
  await p.waitForTimeout(1200);await shot(p,'owner-dark-shop-collapsed',{x:0,y:0,width:390,height:200});
- await p.waitForSelector('.nav.fm-on.is-fm',{timeout:5000});await p.waitForTimeout(700);await shot(p,'owner-dark-shop-islive',{x:0,y:0,width:390,height:200});
+ await p.waitForSelector('.nav.fm-on.is-fm',{timeout:5000});await p.waitForTimeout(700);{const hd=await hbState(p);assert(hd.stroke.base<=1.5,'dark is-live baseline '+JSON.stringify(hd.stroke));}await shot(p,'owner-dark-shop-islive',{x:0,y:0,width:390,height:200});
  // other page types
  for(const pg of ['forum','journal','cart']){await openPanel(p,pg);const hs=await hbState(p);ringOk(hs,pg);assert.equal(/chat-head/.test(hs.cls),pg!=='cart',pg+' targets '+hs.cls);}
  await p.evaluate(()=>{location.hash='#product';});await p.waitForTimeout(700);assert(await hbState(p),'product: no live top bar');
@@ -111,12 +112,14 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  // skip / prev / restart / shuffle / repeat
  await p.locator('.fm-root [data-a="skip"]').tap();await p.waitForTimeout(500);st=await srv.r.fmGet();assert.equal(st.list[st.idx].id,B);await p.waitForTimeout(700);assert.equal((await au()).id,B,'audio follows skip');
  await p.locator('.fm-root [data-a="prev"]').tap();await p.waitForTimeout(500);st=await srv.r.fmGet();assert.equal(st.list[st.idx].id,A);
- await p.waitForTimeout(3200);await p.locator('.fm-root [data-a="restart"]').tap();await p.waitForTimeout(400);st=await srv.r.fmGet();assert(Date.now()-st.startedAt<1500,'restart');
+ await p.waitForTimeout(3200);await p.locator('.fm-root [data-a="prev"]').tap();await p.waitForTimeout(400);st=await srv.r.fmGet();assert(Date.now()-st.startedAt<1500,'restart');
  await p.locator('.fm-root [data-a="shuffle"]').tap();await p.waitForTimeout(400);assert((await srv.r.fmGet()).shuffle);assert.match(await p.locator('.fm-root .fm-h').first().innerText(),/shuffled/i);
  await p.locator('.fm-root [data-a="shuffle"]').tap();await p.waitForTimeout(300);
  for(const mode of ['one','off','all']){await p.locator('.fm-root [data-a="repeat"]').tap();await p.waitForTimeout(350);assert.equal((await srv.r.fmGet()).repeat,mode);}
  // reactions float + broadcast
- await p.locator('.fm-root [data-a="react"]').first().tap();await p.waitForTimeout(150);assert(await p.locator('.fm-float').count()>=1);assert(srv.r.sent.some(x=>x.t==='fmr'));
+ await p.locator('.fm-root [data-a="react"]').first().tap();await p.waitForTimeout(150);assert(await p.locator('.fm-float').count()>=1);assert.equal(await p.locator('.fm-root .fm-reacts .is-pop').count(),1,'reaction pop');
+ assert.equal(await p.locator('.fm-root .fm-note, .fm-root .fm-note-in, .fm-root [data-a="note"]').count(),0,'DJ note removed');
+ {const tb=await p.evaluate(()=>[...document.querySelectorAll('.fm-root .fm-tp .fm-tpb')].map(b=>{const c=getComputedStyle(b);return c.backgroundColor+'|'+c.borderRadius+'|'+Math.round(b.querySelector('svg').getBoundingClientRect().width);}));assert(tb.length===3&&tb.every(x=>/rgba\(0, 0, 0, 0\)|transparent/.test(x.split('|')[0])),'transport glyphs without circles '+tb);}assert(srv.r.sent.some(x=>x.t==='fmr'));
  // queue: drag reorder, play next, edit sheet, cover, ID3 upload
  await p.locator('.fm-root [data-tab="queue"]').tap();await p.waitForTimeout(400);
  const hd=await p.locator('.fm-q li').nth(3).locator('.fm-drag').boundingBox(),row0=await p.locator('.fm-q li').nth(0).boundingBox();
@@ -161,8 +164,12 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await shot(p,'owner-dark-queue');
  // station: note, schedule, crossfade, stats
  await p.locator('.fm-root [data-tab="station"]').tap();await p.waitForTimeout(300);
- await p.fill('.fm-note-in','Taking requests in chat');await p.locator('.fm-root [data-a="note"]').tap();await p.waitForTimeout(400);assert.equal((await srv.r.fmGet()).note,'Taking requests in chat');
- await p.evaluate(()=>{const s=document.querySelector('.fm-root input[data-a="xf"]');s.value=3;s.dispatchEvent(new Event('input',{bubbles:true}));s.dispatchEvent(new Event('change',{bubbles:true}));});await p.waitForTimeout(400);assert.equal((await srv.r.fmGet()).xf,3);
+ assert.equal(await p.locator('.fm-root .fm-note-in').count(),0,'no DJ note control');
+ // crossfade stepper: Off at 0 (minus disabled), +1 s steps, saved to the same setting
+ assert.equal(await p.locator('.fm-root .fm-xf-v').innerText(),'Off');assert(await p.locator('.fm-root [data-a="xfm"]').isDisabled());
+ for(let k=0;k<3;k++){await p.locator('.fm-root [data-a="xfp"]').tap();await p.waitForTimeout(250);}await p.waitForTimeout(300);assert.equal((await srv.r.fmGet()).xf,3);assert.equal(await p.locator('.fm-root .fm-xf-v').innerText(),'3s');
+ for(let k=0;k<3;k++){await p.locator('.fm-root [data-a="xfp"]').tap();await p.waitForTimeout(250);}assert(await p.locator('.fm-root [data-a="xfp"]').isDisabled(),'plus disabled at max');assert.equal((await srv.r.fmGet()).xf,6);
+ await p.locator('.fm-root [data-a="xfm"]').tap();await p.waitForTimeout(350);assert.equal((await srv.r.fmGet()).xf,5);
  const later=new Date(Date.now()+3*3600e3),pad=n=>String(n).padStart(2,'0');await p.fill('.fm-sched-in',`${later.getFullYear()}-${pad(later.getMonth()+1)}-${pad(later.getDate())}T${pad(later.getHours())}:${pad(later.getMinutes())}`);
  await p.locator('.fm-root [data-a="sched"]').tap();await p.waitForTimeout(400);assert(Math.abs((await srv.r.fmGet()).sched-later.getTime())<61e3,'schedule');
  assert.match(await p.locator('.fm-stats').innerText(),/Listening[\s\S]*1[\s\S]*Played/);await shot(p,'owner-dark-station');
@@ -176,7 +183,7 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
 // ---------- owner, light ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'owner',theme:'light'});await seed(srv);
  await p.goto(ORIGIN+'/#shop');await p.waitForSelector('.nav.fm-on');await p.waitForTimeout(1200);await shot(p,'owner-light-shop-collapsed',{x:0,y:0,width:390,height:200});
- ringOk(await hbState(p),'light shop');await p.waitForSelector('.nav.fm-on.is-fm',{timeout:6000});await shot(p,'owner-light-shop-islive',{x:0,y:0,width:390,height:200});ringOk(await hbState(p),'light islive');
+ ringOk(await hbState(p),'light shop');await p.waitForSelector('.nav.fm-on.is-fm',{timeout:6000});await shot(p,'owner-light-shop-islive',{x:0,y:0,width:390,height:200});{const hl=await hbState(p);ringOk(hl,'light islive');assert(hl.stroke.base<=1.5,'light is-live baseline '+JSON.stringify(hl.stroke));}
  await npOpen(p,'.nav',()=>p.locator('.nav').tap({position:{x:60,y:20}}));await p.waitForTimeout(1500);await shot(p,'owner-light-morphed',{x:0,y:0,width:390,height:200});
  await p.locator('.nav .fm-m-t').tap();await p.waitForTimeout(600);assert.equal(await p.locator('.is-np').count(),0);
  await openFM(p);await p.waitForSelector('.fm-root .fm-tabs');await shot(p,'owner-light-now');
@@ -199,7 +206,7 @@ for(const theme of ['dark','light']){const {c,p,srv,errors}=await ctx(browser,{r
  // sheet: listener view, no owner controls
  await openFM(p);await p.waitForTimeout(400);
  const v=await p.evaluate(()=>{const s=document.querySelector('.fm-root');return{tabs:!!s.querySelector('.fm-tabs'),owner:s.querySelectorAll('[data-a="pause"],[data-a="skip"],.fm-scrub,[data-a="edit"],.fm-file').length,up:s.querySelectorAll('.fm-list:not(.fm-hist) li').length,hist:s.querySelectorAll('.fm-hist li').length,note:(s.querySelector('.fm-note')||{}).textContent,img:!!s.querySelector('.fm-cover img'),viz:s.querySelector('.fm-viz').getAttribute('data-src'),lc:s.querySelector('.fm-lc').textContent};});
- assert(!v.tabs&&v.owner===0&&v.up===3&&v.hist>=3&&v.img&&/midnight/.test(v.note)&&/1 listening/.test(v.lc),'listener sheet '+JSON.stringify(v));assert.match(v.viz,/map/,'iOS visualizer should follow the loudness map');
+ assert(!v.tabs&&v.owner===0&&v.up===3&&v.hist>=3&&v.img&&!v.note&&/1 listening/.test(v.lc),'listener sheet '+JSON.stringify(v));assert.match(v.viz,/map/,'iOS visualizer should follow the loudness map');
  // owner pauses from another device → this listener pauses; seek → this listener jumps
  await S.ctl({action:'pause'});await p.waitForTimeout(600);assert(await p.evaluate(()=>[...document.querySelectorAll('.fm-audio')].every(a=>a.paused)),'listener did not pause');
  assert.equal(await p.locator('.fm-root .fm-paused').count(),1);await S.ctl({action:'resume'});await S.ctl({action:'seek',pos:120});await p.waitForTimeout(1500);
@@ -212,7 +219,7 @@ for(const theme of ['dark','light']){const {c,p,srv,errors}=await ctx(browser,{r
  await p.locator('.fm-root [data-a="close"]').tap();await p.waitForTimeout(500);await openPanel(p,'shop');assert(await hbState(p));
  await S.ctl({action:'stop'});await p.waitForTimeout(400);assert.equal(await p.locator('.fm-on').count(),0,'shop still live after stop');
  for(const pg of ['forum','journal','cart']){await openPanel(p,pg);assert.equal(await p.locator('.fm-on').count(),0,pg+' live while off');}
- assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'listener',theme,passed:'no separate pill, even dotted ring, in-bar morph+listen+back (box locked), sheet (no owner controls, up next, history, DJ note, cover, map visualizer), pause/seek sync from owner, live edit + E badge, reaction, stop clears every page'}));await c.close();}
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({role:'listener',theme,passed:'no separate pill, even dotted ring, in-bar morph+listen+back (box locked), sheet (no owner controls, up next, history, no DJ note, cover, map visualizer), pause/seek sync from owner, live edit + E badge, reaction, stop clears every page'}));await c.close();}
 // ---------- reduced motion ----------
 {const {c,p,srv,errors}=await ctx(browser,{role:'listener',theme:'dark',reduced:true});await seed(srv);
  await p.goto(ORIGIN+'/#forum');await p.waitForSelector('.fm-on');await p.waitForTimeout(5000);

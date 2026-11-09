@@ -63,6 +63,14 @@
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', msg: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z"/>',
     xf: '<path d="M3 17c4 0 5-10 9-10M12 7c4 0 5 10 9 10M3 7c4 0 5 10 9 10M12 17c4 0 5-10 9-10" stroke-width="1.6"/>', send: '<path d="M12 19V5M6 11l6-6 6 6"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
   };
+  /* Original filled transport glyphs (drawn for Misery FM; rounded joins, Apple-player proportions). */
+  var GLY = {
+    play: '<path d="M8.2 4.6c-.9-.55-2.05.1-2.05 1.15v12.5c0 1.05 1.15 1.7 2.05 1.15l10.1-6.25c.85-.52.85-1.78 0-2.3z"/>',
+    pause: '<rect x="6" y="4.5" width="4.2" height="15" rx="1.4"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.4"/>',
+    next: '<path d="M3.4 6.9c0-.8.88-1.28 1.55-.86l6.55 4.1c.64.4.64 1.32 0 1.72l-6.55 4.1c-.67.42-1.55-.06-1.55-.86z"/><path d="M12.1 6.9c0-.8.88-1.28 1.55-.86l6.55 4.1c.64.4.64 1.32 0 1.72l-6.55 4.1c-.67.42-1.55-.06-1.55-.86z"/>',
+    prev: '<path d="M20.6 6.9c0-.8-.88-1.28-1.55-.86l-6.55 4.1c-.64.4-.64 1.32 0 1.72l6.55 4.1c.67.42 1.55-.06 1.55-.86z"/><path d="M11.9 6.9c0-.8-.88-1.28-1.55-.86l-6.55 4.1c-.64.4-.64 1.32 0 1.72l6.55 4.1c.67.42 1.55-.06 1.55-.86z"/>'
+  };
+  function gly(k) { return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' + GLY[k] + "</svg>"; }
   function ico(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICO[k] + "</svg>"; }
 
   /* ---------- timeline (same rules as the Worker's fmAdvance / fmStep) ---------- */
@@ -268,7 +276,7 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live</span></span><span class="fm-hb-np"></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live<i class="fm-bl"></i></span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "Misery FM is live. Tap the bar for now playing.");
@@ -278,7 +286,7 @@
     }
     ring(bar);
     if (!bar._fmTy) typo(bar, bar.querySelector(":scope > .fm-hb"));
-    if (!phT && !RM.matches) phT = setInterval(function () { hb && !morph && hb.classList.toggle("is-fm"); }, 4e3);
+    if (!phT && !RM.matches) phT = setInterval(function () { if (hb && !morph) { if (!hb.classList.contains("is-fm")) typo(hb, hb.querySelector(":scope > .fm-hb")); hb.classList.toggle("is-fm"); } }, 4e3);
     if (RM.matches && phT) { clearInterval(phT); phT = 0; hb && hb.classList.remove("is-fm"); }
   }
   /* dc (t517u): "is live" uses the top bar's own typography (font, size, weight, case, spacing),
@@ -296,6 +304,24 @@
     bar._fmTy = 1;
     ["fontFamily", "fontSize", "fontWeight", "letterSpacing", "textTransform", "fontStyle"].forEach(function (k) { x.style[k] = cs[k]; });
     x.style.setProperty("--fm-fs", cs.fontSize);
+    // dc (t522u): "is live" strokes as thick as the logo's lettering (12 units of the 160-unit-tall
+    // artwork), so pick the weight whose stem width matches, measured in this font
+    var lg = x.querySelector(".fm-hb-logo"), H = lg && lg.getBoundingClientRect().height, want = H * 12 / 160, best = 0, bd = 1e9;
+    if (want) [300, 400, 500, 600, 700, 800].forEach(function (w) { var d = Math.abs(stem(cs.fontFamily, cs.fontSize, w) - want); if (d < bd) { bd = d; best = w; } });
+    if (best) { x.querySelector(".fm-hb-is").style.fontWeight = best; x.setAttribute("data-stem", want.toFixed(2)); }
+    // sit the logo's lettering on the text baseline (its "fm" ends at y≈130 of 160, round caps included)
+    var bl = x.querySelector(".fm-bl");
+    if (lg && bl) { lg.style.transform = ""; var dy = bl.getBoundingClientRect().top - (lg.getBoundingClientRect().top + H * 130 / 160); lg.style.transform = "translateY(" + dy.toFixed(2) + "px)"; }
+  }
+  /* width in px of the vertical stem of a lowercase "l" in a given font */
+  function stem(fam, size, w) {
+    var c = stem.c || (stem.c = document.createElement("canvas")), g = c.getContext("2d"), px = Math.ceil(parseFloat(size) * 2);
+    c.width = px * 2; c.height = px * 2;
+    g.clearRect(0, 0, c.width, c.height); g.fillStyle = "#000"; g.font = w + " " + px + "px " + fam; g.textBaseline = "alphabetic";
+    g.fillText("l", px / 2, px * 1.5);
+    var row = g.getImageData(0, Math.round(px * 1.2), c.width, 1).data, n = 0;
+    for (var i = 3; i < row.length; i += 4) n += row[i] / 255;
+    return n / 2;
   }
   /* Dotted outline on the bar's own rounded shape. The rect sits half a stroke inside the edge (never
      clipped), uses the bar's real corner radius, and the dot pitch divides the perimeter exactly, so
@@ -425,6 +451,7 @@
     box.appendChild(s);
     setTimeout(function () { s.remove(); }, RM.matches ? 1300 : 2600);
   }
+  function pop(b) { b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop"); setTimeout(function () { b.classList.remove("is-pop"); }, 420); }
   function react(e) {
     if (Date.now() - lastReact < 650) return;
     lastReact = Date.now();
@@ -434,7 +461,7 @@
   }
 
   /* ---------- visualizer: analyser (non-iOS) > uploaded loudness map > idle ---------- */
-  var vizRaf = 0, vizBars = [];
+  var vizRaf = 0, vizE = 0;
   function viz() {
     vizRaf = 0;
     var cv = sheet && q(".fm-viz", sheet);
@@ -453,17 +480,28 @@
       src = on ? "map" : "map-idle";
     } else for (var n = 0; n < N; n++) lv.push(0.08 + 0.07 * (1 + Math.sin(t * 1.6 + n * 0.55)) * (c && !c.paused ? 1 : 0.5));
     cv.setAttribute("data-src", src);
+    // dc (t521u): smooth layered waves instead of bars. Energy comes from the same sources (live
+    // analyser, the song's loudness map, or a calm idle swell) and is eased so motion stays fluid.
+    var en = 0;
+    for (var m = 0; m < N; m++) en += Math.min(1, lv[m]);
+    en = src === "idle" ? (c && !c.paused ? 0.3 : 0.12) : Math.min(1, en / N * 1.6);
+    vizE += (en - vizE) * (RM.matches ? 1 : 0.06);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, W, H);
-    var bw = W / N, col = getComputedStyle(cv).color;
-    g.fillStyle = col;
-    for (var m = 0; m < N; m++) {
-      var v = vizBars[m] = (vizBars[m] || 0) * 0.6 + Math.min(1, lv[m]) * 0.4, bh = Math.max(2, v * H);
-      g.globalAlpha = 0.35 + 0.6 * v;
-      var x = m * bw + bw * 0.2, w = bw * 0.6, y = H - bh;
+    var cs2 = getComputedStyle(cv), c1 = cs2.color, c2 = cs2.getPropertyValue("--fm-viz2").trim() || c1, mid = H / 2, tt = RM.matches ? 0 : t;
+    var L = [[1, 1.15, 0.9, 1.9, 0.95], [0.72, 1.75, -1.25, 1.4, 0.55], [0.5, 2.6, 1.7, 1.1, 0.32]];
+    for (var k = L.length - 1; k >= 0; k--) {
+      var ly = L[k], A = (H * 0.46) * (0.34 + 0.66 * vizE) * ly[0], fr = ly[1] * Math.PI * 2 / Math.max(1, W), ph = tt * ly[2];
+      var gr = g.createLinearGradient(0, 0, W, 0);
+      gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(0.18, c1); gr.addColorStop(0.6, c2); gr.addColorStop(0.85, c1); gr.addColorStop(1, "rgba(0,0,0,0)");
       g.beginPath();
-      g.roundRect ? g.roundRect(x, y, w, bh, Math.min(w / 2, 3)) : g.rect(x, y, w, bh);
-      g.fill();
+      for (var x = 0; x <= W; x += 2) {
+        var env = Math.pow(Math.sin(Math.PI * x / W), 1.4), y = mid + A * env * (Math.sin(fr * x + ph) * 0.78 + Math.sin(fr * 2.3 * x - ph * 1.6) * 0.22);
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.strokeStyle = gr; g.lineWidth = ly[3]; g.globalAlpha = ly[4]; g.lineCap = "round"; g.lineJoin = "round";
+      g.stroke();
+      if (!k) { g.lineTo(W, mid); g.lineTo(0, mid); g.closePath(); g.fillStyle = gr; g.globalAlpha = 0.12; g.fill(); }
     }
     g.globalAlpha = 1;
     if (!RM.matches && !document.hidden) vizRaf = requestAnimationFrame(viz);
@@ -490,8 +528,7 @@
   function heroHTML(c, o) {
     if (!c) {
       return '<div class="fm-hero is-off"><div class="fm-np"><div class="fm-cover">' + art(null, "fm-big") + '</div><div class="fm-np-tx"><div class="fm-ttl"><b>Off air</b></div><div class="fm-sub">' +
-        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + '</div></div></div><canvas class="fm-viz" aria-hidden="true"></canvas>' +
-        (S && S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
+        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + '</div></div></div><canvas class="fm-viz" aria-hidden="true"></canvas></div>';
     }
     var t = c.tr;
     return '<div class="fm-hero"><div class="fm-np"><div class="fm-cover">' + art(t, "fm-big") + (c.paused ? '<span class="fm-paused" aria-label="Paused">' + ico("pause") + "</span>" : '<span class="fm-onair" aria-label="Live"><i></i></span>') + "</div>" +
@@ -503,7 +540,7 @@
       '<div class="fm-prog">' + (o ? '<input type="range" class="fm-scrub" min="0" max="' + Math.floor(c.d) + '" step="1" value="' + Math.floor(c.t) + '" aria-label="Seek the station">' : '<span class="fm-pbar fm-pbar-l"><i></i></span>') +
       '<div class="fm-times"><span class="fm-el">' + fmt(c.t) + '</span><span class="fm-rem">-' + fmt(c.d - c.t) + "</span></div></div>" +
       (t.notes ? '<p class="fm-tnote">' + esc(t.notes) + "</p>" : "") +
-      (S.note ? '<p class="fm-note"><b>DJ</b>' + esc(S.note) + "</p>" : "") + "</div>";
+      "</div>";
   }
   function listenHTML() {
     return VOLOK && on ? '<label class="fm-vol">' + ico("vol") + '<input type="range" min="0" max="1" step="0.01" value="' + vol + '" data-a="vol" aria-label="Volume"></label>' : "";
@@ -514,12 +551,11 @@
       if (c) {
         h += '<div class="fm-tp" role="group" aria-label="Station controls">' +
           '<button type="button" class="fm-ib fm-tog' + (S.shuffle ? " is-on" : "") + '" data-a="shuffle" aria-pressed="' + !!S.shuffle + '" aria-label="Shuffle">' + ico("shuffle") + "</button>" +
-          '<button type="button" class="fm-ib fm-lg" data-a="prev" aria-label="Previous">' + ico("prev") + "</button>" +
-          '<button type="button" class="fm-ib fm-lg" data-a="restart" aria-label="Restart song">' + ico("restart") + "</button>" +
-          '<button type="button" class="fm-pp" data-a="' + (c.paused ? "resume" : "pause") + '" aria-label="' + (c.paused ? "Resume the station" : "Pause the station for everyone") + '">' + ico(c.paused ? "play" : "pause") + "</button>" +
-          '<button type="button" class="fm-ib fm-lg" data-a="skip" aria-label="Skip">' + ico("next") + "</button>" +
+          '<button type="button" class="fm-tpb fm-tpb-s" data-a="prev" aria-label="Previous (restarts the song after 3 seconds)">' + gly("prev") + "</button>" +
+          '<button type="button" class="fm-tpb fm-tpb-pp" data-a="' + (c.paused ? "resume" : "pause") + '" aria-label="' + (c.paused ? "Resume the station" : "Pause the station for everyone") + '">' + gly(c.paused ? "play" : "pause") + "</button>" +
+          '<button type="button" class="fm-tpb fm-tpb-s" data-a="skip" aria-label="Skip">' + gly("next") + "</button>" +
           '<button type="button" class="fm-ib fm-tog' + (S.repeat !== "off" ? " is-on" : "") + '" data-a="repeat" aria-label="Repeat: ' + S.repeat + '">' + ico("repeat") + (S.repeat === "one" ? '<em class="fm-one">1</em>' : "") + "</button>" +
-          '<button type="button" class="fm-tog fm-stop" data-a="stop">Stop</button></div>';
+          "</div>";
       } else h += '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S && S.list.length ? "" : " disabled") + ">Go Live</button></div>" + (S && S.list.length ? "" : '<p class="fm-hint">Add songs in Queue first.</p>');
     }
     if (c) {
@@ -553,21 +589,23 @@
   function srow(icon, label, sub, ctrl, cls) {
     return '<div class="fm-sr' + (cls ? " " + cls : "") + '"><span class="fm-sr-i">' + ico(icon) + '</span><span class="fm-sr-t"><b>' + label + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>" + (ctrl || "") + "</div>";
   }
+  var XF_MAX = 6;
+  function xfLabel(v) { return v ? v + "s" : "Off"; }
+  function stepHTML(v) {
+    return '<span class="fm-step" role="group" aria-label="Crossfade"><button type="button" class="fm-step-b" data-a="xfm" aria-label="Less crossfade"' + (v <= 0 ? " disabled" : "") + '><svg ' + SV + '><path d="M6 12h12"/></svg></button>' +
+      '<output class="fm-xf-v" aria-live="polite">' + xfLabel(v) + '</output><button type="button" class="fm-step-b" data-a="xfp" aria-label="More crossfade"' + (v >= XF_MAX ? " disabled" : "") + '><svg ' + SV + '><path d="M12 6v12M6 12h12"/></svg></button></span>';
+  }
   function stationHTML() {
     var st = S.stats || {}, c = calc(), lv = live(), up = c && st.since ? fmt((now() - st.since) / 1e3) : "–";
     var air = lv ? '<button type="button" class="fm-pill fm-pill-stop" data-a="stop">Stop</button>' : '<button type="button" class="fm-pill fm-pill-go" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>";
     return '<h3 class="fm-h">Broadcast</h3><div class="fm-grp">' +
       srow("radio", lv ? (c && c.paused ? "Paused" : "On air") : "Off air", lv ? (S.listeners || 0) + " listening · " + up : S.list.length ? S.list.length + (S.list.length === 1 ? " song" : " songs") + " ready" : "Add songs in Queue first", air, lv ? "is-live" : "") +
-      srow("xf", "Crossfade", '<span class="fm-xf-v">' + (S.xf || 0) + " s</span>", '<input type="range" class="fm-sr-range" min="0" max="6" step="0.5" value="' + (S.xf || 0) + '" data-a="xf" aria-label="Crossfade seconds">') +
+      srow("xf", "Crossfade", "Blend between songs", stepHTML(Math.round(S.xf || 0))) +
       srow("clock", "Scheduled go-live", S.sched ? "Goes live " + esc(when(S.sched)) : "Not scheduled",
         '<span class="fm-sr-c"><input type="datetime-local" class="fm-sched-in" value="' + localIn(S.sched) + '" aria-label="Go-live time">' +
         '<button type="button" class="fm-sr-b" data-a="sched" aria-label="Schedule">' + ico("check") + "</button>" +
         (S.sched ? '<button type="button" class="fm-sr-b" data-a="schedclr" aria-label="Clear schedule">' + ico("x") + "</button>" : "") + "</span>", "fm-sr-sched") +
       "</div>" +
-      '<h3 class="fm-h">DJ note</h3><div class="fm-grp">' +
-      '<div class="fm-sr fm-sr-note"><span class="fm-sr-i">' + ico("msg") + '</span><input class="fm-note-in" maxlength="140" enterkeyhint="send" placeholder="Say something to everyone listening" value="' + esc(S.note) + '" aria-label="DJ note for listeners">' +
-      '<button type="button" class="fm-sr-b fm-sr-send" data-a="note" aria-label="Post note">' + ico("send") + "</button>" +
-      (S.note ? '<button type="button" class="fm-sr-b" data-a="noteclr" aria-label="Clear note">' + ico("x") + "</button>" : "") + "</div></div>" +
       '<h3 class="fm-h">Session</h3><dl class="fm-stats">' +
       [["Listening", S.listeners || 0], ["Peak", st.peak || 0], ["Played", st.played || 0], ["Reactions", st.reacts || 0], ["On air", up], ["Library", S.list.length]].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>";
   }
@@ -677,7 +715,6 @@
     el.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
     el.addEventListener("pointerdown", dragStart);
     el.addEventListener("keydown", dragKey);
-    el.addEventListener("keydown", noteKey);
   }
   /* Mounted inside the + chat menu: chat.js morphs the menu exactly as for Music / Polls / Globe and
      hands the menu element over. o = { back, close } from chat.js. */
@@ -826,8 +863,9 @@
     else if (a === "close") closeSheet();
     else if (a === "back") { if (sheet && sheet._mnt && sheet._mnt.back) { var bo = sheet._mnt; unmount(sheet); bo.back(); } else closeSheet(); }
     else if (a === "tab") { tab = b.getAttribute("data-tab"); renderSheet(); }
-    else if (a === "react") react(b.getAttribute("data-e"));
-    else if (a === "prev" || a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
+    else if (a === "react") { pop(b); react(b.getAttribute("data-e")); }
+    else if (a === "prev") { var cc = calc(); ctl({ action: cc && cc.t > 3 ? "restart" : "prev" }); }
+    else if (a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
     else if (a === "shuffle") ctl({ action: "shuffle", on: !S.shuffle });
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
     else if (a === "golive") confirmFM("Go live now? Everyone on the site will see Misery FM is live.", "Go Live", function () { ctl({ action: "live" }); });
@@ -836,13 +874,16 @@
     else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
     else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
     else if (a === "edit") openEdit(id);
-    else if (a === "note") { var n = q(".fm-note-in", sheet); ctl({ action: "note", text: n ? n.value : "" }).then(function (r) { r && r.ok && toast("Note posted"); }); }
-    else if (a === "noteclr") ctl({ action: "note", text: "" });
     else if (a === "sched") {
       var si = q(".fm-sched-in", sheet), ts = si && si.value ? new Date(si.value).getTime() : 0;
       if (!ts || ts < Date.now()) return toast("Pick a time in the future");
       ctl({ action: "sched", at: ts }).then(function (r) { r && r.ok && toast("Scheduled for " + when(ts)); });
     } else if (a === "schedclr") ctl({ action: "sched", at: 0 });
+    else if (a === "xfm" || a === "xfp") {
+      var xv = Math.max(0, Math.min(XF_MAX, Math.round(S.xf || 0) + (a === "xfp" ? 1 : -1))), st2 = b.closest(".fm-step");
+      if (st2) st2.outerHTML = stepHTML(xv);
+      S.xf = xv; ctl({ action: "xf", sec: xv });
+    }
     else if (a === "edclose") closeEdit();
     else if (a === "edsave") saveEdit();
     else if (a === "cover") { pickFor = edit._id; picker("img").click(); }
@@ -855,7 +896,6 @@
     else if (a === "xf") { var v = q(".fm-xf-v", sheet); v && (v.textContent = e.target.value + " s"); }
     else if (e.target.classList.contains("fm-scrub")) { e.target._busy = 1; var c = calc(); if (c) { q(".fm-el", sheet).textContent = fmt(+e.target.value); q(".fm-rem", sheet).textContent = "-" + fmt(c.d - e.target.value); } }
   }
-  function noteKey(e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("fm-note-in")) { e.preventDefault(); var b = q('[data-a="note"]', sheet); b && b.click(); } }
   function onChange(e) {
     var tg = e.target, a = tg.getAttribute("data-a");
     if (a === "xf") ctl({ action: "xf", sec: +tg.value });
@@ -1184,7 +1224,9 @@
     if (RM.matches && sheet) viz();
     if (c && !c.paused && !S.paused && (now() - S.startedAt) / 1e3 > durOf(c.tr) + 4 && tickN % 10 === 0) refresh();
   }
-  window.addEventListener("resize", function () { hb && (q(".fm-ring", hb)._w = 0); deco(); });
+  window.addEventListener("resize", function () { hb && (q(".fm-ring", hb)._w = 0, hb._fmTy = 0); deco(); });
+  // web fonts change the text metrics: re-measure the "is live" weight and baseline once they're in
+  document.fonts && document.fonts.ready && document.fonts.ready.then(function () { if (hb) { hb._fmTy = 0; deco(); } });
   window.addEventListener("hashchange", function () { setTimeout(deco, 60); setTimeout(deco, 400); });
   document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
 

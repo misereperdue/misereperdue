@@ -12524,9 +12524,70 @@ html:not([data-gprows]) .chat-gp-row + .chat-gp-row .chat-gp-body::before,html[d
 .fm-c .fm-stats{margin:0 2px;border-radius:12px;background:rgba(127,127,127,.08)}
 .fm-c .fm-stats div{padding:8px 4px}
 .fm-c .fm-stats dd{font-size:14px}
-.fm-c.fm-root,.chat-plus-menu.fm-mnt.fm-c{background-image:linear-gradient(var(--fm-veil),var(--fm-veil))!important}
+.fm-sheet.fm-c.fm-root{background-image:linear-gradient(var(--fm-veil),var(--fm-veil))!important}
+/* t524u: in the + menu the FM panel uses exactly the + menu glass (no extra veil, which made it near-opaque) */
+.chat-plus-menu.fm-mnt.fm-c{background-image:none!important}
 .fm-c input[type=range]{border:0!important;border-radius:0;box-shadow:none!important;background:transparent!important;padding:0;outline:0}
 
 /* + menu scroll lock (dc): no rubber-band / scroll chaining to the chat while a + menu panel is open */
 html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .chat-plus-menu .chat-gp-list,.chat-plus-menu .chat-music-results,.chat-plus-menu .fm-sh-body,.chat-plus-menu .chat-poll-f,.chat-plus-menu .fm-edit,.chat-plus-menu .fm-ed-body{overscroll-behavior:contain}
+
+/* ===== Misery FM player, t521u/t522u/t523u (dc, 2026-11-09) ===== */
+/* Apple-Music-style transport: large centred glyphs, no circles, subtle press scale */
+.fm-c .fm-tp{display:flex;align-items:center;justify-content:space-between;gap:0;padding:0 6px;margin:2px 0 0}
+.fm-c .fm-tpb{flex:none;display:grid;place-items:center;padding:0;border:0;background:none!important;box-shadow:none;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .16s cubic-bezier(.3,.7,.4,1),opacity .16s ease}
+.fm-c .fm-tpb-s{width:52px;height:44px}
+.fm-c .fm-tpb-s svg{width:34px;height:34px}
+.fm-c .fm-tpb-pp{width:60px;height:52px}
+.fm-c .fm-tpb-pp svg{width:42px;height:42px}
+.fm-c .fm-tpb:active{transform:scale(.84);opacity:.72}
+.fm-c .fm-tp .fm-tog{width:34px;height:34px;color:var(--muted);background:none}
+.fm-c .fm-tp .fm-tog.is-on{color:var(--fm-red);background:none}
+.fm-c .fm-tp .fm-tog svg{width:18px;height:18px}
+/* thin rounded scrubber, grows while dragging; times below */
+.fm-c .fm-prog{gap:5px;padding:0 4px}
+.fm-c input.fm-scrub{height:18px;margin:0;cursor:pointer;--trk:4px}
+.fm-c input.fm-scrub:active{--trk:7px}
+.fm-c input.fm-scrub::-webkit-slider-runnable-track{height:var(--trk);border-radius:99px;background:linear-gradient(var(--ink),var(--ink)) 0/var(--p) 100% no-repeat,color-mix(in srgb,var(--ink) 18%,transparent);transition:height .15s ease}
+.fm-c input.fm-scrub::-webkit-slider-thumb{width:0;height:0;margin-top:0;border:0;box-shadow:none;background:transparent}
+.fm-c input.fm-scrub::-moz-range-track{height:4px;border-radius:99px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+.fm-c input.fm-scrub::-moz-range-progress{height:4px;border-radius:99px;background:var(--ink)}
+.fm-c input.fm-scrub::-moz-range-thumb{width:0;height:0;border:0;background:transparent}
+.fm-c .fm-pbar-l{height:4px;border-radius:99px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+.fm-c .fm-pbar-l i{background:var(--ink);border-radius:99px}
+.fm-c .fm-times{font-size:10.5px;font-weight:550;letter-spacing:.01em}
+/* layered wave visualizer */
+.fm-c .fm-viz{height:30px;opacity:1;color:#ff4d6d;--fm-viz2:#b46bff}
+[data-theme="light"] .fm-c .fm-viz{color:#e5294d;--fm-viz2:#7b4dff}
+/* reactions: compact Liquid Glass pill, evenly spaced, tap pop */
+.fm-c .fm-reacts{display:flex;justify-content:space-around;align-items:center;gap:0;margin:0 2px;padding:3px 4px;border-radius:999px;background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 9%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 4px 14px rgba(0,0,0,.12);-webkit-backdrop-filter:blur(14px) saturate(1.5);backdrop-filter:blur(14px) saturate(1.5)}
+[data-theme="light"] .fm-c .fm-reacts{background:rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 14px rgba(10,18,48,.08)}
+.fm-c .fm-reacts button{flex:none;width:38px;height:34px;padding:0;border:0;border-radius:999px;background:none;font-size:20px;line-height:1;transition:transform .15s ease}
+.fm-c .fm-reacts button:active{transform:scale(.88);background:rgba(127,127,127,.14)}
+.fm-c .fm-reacts button.is-pop{animation:fmPop .42s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fmPop{0%{transform:scale(1)}35%{transform:scale(1.42) rotate(-8deg)}65%{transform:scale(.92) rotate(4deg)}100%{transform:scale(1)}}
+/* crossfade stepper (t523u), + menu control style */
+.fm-c .fm-step{flex:none;display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:999px;background:rgba(127,127,127,.14)}
+.fm-c .fm-step-b{width:30px;height:30px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:none;color:inherit;cursor:pointer;transition:transform .14s ease,opacity .14s ease}
+.fm-c .fm-step-b svg{width:15px;height:15px}
+.fm-c .fm-step-b:active:not(:disabled){transform:scale(.86);background:rgba(127,127,127,.18)}
+.fm-c .fm-step-b:disabled{opacity:.32;cursor:default}
+.fm-c .fm-xf-v{min-width:34px;text-align:center;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+/* "is live": logo-matched stroke (weight set in JS from the measured stem), on the logo baseline */
+.fm-hb-is i.fm-bl,.fm-bl{display:inline-block!important;width:0!important;height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;animation:none!important;overflow:hidden;vertical-align:baseline}
+.fm-on .fm-hb-is{font-weight:inherit;display:block;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.fm-c .fm-tpb,.fm-c .fm-step-b,.fm-c .fm-reacts button{transition:none}.fm-c .fm-tpb:active,.fm-c .fm-step-b:active:not(:disabled),.fm-c .fm-reacts button:active{transform:none}.fm-c .fm-reacts button.is-pop{animation:none}}
+/* ===== t525u/t526u (dc): Misery FM accents in the site's Misère navy / light blue (--accent: navy in light,
+   light blue in dark). The top bar's red dotted live border (--fm-dot) stays red; the E badge stays neutral. ===== */
+:root,[data-theme="light"]{--fm-red:var(--accent);--fm-on:#fff}
+[data-theme="dark"]{--fm-red:var(--accent);--fm-on:#0a1230}
+.fm-c,[data-theme="light"] .fm-c{--fm-red:var(--accent)}
+.fm-primary,.fm-c .fm-listen.is-on,.fm-c .fm-pp,.fm-c .fm-pill-go,.fm-m-live,.fm-onair,.fm-paused,.fm-live,
+.fm-on .fm-hb-np .fm-m-l.is-on,.chat-plus-menu .chat-pmenu-row em.chat-fm-pill{color:var(--fm-on)!important}
+.fm-c .fm-onair i{background:var(--fm-on)}
+.fm-pp{box-shadow:none}
+.fm-c .fm-viz,[data-theme="light"] .fm-c .fm-viz{color:var(--accent);--fm-viz2:var(--ink)}
+[data-theme="light"] .fm-c .fm-viz{--fm-viz2:#5a7492}
+.fm-c .fm-sched-in:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+.fm-e{background:rgba(127,127,127,.32)!important;color:inherit!important}
