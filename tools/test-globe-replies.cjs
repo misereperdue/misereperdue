@@ -23,6 +23,7 @@ else if(u.pathname==='/api/forum/thread/t1')data={ok:true,thread:th};else if(u.p
 await r.fulfill({json:data,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'}});return;}
 if(process.env.MP_TEST_ORIGIN&&u.origin===ORIGIN){await r.continue();return;}
 if(u.hostname!=='misereperdue.com'){await r.fulfill({json:{data:{products:{edges:[]}}}});return;}
+if(u.pathname==='/js/shop.js')await new Promise(resolve=>setTimeout(resolve,350));
 let f=path.join(ROOT,u.pathname==='/'?'index.html':decodeURIComponent(u.pathname));if(!fs.existsSync(f)){await r.fulfill({status:404,body:''});return;}
 await r.fulfill({path:f,contentType:({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'})[path.extname(f)]||'application/octet-stream'});});
 const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(ORIGIN+'/#globe');await p.locator('.forum-thread-connector').waitFor();await p.waitForTimeout(1000);await p.screenshot({path:OUT+'/thread-elbow-'+theme+'.png'});

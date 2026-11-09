@@ -4153,6 +4153,14 @@
       vis: function (v) { seen = v; v ? kick() : draw(performance.now()); }
     };
   }
+  var mpGeGlobeQueue=[];
+  function mpGeMountGlobe(card){
+    if(!card.isConnected)return;
+    if(!window.MPShop || !MPShop.mountDecorativeGlobe){mpGeGlobeQueue=mpGeGlobeQueue.filter(function(el){return el.isConnected;});mpGeGlobeQueue.push(card);return;}
+    var icon=card.querySelector('svg.chat-ge-ico');if(!icon)return;
+    var canvas=document.createElement('canvas');canvas.className='chat-ge-ico chat-ge-globe';canvas.setAttribute('aria-hidden','true');icon.replaceWith(canvas);MPShop.mountDecorativeGlobe(canvas,true);
+  }
+  document.addEventListener('load',function(event){if(event.target.tagName==='SCRIPT'&&/\/js\/shop\.js(?:\?|$)/.test(event.target.src)){var cards=mpGeGlobeQueue;mpGeGlobeQueue=[];cards.forEach(mpGeMountGlobe);}},true);
   function mpGlobeEmbed(b, t) {
     if (!b || !t || b.classList.contains("chat-np-bubble")) return;
     var m = MP_GE_RE.exec(String(t));
@@ -4167,10 +4175,7 @@
     var tx = b.querySelector(".chat-text");
     if (only) { b.classList.add("chat-ge-bubble"); tx && (tx.hidden = !0); b.insertBefore(c, b.firstChild); }
     else { tx && (tx.innerHTML = _e(rest)); tx ? tx.insertAdjacentElement("afterend", c) : b.appendChild(c); }
-    requestAnimationFrame(function(){
-      if(!c.isConnected || !window.MPShop || !MPShop.mountDecorativeGlobe)return;
-      var icon=c.querySelector('.chat-ge-ico'),canvas=document.createElement('canvas');canvas.className='chat-ge-ico chat-ge-globe';canvas.setAttribute('aria-hidden','true');icon.replaceWith(canvas);MPShop.mountDecorativeGlobe(canvas,true);
-    });
+    requestAnimationFrame(function(){mpGeMountGlobe(c);});
     var who = c.querySelector(".chat-ge-who"), l2 = c.querySelector(".chat-ge-l2"), pic = c.querySelector(".chat-ge-pic");
     function fail() { c.classList.remove("is-loading"); c.classList.add("is-na"); who.textContent = "Globe"; l2.textContent = "Post unavailable"; }
     var pr = mpGeCache[id] || (mpGeCache[id] = E("/api/forum/thread/" + encodeURIComponent(id) + "?limit=1").catch(function () { delete mpGeCache[id]; return null; }));
