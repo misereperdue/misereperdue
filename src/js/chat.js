@@ -4703,15 +4703,12 @@
       ((p.onopen = function () {
         ((h = 0),
           dt(),
+          document.dispatchEvent(new Event("mp-live-connected")),
           clearInterval(b),
           (b = setInterval(function () {
             p && 1 === p.readyState && p.send(JSON.stringify({ t: "ping" }));
           }, 25e3)),
-          E("/api/messages?since=" + m + "&limit=50")
-            .then(function (e) {
-              e && e.messages && e.messages.forEach(Fe);
-            })
-            .catch(function () {}));
+          ut());
       }),
         (p.onmessage = function (e) {
           var t, n, a, o;
@@ -4721,18 +4718,16 @@
             return;
           }
           if (t && t.t)
-            if ("hello" === t.t)
+            if ("hello" === t.t) {
+              var followHello = Se() || !c.querySelector(".chat-msg");
               ("number" == typeof t.online && Xe(t.online),
                 "boolean" == typeof t.paused && st(t.paused),
                 t.badges && (T = Object.assign(Object.create(null), t.badges)),
                 t.you && te((s = rcKeep(t.you)).points || 0),
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
                 t.messages && t.messages.forEach(Fe),
-                Ne(!0),
-                setTimeout(function () {
-                  Te() && window.scrollTo(0, document.documentElement.scrollHeight);
-                }, 800));
-            else if ("badge" === t.t && t.user) {
+                followHello && Ne(!0));
+            } else if ("badge" === t.t && t.user) {
               t.badge ? (T[t.user] = t.badge) : delete T[t.user];
               var i = '.chat-msg[data-user="' + CSS.escape(t.user) + '"]';
               c.querySelectorAll(i).forEach(function (e) {
@@ -4940,14 +4935,7 @@
           (function () {
             if (C) return;
             C = !0;
-            var e = function () {
-              E("/api/messages?since=" + m + "&limit=50")
-                .then(function (e) {
-                  if (e && e.badges) for (var t in e.badges) T[t] = e.badges[t];
-                  e && e.messages && e.messages.length && e.messages.forEach(Fe);
-                })
-                .catch(function () {});
-            };
+            var e = function () { if (!document.hidden) ut(); };
             (e(), lt(), (y = setInterval(e, 3e3)), (w = setInterval(lt, 3e4)));
           })(),
         clearTimeout(g),
@@ -4979,13 +4967,19 @@
   function dt() {
     ((C = !1), clearInterval(y), clearInterval(w));
   }
+  var catchUpRequest = null;
   function ut() {
-    return E("/api/messages?since=" + m + "&limit=50")
+    if (catchUpRequest) return catchUpRequest;
+    var token = d;
+    catchUpRequest = E("/api/messages?since=" + m + "&limit=200")
       .then(function (e) {
+        if (token !== d) return;
         if (e && e.badges) for (var t in e.badges) T[t] = e.badges[t];
         e && e.messages && e.messages.length && e.messages.forEach(Fe);
       })
-      .catch(function () {});
+      .catch(function () {})
+      .finally(function () { catchUpRequest = null; });
+    return catchUpRequest;
   }
   function mt() {
     if (
@@ -5007,18 +5001,18 @@
     }
     h = 0;
   }
-  (setInterval(function () {
-    d && s && (C || document.hidden || (p && 1 === p.readyState) || ut());
-  }, 3e3),
-    setInterval(function () {
-      d && s && !document.hidden && p && 1 === p.readyState && ut();
-    }, 6e4),
-    setInterval(function () {
-      d && s && document.hidden && ut();
-    }, 1e4),
-    document.addEventListener("visibilitychange", function () {
-      !document.hidden && d && s && (ut(), (p && 1 === p.readyState) || ot());
-    }));
+  function liveChatCatchUp() {
+    if (document.hidden || !d || !s) return;
+    ut();
+    if (!p || p.readyState > 1) ot();
+  }
+  // WebSocket is primary. A visible-page catch-up also heals missed events
+  // and mobile sockets which appear OPEN after the phone resumes.
+  setInterval(liveChatCatchUp, 5000);
+  document.addEventListener("visibilitychange", liveChatCatchUp);
+  window.addEventListener("online", liveChatCatchUp);
+  window.addEventListener("focus", liveChatCatchUp);
+  window.addEventListener("pageshow", liveChatCatchUp);
   var pt = null;
   function ht() {
     (pt && pt.parentNode && pt.parentNode.removeChild(pt),
@@ -7232,7 +7226,7 @@
     }),
     Mt(),
     (function () {
-        /* Pull-to-refresh on every non-Globe-LIST page (PWA + Safari).
+        /* Pull-to-refresh on the store pages (PWA + Safari).
          * Only arms at the TRUE top of the scroller under the finger
          * (scrollTop<=1). Never at the bottom edge — in Chat a downward
          * drag there is normal scrolling toward older messages (per dc).
@@ -7264,20 +7258,12 @@
         if (document.body) mountTip();
         else document.addEventListener("DOMContentLoaded", mountTip);
 
-        function onGlobeList() {
-          /* Two-stage pull-to-post owns the gesture only on the Globe LIST.
-             Thread detail uses this PTR pill (per dc). */
-          var f = document.getElementById("forum");
-          if (!(f && f.classList.contains("on"))) return !1;
-          if (f.classList.contains("is-globe-list")) return !0;
-          try {
-            if (window.MPForum && typeof MPForum.isGlobeList === "function")
-              return !!MPForum.isGlobeList();
-          } catch (e) {}
-          return !!f.querySelector("#forum-pullpost");
+        function onLivePage() {
+          // Globe owns pull-to-post; Chat and thread detail update themselves.
+          return !!document.querySelector("#journal.on, #forum.on");
         }
         function clearStuckClaim() {
-          if (!onGlobeList() && window.__mpPullToPost) {
+          if (!onLivePage() && window.__mpPullToPost) {
             try { window.__mpPullToPost = !1; } catch (e) {}
             document.documentElement.classList.remove("mp-globe-pull");
           }
@@ -7361,7 +7347,7 @@
           dist = 0;
           armed = 0;
           activeScroller = null;
-          if (onGlobeList() || window.__mpPullToPost) {
+          if (onLivePage() || window.__mpPullToPost) {
             startY = null;
             return;
           }
@@ -7385,7 +7371,7 @@
         }
         function onMove(ev) {
           if (busy || null === startY) return;
-          if (onGlobeList() || window.__mpPullToPost) {
+          if (onLivePage() || window.__mpPullToPost) {
             startY = null;
             locked = 0;
             dist = 0;
@@ -7422,7 +7408,7 @@
           if (!raf) {
             raf = requestAnimationFrame(function () {
               raf = 0;
-              if (g !== gen || busy || onGlobeList()) return;
+              if (g !== gen || busy || onLivePage()) return;
               paint(p);
               shiftContent(resisted);
             });
@@ -7444,7 +7430,7 @@
             hide();
             return;
           }
-          var go = dist >= THRESH && !onGlobeList() && !window.__mpPullToPost;
+          var go = dist >= THRESH && !onLivePage() && !window.__mpPullToPost;
           startY = null;
           locked = 0;
           activeScroller = null;
