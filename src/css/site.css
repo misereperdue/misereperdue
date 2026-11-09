@@ -11967,3 +11967,50 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-pbig-music.is-compact .chat-music-results { flex:1 0 96px; }
 .chat-pbig-music.is-compact .chat-music-footer { padding-top:6px; }
 .chat-np[role="link"]:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
+
+/* Refined pull feedback and consistent thread rhythm. */
+.forum-pullpost::after { display:none; }
+.forum-pullpost-indicator { transition:transform .12s ease-out; }
+.forum-reply-node > .forum-post { margin-bottom:8px; }
+.forum-replies .forum-post { margin-top:0; }
+.chat-music-orb { border-radius:50%;box-shadow:none; }
+.chat-fm-preview { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:28px;text-align:center; }
+.chat-plus-menu .chat-fm-preview .chat-misery-fm-logo { width:180px;height:48px; }
+.chat-fm-preview p { max-width:240px;font-size:14px;line-height:1.6;color:var(--muted);margin:0; }
+.chat-np.is-loading { overflow:hidden; }
+.chat-np.is-loading .chat-np-art,.chat-np.is-loading .chat-np-line { background:linear-gradient(100deg,var(--fill) 20%,var(--stroke) 45%,var(--fill) 70%);background-size:220% 100%;animation:music-load 1.6s ease-in-out infinite;border-radius:6px; }
+@keyframes music-load { to { background-position:-220% 0; } }
+@media(prefers-reduced-motion:reduce){.chat-np.is-loading *{animation:none!important}.forum-pullpost-indicator{transition:none}}
+
+/* Content stays below the fixed Globe chrome, even with transformed media. */
+#forum.on::before { content:"";position:fixed;top:calc(env(safe-area-inset-top,0px) + 76px);left:0;right:0;height:78px;background:linear-gradient(var(--bg) 86%,transparent);z-index:27;pointer-events:none; }
+.forum .forum-topbar { z-index:29;isolation:isolate; }
+.forum-pull-body { isolation:isolate;z-index:0; }
+.forum-replies { position:relative;isolation:isolate; }
+.forum-replies .forum-reply-node > .forum-post { margin:0 0 8px; }
+.forum-replies .forum-children .forum-nested { margin-top:0; }
+.forum-show-replies { margin-bottom:8px; }
+
+/* Finger-driven feedback rather than a second underline or threshold jump. */
+.forum-pullpost .forum-pullpost-idle { opacity:calc(1 - var(--pull));transform:translateY(calc(var(--pull) * -4px)); }
+.forum-pullpost .forum-pullpost-ready { opacity:var(--pull);transform:translateY(calc((1 - var(--pull)) * 4px)); }
+.forum-pullpost.is-pop .forum-pullpost-indicator { animation:none; }
+.forum-pullpost.is-pulling .forum-pullpost-labels > span { transition:none; }
+.forum-pullpost-stroke-a,.forum-pullpost-stroke-b { transition:d .28s cubic-bezier(.2,.8,.2,1); }
+.forum-pullpost.is-pulling path { transition:none; }
+.chat-plus-menu.chat-pbig-fm { height:240px; }
+.chat-fm-preview .chat-misery-fm-logo { flex:none; }
+.chat-np.is-loading { min-width:210px;min-height:64px;box-sizing:border-box; }
+.chat-np.is-loading .chat-np-tx { display:flex;flex-direction:column;justify-content:center;gap:7px; }
+.chat-np.is-loading .chat-np-who { display:none; }
+.chat-np.is-loading .chat-np-art { border-radius:11px;box-shadow:none; }
+.chat-np.is-loading .chat-np-line { border-radius:4px;min-height:9px;height:9px; }
+.forum-thread-row.is-misery-globe { isolation:isolate; }
+.forum-card-globe { position:absolute;inset:0;width:100%;height:100%;z-index:0;color:var(--accent);opacity:.45;pointer-events:none; }
+.forum-thread-row.is-misery-globe > .forum-thread,.forum-thread-row.is-misery-globe > .forum-thread-foot { position:relative;z-index:1; }
+.forum-thread-row.is-misery-globe .forum-thread-bg { display:none; }
+.forum-thread-row.is-misery-globe { background:var(--fill); }
+.forum-thread-row.is-misery-globe .forum-thread { color:var(--ink); }
+@media(prefers-reduced-motion:reduce){.forum-pullpost path,.forum-pullpost-labels > span{transition:none!important}}
+
+.chat-music-choice { color:var(--music-accent);border-color:color-mix(in srgb,var(--music-accent) 25%,transparent); }

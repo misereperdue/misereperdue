@@ -424,8 +424,9 @@ var MPShop = (function () {
   }
 
   var globeStop = null;
-  function mountGlobe(cv) {
-    if (globeStop) (globeStop(), (globeStop = null));
+  function mountGlobe(cv, options) {
+    options = options || {};
+    if (!options.decorative && globeStop) (globeStop(), (globeStop = null));
     if (!cv || !cv.getContext) return;
     var ctx = cv.getContext("2d");
     if (!ctx) return;
@@ -551,7 +552,7 @@ var MPShop = (function () {
       ctx.lineWidth = 1.4;
       ctx.stroke();
       // live pins (front hemisphere only, fading out towards the rim)
-      if (pins.list.length) {
+      if (!options.decorative && pins.list.length) {
         var light = document.documentElement.getAttribute("data-theme") === "light",
           still = rm && rm.matches,
           spr = pinGlow(colour || "rgb(169,215,245)", light),
@@ -600,6 +601,7 @@ var MPShop = (function () {
     }
     var io = window.IntersectionObserver
       ? new IntersectionObserver(function (es) {
+          if (!cv.isConnected) return stop();
           visible = es[0].isIntersecting;
           visible ? kick() : (cancelAnimationFrame(raf), (raf = 0));
         })
@@ -615,9 +617,9 @@ var MPShop = (function () {
       document.removeEventListener("visibilitychange", onVis);
       rm && rm.removeEventListener && rm.removeEventListener("change", kick);
     }
-    globeStop = stop;
+    if (!options.decorative) globeStop = stop;
     kick();
-    loadPins(function () {
+    if (!options.decorative) loadPins(function () {
       // redraw once data lands (needed for the single reduced-motion frame)
       running && (cancelAnimationFrame(raf), (raf = 0), kick());
     });
@@ -1424,5 +1426,5 @@ var MPShop = (function () {
       };
     I.addEventListener ? I.addEventListener("change", j) : I.addListener && I.addListener(j);
   }
-  return { renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q };
+  return { mountDecorativeGlobe:function(cv){return mountGlobe(cv,{decorative:true});}, renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q };
 })();

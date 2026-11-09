@@ -2172,6 +2172,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
             '<div class="forum-thread-row' +
             (t.thumb ? " has-thumb" : "") +
             (t.pinned ? " is-pinned" : "") +
+            (t.pinned && /^misery\s+globe$/i.test(String(t.title || "").trim()) ? " is-misery-globe" : "") +
             '" data-search="' +
             w(l) +
             '" data-id="' +
@@ -2302,6 +2303,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       });
     } catch (e) {}
     try {
+      t.querySelectorAll('.forum-thread-row.is-misery-globe').forEach(function(row){
+        if (row.querySelector('.forum-card-globe') || !window.MPShop || !MPShop.mountDecorativeGlobe) return;
+        var canvas=document.createElement('canvas');canvas.className='forum-card-globe';canvas.setAttribute('aria-hidden','true');row.prepend(canvas);MPShop.mountDecorativeGlobe(canvas);
+      });
       watchPinRails(t);
     } catch (e) {}
     (!(function () {
@@ -2723,7 +2728,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       if (!iconA || !iconB) return;
       // Two chevron arms interpolate into the horizontal and vertical plus
       // strokes. Driven by the finger, so pulling back reverses the morph.
-      var p = RM ? (progress >= 1 ? 1 : 0) : progress;
+      var p = RM ? (progress >= 1 ? 1 : 0) : progress * progress * (3 - 2 * progress);
       function mix(a, b) { return (a + (b - a) * p).toFixed(2); }
       iconA.setAttribute("d", "M5 " + mix(10, 12) + "Q" + mix(11, 12) + " " + mix(14, 12) + " " + mix(12, 19) + " " + mix(14, 12));
       iconB.setAttribute("d", "M12 " + mix(14, 5) + "Q" + mix(13, 12) + " " + mix(14, 12) + " " + mix(19, 12) + " " + mix(10, 19));
