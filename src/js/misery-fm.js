@@ -506,7 +506,6 @@
   function queueHTML() {
     var c = calc(), L = S.list, Q = S.q || [];
     var h = '<div class="fm-upl"><button type="button" class="fm-btn fm-primary fm-wide" data-a="add">' + ico("plus") + "<span>Add songs</span></button>" +
-      '<input class="fm-file" type="file" accept=".mp3,.m4a,.aac,audio/mpeg,audio/mp4,audio/aac,audio/x-m4a" multiple hidden>' +
       '<p class="fm-hint">MP3, M4A or AAC up to 25 MB each. Title, artist, album, year, genre, explicit, cover art and length are read from the file.</p>' +
       (ups.length ? '<ul class="fm-ups">' + ups.map(function (u) { return '<li class="' + (u.err ? "is-err" : u.done ? "is-done" : "") + '"><span><b>' + esc(u.name) + "</b><small>" + esc(u.st) + '</small></span><span class="fm-upbar"><i style="transform:scaleX(' + (u.p || 0).toFixed(3) + ')"></i></span></li>'; }).join("") + "</ul>" : "") + "</div>";
     if (!L.length) return h + '<p class="fm-empty">No songs yet.</p>';
@@ -717,7 +716,7 @@
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
     else if (a === "golive") confirmFM("Go live now? Everyone on the site will see Misery FM is live.", "Go Live", function () { ctl({ action: "live" }); });
     else if (a === "stop") confirmFM("Stop Misery FM for everyone?", "Stop", function () { ctl({ action: "stop" }); }, !0);
-    else if (a === "add") { var f = q(".fm-file", sheet); f && f.click(); }
+    else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else picker("audio").click(); }
     else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
     else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
     else if (a === "edit") openEdit(id);
@@ -730,7 +729,7 @@
     } else if (a === "schedclr") ctl({ action: "sched", at: 0 });
     else if (a === "edclose") closeEdit();
     else if (a === "edsave") saveEdit();
-    else if (a === "cover") { var ci = q(".fm-cover-in", edit); ci && ci.click(); }
+    else if (a === "cover") { pickFor = edit._id; picker("img").click(); }
     else if (a === "coverdel") ctl({ action: "artdel", id: edit._id }).then(function (r) { r && r.ok && fillEdit(); });
     else if (a === "remove") { var t = byId(id); confirmFM("Remove “" + ((t && t.title) || "this song") + "” from Misery FM?", "Remove", function () { closeEdit(); ctl({ action: "remove", id: id }); }, !0); }
   }
@@ -744,8 +743,6 @@
     var tg = e.target, a = tg.getAttribute("data-a");
     if (a === "xf") ctl({ action: "xf", sec: +tg.value });
     else if (tg.classList.contains("fm-scrub")) { tg._busy = 0; ctl({ action: "seek", pos: +tg.value }); }
-    else if (tg.classList.contains("fm-file")) { addFiles(tg.files); tg.value = ""; }
-    else if (tg.classList.contains("fm-cover-in")) { var f = tg.files && tg.files[0]; tg.value = ""; f && coverUpload(edit._id, f); }
   }
 
   /* ---------- edit sheet (per song) ---------- */
@@ -777,7 +774,7 @@
     var v = function (k) { return k in keep ? keep[k] : t[k]; };
     edit.innerHTML = '<div class="fm-ed-hd"><b>Edit song</b><button type="button" class="fm-ib" data-a="edclose" aria-label="Close">' + ico("x") + "</button></div>" +
       '<div class="fm-ed-body"><div class="fm-ed-art">' + art(t, "fm-ed-cover") + '<div class="fm-ed-artb"><button type="button" class="fm-btn" data-a="cover">' + (t.art ? "Replace cover" : "Upload cover") + "</button>" +
-      (t.art ? '<button type="button" class="fm-btn fm-ghost" data-a="coverdel">Remove cover</button>' : "") + '<input class="fm-cover-in" type="file" accept="image/*" hidden><small class="fm-hint">Square JPEG/PNG works best.</small></div></div>' +
+      (t.art ? '<button type="button" class="fm-btn fm-ghost" data-a="coverdel">Remove cover</button>' : "") + '<small class="fm-hint">Square JPEG/PNG works best.</small></div></div>' +
       fld("title", "Song name", v("title"), 'maxlength="120" autocomplete="off"') + fld("artist", "Artist", v("artist"), 'maxlength="120" autocomplete="off"') + fld("album", "Album", v("album"), 'maxlength="120" autocomplete="off"') +
       '<div class="fm-f2">' + fld("year", "Year", v("year"), 'inputmode="numeric" maxlength="4" pattern="[0-9]*"') + fld("genre", "Genre", v("genre"), 'maxlength="40" autocomplete="off"') + "</div>" +
       '<label class="fm-f"><span>Track notes</span><textarea name="notes" maxlength="280" rows="2" placeholder="Shown to listeners under the song">' + esc(v("notes") || "") + "</textarea></label>" +
@@ -878,7 +875,7 @@
     return new Promise(function (res) {
       var done = function (v) { try { ctx.close(); } catch (e) {} res(v); };
       try {
-        var pr = ctx.decodeAudioData(buf.slice(0), function (ab) { done(ab); }, function () { done(null); });
+        var pr = ctx.decodeAudioData(buf, function (ab) { done(ab); }, function () { done(null); });
         pr && pr.catch && pr.catch(function () { done(null); });
       } catch (e) { done(null); }
     }).then(function (ab) {
@@ -917,11 +914,13 @@
     return new Promise(function (res) {
       var x = new XMLHttpRequest(), h = hdr();
       x.open("POST", API + path);
+      x.timeout = 5 * 60e3;
+      x.ontimeout = function () { res({ ok: !1, error: "Upload timed out. Check your connection" }); };
       for (var k in h) x.setRequestHeader(k, h[k]);
       x.setRequestHeader("Content-Type", type);
       x.upload && (x.upload.onprogress = function (e) { e.lengthComputable && prog && prog(e.loaded / e.total); });
       x.onload = function () { var j; try { j = JSON.parse(x.responseText); } catch (e) { j = { ok: !1, error: "HTTP " + x.status }; } res(j); };
-      x.onerror = function () { res({ ok: !1, error: "Network error" }); };
+      x.onerror = function () { res({ ok: !1, error: "Network error. Check your connection" }); };
       // ArrayBuffer bodies (not Blob): same bytes, and every engine reports them reliably
       (body && body.arrayBuffer && !(body instanceof ArrayBuffer) ? body.arrayBuffer() : Promise.resolve(body)).then(function (b) { x.send(b); }, function () { res({ ok: !1, error: "Could not read the file" }); });
     });
@@ -933,8 +932,31 @@
       return xhr("/api/fm/art?id=" + encodeURIComponent(id), b, b.type || "image/jpeg").then(function (r) { if (r.ok) { set(r.fm); fillEdit(); toast("Cover updated"); } else toast(r.error || "Cover upload failed"); });
     });
   }
-  var OKT = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 }, EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", mp4: "audio/mp4" };
-  var upBusy = !1;
+  /* File pickers live outside the sheet. iOS hides the page while the Files picker is open; the
+     state refresh on return re-renders the sheet, and a picker inside it would be detached, so its
+     change event never reached the sheet (dc, 2026-11-09: "adding tracks doesn't work"). */
+  var pickFor = "";
+  function picker(kind) {
+    var id = "fm-pick-" + kind, i = document.getElementById(id);
+    if (i) return i;
+    i = document.createElement("input");
+    i.type = "file"; i.id = id; i.tabIndex = -1; i.setAttribute("aria-hidden", "true");
+    i.className = kind === "audio" ? "fm-pick fm-file" : "fm-pick fm-cover-in";
+    // audio/* first: iOS Files greys out files that only match a bare extension list
+    i.accept = kind === "audio" ? "audio/*,.mp3,.m4a,.aac,.mp4" : "image/*";
+    if (kind === "audio") i.multiple = !0;
+    i.addEventListener("change", function () {
+      var fs = [].slice.call(i.files || []);
+      i.value = "";
+      if (kind === "audio") { if (fs.length) { tab = "queue"; addFiles(fs); } }
+      else if (fs[0] && pickFor) coverUpload(pickFor, fs[0]);
+    });
+    document.body.appendChild(i);
+    return i;
+  }
+  function within(pr, ms, v) { return Promise.race([pr, new Promise(function (r) { setTimeout(function () { r(v); }, ms); })]); }
+  var OKT = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mpeg3": 1, "audio/x-mpeg": 1, "audio/x-mpeg-3": 1, "audio/x-mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 }, EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", mp4: "audio/mp4" };
+  var upBusy = !1, batchN = 0;
   function addFiles(files) {
     [].slice.call(files || []).forEach(function (f) { ups.unshift({ f: f, name: f.name, st: "Waiting…", p: 0 }); });
     ups = ups.slice(0, 30);
@@ -947,39 +969,59 @@
     var u = ups.filter(function (x) { return x.f && !x.done && !x.err && !x.run; }).pop();
     if (!u) return;
     upBusy = !0; u.run = 1;
-    var f = u.f, ext = String(f.name || "").split(".").pop().toLowerCase(), type = OKT[String(f.type).toLowerCase()] ? String(f.type).toLowerCase() : EXT[ext];
-    var fin = function (st, err) { u.st = st; u.err = !!err; u.done = !err; u.f = null; upBusy = !1; upPaint(); pump(); };
-    if (!type) return fin("MP3, M4A or AAC only", 1);
+    var f = u.f, ext = String(f.name || "").split(".").pop().toLowerCase(), ft = String(f.type || "").toLowerCase(),
+      // iOS Files often reports "" or audio/mpeg3 for MP3s: trust the extension, then send a type the Worker accepts
+      type = EXT[ext] || (OKT[ft] ? (/mp4|m4a/.test(ft) ? "audio/mp4" : /aac/.test(ft) ? "audio/aac" : "audio/mpeg") : "");
+    var fin = function (st, err) {
+      u.st = st; u.err = !!err; u.done = !err; u.f = null; upBusy = !1; upPaint();
+      if (err) toast((u.name || "Song") + ": " + st);
+      else { batchN++; if (!ups.some(function (x) { return x.f && !x.done && !x.err; })) { toast(batchN > 1 ? batchN + " songs added to the queue" : u.name + " added to the queue"); batchN = 0; } }
+      pump();
+    };
+    if (!type) return fin("MP3, M4A or AAC only (this file is " + (ext && ext !== String(f.name) ? "." + ext : f.type || "an unknown type") + ")", 1);
     if (f.size > 25 * 1024 * 1024) return fin("Over 25 MB", 1);
     u.st = "Reading tags…"; upPaint();
     var tg = {}, an = null, raw = null;
-    f.arrayBuffer().then(function (buf) {
+    var big = IOS && f.size > 12 * 1024 * 1024;
+    within(f.arrayBuffer(), 30e3, null).then(function (buf) {
+      if (!buf || !buf.byteLength) throw new Error("the file is empty or could not be read");
       raw = buf;
-      tg = tags(buf);
+      try { tg = tags(buf) || {}; } catch (e) { tg = {}; }
+      if (tg.dur) return tg.dur;
       u.st = "Measuring…"; upPaint();
-      return analyse(buf);
-    }).then(function (r) {
-      an = r;
-      return an && an.dur ? an.dur : tg.dur || metaDur(f);
+      // <audio> metadata can stall on iOS: give it 6 s, then let the server default (180 s) stand
+      return within(metaDur(f), 6e3, 0).then(function (d) {
+        if (d || big) return d;
+        // last resort before upload: decode (copy, since raw is still needed)
+        return within(analyse(raw.slice(0)), 20e3, null).then(function (r) { an = r; return r && r.dur; });
+      });
     }).then(function (dur) {
-      var base = String(f.name || "Untitled").replace(/\.[^.]+$/, "").replace(/_/g, " ").trim(), sp = base.split(/\s+[-–—]\s+/);
+      var base = String(f.name || "Untitled").replace(/\.[^.]+$/, "").replace(/_/g, " ").trim() || "Untitled", sp = base.split(/\s+[-–—]\s+/);
       var meta = { title: tg.title || (sp.length > 1 ? sp.slice(1).join(" - ") : base), artist: tg.artist || (sp.length > 1 ? sp[0] : ""), album: tg.album || "", year: tg.year || "", genre: tg.genre || "", explicit: tg.explicit ? "1" : "", dur: Math.round((+dur || 0) * 1e3) / 1e3 };
-      var qs = Object.keys(meta).filter(function (k) { return meta[k] !== ""; }).map(function (k) { return k + "=" + encodeURIComponent(String(meta[k]).slice(0, 120)); }).join("&");
+      var qs = Object.keys(meta).filter(function (k) { return meta[k] !== "" && meta[k] != null; }).map(function (k) { return k + "=" + encodeURIComponent(String(meta[k]).slice(0, 120)); }).join("&");
       u.name = meta.title + (meta.artist ? " · " + meta.artist : "");
       u.st = "Uploading 0%"; upPaint();
       return xhr("/api/fm/upload?" + qs, raw, type, function (p) { u.p = p * 0.92; u.st = "Uploading " + Math.round(p * 100) + "%"; var bar = sheet && sheet.querySelector(".fm-ups li:nth-child(" + (ups.indexOf(u) + 1) + ") .fm-upbar i"); bar ? (bar.style.transform = "scaleX(" + u.p.toFixed(3) + ")", bar.parentNode.previousSibling.lastChild.textContent = u.st) : 0; });
     }).then(function (r) {
-      if (!r || !r.ok) return fin((r && r.error) || "Upload failed", 1);
+      if (!r || !r.ok) return fin(upErr(r), 1);
       set(r.fm);
       var id = r.id, extra = [];
-      if (tg.pic) { u.st = "Adding cover…"; upPaint(); extra.push(square(tg.pic, 600).then(function (b) { return b && xhr("/api/fm/art?id=" + id, b, b.type || "image/jpeg"); })); }
-      if (an && an.wave && an.wave.length) extra.push(xhr("/api/fm/wave?id=" + id, an.wave, "application/octet-stream"));
+      if (tg.pic) { u.st = "Adding cover…"; upPaint(); extra.push(within(square(tg.pic, 600), 15e3, null).then(function (b) { return b && xhr("/api/fm/art?id=" + id, b, b.type || "image/jpeg"); })); }
+      // loudness map for the iOS visualizer: decode after the upload, without copying; skipped for big files on iOS (memory)
+      if (!an && !big) extra.push(within(analyse(raw), 25e3, null).then(function (a2) { an = a2; }));
       return Promise.all(extra).then(function (rs) {
         rs.forEach(function (x) { x && x.ok && x.fm && set(x.fm); });
+        return an && an.wave && an.wave.length ? xhr("/api/fm/wave?id=" + id, an.wave, "application/octet-stream") : null;
+      }).then(function (x) {
+        x && x.ok && x.fm && set(x.fm);
         u.p = 1;
         fin("Added" + (tg.pic ? " with cover" : "") + (tg.title ? " · tags read" : ""));
       });
-    }).catch(function () { fin("Could not read this file", 1); });
+    }).catch(function (e) { fin("Could not add: " + ((e && e.message) || "unreadable file"), 1); });
+  }
+  function upErr(r) {
+    var e = (r && r.error) || "Upload failed";
+    return e === "owner only" ? "Not signed in as the station owner. Sign in again." : e;
   }
 
   /* ---------- render / paint / tick ---------- */
