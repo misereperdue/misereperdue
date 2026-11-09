@@ -18,6 +18,34 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Globe / music interaction polish
+
+Branch: `codex/globe-music-polish`.
+
+- Pull cue: remove underline, ease the chevron-to-plus interpolation, crossfade
+  labels continuously with the finger, and soften return instead of a pop.
+- Replies: consistent 8px spacing at every nesting depth. Globe content gets a
+  stacking boundary and fixed header underlay to prevent painting over chrome.
+- Only the pinned post titled exactly Misery Globe (verified public thread t29)
+  gets the shop's moving canvas globe. Exposed an independent decorative mount
+  on MPShop that neither fetches nor draws live location pins; other pinned and
+  unpinned cards keep their backgrounds. Existing thumbnail remains visible.
+- Misery FM is enabled as a menu action, morphing to its logo and the requested
+  “Listen to music live with others. Coming soon.” copy. Back/Close retained.
+- All picker morphs resize the container rather than stretching the contents.
+  Music uses a filled double-note silhouette, round empty-state icon and direct
+  search copy. Loading embeds use balanced placeholder bars and softer shimmer.
+- Selecting a song now drops it into the existing Globe-style composer preview.
+  Cancel/Send live in the bar, typed draft is preserved, and sends reuse their
+  CID on retry. Music metadata/URL travel with the shared preview state; Globe
+  sending remains separate. Fixed accessibility of the settled preview Send.
+- Tests: tools/test-music-picker.cjs updated for drop/cancel/send/retry, FM,
+  skeleton, keyboard and existing picker navigation; tools/test-globe-polish.cjs
+  covers targeted canvas animation, finger feedback, reply rhythm and header
+  stacking. Both run 390×844 and 360×780 in light/dark; reduced motion included
+  in music suite. All writes mocked. Existing live-reply regression also run.
+- Pins: site 803, chat 403, forum3 1175, shop 107, SW 393. No backend changes.
+
 ## 2026-11-09 — Chat Apple Music picker
 
 Branch: `codex/apple-music-picker`.
