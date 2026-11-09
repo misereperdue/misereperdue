@@ -176,14 +176,74 @@
       a
     );
   }
-  function p() {
-    y("/api/forum/threads")
-      .then(function (e) {
-        var t = (e.ok && e.threads) || [];
-        ((b.threads = t), (s = ""), "list" === r.name && ye());
-      })
-      .catch(function () {});
+  // Events deliver instant updates; polling also covers signed-out visitors,
+  // missed broadcasts and suspended mobile sockets. Never remount an editor.
+  var liveRequest = null;
+  function liveBlocked() {
+    var active = document.activeElement;
+    var selection = window.getSelection && window.getSelection();
+    return !t || document.hidden || !document.querySelector("#forum.on") ||
+      (r.name !== "list" && r.name !== "thread") || $() ||
+      window.__mpPullToPost || t.querySelector(".is-pulling, .is-settle, .forum-view-enter") ||
+      (active && t.contains(active) && active.matches("input, textarea, select, [contenteditable=true]")) ||
+      !!(selection && !selection.isCollapsed && t.contains(selection.anchorNode)) ||
+      !!document.querySelector(".chat-pmenu, .forum-copy-dialog-back") ||
+      Array.from(t.querySelectorAll("video, audio")).some(function (m) { return !m.paused; });
   }
+  function livePaint(render) {
+    // Keep the first visible card/reply at the same screen position if rows
+    // above it arrive, disappear or reorder. At the top, show new posts.
+    var top = window.scrollY, anchor = null, offset = 0;
+    if (top > 8) {
+      anchor = Array.from(t.querySelectorAll("[data-id]")).find(function (el) {
+        return el.getBoundingClientRect().top >= 110;
+      });
+      if (anchor) offset = anchor.getBoundingClientRect().top;
+    }
+    var id = anchor && anchor.getAttribute("data-id");
+    t.classList.add("forum-live-paint");
+    render();
+    var next = id && t.querySelector('[data-id="' + CSS.escape(id) + '"]');
+    window.scrollTo(0, next ? window.scrollY + next.getBoundingClientRect().top - offset : top);
+    requestAnimationFrame(function () { t.classList.remove("forum-live-paint"); });
+  }
+  function p() {
+    return liveSync();
+  }
+  function liveSync() {
+    if (liveRequest || liveBlocked()) return liveRequest;
+    var route = r.name, id = r.threadId, token = g();
+    var url = route === "thread" ? "/api/forum/thread/" + encodeURIComponent(id) : "/api/forum/threads";
+    liveRequest = y(url).then(function (e) {
+      if (!e || !e.ok || liveBlocked() || route !== r.name || id !== r.threadId || token !== g()) return;
+      if (route === "list" && Array.isArray(e.threads)) {
+        if (JSON.stringify(e.threads) === JSON.stringify(b.threads)) return;
+        b.threads = e.threads;
+        s = "list";
+        livePaint(ye);
+      } else if (route === "thread" && e.thread) {
+        // Locked responses must go through the existing access-control view.
+        if (e.locked) { we(); return; }
+        if (JSON.stringify(e.thread) === JSON.stringify(b.thread)) return;
+        b.thread = e.thread;
+        livePaint(ke);
+      }
+    }).catch(function () {
+      // Keep the current content on transient failures; next tick catches up.
+    }).finally(function () { liveRequest = null; });
+    return liveRequest;
+  }
+  var liveTimer = 0;
+  function liveSoon() {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(liveSync, 120);
+  }
+  setInterval(liveSync, 5000);
+  window.addEventListener("online", liveSoon);
+  window.addEventListener("focus", liveSoon);
+  window.addEventListener("hashchange", liveSoon);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) liveSoon(); });
+  document.addEventListener("mp-live-connected", liveSoon);
   function h(e) {
     ((r.tag = e),
       (r.category = ""),
@@ -2056,47 +2116,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '<button type="button" class="forum-search-clear" aria-label="Clear search"' +
         (n ? "" : " hidden") +
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
-      (u += (function () {
-        var pullStyle = "q1";
-        try {
-          var ps = localStorage.getItem("mp-pull-style");
-          if (ps === "p2" || ps === "q1") pullStyle = ps;
-        } catch (e) {}
-        var busy =
-          '<span class="forum-pullpost-busy" aria-hidden="true">' +
-          '<span class="forum-pullpost-spin"></span><span>Refreshing</span></span>';
-        if (pullStyle === "p2") {
-          return (
-            '<button type="button" class="forum-pullpost forum-pullpost--p2" id="forum-pullpost" data-style="p2" aria-label="Pull to post or refresh">' +
-            '<span class="forum-pullpost-seg" aria-hidden="true">' +
-            '<span class="forum-pullpost-thumb"></span>' +
-            '<span class="forum-pullpost-chip" data-chip="1">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
-            '<span>Post</span></span>' +
-            '<span class="forum-pullpost-chip" data-chip="2">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>' +
-            '<span>Refresh</span></span></span>' +
-            busy +
-            "</button>"
-          );
-        }
-        return (
-          '<button type="button" class="forum-pullpost forum-pullpost--q1" id="forum-pullpost" data-style="q1" aria-label="Pull to post or refresh">' +
-          '<span class="forum-pullpost-q1" aria-hidden="true">' +
-          '<span class="forum-pullpost-labs">' +
-          '<span class="forum-pullpost-lab" data-lab="0">Pull</span>' +
-          '<span class="forum-pullpost-lab" data-lab="1">Post</span>' +
-          '<span class="forum-pullpost-lab" data-lab="2">Refresh</span>' +
-          "</span>" +
-          '<span class="forum-pullpost-track">' +
-          '<span class="forum-pullpost-fill"></span>' +
-          '<span class="forum-pullpost-tick" data-tick="1"></span>' +
-          '<span class="forum-pullpost-tick" data-tick="2"></span>' +
-          "</span></span>" +
-          busy +
-          "</button>"
-        );
-      })()),
+      (u +=
+        '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Create a post">' +
+        '<span class="forum-pullpost-orb" aria-hidden="true">' +
+        '<svg viewBox="0 0 32 32"><circle class="forum-pullpost-ring" cx="16" cy="16" r="13"/>' +
+        '<path class="forum-pullpost-plus" d="M16 11v10M11 16h10"/></svg></span>' +
+        '<span class="forum-pullpost-labels" aria-hidden="true">' +
+        '<span class="forum-pullpost-idle">Pull to post</span>' +
+        '<span class="forum-pullpost-ready">Release to post</span></span></button>'),
       r.tag &&
         (u +=
           '<div class="forum-tagbar"><span>Filtering by</span><span class="forum-tag on">#' +
@@ -2406,7 +2433,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     try {
       H();
     } catch (e) {}
-    ("list" === r.name && window.scrollTo(0, 0),
+    ("list" === r.name && !t.classList.contains("forum-live-paint") && window.scrollTo(0, 0),
       t.querySelectorAll(".forum-cat").forEach(function (e) {
         e.addEventListener("click", function () {
           if (e.getAttribute("data-search-toggle")) return;
@@ -2596,7 +2623,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }, 380);
     }, 180);
   }
-  // Globe list: two-stage pull — ~70px post, ~150px refresh; Q1 text+track (P2 via mp-pull-style).
+  // Globe list: one pull threshold opens the composer; live sync replaces refresh.
   // Transform ONLY .forum-pull-body (topbar stays fixed). Global PTR stays off
   // on Globe via __mpPullToPost / #forum.on. Reduced-motion: snap, no springs.
 
@@ -2668,10 +2695,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     var sig = t._pullAborter.signal;
     var panel = document.getElementById("forum") || t;
     var body = t.querySelector(".forum-pull-body") || t.querySelector(".forum-anim") || t;
-    var STAGE1 = 70, STAGE2 = 150;
+    var POST_THRESHOLD = 80;
     var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var startY = 0, startX = 0, locked = 0, dist = 0, tracking = 0;
-    var stage = 0, buzz1 = 0, buzz2 = 0, busy = 0;
+    var stage = 0, buzz1 = 0, busy = 0;
     var shift = 0, raf = 0, pending = 0;
 
     function claim(on) {
@@ -2685,16 +2712,14 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       }
     }
     function setStage(st) {
-      hint.classList.toggle("is-pulling", dist > 4 || st > 0);
-      hint.classList.toggle("is-refresh", !busy && st === 1);
-      hint.classList.toggle("is-armed", !busy && st >= 2);
-      hint.style.setProperty("--seg", st >= 2 ? "1" : "0");
+      hint.classList.toggle("is-pulling", dist > 4);
+      hint.classList.toggle("is-armed", st === 1);
     }
     function paint() {
       raf = 0;
       if (!pending) return;
       pending = 0;
-      var p2 = Math.max(0, Math.min(1, dist / STAGE2));
+      var p2 = Math.max(0, Math.min(1, dist / POST_THRESHOLD));
       hint.style.setProperty("--pull", p2.toFixed(4));
       if (!busy) setStage(stage);
       body.style.transform = shift ? "translate3d(0," + shift.toFixed(2) + "px,0)" : "";
@@ -2708,22 +2733,15 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       var resisted = Math.min(132, raw * 0.5 + Math.pow(Math.max(0, raw - 40), 0.82) * 0.28);
       if (RM) resisted = Math.min(72, raw * 0.35);
       shift = resisted;
-      var next = raw >= STAGE2 ? 2 : raw >= STAGE1 ? 1 : 0;
+      var next = raw >= POST_THRESHOLD ? 1 : 0;
       if (next !== stage) {
         if (next === 1 && !buzz1) {
           buzz1 = 1;
           hint.classList.add("is-pop");
           try { navigator.vibrate && navigator.vibrate(10); } catch (err) {}
-          setTimeout(function () { hint.classList.remove("is-pop"); }, 160);
-        }
-        if (next === 2 && !buzz2) {
-          buzz2 = 1;
-          hint.classList.add("is-pop");
-          try { navigator.vibrate && navigator.vibrate(12); } catch (err) {}
-          setTimeout(function () { hint.classList.remove("is-pop"); }, 160);
+          setTimeout(function () { hint.classList.remove("is-pop"); }, 450);
         }
         if (next < 1) buzz1 = 0;
-        if (next < 2) buzz2 = 0;
         stage = next;
       }
       schedule();
@@ -2741,8 +2759,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       body.style.opacity = "";
       hint.style.transition = "none";
       hint.style.setProperty("--pull", "0");
-      hint.style.setProperty("--seg", "0");
-      hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
+      hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-settle");
       busy = 0;
       setStage(0);
       void body.offsetWidth;
@@ -2765,8 +2782,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       requestAnimationFrame(function () {
         body.style.transform = "";
         hint.style.setProperty("--pull", "0");
-        hint.style.setProperty("--seg", "0");
-        hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-refresh", "is-busy", "is-settle");
+          hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-settle");
         busy = 0;
         setStage(0);
       });
@@ -2775,27 +2791,6 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         hint.style.transition = "";
         if (then) then();
       }, 320);
-    }
-    function doRefresh() {
-      busy = 1;
-      claim(0);
-      hint.classList.add("is-busy");
-      hint.classList.remove("is-armed", "is-refresh");
-      hint.style.setProperty("--seg", "0");
-      body.style.transition = RM ? "none" : "transform .22s cubic-bezier(.2,.8,.2,1)";
-      body.style.transform = "translate3d(0," + Math.min(shift, 36).toFixed(2) + "px,0)";
-      y("/api/forum/threads")
-        .then(function (e) {
-          var list = (e && e.ok && e.threads) || [];
-          b.threads = list;
-          s = "";
-          snapClear();
-          if ("list" === r.name) ye();
-        })
-        .catch(function () {
-          busy = 0;
-          springBack();
-        });
     }
     function atTop() {
       var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -2807,7 +2802,6 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       dist = 0;
       stage = 0;
       buzz1 = 0;
-      buzz2 = 0;
       tracking = 0;
       claim(0);
       /* Bail unless the Globe LIST is the live view right now (per dc). */
@@ -2879,19 +2873,10 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         springBack();
         return;
       }
-      if (st >= 2) {
-        /* Stage 2 = refresh (per dc). */
-        doRefresh();
-      } else if (st === 1) {
-        /* Stage 1 = post / new thread (per dc). */
+      if (st === 1) {
         claim(0);
-        if (RM) {
-          snapClear();
-          openNewThread({ smooth: false });
-          return;
-        }
-        hint.classList.add("is-refresh", "is-settle");
-        openNewThread({ smooth: true });
+        hint.classList.add("is-settle");
+        openNewThread({ smooth: !RM });
       } else {
         springBack();
       }
@@ -2914,7 +2899,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     panel.addEventListener("touchstart", onStart, { passive: true, signal: sig, capture: true });
     panel.addEventListener("touchmove", onMove, { passive: false, signal: sig, capture: true });
     panel.addEventListener("touchend", onEnd, { passive: true, signal: sig, capture: true });
-    panel.addEventListener("touchcancel", onEnd, { passive: true, signal: sig, capture: true });
+    panel.addEventListener("touchcancel", function () { tracking = 0; locked = 0; springBack(); }, { passive: true, signal: sig, capture: true });
   }
   function we() {
     killPullToPost();
@@ -4752,21 +4737,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           : we());
     }
   }
-  (document.addEventListener("mp-forum-update", function (e) {
-    var t = (e && e.detail) || {},
-      n = document.getElementById("forum");
-    if (n && n.classList.contains("on"))
-      if ("list" !== r.name) {
-        if ("thread" === r.name && "reply" === t.kind && t.threadId === r.threadId) {
-          if ($()) return;
-          y("/api/forum/thread/" + encodeURIComponent(r.threadId))
-            .then(function (e) {
-              e && e.ok && e.thread && ((b.thread = e.thread), Ce());
-            })
-            .catch(function () {});
-        }
-      } else p();
-  }),
+  (document.addEventListener("mp-forum-update", liveSoon),
     (window.MPForum = {
       render: Be,
       goHome: Re,

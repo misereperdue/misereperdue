@@ -11817,285 +11817,73 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post / refresh (Globe list) — Q1: ~70px Post, ~150px Refresh (per dc);
-   P2 segmented kept behind .forum-pullpost--p2 / localStorage mp-pull-style=p2 */
+/* Pull to post: glass capsule, a finger-driven orbit, then a soft light pulse. */
 .forum-pullpost {
   --pull: 0;
-  --seg: 0;
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: max-content;
-  max-width: calc(100% - 24px);
-  margin: 10px auto 14px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  opacity: calc(0.58 + 0.42 * var(--pull));
-  transform: none;
-  transform-origin: 50% 50%;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-  font: inherit;
-}
-.forum-pullpost.is-refresh,
-.forum-pullpost.is-armed {
-  opacity: 1;
-}
-.forum-pullpost.is-settle {
-  opacity: 0.7;
-}
-/* Apple-style opacity pulse on stage haptic — never bounce */
-.forum-pullpost.is-pop {
-  animation: forum-pull-pop 0.18s ease;
-}
-@keyframes forum-pull-pop {
-  0%, 100% { opacity: 1; }
-  45% { opacity: 0.42; }
-}
-
-/* ===== Q1: centred label morph + thin progress + refresh tick ===== */
-.forum-pullpost--q1 {
-  flex-direction: column;
-  width: 148px;
-  gap: 0;
-}
-.forum-pullpost-q1 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 148px;
-}
-.forum-pullpost-labs {
-  position: relative;
-  height: 14px;
-  width: 100%;
-}
-.forum-pullpost-lab {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: var(--muted, rgba(183, 189, 208, 0.7));
-  opacity: 0;
-  transition: opacity 0.18s ease, color 0.18s ease;
-  pointer-events: none;
-}
-.forum-pullpost--q1:not(.is-refresh):not(.is-armed):not(.is-busy) .forum-pullpost-lab[data-lab="0"] {
-  opacity: 0.72;
-}
-.forum-pullpost--q1.is-refresh .forum-pullpost-lab[data-lab="1"],
-.forum-pullpost--q1.is-armed .forum-pullpost-lab[data-lab="2"] {
-  opacity: 1;
-  color: var(--ink);
-}
-.forum-pullpost-track {
-  position: relative;
-  width: 128px;
-  height: 2px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--ink) 16%, transparent);
-  overflow: visible;
-}
-.forum-pullpost-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: calc(var(--pull) * 100%);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--ink) 78%, transparent);
-  transition: background 0.16s ease;
-  pointer-events: none;
-}
-.forum-pullpost--q1.is-refresh .forum-pullpost-fill,
-.forum-pullpost--q1.is-armed .forum-pullpost-fill {
-  background: color-mix(in srgb, var(--accent, #5b7cfa) 58%, var(--ink));
-}
-.forum-pullpost-tick {
-  position: absolute;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  margin: -2.5px 0 0 -2.5px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--ink) 32%, transparent);
-  /* ring matches page bg so the dot reads cleanly on the track */
-  box-shadow: 0 0 0 2px var(--bg, #0a1230);
-  transition: background 0.16s ease, opacity 0.16s ease;
-  pointer-events: none;
-}
-.forum-pullpost-tick[data-tick="1"] {
-  left: 46.67%; /* STAGE1/STAGE2 = 70/150 — Post */
-}
-.forum-pullpost-tick[data-tick="2"] {
-  left: 100%; /* STAGE2 end — Refresh */
-}
-.forum-pullpost--q1.is-refresh .forum-pullpost-tick[data-tick="1"],
-.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="1"],
-.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="2"] {
-  background: var(--accent, #5b7cfa);
-}
-.forum-pullpost--q1.is-armed .forum-pullpost-tick[data-tick="1"] {
-  opacity: 0.55;
-}
-
-/* ===== P2 segmented (switchable) ===== */
-.forum-pullpost--p2 {
-  transform: scale(calc(0.97 + 0.03 * var(--pull)));
-}
-.forum-pullpost-seg {
-  position: relative;
-  display: none;
-  grid-template-columns: 1fr 1fr;
-  align-items: stretch;
-  gap: 0;
-  min-width: 208px;
-  padding: 3px;
-  border-radius: 999px;
-  background: var(--orb-chip);
-  box-shadow: var(--orb-chip-shadow);
-  color: var(--orb-chip-ink);
-  isolation: isolate;
-  overflow: hidden;
-}
-.forum-pullpost--p2 .forum-pullpost-seg {
-  display: grid;
-}
-.forum-pullpost-thumb {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc((100% - 6px) / 2);
-  border-radius: 999px;
-  background: var(--orb-fill);
-  box-shadow: var(--orb-shadow);
-  transform: translate3d(calc(var(--seg, 0) * 100%), 0, 0);
-  opacity: 0;
-  transition:
-    transform 0.16s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.16s ease,
-    background 0.16s ease,
-    box-shadow 0.16s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-.forum-pullpost--p2.is-refresh .forum-pullpost-thumb,
-.forum-pullpost--p2.is-armed .forum-pullpost-thumb {
-  opacity: 1;
-}
-.forum-pullpost--p2.is-armed .forum-pullpost-thumb {
-  background: color-mix(in srgb, var(--accent, #5b7cfa) 22%, var(--orb-fill));
-  box-shadow:
-    var(--orb-shadow),
-    0 0 0 0.5px color-mix(in srgb, var(--accent, #5b7cfa) 35%, transparent);
-}
-.forum-pullpost-chip {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 7px 16px;
-  border-radius: 999px;
-  color: var(--orb-chip-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0.55;
-  transition:
-    color 0.16s ease,
-    opacity 0.16s ease;
-}
-.forum-pullpost-chip svg {
-  width: 13px;
-  height: 13px;
-  flex: none;
-}
-.forum-pullpost--p2.is-refresh .forum-pullpost-chip[data-chip="1"],
-.forum-pullpost--p2.is-armed .forum-pullpost-chip[data-chip="2"] {
-  color: var(--orb-ink);
-  opacity: 1;
-}
-
-.forum-pullpost-busy {
-  display: none;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
-  min-width: 128px;
-  min-height: 28px;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.forum-pullpost--p2 .forum-pullpost-busy {
-  min-width: 208px;
-  min-height: 40px;
-  padding: 7px 18px;
+  min-height: 44px;
+  width: max-content;
+  margin: 10px auto 14px;
+  padding: 5px 16px 5px 7px;
+  border: .5px solid var(--stroke);
   border-radius: 999px;
   background: var(--orb-chip);
   box-shadow: var(--orb-chip-shadow);
-  color: var(--orb-ink);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
+  color: var(--muted);
+  font: 600 10px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .2s, box-shadow .2s, border-color .2s;
+  isolation: isolate;
 }
-.forum-pullpost.is-busy .forum-pullpost-seg,
-.forum-pullpost.is-busy .forum-pullpost-q1 {
-  display: none;
+.forum-pullpost:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.forum-pullpost-orb { position: relative; width: 32px; height: 32px; color: var(--accent); }
+.forum-pullpost-orb svg { width: 100%; height: 100%; overflow: visible; fill: none; }
+.forum-pullpost-ring {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 81.69;
+  stroke-dashoffset: calc(81.69 * (1 - var(--pull)));
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 16px 16px;
 }
-.forum-pullpost.is-busy .forum-pullpost-busy {
-  display: inline-flex;
+.forum-pullpost-plus {
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  transform-origin: 16px 16px;
+  transform: rotate(calc(-90deg + var(--pull) * 90deg)) scale(calc(.85 + var(--pull) * .15));
 }
-.forum-pullpost-spin {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  border: 1.6px solid currentColor;
-  border-right-color: transparent;
+.forum-pullpost-labels { position: relative; display: grid; align-items: center; }
+.forum-pullpost-labels > span { grid-area: 1 / 1; transition: opacity .18s, transform .22s; }
+.forum-pullpost-idle { opacity: .8; }
+.forum-pullpost-ready { opacity: 0; transform: translateY(5px); }
+.forum-pullpost.is-armed { color: var(--ink); border-color: var(--accent); box-shadow: var(--orb-chip-shadow), 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent); }
+.forum-pullpost.is-armed .forum-pullpost-idle { opacity: 0; transform: translateY(-5px); }
+.forum-pullpost.is-armed .forum-pullpost-ready { opacity: 1; transform: none; }
+.forum-pullpost-orb::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid var(--accent);
   border-radius: 50%;
-  box-sizing: border-box;
-  animation: forum-pull-spin 0.7s linear infinite;
+  opacity: 0;
+  pointer-events: none;
 }
-@keyframes forum-pull-spin {
-  to { transform: rotate(360deg); }
-}
+.forum-pullpost.is-pop .forum-pullpost-orb::after { animation: forum-post-ripple .45s ease-out; }
+@keyframes forum-post-ripple { from { opacity: .6; transform: scale(.85); } to { opacity: 0; transform: scale(1.65); } }
+.forum-pullpost.is-settle { opacity: 0; transition: opacity .18s; }
+/* Background updates must not replay the page entrance or scroll animation. */
+.forum-live-paint .forum-anim, .forum-live-paint .forum-thread-row, .forum-live-paint .forum-post { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  .forum-pullpost,
-  .forum-pullpost-thumb,
-  .forum-pullpost-chip,
-  .forum-pullpost-lab,
-  .forum-pullpost-fill,
-  .forum-pullpost-tick,
-  .forum-pullpost-spin {
-    transition: none !important;
-    animation: none !important;
-  }
+  .forum-pullpost, .forum-pullpost-labels > span, .forum-pullpost-orb::after { transition: none !important; animation: none !important; }
+  .forum-pullpost-plus { transform: none; }
 }
 
 /* Smooth list ↔ composer handoff (transform/opacity only) */
