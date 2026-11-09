@@ -3708,6 +3708,7 @@
         // keyboard lift may be inactive. Anchor directly to the visible viewport.
         menu.style.bottom = Math.max(parent.height + 8, parent.bottom - bottom) + "px";
         menu.classList.toggle("is-compact", space < 300);
+        menu.style.maxHeight = Math.max(140,space) + "px";
         menu.style.height = Math.min(menu.classList.contains("has-results") ? 460 : 340, Math.max(140, space)) + "px";
       });
     }
