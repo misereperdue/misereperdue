@@ -873,3 +873,23 @@ Branch: `codex/live-globe-pull-post`.
   - the position is restored on close, or kept at the bottom if the chat was at the bottom.
 - Globe list in the default `s1` row style had `overflow:hidden` (not scrollable); now `overflow-y:auto`.
 - Test: `tools/test-scroll-lock.cjs` (WebKit iPhone 14, dark + light).
+
+## Misery FM player, t521u–t526u (Grim, Nov 9 2026)
+
+- Now tab transport: Apple Music-style glyphs with no circles (`.fm-tpb`, original filled paths in `GLY`);
+  prev restarts the track if more than 3s in, otherwise goes back. There's a thin `input.fm-scrub` with
+  elapsed and -remaining below it. The Restart button and the Now-tab Stop pill are gone (Stop stays in Station).
+- Visualizer: `viz()` draws three layered flowing waves (eased energy, accent → `--fm-viz2` gradient),
+  at 60fps on rAF; reduced motion makes it static.
+- DJ note removed from the client (owner control, listener display, `noteKey`). The Worker field is untouched and ignored.
+- Reactions: a compact glass pill (`.fm-reacts`) with a `fmPop` tap animation (`.is-pop`).
+- Crossfade is now a stepper (`.fm-step`: −, "Off"/"Ns", +), 0–6 in 1s steps (was a 0.5-step slider),
+  disabled at the ends, same `ctl({action:"xf"})` setting.
+- Top bar "is live": the weight is picked so the "l" stem width matches the logo's 12/160 stroke (`stem()`,
+  `data-stem`); the logo is shifted so its lettering baseline (y=130/160) sits on the text baseline,
+  measured with a zero-size `.fm-bl` marker. `.fm-hb-is` must stay block, not flex+center,
+  or the marker centres and the baseline is wrong. It re-measures on fonts.ready, resize and the phase flip.
+- Frost (t524u root cause): the #63 veil `.chat-plus-menu.fm-mnt.fm-c{background-image:linear-gradient(var(--fm-veil)…)}`
+  stacked ~80% opaque navy/white over `--sheet-bg`, hiding the + menu blur. Removed, so the panel uses the + menu glass exactly.
+- Palette: `--fm-red` now maps to `--accent` (navy in light, light blue in dark) with `--fm-on` as the on-accent text.
+  The red dotted live ring (`--fm-dot`) stays red, and the E badge stays neutral.
