@@ -834,3 +834,14 @@ Branch: `codex/live-globe-pull-post`.
   reactions/deletions continue to use the existing WebSocket event handlers.
 - Grok's separate conversation history is not accessible to Codex. Put ongoing
   implementation decisions in the repo/PR so both assistants can follow them.
+
+## Shared divider style (Grim, Nov 9 2026)
+
+- Every hairline divider uses the + chat menu separator via tokens in
+  `src/css/site.css`: `--mp-div-c` (ink at 16%), `--mp-div` (horizontal fade),
+  `--mp-div-v` (vertical) and `--mp-div-in` (border-image version with a 12px
+  inset). `.mp-divider` is the shared class for new markup.
+- Existing border dividers keep their element and only take
+  `border-image: var(--mp-div-in) 1`, so no divider is added where there was none
+  (Globe thread rows intentionally stay borderless; `.mp-tbar` keeps its card border).
+- Test: `MP_PLAYWRIGHT=... node tools/test-dividers.cjs` (WebKit + Chromium, dark + light).
