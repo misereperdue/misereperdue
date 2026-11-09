@@ -9693,7 +9693,7 @@ svg[data-hi].hi-play {
 @keyframes chat-np-sk{to{background-position:-200% 0}}
 .chat-react-target .chat-np{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.chat-np-eq i{animation:none}}
-/* Now listening: compact, bubble-sized (per dc) — even pad around art, text fills art height */
+/* Now listening: compact, bubble-sized — text groups centered beside art. */
 .chat-np{width:auto;max-width:min(260px,78vw);gap:10px;padding:8px 10px 8px 8px;border-radius:18px;align-items:center}
 .chat-np-art,.chat-np.is-loading .chat-np-art{width:48px;height:48px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
 .chat-np-tx{gap:0;padding-right:0;height:48px;min-height:48px;justify-content:stretch;flex:1 1 auto;width:max-content;max-width:calc(100% - 58px);min-width:88px}
@@ -9724,12 +9724,14 @@ svg[data-hi].hi-play {
 
 /* Now listening: Apple Music powered-by crossfade (per dc) — larger mark, iOS-style crossfade */
 /* Grid stack: both states share one cell → column width = max(text, mark); no clip, no width jump */
-.chat-np-meta{display:grid;grid-template:minmax(0,1fr)/max-content;align-items:stretch;justify-items:stretch;flex:1 1 auto;width:max-content;max-width:100%;height:100%;min-width:88px;min-height:0}
+.chat-np-meta{display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);align-items:stretch;justify-items:stretch;flex:1 1 auto;width:100%;max-width:100%;height:100%;min-width:88px;min-height:0}
 .chat-np-info,.chat-np-am{grid-area:1/1}
-.chat-np-info{position:relative;display:flex;flex-direction:column;justify-content:flex-start;width:max-content;max-width:100%;height:100%;min-width:0;opacity:1;transform:scale(1);filter:blur(0);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
-.chat-np-who{margin:0;padding:0}
-.chat-np-body{display:flex;flex-direction:column;justify-content:space-between;gap:0;margin-top:2px;flex:1 1 auto;min-height:0;min-width:0;width:max-content;max-width:100%}
-.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:center;align-self:center;width:max-content;max-width:none;opacity:0;pointer-events:none;transform:scale(.98);filter:blur(4px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
+.chat-np-info{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;width:100%;max-width:100%;height:100%;min-width:0;opacity:1;transform:scale(1);filter:blur(0);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
+.chat-np-who{margin:0;padding:0;justify-content:center;max-width:100%;min-width:0}
+.chat-np-who > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.chat-np-info .chat-np-line{width:100%;max-width:100%;text-align:center;flex:none}
+.chat-np-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin-top:0;flex:none;min-height:0;min-width:0;width:100%;max-width:100%}
+.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:stretch;width:100%;min-width:0;max-width:100%;opacity:0;pointer-events:none;transform:scale(.98);filter:blur(4px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1),filter .8s cubic-bezier(.4,0,.2,1)}
 .chat-np-am-mark{display:inline-flex;align-items:baseline;gap:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.035em;line-height:1;color:#1a1a1a;white-space:nowrap;overflow:visible;flex:none}
 .chat-np-am-mark .am-g{font-size:1.05em;letter-spacing:0;margin-right:.04em;transform:translateY(.06em);display:inline-block;line-height:1}
 .chat-np-am-mark .am-w{letter-spacing:-.04em}
@@ -9776,7 +9778,9 @@ svg[data-hi].hi-play {
 .chat-plus-menu .chat-pmenu-row:not(:disabled):active{background:rgba(127,127,127,.18);transform:scale(.97)}
 .chat-plus-menu .chat-pmenu-row:disabled{opacity:.4;cursor:default;pointer-events:none}
 .chat-plus-menu .chat-pmenu-row em{margin-left:auto;font-style:normal;font-size:11px;opacity:.8}
-.chat-plus-menu .chat-pmenu-sep{height:1px;margin:2px 10px;background:var(--sheet-border,rgba(127,127,127,.2))}
+.chat-plus-menu .chat-pmenu-sep{height:1px;margin:6px 10px;background:color-mix(in srgb,currentColor 20%,transparent);flex:none}
+.chat-plus-menu .chat-misery-fm-logo{display:block;width:108px;height:24px;flex:none;background:currentColor;-webkit-mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat;mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat}
+.chat-plus-menu .chat-pmenu-row.chat-misery-fm:disabled{opacity:.65}
 @media (prefers-reduced-motion:reduce){.chat-plus-menu,.chat-plus svg{transition:none}}
 /* whisper legibility (light + dark) */
 .chat-msg.chat-private .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble),.chat-msg.chat-private .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble) > :not(.chat-react-badge){color:#1d1640!important}
@@ -11817,73 +11821,42 @@ html[data-gcards="g3"] .forum-thread-more {
   will-change: transform;
 }
 
-/* Pull to post: glass capsule, a finger-driven orbit, then a soft light pulse. */
+/* Pull to post: basic text and a down indicator, per dc. */
 .forum-pullpost {
   --pull: 0;
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 7px;
   min-height: 44px;
   width: max-content;
   margin: 10px auto 14px;
-  padding: 5px 16px 5px 7px;
-  border: .5px solid var(--stroke);
-  border-radius: 999px;
-  background: var(--orb-chip);
-  box-shadow: var(--orb-chip-shadow);
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  box-shadow: none;
   color: var(--muted);
-  font: 600 10px ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  font: 500 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .02em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color .2s, box-shadow .2s, border-color .2s;
-  isolation: isolate;
+  transition: color .18s;
 }
 .forum-pullpost:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-.forum-pullpost-orb { position: relative; width: 32px; height: 32px; color: var(--accent); }
-.forum-pullpost-orb svg { width: 100%; height: 100%; overflow: visible; fill: none; }
-.forum-pullpost-ring {
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-dasharray: 81.69;
-  stroke-dashoffset: calc(81.69 * (1 - var(--pull)));
-  stroke-linecap: round;
-  transform: rotate(-90deg);
-  transform-origin: 16px 16px;
-}
-.forum-pullpost-plus {
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  transform-origin: 16px 16px;
-  transform: rotate(calc(-90deg + var(--pull) * 90deg)) scale(calc(.85 + var(--pull) * .15));
-}
+.forum-pullpost-indicator { width: 14px; height: 14px; flex: none; transform: translateY(calc(var(--pull) * 3px)); }
 .forum-pullpost-labels { position: relative; display: grid; align-items: center; }
-.forum-pullpost-labels > span { grid-area: 1 / 1; transition: opacity .18s, transform .22s; }
-.forum-pullpost-idle { opacity: .8; }
-.forum-pullpost-ready { opacity: 0; transform: translateY(5px); }
-.forum-pullpost.is-armed { color: var(--ink); border-color: var(--accent); box-shadow: var(--orb-chip-shadow), 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent); }
-.forum-pullpost.is-armed .forum-pullpost-idle { opacity: 0; transform: translateY(-5px); }
-.forum-pullpost.is-armed .forum-pullpost-ready { opacity: 1; transform: none; }
-.forum-pullpost-orb::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-}
-.forum-pullpost.is-pop .forum-pullpost-orb::after { animation: forum-post-ripple .45s ease-out; }
-@keyframes forum-post-ripple { from { opacity: .6; transform: scale(.85); } to { opacity: 0; transform: scale(1.65); } }
+.forum-pullpost-labels > span { grid-area: 1 / 1; transition: opacity .16s; }
+.forum-pullpost-ready { opacity: 0; }
+.forum-pullpost.is-armed { color: var(--ink); }
+.forum-pullpost.is-armed .forum-pullpost-idle { opacity: 0; }
+.forum-pullpost.is-armed .forum-pullpost-ready { opacity: 1; }
 .forum-pullpost.is-settle { opacity: 0; transition: opacity .18s; }
 /* Background updates must not replay the page entrance or scroll animation. */
 .forum-live-paint .forum-anim, .forum-live-paint .forum-thread-row, .forum-live-paint .forum-post { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  .forum-pullpost, .forum-pullpost-labels > span, .forum-pullpost-orb::after { transition: none !important; animation: none !important; }
-  .forum-pullpost-plus { transform: none; }
+  .forum-pullpost, .forum-pullpost-labels > span { transition: none !important; }
+  .forum-pullpost-indicator { transform: none; }
 }
 
 /* Smooth list ↔ composer handoff (transform/opacity only) */

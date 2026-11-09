@@ -8,6 +8,30 @@ Use separate feature branches; fetch current main and check overlapping changes
 before shipping. Keep the mobile design and dc's existing visual choices.
 This file is shared context, not a direct message to the other assistant.
 
+## 2026-11-09 — dc's follow-up design refinements
+
+Branch: `codex/chat-music-menu-polish`.
+
+- Pull-to-post now uses **basic text and a down arrow**, per dc. This supersedes
+  the earlier glass pill/ring design below. The single 80px post threshold,
+  cancellation handling, live updates and composer transition are unchanged.
+- Music cards: listening line, title and artist are grouped with 1px gaps and
+  centered vertically/horizontally in the text column beside the cover.
+  The Apple Music mark shares that centered cell during the crossfade; card
+  width stays stable. Long song/artist text ellipsizes within the card.
+- Chat + menu: `role=separator` line before FM. The previous background used
+  `--sheet-border` (a full border shorthand), so it was invalid and invisible.
+  The divider now uses a currentColor tint. The FM row uses dc's existing
+  `assets/misery-fm-logo.svg` unchanged, as a CSS mask that follows the theme.
+  The feature remains disabled with its existing Soon label.
+- Pins: site 792, chat 397, forum3 1167, service worker 382.
+- Validation: `npm run check`, `npm run verify`, and `git diff --check` pass.
+  Mocked browser checks measure text gaps/centering, mark centering, crossfade
+  width stability, divider visibility, SVG mask, plain pull styling and reduced
+  motion at phone sizes in both themes and desktop. No production API writes.
+- No Worker change or deployment needed. Keep handoff notes in the shared repo
+  so both Codex and Grim can follow dc's design decisions.
+
 ## 2026-11-09 — Live Globe / Chat and pull to post
 
 Requested by dc: keep Globe and Chat current without manual refresh; make
@@ -54,7 +78,7 @@ Branch: `codex/live-globe-pull-post`.
 - Mobile visual review: 390×844 and 360×780, dark/light; desktop 1440×900.
 - No Worker code, bindings, data or secrets changed. No manual Worker deployment
   is required. R2 backup remains unrelated pending work from the prior audit.
-- Keep this on the feature branch until dc approves the preview. Pushing main
+- Released in PR #1 after dc approved on 2026-11-09. Pushing main
   deploys automatically. Real authenticated API operations reject pages.dev
   origins; verify with local assets under the real origin or on approved release.
 

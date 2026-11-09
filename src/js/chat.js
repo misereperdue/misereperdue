@@ -2424,7 +2424,7 @@
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span></button>'
                 : '<button type="button" role="menuitem" class="chat-pmenu-row is-locked" data-act="poll-locked" aria-disabled="true"><svg ' + ico + '><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Poll</span><em>VIP</em></button>'
               : '') +
-            '<div class="chat-pmenu-sep"></div><button type="button" role="menuitem" class="chat-pmenu-row" disabled aria-disabled="true"><svg ' + ico + '><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></svg><span>misery.fm</span><em>Soon</em></button>';
+            '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" disabled aria-disabled="true" aria-label="Misery FM — coming soon"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><em>Soon</em></button>';
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
           var pq = m.querySelector('[data-act="poll"]');
@@ -4100,7 +4100,7 @@
     meta.className = "chat-np-meta";
     var info = document.createElement("span");
     info.className = "chat-np-info";
-    // Fill art height: who at top, title+artist at bottom; mark centers on art.
+    // Keep listening, title and artist together; both crossfade states share one centered cell.
     if (who) info.appendChild(who);
     var body = document.createElement("span");
     body.className = "chat-np-body";
