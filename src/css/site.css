@@ -11994,3 +11994,10 @@ body.home:has(#product.on) > .page { position:relative;z-index:2;isolation:isola
 
 /* Product Back stays parked beneath the navigation while the page scrolls. */
 #product .shop-product-head { position:sticky;top:calc(env(safe-area-inset-top, 0px) + 93px);z-index:3; }
+
+/* Owner delete: thin rounded X with a soft red glow on hover, focus and touch press. */
+.chat-react-delete { transition:background-color .18s ease,box-shadow .22s ease,color .18s ease; }
+.chat-react-delete svg { width:19px;height:19px;transition:filter .22s ease; }
+.chat-react-delete:hover:not(:disabled),.chat-react-delete:focus-visible,.chat-react-delete.is-press:not(:disabled) { background:rgba(240,68,92,.12);box-shadow:0 0 0 1px rgba(240,68,92,.22),0 0 16px rgba(240,68,92,.38);outline:none; }
+.chat-react-delete:hover:not(:disabled) svg,.chat-react-delete:focus-visible svg,.chat-react-delete.is-press:not(:disabled) svg { filter:drop-shadow(0 0 4px rgba(240,68,92,.6)); }
+@media (hover:none){ .chat-react-delete:hover:not(.is-press):not(:focus-visible) { background:none;box-shadow:none; } .chat-react-delete:hover:not(.is-press):not(:focus-visible) svg { filter:none; } }
