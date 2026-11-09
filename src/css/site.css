@@ -11915,3 +11915,55 @@ html[data-gcards="g3"] .forum-thread-more {
 .forum-replying-to { align-self:flex-start;max-width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--stroke);border-radius:12px;background:var(--fill);margin-bottom:0; }
 .forum-replying-to b { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .forum-replying-to button { flex:none; }
+
+/* Apple Music picker: the + menu grows into a compact, artwork-led sheet. */
+.chat-plus-menu .chat-pmenu-row[data-act="music"] > svg { background:#fa243c;color:#fff; }
+.chat-plus-menu.chat-pbig-music { height:min(460px,62dvh);max-height:calc(100dvh - 120px);gap:10px;--music-accent:#e92646; }
+[data-theme="dark"] .chat-plus-menu.chat-pbig-music { --music-accent:#ff526c; }
+.chat-music-heading { display:flex;align-items:center;gap:7px; }
+.chat-music-heading > svg { width:23px;height:23px;box-sizing:border-box;padding:4px;border-radius:50%;background:#fa243c;color:white; }
+.chat-music-search { display:flex;align-items:center;gap:8px;flex:none;min-height:44px;padding:0 12px;border-radius:13px;border:1px solid var(--menu-glass-border);background:rgba(127,127,127,.1);transition:border-color .18s,box-shadow .18s; }
+.chat-music-search:focus-within { border-color:color-mix(in srgb,var(--music-accent) 48%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--music-accent) 8%,transparent); }
+.chat-music-search > svg { width:18px;height:18px;flex:none;color:var(--music-accent); }
+.chat-music-q { width:100%;min-width:0;padding:10px 0;border:0;background:none;color:inherit;font:inherit;font-size:16px;line-height:22px;outline:0;-webkit-appearance:none;appearance:none; }
+.chat-music-q::placeholder { color:var(--muted);opacity:.8;font-size:14px; }
+.chat-music-status { flex:none;min-height:13px;margin:0 3px;font-size:9px;font-weight:650;letter-spacing:.11em;color:var(--muted);line-height:1.4; }
+.chat-music-results { flex:1;min-height:0;list-style:none;margin:0 -3px;padding:0 3px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin; }
+.chat-music-results > li { list-style:none;margin:0;padding:0; }
+.chat-music-track { width:100%;display:flex;align-items:center;gap:10px;min-height:76px;box-sizing:border-box;padding:8px;border:1px solid transparent;border-radius:13px;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .18s,border-color .18s; }
+.chat-music-results > li + li { margin-top:3px; }
+.chat-music-track:not(:disabled):hover { background:rgba(127,127,127,.07); }
+.chat-music-track[aria-pressed="true"] { background:color-mix(in srgb,var(--music-accent) 9%,transparent);border-color:color-mix(in srgb,var(--music-accent) 28%,transparent); }
+.chat-music-art { position:relative;display:grid;place-items:center;flex:none;width:54px;height:54px;overflow:hidden;border-radius:9px;background:color-mix(in srgb,var(--music-accent) 10%,transparent);color:var(--music-accent); }
+.chat-music-art > svg { width:23px;height:23px; }
+.chat-music-art > img { position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover; }
+.chat-music-copy { display:flex;flex:1;min-width:0;flex-direction:column;gap:3px; }
+.chat-music-copy > * { overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.25; }
+.chat-music-copy strong { font-size:13px;font-weight:650; }
+.chat-music-artist { font-size:11.5px;color:var(--muted); }
+.chat-music-album { font-size:10px;color:var(--muted);opacity:.8; }
+.chat-music-choice { width:22px;height:22px;display:grid;place-items:center;box-sizing:border-box;flex:none;border-radius:50%;border:1px solid var(--stroke);color:transparent;transition:background .18s,border-color .18s,color .18s; }
+.chat-music-choice > svg { width:14px;height:14px; }
+.chat-music-track[aria-pressed="true"] .chat-music-choice { background:#fa243c;border-color:#fa243c;color:white; }
+.chat-music-empty { min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:16px 20px!important;text-align:center; }
+.chat-music-orb { display:grid;place-items:center;flex:none;width:56px;height:56px;margin-bottom:4px;border-radius:19px;background:linear-gradient(145deg,#ff607c,#ee2549);color:white;box-shadow:0 6px 24px rgba(250,36,60,.17),inset 0 1px 0 rgba(255,255,255,.24); }
+.chat-music-orb > svg { width:28px;height:28px; }
+.chat-music-empty strong { font-size:15px;font-weight:650;letter-spacing:-.02em; }
+.chat-music-detail { max-width:225px;color:var(--muted);font-size:12px;line-height:1.5; }
+.chat-music-results[aria-busy="true"] .chat-music-orb { animation:chat-music-breathe 1.1s ease-in-out infinite alternate; }
+@keyframes chat-music-breathe { to { opacity:.55;transform:scale(.94); } }
+.chat-music-footer { display:flex;flex:none;flex-direction:column;gap:9px;padding:10px 2px 2px;border-top:1px solid var(--menu-glass-border); }
+.chat-music-selection { padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:10px;text-align:center; }
+.chat-music-send { display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;border:0;border-radius:12px;background:linear-gradient(120deg,#f83658,#df1d42);color:white;font:inherit;font-weight:650;font-size:13px;cursor:pointer;transition:opacity .18s,transform .18s; }
+.chat-music-send > svg { width:16px;height:16px; }
+.chat-music-send:disabled { opacity:.4;cursor:default; }
+.chat-music-send:not(:disabled):active { transform:scale(.98); }
+.chat-music-retry { min-height:32px;padding:6px 14px;border:1px solid color-mix(in srgb,var(--music-accent) 24%,transparent);border-radius:999px;background:none;color:var(--music-accent);font:inherit;font-size:12px;cursor:pointer; }
+.chat-music-track:focus-visible,.chat-music-send:focus-visible,.chat-music-retry:focus-visible { outline:2px solid var(--music-accent);outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { .chat-music-results * { animation:none!important;transition:none!important; } .chat-music-send { transition:none; } }
+
+.chat-plus-menu.chat-pbig-music.is-compact { overflow-y:auto; }
+.chat-pbig-music.is-compact .chat-music-status,.chat-pbig-music.is-compact .chat-music-selection { display:none; }
+.chat-pbig-music.is-compact .chat-music-results { flex:1 0 96px; }
+.chat-pbig-music.is-compact .chat-music-footer { padding-top:6px; }
+.chat-np[role="link"]:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }

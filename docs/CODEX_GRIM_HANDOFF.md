@@ -18,6 +18,39 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Chat Apple Music picker
+
+Branch: `codex/apple-music-picker`.
+
+- New red circular Music action in the Chat + menu, available to signed-in users
+  without a VIP restriction. Uses the same menu morph as Globe/Poll. Search,
+  artwork/artist/album/duration rows, selected red check, and Send song footer
+  share the site's glass, spacing and light/dark styling. Reduced motion honored.
+- Uses the existing public Apple/iTunes Search API, CA storefront, with debounce,
+  cancellation, deduplication and relevance ordering. If no full title/artist
+  match appears, inspect up to two relevant albums via lookup: Apple's search
+  sometimes omits an explicit song version despite a valid lookup. Album lookups
+  cache in memory. Live API verified using Frank Ocean / Nights.
+- Share the selected song's exact Apple Music URL through the existing /api/send
+  endpoint. Keep typed chat text and attachments intact; preserve private-chat
+  target. Reuse the message CID on retry; failures keep the selection available.
+- Recipients resolve the same song ID, not fuzzy title/artist search, into the
+  existing music card/official animation. Cache exact metadata locally. Suppress
+  duplicate server link previews when successful, restore them on lookup failure.
+  Music cards support Enter to open Apple Music. Old +song messages still work.
+- Picker anchors to visualViewport when the search keyboard opens; compact
+  scrolling layout for short space. Close/back/outside/+ toggle/navigation clean
+  up searches and viewport listeners. Menu close now uses its original handler,
+  preventing leaked listeners and stale callbacks affecting a reopened menu.
+- Checks: build/site/source verification; tools/test-music-picker.cjs at 390×844
+  and 360×780 in both themes, including non-VIP/reduced motion. Covers incoming
+  and outgoing exact IDs, generic-preview fallback, safe text/deduplication,
+  sending/retry/CID/draft preservation, empty/error/retry, search races/closure,
+  album versions, keyboard bounds, Back/Globe and toggling/navigation. API and
+  WebSocket traffic mocked; no real chat posts. Real Apple catalog data and
+  artwork inspected separately. Hosted preview/production verified at release.
+- Pins: site 802, chat 402, SW 392. No Worker or CSP changes; no new credentials.
+
 ## 2026-11-09 — smaller pull label, VIP media and category sorting
 
 Branch: `codex/vip-category-fixes`.
