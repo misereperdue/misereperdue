@@ -19,7 +19,9 @@ for(const[theme,width,height]of[['dark',390,844],['light',390,844],['dark',360,7
  await p.locator('.forum-cats .forum-cat').nth(1).evaluate(el=>{const b=el.getBoundingClientRect();window.__pull=(type,y)=>{const t=new Touch({identifier:1,target:el,clientX:b.x+b.width/2,clientY:y});el.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:type==='touchend'?[]:[t],changedTouches:[t]}));};__pull('touchstart',b.y+5);__pull('touchmove',b.y+30);__pull('touchmove',b.y+60);});
  await p.waitForTimeout(120);const r1=await pos();if(width===390&&theme==='dark')await p.screenshot({path:OUT+'/mid-pull.png'});
  assert(r1.cats-r0.cats>10,'category pills did not follow the pull '+JSON.stringify({r0,r1}));assert(Math.abs((r1.cats-r0.cats)-(r1.list-r0.list))<0.5,'pills and list moved differently');assert.equal(r1.top,r0.top,'top bar moved');
- await p.locator('.forum-cats .forum-cat').nth(1).evaluate(()=>__pull('touchend',0));await p.waitForTimeout(500);const r2=await pos();
+ const st=()=>p.evaluate(()=>[...document.querySelectorAll('.forum-cats .forum-cat')].slice(0,4).map(c=>{const i=c.querySelector('.forum-cat-in');return{h:c.getBoundingClientRect().height/c.offsetHeight,lab:i?i.getBoundingClientRect().height/i.offsetHeight:1}}));const s1=await st();
+ assert(s1.some(x=>x.h>1.08&&x.h<1.26),'pills did not stretch '+JSON.stringify(s1));assert(s1.every(x=>x.h>=1&&x.lab<1.04&&x.lab>0.96),'label distorted '+JSON.stringify(s1));assert(new Set(s1.map(x=>x.h.toFixed(3))).size>1,'no stagger');
+ await p.locator('.forum-cats .forum-cat').nth(1).evaluate(()=>__pull('touchend',0));await p.waitForTimeout(900);const r2=await pos();assert((await st()).every(x=>Math.abs(x.h-1)<0.01),'pills did not spring back');
  if(!(await p.locator('#forum-title, .forum-compose, #forum-new').count())){assert(Math.abs(r2.cats-r0.cats)<0.5&&Math.abs(r2.list-r0.list)<0.5,'did not spring back together');}
  // A sideways drag on the pills still scrolls them, not the pull.
  await p.goto(ORIGIN+'/#globe');await p.locator('.forum-pullpost').waitFor();await p.waitForTimeout(800);const s0=await pos();

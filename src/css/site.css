@@ -12002,3 +12002,11 @@ body.home:has(#shop.on) > .page { position:relative;z-index:2;isolation:isolate;
 .chat-react-delete:hover:not(:disabled),.chat-react-delete:focus-visible,.chat-react-delete.is-press:not(:disabled) { background:rgba(240,68,92,.12);box-shadow:0 0 0 1px rgba(240,68,92,.22),0 0 16px rgba(240,68,92,.38);outline:none; }
 .chat-react-delete:hover:not(:disabled) svg,.chat-react-delete:focus-visible svg,.chat-react-delete.is-press:not(:disabled) svg { filter:drop-shadow(0 0 4px rgba(240,68,92,.6)); }
 @media (hover:none){ .chat-react-delete:hover:not(.is-press):not(:focus-visible) { background:none;box-shadow:none; } .chat-react-delete:hover:not(.is-press):not(:focus-visible) svg { filter:none; } }
+
+/* Globe pull: category pills stretch like rubber from the top with the finger (--cat-pull 0..1,
+   --k per-pill weight, centre strongest), label counter-scaled, overshoot spring on release. */
+.forum-pull-body .forum-cat { transform-origin:50% 0;transform:scale(calc(1 - .05 * var(--cat-pull,0) * var(--k,1)),calc(1 + .2 * var(--cat-pull,0) * var(--k,1)));transition:all .2s ease,transform .55s cubic-bezier(.34,1.56,.64,1) var(--kd,0ms); }
+.forum-cat-in { display:inline-block;transform:scale(calc(1 + .052 * var(--cat-pull,0) * var(--k,1)),calc(1 - .166 * var(--cat-pull,0) * var(--k,1)));transition:transform .55s cubic-bezier(.34,1.56,.64,1) var(--kd,0ms); }
+.forum-pull-body.is-pulling .forum-cat { transition:all .2s ease,transform 0s; }
+.forum-pull-body.is-pulling .forum-cat-in { transition:none; }
+@media (prefers-reduced-motion:reduce){ .forum-pull-body .forum-cat,.forum-cat-in { transform:none; } }
