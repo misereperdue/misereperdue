@@ -9774,6 +9774,12 @@ svg[data-hi].hi-play {
 .chat-plus-menu.is-out{transform:scale(.7);opacity:0;transition-duration:.16s}
 .chat-plus-menu .chat-pmenu-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:11px;background:none;color:inherit;font:inherit;font-size:15px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .15s}
 .chat-plus-menu .chat-pmenu-row svg{width:20px;height:20px;flex:none}
+/* Circular action badges follow the site's light/dark accent palette. */
+.chat-plus-menu .chat-pmenu-row[data-act] > svg{box-sizing:border-box;width:36px;height:36px;padding:8px;border-radius:50%;background:#1c1c1e;color:#fff}
+[data-theme="dark"] .chat-plus-menu .chat-pmenu-row[data-act="media"] > svg{background:#f5f5f7;color:#1c1c1e}
+.chat-plus-menu .chat-pmenu-row[data-act="globe"] > svg{background:#0a1230;color:#fff}
+[data-theme="dark"] .chat-plus-menu .chat-pmenu-row[data-act="globe"] > svg{background:#a9d7f5;color:#0a1230}
+.chat-plus-menu .chat-pmenu-row[data-act^="poll"] > svg{background:#8055c9;color:#fff}
 .chat-plus-menu .chat-pmenu-row:not(:disabled):active{background:rgba(127,127,127,.18);transform:scale(.97)}
 .chat-plus-menu .chat-pmenu-row:disabled{opacity:.4;cursor:default;pointer-events:none}
 .chat-plus-menu .chat-pmenu-row em{margin-left:auto;font-style:normal;font-size:11px;opacity:.8}
