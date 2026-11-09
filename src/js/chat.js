@@ -3029,7 +3029,7 @@
   }
   function mpNPSearch(e, options) {
     options = options || {};
-    return fetch("https://itunes.apple.com/search?entity=song&limit=25&term=" + encodeURIComponent(e) + (options.country ? "&country=" + encodeURIComponent(options.country) : ""), { signal:options.signal })
+    return fetch("https://itunes.apple.com/search?media=music&entity=song&limit=" + (options.limit || 25) + "&term=" + encodeURIComponent(e) + (options.country ? "&country=" + encodeURIComponent(options.country) : ""), { signal:options.signal })
       .then(function (e) {
         if (!e.ok) throw new Error("Catalog unavailable");
         return e.json();
@@ -3055,19 +3055,45 @@
   }
   var mpMusicAlbums = Object.create(null);
   function mpMusicSearch(query, signal) {
-    var words = mpNPq(query).split(" ").filter(Boolean);
+    var fold = function (text) { return mpNPq(text).normalize("NFD").replace(/\p{M}+/gu, ""); },
+      words = fold(query).split(" ").filter(Boolean),
+      junk = /\b(karaoke|originally performed|tribute|instrumental|cover|lullaby|8 bit|ringtone|string quartet|made famous)\b/;
     function score(track) {
-      var title = mpNPq(track.trackName), artist = mpNPq(track.artistName), album = mpNPq(track.collectionName);
-      return words.reduce(function (total, word) { return total + (title.includes(word) ? 5 : artist.includes(word) ? 4 : album.includes(word) ? 1 : 0); }, 0);
+      var title = fold(track.trackName), artist = fold(track.artistName), album = fold(track.collectionName), total;
+      var inTitle = 0, inArtist = 0;
+      total = words.reduce(function (sum, word) { return sum + (title.includes(word) ? (inTitle = 5) : artist.includes(word) ? (inArtist = 4) : album.includes(word) ? 1 : 0); }, 0);
+      /* "artist + title" queries: a track matching both beats a title that merely contains every word */
+      if (inTitle && inArtist) total += 2;
+      /* originals before karaoke/cover/instrumental uploads unless the query asks for them */
+      if (junk.test(String(track.trackName + " " + track.artistName + " " + track.collectionName).toLowerCase()) && !junk.test(words.join(" "))) total -= 3;
+      return total;
     }
-    function rank(tracks) { return tracks.sort(function (a, b) { return score(b) - score(a); }); }
-    return mpNPSearch(query, { signal:signal, country:"ca" }).then(function (tracks) {
-      // Search can omit an album's explicit version even when its song lookup
-      // is available. Check two relevant albums if no result matches all words.
-      var exact = tracks.some(function (track) { var text = mpNPq(track.trackName + " " + track.artistName); return words.every(function (word) { return text.includes(word); }); });
+    /* score first, then Apple's own relevance order (best position across storefronts) */
+    function rank(tracks) { var seen = Object.create(null); return tracks.map(function (t, i) { return { t:t, s:score(t), p:t._mpPos == null ? 1e3 + i : t._mpPos }; }).sort(function (a, b) { return b.s - a.s || a.p - b.p; }).map(function (x) { return x.t; }).filter(function (t) { var k = songKey(t); if (seen[k]) return !1; seen[k] = 1; return !0; }); }
+    function songKey(t) { return fold(t.trackName) + "|" + fold(t.artistName) + "|" + (t.trackExplicitness === "explicit" ? 1 : 0); }
+    /* Canadian storefront first (dc), merged with the US catalog for songs the CA index ranks low or misses */
+    function store(country) { return mpNPSearch(query, { signal:signal, country:country, limit:50 }).catch(function (error) { if (error.name === "AbortError") throw error; return null; }); }
+    return Promise.all([store("ca"), store("us")]).then(function (both) {
+      /* one storefront failing still shows the other; both failing is a catalog error */
+      if (!both[0] && !both[1]) throw new Error("Catalog unavailable");
+      both = [both[0] || [], both[1] || []];
+      var byKey = Object.create(null), ids = Object.create(null), tracks = [];
+      [both[0], both[1]].forEach(function (list, store) {
+        list.forEach(function (t, i) {
+          if (!t || !t.trackId) return;
+          var pos = i + store * 0.5, key = songKey(t), had = byKey[key];
+          if (had) { had._mpPos = Math.min(had._mpPos, pos); return; }
+          if (ids[t.trackId]) return;
+          ids[t.trackId] = 1; t._mpPos = pos; byKey[key] = t; tracks.push(t);
+        });
+      });
+      /* a real title+artist match: every query word found and the whole title asked for */
+      var exact = tracks.some(function (track) { var title = fold(track.trackName), text = title + " " + fold(track.artistName); return words.every(function (word) { return text.includes(word); }) && title.split(" ").every(function (w) { return words.indexOf(w) >= 0; }); });
       if (exact || words.length < 2) return rank(tracks);
       var albums = [];
-      rank(tracks).forEach(function (track) { var id = String(track.collectionId || ""); if (/^\d+$/.test(id) && albums.indexOf(id) < 0 && albums.length < 2) albums.push(id); });
+      /* albums by the artist the query names come first (e.g. Blonde for "frank ocean nights") */
+      var byArtist = rank(tracks).filter(function (t) { var a = fold(t.artistName); return words.some(function (w) { return a.split(" ").indexOf(w) >= 0; }); });
+      byArtist.concat(rank(tracks)).forEach(function (track) { var id = String(track.collectionId || ""); if (/^\d+$/.test(id) && albums.indexOf(id) < 0 && albums.length < 2) albums.push(id); });
       return Promise.all(albums.map(function (id) {
         if (mpMusicAlbums[id]) return mpMusicAlbums[id];
         return fetch("https://itunes.apple.com/lookup?id=" + id + "&entity=song&country=ca&limit=200", { signal:signal })
@@ -3689,7 +3715,7 @@
     }
     function idle() {
       var recent = mpMusicRecent();
-      if (!recent.length) { status.textContent = ""; return state("No recently played songs", "Choose a song to share."); }
+      if (!recent.length) { status.textContent = ""; return state("No recently played songs", ""); }
       list.innerHTML = ""; menu.classList.add("has-results"); menu.classList.add("is-recent"); fit(); mountBrand();
       status.textContent = "RECENT";
       rows(recent);

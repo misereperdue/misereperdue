@@ -22,6 +22,7 @@ for(const theme of ['dark','light']){
  const pick=async name=>{await p.locator('.chat-music-q').fill('song');await menu.locator('.chat-music-track',{hasText:name}).first().click();const g=p.getByRole('group',{name:'Music preview'});await g.waitFor();await p.waitForTimeout(450);await g.getByRole('button',{name:'Cancel',exact:true}).click();await p.waitForTimeout(300);};
  await open();
  await menu.getByText('No recently played songs',{exact:true}).waitFor();
+ assert.equal(await menu.getByText('Choose a song to share.').count(),0,'old helper text still shown');
  assert.equal(await menu.locator('.chat-music-idle-wave i').count(),5,'empty state lost the waveform');
  assert.notEqual(await menu.locator('.chat-music-idle-wave i').first().evaluate(e=>getComputedStyle(e).animationName),'none','waveform not animated');
  if(theme==='dark')await p.screenshot({path:`${OUT}/empty.png`});
