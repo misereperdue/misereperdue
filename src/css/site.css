@@ -11948,3 +11948,19 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-album { font-size:9px;opacity:.65; }
 .chat-music-choice { width:26px;height:26px;background:color-mix(in srgb,var(--music-accent) 8%,transparent); }
 @media(prefers-reduced-motion:reduce){.chat-music-branding .chat-music-official{display:none}}
+
+/* Compact Apple Music signature: search first, quiet attribution below. */
+.chat-music-branding { flex:none;align-self:stretch;flex-direction:row;justify-content:center;gap:9px;padding:11px 0 0;border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent); }
+.chat-music-branding::before { display:none; }
+.chat-music-orb { width:36px;height:36px; }
+.chat-music-poster,.chat-music-official { border-radius:8px; }
+.chat-music-brand-copy { display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left; }
+.chat-music-powered { font-size:9px;font-weight:450;line-height:1.2;letter-spacing:.015em;opacity:.75; }
+.chat-music-provider { color:var(--ink);font:600 13px/1.2 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;letter-spacing:-.025em; }
+.chat-music-empty { gap:10px; }
+.chat-music-empty .chat-music-detail { font-size:12px; }
+.chat-music-idle-wave { height:30px;display:flex;align-items:center;gap:4px;margin-bottom:4px;color:var(--music-accent);opacity:.65; }
+.chat-music-idle-wave i { display:block;width:3px;height:12px;border-radius:3px;background:currentColor; }
+.chat-music-idle-wave i:nth-child(2),.chat-music-idle-wave i:nth-child(4) { height:22px; }
+.chat-music-idle-wave i:nth-child(3) { height:30px; }
+.chat-pbig-music.is-compact .chat-music-branding { display:none; }
