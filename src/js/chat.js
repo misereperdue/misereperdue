@@ -3147,9 +3147,20 @@
     function songKey(t) { return fold(t.trackName) + "|" + fold(t.artistName) + "|" + (t.trackExplicitness === "explicit" ? 1 : 0); }
     /* Canadian storefront first (dc), merged with the US catalog for songs the CA index ranks low or misses */
     function store(country) { return mpNPSearch(query, { signal:signal, country:country, limit:50 }).catch(function (error) { if (error.name === "AbortError") throw error; return null; }); }
-    return Promise.all([store("ca"), store("us")]).then(function (both) {
+    /* Deezer's relevance mapped to Apple tracks by our Worker (finds songs the iTunes index misses);
+       any failure or timeout falls back to the iTunes CA+US search below */
+    function deezer() {
+      var ac = new AbortController(), to = setTimeout(function () { ac.abort(); }, 4500);
+      if (signal) signal.addEventListener("abort", function () { ac.abort(); });
+      return fetch("https://api.misereperdue.com/api/music/search?q=" + encodeURIComponent(query), { signal:ac.signal })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) { clearTimeout(to); return data && data.ok && Array.isArray(data.tracks) ? data.tracks.filter(function (t) { return t && t.trackId && t.trackName && t.artistName && t.trackViewUrl; }) : null; })
+        .catch(function () { clearTimeout(to); return null; });
+    }
+    return Promise.all([store("ca"), store("us"), deezer()]).then(function (both) {
+      var dz = both[2];
       /* one storefront failing still shows the other; both failing is a catalog error */
-      if (!both[0] && !both[1]) throw new Error("Catalog unavailable");
+      if (!both[0] && !both[1] && !(dz && dz.length)) throw new Error("Catalog unavailable");
       both = [both[0] || [], both[1] || []];
       var byKey = Object.create(null), ids = Object.create(null), tracks = [];
       [both[0], both[1]].forEach(function (list, store) {
@@ -3162,6 +3173,12 @@
           ids[t.trackId] = 1; t._mpPos = pos; byKey[key] = t; tracks.push(t);
         });
       });
+      if (dz && dz.length) {
+        /* Deezer order first (covers/karaoke after the rest unless asked), then the iTunes ranking for anything else */
+        var keys = Object.create(null), lead = [], tail = [];
+        dz.forEach(function (t) { var k = songKey(t); if (keys[k] || keys["#" + t.trackId]) return; keys[k] = keys["#" + t.trackId] = 1; (unasked(junk, lower(t.trackName + " " + t.artistName + " " + t.collectionName)) ? tail : lead).push(t); });
+        return lead.concat(tail, rank(tracks).filter(function (t) { return !keys[songKey(t)] && !keys["#" + t.trackId]; }));
+      }
       /* split the query into an artist (a leading or trailing run of words that is exactly a returned
          artist's name) and a title (the rest), so either order and short names like "Future" work */
       for (var k = words.length - 1; k >= 1 && !split; k--) [words.slice(0, k), words.slice(words.length - k)].forEach(function (a, lead) {

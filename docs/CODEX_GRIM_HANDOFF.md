@@ -18,6 +18,39 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Deezer-led music search via the Worker (Grim, PR #49, Worker version 8369411d)
+
+- **Worker `GET /api/music/search?q=`** on `misery-chat`, handled in the
+  top-level fetch, not the DO. dc approved this.
+  1. Calls Deezer's public search (`api.deezer.com/search`, no key, 25 hits).
+  2. Maps each hit to an Apple track using iTunes CA+US search results for
+     the query, matched on normalized title + primary artist. Duration within
+     3s scores higher; more than 10s apart is rejected. Explicitness counts too.
+  3. For top hits still unmatched: one iTunes search on "artist title".
+  4. For the top 5 still unmatched: Apple Music's public web search page
+     (song ids only), then `itunes lookup?id=`. This is how Future's "SOME
+     MORE" (1407069165) is found. iTunes has no ISRC lookup.
+  - Response is `{ok, src:"deezer", tracks}` in Deezer's order. Unmatched
+    Deezer hits are dropped, because a card needs an Apple id/link.
+  - Cached 10 min in `caches.default` per lowercased query.
+  - Uncached searches are limited to 40/min per IP (in memory, per isolate).
+    Over the limit, it asks the DO `POST /__internal/owner-exempt`
+    (`X-Internal: music`; public `/__internal/*` stays 404) and never limits
+    dc's devices/networks.
+- Deployed by API upload with `keep_bindings`. All 14 bindings were kept (DO
+  CHAT_ROOM, AI, SHOPIFY_CLIENT_ID, 11 secrets), compatibility date
+  2024-01-01, observability on. The Worker source is **not** in this public
+  repo; download it from Cloudflare (`workers/scripts/misery-chat/content/v2`)
+  before editing.
+- **Client (`mpMusicSearch`):** the Worker call runs in parallel with the
+  iTunes CA+US searches, with a 4.5s timeout. If it returns tracks, they lead
+  (covers/karaoke after the rest unless asked), then the iTunes ranking fills
+  in, deduped. Any Worker failure, 429 or timeout means the iTunes-only path
+  runs exactly as before.
+- Test: `tools/test-music-rank.cjs` runs two passes. Pass 1 makes the Worker
+  fail and checks the 18 iTunes-ranked queries. Pass 2 replays
+  `tools/fixtures/music-deezer.json` and checks 6 Deezer-led queries.
+
 ## 2026-11-09 — artist+title search, tap-anchored profile popover (Grim, PRs #46–#48)
 
 - **#46 artist + title in either order:** `mpMusicSearch` splits the query into
