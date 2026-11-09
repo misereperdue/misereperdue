@@ -3623,20 +3623,20 @@
     function mountBrand() {
       if (!branding) {
         branding=document.createElement('span');branding.className='chat-music-branding';
-        branding.innerHTML='<span class="chat-music-powered">Powered by</span><span class="chat-music-orb"><img class="chat-music-poster" src="/assets/apple-music/official-icon-start.webp?v=2" alt="Apple Music"><video class="chat-music-official" muted playsinline preload="auto" poster="/assets/apple-music/official-icon-start.webp?v=2" src="/assets/apple-music/official-icon.mp4?v=2" aria-hidden="true"></video></span>';
+        branding.innerHTML='<span class="chat-music-orb"><img class="chat-music-poster" src="/assets/apple-music/official-icon-start.webp?v=2" alt="Apple Music"><video class="chat-music-official" muted playsinline preload="auto" poster="/assets/apple-music/official-icon-start.webp?v=2" src="/assets/apple-music/official-icon.mp4?v=2" aria-hidden="true"></video></span><span class="chat-music-brand-copy"><span class="chat-music-powered">Powered by</span><span class="chat-music-provider">Apple Music</span></span>';
         var film=branding.querySelector('video'),poster=branding.querySelector('img');film.muted=true;film.playsInline=true;
         if(mpGpReduced())poster.src='/assets/apple-music/official-icon.webp?v=2';
         film.addEventListener('playing',function(){branding.classList.add('is-playing');});
         film.addEventListener('ended',function(){branding.dataset.completed='1';poster.onload=function(){branding.classList.add('is-finished');};poster.src='/assets/apple-music/official-icon.webp?v=2';if(poster.complete&&poster.naturalWidth)branding.classList.add('is-finished');});
         film.addEventListener('error',function(){branding.classList.remove('is-playing');});
       }
-      list.querySelector('.chat-music-brand-slot').replaceWith(branding);
+      if(!branding.isConnected)menu.appendChild(branding);
       var film=branding.querySelector('video');
       if(!mpGpReduced()&&!branding.dataset.completed){var playing=film.play();if(playing)playing.catch(function(){});}
     }
     function state(title, detail, retry) {
       menu.classList.remove("has-results");fit();
-      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-brand-slot"></span><strong></strong><span class="chat-music-detail"></span></li>';
+      list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-idle-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><strong></strong><span class="chat-music-detail"></span></li>';
       mountBrand();
       list.querySelector("strong").textContent = title;
       list.querySelector("strong").hidden = !title;

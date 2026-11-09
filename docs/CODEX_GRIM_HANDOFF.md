@@ -18,6 +18,16 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — compact music attribution
+
+- Replaced the large central Powered by/logo stack with a quiet horizontal
+  footer: official animated icon at 36px, Powered by and Apple Music beside it,
+  separated from the search area by a subtle hairline. Removed ambient glow.
+- Footer persists through search/results; idle state has a small waveform.
+  Official video lifecycle and reduced motion fallback preserved. Compact
+  keyboard layout hides attribution so search/results remain usable.
+- Pins: site809, chat408, SW399. Music browser checks cover footer bounds.
+
 ## 2026-11-09 — actual header height consistency
 
 - Previous header fix covered width only. Removed route-specific sky crops:
