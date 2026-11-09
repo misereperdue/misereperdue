@@ -1,5 +1,5 @@
-// Product content scrolls UNDER the header sky like Chat/Globe: Back and "Drag to spin" are visible at rest and
-// never paint on top of the header band when scrolled. Pixel check: hiding the element must not change the band.
+// Product content scrolls UNDER the header sky like Chat/Globe and fades out gradually: Back and "Drag to spin" are
+// visible at rest and never paint in the fully covered header band (down to the nav bottom) when scrolled. Pixel check: hiding the element must not change the band.
 // MP_PLAYWRIGHT=<playwright(-core)> MP_BROWSER=webkit node tools/test-product-under-header.cjs   (catalog mocked)
 const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-product-under-header';fs.mkdirSync(OUT,{recursive:true});
@@ -13,7 +13,8 @@ for(const theme of ['dark','light']){
  await c.route('**/*',async r=>{const u=new URL(r.request().url());if(u.origin===ORIGIN){const f=path.join(ROOT,u.pathname==='/'?'index.html':decodeURIComponent(u.pathname));if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({path:f,contentType:T[path.extname(f)]||'application/octet-stream'});return r.fulfill({status:404,body:''});}return r.fulfill({json:u.hostname==='api.misereperdue.com'?{ok:true,user:null,messages:[],count:0}:{data:{products:{edges:[]}}},headers:{'access-control-allow-origin':'*'}});});
  const p=await c.newPage();await p.goto(ORIGIN+'/#shop');await p.locator('[data-product="membership"],[data-product="gid://shopify/Product/1"]').first().click();
  await p.locator('#product.on .vip-3d-hint').waitFor();await p.waitForTimeout(700);
- const band=await p.evaluate(()=>document.querySelector('.hero').getBoundingClientRect().bottom);
+ // Fully covered part of the header: down to the nav bottom; below that the sky fades (eased) over the content.
+ const band=await p.evaluate(()=>document.querySelector('.nav').getBoundingClientRect().bottom);
  // Freeze the moving parts (rain/3D) so before/after pixels compare cleanly.
  await p.addStyleTag({content:'.hero *,.vip-3d canvas{visibility:hidden!important} *{animation-play-state:paused!important;transition:none!important}'});
  for(const y of [0,30,80,200]){
