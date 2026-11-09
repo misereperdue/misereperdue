@@ -1976,7 +1976,13 @@
             }),
             o.appendChild(t));
         }),
-        document.body.appendChild(o));
+        (function () {
+          if (!s || !s.owner) return;
+          var divider=document.createElement("span");divider.className="chat-react-divider";divider.setAttribute("role","separator");o.appendChild(divider);
+          var button=document.createElement("button");button.type="button";button.className="chat-react-delete";button.setAttribute("aria-label","Delete message");
+          button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></svg>';
+          button.addEventListener("click",function(event){event.stopPropagation();if(button.disabled)return;button.disabled=true;E("/api/delete",{method:"POST",body:{id:n}}).then(function(result){if(!result||!result.ok)throw new Error(result&&result.error||"Couldn’t delete message");Ze(n);Ue=Ue.filter(function(message){return message.id!==n;});xe();}).catch(function(error){button.disabled=false;mpToast(error.message);});});o.appendChild(button);
+        })(), document.body.appendChild(o));
       var i = e.getBoundingClientRect(),
         c = o.offsetWidth || 128,
         l = o.offsetHeight || 48,
@@ -3104,6 +3110,9 @@
       { r: a, s: r }
     );
   }
+  function mpMusicTitle(title) {
+    return String(title || "").replace(/\s*[([]\s*(?:feat(?:uring)?\.?|ft\.?)\s+[^)\]]*[)\]]/gi, "").replace(/\s+(?:[-–—]\s*)?(?:feat(?:uring)?\.?|ft\.?)\s+.+$/i, "").trim();
+  }
   function mpNPOut(e, t) {
     return { title: t || e.trackName, artist: e.artistName, art: String(e.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: t ? e.artistViewUrl || "" : e.trackViewUrl || "" };
   }
@@ -3347,7 +3356,7 @@
       '</span>';
     card.querySelector(".chat-gp-prev-who").textContent =
       (t.kind === "music" ? t.artist : mpAt(t.author || "unknown")) + (t.createdAt ? " · " + mpGeAgo(t.createdAt) : "");
-    card.querySelector(".chat-gp-prev-title").textContent = t.title || t.excerpt || "Globe post";
+    card.querySelector(".chat-gp-prev-title").textContent = t.kind === "music" ? mpMusicTitle(t.title) : t.title || t.excerpt || "Globe post";
     var pic = card.querySelector(".chat-gp-prev-pic");
     var srcThumb = mpGpThumbUrl(t.thumb);
     if (srcThumb) {
@@ -3600,7 +3609,7 @@
       m.animate([{ width:r0.width + "px", height:r0.height + "px", opacity:.8 }, { width:r1.width + "px", height:r1.height + "px", opacity:1 }], { duration:320, easing:"cubic-bezier(.22,.8,.25,1)" });
     }
     if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); mpMusicWire(m, close); }
-    else if (kind === "fm") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Misery FM"); }
+    else if (kind === "fm") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Misery FM"); m.querySelector(".chat-pbig-hd b").textContent = ""; }
     else kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
   }
   function mpMusicForm() {
@@ -3612,7 +3621,11 @@
     var input = menu.querySelector(".chat-music-q"), list = menu.querySelector(".chat-music-results"), status = menu.querySelector(".chat-music-status"),
       timer = null, controller = null, epoch = 0, dead = false;
     function state(title, detail, retry) {
+      list.querySelectorAll("video").forEach(function(video){video.pause();});
       list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-orb">' + mpMusicIcon() + '</span><strong></strong><span class="chat-music-detail"></span></li>';
+      var orb=list.querySelector(".chat-music-orb");
+      orb.innerHTML='<video class="chat-music-official" muted playsinline preload="metadata" poster="/assets/apple-music/official-icon.webp?v=1" src="/assets/apple-music/official-icon.mp4?v=1" aria-hidden="true"></video>';
+      var film=orb.firstChild;film.muted=true;film.playsInline=true;if(!mpGpReduced()){var playing=film.play();if(playing)playing.catch(function(){});}
       list.querySelector("strong").textContent = title;
       list.querySelector("strong").hidden = !title;
       list.querySelector(".chat-music-detail").textContent = detail;
@@ -3697,14 +3710,14 @@
       });
     }
     function dispose() {
-      if (dead) return; dead = true; invalidate(); cancelAnimationFrame(sizeFrame);
+      if (dead) return; dead = true; list.querySelectorAll("video").forEach(function(video){video.pause();}); invalidate(); cancelAnimationFrame(sizeFrame);
       window.removeEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.removeEventListener("resize", fit); window.visualViewport.removeEventListener("scroll", fit); }
       observer.disconnect();
     }
     var observer = new MutationObserver(function () { if (!menu.isConnected) dispose(); });
     observer.observe(menu.parentElement, { childList:true }); menu._dispose = dispose;
     window.addEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.addEventListener("resize", fit); window.visualViewport.addEventListener("scroll", fit); }
-    search(); fit(); input.focus({ preventScroll:true });
+    search(); fit();
   }
   function mpGpWire(m, close) {
     var sort = "active", list = m.querySelector(".chat-gp-list"), q = m.querySelector(".chat-gp-q");
@@ -4371,7 +4384,7 @@
       }
       ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), (r.onload = function () { mpNPGrad(r.src, function (gr) { sg(gr || "linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"); }); }), a.appendChild(r), nx());
       var d = c.querySelectorAll(".chat-np-line");
-      ((d[0].textContent = n.title), (d[1].textContent = "by " + n.artist));
+      ((d[0].textContent = mpMusicTitle(n.title)), (d[1].textContent = "by " + n.artist));
       var u = document.createElement("span");
       ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), (u.setAttribute("aria-hidden", "true"), a.appendChild(u)));
       mpAmWire(c);

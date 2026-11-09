@@ -2137,7 +2137,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Create a post">' +
-        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="forum-pullpost-stroke-a" d="M5 10Q11 14 12 14"/><path class="forum-pullpost-stroke-b" d="M12 14Q13 14 19 10"/></svg>' +
+        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="forum-pullpost-chevron"><path d="M5 10Q11 14 12 14"/><path d="M12 14Q13 14 19 10"/></g><path class="forum-pullpost-plus" d="M5 12h14M12 5v14" opacity="0"/></svg>' +
         '<span class="forum-pullpost-labels" aria-hidden="true">' +
         '<span class="forum-pullpost-idle">PULL TO POST</span>' +
         '<span class="forum-pullpost-ready">RELEASE TO POST</span></span></button>'),
@@ -2722,16 +2722,13 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
     var startY = 0, startX = 0, locked = 0, dist = 0, tracking = 0;
     var stage = 0, buzz1 = 0, busy = 0;
     var shift = 0, raf = 0, pending = 0;
-    var iconA = hint.querySelector(".forum-pullpost-stroke-a");
-    var iconB = hint.querySelector(".forum-pullpost-stroke-b");
+    var chevron=hint.querySelector(".forum-pullpost-chevron"),plus=hint.querySelector(".forum-pullpost-plus"),settleRaf=0;
     function morphIcon(progress) {
-      if (!iconA || !iconB) return;
-      // Two chevron arms interpolate into the horizontal and vertical plus
-      // strokes. Driven by the finger, so pulling back reverses the morph.
-      var p = RM ? (progress >= 1 ? 1 : 0) : progress * progress * (3 - 2 * progress);
-      function mix(a, b) { return (a + (b - a) * p).toFixed(2); }
-      iconA.setAttribute("d", "M5 " + mix(10, 12) + "Q" + mix(11, 12) + " " + mix(14, 12) + " " + mix(12, 19) + " " + mix(14, 12));
-      iconB.setAttribute("d", "M12 " + mix(14, 5) + "Q" + mix(13, 12) + " " + mix(14, 12) + " " + mix(19, 12) + " " + mix(10, 19));
+      var p=Math.max(0,Math.min(1,progress)),ease=p*p*(3-2*p);
+      if(chevron){chevron.style.opacity=String(1-ease);chevron.setAttribute("transform","translate(0 "+(ease*2)+")");}
+      if(plus){plus.style.opacity=String(ease);plus.setAttribute("transform","translate(12 12) rotate("+(-35*(1-ease))+") scale("+(.75+.25*ease)+") translate(-12 -12)");}
+      hint.style.setProperty("--pull-idle",String(Math.max(0,1-p*2.5)));
+      hint.style.setProperty("--pull-ready",String(Math.max(0,(p-.65)/.35)));
     }
 
     function claim(on) {
@@ -2781,6 +2778,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       schedule();
     }
     function snapClear() {
+      cancelAnimationFrame(settleRaf);
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       pending = 0;
       shift = 0;
@@ -2800,33 +2798,20 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       void body.offsetWidth;
     }
     function springBack(then) {
-      claim(0);
-      body.style.willChange = "";
-      if (RM) {
-        snapClear();
-        if (then) then();
-        return;
+      claim(0);cancelAnimationFrame(settleRaf);
+      if(RM){snapClear();if(then)then();return;}
+      var from=Math.min(1,dist/POST_THRESHOLD),start=performance.now();
+      if(raf){cancelAnimationFrame(raf);raf=0;}pending=0;busy=1;
+      body.style.transition="transform .28s cubic-bezier(.2,.8,.2,1)";body.style.transform="";
+      hint.classList.remove("is-armed","is-pulling","is-pop");
+      function settle(now){
+        if(!hint.isConnected){busy=0;return;}
+        var t=Math.min(1,(now-start)/280),p=from*Math.pow(1-t,3);
+        hint.style.setProperty("--pull",String(p));morphIcon(p);
+        if(t<1)settleRaf=requestAnimationFrame(settle);
+        else{dist=0;shift=0;stage=0;busy=0;body.style.transition="";body.style.willChange="";if(then)then();}
       }
-      body.style.transition = "transform .3s cubic-bezier(.2,.85,.25,1.15)";
-      hint.style.transition = "opacity .28s ease, transform .3s cubic-bezier(.2,.85,.25,1.15)";
-      shift = 0;
-      dist = 0;
-      stage = 0;
-      schedule();
-      body.style.transform = "translate3d(0,0,0)";
-      requestAnimationFrame(function () {
-        body.style.transform = "";
-        hint.style.setProperty("--pull", "0");
-        morphIcon(0);
-        hint.classList.remove("is-armed", "is-pulling", "is-pop", "is-settle");
-        busy = 0;
-        setStage(0);
-      });
-      setTimeout(function () {
-        body.style.transition = "";
-        hint.style.transition = "";
-        if (then) then();
-      }, 320);
+      settleRaf=requestAnimationFrame(settle);
     }
     function atTop() {
       var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;

@@ -18,6 +18,19 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — music/reaction/pull refinements
+
+- Hide featured-artist suffixes in embed and composer titles only; retain exact
+  catalog titles and song IDs for search/sharing. Music no longer autofocuses.
+- Owner-only delete button separated from reactions; uses existing owner-guarded
+  POST /api/delete, removes the message only after success. No Worker changes.
+- Picker center uses the official icon excerpt (asset SOURCE.md), plays once,
+  holds its last frame; reduced motion uses its poster. FM menu title removed.
+- Pull uses a clean chevron/plus handoff and separated label fades; return animates
+  progress with the body instead of snapping. Header underlay fades at both edges.
+- Pins: site804, chat404, forum1176, SW394. Checks and mocked browser tests cover
+  owner/nonowner, shortened titles, no autofocus, playback and existing flows.
+
 ## 2026-11-09 — Globe / music interaction polish
 
 Branch: `codex/globe-music-polish`.
