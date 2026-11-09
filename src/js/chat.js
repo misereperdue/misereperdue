@@ -3053,15 +3053,15 @@
       return { id:id, country:country.toLowerCase(), key:"apple:" + country.toLowerCase() + ":" + id, url:url.href };
     } catch (_) { return null; }
   }
-  var mpMusicAlbums = Object.create(null);
+  var mpMusicAlbums = Object.create(null), mpMusicArtists = Object.create(null);
   function mpMusicSearch(query, signal) {
     var fold = function (text) { return mpNPq(text).normalize("NFD").replace(/\p{M}+/gu, ""); },
       words = fold(query).split(" ").filter(Boolean), last = words[words.length - 1] || "",
       asked = " " + words.join(" ") + " ",
       /* covers/karaoke and alternate versions sink unless the query asks for them */
-      junk = /\b(karaoke|originally performed|tribute|cover|instrumental|lullaby|8 bit|ringtone|string quartet|made famous|kidz bop|in the style of|rendition)\b/,
+      junk = /\b(karaoke|originally performed|tribute|cover|instrumental|lullaby|8 bit|ringtone|string quartet|made famous|kidz bop|in the style of|rendition|parody|originally by)\b/,
       variant = /\b(remix|mix|version|live|acoustic|slowed|sped up|reverb|edit|session|demo|extended|rework|bootleg|nightcore|workout|bpm)\b/,
-      pop = Object.create(null);
+      pop = Object.create(null), split = null, titleQuery = !1;
     function lower(text) { return String(text || "").normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase(); }
     function flat(text) { return lower(text).replace(/[^\p{L}\p{N} ]+/gu, " ").split(" ").filter(Boolean); }
     function primary(track) { return fold(String(track.artistName || "").split(/\s*(?:&|,|\bx\b|\bfeat\.?|\bwith\b)\s*/i)[0]); }
@@ -3089,6 +3089,11 @@
       if (unasked(variant, lower(String(track.trackName).replace(/^[^(\[-]*/, "")))) total -= 4;
       /* the artist Apple keeps returning for this query is the original */
       if ((pop[primary(track)] || 0) >= 6) total += 3;
+      /* "future some more" / "some more future": artist part + title part, in either order */
+      if (split && primary(track) === split.artist) {
+        if (split.title.every(function (w) { return hit(title, w); })) total += 12;
+        else if (!titleQuery && !split.paired) total += 10;
+      }
       return total;
     }
     /* score first, then Apple's own relevance order (best position across storefronts) */
@@ -3111,6 +3116,26 @@
           ids[t.trackId] = 1; t._mpPos = pos; byKey[key] = t; tracks.push(t);
         });
       });
+      /* split the query into an artist (a leading or trailing run of words that is exactly a returned
+         artist's name) and a title (the rest), so either order and short names like "Future" work */
+      for (var k = words.length - 1; k >= 1 && !split; k--) [words.slice(0, k), words.slice(words.length - k)].forEach(function (a, lead) {
+        if (split) return;
+        var name = a.join(" "), rest = lead ? words.slice(0, words.length - k) : words.slice(k),
+          by = tracks.filter(function (t) { return primary(t) === name; });
+        if (by.length) split = { artist:name, title:rest, id:by[0].artistId };
+      });
+      titleQuery = tracks.some(function (t) { var c = core(t).split(" "); return words.every(function (w) { return hit(c, w); }) && c.every(function (w) { return words.indexOf(w) >= 0; }); });
+      var paired = split && tracks.some(function (t) { return primary(t) === split.artist && split.title.every(function (w) { return hit(core(t).split(" "), w); }); });
+      /* the named artist's song isn't in Apple's plain search: ask for that artist's own top songs */
+      var artistSongs = split && !paired && /^\d+$/.test(String(split.id || "")) ? (mpMusicArtists[split.id] || (mpMusicArtists[split.id] = fetch("https://itunes.apple.com/lookup?id=" + split.id + "&entity=song&country=ca&limit=200", { signal:signal })
+        .then(function (response) { if (!response.ok) throw new Error("Catalog unavailable"); return response.json(); })
+        .then(function (data) { return (data.results || []).filter(function (track) { return !!track.trackId; }); })
+        .catch(function (error) { delete mpMusicArtists[split.id]; if (error.name === "AbortError") throw error; return []; }))).then(function (list) {
+          return list.filter(function (t) { return !ids[t.trackId] && split.title.every(function (w) { return hit(core(t).split(" "), w); }); });
+        }) : Promise.resolve([]);
+      if (split) split.paired = paired;
+      return artistSongs.then(function (found) {
+      found.forEach(function (t) { ids[t.trackId] = 1; t._mpPos = 0; tracks.push(t); });
       /* a real title+artist match: every query word found and the whole title asked for */
       var exact = tracks.some(function (track) { var title = fold(track.trackName), text = title + " " + fold(track.artistName); return words.every(function (word) { return text.includes(word); }) && title.split(" ").every(function (w) { return words.indexOf(w) >= 0; }); });
       if (exact || words.length < 2) return rank(tracks);
@@ -3125,6 +3150,7 @@
           .then(function (data) { return (mpMusicAlbums[id] = (data.results || []).filter(function (track) { return !!track.trackId; })); })
           .catch(function (error) { if (error.name === "AbortError") throw error; return []; });
       })).then(function (extra) { return rank(tracks.concat.apply(tracks, extra)); });
+      });
     });
   }
   function mpMusicRemember(ref, result) {
