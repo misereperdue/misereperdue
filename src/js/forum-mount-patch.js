@@ -37,7 +37,7 @@
         if (t.length > 1) for (var e = 0; e < t.length - 1; e++) t[e].remove();
         var r = document.querySelector(".forum-notif-panel");
         if (r && !r._posFixed) {
-          var n = document.querySelector(".forum-topbar");
+          var n = Array.from(document.querySelectorAll(".chat-head")).find(function(el){var r=el.getBoundingClientRect();return r.width>0&&r.height>0;});
           if (n) {
             var i = n.getBoundingClientRect();
             ((r.style.top = i.bottom + 8 + "px"),

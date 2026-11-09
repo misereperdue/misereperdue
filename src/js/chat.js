@@ -33,25 +33,45 @@
     },
     /* small glass action menu anchored to an element */
     menu: function (anchor, items) {
-      var prev = document.querySelector(".mp-ctx-menu"); prev && prev.remove();
-      var m = document.createElement("div"); m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu");
-      function close() { document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("scroll", close, !0); m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
-      function out(e) { m.contains(e.target) || close(); }
-      function esc(e) { "Escape" === e.key && (e.preventDefault(), close()); }
+      var prev = document.querySelector(".mp-ctx-menu");
+      var same = prev && prev._ctxAnchor === anchor;
+      if (prev) prev._close(true);
+      if (same) return;
+      var m = document.createElement("div"), closed = false;
+      m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu"); m._ctxAnchor = anchor;
+      function close(immediate) {
+        if (closed) return;
+        closed = true;
+        document.removeEventListener("pointerdown", out, true); document.removeEventListener("keydown", esc, true);
+        window.removeEventListener("scroll", scroll, true); window.removeEventListener("resize", resize);
+        window.removeEventListener("hashchange", resize);
+        anchor.setAttribute("aria-expanded", "false");
+        if (immediate) m.remove();
+        else { m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
+      }
+      function out(e) { if (!m.contains(e.target) && !anchor.contains(e.target)) close(); }
+      function esc(e) { if (e.key === "Escape") { e.preventDefault(); close(); if (anchor.isConnected) anchor.focus({preventScroll:true}); } }
+      function scroll(e) { if (!(e.target instanceof Node) || !m.contains(e.target)) close(true); }
+      function resize() { close(true); }
+      m._close = close;
       items.forEach(function (it, i) {
         if (i) { var sp = document.createElement("div"); sp.className = "chat-pmenu-sep"; m.appendChild(sp); }
         var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
         b.className = "chat-pmenu-row" + (it.danger ? " is-danger" : "");
         b.innerHTML = (it.icon || "") + "<span></span>"; b.querySelector("span").textContent = it.label;
-        b.addEventListener("click", function (e) { e.stopPropagation(); close(); it.run(); });
-        m.appendChild(b);
+        b.addEventListener("click", function (e) { e.stopPropagation(); close(true); it.run(); }); m.appendChild(b);
       });
       document.body.appendChild(m);
-      var r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth, vw = innerWidth;
-      var left = Math.max(8, Math.min(r.left, vw - w - 8)), up = r.top - h - 8 > 60, top = up ? r.top - h - 8 : r.bottom + 8;
-      m.style.cssText = "position:fixed;left:" + left + "px;top:" + top + "px;bottom:auto;z-index:2147483000;transform-origin:" + (r.left + r.width / 2 - left) + "px " + (up ? h + 8 + r.height / 2 : -8 - r.height / 2) + "px";
-      requestAnimationFrame(function () { m.classList.add("is-in"); });
-      setTimeout(function () { document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("scroll", close, !0); }, 0);
+      var r = anchor.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+      m.style.maxWidth = Math.max(0,vw-16) + "px"; m.style.maxHeight = Math.max(80,vh-160) + "px"; m.style.overflowY = "auto";
+      var h = m.offsetHeight, w = m.offsetWidth, up = r.top-h-8 >= 80;
+      var left = Math.max(8,Math.min(r.left,vw-w-8)), top = Math.max(80,Math.min(up?r.top-h-8:r.bottom+8,vh-h-8));
+      m.style.position="fixed"; m.style.left=left+"px"; m.style.top=top+"px"; m.style.bottom="auto"; m.style.zIndex="2147483000";
+      m.style.transformOrigin=(r.left+r.width/2-left)+"px "+(up?"100%":"0");
+      anchor.setAttribute("aria-expanded","true");
+      requestAnimationFrame(function () { if (!closed) m.classList.add("is-in"); });
+      document.addEventListener("pointerdown",out,true); document.addEventListener("keydown",esc,true);
+      window.addEventListener("scroll",scroll,true); window.addEventListener("resize",resize); window.addEventListener("hashchange",resize);
       return m;
     },
   };
@@ -3999,6 +4019,11 @@
       showing = !showing;
       card.classList.add("is-xf");
       card.classList.toggle("show-am", showing);
+      var video = card.querySelector(".chat-np-official");
+      if (video) {
+        if (showing) { video.currentTime = 0; var playing = video.play(); if (playing) playing.catch(function () {}); }
+        else video.pause();
+      }
       xfEnd();
       xfTimer = setTimeout(xfEnd, 900);
     }
@@ -4013,6 +4038,8 @@
       }, wait);
     }
     function pauseOff() {
+      var video = card.querySelector(".chat-np-official");
+      if (video) video.pause();
       clear();
       xfEnd();
       if (showing) {
@@ -4041,7 +4068,16 @@
   function mpAmBuildMark() {
     var mark = document.createElement("span");
     mark.className = "chat-np-am-mark";
-    mark.innerHTML = '<svg class="am-g" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.62 7.59 9.16 7.31c1.35.07 2.29.77 3.08.83 1.18-.24 2.31-.96 3.57-.87 1.51.12 2.64.72 3.39 1.8-3.1 1.86-2.36 5.95.48 7.1-.57 1.5-1.31 2.99-2.64 4.12zM12.03 7.25C11.88 5.02 13.69 3.18 15.77 3c.29 2.58-2.34 4.5-3.74 4.25z"/></svg><span class="am-w">music</span>';
+    var video = document.createElement("video");
+    video.className = "chat-np-official";
+    video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
+    video.preload = "none";
+    video.poster = "/assets/apple-music/official-wordmark.webp?v=1";
+    video.src = "/assets/apple-music/official-wordmark.mp4?v=1";
+    video.setAttribute("aria-hidden", "true");
+    mark.appendChild(video);
     return mark;
   }
   function mpAmWire(card) {

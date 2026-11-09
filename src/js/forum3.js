@@ -39,25 +39,45 @@
     },
     /* small glass action menu anchored to an element */
     menu: function (anchor, items) {
-      var prev = document.querySelector(".mp-ctx-menu"); prev && prev.remove();
-      var m = document.createElement("div"); m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu");
-      function close() { document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("scroll", close, !0); m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
-      function out(e) { m.contains(e.target) || close(); }
-      function esc(e) { "Escape" === e.key && (e.preventDefault(), close()); }
+      var prev = document.querySelector(".mp-ctx-menu");
+      var same = prev && prev._ctxAnchor === anchor;
+      if (prev) prev._close(true);
+      if (same) return;
+      var m = document.createElement("div"), closed = false;
+      m.className = "chat-plus-menu mp-ctx-menu"; m.setAttribute("role", "menu"); m._ctxAnchor = anchor;
+      function close(immediate) {
+        if (closed) return;
+        closed = true;
+        document.removeEventListener("pointerdown", out, true); document.removeEventListener("keydown", esc, true);
+        window.removeEventListener("scroll", scroll, true); window.removeEventListener("resize", resize);
+        window.removeEventListener("hashchange", resize);
+        anchor.setAttribute("aria-expanded", "false");
+        if (immediate) m.remove();
+        else { m.classList.remove("is-in"); m.classList.add("is-out"); setTimeout(function () { m.remove(); }, 180); }
+      }
+      function out(e) { if (!m.contains(e.target) && !anchor.contains(e.target)) close(); }
+      function esc(e) { if (e.key === "Escape") { e.preventDefault(); close(); if (anchor.isConnected) anchor.focus({preventScroll:true}); } }
+      function scroll(e) { if (!(e.target instanceof Node) || !m.contains(e.target)) close(true); }
+      function resize() { close(true); }
+      m._close = close;
       items.forEach(function (it, i) {
         if (i) { var sp = document.createElement("div"); sp.className = "chat-pmenu-sep"; m.appendChild(sp); }
         var b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem");
         b.className = "chat-pmenu-row" + (it.danger ? " is-danger" : "");
         b.innerHTML = (it.icon || "") + "<span></span>"; b.querySelector("span").textContent = it.label;
-        b.addEventListener("click", function (e) { e.stopPropagation(); close(); it.run(); });
-        m.appendChild(b);
+        b.addEventListener("click", function (e) { e.stopPropagation(); close(true); it.run(); }); m.appendChild(b);
       });
       document.body.appendChild(m);
-      var r = anchor.getBoundingClientRect(), h = m.offsetHeight, w = m.offsetWidth, vw = innerWidth;
-      var left = Math.max(8, Math.min(r.left, vw - w - 8)), up = r.top - h - 8 > 60, top = up ? r.top - h - 8 : r.bottom + 8;
-      m.style.cssText = "position:fixed;left:" + left + "px;top:" + top + "px;bottom:auto;z-index:2147483000;transform-origin:" + (r.left + r.width / 2 - left) + "px " + (up ? h + 8 + r.height / 2 : -8 - r.height / 2) + "px";
-      requestAnimationFrame(function () { m.classList.add("is-in"); });
-      setTimeout(function () { document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("scroll", close, !0); }, 0);
+      var r = anchor.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+      m.style.maxWidth = Math.max(0,vw-16) + "px"; m.style.maxHeight = Math.max(80,vh-160) + "px"; m.style.overflowY = "auto";
+      var h = m.offsetHeight, w = m.offsetWidth, up = r.top-h-8 >= 80;
+      var left = Math.max(8,Math.min(r.left,vw-w-8)), top = Math.max(80,Math.min(up?r.top-h-8:r.bottom+8,vh-h-8));
+      m.style.position="fixed"; m.style.left=left+"px"; m.style.top=top+"px"; m.style.bottom="auto"; m.style.zIndex="2147483000";
+      m.style.transformOrigin=(r.left+r.width/2-left)+"px "+(up?"100%":"0");
+      anchor.setAttribute("aria-expanded","true");
+      requestAnimationFrame(function () { if (!closed) m.classList.add("is-in"); });
+      document.addEventListener("pointerdown",out,true); document.addEventListener("keydown",esc,true);
+      window.addEventListener("scroll",scroll,true); window.addEventListener("resize",resize); window.addEventListener("hashchange",resize);
       return m;
     },
   };
@@ -188,7 +208,7 @@
       window.__mpPullToPost || t.querySelector(".is-pulling, .is-settle, .forum-view-enter") ||
       (r.name === "list" && active && t.contains(active) && active.matches("input, textarea, select, [contenteditable=true]")) ||
       (r.name === "list" && !!(selection && !selection.isCollapsed && t.contains(selection.anchorNode))) ||
-      !!document.querySelector(".chat-pmenu, .forum-copy-dialog-back") ||
+      !!document.querySelector(".chat-pmenu, .mp-ctx-menu, .forum-copy-dialog-back") ||
       (r.name === "list" && Array.from(t.querySelectorAll("video, audio")).some(function (m) { return !m.paused; }));
   }
   function livePaint(render) {
@@ -508,37 +528,32 @@
           .catch(function () {}));
     }
   }
+  var notificationEpoch = 0;
+  function closeNotifications() { notificationEpoch++; document.querySelectorAll(".forum-notif-panel").forEach(function (node) { node.remove(); }); }
+  function positionNotifications(panel) {
+    var header = Array.from(document.querySelectorAll(".chat-head")).find(function (node) { var r=node.getBoundingClientRect();return r.width>0&&r.height>0; });
+    var rect=header&&header.getBoundingClientRect();
+    panel.style.top=Math.max(80,rect?rect.bottom+8:80)+"px";
+    panel.style.right=Math.max(8,rect?innerWidth-rect.right:12)+"px";
+    panel.style.width="min(280px, calc(100vw - 24px))";
+  }
+  document.addEventListener("pointerdown",function(e){var panel=document.querySelector(".forum-notif-panel");if(panel&&!panel.contains(e.target)&&!e.target.closest("#chat-bell,#forum-bell"))closeNotifications();},true);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeNotifications();});
+  window.addEventListener("hashchange",closeNotifications);
+  window.addEventListener("resize",function(){var panel=document.querySelector(".forum-notif-panel");if(panel)positionNotifications(panel);});
   function P() {
-    var e = document.querySelector(".forum-notif-panel");
-    (e && e.remove(),
-      document.querySelectorAll(".forum-notif-panel").forEach(function (e) {
-        e.remove();
-      }),
-      document.querySelectorAll(".chat-me-menu").forEach(function (e) {
-        e.remove();
-      }),
-      y("/api/notifications").then(function (e) {
+    var existing = document.querySelector(".forum-notif-panel");
+    closeNotifications();
+    if (existing) return;
+    var epoch = notificationEpoch, route = location.hash;
+    var shell = document.createElement("div"); shell.className="forum-notif-panel";
+    shell.setAttribute("role","dialog"); shell.setAttribute("aria-label","Notifications"); shell.textContent="Loading notifications…";
+    shell._posFixed = true; positionNotifications(shell); document.body.appendChild(shell);
+    document.querySelectorAll(".chat-me-menu").forEach(function (node) { node.remove(); });
+    (      y("/api/notifications").then(function (e) {
         if (e && e.ok) {
-          var t = document.createElement("div");
-          t.className = "forum-notif-panel";
-          try {
-            for (
-              var r = document.querySelectorAll(".chat-head"), n = null, a = 0;
-              a < r.length;
-              a++
-            ) {
-              var o = r[a].getBoundingClientRect();
-              if (o.width > 0 && o.height > 0) {
-                n = o;
-                break;
-              }
-            }
-            n &&
-              ((t.style.top = n.bottom + 8 + "px"),
-              (t.style.width = "280px"),
-              (t.style.left = "auto"),
-              (t.style.right = window.innerWidth - n.right + "px"));
-          } catch (e) {}
+          if (epoch !== notificationEpoch || route !== location.hash || !shell.isConnected) return;
+          var t = shell;
           var i =
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="width:28px;height:28px;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"><svg width="14" height="14" style="display:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div>';
           if (!e.notifications.length)
@@ -668,6 +683,8 @@
           });
         }
         function u() {
+          if (epoch !== notificationEpoch || route !== location.hash || !shell.isConnected) return;
+          positionNotifications(t);
           ((t.innerHTML = i),
             document.body.appendChild(t),
             t.querySelector("#forum-notif-close").addEventListener("click", function () {
@@ -683,11 +700,11 @@
               e.addEventListener("click", function (r) {
                 (r.preventDefault(), t.remove());
                 var n = e.getAttribute("data-thread");
-                n && Oe(n);
+                if (n) location.hash = "#globe/" + encodeURIComponent(n);
               });
             }));
         }
-      }));
+      }).catch(function () { if (shell.isConnected) shell.textContent="Couldn’t load notifications. Close and try again."; }));
   }
   function I(e) {
     var t = document.querySelector(".forum-copy-dialog-back");
