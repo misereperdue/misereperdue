@@ -1497,6 +1497,8 @@ textarea {
   overflow: hidden;
   aspect-ratio: 4/5;
 }
+.vip-3d:not(.mask-3d) { aspect-ratio:1; }
+.vip-3d:not(.mask-3d) .vip-3d-hint { left:auto;right:12px;top:12px;bottom:auto;padding:6px 10px;font-size:11px; }
 .vip-3d.mask-3d {
   aspect-ratio: 3/2;
 }
@@ -1656,8 +1658,7 @@ textarea {
 #shop-grid .product-card img {
   aspect-ratio: 4/5;
 }
-/* VIP tile: optical size closer to the mask without cropping the card/lanyard.
-   Local light render has large side margins; contain + modest scale fills them. */
+/* Fill the VIP tile edge-to-edge; both source images include safe side margins. */
 #shop-grid .tile-wrap.is-vip {
   background: #d8d9dd;
 }
@@ -1665,14 +1666,8 @@ textarea {
   background: rgba(80, 140, 255, 0.08);
 }
 #shop-grid .tile-wrap.is-vip > img {
-  object-fit: contain;
-  transform: scale(1.08);
-  transform-origin: center center;
-}
-@media (prefers-reduced-motion: reduce) {
-  #shop-grid .tile-wrap.is-vip > img {
-    transform: scale(1.08);
-  }
+  object-fit: cover;
+  transform: none;
 }
 #shop-grid .product-meta {
   margin-top: 8px;
@@ -11843,7 +11838,7 @@ html[data-gcards="g3"] .forum-thread-more {
   background: none;
   box-shadow: none;
   color: var(--muted);
-  font: 600 11.5px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font: 600 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   line-height: 16px;
   letter-spacing: .12em;
   text-transform: uppercase;

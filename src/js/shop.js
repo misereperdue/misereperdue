@@ -1082,7 +1082,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=7", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=8", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),

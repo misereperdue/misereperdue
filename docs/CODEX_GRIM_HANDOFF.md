@@ -18,6 +18,32 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — smaller pull label, VIP media and category sorting
+
+Branch: `codex/vip-category-fixes`.
+
+- Pull-to-post label reduced from 11.5px to 10px; etched uppercase styling,
+  spacing, chevron and 44px touch target retained.
+- VIP tile uses cover fitting rather than letterboxing the source image inside
+  a differently colored background. Existing theme-specific images preserved.
+- VIP 3D stage is square (81.5px shorter at 390px viewport), with responsive
+  camera framing centered on the card + lanyard. Hint moves to upper right;
+  model remains the same size and fully visible. Mask viewer is unchanged.
+- Category dragging now uses viewport coordinates and document pointer handlers,
+  recomputes translation immediately after reordering, tracks the active pointer,
+  restores the original order on cancellation, and skips saves for unchanged order.
+  Saves serialize; failures restore the previous order. Grips support arrow keys.
+- Cached stats no longer replace a dashboard after the user starts interacting,
+  avoiding destruction of a category drag/edit during the initial refresh.
+- Regression test: `node tools/test-dashboard-categories.cjs` covers both drag
+  directions, pointer alignment, cancellation, failed-save rollback, keyboard,
+  real mouse reordering and preserving the editor during refresh in both themes
+  at 390×844 / 360×780. APIs mocked: no real category/account writes.
+- Validation also includes site/build checks, pull cue and actual WebGL viewer
+  phone checks/screenshots; hosted preview/production checked during release.
+- Pins: site 801, shop 106, dashboard 62, lazy VIP viewer 8, SW 391.
+  No Worker changes.
+
 ## 2026-11-09 — etched uppercase pull-to-post cue
 
 Branch: `codex/etched-pull-cue`.
