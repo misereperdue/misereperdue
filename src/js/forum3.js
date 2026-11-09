@@ -2833,7 +2833,9 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       if (!atTop()) return;
       var el = e.target;
       if (el && el.closest) {
-        if (el.closest(".forum-cats, .forum-search, .forum-search-slot, .chat-head, #nav, .forum-thread, .forum-thread-row, .forum-post, .forum-replies, .forum-compose")) {
+        /* The category row rides the pull with the list (per dc); a sideways
+           drag still scrolls it natively because the lock needs a vertical move. */
+        if (el.closest(".forum-search, .forum-search-slot, .chat-head, #nav, .forum-thread, .forum-thread-row, .forum-post, .forum-replies, .forum-compose")) {
           if (!el.closest("#forum-pullpost")) return;
         }
       }
