@@ -1021,14 +1021,14 @@
      (glass opacity stays 1), frost from frame 1, fade content only. */
   var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
   var MP_PB_STEM = 13, MP_PB_RADIUS = 20;
-  /* Opt-in tap-anchored popover (dc testing): ?pop=2 turns it on for this browser/PWA, ?pop=0 off.
-     Off by default; the shipped popover below is unchanged when the flag is off. */
+  /* Tap-anchored popover is the default (dc, 2026-11-09). Escape hatch: ?pop=0 keeps the old
+     centered popover for this browser/PWA (persisted); ?pop=2 turns the tap-anchored one back on. */
   var mpPop2 = (function () {
     try {
       var m = /[?&]pop=(\d)/.exec(location.search);
-      if (m) m[1] === "2" ? localStorage.setItem("mp-pop", "2") : localStorage.removeItem("mp-pop");
-      return localStorage.getItem("mp-pop") === "2";
-    } catch (e) { return !1; }
+      if (m) m[1] === "0" ? localStorage.setItem("mp-pop", "0") : localStorage.removeItem("mp-pop");
+      return localStorage.getItem("mp-pop") !== "0";
+    } catch (e) { return !0; }
   })(), mpPBtap2 = null;
   if (mpPop2) {
     document.documentElement.setAttribute("data-pop", "2");

@@ -18,6 +18,49 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — artist+title search, tap-anchored profile popover (Grim, PRs #46–#48)
+
+- **#46 artist + title in either order:** `mpMusicSearch` splits the query into
+  an artist part and a title part. The artist part is a leading or trailing run
+  of words that exactly matches a returned primary artist (`future`,
+  `the weeknd`). Scoring:
+
+  | Case | Points |
+  |---|---|
+  | Primary artist matches and the title words are in the title | +12 |
+  | Primary artist matches, no such pair exists, and the query isn't itself a full title | +10 |
+
+  When the pair is missing, one extra request fetches that artist's top 200
+  songs (`lookup?id=<artistId>&entity=song`, cached per artist) and merges
+  title matches. Parody and "originally by" results are demoted.
+
+  Known gap: Future's "SOME MORE" (BEASTMODE 2, trackId 1407069165) can be
+  looked up by id, but the public iTunes Search API never returns it. dc
+  approved a Deezer-backed search through the Worker to fix this (next).
+  Four queries were added to `tools/test-music-rank.cjs`; the fixtures now
+  keep `artistId`.
+- **#47/#48 tap-anchored profile popover:** the mini profile popover now opens
+  at the finger (default since #48).
+  - The tap point comes from `touchend` changedTouches, `pointerup` or `click`.
+    It's ignored if older than 1.5s or more than 16px outside the tapped
+    element; then the element's center is used.
+  - The stem tip sits at the tap x, just past the element, never more than
+    28px from the finger.
+  - The card is clamped to `visualViewport` minus all four
+    `env(safe-area-inset-*)` and a 10px margin. It flips above/below by fit,
+    then by more room.
+  - After placement it measures its real rect and corrects for any
+    transformed or offset containing block.
+  - No ResizeObserver and no global pointerdown tracker. Those were the
+    riskiest parts of #29, which broke on dc's iPhone (never reproduced in
+    emulation).
+  - **Escape hatch:** `?pop=0` stores `localStorage["mp-pop"]="0"` and brings
+    back the old centered popover in that browser/PWA. `?pop=2` clears it.
+    `<html data-pop="2">` marks the new path.
+  - Test: `tools/test-profile-pop2.cjs` (WebKit iPhone 14, real touch): on by
+    default, the escape hatch persists, 18 edge/corner taps, scrolled chat
+    avatars, dark and light.
+
 ## 2026-11-09 — cart fade, music search, iOS catalog outage, ranking (Grim, PRs #39–#44)
 
 - **#39 cart/bag fade:** checkout and bag lists fade under the sky with the

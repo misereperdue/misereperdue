@@ -1,5 +1,5 @@
-// Opt-in tap-anchored profile popover (?pop=2): WebKit iPhone 14, real touch taps near every edge/corner and on
-// chat avatars in a scrolled chat, dark/light. Flag persists across reloads, ?pop=0 turns it off, off by default.
+// Tap-anchored profile popover (default; ?pop=0 = old popover, persisted): WebKit iPhone 14, real touch taps near every edge/corner and on
+// chat avatars in a scrolled chat, dark/light. On by default; ?pop=0 persists the old popover; ?pop=2 back on.
 // Local assets, mocked APIs/WebSockets, service worker blocked. MP_PLAYWRIGHT=<playwright[-core]> node tools/test-profile-pop2.cjs
 const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-profile-pop2';fs.mkdirSync(OUT,{recursive:true});
@@ -24,12 +24,13 @@ for(const theme of ['dark','light']){
   const clampX=Math.max(s.l+26,Math.min(x,s.r-26));assert(Math.abs(s.tipX-clampX)<=1.5,name+`: stem x ${s.tipX} not at tap ${x}`);
   const roomB=s.vh-M-(y+32),roomA=y-32-M;if(roomB>=s.h+13)assert(s.below,name+': should open below');else if(roomA>=s.h+13)assert(!s.below,name+': should flip above');
   if((s.below&&roomB>=s.h+13)||(!s.below&&roomA>=s.h+13))assert(Math.abs(s.tipY-y)<=36,name+`: stem tip ${s.tipY} far from tap ${y}`);};
- // 1) off by default: shipped popover, no flag
- await p.goto(ORIGIN+'/#journal');await p.locator('#chat .chat-avatar-click').first().waitFor({timeout:15000});await p.waitForTimeout(800);
- assert.equal(await p.evaluate(()=>document.documentElement.getAttribute('data-pop')),null,'flag on by default');
- // 2) ?pop=2 turns it on and survives a relaunch without the param
- await p.goto(ORIGIN+'/?pop=2#journal');await p.waitForTimeout(500);await p.goto(ORIGIN+'/#journal');await p.locator('#chat .chat-avatar-click').first().waitFor({timeout:15000});await p.waitForTimeout(800);
- assert.equal(await p.evaluate(()=>document.documentElement.getAttribute('data-pop')),'2','flag not persisted');
+ const flag=()=>p.evaluate(()=>document.documentElement.getAttribute('data-pop'));
+ // 1) on by default; 2) ?pop=0 = old popover and survives a relaunch; ?pop=2 back on
+ await p.goto(ORIGIN+'/?pop=0#journal');await p.waitForTimeout(500);await p.goto(ORIGIN+'/#journal');await p.waitForTimeout(800);
+ assert.equal(await flag(),null,'?pop=0 not persisted');
+ await p.goto(ORIGIN+'/?pop=2#journal');await p.waitForTimeout(500);assert.equal(await p.evaluate(()=>localStorage.getItem('mp-pop')),null,'?pop=2 did not clear');
+ await p.evaluate(()=>localStorage.removeItem('mp-pop'));await p.goto(ORIGIN+'/#journal');await p.locator('#chat .chat-avatar-click').first().waitFor({timeout:15000});await p.waitForTimeout(800);
+ assert.equal(await flag(),'2','not on by default');
  // 3) taps near every edge/corner (fixed test targets, real touch)
  await p.evaluate(()=>{const W=innerWidth,H=innerHeight,X=[4,W/2-24,W-52],Y=[56,H/2-20,H-44],pts={};['t','m','b'].forEach((r,i)=>['l','c','r'].forEach((q,j)=>pts[r+q]=[X[j],Y[i]]));
   for(const[k,[x,y]]of Object.entries(pts)){const e=document.createElement('button');e.id='pt-'+k;e.textContent=k;e.style.cssText=`position:fixed;left:${x}px;top:${y}px;width:48px;height:40px;z-index:2147482000;opacity:.6`;
@@ -45,7 +46,9 @@ for(const theme of ['dark','light']){
  await p.evaluate(()=>{const l=document.querySelector('#chat .chat-messages, #chat .chat-list, #chat [class*=messages]');l&&(l.scrollTop=Math.max(0,l.scrollTop-300));});await p.waitForTimeout(400);
  const av2=await p.locator('#chat .chat-avatar-click').evaluateAll(es=>es.map(e=>{const q=e.getBoundingClientRect();const x=q.x+q.width*.5,y=q.y+q.height*.5,h=document.elementFromPoint(x,y);return h&&e.contains(h)?[x,y]:null;}).filter(Boolean));
  {const[x,y]=av2[av2.length>>1];await p.touchscreen.tap(x,y);await p.waitForTimeout(700);check(await state(),x,y,theme+' scrolled avatar');if(theme==='dark'){await p.screenshot({path:OUT+'/dark-avatar.png'});shots.push(OUT+'/dark-avatar.png');}await close();}
- // 5) ?pop=0 turns it off again
- await p.goto(ORIGIN+'/?pop=0#journal');await p.waitForTimeout(600);assert.equal(await p.evaluate(()=>[document.documentElement.getAttribute('data-pop'),localStorage.getItem('mp-pop')].join()),',','pop=0 did not turn it off');
- assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,passed:'off by default, ?pop=2 persists, 18 edge/corner touch taps, scrolled chat avatars, ?pop=0 off'}));await c.close();}
+ // 5) ?pop=0 escape hatch: old popover, still opens on screen
+ await p.goto(ORIGIN+'/?pop=0#journal');await p.locator('#chat .chat-avatar-click').first().waitFor({timeout:15000});await p.waitForTimeout(800);
+ assert.equal(await p.evaluate(()=>[document.documentElement.getAttribute('data-pop'),localStorage.getItem('mp-pop')].join()),',0','pop=0 did not switch back');
+ {const[x,y]=av2[av2.length>>1];await p.touchscreen.tap(x,y);await p.waitForTimeout(700);const s=await state();assert(s&&s.inn&&s.l>=0&&s.r<=s.vw,'old popover broken');await close();}
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,passed:'on by default, ?pop=0 persists old popover, ?pop=2 back on, 18 edge/corner touch taps, scrolled chat avatars'}));await c.close();}
 await browser.close();fs.writeFileSync(OUT+'/shots.json',JSON.stringify(shots));})().catch(e=>{console.error(e);process.exit(1)});
