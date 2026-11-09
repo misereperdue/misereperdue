@@ -32,11 +32,20 @@ class_name = "ChatRoom"
 tag = "v1"
 new_sqlite_classes = ["ChatRoom"]
 
-# No cron triggers, KV, D1, R2 or other bindings are configured on the live Worker.
+# R2 bucket for Misery FM audio (added 2026-11-09, Worker version 4e07045e). Objects: t/<id>.
+[[r2_buckets]]
+binding = "FM_BUCKET"
+bucket_name = "misery-fm"
+
+# No cron triggers, KV or D1 are configured on the live Worker. The code also references
+# env.BACKUPS (R2) for the backup routine, but that binding is NOT set on the live Worker (pre-existing).
+# Plain-text var SHOPIFY_CLIENT_ID and the Workers AI binding AI are also configured (dashboard).
 
 # Secrets configured on the live Worker (values live only in Cloudflare):
 #   AGENT_KEY               - key for automated/agent API calls (X-Agent-Key header)
 #   GROQ_API_KEY            - LLM API used by the chat bot features
+#   RECOVERY_PEPPER         - account-recovery hashing pepper (NEVER delete or rotate)
+#   SHOPIFY_CLIENT_SECRET   - Shopify app client secret
 #   OWNER_SECRET            - owner-only admin actions (X-Owner-Secret header)
 #   SHOPIFY_WEBHOOK_SECRET  - verifies Shopify order webhooks (VIP upgrades)
 #   TURNSTILE_SECRET        - Cloudflare Turnstile server-side verification (sign-up / sign-in)

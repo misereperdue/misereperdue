@@ -18,6 +18,58 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — Misery FM: owner-run live radio (Grim, PR #50, Worker version 4e07045e)
+
+dc approved the Worker deploy and R2. **No mic or recording**: dc uploads audio files
+and everyone in chat hears the same track at the same moment.
+
+- **Worker** (`misery-chat`, version `4e07045e-40a8-402b-a40d-9160e542baa5`). New binding
+  `FM_BUCKET` → R2 bucket `misery-fm`. All 14 earlier bindings were kept (`keep_bindings`).
+  The code excerpts and a Node test are in `worker/misery-chat/src/` (see its README).
+  The full Worker source is still **not** in this public repo.
+  - The ChatRoom DO key `fm` stores `{live, idx, startedAt, list:[{id,title,artist,dur,type,size,at}], v}`.
+  - Every change broadcasts `{t:"fm", fm}` on the chat WebSocket. The DO alarm fires at
+    track end + 250 ms, advances, and re-broadcasts. The playlist loops.
+  - `GET /api/fm/state` is public: `{ok, fm:{live, idx, startedAt, v, now, list}}`.
+  - `POST /api/fm/upload?title=&artist=&dur=` is owner only. The raw file is the body,
+    and its Content-Type must be mp3/m4a/aac. Max 25 MB, max 200 songs.
+    Metadata goes in the query string, so CORS needs no custom headers.
+  - `POST /api/fm/control {action, id?, dir?}` is owner only. Actions: `live`, `stop`,
+    `skip`, `play`, `move` and `remove`. `remove` deletes the R2 object too.
+  - `GET|HEAD /api/fm/audio/<id>` is public, in the top-level fetch. It supports Range
+    (206) and is served immutable with ACAO `*`.
+- **Client** (`src/js/chat.js`, the `fm*` functions before `mpMusicForm`):
+  - Each client works out the current track and offset locally from `startedAt`.
+    The server clock comes from `fm.now`.
+  - One shared `<audio>` element. It seeks on `loadedmetadata`, resyncs every 5 s
+    when drift is over 1.5 s, and refetches state on `visibilitychange`.
+  - Media Session metadata is set, including play/pause handlers.
+  - The live bar `.chat-fm-bar` sits fixed under `.chat-head`. It has a LIVE pill,
+    the title and artist, and Listen/Mute. iOS needs that tap before audio starts.
+    The chat fade line uses the bar's bottom while it shows.
+  - **+ menu → Misery FM row:** the LIVE pill shows while on air.
+    - Owner panel: Go Live / Stop, Skip and Add songs (multiple files), plus playlist rows
+      with play/stop-this, up, down and remove.
+    - Listener panel: now playing, plus Listen live / Mute, or "Off air".
+  - On upload, the title and artist come from the filename (`Artist - Title.mp3`), and the
+    duration comes from the browser's `loadedmetadata` (if it can't be read, it is 0 and the
+    server uses 180 s). ID3 tags are not read.
+- **Tests:**
+  - `tools/test-misery-fm.cjs`: WebKit iPhone 14, owner dark/light and listener dark. A silent
+    240 s WAV is served for audio. It covers the seek to about 30 s, Skip, move and upload
+    (query and type), and WS off-air hiding the bar.
+  - `node worker/misery-chat/src/test-fm.mjs`: owner gating, 415, upload, live, auto-advance,
+    alarm, skip, move, remove, stop and Range.
+  - `tools/test-music-picker.cjs` now expects "Off air" instead of "Coming soon".
+- **Pins:** chat 426, site.css 821, SW 427.
+- **Caveats:**
+  - Sync is approximate: about the network latency, and within 1.5 s after a resync.
+  - iOS may pause audio when the page is in the background for a long time. Coming back
+    resyncs.
+  - Durations are trusted from the owner's browser.
+  - The 25 MB limit counts per file.
+  - Unused R2 objects are removed only through the panel's remove button.
+
 ## 2026-11-09 — Deezer-led music search via the Worker (Grim, PR #49, Worker version 8369411d)
 
 - **Worker `GET /api/music/search?q=`** on `misery-chat`, handled in the
