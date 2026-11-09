@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" role="img" aria-label="Misery FM logo">
+  <title>Misery FM</title>
+  <g fill="none" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Closed eyes: same 12-unit stroke as the FM lettering -->
+    <path d="M38 50 Q108 130 178 50"/>
+    <path d="M38 85 L53 70 M67 104 L78 86 M101 117 L103 99 M135 115 L133 98 M160 101 L150 84 M178 85 L163 70"/>
+    <path d="M208 50 Q278 130 348 50"/>
+    <path d="M208 85 L223 70 M237 104 L248 86 M271 117 L273 99 M305 115 L303 98 M330 101 L320 84 M348 85 L333 70"/>
+    <!-- Rounded lowercase f and m, using identical stroke thickness -->
+    <path d="M494 124 V46 Q494 23 522 26 M475 67 H518"/>
+    <path d="M553 124 V76 Q553 52 577 52 Q604 52 604 79 V124 M604 79 Q604 52 631 52 Q658 52 658 79 V124"/>
+  </g>
+  <circle cx="419" cy="89" r="6" fill="#000"/>
+</svg>
