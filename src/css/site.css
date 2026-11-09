@@ -9567,21 +9567,21 @@ svg[data-hi].hi-play {
 /* Grid stack: both states share one cell → column width = max(text, mark); no clip, no width jump */
 .chat-np-meta{display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);align-items:stretch;justify-items:stretch;flex:1 1 auto;width:100%;max-width:100%;height:100%;min-width:88px;min-height:0}
 .chat-np-info,.chat-np-am{grid-area:1/1}
-.chat-np-info{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;text-align:left;width:100%;max-width:100%;height:100%;min-width:0;opacity:1;transform:translateY(0);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
+.chat-np-info{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;text-align:left;width:100%;max-width:100%;height:100%;min-width:0;opacity:1;transform:translateY(0);transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1)}
 .chat-np-who{margin:0;padding:0;justify-content:flex-start;max-width:100%;min-width:0}
 .chat-np-who > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .chat-np-info .chat-np-line{width:100%;max-width:100%;text-align:left;flex:none}
 .chat-np-body{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;margin-top:0;flex:none;min-height:0;min-width:0;width:100%;max-width:100%}
-.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:stretch;width:100%;min-width:0;max-width:100%;opacity:0;pointer-events:none;transform:translateY(3px);transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.2,1)}
+.chat-np-am{position:relative;display:flex;align-items:center;justify-content:center;justify-self:stretch;align-self:stretch;width:100%;min-width:0;max-width:100%;opacity:0;pointer-events:none;transform:translateY(2px);transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1)}
 .chat-np-am-mark{display:inline-flex;align-items:center;gap:1px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;font-weight:600;font-size:20px;letter-spacing:-.035em;line-height:1;color:#1a1a1a;white-space:nowrap;flex:none}
 .chat-np-am-mark .am-g{display:block;width:18px;height:22px;flex:none;overflow:visible}
 .chat-np-am-mark .am-w{letter-spacing:-.04em}
 .chat-np.is-xf .chat-np-info,.chat-np.is-xf .chat-np-am{will-change:opacity,transform}
-.chat-np.show-am .chat-np-info{opacity:0;transform:translateY(-3px)}
+.chat-np.show-am .chat-np-info{opacity:0;transform:translateY(-2px)}
 .chat-np.show-am .chat-np-am{opacity:1;transform:translateY(0)}
-/* slight stagger: mark starts a touch later via transition-delay when entering */
-.chat-np.show-am .chat-np-am{transition-delay:.04s}
-.chat-np:not(.show-am) .chat-np-info{transition-delay:.04s}
+/* overlapped crossfade (~510ms): the incoming side starts at once, the outgoing side
+   60ms later, so the cell never fades through empty (per dc) */
+.chat-np.show-am .chat-np-info,.chat-np:not(.show-am) .chat-np-am{transition-delay:.06s}
 [data-theme="dark"] .chat-np-am-mark{color:#fff}
 .chat-np.has-grad .chat-np-am-mark{color:#fff;text-shadow:none}
 .chat-np-tx,.chat-np-tx *{text-shadow:none;filter:none}

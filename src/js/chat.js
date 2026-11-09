@@ -4306,11 +4306,19 @@
       if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
       var keyed = card.querySelector(".chat-np-official-key");
       if (keyed && keyed._mpInk !== mpAmKeyInk(keyed)) mpAmKeyRedraw(keyed);
+      if (!showing && keyed) {
+        /* prewarm: key the current film frame and let it composite before the fade-in */
+        try { if (video && video.classList.contains("is-playing") && video.readyState >= 2 && mpAmKey(keyed, video)) { var host = card.querySelector(".chat-np-am-mark"); host && host.classList.add("is-keyed"); } } catch (_) {}
+        card.classList.add("is-xf");
+        await new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
+        if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) { card.classList.remove("is-xf"); return; }
+      }
       showing = !showing;
-      xfEnd();
+      if (xfTimer) clearTimeout(xfTimer);
       card.classList.add("is-xf");
       card.classList.toggle("show-am", showing);
-      xfTimer = setTimeout(xfEnd, 650);
+      /* will-change only while the ~510ms crossfade runs */
+      xfTimer = setTimeout(xfEnd, 560);
     }
     function arm() {
       clear();
