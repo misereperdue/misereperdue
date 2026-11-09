@@ -18,6 +18,18 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — music picker finesse
+
+- One official branding video per picker: retain playback position across state
+  changes, pause behind results, and hold the final frame once complete. Start
+  and final posters match the recropped 224px film. Never restart while typing.
+  Reduced motion and blocked autoplay retain an official still.
+- Refined header hierarchy, search field, empty-state spacing, larger tighter
+  branding, subtle ambient glow, and simpler song rows with clearer metadata.
+- Existing no-autofocus, exact-ID embeds, drop-to-bar, Cancel/Send and retry flows
+  retained. Browser suite includes branding DOM continuity through state changes.
+- Pins: site807, chat407, SW397. Asset derivation in SOURCE.md. No backend changes.
+
 ## 2026-11-09 — shared headers and picker/layout redesign
 
 Branch: `codex/header-picker-layout`.
