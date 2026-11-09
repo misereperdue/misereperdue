@@ -861,3 +861,15 @@ Branch: `codex/live-globe-pull-post`.
 - Live checks: never fetch an exact `?v=N` pin before the probe shows the new SW. Cloudflare caches
   pinned assets as immutable, so an early fetch pins the old file under the new URL (happened to
   css 826 at one edge; superseded by 827).
+
+## + menu scroll lock (Grim, Nov 9 2026)
+
+- `chat.js` `mpScrollLock(m)` / `mpScrollUnlock()` run from the + menu open/close (covers the menu and every
+  sub-panel: Music, Misery FM, Polls, Globe). There are no overflow or position tricks on the page (they jump in the iOS PWA). Instead:
+  - touchmove, wheel and scroll keys outside the panel are cancelled;
+  - inside the panel a drag is allowed only while an inner scroller can still scroll that way, so there's no chaining at the edges;
+  - `overscroll-behavior` is `none` on the page and `contain` on the panel lists;
+  - stray page scrolls are pinned back (except while typing in a panel field, so iOS can reveal it);
+  - the position is restored on close, or kept at the bottom if the chat was at the bottom.
+- Globe list in the default `s1` row style had `overflow:hidden` (not scrollable); now `overflow-y:auto`.
+- Test: `tools/test-scroll-lock.cjs` (WebKit iPhone 14, dark + light).

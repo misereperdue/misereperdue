@@ -10062,6 +10062,7 @@ html[data-gprows="s1"] .chat-gp-list{
   gap:0;
   border-radius:12px;
   overflow:hidden;
+  overflow-y:auto; /* still clips to the radius; must stay scrollable (scroll lock, dc) */
   background:rgba(255,255,255,.06);
   border:.5px solid rgba(255,255,255,.08);
 }
@@ -12525,3 +12526,7 @@ html:not([data-gprows]) .chat-gp-row + .chat-gp-row .chat-gp-body::before,html[d
 .fm-c .fm-stats dd{font-size:14px}
 .fm-c.fm-root,.chat-plus-menu.fm-mnt.fm-c{background-image:linear-gradient(var(--fm-veil),var(--fm-veil))!important}
 .fm-c input[type=range]{border:0!important;border-radius:0;box-shadow:none!important;background:transparent!important;padding:0;outline:0}
+
+/* + menu scroll lock (dc): no rubber-band / scroll chaining to the chat while a + menu panel is open */
+html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
+.chat-plus-menu .chat-gp-list,.chat-plus-menu .chat-music-results,.chat-plus-menu .fm-sh-body,.chat-plus-menu .chat-poll-f,.chat-plus-menu .fm-edit,.chat-plus-menu .fm-ed-body{overscroll-behavior:contain}

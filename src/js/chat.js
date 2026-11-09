@@ -2497,6 +2497,7 @@
             var mm = m;
             g.classList.remove("is-open"); g.setAttribute("aria-expanded", "false");
             document.removeEventListener("pointerdown", out, !0); document.removeEventListener("keydown", esc, !0); window.removeEventListener("hashchange", close);
+            mpScrollUnlock();
             if (mm && mm._dispose) mm._dispose();
             if (mm) { mm.classList.remove("is-in"); mm.classList.add("is-out"); setTimeout(function () { mm.remove(); }, 180); }
           }
@@ -2524,6 +2525,7 @@
           var plk = m.querySelector('[data-act="poll-locked"]');
           plk && plk.addEventListener("click", function (e) { e.stopPropagation(); mpToast("Polls are a VIP perk"); });
           row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
+          mpScrollLock(m);
           requestAnimationFrame(function () { m.classList.add("is-in"); });
           document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("hashchange", close);
         })),
@@ -3747,6 +3749,68 @@
 
   /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
   var mpGpCache = null, mpGpAt = 0;
+  /* dc: the chat must not scroll behind the + menu or any of its panels (Music, Misery FM, Polls,
+     Globe). iOS PWA safe: no overflow/position tricks on the page (they jump on iOS); instead touch,
+     wheel and key scrolling outside the panel is cancelled, scroll chaining out of the panel's own
+     scrollers is stopped at their edges, any stray page scroll is pinned back, and the position is
+     restored on close (or the bottom kept, if the chat was at the bottom when the menu opened). */
+  var mpLock = null;
+  function mpCanScroll(el, dx, dy, root) {
+    var hz = Math.abs(dx) > Math.abs(dy);
+    for (; el && el.nodeType === 1; el = el.parentElement) {
+      var cs = getComputedStyle(el);
+      if (hz) { if (/auto|scroll/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1 && (dx < 0 ? el.scrollLeft + el.clientWidth < el.scrollWidth - 1 : el.scrollLeft > 0)) return !0; }
+      else if (/auto|scroll/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1 && (dy < 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0)) return !0;
+      if (el === root) break;
+    }
+    return !1;
+  }
+  function mpScrollLock(m) {
+    if (mpLock) { mpLock.m = m; return; }
+    var de = document.documentElement, L = { m: m, y: window.scrollY, x0: 0, y0: 0 };
+    L.end = L.y + window.innerHeight >= de.scrollHeight - 8;
+    function inPanel(t) { return L.m && t && t.nodeType === 1 && L.m.contains(t); }
+    function typing() { var a = document.activeElement; return inPanel(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== "range"; }
+    function st(e) { var t = e.touches && e.touches[0]; if (t) { L.x0 = t.clientX; L.y0 = t.clientY; } }
+    function mv(e) {
+      if (!e.touches || e.touches.length !== 1) return;
+      var t = e.touches[0], dx = t.clientX - L.x0, dy = t.clientY - L.y0, tg = e.target;
+      if (inPanel(tg)) {
+        if (tg.closest('input[type="range"], textarea, .fm-drag')) return;
+        if (mpCanScroll(tg, dx, dy, L.m)) { L.x0 = t.clientX; L.y0 = t.clientY; return; }
+      }
+      e.cancelable && e.preventDefault();
+    }
+    function wh(e) { if (inPanel(e.target) && mpCanScroll(e.target, -e.deltaX, -e.deltaY, L.m)) return; e.cancelable && e.preventDefault(); }
+    function ky(e) {
+      if (!/^( |PageUp|PageDown|Home|End|ArrowUp|ArrowDown|Spacebar)$/.test(e.key)) return;
+      var t = e.target; if (inPanel(t) || (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName)))) return;
+      e.preventDefault();
+    }
+    function sc() { if (!typing() && Math.abs(window.scrollY - L.y) > 1) window.scrollTo(0, L.y); }
+    document.addEventListener("touchstart", st, { passive: !0, capture: !0 });
+    document.addEventListener("touchmove", mv, { passive: !1, capture: !0 });
+    document.addEventListener("wheel", wh, { passive: !1, capture: !0 });
+    document.addEventListener("keydown", ky, !0);
+    window.addEventListener("scroll", sc, { passive: !0 });
+    de.classList.add("mp-noscroll");
+    L.off = function () {
+      document.removeEventListener("touchstart", st, { passive: !0, capture: !0 });
+      document.removeEventListener("touchmove", mv, { passive: !1, capture: !0 });
+      document.removeEventListener("wheel", wh, { passive: !1, capture: !0 });
+      document.removeEventListener("keydown", ky, !0);
+      window.removeEventListener("scroll", sc, { passive: !0 });
+      de.classList.remove("mp-noscroll");
+    };
+    mpLock = L;
+  }
+  function mpScrollUnlock() {
+    if (!mpLock) return;
+    var L = mpLock, de = document.documentElement; mpLock = null; L.off();
+    var y = L.end ? de.scrollHeight : L.y;
+    if (Math.abs(window.scrollY - y) > 1) { try { window.scrollTo({ top: y, behavior: "instant" }); } catch (_) { window.scrollTo(0, y); } }
+  }
+  window.mpScrollLockState = function () { return mpLock ? { y: mpLock.y, end: mpLock.end } : null; };
   function mpMorph(m, kind, close) {
     mpGpClearPreview();
     var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
