@@ -12014,3 +12014,20 @@ html[data-gcards="g3"] .forum-thread-more {
 @media(prefers-reduced-motion:reduce){.forum-pullpost path,.forum-pullpost-labels > span{transition:none!important}}
 
 .chat-music-choice { color:var(--music-accent);border-color:color-mix(in srgb,var(--music-accent) 25%,transparent); }
+
+/* Smooth sky-to-header fade, without the previous opaque upper edge. */
+#forum.on::before { top:calc(env(safe-area-inset-top,0px) + 54px);height:100px;background:linear-gradient(transparent,var(--bg) 28%,var(--bg) 72%,transparent); }
+.forum-pullpost .forum-pullpost-idle { opacity:var(--pull-idle,1);transform:none; }
+.forum-pullpost .forum-pullpost-ready { opacity:var(--pull-ready,0);transform:none; }
+.forum-pullpost.is-armed .forum-pullpost-idle { opacity:0;transform:none; }
+.forum-pullpost.is-armed .forum-pullpost-ready { opacity:1;transform:none; }
+.forum-pullpost-labels > span,.forum-pullpost-indicator { transition:none!important; }
+.chat-react-picker { max-width:calc(100vw - 16px);box-sizing:border-box; }
+.chat-react-divider { width:1px;align-self:stretch;margin:5px 3px;background:var(--stroke);flex:none; }
+.chat-react-delete { width:36px;height:36px;flex:none;border:0;border-radius:50%;background:none;color:#f0445c;display:grid;place-items:center;cursor:pointer; }
+.chat-react-delete svg { width:21px;height:21px; }
+.chat-react-delete:disabled { opacity:.4; }
+.chat-react-delete:hover { background:rgba(240,68,92,.1); }
+.chat-music-orb { width:88px;height:88px;background:#080c17;overflow:hidden; }
+.chat-music-official { display:block;width:100%;height:100%;object-fit:contain;border-radius:50%; }
+.chat-music-results[aria-busy="true"] .chat-music-orb { animation:none; }
