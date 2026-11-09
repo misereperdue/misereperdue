@@ -18,6 +18,23 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — action circles, shallow chevron and faded moon
+
+Branch: `codex/menu-circles-soft-moon`.
+
+- Chat + menu: 36px circular badges around existing action icons. Media uses
+  black in light mode/white in dark, Globe navy/ice blue, Poll purple (including
+  the locked VIP option). Misery FM and its divider retain their existing design.
+- Pull-to-post: shallower curved chevron, rounded 3.2px strokes; quadratic paths
+  interpolate into the same plus, retaining the pull threshold and reduced motion.
+- Weather: lower moon opacity in both palettes and bake an 8px Gaussian alpha
+  blur once into a padded texture. No per-frame filters or canvas-filter support
+  dependency; padding preserves the moon's size and prevents hard texture edges.
+- Validation: build verification/site checks, phone screenshots and browser
+  checks at 390×844 and 360×780 in both themes, without page errors. Mocked APIs;
+  hosted preview and production checked during release. No backend changes.
+- Pins: site 798, forum3 1173, rain 24, SW 388.
+
 ## 2026-11-09 — official Apple animation and overlay repairs
 
 Branch: `codex/official-music-overlays`.

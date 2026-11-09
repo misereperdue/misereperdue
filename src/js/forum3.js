@@ -2137,7 +2137,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         '><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18 18 6M6 6l12 12"/></svg></button></div></div></div>'),
       (u +=
         '<button type="button" class="forum-pullpost" id="forum-pullpost" aria-label="Create a post">' +
-        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="forum-pullpost-stroke-a" d="M5 8L12 15"/><path class="forum-pullpost-stroke-b" d="M12 15L19 8"/></svg>' +
+        '<svg class="forum-pullpost-indicator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="forum-pullpost-stroke-a" d="M5 10Q11 14 12 14"/><path class="forum-pullpost-stroke-b" d="M12 14Q13 14 19 10"/></svg>' +
         '<span class="forum-pullpost-labels" aria-hidden="true">' +
         '<span class="forum-pullpost-idle">Pull to post</span>' +
         '<span class="forum-pullpost-ready">Release to post</span></span></button>'),
@@ -2725,8 +2725,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
       // strokes. Driven by the finger, so pulling back reverses the morph.
       var p = RM ? (progress >= 1 ? 1 : 0) : progress;
       function mix(a, b) { return (a + (b - a) * p).toFixed(2); }
-      iconA.setAttribute("d", "M5 " + mix(8, 12) + "L" + mix(12, 19) + " " + mix(15, 12));
-      iconB.setAttribute("d", "M12 " + mix(15, 5) + "L" + mix(19, 12) + " " + mix(8, 19));
+      iconA.setAttribute("d", "M5 " + mix(10, 12) + "Q" + mix(11, 12) + " " + mix(14, 12) + " " + mix(12, 19) + " " + mix(14, 12));
+      iconB.setAttribute("d", "M12 " + mix(14, 5) + "Q" + mix(13, 12) + " " + mix(14, 12) + " " + mix(19, 12) + " " + mix(10, 19));
     }
 
     function claim(on) {

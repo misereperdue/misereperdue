@@ -33,7 +33,7 @@
       rain: "190,214,245",
       rainA: [0.12, 0.22, 0.36],
       mist: "120,150,200",
-      stars: 1, moon: [222, 234, 250], moonA: 0.62, halo: "170,200,240", haloA: 0.18,
+      stars: 1, moon: [222, 234, 250], moonA: 0.36, halo: "170,200,240", haloA: 0.18,
       flash: "205,222,255", flashA: 0.3, bolt: "232,240,255",
     },
     light: {
@@ -43,7 +43,7 @@
       rain: "52,70,104",
       rainA: [0.1, 0.17, 0.26],
       mist: "255,255,255",
-      stars: 0, moon: [255, 255, 255], moonA: 0.92, halo: "120,138,166", haloA: 0.145,
+      stars: 0, moon: [255, 255, 255], moonA: 0.48, halo: "120,138,166", haloA: 0.145,
       flash: "255,255,255", flashA: 0.16, bolt: "255,255,255",
     },
   };
@@ -91,7 +91,7 @@
     return c;
   }
   // Moon: a crescent (lit limb, faint maria; dark side fully clear, per dc 17:52),
-  // drawn once at 128px so it downsamples crisply; the halo is a live gradient.
+  // softened once in a padded texture; the halo is a live gradient.
   // Orientation (per dc 17:40/17:44): the original crescent (shadow disc
   // up-left of centre) turned 90 deg clockwise, then mirrored horizontally, so
   // the shadow disc sits up-left and the lit limb faces low-right (MOON_LIT).
@@ -115,7 +115,7 @@
     for (i = 0; i < 7; i++) spots.push([0.25 + r() * 0.5, 0.25 + r() * 0.5, 0.08 + r() * 0.12, 0.1 + r() * 0.12]);
     for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
       var dx = (x + 0.5) / s - 0.5, dy = (y + 0.5) / s - 0.5, dd = Math.sqrt(dx * dx + dy * dy) / 0.5;
-      // crisp limb: ~1 device px of anti-aliasing at the drawn size
+      // Base crescent mask, softened below before drawing.
       var edge = 1 - sm(Math.min(1, Math.max(0, (dd - 0.94) / 0.06))), shade = 1 - 0.12 * dd * dd;
       // shadow disc: original offset (-0.17,-0.1) turned 90 deg cw -> (0.1,-0.17),
       // then mirrored left-right -> (-0.1,-0.17)
@@ -131,8 +131,33 @@
       d[p++] = Math.min(255, col[0] * tone); d[p++] = Math.min(255, col[1] * tone); d[p++] = Math.min(255, col[2] * tone);
       d[p++] = Math.round(255 * alpha * edge * a);
     }
-    m.putImageData(img, 0, 0);
-    return c;
+    // Bake a Gaussian alpha blur once, including on iOS canvas implementations
+    // without ctx.filter. Padding lets the limb fade without clipped edges.
+    var size = s + 32, soft = document.createElement("canvas");
+    soft.width = soft.height = size;
+    var smoothed = soft.getContext("2d"), out = smoothed.createImageData(size, size);
+    var horizontal = new Float32Array(size * size), weights = [], sum = 0;
+    for (i = -20; i <= 20; i++) { var weight = Math.exp(-i * i / 128); weights.push(weight); sum += weight; }
+    for (y = 0; y < size; y++) for (x = 0; x < size; x++) {
+      var value = 0, sy = y - 16;
+      if (sy >= 0 && sy < s) for (i = -20; i <= 20; i++) {
+        var sx = x + i - 16;
+        if (sx >= 0 && sx < s) value += d[(sy * s + sx) * 4 + 3] * weights[i + 20];
+      }
+      horizontal[y * size + x] = value / sum;
+    }
+    for (y = 0; y < size; y++) for (x = 0; x < size; x++) {
+      var value = 0;
+      for (i = -20; i <= 20; i++) {
+        var sy = y + i;
+        if (sy >= 0 && sy < size) value += horizontal[sy * size + x] * weights[i + 20];
+      }
+      var offset = (y * size + x) * 4;
+      out.data[offset] = col[0]; out.data[offset + 1] = col[1]; out.data[offset + 2] = col[2];
+      out.data[offset + 3] = Math.round(value / sum);
+    }
+    smoothed.putImageData(out, 0, 0);
+    return soft;
   }
 
   var W = 0, H = 0, HF = 0, dpr = 1, pal, clouds = [], moon, skyGrad, mistGrad, drops = [];
@@ -261,7 +286,8 @@
   function moonAim() { return moonSky(moonForced || new Date(), LOC[0], LOC[1]); }
 
   function drawMoon(img, mp) {
-    ctx.drawImage(img, mp.x - mp.r, mp.y - mp.r, mp.r * 2, mp.r * 2);
+    var radius = mp.r * img.width / 128;
+    ctx.drawImage(img, mp.x - radius, mp.y - radius, radius * 2, radius * 2);
   }
   function resize() {
     var rc = cv.getBoundingClientRect();
