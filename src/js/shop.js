@@ -243,15 +243,22 @@ var MPShop = (function () {
    * and reads "Checkout". Refreshed when the bag renders, on tab return, and
    * by one setTimeout armed for the next day rollover (no per-second timer). */
   var coTimer = null;
+  function vipOnlyCart() {
+    var cart = MP.readCart();
+    return cart.length > 0 && cart.every(function (line) {
+      var product = MP.PRODUCTS[line.id];
+      return product && n(product) && Number(line.qty) > 0;
+    });
+  }
   function checkoutLocked() {
-    return Date.now() < CD_END;
+    return Date.now() < CD_END && !vipOnlyCart();
   }
   function checkoutGate() {
     if (coTimer) (clearTimeout(coTimer), (coTimer = null));
     var b = document.getElementById("checkout-btn");
     if (!b) return;
     var ms = CD_END - Date.now();
-    if (ms <= 0) {
+    if (!checkoutLocked()) {
       if (b.classList.contains("is-soon")) {
         b.classList.remove("is-soon");
         b.disabled = !1;
