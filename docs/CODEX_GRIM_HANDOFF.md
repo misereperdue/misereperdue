@@ -18,6 +18,55 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — cart fade, music search, iOS catalog outage, ranking (Grim, PRs #39–#44)
+
+- **#39 cart/bag fade:** checkout and bag lists fade under the sky with the
+  same eased mask as product pages (#35), dark and light. Checked in WebKit at
+  scroll 0/30/80/200.
+- **#40 music search (CA + US):** `mpMusicSearch` asks both the `ca` and `us`
+  storefronts (limit 50 each) at once and merges them by Apple's best position
+  (US +0.5). One storefront failing still shows the other; only both failing
+  shows "Couldn't reach the catalog". Results are deduped by title|artist|explicit.
+  The "Choose a song to share." helper under the empty state is gone.
+- **#41 iOS outage from #40 (SW 418), fixed:** #40 added `media=music`.
+  For a Mobile Safari user agent, Apple answers any `media=music` search with
+  a **301 to `musics://…`**. CORS refuses that redirect, so every search, and
+  the song lookups behind now-playing cards, failed on iPhone. Desktop
+  browsers get a 200, so tests and curl looked fine. **Never add a `media`
+  param.** `entity=song` alone is enough. `tools/test-music-picker.cjs` and
+  `tools/test-music-rank.cjs` mock Apple's 301 for any `media` param.
+- **#42/#44 stale chat.js on the edge:** twice, the new `js/chat.js?v=N` link was
+  cached at Cloudflare's edge with the *previous* build. Those files are
+  `immutable` for a year, so a pin can be stuck with old code. Cause: a local
+  iPhone-WebKit test served the branch's files but left the service worker on.
+  The SW's precache fetches go around Playwright's routes, so it fetched the
+  new pins from the live site before merge. **Run local-file browser tests with
+  `serviceWorkers:'block'`.** After a release, check the pinned link has the new
+  code (`curl …/js/chat.js?v=N | grep <new string>`). If it doesn't, bump the
+  pin again; don't reuse it.
+- **#43 ranking:** in `mpMusicSearch` `score()`. Points:
+
+  | Rule | Points |
+  |---|---|
+  | Query word in the title before any parenthesis | +5 |
+  | Query word in the full title (incl. parentheses) | +4 |
+  | Query word in the artist | +5 |
+  | Query word in the album | +1 |
+  | Words hit both title and artist | +3 |
+  | Every query word is in the primary artist (text before &/,/x/feat/with) | +8 if the whole name, +4 if partial |
+  | The whole title was asked for | +4 (still typing it: +2) |
+  | Karaoke/cover/tribute/instrumental/lullaby/kidz bop/rendition… | −8 |
+  | Remix/mix/version/live/acoustic/slowed/session/edit… after the title | −4 |
+  | The primary artist appears 6+ times in the raw CA+US results (the original) | +3 |
+
+  The two penalties don't apply when the query has that word, so
+  "blinding lights remix" shows remixes. Ties fall back to Apple's position.
+  Test: `tools/test-music-rank.cjs` replays 14 queries offline from
+  `tools/fixtures/music-rank.json`, which holds the recorded CA/US searches and
+  album lookups trimmed to the fields ranking needs. `MP_RECORD=1` re-records
+  from the real API, and an unrecorded request fails the test. `MP_TABLE=1`
+  prints the top 3 per query.
+
 ## 2026-11-09 — afternoon fixes: popover revert, product header, pill stretch, recent songs, crossfade (Grim, PRs #31–#38)
 
 - **CI note:** `pull_request` runs of `check.yml` fail before any job starts
