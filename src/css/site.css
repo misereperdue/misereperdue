@@ -11966,6 +11966,24 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-idle-wave i:nth-child(3) { height:30px; }
 .chat-pbig-music.is-compact .chat-music-branding { display:none; }
 
+/* Transparent official films (keyed to alpha in canvas), looping footer icon, live idle EQ. */
+.chat-np-am,.chat-np-am-mark,.chat-music-orb,.chat-music-branding { background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none; }
+.chat-np-am { mix-blend-mode:normal; }
+.chat-np-official-key,.chat-music-key { position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:0; }
+.chat-np-am-mark.is-keyed .chat-np-official-key,.chat-music-orb.is-keyed .chat-music-key { opacity:1; }
+.chat-np-am-mark.is-keyed .chat-np-official,.chat-np-am-mark.is-keyed .chat-np-official-still,.chat-music-orb.is-keyed .chat-music-poster,.chat-music-orb.is-keyed .chat-music-official { opacity:0!important; }
+.chat-np-am-mark.is-keyed .chat-np-official-still { visibility:hidden; }
+.chat-music-orb { color:var(--ink); }
+.chat-music-orb:not(.is-keyed) .chat-music-poster { border-radius:8px; }
+.chat-music-idle-wave i { transform-origin:50% 50%;animation:chat-music-eq 1.15s ease-in-out infinite alternate;will-change:transform; }
+.chat-music-idle-wave i:nth-child(1) { animation-duration:.92s;animation-delay:-.31s; }
+.chat-music-idle-wave i:nth-child(2) { animation-duration:1.27s;animation-delay:-.74s; }
+.chat-music-idle-wave i:nth-child(3) { animation-duration:1.06s;animation-delay:-.12s; }
+.chat-music-idle-wave i:nth-child(4) { animation-duration:1.39s;animation-delay:-.95s; }
+.chat-music-idle-wave i:nth-child(5) { animation-duration:.98s;animation-delay:-.53s; }
+@keyframes chat-music-eq { 0% { transform:scaleY(.42); } 38% { transform:scaleY(1); } 64% { transform:scaleY(.66); } 100% { transform:scaleY(.9); } }
+@media(prefers-reduced-motion:reduce){ .chat-music-idle-wave i { animation:none;will-change:auto; } }
+
 /* Retail content may overlap the decorative sky, never the navigation. */
 body.home:has(#shop.on) .hero,
 body.home:has(#product.on) .hero { z-index:1; }

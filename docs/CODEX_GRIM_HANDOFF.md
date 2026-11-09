@@ -18,6 +18,34 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — transparent Apple Music films, looping footer icon, live EQ (Grim)
+
+Branch: `grim/music-logo-loop-transparent`. Finishes dc's request Codex ran out
+of usage on (no partial Codex branch existed).
+
+- Translucent box cause: `.chat-np-am{mix-blend-mode:screen}` over a video.
+  iOS composites video in its own layer, so the blend is unreliable and the
+  film's near-black frame shows as a translucent rectangle (worse mid-fade).
+- Fix: both official films (embed wordmark, picker icon) are now drawn into a
+  small canvas and luma-keyed to real alpha (black → transparent, colour
+  un-premultiplied, 6% edge feather). Works the same on iOS Safari/PWA, Chrome
+  and Firefox with the existing H.264 MP4s; no HEVC-alpha encoder exists on
+  Linux. Blend mode removed. When the text colour is dark (light theme, no
+  album gradient) the key renders a hue-kept dark version, re-keyed on theme
+  change. If canvas keying fails, the old video/still remain visible.
+- Footer icon: new `official-icon-loop.mp4` (0–0.96s glass-icon part of the
+  same film, ping-pong, 112px, seamless) loops while the picker is open and
+  visible; pauses when hidden (IntersectionObserver, compact keyboard layout),
+  page hidden, or closed. Not restarted by typing. Reduced motion: keyed still
+  `official-icon-still.webp`. Embed wordmark lifecycle (play once, hold) unchanged.
+- Idle waveform: five bars animate (staggered scaleY EQ); static under reduced motion.
+- Tests: `tools/test-music-logo.cjs` (MP_BROWSER=webkit|chromium) checks no
+  blend/background/shadow/backdrop on the mark chain, compares screenshots with
+  and without the canvas where the logo is transparent (≤4 levels), keyed video
+  frames, loop attribute/playing, no restart while typing, pause on close, EQ
+  animation and reduced motion. Existing `test-music-picker.cjs` passes.
+- Pins: site811, chat410, SW402. No Worker changes.
+
 ## 2026-11-09 — shop content beneath navigation
 
 - Earlier shared-header change raised decorative sky to z27 and pushed Shop

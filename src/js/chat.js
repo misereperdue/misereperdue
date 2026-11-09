@@ -3619,20 +3619,27 @@
   }
   function mpMusicWire(menu, close) {
     var input = menu.querySelector(".chat-music-q"), list = menu.querySelector(".chat-music-results"), status = menu.querySelector(".chat-music-status"),
-      timer = null, controller = null, epoch = 0, dead = false, branding = null;
+      timer = null, controller = null, epoch = 0, dead = false, branding = null, brandIO = null, brandRun = function () {};
     function mountBrand() {
       if (!branding) {
         branding=document.createElement('span');branding.className='chat-music-branding';
-        branding.innerHTML='<span class="chat-music-orb"><img class="chat-music-poster" src="/assets/apple-music/official-icon-start.webp?v=2" alt="Apple Music"><video class="chat-music-official" muted playsinline preload="auto" poster="/assets/apple-music/official-icon-start.webp?v=2" src="/assets/apple-music/official-icon.mp4?v=2" aria-hidden="true"></video></span><span class="chat-music-brand-copy"><span class="chat-music-powered">Powered by</span><span class="chat-music-provider">Apple Music</span></span>';
-        var film=branding.querySelector('video'),poster=branding.querySelector('img');film.muted=true;film.playsInline=true;
-        if(mpGpReduced())poster.src='/assets/apple-music/official-icon.webp?v=2';
+        branding.innerHTML='<span class="chat-music-orb"><img class="chat-music-poster" src="/assets/apple-music/official-icon-still.webp?v=1" alt="Apple Music"><video class="chat-music-official" muted playsinline loop preload="auto" src="/assets/apple-music/official-icon-loop.mp4?v=1" aria-hidden="true"></video><canvas class="chat-music-key" width="112" height="112" aria-hidden="true"></canvas></span><span class="chat-music-brand-copy"><span class="chat-music-powered">Powered by</span><span class="chat-music-provider">Apple Music</span></span>';
+        var film=branding.querySelector('video'),poster=branding.querySelector('img'),key=branding.querySelector('canvas'),orb=branding.querySelector('.chat-music-orb');
+        film.muted=true;film.playsInline=true;film.loop=true;
+        // The official film is art on black: key it to real alpha so only the icon shows.
+        mpAmKeyWire(orb,key,film,poster);
         film.addEventListener('playing',function(){branding.classList.add('is-playing');});
-        film.addEventListener('ended',function(){branding.dataset.completed='1';poster.onload=function(){branding.classList.add('is-finished');};poster.src='/assets/apple-music/official-icon.webp?v=2';if(poster.complete&&poster.naturalWidth)branding.classList.add('is-finished');});
         film.addEventListener('error',function(){branding.classList.remove('is-playing');});
+        var seen=false;
+        brandRun=function(){
+          if(dead||!branding.isConnected||!seen||document.hidden||mpGpReduced()){film.pause();return;}
+          var playing=film.play();if(playing)playing.catch(function(){});
+        };
+        try{brandIO=new IntersectionObserver(function(ents){seen=!!(ents[0]&&ents[0].isIntersecting);brandRun();});brandIO.observe(orb);}catch(_){seen=true;}
+        document.addEventListener('visibilitychange',brandRun);
       }
       if(!branding.isConnected)menu.appendChild(branding);
-      var film=branding.querySelector('video');
-      if(!mpGpReduced()&&!branding.dataset.completed){var playing=film.play();if(playing)playing.catch(function(){});}
+      brandRun();
     }
     function state(title, detail, retry) {
       menu.classList.remove("has-results");fit();
@@ -3724,7 +3731,7 @@
       });
     }
     function dispose() {
-      if (dead) return; dead = true; if(branding)branding.querySelector("video").pause(); invalidate(); cancelAnimationFrame(sizeFrame);
+      if (dead) return; dead = true; if(branding)branding.querySelector("video").pause(); if(brandIO)brandIO.disconnect(); document.removeEventListener("visibilitychange",brandRun); invalidate(); cancelAnimationFrame(sizeFrame);
       window.removeEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.removeEventListener("resize", fit); window.visualViewport.removeEventListener("scroll", fit); }
       observer.disconnect();
     }
@@ -4261,10 +4268,12 @@
           }
           if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
           if (started && video.readyState >= 2) video.classList.add("is-playing");
-          else video.pause();
+          else { video.pause(); var still = card.querySelector(".chat-np-official-key"); still && still._mpStill && still._mpStill(); }
         } catch (_) { video.pause(); }
       } else if (video) video.pause();
       if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
+      var keyed = card.querySelector(".chat-np-official-key");
+      if (keyed && keyed._mpInk !== mpAmKeyInk(keyed)) mpAmKeyRedraw(keyed);
       showing = !showing;
       xfEnd();
       card.classList.add("is-xf");
@@ -4327,7 +4336,80 @@
     video.src = "/assets/apple-music/official-wordmark.mp4?v=1";
     video.setAttribute("aria-hidden", "true");
     mark.appendChild(video);
+    var key = document.createElement("canvas");
+    key.className = "chat-np-official-key";
+    key.width = 384;
+    key.height = 124;
+    key.setAttribute("aria-hidden", "true");
+    mark.appendChild(key);
+    mpAmKeyWire(mark, key, video, poster);
     return mark;
+  }
+  // Apple's films are bright artwork on black. Blend modes on video layers are
+  // unreliable on iOS (a translucent box shows), so convert the black to real
+  // alpha in a small canvas. Light text colour gets a hue-kept dark version.
+  var mpAmKeys = [], mpAmKeyObs = null;
+  function mpAmKeyInk(canvas) {
+    var m = /(\d+(?:\.\d+)?)[,\s]+(\d+(?:\.\d+)?)[,\s]+(\d+(?:\.\d+)?)/.exec(getComputedStyle(canvas).color || "");
+    return !!m && 0.2126 * m[1] + 0.7152 * m[2] + 0.0722 * m[3] < 128;
+  }
+  function mpAmKey(canvas, source) {
+    var ctx = canvas._mpCtx || (canvas._mpCtx = canvas.getContext("2d", { willReadFrequently: true }));
+    if (!ctx || !source) return false;
+    var w = canvas.width, h = canvas.height;
+    try {
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(source, 0, 0, w, h);
+      var img = ctx.getImageData(0, 0, w, h), d = img.data, ink = mpAmKeyInk(canvas), K = 20, S = 255 / (255 - K), edge = canvas._mpEdge;
+      if (!edge) {
+        // Feather the outer edge so the film's frame can never read as a box.
+        var e = Math.max(2, Math.round(Math.min(w, h) * 0.06));
+        edge = canvas._mpEdge = new Float32Array(w * h);
+        for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) edge[y * w + x] = Math.min(1, Math.min(x, y, w - 1 - x, h - 1 - y) / e);
+      }
+      for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], g = d[i + 1], b = d[i + 2], hi = r > g ? (r > b ? r : b) : (g > b ? g : b);
+        if (hi <= K) { d[i + 3] = 0; continue; }
+        var f = 255 / (hi - K);
+        r = r > K ? (r - K) * f : 0; g = g > K ? (g - K) * f : 0; b = b > K ? (b - K) * f : 0;
+        if (ink) { var lo = r < g ? (r < b ? r : b) : (g < b ? g : b); r -= lo; g -= lo; b -= lo; }
+        d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = (hi - K) * S * edge[i >> 2];
+      }
+      ctx.putImageData(img, 0, 0);
+      canvas._mpLast = source;
+      canvas._mpInk = ink;
+      return true;
+    } catch (_) { return false; }
+  }
+  function mpAmKeyRedraw(canvas) { return !!(canvas && canvas._mpLast) && mpAmKey(canvas, canvas._mpLast); }
+  function mpAmKeyWire(host, canvas, video, still) {
+    function ready() {
+      if (!canvas._mpLast || canvas._mpLast === still) { if (mpAmKey(canvas, still)) host.classList.add("is-keyed"); }
+    }
+    still.complete && still.naturalWidth ? ready() : still.addEventListener("load", ready);
+    var pumping = false, lastTime = -1;
+    function tick() {
+      if (video.readyState >= 2 && video.currentTime !== lastTime) { lastTime = video.currentTime; if (mpAmKey(canvas, video)) host.classList.add("is-keyed"); }
+      if (video.paused || video.ended || !canvas.isConnected) { pumping = false; return; }
+      video.requestVideoFrameCallback ? video.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+    }
+    function pump() { if (!pumping) { pumping = true; lastTime = -1; tick(); } }
+    video.addEventListener("playing", pump);
+    video.addEventListener("seeked", function () { if (video.paused && canvas._mpLast === video) { lastTime = -1; tick(); } });
+    video.addEventListener("ended", function () { lastTime = -1; tick(); });
+    canvas._mpStill = function () { mpAmKey(canvas, still); };
+    mpAmKeys.push(canvas);
+    if (!mpAmKeyObs && window.MutationObserver) {
+      // Theme switches change the text colour; re-key paused frames to match.
+      var rekey = function () {
+        mpAmKeys = mpAmKeys.filter(function (c) { return c.isConnected || !c._mpSeen; });
+        mpAmKeys.forEach(function (c) { if (c.isConnected) { c._mpSeen = 1; if (c._mpInk !== mpAmKeyInk(c)) mpAmKeyRedraw(c); } });
+      };
+      var again = function () { requestAnimationFrame(rekey); setTimeout(rekey, 500); };
+      mpAmKeyObs = new MutationObserver(again);
+      mpAmKeyObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+      document.body && mpAmKeyObs.observe(document.body, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    }
   }
   function mpAmWire(card) {
     if (!card || card.querySelector(".chat-np-meta")) return;
