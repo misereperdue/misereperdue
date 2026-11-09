@@ -18,6 +18,27 @@ pause, review first, or keep work local. This permission covers release of
 requested work; it does not expand the requested scope. Tool-level approval
 controls still apply.
 
+## 2026-11-09 — centered provider mark and chevron-to-plus pull
+
+Branch: `codex/music-center-pull-morph`.
+
+- Latest dc request supersedes the provider mark's left alignment below:
+  center Apple Music between the cover's right edge and the card's right edge.
+  Keep the compact listening/title/artist text left-aligned beside the cover.
+- Removed music text and provider-mark text shadows, with a scoped shadow/filter
+  reset inside the text column. Cover and card styling remain as before.
+- Pull cue: a 26px chevron above the text (previously 14px beside it).
+  Its two SVG strokes interpolate to a plus at the posting threshold using
+  requestAnimationFrame and existing pull progress. Retreat reverses the morph;
+  cancellation/spring-back resets it. Reduced motion uses discrete icon states.
+- Pins: site 794, forum3 1169, SW 384; chat stays 398 (no chat JS change).
+- Validation: npm run check, npm run verify and git diff --check passed.
+  Mocked browser checks passed at 390×844 and 360×780 dark/light, plus desktop
+  1440×900 dark: provider centering within 1px, no text/filter shadows, stable
+  crossfade width, stacked 26px icon, half/full/reversed morph, composer opening,
+  and reduced-motion styling. Screenshots reviewed; no page exceptions.
+- No Worker changes. Release after CI and preview pass under standing approval.
+
 ## 2026-11-09 — cover alignment, vector Apple mark and animated chevron
 
 Branch: `codex/music-chevron-menu-refine`.
