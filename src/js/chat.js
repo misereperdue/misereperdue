@@ -584,7 +584,7 @@
       (t.className = "chat-sheet-share"),
       t.setAttribute("aria-label", "Share profile"),
       (t.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="float"><path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/></svg>'),
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="float"><path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/></svg>'),
       (t.style.cssText =
         "position:absolute;top:10px;left:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
       t.addEventListener("click", function (n) {
@@ -782,7 +782,7 @@
               (i.className = "chat-sheet-x"),
               i.setAttribute("aria-label", "Close"),
               (i.innerHTML =
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
               (i.style.cssText =
                 "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
               i.addEventListener("click", gt),
@@ -1454,7 +1454,7 @@
   function mpPMRow() {
     return document.querySelector("#chat .chat-inputrow");
   }
-  var MP_IC = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var MP_IC = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   function mpHideUser(u, id) {
     mpHide.hide(u, id);
     window.haptic && window.haptic(12);
@@ -1478,7 +1478,7 @@
       (n ||
         (((n = document.createElement("div")).className = "chat-pm-chip"),
         (n.innerHTML =
-          '<svg class="chat-pm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="M12 14.5V17.5M13 14.5C13 15.0523 12.5523 15.5 12 15.5C11.4477 15.5 11 15.0523 11 14.5C11 13.9477 11.4477 13.5 12 13.5C12.5523 13.5 13 13.9477 13 14.5Z"/><path d="M16.5 9V6.5C16.5 4.01472 14.4853 2 12 2C9.51471 2 7.49999 4.01472 7.49999 6.5V9"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/></svg><span class="chat-pm-txt"></span><button type="button" class="chat-pm-x" aria-label="Cancel private message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button>'),
+          '<svg class="chat-pm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="M12 14.5V17.5M13 14.5C13 15.0523 12.5523 15.5 12 15.5C11.4477 15.5 11 15.0523 11 14.5C11 13.9477 11.4477 13.5 12 13.5C12.5523 13.5 13 13.9477 13 14.5Z"/><path d="M16.5 9V6.5C16.5 4.01472 14.4853 2 12 2C9.51471 2 7.49999 4.01472 7.49999 6.5V9"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/></svg><span class="chat-pm-txt"></span><button type="button" class="chat-pm-x" aria-label="Cancel private message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button>'),
         n.querySelector(".chat-pm-x").addEventListener("click", function (e) {
           (e.preventDefault(), mpPMStop());
         }),
@@ -1509,7 +1509,7 @@
       var n = document.createElement("div");
       n.className = "chat-pm-cap";
       var a = s && t.to && String(t.to).toLowerCase() === String(s.username).toLowerCase();
-      n.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M12 14.5V17.5M13 14.5C13 15.0523 12.5523 15.5 12 15.5C11.4477 15.5 11 15.0523 11 14.5C11 13.9477 11.4477 13.5 12 13.5C12.5523 13.5 13 13.9477 13 14.5Z"/><path d="M16.5 9V6.5C16.5 4.01472 14.4853 2 12 2C9.51471 2 7.49999 4.01472 7.49999 6.5V9"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/></svg>';
+      n.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10" aria-hidden="true"><path d="M12 14.5V17.5M13 14.5C13 15.0523 12.5523 15.5 12 15.5C11.4477 15.5 11 15.0523 11 14.5C11 13.9477 11.4477 13.5 12 13.5C12.5523 13.5 13 13.9477 13 14.5Z"/><path d="M16.5 9V6.5C16.5 4.01472 14.4853 2 12 2C9.51471 2 7.49999 4.01472 7.49999 6.5V9"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/></svg>';
       var r = document.createElement("span");
       ((r.textContent = a ? "Only visible to you" : "Only visible to " + mpAt(t.to || "")), n.appendChild(r));
       var o = e.querySelector(".chat-msg-main") || e.querySelector(".chat-photo-col") || e;
@@ -2221,7 +2221,7 @@
       (Ue = []),
       (m = 0),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" data-hi="wiggle"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add to chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
+        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" data-hi="wiggle"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add to chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
       window.MPForum && MPForum.updateBellBadge)
     )
       try {
@@ -2447,7 +2447,7 @@
           (i.className = "chat-attach-x"),
           i.setAttribute("aria-label", "Remove attachment"),
           (i.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="12" height="12" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="12" height="12" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
           i.addEventListener("click", function (e) {
             (e.preventDefault(),
               (H = H.filter(function (e) {
@@ -2582,7 +2582,7 @@
           function esc(e) { if (e.key === "Escape") { e.preventDefault(); if (m && m._esc && m._esc()) return; close(); g.focus(); } }
           if (m && !m.classList.contains("is-out")) return m._close ? m._close() : close();
           if (m) m.remove();
-          var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+          var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu"); m._close = close;
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"/><path d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"/><path d="M21.5 6H18M18 6H14.5M18 6V2.5M18 6V9.5"/></svg><span>Add media</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg><span>Globe</span></button>' +
@@ -2947,7 +2947,7 @@
     ((u.type = "button"),
       (u.className = "chat-pv-close"),
       u.setAttribute("aria-label", "Close"),
-      (u.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
+      (u.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
       c.appendChild(l),
       c.appendChild(u));
     var m = document.createElement("div");
@@ -3177,7 +3177,7 @@
       });
   }
   function mpMusicIcon() {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>';
   }
   // Shared URLs carry the song ID, never a fuzzy artist/title match.
   function mpMusicRef(text) {
@@ -3646,7 +3646,7 @@
     x.type = "button";
     x.className = "chat-gp-prev-x";
     x.setAttribute("aria-label", "Cancel");
-    x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
+    x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
     if (m.plus) {
       x.style.width = m.plus.offsetWidth + "px";
       x.style.height = m.plus.offsetHeight + "px";
@@ -3658,7 +3658,7 @@
     snd.type = "button";
     snd.className = "chat-send chat-gp-prev-send";
     snd.setAttribute("aria-label", t.kind === "music" ? "Send song" : "Send");
-    snd.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg>';
+    snd.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg>';
     /* Send lives inside the pill (same as the real composer). */
     card.appendChild(snd);
     prev.appendChild(x);
@@ -3793,7 +3793,7 @@
     flyerCard.style.height = "100%";
     flyerCard.style.borderRadius = "inherit";
     mpGpApplyBarMetrics(flyerCard,m);flyerCard.style.height='100%';
-    var ghostSend=document.createElement('span');ghostSend.className='chat-send chat-gp-prev-send';ghostSend.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg>';flyerCard.appendChild(ghostSend);
+    var ghostSend=document.createElement('span');ghostSend.className='chat-send chat-gp-prev-send';ghostSend.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg>';flyerCard.appendChild(ghostSend);
 
     // Animate the container geometry; never stretch text or cover artwork.
     var anim = flyer.animate([
@@ -3893,11 +3893,11 @@
     var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
-    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
     if(kind === "music")m.style.height="340px";
     // Misery FM renders its own body and the same header (Back, logo, Close) into the morphed menu
     if (kind === "fm") { m.innerHTML = ""; MPFM.mount(m, { back: back, close: close }); }
-    else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     if (kind !== "fm") {
       m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
       m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
@@ -3911,7 +3911,7 @@
     else if (kind !== "fm") kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
   }
   function mpMusicForm() {
-    return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
+    return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
       '<p class="chat-music-status" role="status" aria-live="polite"></p><ul class="chat-music-results" aria-label="Songs"></ul>' +
       '';
   }
@@ -3994,7 +3994,7 @@
       tracks.forEach(function (track) {
         var item = document.createElement("li"), button = document.createElement("button"), ref = mpMusicRef(track.trackViewUrl), result = mpNPOut(track);
         button.type = "button"; button.className = "chat-music-track"; button.setAttribute("aria-label", "Add " + track.trackName + " by " + track.artistName);
-        button.innerHTML = '<span class="chat-music-art">' + mpMusicIcon() + '</span><span class="chat-music-copy"><strong></strong><span class="chat-music-artist"></span><span class="chat-music-album"></span></span><span class="chat-music-choice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></span>';
+        button.innerHTML = '<span class="chat-music-art">' + mpMusicIcon() + '</span><span class="chat-music-copy"><strong></strong><span class="chat-music-artist"></span><span class="chat-music-album"></span></span><span class="chat-music-choice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></span>';
         button.querySelector("strong").textContent = track.trackName;
         button.querySelector(".chat-music-artist").textContent = track.artistName;
         var seconds = Math.floor((Number(track.trackTimeMillis) || 0) / 1000);
@@ -4098,7 +4098,7 @@
                 '<span class="chat-gp-m chat-gp-ago" hidden><span class="chat-gp-n"></span></span>' +
               '</span>' +
             '</span>' +
-            '<svg class="chat-gp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"/></svg>' +
+            '<svg class="chat-gp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"/></svg>' +
           '</span>' +
           (t.pinned ? '<span class="chat-gp-pin" aria-hidden="true"><span class="chat-gp-pin-lab">PINNED</span></span>' : "");
         var title = t.title || "Untitled";
@@ -4313,7 +4313,7 @@
     /* build once, then update in place so votes animate (per dc) */
     if (c.getAttribute("data-n") !== String(pl.o.length)) {
       c.setAttribute("data-n", pl.o.length);
-      c.innerHTML = '<div class="chat-poll-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg>Poll</div><div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span></span></div>';
+      c.innerHTML = '<div class="chat-poll-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg>Poll</div><div class="chat-poll-q"></div><div class="chat-poll-list"></div><div class="chat-poll-ft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span></span></div>';
       c.querySelector(".chat-poll-q").textContent = p.q || "Poll";
       var L = c.querySelector(".chat-poll-list");
       pl.o.forEach(function (o, i) {
@@ -4519,7 +4519,7 @@
     ge && ge.remove(); gb && gb.remove();
     var c = document.createElement("a");
     c.className = "chat-ge is-loading"; c.href = "/#globe/" + id;
-    c.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span><svg class="chat-ge-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg></span><span class="chat-ge-l2"></span></span>';
+    c.innerHTML = '<span class="chat-ge-pic"></span><span class="chat-ge-tx"><span class="chat-ge-l1"><span class="chat-ge-who"></span><svg class="chat-ge-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg></span><span class="chat-ge-l2"></span></span>';
     c.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); if (location.pathname === "/" || /index\.html$/.test(location.pathname)) location.hash = "#globe/" + id; else location.href = "/#globe/" + id; });
     var tx = b.querySelector(".chat-text");
     if (only) { b.classList.add("chat-ge-bubble"); tx && (tx.hidden = !0); b.insertBefore(c, b.firstChild); }
@@ -4812,7 +4812,7 @@
       var aL = (n.arts || [n.art]).filter(Boolean),
         gl = c.querySelector(".chat-np-glow");
       function ph() {
-        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""), sg("linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"));
+        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""), sg("linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"));
       }
       function sg(gr) {
         gr && (c.style.setProperty("--np-g", gr), requestAnimationFrame(function () { c.classList.add("has-grad"); }));
@@ -5701,7 +5701,7 @@
       (l.className = "chat-sheet-x"),
       l.setAttribute("aria-label", "Close"),
       (l.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
       (l.style.cssText =
         "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
       l.addEventListener("click", gt),
@@ -6229,7 +6229,7 @@
           var n = V("span", "sig-chip", Y);
           n.insertAdjacentHTML("afterbegin", se(e) + " ");
           var a = V("button", "sig-chip-x", n);
-          a.innerHTML = '<svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
+          a.innerHTML = '<svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
           ((a.type = "button"),
             a.setAttribute("aria-label", "Remove embed"),
             a.addEventListener("click", function () {
@@ -6629,7 +6629,7 @@
         ((r.type = "button"),
         (r.className = "chat-me-item"),
         (r.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M20 21.0001C19.713 17.269 16.7289 14.3151 12.995 14.0662L12 13.9999C11.6446 14.0096 11.3134 14.0225 11.0008 14.0378C7.3 14.2192 4.28417 17.3057 4 21.0001"/><circle cx="12" cy="6.99988" r="4"/></svg><span>Profile</span>'),
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M20 21.0001C19.713 17.269 16.7289 14.3151 12.995 14.0662L12 13.9999C11.6446 14.0096 11.3134 14.0225 11.0008 14.0378C7.3 14.2192 4.28417 17.3057 4 21.0001"/><circle cx="12" cy="6.99988" r="4"/></svg><span>Profile</span>'),
         r.addEventListener("click", function (e) {
           (e.stopPropagation(),
             ht(),
@@ -6645,7 +6645,7 @@
         ((o.type = "button"),
           (o.className = "chat-me-item"),
           (o.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-hi="rubber-band"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Dashboard</span>'),
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="rubber-band"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Dashboard</span>'),
           o.addEventListener("click", function (e) {
             (e.stopPropagation(), ht(), window.openAnalytics && window.openAnalytics());
           }),
@@ -6655,7 +6655,7 @@
       ((i.type = "button"),
         (i.className = "chat-me-item chat-me-logout"),
         (i.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M15.5 8.04045C15.4588 6.87972 15.3216 6.15451 14.8645 5.58671C14.2114 4.77536 13.0944 4.52064 10.8605 4.01121L9.85915 3.78286C6.4649 3.00882 4.76777 2.6218 3.63388 3.51317C2.5 4.40454 2.5 6.1257 2.5 9.56803V14.432C2.5 17.8743 2.5 19.5955 3.63388 20.4868C4.76777 21.3782 6.4649 20.9912 9.85915 20.2171L10.8605 19.9888C13.0944 19.4794 14.2114 19.2246 14.8645 18.4133C15.3216 17.8455 15.4588 17.1203 15.5 15.9595"/><path d="M18.5 9.01172C18.5 9.01172 21.5 11.2212 21.5 12.0117C21.5 12.8023 18.5 15.0117 18.5 15.0117M21 12.0117H8.49998"/></svg><span>Sign out</span>'),
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M15.5 8.04045C15.4588 6.87972 15.3216 6.15451 14.8645 5.58671C14.2114 4.77536 13.0944 4.52064 10.8605 4.01121L9.85915 3.78286C6.4649 3.00882 4.76777 2.6218 3.63388 3.51317C2.5 4.40454 2.5 6.1257 2.5 9.56803V14.432C2.5 17.8743 2.5 19.5955 3.63388 20.4868C4.76777 21.3782 6.4649 20.9912 9.85915 20.2171L10.8605 19.9888C13.0944 19.4794 14.2114 19.2246 14.8645 18.4133C15.3216 17.8455 15.4588 17.1203 15.5 15.9595"/><path d="M18.5 9.01172C18.5 9.01172 21.5 11.2212 21.5 12.0117C21.5 12.8023 18.5 15.0117 18.5 15.0117M21 12.0117H8.49998"/></svg><span>Sign out</span>'),
         i.addEventListener("click", function (e) {
           (e.stopPropagation(), ft());
         }),
@@ -7070,7 +7070,7 @@
   function rcOpenRecover(prefill) {
     var hasX = !!(c && c.querySelector(".chat-xbtn")),
       b = rcLayer(
-        '<button type="button" class="rc-x-close" aria-label="Close"><svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button><h2 class="rc-title">Forgot your password?</h2><p class="rc-sub">Enter your username and the recovery code you saved when you signed up.</p><label class="chat-field"><span>Username</span><input type="text" name="rc-user" maxlength="16" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="chat-field"><span>Recovery code</span><input type="text" name="rc-code" class="rc-codein" maxlength="29" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></label><label class="chat-field"><span>New password</span><input type="password" name="rc-new" maxlength="72" autocomplete="new-password"></label><label class="chat-field"><span>Confirm new password</span><input type="password" name="rc-new2" maxlength="72" autocomplete="new-password"></label><div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">Reset password</button>' +
+        '<button type="button" class="rc-x-close" aria-label="Close"><svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button><h2 class="rc-title">Forgot your password?</h2><p class="rc-sub">Enter your username and the recovery code you saved when you signed up.</p><label class="chat-field"><span>Username</span><input type="text" name="rc-user" maxlength="16" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="chat-field"><span>Recovery code</span><input type="text" name="rc-code" class="rc-codein" maxlength="29" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></label><label class="chat-field"><span>New password</span><input type="password" name="rc-new" maxlength="72" autocomplete="new-password"></label><label class="chat-field"><span>Confirm new password</span><input type="password" name="rc-new2" maxlength="72" autocomplete="new-password"></label><div class="chat-err rc-err" role="alert"></div><button type="button" class="btn accent rc-go">Reset password</button>' +
           (hasX
             ? '<div class="rc-or"><span>or</span></div><button type="button" class="btn chat-xbtn rc-xrec"><span class="chat-xlogo">' +
               a +
@@ -7185,7 +7185,7 @@
     var needPw = s.hasPassword !== false,
       replace = "regen" === mode,
       b = rcLayer(
-        (replace ? '<button type="button" class="rc-x-close" aria-label="Close"><svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button>' : "") +
+        (replace ? '<button type="button" class="rc-x-close" aria-label="Close"><svg class="mp-x-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button>' : "") +
           
           '<h2 class="rc-title">' +
           (replace ? "Make a new recovery code" : "Create your recovery code") +
@@ -7272,7 +7272,7 @@
     row.className = "chat-xbox rc-row";
     var has = s && s.hasRecovery;
     row.innerHTML =
-      '<span class="rc-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M14 21L18 3"/><path d="M6 21L10 3"/><path d="M5 8H21"/><path d="M3 16H19"/></svg></span><span class="rc-row-text"><span class="rc-row-title">Recovery code</span><span class="rc-row-status">' +
+      '<span class="rc-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M14 21L18 3"/><path d="M6 21L10 3"/><path d="M5 8H21"/><path d="M3 16H19"/></svg></span><span class="rc-row-text"><span class="rc-row-title">Recovery code</span><span class="rc-row-status">' +
       (has
         ? "Saved · " + (s.recoveryCreatedAt ? new Date(s.recoveryCreatedAt).toLocaleDateString() : "")
         : "Not set up") +
@@ -7287,7 +7287,7 @@
   /* ---------- Orders (per dc): link a checkout email with one order, then see every order + tracking ---------- */
   var ordTitle = null;
   var ORD_ICON =
-    "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22C11.1818 22 10.4002 21.6698 8.83693 21.0095C4.94564 19.3657 3 18.5438 3 17.1613C3 16.7742 3 10.0645 3 7M12 22C12.8182 22 13.5998 21.6698 15.1631 21.0095C19.0544 19.3657 21 18.5438 21 17.1613V7M12 22L12 11.3548'/><path d='M8.32592 9.69138L5.40472 8.27785C3.80157 7.5021 3 7.11423 3 6.5C3 5.88577 3.80157 5.4979 5.40472 4.72215L8.32592 3.30862C10.1288 2.43621 11.0303 2 12 2C12.9697 2 13.8712 2.4362 15.6741 3.30862L18.5953 4.72215C20.1984 5.4979 21 5.88577 21 6.5C21 7.11423 20.1984 7.5021 18.5953 8.27785L15.6741 9.69138C13.8712 10.5638 12.9697 11 12 11C11.0303 11 10.1288 10.5638 8.32592 9.69138Z'/><path d='M6 12L8 13'/><path d='M17 4L7 9'/></svg>";
+    "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22C11.1818 22 10.4002 21.6698 8.83693 21.0095C4.94564 19.3657 3 18.5438 3 17.1613C3 16.7742 3 10.0645 3 7M12 22C12.8182 22 13.5998 21.6698 15.1631 21.0095C19.0544 19.3657 21 18.5438 21 17.1613V7M12 22L12 11.3548'/><path d='M8.32592 9.69138L5.40472 8.27785C3.80157 7.5021 3 7.11423 3 6.5C3 5.88577 3.80157 5.4979 5.40472 4.72215L8.32592 3.30862C10.1288 2.43621 11.0303 2 12 2C12.9697 2 13.8712 2.4362 15.6741 3.30862L18.5953 4.72215C20.1984 5.4979 21 5.88577 21 6.5C21 7.11423 20.1984 7.5021 18.5953 8.27785L15.6741 9.69138C13.8712 10.5638 12.9697 11 12 11C11.0303 11 10.1288 10.5638 8.32592 9.69138Z'/><path d='M6 12L8 13'/><path d='M17 4L7 9'/></svg>";
   function ordMenuItem() {
     var b = document.createElement("button");
     b.type = "button";
@@ -7558,7 +7558,7 @@
   function ordOpen() {
     if (!s || !d) return;
     var b = rcLayer(
-      "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button><h2 class='rc-title'>Orders</h2><p class='rc-sub'></p><div class='ord-body'></div>",
+      "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button><h2 class='rc-title'>Orders</h2><p class='rc-sub'></p><div class='ord-body'></div>",
       "ord-back",
     );
     b.querySelector(".rc-card").classList.add("ord-sheet");
@@ -7916,7 +7916,7 @@
         tip.setAttribute("aria-hidden", "true");
         tip.innerHTML =
           '<span class="mp-pull-indicator-ico">' +
-          '<svg class="mp-pull-indicator-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18.502V5.00195"/><path d="M18 13.002C18 13.002 13.5811 19.0019 12 19.002C10.4188 19.002 6 13.002 6 13.002"/></svg>' +
+          '<svg class="mp-pull-indicator-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18.502V5.00195"/><path d="M18 13.002C18 13.002 13.5811 19.0019 12 19.002C10.4188 19.002 6 13.002 6 13.002"/></svg>' +
           '<span class="mp-pull-indicator-spin"></span></span>' +
           '<span class="mp-pull-indicator-txt">Pull to refresh</span>';
         var label = tip.querySelector(".mp-pull-indicator-txt");
@@ -8210,7 +8210,7 @@
   var red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var prog = false, IOSW = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || (/Safari/.test(navigator.userAgent) && !/Chrome|CriOS|Chromium|Edg|Firefox|FxiOS/.test(navigator.userAgent));
   fetch(API, { method: "GET" }).then(function (r) { if (r.status === 200 || r.status === 405) { window.MP_VOICE_READY = ready = true; mount(); r.json().then(function (j) { prog = !!(j && j.progressive); }).catch(function () {}); } }).catch(function () {});
-  var MIC = '<span class="chat-mic-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6.5C7 4.01472 9.01472 2 11.5 2C13.9853 2 16 4.01472 16 6.5V11.5C16 13.9853 13.9853 16 11.5 16C9.01472 16 7 13.9853 7 11.5V6.5Z"/><path d="M11.5 19H11.0828C7.57267 19 4.57706 16.4623 4 13M11.5 19H11.9172C15.4273 19 18.4229 16.4623 19 13M11.5 19V22"/></svg></span>';
+  var MIC = '<span class="chat-mic-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6.5C7 4.01472 9.01472 2 11.5 2C13.9853 2 16 4.01472 16 6.5V11.5C16 13.9853 13.9853 16 11.5 16C9.01472 16 7 13.9853 7 11.5V6.5Z"/><path d="M11.5 19H11.0828C7.57267 19 4.57706 16.4623 4 13M11.5 19H11.9172C15.4273 19 18.4229 16.4623 19 13M11.5 19V22"/></svg></span>';
   function mount() {
     if (!ready) return;
     var f = document.querySelector("#chat .chat-inputbar"); if (!f) return void setTimeout(mount, 800);
@@ -8246,7 +8246,7 @@
   }
   function bar(f) {
     var o = document.createElement("div"); o.className = "chat-vrec";
-    o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-hint">Can\'t hear you, check mic</span><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg></button>';
+    o.innerHTML = '<button type="button" class="chat-vrec-x" aria-label="Cancel recording"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button><span class="chat-vrec-dot"></span><span class="chat-vrec-t">0:00</span><canvas class="chat-vrec-wv" aria-hidden="true"></canvas><span class="chat-vrec-hint">Can\'t hear you, check mic</span><span class="chat-vrec-busy">Transcribing…</span><button type="button" class="chat-vrec-ok" aria-label="Stop and transcribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg></button>';
     var row = f.parentNode, mic = f.querySelector(".chat-mic");
     row.appendChild(o);
     if (mic) { var rr = row.getBoundingClientRect(), mr = mic.getBoundingClientRect(); o.style.transformOrigin = Math.round(mr.left + mr.width / 2 - rr.left) + "px 100%"; }

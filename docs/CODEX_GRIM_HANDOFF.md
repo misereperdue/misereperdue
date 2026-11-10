@@ -1078,3 +1078,23 @@ and morph code are untouched.
 - dc t542u: **reaction icons stay byte-for-byte unchanged**. That covers chat tapbacks, reaction pills and `.chat-react-delete`, Globe ★ stars, and Misery FM reactions. Other exceptions: brand marks, seals and badges (verified, pay-check, VIP ⭐, 07, <3), the branded eyes, favicon, app icon, FM logo and `fm-emb` emblem, data visuals (poll ring, `fm-ring`), and the glass stem masks. Full list in docs/THIRD_PARTY.md and the PR.
 - Audit: `node /workspace/amwork/hi/audit.js` (on the box) lists every `<svg>` path not found in `@hugeicons/core-free-icons`. Only the exceptions remain.
 - Note: `tools/test-header-height.cjs` already fails on main (header fade mask is now a gradient, the test expects `none`). It is unrelated to icons and was left for whoever owns the header fade.
+
+## 2026-11-10 10:38 ET: thicker Hugeicons, plus a clean navbar cart (dc t543u, issue #77)
+- dc: "Keep the same icons just make every icon a bit thicker, and for the cart icon in the navbar, remove the two lines inside the cart so the number shows properly." Grim did this on `grok/77-icon-weight`.
+- Same glyphs, heavier strokes:
+  - Hugeicons root `stroke-width` 1.5 → **1.8** everywhere: PHIcon (`js/ph-icons.js`), nav, inline SVGs in chat/forum3/shop/dashboard-v2/profile-cards, FM `SV`/`ico()`, and the `forum-mount-patch` swapper.
+  - Icons at 12px or below: 2 → **2.2** (`.mp-x-ico` too).
+  - Bold shop ticks 2.6 → 2.8; checkbox ticks 2.2 → 2.4; poll check 2.4 → 2.6; poll tag/footer 2 → 2.2; active nav tab 1.8 → 2.1.
+- Unchanged:
+  - FM solid transport glyphs: `gly()` and `ICO.play` stay at 1.5.
+  - Reaction icons, brand marks, seals and badges, branded artwork, `fm-emb`, and the rings. The diff touches none of them.
+- No viewBox clipping at the new weight: every rendered 24-grid icon's bbox plus half its stroke stays inside 0..24.
+- Navbar cart (`#cart-btn` and the bag-mode `#post-btn`):
+  - the `M16 10V13M11 10V13` inner lines are removed;
+  - the count is centred on the basket interior (≈13.75, 11.4 of the grid), 9.5px tabular;
+  - the active-tab count now uses normal ink, because the old inverse colour assumed a filled orb icon and was white-on-white in light.
+- Measured offset from the basket centre is ≤0.12px for 1, 9, 12 and 99, active and inactive, dark and light. The `ShoppingCart01` copy in `PHIcon` keeps its lines; it isn't the navbar.
+- Pins:
+  - site.css 839, chat.js 436, dashboard-v2.js 64, forum-mount-patch.js 1081, forum3.js 1180, misery-fm.js 10, profile-cards.js 7, shop.js 111
+  - **ph-icons.js 8** (5 and 6 stay burned)
+  - SW 446
