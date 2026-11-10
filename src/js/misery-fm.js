@@ -516,19 +516,17 @@
   function li(t, extra, cls) {
     return '<li class="fm-li ' + (cls || "") + '" data-id="' + esc(t.id) + '">' + art(t, "fm-sm") + '<span class="fm-li-t"><span class="fm-li-1"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + "</span><small>" + (sub(t) || "&nbsp;") + "</small></span>" + (extra || "") + "</li>";
   }
-  function histHTML() {
-    var H = (S && S.hist) || [];
-    if (!H.length) return "";
-    return '<h3 class="fm-h">Recently played</h3><ol class="fm-list fm-hist">' + H.slice(0, 6).map(function (h) {
-      var ago = Math.max(1, Math.round((now() - h.at) / 6e4));
-      return li(h, '<span class="fm-ago">' + (ago < 60 ? ago + "m" : Math.round(ago / 60) + "h") + "</span>");
-    }).join("") + "</ol>";
-  }
   /* Compact layout (dc, 2026-11-09: "keep it more compact"): same panel, header, rows and dividers as the + menu's Music picker. */
   function heroHTML(c, o) {
     if (!c) {
-      return '<div class="fm-hero is-off"><div class="fm-np"><div class="fm-cover">' + art(null, "fm-big") + '</div><div class="fm-np-tx"><div class="fm-ttl"><b>Off air</b></div><div class="fm-sub">' +
-        (S && S.sched ? "Goes live " + esc(when(S.sched)) : "Nothing playing right now") + '</div></div></div><canvas class="fm-viz" aria-hidden="true"></canvas></div>';
+      /* dc t532u: polished off-air card — logo, Off air status, one short line, owner entry points */
+      var n = S && S.list ? S.list.length : 0, line = S && S.sched ? "Back on air " + esc(when(S.sched)) : o ? (n ? n + (n === 1 ? " song" : " songs") + " ready to play" : "Add a few songs to start your station") : "Nothing playing right now. Check back soon.";
+      return '<div class="fm-hero is-off"><div class="fm-off"><span class="fm-off-logo" role="img" aria-label="Misery FM"></span>' +
+        '<span class="fm-off-st"><i aria-hidden="true"></i>' + (S && S.sched ? "Scheduled" : "Off air") + "</span>" +
+        '<p class="fm-off-l">' + line + "</p>" +
+        (o ? '<div class="fm-off-act"><button type="button" class="fm-btn fm-primary" data-a="golive"' + (n ? "" : " disabled") + ">Go Live</button>" +
+          '<button type="button" class="fm-btn fm-off-add" data-a="add">' + ico("plus") + "Add songs</button></div>" : "") +
+        '<canvas class="fm-viz" aria-hidden="true"></canvas></div></div>';
     }
     var t = c.tr;
     return '<div class="fm-hero"><div class="fm-np"><div class="fm-cover">' + art(t, "fm-big") + (c.paused ? '<span class="fm-paused" aria-label="Paused">' + ico("pause") + "</span>" : '<span class="fm-onair" aria-label="Live"><i></i></span>') + "</div>" +
@@ -556,14 +554,14 @@
           '<button type="button" class="fm-tpb fm-tpb-s" data-a="skip" aria-label="Skip">' + gly("next") + "</button>" +
           '<button type="button" class="fm-ib fm-tog' + (S.repeat !== "off" ? " is-on" : "") + '" data-a="repeat" aria-label="Repeat: ' + S.repeat + '">' + ico("repeat") + (S.repeat === "one" ? '<em class="fm-one">1</em>' : "") + "</button>" +
           "</div>";
-      } else h += '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="golive"' + (S && S.list.length ? "" : " disabled") + ">Go Live</button></div>" + (S && S.list.length ? "" : '<p class="fm-hint">Add songs in Queue first.</p>');
+      }
     }
     if (c) {
       h += listenHTML();
       h += '<div class="fm-reacts" role="group" aria-label="Send a reaction">' + EMO.map(function (e) { return '<button type="button" data-a="react" data-e="' + e + '" aria-label="React ' + e + '">' + e + "</button>"; }).join("") + "</div>";
       if (c.up.length) h += '<h3 class="fm-h">Up next' + (S.shuffle ? " · shuffled" : "") + '</h3><ol class="fm-list">' + c.up.slice(0, 3).map(function (t) { return li(t, '<span class="fm-dur">' + fmt(t.dur) + "</span>"); }).join("") + "</ol>";
     }
-    return h + histHTML();
+    return h;
   }
   function queueHTML() {
     var c = calc(), L = S.list, Q = S.q || [];

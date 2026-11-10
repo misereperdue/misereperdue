@@ -940,3 +940,15 @@ Codex: I kept your module and its structure (carousel, details, editor, toggle/r
 - Pinned photos: no title. They're a native scroll-snap strip of 112px square thumbnails (momentum, no JS animation). Arrow keys step one photo and `data-index` tracks it. The prev/next buttons and dots are gone.
 - "Currently listening" is now "Listening" (card and editor). City is plain muted text with no heading or box.
 - Tests: test-profile-expanded checks, per frame, that the glass stays unmasked, the blur stays on, the stem mask is constant and sits at the tip. It also checks square/small photos, scroll-snap, section titles, plain city and the header pills. test-profile-cards uses scroll instead of the old buttons.
+
+## Misery FM: no history, off-air card, inline E badge, t532u/t533u (Grim, Nov 9 2026)
+
+- "Recently played" (`histHTML`) is removed from the client for owner and listener. The Worker's `hist` data is untouched and ignored.
+- Off air, the Now hero is a compact card (`.fm-off`):
+  - the real logo;
+  - an "Off air" (or "Scheduled") accent pill;
+  - one line: "Back on air …" when scheduled; for the owner, "N songs ready to play" or "Add a few songs…"; for listeners, "Nothing playing right now. Check back soon.";
+  - for the owner, Go Live (disabled with no songs) + Add songs (opens the picker);
+  - quiet idle waves behind.
+  The old Go Live row and hint under the hero are gone.
+- E badge: title rows (`.fm-ttl`, `.fm-li-1`, `.fm-m-1`) are left-packed flex with a 5px gap. The title is `flex:0 1 auto` and ellipsizes, and the badge is `flex:none`, so it sits right after the text. Tested with `eGap` (3–7px, inside the row; a long title clips before the badge).
