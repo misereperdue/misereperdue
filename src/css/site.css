@@ -12691,3 +12691,23 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 /* location: plain text */
 .mp-profile-loc{padding:10px 0}
 .mp-profile-city{margin:0 2px;padding:0;border-radius:0;background:none;font-size:13px;line-height:1.35;color:var(--muted)}
+/* dc t532u: off-air card — logo, Off air / Scheduled status, one line, owner Go Live + Add songs; quiet waves behind */
+.fm-c .fm-hero.is-off{padding:0;background:none;border:0}
+.fm-c .fm-off{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 14px 14px;border-radius:16px;overflow:hidden;text-align:center;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 11%,transparent),color-mix(in srgb,var(--accent) 3%,transparent));border:1px solid color-mix(in srgb,var(--accent) 16%,transparent)}
+.fm-c .fm-off>:not(canvas){position:relative;z-index:1}
+.fm-off-logo{display:block;width:118px;height:26px;background:var(--ink);-webkit-mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat;mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat}
+.fm-off-st{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 9px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.4;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent)}
+.fm-off-st i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.6}
+.fm-c .fm-off-l{margin:0;max-width:260px;font-size:12px;line-height:1.35;color:var(--muted)}
+.fm-c .fm-off-act{display:flex;gap:8px;width:100%;margin-top:4px}
+.fm-c .fm-off-act .fm-btn{flex:1;min-height:38px;border-radius:12px;font-size:13px;gap:5px}
+.fm-c .fm-off-act .fm-btn svg{width:14px;height:14px}
+.fm-c .fm-off-add{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink)}
+.fm-c .fm-off .fm-viz{position:absolute!important;left:0;right:0;bottom:0;width:100%!important;height:40px!important;margin:0!important;opacity:.3;pointer-events:none;z-index:0}
+/* dc t533u: the E badge sits right after the title text (5px), the title ellipsizes before it */
+.fm-ttl,.fm-c .fm-ttl,.fm-li-1,.fm-c .fm-li-1,.fm-m-1,.fm-hb-np .fm-m-1{display:flex!important;align-items:center;justify-content:flex-start!important;gap:5px!important;min-width:0}
+.fm-ttl>b,.fm-li-1>b,.fm-m-1>.fm-m-t,.fm-hb-np .fm-m-t{flex:0 1 auto!important;width:auto!important;max-width:100%!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-ttl>.fm-e,.fm-li-1>.fm-e,.fm-m-1>.fm-e{flex:none!important;margin:0!important}
+.fm-c .fm-off{padding-bottom:30px}
+.fm-c .fm-off:has(.fm-off-act){padding-bottom:14px}
+.fm-c .fm-off .fm-viz{height:26px!important}
