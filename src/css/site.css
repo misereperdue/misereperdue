@@ -12680,17 +12680,9 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-pb-hd.has-tools-1 .mp-pb-nm{padding-right:32px}
 .mp-pb-hd.has-tools-2 .mp-pb-nm{padding-right:68px}
 .mp-pb-nm{min-width:0}
-/* pinned photos: square thumbnails, native scroll-snap strip, no title */
-.mp-profile-photos{padding-bottom:10px}
-.mp-profile-deck{position:static;display:flex;gap:8px;margin:0 -14px;padding:0 14px;aspect-ratio:auto;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding:0 14px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x pan-y;border-radius:0}
-.mp-profile-deck::-webkit-scrollbar{display:none}
-.mp-profile-deck:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-2px}
-.mp-profile-photo,.mp-profile-photo[data-pos]{position:relative;inset:auto;flex:none;width:112px;height:112px;aspect-ratio:1;border-radius:12px;transform:none!important;z-index:auto;scroll-snap-align:start;overflow:hidden;background:rgba(127,127,127,.14);transition:none}
+/* pinned photos: see t536u stack below */
 .mp-profile-photo img{width:100%;height:100%;object-fit:cover}
 .mp-profile-photo-controls,.mp-profile-photo-dots{display:none}
-/* location: plain text */
-.mp-profile-loc{padding:10px 0}
-.mp-profile-city{margin:0 2px;padding:0;border-radius:0;background:none;font-size:13px;line-height:1.35;color:var(--muted)}
 /* dc t532u: off-air card — logo, Off air / Scheduled status, one line, owner Go Live + Add songs; quiet waves behind */
 .fm-c .fm-hero.is-off{padding:0;background:none;border:0}
 .fm-c .fm-off{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 14px 14px;border-radius:16px;overflow:hidden;text-align:center;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 11%,transparent),color-mix(in srgb,var(--accent) 3%,transparent));border:1px solid color-mix(in srgb,var(--accent) 16%,transparent)}
@@ -12711,3 +12703,22 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-c .fm-off{padding-bottom:30px}
 .fm-c .fm-off:has(.fm-off-act){padding-bottom:14px}
 .fm-c .fm-off .fm-viz{height:26px!important}
+/* Grim t536u: profile card. Pinned photos use the chat photo stack (same square size, radius, shadow,
+   fan and dots as .chat-photo-stacked), Listening sits above them, no location, no dividers. */
+.mp-profile-section::before,.mp-profile-details>.mp-profile-empty::before{display:none}
+.mp-profile-section{padding:8px 0}
+.mp-pb-full{border-top:0;margin-top:2px}
+.mp-profile-editor{border-top:0;padding-top:4px}
+.mp-profile-photos{padding:14px 0 26px}
+.mp-profile-deck.mp-pstack{position:relative;display:block;width:min(180px,50vw);height:min(180px,50vw);margin:0 auto;padding:0;overflow:visible;aspect-ratio:auto;scroll-snap-type:none;touch-action:pan-y;outline:none}
+.mp-profile-deck.mp-pstack:focus-visible .mp-profile-photo[data-pos="0"]{outline:2px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:3px}
+.mp-pstack .mp-profile-photo.chat-photo-card,.mp-pstack .mp-profile-photo.chat-photo-card[data-pos]{position:absolute;inset:0;width:100%;height:100%;border-radius:18px;cursor:grab;background:rgba(128,128,128,.12);z-index:auto;transition:transform .36s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.mp-pstack .mp-profile-photo img{display:block;width:100%;height:100%;object-fit:cover;border-radius:18px}
+.mp-pstack .mp-profile-photo[data-pos="0"]{transform:none}
+.mp-pstack .mp-profile-photo[data-pos="1"]{transform:translate(9px,5px) rotate(4deg)}
+.mp-pstack .mp-profile-photo[data-pos="2"]{transform:translate(-8px,8px) rotate(-4deg)}
+.mp-pstack .mp-profile-photo[data-pos="3"]{transform:translate(0,10px) rotate(1deg);opacity:0}
+.mp-pstack .mp-profile-photo[data-pos="0"]:active{transform:scale(.96)}
+.mp-profile-carousel{position:relative}
+.mp-pstack-dots.chat-stack-dots{bottom:-20px}
+@media(prefers-reduced-motion:reduce){.mp-pstack .mp-profile-photo.chat-photo-card{transition:none}}

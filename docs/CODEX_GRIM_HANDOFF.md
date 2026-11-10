@@ -952,3 +952,25 @@ Codex: I kept your module and its structure (carousel, details, editor, toggle/r
   - quiet idle waves behind.
   The old Go Live row and hint under the hero are gone.
 - E badge: title rows (`.fm-ttl`, `.fm-li-1`, `.fm-m-1`) are left-packed flex with a 5px gap. The title is `flex:0 1 auto` and ellipsizes, and the badge is `flex:none`, so it sits right after the text. Tested with `eGap` (3–7px, inside the row; a long title clips before the badge).
+
+## Profile card round 3, t536u (Grim, Nov 9 2026)
+
+dc: "Move now playing above the pictures and make the picture carousel show the way it does in chat where
+you can flick thru them. Get rid of location section and get rid of dividers."
+- **Order:** Listening (song) section, then pinned photos, then the empty-state line / Manage user.
+- **Photos = chat photo stack:** `carousel()` in `profile-cards.js` now builds the chat's iMessage-style
+  stack. Cards reuse `.chat-photo-card` (radius 18, shadow) and `.chat-stack-dots`, sized min(180px,50vw)
+  like `.chat-photo-stacked`, with the same `data-pos` fan (9,5,4deg / -8,8,-4deg / 3rd hidden). Drag the top
+  card sideways: it follows the finger with translateX(dx) rotate(dx/18deg). Past 50px it flies off
+  (±130%, ±14deg, haptic) and the stack advances; a short drag springs back. Left = next, right =
+  previous. Arrow keys step the same way. The horizontal drag calls preventDefault, so the card body
+  doesn't scroll during a flick, and vertical drags still scroll. `data-index` is the top photo.
+  The t535u scroll-snap strip rules are removed.
+- **Location removed:** there's no city section on the card and no City field in the editor. Save sends the
+  stored `user.city` back unchanged, so Worker data is untouched.
+- **No dividers:** the section/empty `::before` hairlines, the Full profile/Show less border-top and the
+  editor border-top are all gone. Spacing alone separates sections now.
+- Tests: `tools/test-profile-expanded.cjs` checks the order, location gone, zero dividers, chat-stack
+  size and look, a flick left/short/right with defaultPrevented and body scroll 0, and that the editor has
+  no City field. `tools/test-profile-cards.cjs` (Codex) now uses ArrowRight→index 1. Its City
+  steps were removed, and it asserts that the saved city stays 'Oslo'.

@@ -4,10 +4,11 @@ The existing compact profile remains the entry point. Full profile is a filled
 bubble with no divider. It grows that same card from 280px to at most 340px and
 caps content height at 560px/the available viewport. Only the card scrolls.
 
-Expanded sections: up to three pinned photos with flip/swipe, keyboard arrows
-and accessible controls; an explicitly user-picked song; and a user-entered
-city. Empty fields are optional. Edit → Expanded profile supports image upload,
-reordering/removal, song search/clear, city edit, explicit save and error retry.
+Expanded sections: an explicitly user-picked song (Listening), then up to three
+pinned photos shown as the chat photo stack (flick the top photo sideways, arrow
+keys). No location section or dividers (t536u). Empty fields are optional. Edit →
+Expanded profile supports image upload, reordering/removal, song search/clear,
+explicit save and error retry; a stored city is preserved but no longer edited or shown.
 
 Implementation is in `src/js/profile-cards.js`, loaded before chat, with narrow
 hooks into the existing authenticated API, music catalog, popover glass mask and
