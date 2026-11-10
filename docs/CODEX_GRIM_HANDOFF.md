@@ -929,3 +929,14 @@ Codex: I kept your module and its structure (carousel, details, editor, toggle/r
   - `test-profile-cards` now expects "Show less";
   - `test-profile-pop2` and `test-profile-tap-touch` still pass.
 - Headless WebKit doesn't render backdrop blur, so test screenshots look see-through; on device it's the normal `--sheet-*` glass.
+
+## Profile card round 2, t535u (Grim, Nov 9 2026)
+
+- **Blur flash during compact↔expanded:** the glass was one backdrop-filtered element shaped by an SVG data-URL mask that was regenerated every animation frame. WebKit rebuilt the backdrop layer on each new mask, so the glass went clear for a moment.
+  - Now `.mp-pb-shape` is an unmasked rounded rect resized by layout, which is the + menu morph technique and keeps the blur continuous.
+  - The stem is a separate small glass (`.mp-pb-stemg`) with a fixed mask (`mpPBstemMask`, cached per side) that only moves along x.
+  - The opaque open/close cover (`.mp-pb-frost`) keeps the one-piece mask but isn't re-masked while `.is-sizing`.
+- Edit and Share are 30px icon pills in the header corner (`.mp-pb-tools`). Whisper and Hide stay as action buttons. The Share card itself is unchanged.
+- Pinned photos: no title. They're a native scroll-snap strip of 112px square thumbnails (momentum, no JS animation). Arrow keys step one photo and `data-index` tracks it. The prev/next buttons and dots are gone.
+- "Currently listening" is now "Listening" (card and editor). City is plain muted text with no heading or box.
+- Tests: test-profile-expanded checks, per frame, that the glass stays unmasked, the blur stays on, the stem mask is constant and sits at the tip. It also checks square/small photos, scroll-snap, section titles, plain city and the header pills. test-profile-cards uses scroll instead of the old buttons.

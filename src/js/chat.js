@@ -1073,15 +1073,35 @@
       "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z"
     );
   }
+  /* Grim t535u: the glass is a plain rounded rect (.mp-pb-shape, no mask: resized by layout exactly like the
+     + menu morph, so WebKit keeps its backdrop layer and the blur never drops) plus a small stem glass
+     (.mp-pb-stemg) whose mask never changes, it only moves along x. Re-masking the backdrop element every
+     frame (the old single SVG mask) made WebKit rebuild the backdrop: the glass flashed clear mid-morph. */
+  function mpPBstemMask(T, below) {
+    var hw = 14, tipR = 1.8, W = 2 * hw, a = hw, e = T + 0.6,
+      d = "M0 " + e + "L0 " + T + "C3.6 " + T + " " + (a - 4.6) + " " + (tipR + 0.3) + " " + (a - tipR * 0.2) + " " + tipR +
+        "A" + tipR + " " + tipR + " 0 0 1 " + (a + tipR * 0.2) + " " + tipR + "C" + (a + 4.6) + " " + (tipR + 0.3) + " " + (W - 3.6) + " " + T + " " + W + " " + T + "L" + W + " " + e + "Z",
+      fl = below ? "" : ' transform="translate(0 ' + e + ') scale(1 -1)"';
+    return "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + e + '" width="' + W + '" height="' + e + '"><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")";
+  }
   function mpPBapplyMask(shp, frost, line, W, H, ax, T, below) {
     var d = mpPBstemPath(W, H, ax, T, MP_PB_RADIUS),
       fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
       vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
-      mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")";
-    shp.style.webkitMaskImage = mk;
-    shp.style.maskImage = mk;
-    frost.style.webkitMaskImage = mk;
-    frost.style.maskImage = mk;
+      mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")",
+      pb = shp.closest(".mp-pb"), sg = shp.parentNode.querySelector(".mp-pb-stemg");
+    shp.style.webkitMaskImage = "";
+    shp.style.maskImage = "";
+    if (sg) {
+      var sk = T + (below ? "b" : "a");
+      if (sg._k !== sk) { sg._k = sk; var smk = mpPBstemMask(T, below); sg.style.webkitMaskImage = smk; sg.style.maskImage = smk; }
+      sg.style.left = (ax - 14) + "px";
+    }
+    /* the opaque open/close cover keeps the one-piece mask; it is invisible while the card resizes */
+    if (!(pb && pb.classList.contains("is-sizing"))) {
+      frost.style.webkitMaskImage = mk;
+      frost.style.maskImage = mk;
+    }
     /* hairline is a sibling (unmasked) so the full stroke rings the stem tip */
     line.innerHTML = '<svg class="mp-pb-line" ' + vb + "><path" + fl + ' d="' + d + '"/></svg>';
   }
@@ -1186,6 +1206,20 @@
     body.appendChild(bio);
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
+    /* Grim t535u: Edit + Share are small icon pills in the header corner; Whisper/Hide stay as actions */
+    var tools = document.createElement("div");
+    tools.className = "mp-pb-tools";
+    function tool(label, icon, run) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "mp-pb-tool";
+      k.setAttribute("aria-label", label);
+      k.title = label;
+      k.innerHTML = "<svg " + MP_IC + ">" + icon + "</svg>";
+      k.addEventListener("click", function (e) { e.stopPropagation(); run(k); });
+      tools.appendChild(k);
+      return k;
+    }
     function btn(label, icon, run, cls) {
       var k = document.createElement("button");
       k.type = "button";
@@ -1198,8 +1232,8 @@
     }
     if (!me && mpPM.on && s)
       btn("Whisper", '<path d="M11 19H8l-4 2.5V17a5 5 0 0 1-1-3V9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v1"/><rect x="13.5" y="15" width="8" height="6" rx="1.6"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/>', function () { mpPBclose(); mpPMStart(n.username); });
-    me && btn("Edit", '<path d="M16.9 4.6a2 2 0 0 1 2.8 2.8L8.5 18.6 4 20l1.4-4.5z"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
-    btn("Share", '<path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>', function (k) {
+    me && tool("Edit profile", '<path d="M16.9 4.6a2 2 0 0 1 2.8 2.8L8.5 18.6 4 20l1.4-4.5z"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
+    tool("Share profile", '<path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>', function (k) {
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
     if (!me && window.mpHide) {
@@ -1209,7 +1243,9 @@
         mpPBclose();
       }, "is-danger");
     }
-    body.appendChild(ac);
+    ac.childNodes.length && body.appendChild(ac);
+    hd.appendChild(tools);
+    hd.classList.add("has-tools-" + tools.childNodes.length);
     var fp = document.createElement("button");
     fp.type = "button";
     fp.className = "mp-pb-full";
@@ -1238,7 +1274,11 @@
     line.setAttribute("aria-hidden", "true");
     var scale = document.createElement("div");
     scale.className = "mp-pb-scale";
+    var stemg = document.createElement("i");
+    stemg.className = "mp-pb-stemg";
+    stemg.setAttribute("aria-hidden", "true");
     scale.appendChild(shp);
+    scale.appendChild(stemg);
     scale.appendChild(line);
     scale.appendChild(frost);
     scale.appendChild(body);
