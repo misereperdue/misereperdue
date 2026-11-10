@@ -1003,3 +1003,17 @@ positioning of waveform when off air. Remove confirmation pop ups when going liv
   outside cancels and sends nothing. No `.fm-onair`. Go live icon (aria-label, no text, svg) in the card
   and Station. No `.fm-cf` on stop/go live. Off-air viz is in flow, centred (|dl-dr|≤1), under the
   line, above the actions, inside the card (owner and listener).
+
+## + menu sub-panel titles, t537u PR A (Grim, Nov 9 2026)
+
+dc: "Align left the titles of all menus in the + menu like misery fm and music menus are. Remove Share a
+song from music menu title."
+- One rule block covers every `.chat-pbig` header (Globe, New poll, Music; Misery FM already matched):
+  the title sits left, 14px after Back (flex gap 8 + 6 margin, the FM logo's spot), in the Music title's
+  type (17px/650/-0.02em), and Close stays right. Poll's old 14px uppercase-ish title and Globe's
+  centred title now follow it.
+- The Music header lost its "Share a song" subtitle (the dialog's aria-label is still "Share music"). Its
+  header is nudged by its 3px larger panel padding, so Back/Close sit at 12px like the others.
+- Test: `tools/test-plus-titles.cjs` (WebKit iPhone 14 dark+light) checks the Back→title gap equals FM's,
+  the title is centred on Back, Back sits at the same x, the typography is identical, and there's no
+  "Share a song".

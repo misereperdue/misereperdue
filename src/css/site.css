@@ -12742,3 +12742,9 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-c .fm-off-act .fm-golive svg{width:20px;height:20px}
 .fm-c .fm-pill-go.fm-golive{width:34px;padding:0;display:grid;place-items:center}
 .fm-c .fm-pill-go.fm-golive svg{width:16px;height:16px}
+/* Grim t537u: every + menu sub-panel title (Globe, New poll, Music, Misery FM) sits left, 14px after Back,
+   in the Music title's type; Close stays right. */
+.chat-pbig .chat-pbig-hd{justify-content:flex-start;padding-left:2px;padding-right:2px}
+.chat-pbig .chat-pbig-hd>b{margin:0 auto 0 6px;font-size:17px;font-weight:650;letter-spacing:-.02em;line-height:1.1;color:inherit}
+.chat-pbig .chat-pbig-hd>b .chat-music-heading{font-size:inherit;letter-spacing:inherit;gap:0}
+.chat-pbig-music .chat-pbig-hd{padding-left:0;padding-right:0;margin-left:-1px;margin-right:-1px}
