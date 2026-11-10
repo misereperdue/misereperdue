@@ -35,13 +35,32 @@
     deck.addEventListener('touchend', end); deck.addEventListener('touchcancel', end);
     root.appendChild(deck); if (cards.length > 1) root.appendChild(dots); root.appendChild(announce); paint(); return root;
   }
+  /* Grim t537u redesign: Listening is one refined row (art, title/artist, a small live equaliser), then the
+     pinned photo stack; empty states are a quiet glyph + line (own profile gets the way to fill them). */
   function details(user, options) {
     var out = el('div', 'mp-profile-details'), ids = photos(user), song = user.listening;
-    if (song && song.title && song.artist) { var music = section('Listening'), card = el(songUrl(song.url) ? 'a' : 'div', 'mp-profile-song'); if (card.tagName === 'A') { card.href = songUrl(song.url); card.target = '_blank'; card.rel = 'noopener noreferrer'; } var art = artUrl(song.art); if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; card.appendChild(image); } else card.appendChild(el('span', 'mp-profile-song-note', '♫')); var copy = el('span', 'mp-profile-song-copy'); copy.appendChild(el('strong', '', song.title)); copy.appendChild(el('span', '', song.artist)); card.appendChild(copy); music.appendChild(card); out.appendChild(music); }
+    if (song && song.title && song.artist) {
+      var music = section('Listening'), card = el(songUrl(song.url) ? 'a' : 'div', 'mp-profile-song');
+      if (card.tagName === 'A') { card.href = songUrl(song.url); card.target = '_blank'; card.rel = 'noopener noreferrer'; card.setAttribute('aria-label', song.title + ' by ' + song.artist + ', open in Apple Music'); }
+      var cov = el('span', 'mp-profile-song-art'), art = artUrl(song.art);
+      if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); } else cov.classList.add('is-empty');
+      cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
+      card.appendChild(cov);
+      var copy = el('span', 'mp-profile-song-copy'); copy.appendChild(el('strong', '', song.title)); copy.appendChild(el('span', '', song.artist)); card.appendChild(copy);
+      var eq = el('span', 'mp-profile-eq'); eq.setAttribute('aria-hidden', 'true'); for (var i = 0; i < 4; i++) eq.appendChild(el('i')); card.appendChild(eq);
+      if (card.tagName === 'A') { var chev = el('span', 'mp-profile-song-go'); chev.setAttribute('aria-hidden', 'true'); chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>'; card.appendChild(chev); }
+      music.appendChild(card); out.appendChild(music);
+    }
     if (ids.length) { var p = el('section', 'mp-profile-section mp-profile-photos'); p.appendChild(carousel(ids, options.origin)); out.appendChild(p); }
-    if (options.me) { if (!ids.length && !song) out.appendChild(el('p', 'mp-profile-empty', 'Make this space yours with photos and a song.')); out.appendChild(button('Edit profile details', options.edit)); }
-    else if (!ids.length && !song) out.appendChild(el('p', 'mp-profile-empty', 'No photos or music added yet.'));
+    if (!ids.length && !song) {
+      var empty = el('div', 'mp-profile-empty');
+      empty.innerHTML = '<span class="mp-profile-empty-g" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="12" height="14" rx="3"/><path d="M15.5 9.5 20 8.2v8.3M20 16.5a2 2 0 1 1-2-2 2 2 0 0 1 2 2Z"/></svg></span>';
+      empty.appendChild(el('p', '', options.me ? 'Make this space yours with photos and a song.' : 'No photos or music added yet.'));
+      out.appendChild(empty);
+    }
+    if (options.me) out.appendChild(button('Edit profile details', options.edit));
     if (options.manage) out.appendChild(button('Manage user', options.manage));
+    [].forEach.call(out.children, function (c, i) { c.style.setProperty('--i', i); });
     return out;
   }
   /* Grim (t529u): grow/shrink keeps the #48 tap anchoring. The stem tip stays on the tapped element, the
@@ -76,7 +95,7 @@
     function mask() { var q = b.getBoundingClientRect(), ax = Math.max(26, Math.min(tx - q.left, q.width - 26)); b.style.setProperty('--ax', ax + 'px'); options.mask(q.width, q.height, ax, below); }
     if (old && !reduced() && b.animate && wasBelow === below) {
       b.classList.add('is-sizing');
-      var a = b.animate([{width:old.width+'px',height:old.height+'px',left:old.left+'px',top:old.top+'px'},{width:w+'px',height:h+'px',left:left+'px',top:top+'px'}], {duration:300,easing:'cubic-bezier(.2,.8,.2,1)'});
+      var a = b.animate([{width:old.width+'px',height:old.height+'px',left:old.left+'px',top:old.top+'px'},{width:w+'px',height:h+'px',left:left+'px',top:top+'px'}], {duration:b.classList.contains('is-expanded')?420:340,easing:b.classList.contains('is-expanded')?'cubic-bezier(.3,1.12,.4,1)':'cubic-bezier(.25,1,.4,1)'});
       b._profileAnimation = a;
       var tick = function () { if (b._profileAnimation !== a) return; if (!b.isConnected || b.classList.contains('is-out')) { a.cancel(); return; } mask(); requestAnimationFrame(tick); };
       var done = function () { if (b._profileAnimation !== a) return; b._profileAnimation = null; b.classList.remove('is-sizing'); mask(); };
@@ -90,7 +109,7 @@
   function toggle(b, user, options) {
     var old = b.getBoundingClientRect(), expanded = !b.classList.contains('is-expanded'), full = b.querySelector('.mp-pb-full');
     if (b._profileDetails) b._profileDetails.remove(); b.classList.toggle('is-expanded', expanded); full.setAttribute('aria-expanded', expanded ? 'true' : 'false'); full.querySelector('span').textContent = expanded ? 'Show less' : 'Full profile';
-    if (expanded) { b._profileDetails = details(user, options); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); }
+    if (expanded) { b._profileDetails = details(user, options); b._profileDetails.classList.add('is-reveal'); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); }
     b._profileOptions = options; resize(b, options, old);
   }
   function refresh(b, user) { if (!b.classList.contains('is-expanded') || !b._profileOptions) return; b._profileDetails.remove(); b._profileDetails = details(user, b._profileOptions); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); resize(b, b._profileOptions); }
