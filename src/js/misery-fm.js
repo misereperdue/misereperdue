@@ -917,9 +917,19 @@
     edit.addEventListener("change", onChange);
     sheet.appendChild(edit);
     fillEdit();
+    edGrow(1);
     RM.matches ? edit.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 }) : edit.animate([{ opacity: 0, transform: "translateY(24px)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.85,.25,1)" });
     var f = q('[name="title"]', edit);
     f && f.focus({ preventScroll: !0 });
+  }
+  /* the mounted + menu panel grows to its full height while the edit form is open, so the form isn't
+     squeezed into whatever height the Queue tab had; animated like the tab-switch height change */
+  function edGrow(on, instant) {
+    if (!sheet || !sheet._mnt) return;
+    var h0 = sheet.offsetHeight;
+    sheet.classList.toggle("fm-editing", !!on);
+    var h1 = sheet.offsetHeight;
+    if (!instant && !RM.matches && Math.abs(h1 - h0) > 2 && sheet.animate) sheet.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
   }
   function fld(n, label, v, attrs) { return '<label class="fm-f"><span>' + label + '</span><input name="' + n + '" value="' + esc(v || "") + '" ' + (attrs || "") + "></label>"; }
   function fillEdit() {
@@ -929,14 +939,14 @@
     var keep = {};
     edit.querySelectorAll("[name]").forEach(function (i) { keep[i.name] = i.type === "checkbox" ? i.checked : i.value; });
     var v = function (k) { return k in keep ? keep[k] : t[k]; };
-    edit.innerHTML = '<div class="fm-ed-hd"><b>Edit song</b><button type="button" class="fm-ib" data-a="edclose" aria-label="Close">' + ico("x") + "</button></div>" +
-      '<div class="fm-ed-body"><div class="fm-ed-art">' + art(t, "fm-ed-cover") + '<div class="fm-ed-artb"><button type="button" class="fm-btn" data-a="cover">' + (t.art ? "Replace cover" : "Upload cover") + "</button>" +
-      (t.art ? '<button type="button" class="fm-btn fm-ghost" data-a="coverdel">Remove cover</button>' : "") + '<small class="fm-hint">Square JPEG/PNG works best.</small></div></div>' +
+    edit.innerHTML = '<div class="chat-pbig-hd fm-ed-hd"><button type="button" class="chat-pbig-btn fm-back" data-a="edclose" aria-label="Back"><svg ' + SV + '><path d="M15 5l-7 7 7 7"/></svg></button><b>Edit song</b><i class="fm-ed-sp" aria-hidden="true"></i></div>' +
+      '<div class="fm-ed-body"><div class="fm-ed-art">' + art(t, "fm-ed-cover") + '<div class="fm-ed-artb"><b class="fm-ed-artt">Cover</b><div class="fm-ed-cb"><button type="button" class="fm-btn" data-a="cover">' + (t.art ? "Replace" : "Upload") + "</button>" +
+      (t.art ? '<button type="button" class="fm-btn fm-ed-rm" data-a="coverdel">Remove</button>' : "") + '</div><small class="fm-hint">Square JPEG or PNG works best</small></div></div><div class="fm-ed-fs">' +
       fld("title", "Song name", v("title"), 'maxlength="120" autocomplete="off"') + fld("artist", "Artist", v("artist"), 'maxlength="120" autocomplete="off"') + fld("album", "Album", v("album"), 'maxlength="120" autocomplete="off"') +
       '<div class="fm-f2">' + fld("year", "Year", v("year"), 'inputmode="numeric" maxlength="4" pattern="[0-9]*"') + fld("genre", "Genre", v("genre"), 'maxlength="40" autocomplete="off"') + "</div>" +
       '<label class="fm-f"><span>Track notes</span><textarea name="notes" maxlength="280" rows="2" placeholder="Shown to listeners under the song">' + esc(v("notes") || "") + "</textarea></label>" +
-      '<label class="fm-sw"><input type="checkbox" name="explicit"' + (v("explicit") ? " checked" : "") + '><span class="fm-sw-k" aria-hidden="true"></span><span>Explicit</span><span class="fm-e" aria-hidden="true">E</span></label>' +
-      '<div class="fm-row"><button type="button" class="fm-btn fm-primary fm-wide" data-a="edsave">Save</button></div>' +
+      '<label class="fm-sw fm-ed-sw"><span class="fm-ed-swl"><span>Explicit <span class="fm-e" aria-hidden="true">E</span></span><small>Shows the E badge to listeners</small></span><input type="checkbox" name="explicit"' + (v("explicit") ? " checked" : "") + '><span class="fm-sw-k" aria-hidden="true"></span></label></div>' +
+      '<div class="fm-row fm-ed-save"><button type="button" class="fm-btn fm-primary fm-wide" data-a="edsave">Save</button></div>' +
       '<div class="fm-row fm-ed-more" data-id="' + esc(t.id) + '"><button type="button" class="fm-btn" data-a="playnow">' + ico("play") + 'Play now</button><button type="button" class="fm-btn" data-a="playnext">' + ico("next1") + 'Play next</button><button type="button" class="fm-btn fm-danger" data-a="remove">Remove</button></div></div>';
   }
   function saveEdit() {
@@ -948,6 +958,7 @@
     if (!edit) return;
     var e2 = edit;
     edit = null;
+    edGrow(0, instant);
     if (instant || RM.matches) return e2.remove();
     e2.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(16px)" }], { duration: 200 }).onfinish = function () { e2.remove(); };
     setTimeout(function () { dirty && renderSheet(); }, 220);

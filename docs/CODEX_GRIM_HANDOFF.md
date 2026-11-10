@@ -893,3 +893,12 @@ Branch: `codex/live-globe-pull-post`.
   stacked ~80% opaque navy/white over `--sheet-bg`, hiding the + menu blur. Removed, so the panel uses the + menu glass exactly.
 - Palette: `--fm-red` now maps to `--accent` (navy in light, light blue in dark) with `--fm-on` as the on-accent text.
   The red dotted live ring (`--fm-dot`) stays red, and the E badge stays neutral.
+
+## Misery FM edit-song form spacing, t529u (Grim, Nov 9 2026)
+
+- The edit form (`fillEdit`) uses the + menu sub-panel header (`chat-pbig-hd` + Back `chat-pbig-btn`, title).
+- The cover is a filled row: 60px art, "Cover", Replace/Remove side by side, hint.
+- Fields sit in `.fm-ed-fs`: 12px between fields, 6px label→input, labels flush with inputs, and 42px inputs at 16px (no iOS focus zoom).
+- Explicit is a settings row with the switch at the end; Save is full width; Play now / Play next / Remove sit in a 3-column row.
+- In the + menu the panel grows to its full height (`.fm-editing`, animated) while editing, then returns.
+- Test: `edLayout`/`edOk` in test-misery-fm (dark + light): even gaps, alignment, ≥16px inputs, no zoom on focus, back button, panel grown, switch position.
