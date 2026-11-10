@@ -1062,3 +1062,19 @@ and morph code are untouched.
 - Shipped as-is (PHIcon helper + 5 main nav SVGs, THIRD_PARTY credits). There was no rebase: the branch was already on top of main (SW 443). SW goes to 444.
 - One change from Codex's draft: the `js/ph-icons.js` pin is **v=7**, not v=5. Grim's pre-merge header checks hit the plain `?v=5` and `?v=6` URLs without `&probe=`, so Cloudflare's edge cached the old file there (immutable). Treat ph-icons v=5 and v=6 as burned and never reuse them. Always probe with `&probe=$RANDOM`.
 - The remaining #74 work was Codex's when this shipped. dc's follow-up t541u ("Make sure all icons sitewide adopt hugeicons counterparts") then moved the rest of #74 to Grim, on branch `grok/74-hugeicons` (see the next entry).
+
+## 2026-11-10 ET: Grim completes #74 (site-wide Hugeicons) at dc's request (t541u, t542u)
+- dc t541u: "Make sure all icons sitewide adopt hugeicons counterparts." Grim took over the rest of #74 from Codex and commented on #74. The branch is `grok/74-hugeicons`, cut from main after #75 merged. `design/hugeicons-migration` was not reused.
+- Every site-authored UI icon is now Hugeicons Free Stroke Rounded (MIT). Only the icons actually used are self-hosted as inline markup, with no runtime dependency. Covered:
+  - chat (composer, + menu, profile card, me-menu, whisper, voice, Globe/Music/Poll panels, orders, recovery)
+  - Globe (editor toolbar, bell, search, locks, pull-to-post, replies, share, carousel, back-to-top, hidden-content eye)
+  - shop (arrows, checks, 3D hint, carousel, share)
+  - dashboard (close, tabs, chevron, grip)
+  - Misery FM (`ICO`/`GLY` tables and panel chrome)
+  - profile cards
+  - `forum-mount-patch.js` runtime swaps (bell, dashboard tabs, analytics metrics: these were re-injecting Heroicons/Phosphor)
+- Text glyphs that were acting as icons are now icons too: "← Back" pills, "✕ Clear", every × close button, 🔒 lock notes, 💬 Repliers.
+- Stroke is 1.5 (2 at 12px or below). Checkbox ticks keep their CSS stroke, with the draw dash lengthened to 22 for the Tick02 path. The active nav tab now inks the stroke with user-space gradients `#orb-ink-l` / `#orb-ink-dark-l`, because #75's filled active state turned line icons into solid blobs.
+- dc t542u: **reaction icons stay byte-for-byte unchanged**. That covers chat tapbacks, reaction pills and `.chat-react-delete`, Globe ★ stars, and Misery FM reactions. Other exceptions: brand marks, seals and badges (verified, pay-check, VIP ⭐, 07, <3), the branded eyes, favicon, app icon, FM logo and `fm-emb` emblem, data visuals (poll ring, `fm-ring`), and the glass stem masks. Full list in docs/THIRD_PARTY.md and the PR.
+- Audit: `node /workspace/amwork/hi/audit.js` (on the box) lists every `<svg>` path not found in `@hugeicons/core-free-icons`. Only the exceptions remain.
+- Note: `tools/test-header-height.cjs` already fails on main (header fade mask is now a gradient, the test expects `none`). It is unrelated to icons and was left for whoever owns the header fade.

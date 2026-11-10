@@ -61,12 +61,39 @@ python3 -m venv /tmp/fv && /tmp/fv/bin/pip install fonttools shapely brotli
 After rebuilding, bump `misery-stitch.woff2?v=` in `src/css/site.css`, build the CSS
 and bump its pins.
 
-## Hugeicons Free (shared UI icons)
+## Hugeicons Free (all site-authored UI icons)
 
-- Shared icon helper (`js/ph-icons.js`) and navigation icons from [Hugeicons Free](https://github.com/hugeicons/hugeicons), Stroke Rounded, MIT License. Retains existing `PHIcon` API for compatibility.
-- Other hard-coded Heroicons and animation code remain until the full site-wide migration completes; do not remove their credits yet.
+- Icon shapes: [Hugeicons Free](https://github.com/hugeicons/hugeicons) (`@hugeicons/core-free-icons` 4.4.0), Stroke Rounded, © Hugeicons, MIT License. The full MIT notice is below.
+- Only the icons actually used are self-hosted, as inline SVG markup in `js/ph-icons.js` (`PHIcon` API kept), `index.html`, `src/js/{chat,forum3,shop,dashboard-v2,misery-fm,profile-cards,forum-mount-patch}.js`. There is no runtime dependency and no CDN.
+- Look: 24px grid, `stroke-width` 1.5 (2 for icons rendered at 12px or below), round caps and joins, `currentColor`. The active main-nav tab inks its stroke with the orb gradient (`#orb-ink-l`/`#orb-ink-dark-l`).
+- Subset (#74, Grim): Add01, ArrowDataTransferHorizontal, ArrowDown01, ArrowDown02, ArrowLeft01, ArrowRight01, ArrowRight02, ArrowUp01, ArrowUp02, At, Backward02, BubbleChat, Cancel01, ChartHistogram, Clock01, DragDropVertical, Ear, Film02, Forward02, Globe02, Hashtag, Heading01, Image01, ImageAdd02, LeftToRightListBullet, LeftToRightListNumber, Link01, LiveStreaming02, Logout01, Menu01, Message01, MessageLock01, MessageMultiple01, Mic01, MinusSign, MoreHorizontal, MusicNote03, MusicNoteSquare01, Next, Notification01, Package, Pause, PencilEdit01, Play, Playlist03, Previous, QuoteDown, RadioTower, Refresh, Repeat, Search01, Settings01, Share01, Shuffle, SourceCode, SquareLock02, SquareUnlock02, TextAlignCenter, TextAlignLeft, TextAlignRight, TextBold, TextItalic, TextStrikethrough, TextUnderline, ThreeDRotate, Tick02, TradeUp, Unavailable, User, ViewOffSlash, VolumeHigh, VolumeMute02, plus #75's nav/PHIcon set (ShoppingBag01, ShoppingCart01, BubbleChat, Globe02, PencilEdit01, ArrowLeft01/Right01, Cancel01, Add01, Search01, Notification01, Star, Favourite, Share01, Tick01, MoreHorizontal) and forum-mount-patch's runtime swaps (View, UserGroup, Message01, UserAdd01, Settings01).
+- Not converted, on purpose (see #74 / dc t542u): every reaction icon (chat tapback/reaction pills and the reaction-menu delete ×, Globe ★ stars, Misery FM reactions); brand marks (X, social logos, Apple Music, payment badges); the verified / payment-accepted seals and VIP ⭐ / 07 / <3 badge marks; the branded eyes, favicon/app icons, the Misery FM logo and its station emblem (`fm-emb`); data visuals (poll progress ring, FM ring); user-authored and picker emoji; typographic glyphs inside sentences ("Saved ✓", "×2").
 
-## Legacy Heroicons + heroicons-animated (remaining UI icons)
+```
+MIT License
 
-- Icon shapes: [Heroicons](https://github.com/tailwindlabs/heroicons) v2 (24px solid and outline), © Tailwind Labs, Inc., MIT License.
+Copyright (c) 2025 Hugeicons
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## heroicons-animated (icon motions only)
+
+- Heroicons shapes are no longer referenced (fully replaced by Hugeicons in #74). The `data-hi` motion names are still used:
 - Motions (scale, rotate, shake, wiggle, fade, float, rubber-band, ...): [heroicons-animated](https://github.com/heroicons-animated/heroicons-animated) (https://www.heroicons-animated.com), © 2026 Aniket Pawar, MIT License. Ported to plain inline SVG + CSS keyframes (`src/css/site.css`, `js/app.js`, `js/ph-icons.js`).
