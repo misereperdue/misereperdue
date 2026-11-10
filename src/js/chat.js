@@ -1218,12 +1218,14 @@
     fp.addEventListener("click", function (event) {
       event.stopPropagation();
       if (!window.MPProfiles) return;
-      MPProfiles.toggle(b, n, {origin:e, me:me,
+      MPProfiles.toggle(b, n, pbOpts);
+    });
+    var pbOpts = {origin:e, me:me,
         edit:function(){mpPBclose(!0);mpProfileSheet(!0);setTimeout(function(){var field=document.querySelector('.mp-profile-editor');field&&field.scrollIntoView({block:'start',behavior:'smooth'});},350);},
         manage:!me&&s&&s.owner?function(){mpPBclose(!0);K(n.username);}:null,
+        insets:mpPBinsets, stem:MP_PB_STEM,
         mask:function(w,h,ax,below){mpPBapplyMask(shp,frost,line,w,h,ax,MP_PB_STEM,below);}
-      });
-    });
+      };
     body.appendChild(fp);
     var frost = document.createElement("i");
     frost.className = "mp-pb-frost";
@@ -1278,6 +1280,7 @@
         fitsB = tipB + TH + h <= maxY, fitsA = tipA - TH - h >= minY;
       below = fitsB || (!fitsA && maxY - tipB >= tipA - minY);
       top = Math.max(minY, Math.min(below ? tipB + TH : tipA - TH - h, maxY - h));
+      b._clamped = Math.abs(top - (below ? tipB + TH : tipA - TH - h)) > 0.5;
       left = w > maxX - minX ? minX + (maxX - minX - w) / 2 : Math.max(minX, Math.min(tx - w / 2, maxX - w));
       ax = Math.max(26, Math.min(tx - left, w - 26));
       b._tap = { x: tx, y: ty };
@@ -1295,6 +1298,9 @@
       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { b.style.left = left + dx + "px"; b.style.top = top + dy + "px"; }
     }
     mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
+    /* Grim t529u: when neither side fits, the clamp above would push the card over its own avatar and
+       detach the stem; re-place with the shared anchored logic, which caps and scrolls the body instead */
+    if (mpPop2 && b._clamped && window.MPProfiles && MPProfiles.place) MPProfiles.place(b, pbOpts);
     scale.style.willChange = "transform";
     body.style.willChange = "opacity";
     void shp.offsetWidth;
