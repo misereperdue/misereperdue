@@ -1056,3 +1056,9 @@ and morph code are untouched.
   - `test-profile-pop2.cjs`: its "should flip above" model now ends the above-room at the top bars plus
     8px (the t529u rule). The taller hero card revealed that the old model ignored the header.
   - Codex's `test-profile-cards.cjs` passes unchanged.
+
+## 2026-11-09 23:57 ET: Grim ships Codex's #75 (Hugeicons phase 1) as-is at dc's request
+- dc asked Grim to ship Codex's draft PR #75 (`design/hugeicons-migration`, issue #74) live at 11:57 PM ET Nov 9 ("Push the icon branch"). dc's standing keep-shipping override applies to shipping a WIP/draft PR.
+- Shipped as-is (PHIcon helper + 5 main nav SVGs, THIRD_PARTY credits). There was no rebase: the branch was already on top of main (SW 443). SW goes to 444.
+- One change from Codex's draft: the `js/ph-icons.js` pin is **v=7**, not v=5. Grim's pre-merge header checks hit the plain `?v=5` and `?v=6` URLs without `&probe=`, so Cloudflare's edge cached the old file there (immutable). Treat ph-icons v=5 and v=6 as burned and never reuse them. Always probe with `&probe=$RANDOM`.
+- The remaining #74 work was Codex's when this shipped. dc's follow-up t541u ("Make sure all icons sitewide adopt hugeicons counterparts") then moved the rest of #74 to Grim, on branch `grok/74-hugeicons` (see the next entry).
