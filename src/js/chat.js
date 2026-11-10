@@ -1161,10 +1161,28 @@
     body.className = "mp-pb-body";
     var hd = document.createElement("div");
     hd.className = "mp-pb-hd";
+    /* Grim t537u redesign: avatar sits in a ring (accent; VIP gold, owner shimmer), with a soft aura of the
+       avatar itself behind the header; name, @handle + meta, then chips, bio, actions. */
     var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
       pill = O(n);
-    var bd = pill ? "" : P(n);
-    hd.appendChild(av);
+    var bd = pill ? "" : P(n),
+      isOwn = String(n.username).toLowerCase() === "dc",
+      avw = document.createElement("div");
+    avw.className = "mp-pb-av" + (isOwn ? " is-owner" : N(n) === "member" ? " is-vip" : N(n) === "verified" ? " is-verified" : "");
+    avw.innerHTML = '<i class="mp-pb-ring" aria-hidden="true"></i>';
+    avw.appendChild(av);
+    hd.appendChild(avw);
+    var avImg = av.querySelector("img");
+    if (avImg && avImg.src && !/default-avatar/.test(avImg.src)) {
+      var aura = document.createElement("div");
+      aura.className = "mp-pb-aura";
+      aura.setAttribute("aria-hidden", "true");
+      var ai = document.createElement("img");
+      ai.alt = ""; ai.decoding = "async"; ai.src = avImg.src;
+      ai.onerror = function () { aura.remove(); };
+      aura.appendChild(ai);
+      body.appendChild(aura);
+    }
     var nm = document.createElement("div");
     nm.className = "mp-pb-nm";
     var n1 = document.createElement("div");
@@ -1177,14 +1195,19 @@
     nm.appendChild(n1);
     var n2 = document.createElement("div");
     n2.className = "mp-pb-sub";
-    n2.textContent = [n.numId ? "#" + n.numId : "", n.createdAt ? "Joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }) : ""].filter(Boolean).join(" · ");
+    var hdl = document.createElement("span");
+    hdl.className = "mp-pb-handle";
+    hdl.textContent = mpAt(n.username);
+    n2.appendChild(hdl);
+    var meta = [n.numId ? "#" + n.numId : "", n.createdAt ? "joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }).toLowerCase() : ""].filter(Boolean).join(" · ");
+    meta && n2.insertAdjacentHTML("beforeend", '<span class="mp-pb-dot" aria-hidden="true">·</span><span class="mp-pb-meta"></span>');
+    meta && (n2.lastChild.textContent = meta);
     nm.appendChild(n2);
-    pill && nm.insertAdjacentHTML("beforeend", pill);
     hd.appendChild(nm);
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
+    st.innerHTML = (pill || "") + '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
@@ -1204,6 +1227,14 @@
     if (n.bio) bio.textContent = n.bio;
     else bio.setAttribute("hidden", "");
     body.appendChild(bio);
+    if (!n.bio && me) {
+      var addBio = document.createElement("button");
+      addBio.type = "button";
+      addBio.className = "mp-pb-addbio";
+      addBio.innerHTML = '<svg ' + MP_IC + ' width="14" height="14"><path d="M12 5v14M5 12h14"/></svg><span>Add a bio</span>';
+      addBio.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); mpProfileSheet(!0); });
+      body.appendChild(addBio);
+    }
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
     /* Grim t535u: Edit + Share are small icon pills in the header corner; Whisper/Hide stay as actions */
@@ -1249,7 +1280,7 @@
     var fp = document.createElement("button");
     fp.type = "button";
     fp.className = "mp-pb-full";
-    fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>';
+    fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="m6 9 6 6 6-6"/></svg>';
     fp.setAttribute("aria-expanded", "false");
     fp.addEventListener("click", function (event) {
       event.stopPropagation();

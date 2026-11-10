@@ -4,7 +4,10 @@ The existing compact profile remains the entry point. Full profile is a filled
 bubble with no divider. It grows that same card from 280px to at most 340px and
 caps content height at 560px/the available viewport. Only the card scrolls.
 
-Expanded sections: an explicitly user-picked song (Listening), then up to three
+Design (t537u): centred hero — ringed avatar (accent / VIP gold / owner shimmer) over a soft aura of the
+avatar, lowercase name + badge, @handle · #n · joined, chips (badge pill, points, badges), bio, pill actions.
+
+Expanded sections: an explicitly user-picked song (Listening row with a small equaliser), then up to three
 pinned photos shown as the chat photo stack (flick the top photo sideways, arrow
 keys). No location section or dividers (t536u). Empty fields are optional. Edit →
 Expanded profile supports image upload, reordering/removal, song search/clear,

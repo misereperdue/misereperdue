@@ -1017,3 +1017,42 @@ song from music menu title."
 - Test: `tools/test-plus-titles.cjs` (WebKit iPhone 14 dark+light) checks the Back→title gap equals FM's,
   the title is centred on Back, Back sits at the same x, the typography is identical, and there's no
   "Share a song".
+
+## Profile card redesign, t537u PR B (Grim, Nov 9 2026)
+
+dc: "I need you to carefully redesign and reimagine the profile card take your time." I explored two directions
+in Chromium iPhone-size screenshots, because headless WebKit doesn't paint backdrop blur:
+(A) a centred hero and (B) a left-aligned row header, both over an avatar aura. I picked A: it has
+the clearest hierarchy and matches the + menu glass. B crowded the name, handle and pill next to the corner
+tools. The data and features are unchanged, and the glass, stem, #48/#67 tap-anchored placement, top-bar rule
+and morph code are untouched.
+- **Compact (chat.js `mpPBshow`):**
+  - The avatar is 76px in `.mp-pb-av`, with a gradient ring `.mp-pb-ring` and a soft accent glow. VIP
+    (`member`) has a gold ring, owner (`dc`) has a slow conic shimmer, and default/verified use the accent.
+  - `.mp-pb-aura` is the avatar image blurred and saturated behind the header, radial-masked. It's only
+    there when there's a real avatar, and it's pointer-events none.
+  - The name is 21px/700, lowercase, with its inline badge. `.mp-pb-sub` is `@handle · #n · joined mon
+    yyyy` (lowercase). The VIP/07/<3 pill moved into the chip row (`.mp-pb-stats`) with the points chip and
+    the badge chip.
+  - The bio is centred and clamped to 3 lines (unclamped when expanded). Your own profile without a bio
+    gets an "Add a bio" capsule that opens the profile sheet.
+  - Whisper and Hide are pill actions; Hide is quiet, with red text and icon only.
+  - Edit and Share stay as 30px corner pills.
+  - Full profile / Show less is a small chip capsule whose chevron flips with a spring.
+  - Compact width is now 300px.
+- **Expanded (profile-cards.js `details`):**
+  - Listening is one row: 48px art with a shadow, title/artist, a 4-bar accent equaliser (CSS, static
+    under reduced motion), and a chevron when it links to Apple Music.
+  - Then comes the chat photo stack.
+  - The empty state is a glyph plus one line. The own profile still has Edit profile details, and the
+    owner still has Manage user.
+  - Children reveal staggered (`.is-reveal`, `--i`, 65ms steps) only on expand, not on refresh.
+  - The size morph is a light spring (420ms cubic-bezier(.3,1.12,.4,1)) and the collapse is 340ms.
+- Tests:
+  - `test-profile-expanded.cjs` checks the ring/aura/handle/pill-in-chips per user (VIP other, owner dc
+    added to the mock chat, the long name without an avatar or bio), the corner tools, the width, the
+    staggered reveal, the equaliser and chevron, and the empty state. All earlier geometry, morph and
+    dismiss checks still pass.
+  - `test-profile-pop2.cjs`: its "should flip above" model now ends the above-room at the top bars plus
+    8px (the t529u rule). The taller hero card revealed that the old model ignored the header.
+  - Codex's `test-profile-cards.cjs` passes unchanged.

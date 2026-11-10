@@ -17,12 +17,12 @@ for(const theme of ['dark','light']){
   return r.fulfill({json:d,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'}});});
  const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));
  const state=()=>p.evaluate(()=>{const b=document.querySelector('.mp-pb:not(.is-out)');if(!b)return null;const q=b.getBoundingClientRect(),ax=parseFloat(b.style.getPropertyValue('--ax')),below=b.classList.contains('is-below');
-  return{inn:b.classList.contains('is-in'),below,l:q.left,r:q.right,t:q.top,b:q.bottom,w:q.width,h:q.height,tipX:q.left+ax,tipY:below?q.top-13:q.bottom+13,vw:innerWidth,vh:innerHeight};});
+  const hdr=Math.max(0,...[...document.querySelectorAll('.panel.on .chat-head,.nav')].map(h=>h.getBoundingClientRect()).filter(r=>r.height&&r.bottom<innerHeight/2).map(r=>r.bottom));return{hdr,inn:b.classList.contains('is-in'),below,l:q.left,r:q.right,t:q.top,b:q.bottom,w:q.width,h:q.height,tipX:q.left+ax,tipY:below?q.top-13:q.bottom+13,vw:innerWidth,vh:innerHeight};});
  const close=async()=>{await p.keyboard.press('Escape');await p.waitForTimeout(450);assert.equal(await p.locator('.mp-pb:not(.is-out)').count(),0,'did not close');};
  const check=(s,x,y,name)=>{assert(s&&s.inn,name+': did not open');const M=10;
   assert(s.l>=M-.5&&s.r<=s.vw-M+.5&&s.t>=M-.5&&s.b<=s.vh-M+.5,name+': outside the viewport margin '+JSON.stringify(s));
   const clampX=Math.max(s.l+26,Math.min(x,s.r-26));assert(Math.abs(s.tipX-clampX)<=1.5,name+`: stem x ${s.tipX} not at tap ${x}`);
-  const roomB=s.vh-M-(y+32),roomA=y-32-M;if(roomB>=s.h+13)assert(s.below,name+': should open below');else if(roomA>=s.h+13)assert(!s.below,name+': should flip above');
+  const roomB=s.vh-M-(y+32),roomA=y-32-Math.max(M,s.hdr+8);/* t529u: the card never covers the top bars */if(roomB>=s.h+13)assert(s.below,name+': should open below');else if(roomA>=s.h+13)assert(!s.below,name+': should flip above');
   if((s.below&&roomB>=s.h+13)||(!s.below&&roomA>=s.h+13))assert(Math.abs(s.tipY-y)<=36,name+`: stem tip ${s.tipY} far from tap ${y}`);};
  const flag=()=>p.evaluate(()=>document.documentElement.getAttribute('data-pop'));
  // 1) on by default; 2) ?pop=0 = old popover and survives a relaunch; ?pop=2 back on
