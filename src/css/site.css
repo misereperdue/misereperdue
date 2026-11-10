@@ -12722,3 +12722,23 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-carousel{position:relative}
 .mp-pstack-dots.chat-stack-dots{bottom:-20px}
 @media(prefers-reduced-motion:reduce){.mp-pstack .mp-profile-photo.chat-photo-card{transition:none}}
+/* Grim t536u: Misery FM. Press-and-slide reactions: the hovered emoji lifts + magnifies on a spring,
+   neighbours lean in, the rest settle back. The pill owns the touch, so nothing scrolls under it. */
+.fm-c .fm-reacts{position:relative;overflow:visible;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background-color .2s}
+.fm-c .fm-reacts.is-press{transform:scale(1.025)}
+.fm-c .fm-reacts button{position:relative;z-index:0;touch-action:none;-webkit-touch-callout:none;transform-origin:50% 70%;transition:transform .42s cubic-bezier(.34,1.56,.64,1),opacity .2s,background-color .2s;will-change:transform}
+.fm-c .fm-reacts button:active{transform:none;background:none}
+.fm-c .fm-reacts.is-sliding button{opacity:.62;transform:scale(.9)}
+.fm-c .fm-reacts button.is-near,.fm-c .fm-reacts.is-sliding button.is-near{opacity:.9;transform:translateY(-4px) scale(1.16)}
+.fm-c .fm-reacts button.is-hov,.fm-c .fm-reacts.is-sliding button.is-hov{z-index:2;opacity:1;transform:translateY(-14px) scale(1.65);background:color-mix(in srgb,var(--accent) 16%,transparent);box-shadow:0 6px 16px rgba(0,0,0,.22)}
+.fm-rx-fly{position:fixed;z-index:1360;font-size:20px;line-height:1;pointer-events:none;will-change:transform,opacity;transform:translate(-50%,-50%)}
+.fm-rx-ring{position:fixed;z-index:1359;width:40px;height:40px;border-radius:50%;box-sizing:border-box;border:2px solid color-mix(in srgb,var(--accent) 70%,transparent);pointer-events:none;opacity:0;transform:translate(-50%,-50%)}
+@media (prefers-reduced-motion:reduce){.fm-c .fm-reacts,.fm-c .fm-reacts button{transition:none}.fm-c .fm-reacts.is-press{transform:none}.fm-c .fm-reacts button.is-hov,.fm-c .fm-reacts.is-sliding button.is-hov{transform:scale(1.25)}.fm-c .fm-reacts.is-sliding button,.fm-c .fm-reacts button.is-near{transform:none}}
+/* off-air: the waveform sits in the card's flow, centred under the line, above the owner actions */
+.fm-c .fm-off,.fm-c .fm-off:has(.fm-off-act){padding-bottom:14px}
+.fm-c .fm-off .fm-viz{position:relative!important;inset:auto!important;display:block;width:100%!important;height:30px!important;margin:0!important;opacity:.55;z-index:0}
+/* Go live is an icon button (antenna); Stop stays text */
+.fm-c .fm-off-act .fm-golive{flex:none;width:52px;padding:0;display:grid;place-items:center}
+.fm-c .fm-off-act .fm-golive svg{width:20px;height:20px}
+.fm-c .fm-pill-go.fm-golive{width:34px;padding:0;display:grid;place-items:center}
+.fm-c .fm-pill-go.fm-golive svg{width:16px;height:16px}

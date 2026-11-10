@@ -974,3 +974,32 @@ you can flick thru them. Get rid of location section and get rid of dividers."
   size and look, a flick left/short/right with defaultPrevented and body scroll 0, and that the editor has
   no City field. `tools/test-profile-cards.cjs` (Codex) now uses ArrowRight→index 1. Its City
   steps were removed, and it asserts that the saved city stays 'Oslo'.
+
+## Misery FM menu round, t536u (Grim, Nov 9 2026)
+
+dc: "Make the reaction emojis so that I can hover and move my thumb along emojis and release to send or just
+tap to send … Remove the blue pulsing dot by the album cover. Replace go live text with an icon. Fix
+positioning of waveform when off air. Remove confirmation pop ups when going live or ending a live."
+- **Press-and-slide reactions:** `rxStart/rxMove/rxUp/rxEnd/rxSend` in `misery-fm.js`. pointerdown
+  anywhere on `.fm-reacts` captures the pointer. The nearest emoji (by button centres cached at the
+  start) gets `.is-hov`, a spring lift and magnify (translateY(-14px) scale(1.65), cubic-bezier(.34,1.56,.64,1)).
+  Neighbours get `.is-near`, the rest settle to .9, and each change gives a light `window.haptic(5)` tick.
+  Release sends the hovered emoji. Release more than 64px above, 30px below or 16px to the side of the
+  pill cancels (`data-rx="cancel"`). A plain tap is down+up on the same emoji. The click after a gesture
+  is ignored for 700ms, so it never double-sends, and keyboard Enter/Space still sends via click. The send
+  animation is a WAAPI emoji clone that pops (2.25×) and rises, plus an accent ring burst. The shared
+  float rises from the sent button. Reduced motion skips the fly and uses a plain 1.25× highlight. The pill
+  is `touch-action:none`, touchmove is cancelled while a gesture runs, and `renderSheet()` waits for it to end.
+- **Cover dot gone:** the live hero no longer renders `.fm-onair` (the Paused badge stays).
+- **Go live = icon:** new `ico("golive")` (an antenna mast with a beacon and two wave pairs, distinct
+  from `radio`). It's used in the off-air card (52px primary, next to Add songs) and the Station
+  Broadcast pill (34px). Both have aria-label/title "Go live". Stop stays text.
+- **Off-air waveform:** the canvas sits in the card's flow, between the line and the actions,
+  full content width, 30px, centred. The old absolute bottom strip and its padding hacks are removed.
+- **No confirm** for golive/stop: these call `ctl()` immediately. Remove-song still confirms.
+- Tests (`tools/test-misery-fm.cjs`, WebKit iPhone 14 dark+light, mocked): slide 1st→4th checks
+  touch-action none, hover lift >1.5×/<-10px, neighbours, touchmove defaultPrevented, panel not scrolled,
+  exactly one `fmr` with the slid emoji, fly + ring, and no double-send on the trailing click. Release
+  outside cancels and sends nothing. No `.fm-onair`. Go live icon (aria-label, no text, svg) in the card
+  and Station. No `.fm-cf` on stop/go live. Off-air viz is in flow, centred (|dl-dr|≤1), under the
+  line, above the actions, inside the card (owner and listener).
