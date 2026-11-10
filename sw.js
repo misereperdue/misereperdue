@@ -32,7 +32,7 @@ var SHELL = [
   "/js/misery-fm.js?v=8",
   "/js/dashboard-v2.js?v=62",
   "/js/forum3.js?v=1178",
-  "/js/ph-icons.js?v=5",
+  "/js/ph-icons.js?v=7",
   "/js/forum-mount-patch.js?v=1079",
   "/img/icon-192.png",
   "/img/icon-512.png",
