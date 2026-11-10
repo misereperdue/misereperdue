@@ -10423,7 +10423,7 @@ html[data-gprows="r3"] .chat-gp-row.is-pinned .chat-gp-pin{display:flex}
 .mp-check,.chat-poll-multi{position:relative}
 .mp-check-cb,.chat-poll-f .chat-poll-multi input.chat-poll-cb{position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;margin:0!important;padding:0!important;pointer-events:none}
 .mp-check-box,.chat-poll-box{flex:none!important;position:relative;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;border:1.5px solid rgba(127,127,127,.5);background:rgba(127,127,127,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);transition:background .28s ease,border-color .28s ease,box-shadow .28s ease,transform .38s cubic-bezier(.3,1.6,.5,1)}
-.mp-check-box svg,.chat-poll-box svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .26s cubic-bezier(.4,0,.2,1) .06s;filter:drop-shadow(0 1px 1px rgba(0,30,90,.35))}
+.mp-check-box svg,.chat-poll-box svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .26s cubic-bezier(.4,0,.2,1) .06s;filter:drop-shadow(0 1px 1px rgba(0,30,90,.35))}
 .mp-check-cb:checked + .mp-check-box,.chat-poll-cb:checked + .chat-poll-box{border-color:transparent;background:linear-gradient(160deg,#7fb0ff 0%,#4f8cff 45%,#3a6cf0 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 2px rgba(0,20,80,.25),0 2px 8px rgba(79,140,255,.45),0 0 0 3px rgba(79,140,255,.14);transform:scale(1.08)}
 .mp-check-cb:checked + .mp-check-box svg,.chat-poll-cb:checked + .chat-poll-box svg{stroke-dashoffset:0}
 .mp-check:active .mp-check-box,.chat-poll-multi:active .chat-poll-box,.chat-poll-multi:active .mp-check-box{transform:scale(.9)}
@@ -10460,7 +10460,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .chat-poll-bar{border-radius:inherit;background:linear-gradient(90deg,rgba(127,127,127,.16),rgba(127,127,127,.26));transition:width .6s cubic-bezier(.25,1.35,.45,1)}
 .chat-poll-opt.is-mine{border-color:transparent;box-shadow:0 0 0 1.5px rgba(79,140,255,.85),0 2px 10px rgba(79,140,255,.25)}
 .chat-poll-opt.is-mine .chat-poll-bar{background:linear-gradient(90deg,rgba(79,140,255,.28),rgba(127,176,255,.5))}
-.chat-poll-ck{position:relative;flex:none;width:15px;height:15px;fill:none;stroke:#4f8cff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;margin-left:-3px}
+.chat-poll-ck{position:relative;flex:none;width:15px;height:15px;fill:none;stroke:#4f8cff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;margin-left:-3px}
 [data-theme="dark"] .chat-poll-ck{stroke:#9cc1ff}
 .chat-poll-lbl{font-weight:500}
 .chat-poll-pct{font-variant-numeric:tabular-nums;min-width:30px;text-align:right;font-size:12px;font-weight:650;opacity:.8}
@@ -12830,12 +12830,18 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 /* Grim #74: Hugeicons Free (Stroke Rounded, MIT) glyph replacements. Former text glyphs (← × ✕ 🔒 💬) are now inline icons */
 .mp-gl-ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align:-.17em}
 .forum-back .mp-gl-ico{margin:0 .12em 0 -.2em}
-.mp-x-ico{width:1em;height:1em;display:block;margin:auto;flex:none;stroke-width:2}
+.mp-x-ico{width:1em;height:1em;display:block;margin:auto;flex:none;stroke-width:2.2}
 .forum-locked-icon .mp-locked-svg{width:40px;height:40px;display:inline-block}
 .mp-locked-note .mp-gl-ico{width:18px;height:18px}
 .mp-locked-note .mp-gl-ico + span{font-size:inherit}
-.chat-poll-tag svg,.chat-poll-ft svg{stroke-width:2}
+.chat-poll-tag svg,.chat-poll-ft svg{stroke-width:2.2}
 /* Grim #74: Hugeicons are line icons, so the active tab inks the stroke (user-space gradient: flat lines have a zero-height bbox), not a fill */
 .nav button.on svg,[data-theme="dark"] .nav button.on svg,[data-theme="light"] .nav button.on svg{fill:none}
-.nav button.on svg *{stroke:url(#orb-ink-l);stroke-width:1.8}
+.nav button.on svg *{stroke:url(#orb-ink-l);stroke-width:2.1}
 [data-theme="dark"] .nav button.on svg *{stroke:url(#orb-ink-dark-l)}
+/* Grim t543u: the navbar cart has no inner lines now, so the count sits centred in the basket
+   (basket interior ≈ (13.75, 11.4) of the 24 grid, right of and above the button centre).
+   Active tabs are outline icons now, so the count keeps the normal ink instead of the old filled-orb inverse */
+.nav #cart-btn .badge,.nav #post-btn .badge{left:calc(50% + 1.75px);top:calc(50% - .6px);font-size:9.5px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.nav button.on .badge,[data-theme="dark"] .nav button.on .badge{color:#fff}
+[data-theme="light"] .nav button.on .badge{color:#070f29}
