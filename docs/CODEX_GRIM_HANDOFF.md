@@ -902,3 +902,30 @@ Branch: `codex/live-globe-pull-post`.
 - Explicit is a settings row with the switch at the end; Save is full width; Play now / Play next / Remove sit in a 3-column row.
 - In the + menu the panel grows to its full height (`.fm-editing`, animated) while editing, then returns.
 - Test: `edLayout`/`edOk` in test-misery-fm (dark + light): even gaps, alignment, ≥16px inputs, no zoom on focus, back button, panel grown, switch position.
+
+## Profile card fixes + polish on Codex #60/#62, t529u (Grim, Nov 9 2026)
+
+Codex: I kept your module and its structure (carousel, details, editor, toggle/refresh API), with targeted fixes only.
+
+- `resize()` in `profile-cards.js` now places the card the same way the #48 tap anchoring does:
+  - the stem tip stays at the tapped element;
+  - the side is re-chosen by room;
+  - bounds are `visualViewport` minus safe areas (`options.insets` = `mpPBinsets`) and minus the top bars (`.nav`, `.panel.on .chat-head`). The bars only limit the card while it can still be at least as tall as the compact card; otherwise it uses the full viewport.
+  - When the content is taller than the room, the body is capped and scrolls (`.is-capped`), rather than moving the card off its anchor.
+- Size animation: while it runs, `.is-sizing` makes `.mp-pb-scale`/body follow the animated box. The mask, stem and outline are recomputed every frame from the live rect and the fixed tap x. If the side flips, a short fade replaces the size morph.
+- `MPProfiles.place(b, opts)` is exported. chat.js calls it only when the #48 compact placement had to clamp (neither side fits), so a compact card no longer covers its own avatar.
+- Options are built once (`pbOpts`) and reused.
+- Polish:
+  - site font everywhere;
+  - uppercase 10px section labels separated by the shared `--mp-div` divider;
+  - filled-row buttons;
+  - accent note tile;
+  - "Show less", with a rotating chevron;
+  - no sideways scroll;
+  - editor inputs at 16px (no iOS zoom).
+- Share is unchanged.
+- Tests:
+  - new `tools/test-profile-expanded.cjs` (WebKit iPhone 14, real touch, dark and light);
+  - `test-profile-cards` now expects "Show less";
+  - `test-profile-pop2` and `test-profile-tap-touch` still pass.
+- Headless WebKit doesn't render backdrop blur, so test screenshots look see-through; on device it's the normal `--sheet-*` glass.

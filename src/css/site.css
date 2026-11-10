@@ -12629,3 +12629,39 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-c .fm-ed-more .fm-danger{background:rgba(229,72,77,.13);color:#e5484d}
 .fm-c .fm-ed-hd{justify-content:flex-start;gap:10px}
 .fm-c .fm-ed-hd .fm-ed-sp{display:none}
+/* Grim t529u: profile card fixes + polish (on top of Codex #60). While the card grows/shrinks the
+   glass layers follow the animated box (not the final content height), so mask, stem and outline never
+   stretch or detach mid-animation. */
+.mp-pb.is-sizing .mp-pb-scale{height:100%}
+.mp-pb.is-sizing .mp-pb-body{height:100%;max-height:none!important;overflow:hidden!important}
+.mp-pb.is-expanded .mp-pb-body{overflow-x:hidden;padding-bottom:4px}
+.mp-pb-full{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:40px;margin:8px 0;padding:0 12px;border:0;border-radius:13px;background:var(--fill,rgba(128,128,128,.12));color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}
+.mp-pb-full:active{transform:scale(.98);background:rgba(128,128,128,.22)}
+.mp-pb-full svg{flex:none;transform:rotate(90deg);transition:transform .25s cubic-bezier(.2,.8,.2,1);opacity:.7}
+.mp-pb-full[aria-expanded="true"] svg{transform:rotate(-90deg)}
+.mp-profile-details{display:flex;flex-direction:column;gap:0;padding:0 0 8px}
+.mp-profile-section{position:relative;padding:12px 0}
+.mp-profile-section::before{content:"";position:absolute;left:2px;right:2px;top:0;height:1px;background:var(--mp-div,rgba(127,127,127,.2))}
+.mp-profile-section h3{margin:0 2px 8px;font:inherit;font-size:10px;font-weight:650;line-height:1.2;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.mp-profile-deck{margin:0 10px 10px;border-radius:14px}
+.mp-profile-photo{border-radius:14px;background:rgba(127,127,127,.14)}
+.mp-profile-photo-controls{gap:12px}
+.mp-profile-photo-controls>button{display:grid;place-items:center;width:28px;min-height:28px;height:28px;padding:0 0 2px;border-radius:50%;background:rgba(127,127,127,.18);font-size:19px;line-height:1}
+.mp-profile-photo-dots{gap:2px}
+.mp-profile-photo-dots button{width:16px;min-height:22px}
+.mp-profile-photo-dots button::after{inset:8px 5px}
+.mp-profile-button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.mp-profile-song{gap:10px;padding:8px;border-radius:13px;background:var(--fill,rgba(128,128,128,.12))}
+.mp-profile-song>img,.mp-profile-song-note{width:42px;height:42px;border-radius:9px}
+.mp-profile-song-note{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-size:20px}
+.mp-profile-song-copy strong{font-size:13px;font-weight:650}
+.mp-profile-song-copy span{font-size:11.5px}
+.mp-profile-city{padding:9px 12px;border-radius:12px;background:var(--fill,rgba(128,128,128,.12));font-size:13.5px;line-height:1.35}
+.mp-profile-details>.mp-profile-empty{margin:0;padding:12px 2px 4px;position:relative;text-align:center}
+.mp-profile-details>.mp-profile-empty::before{content:"";position:absolute;left:2px;right:2px;top:0;height:1px;background:var(--mp-div,rgba(127,127,127,.2))}
+.mp-profile-details>.mp-profile-button{width:100%;min-height:40px;margin:4px 0 0;padding:0 12px;border-radius:13px;background:var(--fill,rgba(128,128,128,.12));font-size:13px;font-weight:600}
+.mp-profile-details>.mp-profile-button:active{transform:scale(.98);background:rgba(128,128,128,.22)}
+/* profile editor (profile sheet): iOS zooms the page when a focused input is under 16px */
+.mp-profile-field input,.mp-profile-editor input,.mp-profile-editor textarea{font-size:16px!important}
+.mp-profile-editor .mp-profile-button{font-family:inherit}
+.mp-pb.is-capped .mp-pb-body{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}

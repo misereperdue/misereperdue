@@ -33,23 +33,52 @@
     if (options.manage) out.appendChild(button('Manage user', options.manage));
     return out;
   }
+  /* Grim (t529u): grow/shrink keeps the #48 tap anchoring. The stem tip stays on the tapped element, the
+     side (above/below) is re-chosen by room, the card stays inside the visible viewport minus safe areas
+     and below the top bars (falls back to the full viewport only when there's no room), and the
+     scrolling body is capped to that room instead of pushing the card off its anchor. During the size
+     animation the glass, outline and stem track the animated box every frame. */
+  function topBars(vh) { var y = 0; document.querySelectorAll('.panel.on .chat-head, .nav').forEach(function (h) { var r = h.getBoundingClientRect(), cs = getComputedStyle(h); if (r.height && cs.visibility !== 'hidden' && cs.display !== 'none' && r.bottom > y && r.bottom < vh / 2) y = r.bottom; }); return y; }
   function resize(b, options, old) {
-    if (!b.isConnected) return;
-    var vv = window.visualViewport, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, margin = 12;
-    var expanded = b.classList.contains('is-expanded'); b.style.width = Math.min(expanded ? 340 : 280, vw - 24) + 'px';
-    var body = b.querySelector('.mp-pb-body'); body.style.maxHeight = Math.min(560, Math.max(180, vh - 48)) + 'px';
-    var rect = b.getBoundingClientRect(), anchor = b._a.getBoundingClientRect(), cx = b._tap ? b._tap.x : anchor.left + anchor.width / 2;
-    var below = b.classList.contains('is-below'), left = Math.max(ox + margin, Math.min(cx - rect.width / 2, ox + vw - rect.width - margin));
-    var top = Math.max(oy + margin, Math.min(below ? (old || rect).top : (old || rect).bottom - rect.height, oy + vh - rect.height - margin));
+    if (!b.isConnected || !b._a) return;
+    var vv = window.visualViewport, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight;
+    var ins = options.insets ? options.insets() : {t:0,r:0,b:0,l:0}, M = 10, TH = options.stem || 13, wasBelow = b.classList.contains('is-below');
+    var minX = ox + ins.l + M, maxX = ox + vw - ins.r - M, minY0 = oy + ins.t + M, maxY = oy + vh - ins.b - M, minY = Math.max(minY0, topBars(vh) + 8);
+    var expanded = b.classList.contains('is-expanded'), body = b.querySelector('.mp-pb-body');
+    if (b._profileAnimation) { b._profileAnimation.cancel(); b._profileAnimation = null; }
+    b.classList.remove('is-sizing', 'is-capped');
+    b.style.width = expanded ? Math.min(340, maxX - minX) + 'px' : '';
+    body.style.maxHeight = '';
+    var w = b.offsetWidth, h = b.offsetHeight, r = b._a.getBoundingClientRect(), t = b._tap, tx = t ? t.x : r.left + r.width / 2, ty = t ? t.y : r.top + r.height / 2;
+    var tipB = (t ? Math.min(r.bottom, ty + 28) : r.bottom) + 4, tipA = (t ? Math.max(r.top, ty - 28) : r.top) - 4;
+    function rooms(top) { return [maxY - tipB - TH, tipA - TH - top]; }
+    var rm = rooms(minY);
+    // the bars only limit the card while it can still be at least as tall as the compact card
+    if (Math.max(rm[0], rm[1]) < Math.min(h, Math.max(old ? old.height : 0, 220))) { minY = minY0; rm = rooms(minY); }
+    var below = h <= rm[0] || (h > rm[1] && rm[0] >= rm[1]), room = Math.max(120, below ? rm[0] : rm[1]);
+    b.classList.toggle('is-capped', h > room);
+    if (h > room) { body.style.maxHeight = Math.floor(room) + 'px'; h = b.offsetHeight; }
+    var top = below ? tipB + TH : tipA - TH - h, left = w > maxX - minX ? minX + (maxX - minX - w) / 2 : Math.max(minX, Math.min(tx - w / 2, maxX - w));
+    b.classList.toggle('is-below', below); b.classList.toggle('is-above', !below);
     b.style.left = left + 'px'; b.style.top = top + 'px';
-    function mask() { var r = b.getBoundingClientRect(), ax = Math.max(28, Math.min(cx - r.left, r.width - 28)); b.style.setProperty('--ax', ax + 'px'); b.style.setProperty('--ay', (below ? -13 : r.height + 13) + 'px'); options.mask(r.width, r.height, ax, below); }
-    if (b._profileAnimation) b._profileAnimation.cancel();
-    mask();
-    if (old && !reduced() && b.animate) { var a = b.animate([{width:old.width+'px',height:old.height+'px',left:old.left+'px',top:old.top+'px'},{width:rect.width+'px',height:rect.height+'px',left:left+'px',top:top+'px'}], {duration:300,easing:'cubic-bezier(.2,.8,.2,1)'}); b._profileAnimation = a; function tick() { if (!b.isConnected || b.classList.contains('is-out')) { a.cancel(); return; } mask(); if (a.playState === 'running') requestAnimationFrame(tick); } requestAnimationFrame(tick); a.onfinish = function () { b._profileAnimation = null; mask(); }; }
+    b.style.setProperty('--ay', (below ? -TH : h + TH) + 'px');
+    function mask() { var q = b.getBoundingClientRect(), ax = Math.max(26, Math.min(tx - q.left, q.width - 26)); b.style.setProperty('--ax', ax + 'px'); options.mask(q.width, q.height, ax, below); }
+    if (old && !reduced() && b.animate && wasBelow === below) {
+      b.classList.add('is-sizing');
+      var a = b.animate([{width:old.width+'px',height:old.height+'px',left:old.left+'px',top:old.top+'px'},{width:w+'px',height:h+'px',left:left+'px',top:top+'px'}], {duration:300,easing:'cubic-bezier(.2,.8,.2,1)'});
+      b._profileAnimation = a;
+      var tick = function () { if (b._profileAnimation !== a) return; if (!b.isConnected || b.classList.contains('is-out')) { a.cancel(); return; } mask(); requestAnimationFrame(tick); };
+      var done = function () { if (b._profileAnimation !== a) return; b._profileAnimation = null; b.classList.remove('is-sizing'); mask(); };
+      a.onfinish = done; a.oncancel = function () { if (b._profileAnimation === a) { b._profileAnimation = null; b.classList.remove('is-sizing'); } };
+      mask(); requestAnimationFrame(tick);
+    } else {
+      mask();
+      if (old && !reduced() && b.animate) b.querySelector('.mp-pb-scale').animate([{opacity:.4,transform:'scale(.97)'},{opacity:1,transform:'none'}], {duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
+    }
   }
   function toggle(b, user, options) {
     var old = b.getBoundingClientRect(), expanded = !b.classList.contains('is-expanded'), full = b.querySelector('.mp-pb-full');
-    if (b._profileDetails) b._profileDetails.remove(); b.classList.toggle('is-expanded', expanded); full.setAttribute('aria-expanded', expanded ? 'true' : 'false'); full.querySelector('span').textContent = expanded ? 'Less profile' : 'Full profile';
+    if (b._profileDetails) b._profileDetails.remove(); b.classList.toggle('is-expanded', expanded); full.setAttribute('aria-expanded', expanded ? 'true' : 'false'); full.querySelector('span').textContent = expanded ? 'Show less' : 'Full profile';
     if (expanded) { b._profileDetails = details(user, options); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); }
     b._profileOptions = options; resize(b, options, old);
   }
@@ -70,5 +99,5 @@
     var save=button('Save profile details',async function(){if(uploading||saving)return;saving=true;save.disabled=true;paintPhotos();status.textContent='Saving…';try{var r=await options.api('/api/profile',{method:'POST',body:{city:city.value.trim(),profilePhotos:draft.profilePhotos.slice(),listening:draft.listening}});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not save profile.');options.saved(r.user);status.textContent='Profile details saved.';}catch(e){status.textContent=e.message||'Could not save profile.';}finally{saving=false;if(root.isConnected){save.disabled=false;paintPhotos();}}});root.appendChild(save);root.appendChild(status);paintPhotos();paintSong();container.appendChild(root);
     var observer=new MutationObserver(function(){if(!root.isConnected){epoch++;clearTimeout(timer);if(controller)controller.abort();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});return root;
   }
-  window.MPProfiles={toggle:toggle,refresh:refresh,editor:editor,dispose:function(b){if(b._profileAnimation)b._profileAnimation.cancel();}};
+  window.MPProfiles={place:function(b,o){resize(b,o);},toggle:toggle,refresh:refresh,editor:editor,dispose:function(b){if(b._profileAnimation)b._profileAnimation.cancel();}};
 })();
