@@ -633,9 +633,9 @@ var MPShop = (function () {
      which opens the Globe new-thread composer. chat.js fires "mp-auth" (and keeps
      window.MPAuthUser) on every sign-in/out; before that we go by the stored token. */
   var GP_ARROW =
-    '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>';
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="shake"><path d="M18.5 12L4.99997 12"/><path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"/></svg>';
   var GP_CHECK =
-    '<svg class="gp-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    '<svg class="gp-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg>';
   function gpSignedIn() {
     if (window.MPAuthUser !== undefined) return !!window.MPAuthUser;
     try {
@@ -736,7 +736,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals &amp; content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals &amp; content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="shake"><path d="M18.5 12L4.99997 12"/><path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"/></svg></span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/app-icon-tint-180.png?v=22" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
             e.map(g).join("") +
@@ -833,7 +833,7 @@ var MPShop = (function () {
       ? '<div class="in-bag"><span class="in-bag-label">In your bag</span><div class="bag-stepper"><button type="button" data-step="-1" aria-label="Remove one">−</button><span>' +
           n +
           '</span><button type="button" data-step="1" aria-label="Add one">+</button></div></div>'
-      : '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg></button>';
+      : '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg></button>';
   }
   function P(t, e) {
     var n = document.getElementById("bag-action");
@@ -914,7 +914,7 @@ var MPShop = (function () {
             : '<div style="height:12px"></div>'));
       var v,
         h =
-          '<div class="vip-3d-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg><span>Drag to spin</span></div></div>',
+          '<div class="vip-3d-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M2 12C7.18491 16.8269 16.4642 16.3877 22 12.3556"/><path d="M11.5368 2C6.98945 6.5 6.48414 17 11.9941 22"/></svg><span>Drag to spin</span></div></div>',
         g = n(i)
           ? '<div class="vip-3d"><div class="vip-3d-stage"></div>' + h
           : a(i)
@@ -959,7 +959,7 @@ var MPShop = (function () {
                       : "",
                   i =
                     n.length > 1
-                      ? '<button type="button" class="car-btn prev" aria-label="Previous image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button><button type="button" class="car-btn next" aria-label="Next image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>'
+                      ? '<button type="button" class="car-btn prev" aria-label="Previous image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><button type="button" class="car-btn next" aria-label="Next image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"/></svg></button>'
                       : "";
                 return (
                   '<div class="carousel"><div class="carousel-track">' +
@@ -975,7 +975,7 @@ var MPShop = (function () {
                 );
               })(s, i.name);
       ((p.innerHTML =
-        '<div class="forum-head shop-product-head"><button type="button" class="forum-back forum-glass-pill" id="shop-back">← Back</button></div>' +
+        '<div class="forum-head shop-product-head"><button type="button" class="forum-back forum-glass-pill" id="shop-back"><svg class="mp-gl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg>Back</button></div>' +
         '<article class="article-card">' +
         g +
         "<h1>" +
@@ -984,7 +984,7 @@ var MPShop = (function () {
         l(i.priceLabel || (null != i.price ? MP.money(i.price) : "")) +
         "</div>" +
         r +
-        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg style="width:16px;height:16px;flex:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-hi="float"><path d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/></svg>Share</button>' +
+        '<div id="bag-action"></div><button type="button" class="share-btn" aria-label="Share product"' + (navigator.share ? "" : " hidden") + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;" data-hi="float"><path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/></svg>Share</button>' +
         (((v = i.details)
           ? String(v)
               .split(/\n{2,}/)
