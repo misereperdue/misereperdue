@@ -59,6 +59,7 @@
     x: '<path d="M6 6l12 12M18 6 6 18"/>', back: '<path d="M15 18l-6-6 6-6"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
     grip: '<path d="M8 7h8M8 12h8M8 17h8"/>', plus: '<path d="M12 5v14M5 12h14"/>', ear: '<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.6"/><path d="M10 9.5a2 2 0 0 1 4 0"/>',
     next1: '<path d="M4 7h10M4 12h10M4 17h6M17 14v6M14 17h6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', expand: '<path d="M7 10l5 5 5-5"/>',
+    golive: '<circle cx="12" cy="9" r="1.9" fill="currentColor" stroke="none"/><path d="M12 11v9M9.5 20h5M8.8 12.2a4.5 4.5 0 0 1 0-6.4M15.2 5.8a4.5 4.5 0 0 1 0 6.4M6 15a8.5 8.5 0 0 1 0-12M18 3a8.5 8.5 0 0 1 0 12"/>',
     radio: '<circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', msg: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z"/>',
     xf: '<path d="M3 17c4 0 5-10 9-10M12 7c4 0 5 10 9 10M3 7c4 0 5 10 9 10M12 17c4 0 5-10 9-10" stroke-width="1.6"/>', send: '<path d="M12 19V5M6 11l6-6 6 6"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
@@ -435,7 +436,7 @@
 
 
   /* ---------- floating reactions (everyone sees them) ---------- */
-  function float(e) {
+  function float(e, fromX) {
     if (EMO.indexOf(e) < 0) return;
     var box = q(".fm-floats");
     if (!box) { box = document.createElement("div"); box.className = "fm-floats"; box.setAttribute("aria-hidden", "true"); document.body.appendChild(box); }
@@ -443,7 +444,7 @@
     var s = document.createElement("span"), anchor = sheet && q(".fm-reacts", sheet), r = anchor ? anchor.getBoundingClientRect() : null;
     s.className = "fm-float";
     s.textContent = e;
-    var x = r ? r.left + Math.random() * r.width : innerWidth - 40 - Math.random() * 60, y = r ? r.top : innerHeight - 120;
+    var x = fromX != null ? fromX - 15 + (Math.random() - 0.5) * 16 : r ? r.left + Math.random() * r.width : innerWidth - 40 - Math.random() * 60, y = r ? r.top - (fromX != null ? 30 : 0) : innerHeight - 120;
     s.style.left = Math.round(x) + "px";
     s.style.top = Math.round(y) + "px";
     s.style.setProperty("--dx", Math.round((Math.random() - 0.5) * 70) + "px");
@@ -452,12 +453,81 @@
     setTimeout(function () { s.remove(); }, RM.matches ? 1300 : 2600);
   }
   function pop(b) { b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop"); setTimeout(function () { b.classList.remove("is-pop"); }, 420); }
-  function react(e) {
-    if (Date.now() - lastReact < 650) return;
+  function react(e, fromX) {
+    if (Date.now() - lastReact < 650) return !1;
     lastReact = Date.now();
     sentE[e + "|"] = Date.now();
-    float(e);
+    float(e, fromX);
     api("/api/fm/react", { e: e }).then(function (r) { r && !r.ok && r.error && toast(r.error === "slow down" ? "Easy, one at a time" : r.error); });
+    return !0;
+  }
+  /* dc t536u: press-and-slide reactions (iMessage tapback / Telegram style). Touch down anywhere on the
+     pill, slide across: the emoji under the thumb lifts and magnifies on a spring, its neighbours lean in,
+     each change gives a light tick. Release sends the hovered one (a plain tap sends too), release away
+     from the pill cancels. The pill is touch-action:none and touchmove is cancelled, so neither the page
+     nor the panel scrolls during the gesture; renders wait until it ends. */
+  var rxG = null, rxAt = 0;
+  function rxHit(x, y) {
+    var g = rxG, r = g.r;
+    if (y < r.top - 64 || y > r.bottom + 30 || x < r.left - 16 || x > r.right + 16) return -1;
+    var bi = -1, bd = 1e9;
+    for (var i = 0; i < g.cx.length; i++) { var d = Math.abs(x - g.cx[i]); if (d < bd) { bd = d; bi = i; } }
+    return bi;
+  }
+  function rxSet(i) {
+    var g = rxG;
+    if (!g || i === g.i) return;
+    g.i = i;
+    g.btns.forEach(function (b, k) { b.classList.toggle("is-hov", k === i); b.classList.toggle("is-near", i >= 0 && Math.abs(k - i) === 1); });
+    g.box.classList.toggle("is-sliding", i >= 0);
+    if (i >= 0 && g.moved && window.haptic) window.haptic(5);
+  }
+  function rxStart(e) {
+    var box = e.target.closest && e.target.closest(".fm-reacts");
+    if (!box || rxG || (e.pointerType === "mouse" && e.button)) return;
+    e.preventDefault();
+    var btns = [].slice.call(box.querySelectorAll("button[data-e]"));
+    rxG = { box: box, btns: btns, r: box.getBoundingClientRect(), cx: btns.map(function (b) { var r = b.getBoundingClientRect(); return r.left + r.width / 2; }), i: -2, id: e.pointerId, moved: !1, x0: e.clientX };
+    try { box.setPointerCapture(e.pointerId); } catch (_) {}
+    box.classList.add("is-press");
+    rxSet(rxHit(e.clientX, e.clientY));
+    box.addEventListener("pointermove", rxMove);
+    box.addEventListener("pointerup", rxUp);
+    box.addEventListener("pointercancel", rxCancel);
+  }
+  function rxMove(e) { if (!rxG || e.pointerId !== rxG.id) return; if (Math.abs(e.clientX - rxG.x0) > 4) rxG.moved = !0; rxSet(rxHit(e.clientX, e.clientY)); }
+  function rxEnd(send) {
+    var g = rxG;
+    if (!g) return;
+    rxG = null; rxAt = Date.now();
+    g.box.removeEventListener("pointermove", rxMove); g.box.removeEventListener("pointerup", rxUp); g.box.removeEventListener("pointercancel", rxCancel);
+    var b = send && g.i >= 0 ? g.btns[g.i] : null;
+    g.btns.forEach(function (x) { x.classList.remove("is-near"); x !== b && x.classList.remove("is-hov"); });
+    g.box.classList.remove("is-press", "is-sliding");
+    if (b) rxSend(b); else g.box.setAttribute("data-rx", "cancel");
+    b && setTimeout(function () { b.classList.remove("is-hov"); }, 30);
+    if (dirty) setTimeout(function () { !rxG && dirty && renderSheet(); }, 0);
+  }
+  function rxUp(e) { if (rxG && e.pointerId === rxG.id) { rxSet(rxHit(e.clientX, e.clientY)); rxEnd(!0); } }
+  function rxCancel() { rxEnd(!1); }
+  function rxSend(b) {
+    var e = b.getAttribute("data-e"), r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    pop(b);
+    if (!react(e, x)) return;
+    var box = b.closest(".fm-reacts");
+    box && box.setAttribute("data-rx", "sent:" + e);
+    if (RM.matches || !document.body.animate) return;
+    var fly = document.createElement("span"), ring = document.createElement("span");
+    fly.className = "fm-rx-fly"; fly.textContent = e; ring.className = "fm-rx-ring";
+    [fly, ring].forEach(function (n) { n.setAttribute("aria-hidden", "true"); n.style.left = Math.round(x) + "px"; n.style.top = Math.round(y) + "px"; document.body.appendChild(n); });
+    var T = "translate(-50%,-50%) ";
+    fly.animate([
+      { transform: T + "translateY(-14px) scale(1.65)", opacity: 1 },
+      { transform: T + "translateY(-30px) scale(2.25)", opacity: 1, offset: 0.3 },
+      { transform: T + "translateY(-44px) scale(1.9) rotate(-6deg)", opacity: 1, offset: 0.55 },
+      { transform: T + "translateY(-96px) scale(1.15) rotate(4deg)", opacity: 0 }
+    ], { duration: 820, easing: "cubic-bezier(.22,.9,.3,1)" }).onfinish = function () { fly.remove(); };
+    ring.animate([{ transform: T + "scale(.35)", opacity: 0.6 }, { transform: T + "scale(1.9)", opacity: 0 }], { duration: 560, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = function () { ring.remove(); };
   }
 
   /* ---------- visualizer: analyser (non-iOS) > uploaded loudness map > idle ---------- */
@@ -524,12 +594,13 @@
       return '<div class="fm-hero is-off"><div class="fm-off"><span class="fm-off-logo" role="img" aria-label="Misery FM"></span>' +
         '<span class="fm-off-st"><i aria-hidden="true"></i>' + (S && S.sched ? "Scheduled" : "Off air") + "</span>" +
         '<p class="fm-off-l">' + line + "</p>" +
-        (o ? '<div class="fm-off-act"><button type="button" class="fm-btn fm-primary" data-a="golive"' + (n ? "" : " disabled") + ">Go Live</button>" +
+        '<canvas class="fm-viz" aria-hidden="true"></canvas>' +
+        (o ? '<div class="fm-off-act"><button type="button" class="fm-btn fm-primary fm-golive" data-a="golive" aria-label="Go live" title="Go live"' + (n ? "" : " disabled") + ">" + ico("golive") + "</button>" +
           '<button type="button" class="fm-btn fm-off-add" data-a="add">' + ico("plus") + "Add songs</button></div>" : "") +
-        '<canvas class="fm-viz" aria-hidden="true"></canvas></div></div>';
+        "</div></div>";
     }
     var t = c.tr;
-    return '<div class="fm-hero"><div class="fm-np"><div class="fm-cover">' + art(t, "fm-big") + (c.paused ? '<span class="fm-paused" aria-label="Paused">' + ico("pause") + "</span>" : '<span class="fm-onair" aria-label="Live"><i></i></span>') + "</div>" +
+    return '<div class="fm-hero"><div class="fm-np"><div class="fm-cover">' + art(t, "fm-big") + (c.paused ? '<span class="fm-paused" aria-label="Paused">' + ico("pause") + "</span>" : "") + "</div>" +
       '<div class="fm-np-tx"><div class="fm-ttl"><b>' + esc(t.title || "Untitled") + "</b>" + E(t) + "</div>" +
       '<div class="fm-sub">' + (sub(t) || "Misery FM") + "</div>" + (t.genre ? '<span class="fm-chip">' + esc(t.genre) + "</span>" : "") + "</div>" +
       (o ? '<button type="button" class="fm-ib" data-a="edit" data-id="' + esc(t.id) + '" aria-label="Edit this song">' + ico("edit") + "</button>" : "") +
@@ -595,7 +666,7 @@
   }
   function stationHTML() {
     var st = S.stats || {}, c = calc(), lv = live(), up = c && st.since ? fmt((now() - st.since) / 1e3) : "–";
-    var air = lv ? '<button type="button" class="fm-pill fm-pill-stop" data-a="stop">Stop</button>' : '<button type="button" class="fm-pill fm-pill-go" data-a="golive"' + (S.list.length ? "" : " disabled") + ">Go Live</button>";
+    var air = lv ? '<button type="button" class="fm-pill fm-pill-stop" data-a="stop">Stop</button>' : '<button type="button" class="fm-pill fm-pill-go fm-golive" data-a="golive" aria-label="Go live" title="Go live"' + (S.list.length ? "" : " disabled") + ">" + ico("golive") + "</button>";
     return '<h3 class="fm-h">Broadcast</h3><div class="fm-grp">' +
       srow("radio", lv ? (c && c.paused ? "Paused" : "On air") : "Off air", lv ? (S.listeners || 0) + " listening · " + up : S.list.length ? S.list.length + (S.list.length === 1 ? " song" : " songs") + " ready" : "Add songs in Queue first", air, lv ? "is-live" : "") +
       srow("xf", "Crossfade", "Blend between songs", stepHTML(Math.round(S.xf || 0))) +
@@ -613,7 +684,7 @@
     if (!sheet) return;
     if (!S) { S = BLANK; try { renderSheet(); } finally { S = null; } return; }
     var ae = document.activeElement, body = q(".fm-sh-body", sheet);
-    if (drag || (ae && sheet.contains(ae) && /^(TEXTAREA|SELECT)$|^INPUT$/.test(ae.tagName) && ae.type !== "range" && ae.type !== "file" && !edit)) { dirty = !0; return; }
+    if (drag || rxG || (ae && sheet.contains(ae) && /^(TEXTAREA|SELECT)$|^INPUT$/.test(ae.tagName) && ae.type !== "range" && ae.type !== "file" && !edit)) { dirty = !0; return; }
     dirty = !1;
     if (!owner() && tab !== "now") tab = "now";
     tabsSync();
@@ -712,6 +783,8 @@
     el.addEventListener("change", onChange);
     el.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
     el.addEventListener("pointerdown", dragStart);
+    el.addEventListener("pointerdown", rxStart);
+    el.addEventListener("touchmove", function (e) { rxG && e.cancelable && e.preventDefault(); }, { passive: !1 });
     el.addEventListener("keydown", dragKey);
   }
   /* Mounted inside the + chat menu: chat.js morphs the menu exactly as for Music / Polls / Globe and
@@ -861,13 +934,13 @@
     else if (a === "close") closeSheet();
     else if (a === "back") { if (sheet && sheet._mnt && sheet._mnt.back) { var bo = sheet._mnt; unmount(sheet); bo.back(); } else closeSheet(); }
     else if (a === "tab") { tab = b.getAttribute("data-tab"); renderSheet(); }
-    else if (a === "react") { pop(b); react(b.getAttribute("data-e")); }
+    else if (a === "react") { if (Date.now() - rxAt > 700) rxSend(b); }
     else if (a === "prev") { var cc = calc(); ctl({ action: cc && cc.t > 3 ? "restart" : "prev" }); }
     else if (a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
     else if (a === "shuffle") ctl({ action: "shuffle", on: !S.shuffle });
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
-    else if (a === "golive") confirmFM("Go live now? Everyone on the site will see Misery FM is live.", "Go Live", function () { ctl({ action: "live" }); });
-    else if (a === "stop") confirmFM("Stop Misery FM for everyone?", "Stop", function () { ctl({ action: "stop" }); }, !0);
+    else if (a === "golive") ctl({ action: "live" }); // dc t536u: no confirmation, act immediately
+    else if (a === "stop") ctl({ action: "stop" });
     else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else picker("audio").click(); }
     else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
     else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
