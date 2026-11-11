@@ -279,7 +279,7 @@ class ChatRoomFmExcerpt {
         else if (a === "shuffle") { fm.shuffle = !!body.on; if (fm.shuffle) this.fmShufFix(fm, true); }
         else if (a === "repeat") { if (!["all", "one", "off"].includes(body.mode)) throw new Error("bad mode"); fm.repeat = body.mode; }
         else if (a === "note") fm.note = this.fmClean(body.text, 140);
-        else if (a === "sched") { const t = Number(body.at) || 0; if (t && (t < now - 6e4 || t > now + 30 * 864e5)) throw new Error("pick a time in the next 30 days"); fm.sched = t > now ? t : 0; if (t && t <= now && !fm.live) this.fmStartLive(fm, now); }
+        else if (a === "sched") { const t = body.at == null ? 0 : Number(body.at); if (!Number.isFinite(t) || !Number.isFinite(new Date(t).getTime()) || (t && t < now - 6e4)) throw new Error("pick a valid future date"); fm.sched = t > now ? t : 0; if (t && t <= now && !fm.live) this.fmStartLive(fm, now); }
         else if (a === "xf") {
           const nx = Math.max(0, Math.min(6, Math.round((Number(body.sec) || 0) * 2) / 2));
           if (fm.live && !fm.paused) fm.startedAt = now - pos * 1e3;
