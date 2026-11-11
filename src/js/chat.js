@@ -2371,7 +2371,7 @@
           pq && pq.addEventListener("click", function (e) { e.stopPropagation(); if (!mpIsVip()) return mpToast("Polls are a VIP perk"); mpMorph(m, "poll", close); });
           var plk = m.querySelector('[data-act="poll-locked"]');
           plk && plk.addEventListener("click", function (e) { e.stopPropagation(); mpToast("Polls are a VIP perk"); });
-          row.appendChild(m); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
+          row.appendChild(m); window.MPFM && MPFM.updateMenuStatus && MPFM.updateMenuStatus(); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
           mpScrollLock(m);
           requestAnimationFrame(function () { m.classList.add("is-in"); });
           document.addEventListener("pointerdown", out, !0); document.addEventListener("keydown", esc, !0); window.addEventListener("hashchange", close);
@@ -5460,6 +5460,58 @@
   /* Profile settings sheet (opened from the profile menu and, per dc, from the
      shop Globe tile via window.MPOpenProfile). */
   function mpProfileMusicResolve(url,signal){return E('/api/profile/music?url='+encodeURIComponent(url),{signal:signal}).then(function(r){if(!r||!r.ok||!r.listening)throw Error(r&&r.error||'Music metadata unavailable. Try again.');return r;});}
+  // Foreground clipboard suggestions: resolve/save only after an explicit tap.
+  (function(){
+    var box,action,status,pasteInput,candidate=null,busy=false,checking=false,epoch=0,controller,lastRead=0,lastUser='',manualDismissed=false,dismissed=new Set(),observed,resizeObs,frame=0,successTimer;
+    function song(value){
+      try{if(typeof value!=='string'||value.length>600)return null;var u=new URL(value.trim());if(u.protocol!=='https:'||u.port||u.username||u.password)return null;
+        var p=u.pathname.split('/').filter(Boolean),name,key=u.href;
+        if(u.hostname==='music.apple.com'){var id=u.searchParams.get('i')||(p.includes('song')?p[p.length-1]:'');if(!/^\d{5,20}$/.test(id||''))return null;name='Apple Music';key='apple:'+id;}
+        else if(u.hostname==='open.spotify.com'){if(p[0]&&p[0].indexOf('intl-')===0)p.shift();if(p.length!==2||p[0]!=='track'||!/^[A-Za-z0-9]{22}$/.test(p[1]))return null;name='Spotify';key='spotify:'+p[1];}
+        else if(u.hostname==='spotify.link'&&p.length===1)name='Spotify';
+        else if(u.hostname==='on.soundcloud.com'&&p.length===1)name='SoundCloud';
+        else if(['soundcloud.com','www.soundcloud.com'].indexOf(u.hostname)>=0&&p.length===2&&p.every(function(x){return /^[A-Za-z0-9_-]+$/.test(x);})&&['discover','charts','search','you','sets'].indexOf(p[0])<0){name='SoundCloud';key='soundcloud:'+p.join('/');}
+        else return null;return {url:u.href,name:name,key:key};
+      }catch(e){return null;}
+    }
+    function remove(){clearTimeout(successTimer);if(box)box.remove();box=action=status=pasteInput=null;if(resizeObs)resizeObs.disconnect();observed=null;}
+    function place(){frame=0;if(!box)return;var bar=window.MPProfiles&&MPProfiles.topBar();if(!bar)return;var r=bar.getBoundingClientRect();box.hidden=document.hidden||bar.classList.contains('is-profile-expanded')||r.bottom>innerHeight-90;if(box.hidden)return;var width=Math.min(r.width,390,innerWidth-32);box.style.width=width+'px';box.style.left=Math.max(16,Math.min(innerWidth-width-16,r.left+(r.width-width)/2))+'px';box.style.top=(r.bottom+8)+'px';if(observed!==bar&&window.ResizeObserver){if(resizeObs)resizeObs.disconnect();resizeObs=new ResizeObserver(position);resizeObs.observe(bar);observed=bar;}}
+    function position(){if(!frame)frame=requestAnimationFrame(place);}
+    function sameCurrent(item){var current=s&&s.listening&&song(s.listening.url);return current&&current.key===item.key;}
+    function show(item){
+      if(!s||!d||busy)return;if(item&&(dismissed.has(item.key)||sameCurrent(item))){remove();return;}candidate=item||null;remove();
+      box=document.createElement('div');box.className='mp-clipboard-song';box.setAttribute('role','group');box.setAttribute('aria-label','Copied song');
+      action=document.createElement('button');action.type='button';action.className='mp-clipboard-action';action.textContent=item?item.name+' song detected, update your now playing status?':'Use copied song for now playing';action.addEventListener('click',use);box.appendChild(action);
+      var close=document.createElement('button');close.type='button';close.className='mp-clipboard-close';close.setAttribute('aria-label','Dismiss copied song');close.textContent='×';close.addEventListener('click',function(){if(busy)return;if(candidate){if(dismissed.size>100)dismissed.clear();dismissed.add(candidate.key);}else manualDismissed=true;remove();});box.appendChild(close);
+      status=document.createElement('span');status.className='mp-clipboard-status';status.setAttribute('role','status');box.appendChild(status);document.body.appendChild(box);position();
+    }
+    function manual(){if(!box)return;status.textContent='Paste a song link here.';if(!pasteInput){pasteInput=document.createElement('input');pasteInput.type='url';pasteInput.inputMode='url';pasteInput.placeholder='Apple Music, Spotify or SoundCloud link';pasteInput.setAttribute('aria-label','Copied song link');box.appendChild(pasteInput);pasteInput.addEventListener('input',function(){var item=song(pasteInput.value);if(item)show(item);});}pasteInput.focus({preventScroll:true});}
+    async function use(){
+      if(busy||!s||!d)return;var token=d,user=s.username,version=++epoch,item=candidate,completed=false;
+      // Invoke readText in the click stack, before any await (Safari user activation).
+      var read;try{read=item?Promise.resolve(item.url):navigator.clipboard.readText();}catch(e){manual();return;}
+      busy=true;action.disabled=true;box.querySelector('.mp-clipboard-close').disabled=true;status.textContent='Reading song…';controller=new AbortController();var current=controller,timer=setTimeout(function(){current.abort();},23000);
+      try{item=song(await read);if(!item)throw Error('Copy an Apple Music, Spotify or SoundCloud track link.');if(token!==d||!s||s.username!==user||version!==epoch)return;
+        status.textContent='Updating now playing…';var metadata=await mpProfileMusicResolve(item.url,current.signal);if(token!==d||!s||s.username!==user||version!==epoch)return;
+        var result=await E('/api/profile',{method:'POST',body:{listening:metadata.listening},token:token,signal:current.signal});if(version!==epoch||token!==d||!s||s.username!==user)return;if(!result||!result.ok||!result.user)throw Error(result&&result.error||'Could not update now playing. Try again.');
+        candidate=item;manualDismissed=true;dismissed.add(item.key);s=mpProfileSynced(rcKeep(result.user));mpAuthEmit();completed=true;action.textContent='Now playing updated';status.textContent='';successTimer=setTimeout(remove,2200);
+      }catch(e){if(version===epoch&&box){if(e.name==='NotAllowedError'||e.name==='SecurityError'){manual();}else{status.textContent=e.name==='AbortError'?'Song lookup timed out. Tap to retry.':e.message||'Could not read this song. Try again.';}}}
+      finally{clearTimeout(timer);busy=false;controller=null;if(box){action.disabled=completed;box.querySelector('.mp-clipboard-close').disabled=false;}}
+    }
+    async function check(){
+      if(document.hidden||!s||!d||busy||checking||Date.now()-lastRead<1500)return;lastRead=Date.now();checking=true;var version=++epoch,user=s.username;
+      try{var permission=null;try{permission=await navigator.permissions.query({name:'clipboard-read'});}catch(e){}
+        if(version!==epoch||!s||s.username!==user||document.hidden)return;
+        if(permission&&permission.state==='granted'&&navigator.clipboard&&navigator.clipboard.readText){var item=song(await navigator.clipboard.readText());if(version===epoch&&s&&s.username===user&&!document.hidden){if(item)show(item);else remove();}}
+        else if(!manualDismissed)show(null);
+      }catch(e){if(version===epoch&&!manualDismissed)show(null);}finally{checking=false;}
+    }
+    document.addEventListener('mp-auth',function(){if(!s||!d){epoch++;if(controller)controller.abort();remove();lastUser='';candidate=null;return;}if(lastUser!==s.username){dismissed.clear();candidate=null;lastUser=s.username;manualDismissed=false;lastRead=0;check();}});
+    document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy)epoch++;position();}else{manualDismissed=false;check();position();}});
+    window.addEventListener('pageshow',check);window.addEventListener('focus',check);window.addEventListener('resize',position);window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('hashchange',function(){position();setTimeout(position,400);});
+    document.addEventListener('paste',function(e){if(busy||!s||!d)return;var item=song(e.clipboardData&&e.clipboardData.getData('text/plain'));if(item){epoch++;show(item);}});
+    setTimeout(function(){if(s&&d){lastUser=s.username;check();}},0);
+  })();
   function mpProfileSheet(e, inline) {
     if (!s) return;
     if (!inline && window.MPProfiles && MPProfiles.topBar()) {

@@ -34,6 +34,13 @@
   function fmt(s) { s = Math.max(0, Math.floor(+s || 0)); var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = ("0" + (s % 60)).slice(-2); return h ? h + ":" + ("0" + m).slice(-2) + ":" + x : m + ":" + x; }
   function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; }
   function q(sel, root) { return (root || document).querySelector(sel); }
+  function countdown(){
+    if(!S||live()||!S.sched)return '';
+    var seconds=Math.max(0,Math.ceil((S.sched-now())/1000));if(!seconds)return 'Going live…';
+    var units=seconds>=86400?[Math.floor(seconds/86400),'day']:seconds>=3600?[Math.floor(seconds/3600),'hour']:seconds>=60?[Math.floor(seconds/60),'minute']:[seconds,'second'];
+    return units[0]+' '+units[1]+(units[0]===1?'':'s')+' until live';
+  }
+  function menuStatus(){return {live:live(),scheduled:!!countdown(),text:live()?'LIVE':countdown()};}
   function live() { return !!(S && S.live && S.list && S.list.length); }
   function owner() { return !!(me && me.owner); }
   function now() { return Date.now() + off; }
@@ -574,7 +581,7 @@
       /* dc t532u: polished off-air card — logo, Off air status, one short line, owner entry points */
       var n = S && S.list ? S.list.length : 0, line = S && S.sched ? "Back on air " + esc(when(S.sched)) : o ? (n ? n + (n === 1 ? " song" : " songs") + " ready to play" : "Add a few songs to start your station") : "Nothing playing right now. Check back soon.";
       return '<div class="fm-hero is-off"><div class="fm-off"><span class="fm-off-logo" role="img" aria-label="Misery FM"></span>' +
-        '<span class="fm-off-st"><i aria-hidden="true"></i>' + (S && S.sched ? "Scheduled" : "Off air") + "</span>" +
+        '<div class="fm-off-status"><span class="fm-off-st"><i aria-hidden="true"></i>Off air</span><span class="fm-countdown"'+(countdown()?'':' hidden')+'>'+esc(countdown())+'</span></div>' +
         '<p class="fm-off-l">' + line + "</p>" +
         '<canvas class="fm-viz" aria-hidden="true"></canvas>' +
         (o ? '<div class="fm-off-act"><button type="button" class="fm-btn fm-primary fm-golive" data-a="golive" aria-label="Go live" title="Go live"' + (n ? "" : " disabled") + ">" + ico("golive") + "</button>" +
@@ -962,7 +969,7 @@
     else if (a === "sched") {
       var si = q(".fm-sched-in", sheet), ts = si && si.value ? new Date(si.value).getTime() : 0;
       if (!ts || ts < Date.now()) return toast("Pick a time in the future");
-      ctl({ action: "sched", at: ts }).then(function (r) { r && r.ok && toast("Scheduled for " + when(ts)); });
+      ctl({ action: "sched", at: ts });
     } else if (a === "schedclr") ctl({ action: "sched", at: 0 });
     else if (a === "xfm" || a === "xfp") {
       var xv = Math.max(0, Math.min(XF_MAX, Math.round(S.xf || 0) + (a === "xfp" ? 1 : -1))), st2 = b.closest(".fm-step");
@@ -1282,7 +1289,9 @@
   /* ---------- render / paint / tick ---------- */
   var lastKey = "";
   function menuPill() {
-    document.querySelectorAll(".chat-pmenu-row.chat-misery-fm em").forEach(function (em) { em.textContent = live() ? "LIVE" : ""; em.className = live() ? "chat-fm-pill" : ""; });
+    var status=menuStatus();
+    document.querySelectorAll('.chat-pmenu-row.chat-misery-fm em').forEach(function(em){em.textContent=status.text;em.className=status.text?'chat-fm-pill'+(status.scheduled?' is-scheduled':''):'';});
+    document.querySelectorAll('.fm-countdown').forEach(function(b){b.textContent=countdown();b.hidden=!b.textContent;});
   }
   function render() {
     var c = calc();
@@ -1293,10 +1302,11 @@
     if (morph) { var inn = q(".fm-m-in", morph); if (inn) inn.outerHTML = morphHTML(); }
     renderSheet();
     if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
-    if (live() && !tickT) tickT = setInterval(tick, 1e3);
-    if (!live() && tickT && !sheet) { clearInterval(tickT); tickT = 0; }
+    if ((live() || (S && S.sched)) && !tickT) tickT = setInterval(tick, 1e3);
+    if (!live() && !(S && S.sched) && tickT && !sheet) { clearInterval(tickT); tickT = 0; }
   }
   function paint() {
+    menuPill();
     var c = calc();
     [morph, sheet].forEach(function (root) {
       if (!root || !c) return;
@@ -1331,6 +1341,7 @@
     open: function () { openSheet("now"); },
     mount: mount,
     isLive: live,
+    menuStatus:menuStatus, updateMenuStatus:menuPill,
     setMe: function (u) { me = u || null; meP = Promise.resolve(me); sheet && renderSheet(); },
     state: function () { return S; },
     _calc: calc
