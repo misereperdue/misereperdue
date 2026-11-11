@@ -13102,7 +13102,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 /* #91: richer linked listening and a short compact bio. */
 .mp-profile-bar .mp-profile-song-title{display:flex;align-items:center;gap:5px;min-width:0}
 .mp-profile-song-title strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mp-profile-explicit{display:inline-grid;place-items:center;flex:none;width:12px;height:12px;border-radius:2px;background:color-mix(in srgb,var(--ink) 55%,transparent);color:var(--sheet-bg);font:700 8px/1 system-ui;letter-spacing:0}
+.mp-profile-explicit.fm-e{margin:0}
 .mp-profile-bar .mp-profile-song-artist{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
 .mp-profile-artist-avatar{position:relative;display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;overflow:hidden;background:var(--fill);font-size:9px;color:var(--muted)}
 .mp-profile-artist-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
@@ -13128,3 +13128,12 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-on .fm-hb-logo{height:32px;width:144px;aspect-ratio:auto;margin:0;transform:none}
 .fm-on .fm-hb-is{display:block;flex:none;width:72px;height:32px;line-height:1}
 .fm-on .fm-hb-in .fm-hb-is svg{max-width:none;max-height:none;display:block;width:100%;height:100%}
+
+/* #95: compact live brand, quiet queue confirmation and sweeping neon lasers. */
+.fm-on .fm-hb-logo{height:22px;width:99px}
+.fm-on .fm-hb-is{height:22px;width:49.5px}
+.fm-ib.is-queued:disabled{opacity:1;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.fm-live-burst{inset:0;width:auto;height:auto;overflow:hidden;background:rgba(2,4,14,.12);animation:fmLaserVeil 2.4s ease both}
+.fm-live-ray{width:var(--ray-length);height:2px;top:auto;left:auto;background:#fff;border-radius:999px;transform-origin:0 50%;box-shadow:0 0 3px 1px hsl(var(--ray-hue) 100% 75%),0 0 11px 3px hsl(var(--ray-hue) 100% 55% / .75),0 0 25px 5px hsl(var(--ray-hue) 100% 50% / .3);animation:fmLaserSweep 1.9s cubic-bezier(.35,0,.65,1) var(--ray-delay) both}
+@keyframes fmLaserSweep{0%{opacity:0;transform:rotate(var(--ray-from)) scaleX(.4)}12%{opacity:.9}85%{opacity:.9}100%{opacity:0;transform:rotate(var(--ray-to)) scaleX(1)}}
+@keyframes fmLaserVeil{0%,100%{opacity:0}12%,85%{opacity:1}}
