@@ -1014,117 +1014,23 @@
         })
         .catch(function () {});
   }
-  /* Profile bubble (per dc): compact profile popover anchored to the tapped avatar.
-     One SVG outline = rounded body + soft iOS stem (mask on a single glass layer) so
-     backdrop-filter / tint / hairline cover body and stem together — no diamond seam.
-     Tip is ~12px tall so WebKit keeps blur on the protrusion. Open: scale from tip
-     (glass opacity stays 1), frost from frame 1, fade content only. */
-  var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null), mpPBwarmed = !1;
-  var MP_PB_STEM = 13, MP_PB_RADIUS = 20;
-  /* Tap-anchored popover is the default (dc, 2026-11-09). Escape hatch: ?pop=0 keeps the old
-     centered popover for this browser/PWA (persisted); ?pop=2 turns the tap-anchored one back on. */
-  var mpPop2 = (function () {
-    try {
-      var m = /[?&]pop=(\d)/.exec(location.search);
-      if (m) m[1] === "0" ? localStorage.setItem("mp-pop", "0") : localStorage.removeItem("mp-pop");
-      return localStorage.getItem("mp-pop") !== "0";
-    } catch (e) { return !0; }
-  })(), mpPBtap2 = null;
-  if (mpPop2) {
-    document.documentElement.setAttribute("data-pop", "2");
-    /* the finger's last position: touchend (changedTouches) on iOS, click/pointerup elsewhere;
-       viewport (client) coords, the same space as getBoundingClientRect */
-    var mpPBnote = function (x, y) { if (isFinite(x) && isFinite(y) && (x || y)) mpPBtap2 = { x: x, y: y, t: Date.now() }; };
-    document.addEventListener("touchend", function (e) { var t = e.changedTouches && e.changedTouches[0]; t && mpPBnote(t.clientX, t.clientY); }, { capture: !0, passive: !0 });
-    document.addEventListener("pointerup", function (e) { mpPBnote(e.clientX, e.clientY); }, { capture: !0, passive: !0 });
-    document.addEventListener("click", function (e) { e.detail && mpPBnote(e.clientX, e.clientY); }, { capture: !0, passive: !0 });
-  }
-  function mpPBinsets() {
-    var q = document.createElement("div"), cs, v;
-    q.style.cssText = "position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)";
-    document.body.appendChild(q); cs = getComputedStyle(q);
-    v = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
-    q.remove(); return v;
-  }
-  function mpPBwarm() {
-    if (mpPBwarmed) return;
-    mpPBwarmed = !0;
-    try {
-      var w = document.createElement("i");
-      w.setAttribute("aria-hidden", "true");
-      w.style.cssText = "position:fixed;left:0;top:0;width:40px;height:40px;opacity:1;pointer-events:none;z-index:-1;border-radius:12px;background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur)";
-      document.body.appendChild(w);
-      void w.offsetWidth;
-      void getComputedStyle(w).webkitBackdropFilter;
-      setTimeout(function () { w.remove(); }, 1200);
-    } catch (e) {}
-  }
-  /* soft iOS stem: rounded tip + concave shoulders flowing into the body edge */
-  function mpPBstemPath(W, H, ax, T, R) {
-    var hw = 14, tipR = 1.8;
-    return (
-      "M0 " + (T + R) + "A" + R + " " + R + " 0 0 1 " + R + " " + T +
-      "L" + (ax - hw) + " " + T +
-      "C" + (ax - hw + 3.6) + " " + T + " " + (ax - 4.6) + " " + (tipR + 0.3) + " " + (ax - tipR * 0.2) + " " + tipR +
-      "A" + tipR + " " + tipR + " 0 0 1 " + (ax + tipR * 0.2) + " " + tipR +
-      "C" + (ax + 4.6) + " " + (tipR + 0.3) + " " + (ax + hw - 3.6) + " " + T + " " + (ax + hw) + " " + T +
-      "L" + (W - R) + " " + T + "A" + R + " " + R + " 0 0 1 " + W + " " + (T + R) +
-      "L" + W + " " + (T + H - R) + "A" + R + " " + R + " 0 0 1 " + (W - R) + " " + (T + H) +
-      "L" + R + " " + (T + H) + "A" + R + " " + R + " 0 0 1 0 " + (T + H - R) + "Z"
-    );
-  }
-  /* Grim t535u: the glass is a plain rounded rect (.mp-pb-shape, no mask: resized by layout exactly like the
-     + menu morph, so WebKit keeps its backdrop layer and the blur never drops) plus a small stem glass
-     (.mp-pb-stemg) whose mask never changes, it only moves along x. Re-masking the backdrop element every
-     frame (the old single SVG mask) made WebKit rebuild the backdrop: the glass flashed clear mid-morph. */
-  function mpPBstemMask(T, below) {
-    var hw = 14, tipR = 1.8, W = 2 * hw, a = hw, e = T + 0.6,
-      d = "M0 " + e + "L0 " + T + "C3.6 " + T + " " + (a - 4.6) + " " + (tipR + 0.3) + " " + (a - tipR * 0.2) + " " + tipR +
-        "A" + tipR + " " + tipR + " 0 0 1 " + (a + tipR * 0.2) + " " + tipR + "C" + (a + 4.6) + " " + (tipR + 0.3) + " " + (W - 3.6) + " " + T + " " + W + " " + T + "L" + W + " " + e + "Z",
-      fl = below ? "" : ' transform="translate(0 ' + e + ') scale(1 -1)"';
-    return "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + e + '" width="' + W + '" height="' + e + '"><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")";
-  }
-  function mpPBapplyMask(shp, frost, line, W, H, ax, T, below) {
-    var d = mpPBstemPath(W, H, ax, T, MP_PB_RADIUS),
-      fl = below ? "" : ' transform="translate(0 ' + (H + T) + ') scale(1 -1)"',
-      vb = 'viewBox="0 0 ' + W + " " + (H + T) + '" width="' + W + '" height="' + (H + T) + '"',
-      mk = "url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" ' + vb + '><path' + fl + ' d="' + d + '" fill="black"/></svg>') + "\")",
-      pb = shp.closest(".mp-pb"), sg = shp.parentNode.querySelector(".mp-pb-stemg");
-    shp.style.webkitMaskImage = "";
-    shp.style.maskImage = "";
-    if (sg) {
-      var sk = T + (below ? "b" : "a");
-      if (sg._k !== sk) { sg._k = sk; var smk = mpPBstemMask(T, below); sg.style.webkitMaskImage = smk; sg.style.maskImage = smk; }
-      sg.style.left = (ax - 14) + "px";
-    }
-    /* the opaque open/close cover keeps the one-piece mask; it is invisible while the card resizes */
-    if (!(pb && pb.classList.contains("is-sizing"))) {
-      frost.style.webkitMaskImage = mk;
-      frost.style.maskImage = mk;
-    }
-    /* hairline is a sibling (unmasked) so the full stroke rings the stem tip */
-    line.innerHTML = '<svg class="mp-pb-line" ' + vb + "><path" + fl + ' d="' + d + '"/></svg>';
-  }
+  // Avatar profiles share the active status bar through summary, details and editing.
+  var mpPBel = null, mpPBreq = 0, mpPBcache = Object.create(null);
   function mpPBclose(fast) {
     var b = mpPBel;
     if (!b) return;
     mpPBel = null;
-    b._off && b._off();
-    window.MPProfiles && MPProfiles.dispose(b);
-    if (fast) {
-      b.remove();
-      return;
-    }
-    /* close: navy cover on, content fades (~80ms), then .mp-pb-scale shrinks+fades into tip (~200ms).
-       Opacity animates the non-backdrop wrapper only — glass itself stays opacity 1 under the cover. */
-    /* is-out forces navy cover on instantly (wins over is-frosted); then fade content + scale wrap */
-    b.classList.add("is-out");
-    b.classList.remove("is-in", "is-frosted");
-    setTimeout(function () { b.classList.add("is-gone"); }, 290);
-    setTimeout(function () { b.remove(); }, 340);
+    ++mpPBreq;
+    if (b._close) b._close(fast);
   }
   function mpPBput(u) {
     if (u && u.username) mpPBcache[String(u.username).toLowerCase()] = { t: Date.now(), u: u };
+  }
+  function mpProfileSynced(user) {
+    s = user;
+    mpPBput(user);
+    if(mpPBel && mpPBel._me){mpPBel._profile=user;mpPBel._refresh && mpPBel._refresh();}
+    return user;
   }
   function mpPBget(name) {
     var c = mpPBcache[String(name).toLowerCase()];
@@ -1137,7 +1043,7 @@
       if (mpPBel._fromCache && !fromCache) {
         mpPBel._fromCache = !1;
         Object.assign(mpPBel._profile, n);
-        window.MPProfiles && MPProfiles.refresh(mpPBel, mpPBel._profile);
+        mpPBel._refresh && mpPBel._refresh();
         try {
           var pts = mpPBel.querySelector(".mp-pb-pts b");
           if (pts && n.points != null) pts.textContent = x(n.points || 0);
@@ -1145,7 +1051,7 @@
       }
       return;
     }
-    mpPBclose(!0);
+    if (mpPBel) { var previous = mpPBel; mpPBel = null; previous._close && previous._close(true); }
     var me = !!(s && String(n.username).toLowerCase() === String(s.username).toLowerCase()),
       b = document.createElement("div");
     b.className = "mp-pb";
@@ -1153,6 +1059,7 @@
     b.setAttribute("aria-label", mpName(n.username) + "'s profile");
     b.tabIndex = -1;
     b._u = key;
+    b._me = me;
     b._profile = n;
     b._a = anchor;
     b._fromCache = !!fromCache;
@@ -1252,7 +1159,7 @@
     }
     if (!me && mpPM.on && s)
       btn("Whisper", '<path d="M21.9918 12.8046C21.9851 13.0352 21.9745 13.2648 21.9598 13.4922C21.6856 17.7346 18.3536 21.1138 14.1706 21.3919C13.4574 21.4393 12.7285 21.5013 12 21.5013C10.4054 21.5013 8.95127 21.3641 7.44544 20.7906C7.44544 20.7906 5.56108 22.2592 3.69962 21.959H3.69961C3.31008 21.8962 3.11532 21.8648 3.00091 21.6347C2.8865 21.4046 3.00788 21.176 3.25063 20.7189C3.65964 19.9487 3.92248 19.174 3.80076 18.3309C3.73703 17.8895 3.50433 17.4977 3.27644 17.114L3.26529 17.0952C2.62637 16.0191 2.12462 14.7979 2.04024 13.4922C1.98659 12.662 1.98659 11.8023 2.04024 10.9721C2.31441 6.72972 5.64639 3.35048 9.8294 3.07242C11.1415 2.9852 12.5095 2.97817 13.8327 3.05179"/><path d="M16.75 5.50134V4.00134C16.75 2.89677 17.6454 2.00134 18.75 2.00134C19.8546 2.00134 20.75 2.89677 20.75 4.00134V5.50134M17.5 10.0013H20C20.9428 10.0013 21.4142 10.0013 21.7071 9.70845C22 9.41556 22 8.94415 22 8.00134V7.50134C22 6.55853 22 6.08713 21.7071 5.79424C21.4142 5.50134 20.9428 5.50134 20 5.50134H17.5C16.5572 5.50134 16.0858 5.50134 15.7929 5.79424C15.5 6.08713 15.5 6.55853 15.5 7.50134V8.00134C15.5 8.94415 15.5 9.41556 15.7929 9.70845C16.0858 10.0013 16.5572 10.0013 17.5 10.0013Z"/><path d="M8.75 15.0013H15.25M8.75 10.0013H12.25"/>', function () { mpPBclose(); mpPMStart(n.username); });
-    me && tool("Edit profile", '<path d="M15.2141 5.98239L16.6158 4.58063C17.39 3.80646 18.6452 3.80646 19.4194 4.58063C20.1935 5.3548 20.1935 6.60998 19.4194 7.38415L18.0176 8.78591M15.2141 5.98239L6.98023 14.2163C5.93493 15.2616 5.41226 15.7842 5.05637 16.4211C4.70047 17.058 4.3424 18.5619 4 20C5.43809 19.6576 6.94199 19.2995 7.57889 18.9436C8.21579 18.5877 8.73844 18.0651 9.78375 17.0198L18.0176 8.78591M15.2141 5.98239L18.0176 8.78591"/><path d="M11 20H17"/>', function () { mpPBclose(!0); mpProfileSheet(!0); });
+    me && tool("Edit profile", '<path d="M15.2141 5.98239L16.6158 4.58063C17.39 3.80646 18.6452 3.80646 19.4194 4.58063C20.1935 5.3548 20.1935 6.60998 19.4194 7.38415L18.0176 8.78591M15.2141 5.98239L6.98023 14.2163C5.93493 15.2616 5.41226 15.7842 5.05637 16.4211C4.70047 17.058 4.3424 18.5619 4 20C5.43809 19.6576 6.94199 19.2995 7.57889 18.9436C8.21579 18.5877 8.73844 18.0651 9.78375 17.0198L18.0176 8.78591M15.2141 5.98239L18.0176 8.78591"/><path d="M11 20H17"/>', function () { b._edit && b._edit(); });
     tool("Share profile", '<path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/>', function (k) {
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
@@ -1266,171 +1173,28 @@
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
     hd.classList.add("has-tools-" + tools.childNodes.length);
-    var fp = document.createElement("button");
-    fp.type = "button";
-    fp.className = "mp-pb-full";
-    fp.innerHTML = "<span>Full profile</span><svg " + MP_IC + ' width="14" height="14"><path d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9"/></svg>';
-    fp.setAttribute("aria-expanded", "false");
-    fp.addEventListener("click", function (event) {
-      event.stopPropagation();
-      if (!window.MPProfiles) return;
-      MPProfiles.toggle(b, n, pbOpts);
-    });
-    var pbOpts = {origin:e, me:me,
-        edit:function(){mpPBclose(!0);mpProfileSheet(!0);setTimeout(function(){var field=document.querySelector('.mp-profile-editor');field&&field.scrollIntoView({block:'start',behavior:'smooth'});},350);},
-        manage:!me&&s&&s.owner?function(){mpPBclose(!0);K(n.username);}:null,
-        insets:mpPBinsets, stem:MP_PB_STEM,
-        mask:function(w,h,ax,below){mpPBapplyMask(shp,frost,line,w,h,ax,MP_PB_STEM,below);}
-      };
-    body.appendChild(fp);
-    var frost = document.createElement("i");
-    frost.className = "mp-pb-frost";
-    frost.setAttribute("aria-hidden", "true");
-    var shp = document.createElement("i");
-    shp.className = "mp-pb-shape";
-    shp.setAttribute("aria-hidden", "true");
-    var line = document.createElement("i");
-    line.className = "mp-pb-outline";
-    line.setAttribute("aria-hidden", "true");
-    var scale = document.createElement("div");
-    scale.className = "mp-pb-scale";
-    var stemg = document.createElement("i");
-    stemg.className = "mp-pb-stemg";
-    stemg.setAttribute("aria-hidden", "true");
-    scale.appendChild(shp);
-    scale.appendChild(stemg);
-    scale.appendChild(line);
-    scale.appendChild(frost);
-    scale.appendChild(body);
-    b.appendChild(scale);
-    b.style.visibility = "hidden";
-    b.style.pointerEvents = "none";
-    b.style.transition = "none";
-    b.style.left = "0px";
-    b.style.top = "0px";
-    document.body.appendChild(b);
-    var sat = (function () { var q = document.createElement("div"); q.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)"; document.body.appendChild(q); var v = parseFloat(getComputedStyle(q).paddingTop) || 0; q.remove(); return v; })(),
-      r = anchor.getBoundingClientRect(),
-      w = b.offsetWidth,
-      h = b.offsetHeight,
-      vw = document.documentElement.clientWidth,
-      vh = window.innerHeight,
-      M8 = 10,
-      TH = MP_PB_STEM,
-      gap = 5 + TH,
-      cx = r.left + r.width / 2,
-      below = r.bottom + gap + h <= vh - M8 - 12 || r.top - gap - h < M8 + sat,
-      left = Math.max(M8, Math.min(cx - w / 2, vw - w - M8)),
-      top = below ? r.bottom + gap : r.top - gap - h,
-      ax;
-    /* keep stem clear of the corner radius */
-    cx - left < 30 && (left = Math.max(4, cx - 30));
-    left + w - cx < 30 && (left = Math.min(vw - w - 4, cx + 30 - w));
-    ax = Math.max(28, Math.min(cx - left, w - 28));
-    top = Math.max(M8 + sat, Math.min(top, vh - h - M8));
-    if (mpPop2) (function () {
-      /* anchor at the tap point, inside the visible viewport minus safe areas, flip above/below */
-      var vv = window.visualViewport, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0,
-        VW = vv ? vv.width : vw, VH = vv ? vv.height : vh, ins = mpPBinsets(), M = 10,
-        tp = mpPBtap2, tx = r.left + r.width / 2, ty = r.top + r.height / 2;
-      if (tp && Date.now() - tp.t < 1500 && tp.x >= r.left - 16 && tp.x <= r.right + 16 && tp.y >= r.top - 16 && tp.y <= r.bottom + 16) { tx = tp.x; ty = tp.y; }
-      var minX = ox + ins.l + M, maxX = ox + VW - ins.r - M, minY = oy + ins.t + M, maxY = oy + VH - ins.b - M,
-        /* stem tip just past the tapped element, never more than 28px from the finger */
-        tipB = Math.min(r.bottom, ty + 28) + 4, tipA = Math.max(r.top, ty - 28) - 4,
-        fitsB = tipB + TH + h <= maxY, fitsA = tipA - TH - h >= minY;
-      below = fitsB || (!fitsA && maxY - tipB >= tipA - minY);
-      top = Math.max(minY, Math.min(below ? tipB + TH : tipA - TH - h, maxY - h));
-      b._clamped = Math.abs(top - (below ? tipB + TH : tipA - TH - h)) > 0.5;
-      left = w > maxX - minX ? minX + (maxX - minX - w) / 2 : Math.max(minX, Math.min(tx - w / 2, maxX - w));
-      ax = Math.max(26, Math.min(tx - left, w - 26));
-      b._tap = { x: tx, y: ty };
-    })();
-    b.classList.add(below ? "is-below" : "is-above");
-    b.style.left = left + "px";
-    b.style.top = top + "px";
-    b.style.setProperty("--ax", ax + "px");
-    /* transform-origin at the stem tip (outside the padding box) */
-    b.style.setProperty("--ay", (below ? -TH : h + TH) + "px");
-    b.style.setProperty("--stem", TH + "px");
-    if (mpPop2) {
-      /* a transformed/offset containing block would shift position:fixed: measure and correct */
-      var got = b.getBoundingClientRect(), dx = left - got.left, dy = top - got.top;
-      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { b.style.left = left + dx + "px"; b.style.top = top + dy + "px"; }
-    }
-    mpPBapplyMask(shp, frost, line, w, h, ax, TH, below);
-    /* Grim t529u: when neither side fits, the clamp above would push the card over its own avatar and
-       detach the stem; re-place with the shared anchored logic, which caps and scrolls the body instead */
-    if (mpPop2 && b._clamped && window.MPProfiles && MPProfiles.place) MPProfiles.place(b, pbOpts);
-    scale.style.willChange = "transform";
-    body.style.willChange = "opacity";
-    void shp.offsetWidth;
-    void frost.offsetWidth;
-    void getComputedStyle(shp).webkitBackdropFilter;
-    void getComputedStyle(shp).backdropFilter;
     mpPBel = b;
-    /* triple rAF: composite glass under frost at scale .6, then spring open */
-    requestAnimationFrame(function () {
-      if (mpPBel !== b) return;
-      requestAnimationFrame(function () {
-        if (mpPBel !== b) return;
-        b.style.visibility = "";
-        b.style.transition = "";
-        requestAnimationFrame(function () {
-          if (mpPBel !== b) return;
-          b.classList.add("is-in");
-          b.style.pointerEvents = "";
-          /* cross-fade cover only after blur has had time to composite */
-          setTimeout(function () { if (mpPBel === b) b.classList.add("is-frosted"); }, 260);
-          setTimeout(function () {
-            if (mpPBel === b) {
-              scale.style.willChange = "auto";
-              body.style.willChange = "auto";
-            }
-          }, 380);
-        });
-      });
+    MPProfiles.openBar(b, body, n, {
+      origin:e, me:me, anchor:anchor,
+      avatar:function(user,size){return J(user.username,user.avatar,size||"sm",user.hasAvatarImg ? user.avatarV : void 0);},
+      current:function(){return me && s ? s : b._profile;},
+      edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
+      close:function(){mpPBclose();},
+      manage:!me && s && s.owner ? function(){mpPBclose(true);K(n.username);} : null
     });
-    try { b.focus({ preventScroll: !0 }); } catch (e) {}
-    var out = function (e) {
-        if (Date.now() - b._openedAt < 340) return;
-        b.contains(e.target) || (anchor.contains(e.target) ? 0 : mpPBclose());
-      },
-      esc = function (e) { "Escape" === e.key && (e.preventDefault(), mpPBclose(), anchor.focus && anchor.focus()); },
-      scr = function (e) {
-        if (Date.now() - b._openedAt < 420) return;
-        b.contains(e.target) || mpPBclose();
-      },
-      pop = function () { mpPBclose(!0); };
-    b._off = function () {
-      document.removeEventListener("pointerdown", out, !0);
-      document.removeEventListener("keydown", esc, !0);
-      window.removeEventListener("scroll", scr, !0);
-      window.removeEventListener("popstate", pop);
-      window.removeEventListener("resize", pop);
-      window.removeEventListener("hashchange", pop);
-    };
-    setTimeout(function () {
-      if (mpPBel !== b) return;
-      document.addEventListener("pointerdown", out, !0);
-      document.addEventListener("keydown", esc, !0);
-      window.addEventListener("scroll", scr, !0);
-      window.addEventListener("popstate", pop);
-      window.addEventListener("resize", pop);
-      window.addEventListener("hashchange", pop);
-    }, 340);
   }
   function mpPB(u, anchor) {
     if (!u) return;
-    if (!anchor || !anchor.isConnected) return K(u);
-    if (mpPBel && mpPBel._u === u && mpPBel._a === anchor) return mpPBclose();
-    mpPBwarm();
+    if (!anchor || !anchor.isConnected) anchor = MPProfiles.topBar();
+    if (!anchor) return;
+    if (mpPBel && String(mpPBel._u).toLowerCase() === String(u).toLowerCase()) return mpPBclose();
     mpPBclose(!0);
-    var rq = ++mpPBreq,
+    var route = location.hash, rq = ++mpPBreq,
       cached = mpPBget(u);
     if (cached) mpPBshow(cached, anchor, rq, !0, u);
     E("/api/user/" + encodeURIComponent(u))
       .then(function (t) {
-        if (rq !== mpPBreq || !(t && t.ok && t.user) || !anchor.isConnected) return;
+        if (rq !== mpPBreq || route !== location.hash || !(t && t.ok && t.user) || !anchor.isConnected) return;
         mpPBput(t.user);
         mpPBshow(t.user, anchor, rq, !1, u);
       })
@@ -5678,9 +5442,15 @@
   }
   /* Profile settings sheet (opened from the profile menu and, per dc, from the
      shop Globe tile via window.MPOpenProfile). */
-  function mpProfileSheet(e) {
+  function mpProfileSheet(e, inline) {
     if (!s) return;
-    gt();
+    if (!inline && window.MPProfiles && MPProfiles.topBar()) {
+      mpPBclose(true);
+      mpPBshow(s, MPProfiles.topBar(), ++mpPBreq, false, s.username);
+      mpPBel && mpPBel._edit && mpPBel._edit();
+      return;
+    }
+    if (!inline) gt();
     var r = document.createElement("div");
     r.className = "chat-sheet-backdrop" + (e ? " backdrop-enter" : "");
     var o = document.createElement("div");
@@ -5697,7 +5467,7 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>'),
       (l.style.cssText =
         "position:absolute;top:10px;right:12px;width:32px;height:32px;flex:none;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"),
-      l.addEventListener("click", gt),
+      l.addEventListener("click", inline ? inline.back : gt),
       o.appendChild(l),
       o.appendChild(z(s)));
     var d = J(s.username, s.avatar, "lg", X()),
@@ -5735,7 +5505,7 @@
               E("/api/profile", { method: "POST", body: { removeAvatar: !0 } })
                 .then(function (e) {
                   e && e.ok && e.user
-                    ? ((s = rcKeep(e.user)), h(), (f.textContent = "Photo removed."))
+                    ? ((s = mpProfileSynced(rcKeep(e.user))), h(), (f.textContent = "Photo removed."))
                     : (be.textContent = (e && e.error) || "Couldn't remove.");
                 })
                 .catch(function () {
@@ -5891,7 +5661,7 @@
           .then(function (e) {
             if (e && e.ok && e.user) {
               var t = s.username;
-              ((s = rcKeep(e.user)),
+              ((s = mpProfileSynced(rcKeep(e.user))),
                 h(),
                 t !== s.username &&
                   c.querySelectorAll(".chat-msg[data-user]").forEach(function (e) {
@@ -5950,7 +5720,7 @@
                 })
                   .then(function (e) {
                     if (e && e.ok && e.user) {
-                      var t = N((s = rcKeep(e.user)));
+                      var t = N((s = mpProfileSynced(rcKeep(e.user))));
                       T.querySelectorAll(".chat-badge-opt").forEach(function (e) {
                         e.classList.toggle("on", e.getAttribute("data-badge") === t);
                       });
@@ -5996,7 +5766,7 @@
         E("/api/profile", { method: "POST", body: { bio: e } })
           .then(function (e) {
             e && e.ok && e.user
-              ? (s = rcKeep(e.user))
+              ? (s = mpProfileSynced(rcKeep(e.user)))
               : (be.textContent = (e && e.error) || "Couldn't save bio.");
           })
           .catch(function () {
@@ -6005,7 +5775,7 @@
     };
     I.addEventListener("blur", H);
     window.MPProfiles && MPProfiles.editor(o, s, {origin:"https://api.misereperdue.com", api:E, search:mpMusicSearch, normalize:mpNPOut,
-      saved:function(user){s=rcKeep(user);mpPBput(s);window.MPAuthUser=s;}
+      saved:function(user){s=mpProfileSynced(rcKeep(user));window.MPAuthUser=s;}
     });
     var j = document.createElement("div");
     ((j.className = "chat-pw-title"),
@@ -6310,7 +6080,7 @@
       E("/api/profile", { method: "POST", body: { signature: me() } })
         .then(function (e) {
           e && e.ok && e.user
-            ? ((s = rcKeep(e.user)),
+            ? ((s = mpProfileSynced(rcKeep(e.user))),
               (K.textContent = "Saved ✓"),
               setTimeout(function () {
                 "Saved ✓" === K.textContent && (K.textContent = "");
@@ -6600,18 +6370,17 @@
     o.appendChild(Be);
     o.appendChild(rcSettingsRow());
     var ze = document.createElement("button");
-    ((ze.type = "button"),
-      (ze.className = "chat-logout"),
-      (ze.textContent = "Sign out"),
-      ze.addEventListener("click", ft),
-      o.appendChild(ze),
-      $(i, o),
-      r.addEventListener("click", function (e) {
-        e.target === r && gt();
-      }),
-      document.body.appendChild(r),
-      document.body.appendChild(i),
-      e && Q(o));
+    ze.type = "button";
+    ze.className = "chat-logout";
+    ze.textContent = "Sign out";
+    ze.addEventListener("click", ft);
+    o.appendChild(ze);
+    if (inline) { l.hidden = true; inline.show(o); return; }
+    $(i, o);
+    r.addEventListener("click", function(event){if(event.target===r)gt();});
+    document.body.appendChild(r);
+    document.body.appendChild(i);
+    e && Q(o);
   }
   function vt(e) {
     if (pt) ht();
@@ -6693,6 +6462,7 @@
       } catch (e) {}
   }
   function gt() {
+    if (mpPBel && mpPBel.dataset.phase === "edit") mpPBclose(true);
     var e = document.querySelector(".chat-sheet-backdrop");
     e && e.parentNode && e.parentNode.removeChild(e);
     var t = document.querySelector(".chat-sheet-anim");
@@ -8142,7 +7912,7 @@
     (window.MPChat.catchUp = function () {
       return d && s ? ut() : Promise.resolve();
     }),
-    (window.MPChat.openUserSheet = function (u, el) { return el ? mpPB(u, el) : K(u); }),
+    (window.MPChat.openUserSheet = function (u, el) { return mpPB(u, el); }),
     (window.MPChat.openFullProfile = K),
     (window.MPChat.fadeSheetIn = Q),
     (window.MPChat.addBorderSparkles = Z),
