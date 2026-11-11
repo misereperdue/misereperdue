@@ -5528,10 +5528,22 @@
       // permission. Reuse the topbar copy as its target; never add a URL form.
       if(!box||box.classList.contains('is-native-paste'))return;
       var target=document.createElement('div');target.className='mp-clipboard-action mp-clipboard-native';
-      target.contentEditable='true';target.inputMode='none';target.spellcheck=false;target.tabIndex=0;
+      target.contentEditable='plaintext-only';target.inputMode='none';target.spellcheck=false;target.tabIndex=0;
       target.setAttribute('role','textbox');target.setAttribute('aria-label','Paste copied song');target.setAttribute('aria-describedby','mp-clipboard-native-help');
-      target.textContent='Update your now playing?';
-      target.addEventListener('beforeinput',function(e){e.preventDefault();});
+      target.dataset.placeholder='Update your now playing?';
+      function accept(item){if(!item||!target.isConnected||busy||!s||!d||outsideDismissed||!clipboardBar())return;epoch++;show(item);if(box)use(item);}
+      target.addEventListener('beforeinput',function(e){
+        if(!target.isConnected||busy){e.preventDefault();return;}
+        var data=e.dataTransfer,item=data&&(song(data.getData('text/uri-list'))||song(data.getData('text/plain'))||song(data.getData('text/html')))||song(e.data);
+        if(item){e.preventDefault();accept(item);}
+        // Some platform Paste controls deliver their data only through editing
+        // events. Let plaintext insertion finish when beforeinput has no data.
+      });
+      target.addEventListener('input',function(){
+        if(!target.isConnected||busy||!status)return;
+        var item=song(target.textContent);if(item){accept(item);return;}
+        target.textContent='';status.textContent='No song found. Copy a supported song link and Paste again';
+      });
       target.addEventListener('click',function(e){e.stopPropagation();target.focus({preventScroll:true});});
       action.replaceWith(target);action=target;box.classList.add('is-native-paste');
       status.id='mp-clipboard-native-help';status.textContent='Touch and hold here, then choose Paste';
@@ -5570,7 +5582,9 @@
     document.addEventListener('paste',function(e){
       if(!s||!d||outsideDismissed||!clipboardBar())return;
       var data=e.clipboardData,item=data&&(song(data.getData('text/uri-list'))||song(data.getData('text/plain'))||song(data.getData('text/html')));
-      var inside=box&&box.contains(e.target);if(inside){e.preventDefault();e.stopPropagation();}
+      var inside=box&&box.contains(e.target);
+      if(inside&&!item&&e.target.closest&&e.target.closest('.mp-clipboard-native')){e.stopPropagation();return;}
+      if(inside){e.preventDefault();e.stopPropagation();}
       if(pasteResolve){e.preventDefault();e.stopPropagation();pasteResolve(item||null);return;}
       if(inside&&!item){status.textContent='Copy an Apple Music, Spotify or SoundCloud song, then Paste';return;}
       if(!busy&&item){
