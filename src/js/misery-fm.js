@@ -381,6 +381,7 @@
   function barTap(e) {
     if (!live() || e.currentTarget.classList.contains("is-profile-bar")) return;
     var bar = e.currentTarget;
+    if (e.target.closest(".chat-me")) return; // avatar taps always reach the profile bar
     if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
     var hit = e.target.closest("button, a, input, select, textarea, [role=button], [role=tab], label");
     if (bar.classList.contains("is-fm") || !hit) {

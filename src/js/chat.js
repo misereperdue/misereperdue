@@ -1170,6 +1170,10 @@
         mpPBclose();
       }, "is-danger");
     }
+    if(me){
+      btn("Orders",'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
+      if(s && s.owner)btn("Dashboard",'<path d="M4 3v17h17M9 15V9m5 11V5m5 15v-7"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
+    }
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
     hd.classList.add("has-tools-" + tools.childNodes.length);
@@ -6382,58 +6386,9 @@
     document.body.appendChild(i);
     e && Q(o);
   }
-  function vt(e) {
-    if (pt) ht();
-    else {
-      (ht(), $e(), ((pt = document.createElement("div")).className = "chat-me-menu"));
-      var r = document.createElement("button");
-      if (
-        ((r.type = "button"),
-        (r.className = "chat-me-item"),
-        (r.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="fade"><path d="M20 21.0001C19.713 17.269 16.7289 14.3151 12.995 14.0662L12 13.9999C11.6446 14.0096 11.3134 14.0225 11.0008 14.0378C7.3 14.2192 4.28417 17.3057 4 21.0001"/><circle cx="12" cy="6.99988" r="4"/></svg><span>Profile</span>'),
-        r.addEventListener("click", function (e) {
-          (e.stopPropagation(),
-            ht(),
-            setTimeout(function () {
-              mpProfileSheet(!0);
-            }, 120));
-        }),
-        pt.appendChild(r),
-        pt.appendChild(ordMenuItem()),
-        s && s.owner)
-      ) {
-        var o = document.createElement("button");
-        ((o.type = "button"),
-          (o.className = "chat-me-item"),
-          (o.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="rubber-band"><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Dashboard</span>'),
-          o.addEventListener("click", function (e) {
-            (e.stopPropagation(), ht(), window.openAnalytics && window.openAnalytics());
-          }),
-          pt.appendChild(o));
-      }
-      var i = document.createElement("button");
-      ((i.type = "button"),
-        (i.className = "chat-me-item chat-me-logout"),
-        (i.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-hi="shake"><path d="M15.5 8.04045C15.4588 6.87972 15.3216 6.15451 14.8645 5.58671C14.2114 4.77536 13.0944 4.52064 10.8605 4.01121L9.85915 3.78286C6.4649 3.00882 4.76777 2.6218 3.63388 3.51317C2.5 4.40454 2.5 6.1257 2.5 9.56803V14.432C2.5 17.8743 2.5 19.5955 3.63388 20.4868C4.76777 21.3782 6.4649 20.9912 9.85915 20.2171L10.8605 19.9888C13.0944 19.4794 14.2114 19.2246 14.8645 18.4133C15.3216 17.8455 15.4588 17.1203 15.5 15.9595"/><path d="M18.5 9.01172C18.5 9.01172 21.5 11.2212 21.5 12.0117C21.5 12.8023 18.5 15.0117 18.5 15.0117M21 12.0117H8.49998"/></svg><span>Sign out</span>'),
-        i.addEventListener("click", function (e) {
-          (e.stopPropagation(), ft());
-        }),
-        pt.appendChild(i),
-        document.body.appendChild(pt));
-      var l = e || c.querySelector(".chat-head");
-      if (l) {
-        var d = l.getBoundingClientRect();
-        ((pt.style.top = d.bottom + 8 + "px"),
-          (pt.style.right = Math.max(8, window.innerWidth - d.right) + "px"),
-          (pt.style.minWidth = "200px"));
-      }
-      setTimeout(function () {
-        document.addEventListener("click", ht);
-      }, 10);
-    }
+  function vt(anchor) {
+    ht();
+    if(s)mpPB(s.username,anchor||MPProfiles.topBar());
   }
   function ft() {
     // Sign out: with the token captured first, drop this device's push
