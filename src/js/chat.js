@@ -5485,7 +5485,7 @@
       var close=document.createElement('button');close.type='button';close.className='mp-clipboard-close';close.setAttribute('aria-label','Dismiss copied song');close.textContent='×';close.addEventListener('click',function(){if(busy)return;if(candidate){if(dismissed.size>100)dismissed.clear();dismissed.add(candidate.key);}else manualDismissed=true;remove();});box.appendChild(close);
       status=document.createElement('span');status.className='mp-clipboard-status';status.setAttribute('role','status');box.appendChild(status);document.body.appendChild(box);position();
     }
-    function manual(){if(!box)return;status.textContent='Paste a song link here.';if(!pasteInput){pasteInput=document.createElement('input');pasteInput.type='url';pasteInput.inputMode='url';pasteInput.placeholder='Apple Music, Spotify or SoundCloud link';pasteInput.setAttribute('aria-label','Copied song link');box.appendChild(pasteInput);pasteInput.addEventListener('input',function(){var item=song(pasteInput.value);if(item)show(item);});}pasteInput.focus({preventScroll:true});}
+    function manual(){if(!box)return;status.textContent='Paste a song link here.';if(!pasteInput){pasteInput=document.createElement('input');pasteInput.type='url';pasteInput.inputMode='url';pasteInput.placeholder='Apple Music, Spotify or SoundCloud link';pasteInput.setAttribute('aria-label','Copied song link');box.appendChild(pasteInput);var field=pasteInput,pasteTimer;field.addEventListener('input',function(){clearTimeout(pasteTimer);pasteTimer=setTimeout(function(){if(!field.isConnected||busy)return;var item=song(field.value);if(item)show(item);},350);});}pasteInput.focus({preventScroll:true});}
     async function use(){
       if(busy||!s||!d)return;var token=d,user=s.username,version=++epoch,item=candidate,completed=false;
       // Invoke readText in the click stack, before any await (Safari user activation).
@@ -5509,7 +5509,7 @@
     document.addEventListener('mp-auth',function(){if(!s||!d){epoch++;if(controller)controller.abort();remove();lastUser='';candidate=null;return;}if(lastUser!==s.username){dismissed.clear();candidate=null;lastUser=s.username;manualDismissed=false;lastRead=0;check();}});
     document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy)epoch++;position();}else{manualDismissed=false;check();position();}});
     window.addEventListener('pageshow',check);window.addEventListener('focus',check);window.addEventListener('resize',position);window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('hashchange',function(){position();setTimeout(position,400);});
-    document.addEventListener('paste',function(e){if(busy||!s||!d)return;var item=song(e.clipboardData&&e.clipboardData.getData('text/plain'));if(item){epoch++;show(item);}});
+    document.addEventListener('paste',function(e){if(busy||!s||!d||e.target===pasteInput)return;var item=song(e.clipboardData&&e.clipboardData.getData('text/plain'));if(item){epoch++;show(item);}});
     setTimeout(function(){if(s&&d){lastUser=s.username;check();}},0);
   })();
   function mpProfileSheet(e, inline) {
