@@ -262,7 +262,7 @@
     return "robot" !== t || "grim" === e;
   }
   function N(e) {
-    return e ? e.activeBadge || (e.verified ? "verified" : null) : null;
+    return e ? e.activeBadge === null ? null : e.activeBadge || (e.verified ? "verified" : null) : null;
   }
   function P(e) {
     var t = N(e);
@@ -1184,7 +1184,13 @@
       current:function(){return me && s ? s : b._profile;},
       edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
       close:function(){mpPBclose();},
-      manage:!me && s && s.owner ? function(){mpPBclose(true);K(n.username);} : null
+      sync:function(user){
+        var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=O(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
+        st.innerHTML=(pill||'')+'<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>'+x(user.points||0)+'</b> points</span>';
+        if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===N(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
+        avw.classList.toggle('is-vip',N(user)==='member');avw.classList.toggle('is-verified',N(user)==='verified');
+      },
+      manage:!me && s && s.owner ? function(){return MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}});} : null
     });
   }
   function mpPB(u, anchor) {
@@ -5480,7 +5486,7 @@
     (d.classList.add("chat-avatar-click"),
       d.setAttribute("role", "button"),
       d.setAttribute("tabindex", "0"),
-      d.setAttribute("aria-label", "View larger avatar"));
+      d.setAttribute("aria-label", "Change profile photo"));
     var m = function (e) {
       e && e.stopPropagation();
       var t = document.createElement("div");
@@ -5701,58 +5707,12 @@
         x(s.points || 0) +
         "</span> points"),
       o.appendChild(C));
-    var L = s.badges || [];
-    if (L.length) {
-      var S = document.createElement("div");
-      ((S.className = "chat-pw-title"), (S.textContent = "Badges"), o.appendChild(S));
-      var T = document.createElement("div");
-      ((T.className = "chat-badge-row"),
-        L.map(function (e) {
-          return { id: e };
-        }).forEach(function (e) {
-          if (!s.owner || "verified" === e.id) {
-            var t = document.createElement("button");
-            ((t.type = "button"),
-              t.setAttribute("data-badge", e.id),
-              (t.className = "chat-badge-opt" + (N(s) === e.id ? " on" : "")),
-              (t.innerHTML = M(e.id)),
-              t.setAttribute("aria-label", "Show " + e.id + " badge"),
-              t.addEventListener("click", function () {
-                E("/api/badge", {
-                  method: "POST",
-                  body: { badge: N(s) === e.id ? null : e.id },
-                })
-                  .then(function (e) {
-                    if (e && e.ok && e.user) {
-                      var t = N((s = mpProfileSynced(rcKeep(e.user))));
-                      T.querySelectorAll(".chat-badge-opt").forEach(function (e) {
-                        e.classList.toggle("on", e.getAttribute("data-badge") === t);
-                      });
-                      var n = p.querySelector(".chat-avatar-wrap");
-                      if (n) {
-                        var a = J(s.username, s.avatar, "lg", X()),
-                          r = P(s);
-                        (r && a.insertAdjacentHTML("beforeend", r),
-                          n.parentNode.replaceChild(a, n));
-                      }
-                      var o = c.querySelector(".chat-me");
-                      o &&
-                        ((o.innerHTML = ""),
-                        o.appendChild(J(s.username, s.avatar, "sm", X())),
-                        ne(o));
-                    }
-                  })
-                  .catch(function () {});
-              }),
-              T.appendChild(t));
-          }
-        }),
-        o.appendChild(T));
-    }
+    o.appendChild(MPProfiles.badgePicker(s,{api:E,art:M,allowed:function(user,id){return id!=='robot'||user==='grim';},active:N,changed:function(user){s=mpProfileSynced(rcKeep(user));T[user.username]=N(user);h();}}));
     var A = document.createElement("div");
     ((A.className = "chat-pw-title"), (A.textContent = "Bio"), o.appendChild(A));
     var I = document.createElement("textarea");
     ((I.className = "chat-bio"),
+      I.setAttribute("aria-label", "Bio"),
       (I.maxLength = 250),
       (I.rows = 3),
       (I.placeholder = "Tell the chat a little about yourself…"),
@@ -6379,7 +6339,7 @@
     ze.textContent = "Sign out";
     ze.addEventListener("click", ft);
     o.appendChild(ze);
-    if (inline) { l.hidden = true; inline.show(o); return; }
+    if (inline) { l.hidden = true; MPProfiles.settings(o); inline.show(o); return; }
     $(i, o);
     r.addEventListener("click", function(event){if(event.target===r)gt();});
     document.body.appendChild(r);
