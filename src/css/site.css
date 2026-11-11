@@ -13115,25 +13115,17 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-pb-bio[hidden]{display:none}
 .fm-golive:not(:disabled){box-shadow:0 0 0 1px rgba(170,216,255,.28),0 0 18px rgba(145,199,249,.32);animation:fmGoGlow 2.6s ease-in-out infinite}
 @keyframes fmGoGlow{0%,100%{box-shadow:0 0 0 1px rgba(170,216,255,.24),0 0 14px rgba(145,199,249,.25)}50%{box-shadow:0 0 0 1px rgba(190,226,255,.5),0 0 25px rgba(145,199,249,.5)}}
-.fm-live-burst{position:fixed;width:0;height:0;z-index:2147482000;pointer-events:none}
-.fm-live-ray{position:absolute;left:0;top:-1px;width:var(--ray-length);height:2px;border-radius:999px;background:linear-gradient(90deg,rgba(210,238,255,.9),rgba(154,197,255,.6),transparent);box-shadow:0 0 8px rgba(130,194,255,.7);transform-origin:0 50%;animation:fmGoLaser .75s cubic-bezier(.15,.7,.3,1) both}
-@keyframes fmGoLaser{0%{opacity:0;transform:rotate(var(--ray-angle)) scaleX(.05)}18%{opacity:.85}100%{opacity:0;transform:rotate(var(--ray-angle)) translateX(20px) scaleX(1.15)}}
-.fm-live-ring{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border:1px solid rgba(191,225,255,.65);border-radius:50%;box-sizing:border-box;animation:fmGoRing .7s ease-out both}
-@keyframes fmGoRing{from{opacity:.7;transform:scale(.8)}to{opacity:0;transform:scale(3.2)}}
-@media(prefers-reduced-motion:reduce){.fm-golive:not(:disabled){animation:none}.fm-live-burst{display:none}}
+@media(prefers-reduced-motion:reduce){.fm-golive:not(:disabled){animation:none}}
 
-/* #93: live lettering shares the logo's 160-unit canvas and 12-unit round strokes.
-   Fixed artwork height also keeps icon-only Shop nav equal to Chat/Globe. */
+/* Shared compact live branding on Chat/Globe and the Shop navbar. */
 .fm-on .fm-hb-in{gap:4px;font-size:16px;line-height:1}
-.fm-on .fm-hb-logo{height:32px;width:144px;aspect-ratio:auto;margin:0;transform:none}
-.fm-on .fm-hb-is{display:block;flex:none;width:72px;height:32px;line-height:1}
-.fm-on .fm-hb-in .fm-hb-is svg{max-width:none;max-height:none;display:block;width:100%;height:100%}
+.fm-on .fm-hb-logo{height:22px;width:99px;aspect-ratio:auto;margin:0;transform:none}
+.fm-on .fm-hb-is{display:block;flex:none;line-height:1}
 
-/* #95: compact live brand, quiet queue confirmation and sweeping neon lasers. */
-.fm-on .fm-hb-logo{height:22px;width:99px}
-.fm-on .fm-hb-is{height:22px;width:49.5px}
+/* #95: quiet queue confirmation. */
 .fm-ib.is-queued:disabled{opacity:1;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
-.fm-live-burst{inset:0;width:auto;height:auto;overflow:hidden;background:rgba(2,4,14,.12);animation:fmLaserVeil 2.4s ease both}
-.fm-live-ray{width:var(--ray-length);height:2px;top:auto;left:auto;background:#fff;border-radius:999px;transform-origin:0 50%;box-shadow:0 0 3px 1px hsl(var(--ray-hue) 100% 75%),0 0 11px 3px hsl(var(--ray-hue) 100% 55% / .75),0 0 25px 5px hsl(var(--ray-hue) 100% 50% / .3);animation:fmLaserSweep 1.9s cubic-bezier(.35,0,.65,1) var(--ray-delay) both}
-@keyframes fmLaserSweep{0%{opacity:0;transform:rotate(var(--ray-from)) scaleX(.4)}12%{opacity:.9}85%{opacity:.9}100%{opacity:0;transform:rotate(var(--ray-to)) scaleX(1)}}
-@keyframes fmLaserVeil{0%,100%{opacity:0}12%,85%{opacity:1}}
+
+/* #97: native rounded live label and equal Listening bookend insets. */
+.fm-on .fm-hb-is{width:auto;height:auto;font:500 14px/1 ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;letter-spacing:0;text-transform:none}
+.mp-profile-bar .mp-profile-song{--mp-song-inset:8px;padding:var(--mp-song-inset)}
+.mp-profile-bar .mp-profile-eq{margin:0 0 0 auto;padding:0;align-self:center}
