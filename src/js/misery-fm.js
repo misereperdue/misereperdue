@@ -292,7 +292,7 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live<i class="fm-bl"></i></span></span><span class="fm-hb-np"></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is"><svg viewBox="0 0 360 160" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M18 76v48M18 52v1M82 61C47 37 36 83 65 88C103 94 83 143 44 117"/><g transform="translate(25 0)"><path d="M115 26v89q0 9 12 9M151 76v48M151 52v1M181 58l25 66 25-66M256 88h54C310 39 250 39 250 88s39 42 55 28"/></g></svg></span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "Misery FM is live. Tap the bar for now playing.");
@@ -301,43 +301,8 @@
       hb = bar;
     }
     ring(bar);
-    if (!bar._fmTy) typo(bar, bar.querySelector(":scope > .fm-hb"));
-    if (!phT && !RM.matches) phT = setInterval(function () { if (hb && !morph) { if (!hb.classList.contains("is-fm")) typo(hb, hb.querySelector(":scope > .fm-hb")); hb.classList.toggle("is-fm"); } }, 4e3);
+    if (!phT && !RM.matches) phT = setInterval(function () { if (hb && !morph) { hb.classList.toggle("is-fm"); } }, 4e3);
     if (RM.matches && phT) { clearInterval(phT); phT = 0; hb && hb.classList.remove("is-fm"); }
-  }
-  /* dc (t517u): "is live" uses the top bar's own typography (font, size, weight, case, spacing),
-     copied from a real text item in that bar, so it never looks out of place. */
-  function typo(bar, o) {
-    var src = null;
-    bar.querySelectorAll(".chat-title, a, button, h1, h2, span").forEach(function (n) {
-      if (src || n.closest(".fm-hb") || !n.getClientRects().length || !/\S/.test(n.textContent) || n.children.length > 2) return;
-      src = n;
-    });
-    // icon-only bars (the main nav) use the site's top bar title style: the chat header title
-    src = src || q(".chat-head .chat-title");
-    var x = o.querySelector(".fm-hb-in"), cs = src && getComputedStyle(src);
-    if (!x || !cs || !parseFloat(cs.fontSize)) return;
-    bar._fmTy = 1;
-    ["fontFamily", "fontSize", "fontWeight", "letterSpacing", "textTransform", "fontStyle"].forEach(function (k) { x.style[k] = cs[k]; });
-    x.style.setProperty("--fm-fs", cs.fontSize);
-    // dc (t522u): "is live" strokes as thick as the logo's lettering (12 units of the 160-unit-tall
-    // artwork), so pick the weight whose stem width matches, measured in this font
-    var lg = x.querySelector(".fm-hb-logo"), H = lg && lg.getBoundingClientRect().height, want = H * 12 / 160, best = 0, bd = 1e9;
-    if (want) [300, 400, 500, 600, 700, 800].forEach(function (w) { var d = Math.abs(stem(cs.fontFamily, cs.fontSize, w) - want); if (d < bd) { bd = d; best = w; } });
-    if (best) { x.querySelector(".fm-hb-is").style.fontWeight = best; x.setAttribute("data-stem", want.toFixed(2)); }
-    // sit the logo's lettering on the text baseline (its "fm" ends at y≈130 of 160, round caps included)
-    var bl = x.querySelector(".fm-bl");
-    if (lg && bl) { lg.style.transform = ""; var dy = bl.getBoundingClientRect().top - (lg.getBoundingClientRect().top + H * 130 / 160); lg.style.transform = "translateY(" + dy.toFixed(2) + "px)"; }
-  }
-  /* width in px of the vertical stem of a lowercase "l" in a given font */
-  function stem(fam, size, w) {
-    var c = stem.c || (stem.c = document.createElement("canvas")), g = c.getContext("2d"), px = Math.ceil(parseFloat(size) * 2);
-    c.width = px * 2; c.height = px * 2;
-    g.clearRect(0, 0, c.width, c.height); g.fillStyle = "#000"; g.font = w + " " + px + "px " + fam; g.textBaseline = "alphabetic";
-    g.fillText("l", px / 2, px * 1.5);
-    var row = g.getImageData(0, Math.round(px * 1.2), c.width, 1).data, n = 0;
-    for (var i = 3; i < row.length; i += 4) n += row[i] / 255;
-    return n / 2;
   }
   /* Dotted outline on the bar's own rounded shape. The rect sits half a stroke inside the edge (never
      clipped), uses the bar's real corner radius, and the dot pitch divides the perimeter exactly, so
@@ -1362,8 +1327,6 @@
     if (c && !c.paused && !S.paused && (now() - S.startedAt) / 1e3 > durOf(c.tr) + 4 && tickN % 10 === 0) refresh();
   }
   window.addEventListener("resize", function () { hb && (q(".fm-ring", hb)._w = 0, hb._fmTy = 0); deco(); });
-  // web fonts change the text metrics: re-measure the "is live" weight and baseline once they're in
-  document.fonts && document.fonts.ready && document.fonts.ready.then(function () { if (hb) { hb._fmTy = 0; deco(); } });
   window.addEventListener("hashchange", function () { setTimeout(deco, 60); setTimeout(deco, 400); });
   document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
 
