@@ -293,7 +293,7 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is"><svg viewBox="0 0 360 160" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M18 76v48M18 52v1M82 61C47 37 36 83 65 88C103 94 83 143 44 117"/><g transform="translate(25 0)"><path d="M115 26v89q0 9 12 9M151 76v48M151 52v1M181 58l25 66 25-66M256 88h54C310 39 250 39 250 88s39 42 55 28"/></g></svg></span></span><span class="fm-hb-np"></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live</span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "Misery FM is live. Tap the bar for now playing.");
@@ -933,18 +933,6 @@
     var y = q('[data-c="1"]', cf);
     y && y.focus();
   }
-  function goLiveBurst(button){
-    if(RM.matches||!button||button.disabled)return;
-    var rect=button.getBoundingClientRect(),burst=document.createElement('div'),w=innerWidth,h=innerHeight,length=Math.hypot(w,h)*1.4;
-    burst.className='fm-live-burst';burst.setAttribute('aria-hidden','true');
-    for(var i=0;i<12;i++){
-      var ray=document.createElement('i'),x=i<4?rect.left+rect.width/2:i%2?w:0,y=i<4?rect.top+rect.height/2:h*(.2+(i%4)*.23),angle=Math.atan2(h/2-y,w/2-x)*180/Math.PI;
-      ray.className='fm-live-ray';ray.style.left=x+'px';ray.style.top=y+'px';ray.style.setProperty('--ray-length',length+'px');ray.style.setProperty('--ray-from',(angle-38)+'deg');ray.style.setProperty('--ray-to',(angle+38)+'deg');ray.style.setProperty('--ray-hue',[325,185,130,265][i%4]);ray.style.setProperty('--ray-delay',(i%4)*90+'ms');burst.appendChild(ray);
-    }
-    document.querySelectorAll('.fm-live-burst').forEach(function(e){e.remove();});document.body.appendChild(burst);
-    button.animate&&button.animate([{transform:'scale(.92)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});
-    setTimeout(function(){burst.remove();},2400);
-  }
   function onAct(e) {
     var b = e.target.closest("[data-a]");
     if (!b || b.disabled) return;
@@ -962,7 +950,7 @@
     else if (a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
     else if (a === "shuffle") ctl({ action: "shuffle", on: !S.shuffle });
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
-    else if (a === "golive") {if(owner())goLiveBurst(b);ctl({ action: "live" });} // dc t536u: no confirmation, act immediately
+    else if (a === "golive") ctl({ action: "live" }); // dc t536u: no confirmation, act immediately
     else if (a === "stop") ctl({ action: "stop" });
     else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else beginAdd(); }
     else if (a === "applelookup") matchApple();
