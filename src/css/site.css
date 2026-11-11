@@ -12885,7 +12885,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .chat-head.is-profile-bar,.nav.is-profile-bar{box-sizing:border-box;display:block!important;padding:0!important;overflow:hidden!important;isolation:isolate;z-index:60;border-radius:32px;min-height:0;max-height:none;transition:border-radius .42s cubic-bezier(.22,1,.36,1);background:var(--sheet-bg);-webkit-backdrop-filter:var(--sheet-blur);backdrop-filter:var(--sheet-blur)}
 .chat-head.is-profile-expanded,.nav.is-profile-expanded{border-radius:28px}
 .is-profile-bar>:not(.mp-profile-bar){visibility:hidden!important;pointer-events:none!important}
-.is-profile-bar>.mp-profile-bar{position:absolute;inset:0;z-index:5;display:flex!important;flex-direction:column;color:var(--ink);opacity:1!important;transform:none!important;visibility:visible!important;pointer-events:auto!important;font:inherit;text-align:left;min-width:0}
+.is-profile-bar>.mp-profile-bar{position:absolute;inset:0;z-index:5;display:flex!important;flex-direction:column;color:var(--ink);opacity:1;transform:none;visibility:visible!important;pointer-events:auto!important;font:inherit;text-align:left;min-width:0}
 .mp-profile-summary{display:flex;align-items:center;gap:7px;height:100%;padding:7px 12px}
 .mp-profile-control{display:grid!important;place-items:center;width:34px!important;height:34px!important;min-width:34px;flex:none;border:0!important;border-radius:50%!important;background:var(--fill)!important;color:var(--ink)!important;padding:8px!important;box-shadow:none!important;cursor:pointer}
 .mp-profile-control svg{width:18px!important;height:18px!important;display:block;fill:none!important}
@@ -12940,3 +12940,23 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-pb-bio{display:block;-webkit-line-clamp:unset}
 .mp-profile-bar .mp-pb-act{flex-direction:row;gap:7px;padding:8px 14px;min-height:36px;border-radius:999px}
 .mp-profile-gallery:has(img:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* #83: translucent frost plus the selected avatar's diffuse color in every phase. */
+.chat-head.is-profile-bar,.nav.is-profile-bar{background:rgba(13,22,45,.52);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+[data-theme="light"] .chat-head.is-profile-bar,[data-theme="light"] .nav.is-profile-bar{background:rgba(245,248,255,.58)}
+.is-profile-bar.is-profile-bar>.mp-profile-bar{opacity:1;transform:none}
+.is-profile-entering>:not(.mp-profile-bar){visibility:visible!important}
+.mp-profile-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;background:radial-gradient(ellipse at 20% 0%,rgba(135,176,214,.2),transparent 70%)}
+.mp-profile-backdrop img{position:absolute;inset:-45px;width:calc(100% + 90px);height:calc(100% + 90px);max-width:none;object-fit:cover;filter:blur(34px) saturate(135%);opacity:.3;pointer-events:none}
+[data-theme="light"] .mp-profile-backdrop img{opacity:.18}
+.mp-profile-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(15,25,48,.12),rgba(15,25,48,.42))}
+[data-theme="light"] .mp-profile-backdrop::after{background:linear-gradient(115deg,rgba(250,252,255,.2),rgba(250,252,255,.4))}
+.mp-profile-bar>.mp-profile-summary,.mp-profile-bar>.mp-profile-bar-scroll{position:relative;z-index:1}
+.mp-profile-bar .mp-pb-aura{display:none}
+.mp-profile-summary{padding:5px 10px;gap:8px;box-sizing:border-box}
+.mp-profile-summary-copy{gap:1px;overflow:hidden}
+.mp-profile-summary-title{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.mp-profile-summary-title strong{font-size:13px;line-height:16px;min-width:0;flex:1}
+.mp-profile-summary-score{font-size:10px;line-height:16px;color:var(--muted);flex:none;white-space:nowrap;font-weight:600}
+.mp-profile-summary-copy small{font-size:10.5px;line-height:13px;flex:none}
+.mp-profile-summary-copy .mp-profile-summary-info{font-size:10px;line-height:12px;color:color-mix(in srgb,var(--ink) 68%,transparent)}
