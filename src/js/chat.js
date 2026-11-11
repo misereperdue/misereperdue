@@ -5483,8 +5483,10 @@
       var text=clipboardText(value).replace(/[\u200b-\u200d\ufeff]/g,''),links=text.match(/https:\/\/[^\s<>"'`]+/gi)||[];
       for(var i=0;i<Math.min(links.length,32);i++){var item=songURL(links[i].replace(/[.,;!?)\]}”’]+$/g,''));if(item)return item;}return null;
     }
-    async function clipboardSong(){
+    async function clipboardSong(textFirst){
       var clip=navigator.clipboard;if(!clip)throw Error('Clipboard access is unavailable in this browser.');
+      // Invoke readText directly from the tap before changing focus or the button DOM.
+      if(textFirst&&typeof clip.readText==='function')return song(await clip.readText());
       if(typeof clip.read==='function'){
         try{var items=await clip.read();for(var i=0;i<Math.min(items.length,8);i++){
           for(var type of ['text/uri-list','text/plain','text/html','text/x-moz-url']){if(items[i].types.indexOf(type)<0)continue;
@@ -5515,20 +5517,29 @@
     function show(item,manual){
       if((!item&&!manual)||!s||!d||busy||outsideDismissed)return;if(item&&(dismissed.has(item.key)||sameCurrent(item))){remove();return;}candidate=item||null;remove();
       box=document.createElement('div');box.className='mp-clipboard-song';box.setAttribute('role','group');box.dataset.mode=item?'detected':'paste';box.setAttribute('aria-label',item?'Copied song':'Paste song');if(manual)pasteOffered=true;
+      var mark=document.createElement('span');mark.className='mp-clipboard-mark';mark.setAttribute('aria-hidden','true');mark.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2.5"/><ellipse cx="17" cy="16" rx="3" ry="2.5"/></svg>';box.appendChild(mark);
       action=document.createElement('button');action.type='button';action.className='mp-clipboard-action';action.textContent=item?'Update your now playing?':'Paste song';action.addEventListener('click',use);box.appendChild(action);
       var close=document.createElement('button');close.type='button';close.className='mp-clipboard-confirm';close.setAttribute('aria-label','Confirm now playing update');close.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';close.addEventListener('click',use);box.appendChild(close);
       status=document.createElement('span');status.className='mp-clipboard-status';status.setAttribute('role','status');if(!item)status.textContent='Update your now playing';box.appendChild(status);place();if(box){barObserver=new MutationObserver(position);barObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});}
     }
     async function use(){
       if(busy||!s||!d||!box)return;var token=d,user=s.username,version=++epoch,item=box.dataset.mode==='paste'?null:candidate,completed=false,confirm=box.querySelector('.mp-clipboard-confirm'),icon=confirm.innerHTML;
-      busy=true;action.disabled=true;confirm.disabled=true;box.classList.add('is-updating');box.setAttribute('aria-busy','true');confirm.innerHTML='<span class="mp-clipboard-spinner" aria-hidden="true"></span>';status.textContent=item?'Updating now playing…':'Waiting for Paste…';controller=new AbortController();var current=controller,timer=setTimeout(function(){current.abort();},23000);
+      // Start native clipboard access in the original user gesture. Keep the focused
+      // button intact while Safari presents its system Paste permission control.
+      var reading=item?null:clipboardSong(true);
+      busy=true;confirm.insertAdjacentHTML('beforeend','<span class="mp-clipboard-spinner" aria-hidden="true"></span>');box.classList.remove('is-error','is-success');box.classList.add('is-updating');box.setAttribute('aria-busy','true');confirm.setAttribute('aria-disabled','true');action.setAttribute('aria-disabled','true');status.textContent=item?'Finding your song…':'Tap Paste to continue';controller=new AbortController();var current=controller,timer;
       try{
-        if(!item){item=await new Promise(function(resolve,reject){pasteResolve=resolve;current.signal.addEventListener('abort',function(){reject(new DOMException('Aborted','AbortError'));},{once:true});clipboardSong().then(resolve,function(e){if(e.name!=='NotAllowedError'&&e.name!=='SecurityError')reject(e);});});pasteResolve=null;if(!item){dismiss();return;}if(token!==d||!s||s.username!==user||version!==epoch)return;candidate=item;status.textContent='Updating now playing…';}
+        if(!item){item=await Promise.race([reading,new Promise(function(resolve,reject){pasteResolve=resolve;current.signal.addEventListener('abort',function(){reject(new DOMException('Aborted','AbortError'));},{once:true});})]);pasteResolve=null;if(token!==d||!s||s.username!==user||version!==epoch)return;
+          if(!item)throw Error('Copy an Apple Music, Spotify or SoundCloud song, then try again.');candidate=item;}
+        // The network deadline starts after the system Paste menu completes.
+        timer=setTimeout(function(){current.abort();},23000);
+        status.textContent='Finding your song…';
         var metadata=await mpProfileMusicResolve(item.url,current.signal);if(token!==d||!s||s.username!==user||version!==epoch)return;
+        status.textContent='Saving now playing…';
         var result=await E('/api/profile',{method:'POST',body:{listening:metadata.listening},token:token,signal:current.signal});if(version!==epoch||token!==d||!s||s.username!==user)return;if(!result||!result.ok||!result.user)throw Error(result&&result.error||'Could not update now playing. Try again.');
-        dismissed.add(item.key);s=mpProfileSynced(rcKeep(result.user));mpAuthEmit();completed=true;action.textContent='Now playing updated';status.textContent='';successTimer=setTimeout(remove,1800);
-      }catch(e){if(version===epoch&&box)status.textContent=e.name==='AbortError'?'Paste or song lookup timed out. Tap to retry.':e.message||'Could not read this song. Try again.';}
-      finally{clearTimeout(timer);if(version===epoch){busy=false;controller=null;pasteResolve=null;if(box){box.classList.remove('is-updating');box.removeAttribute('aria-busy');action.disabled=completed;confirm.disabled=completed;confirm.innerHTML=icon;}}}
+        dismissed.add(item.key);s=mpProfileSynced(rcKeep(result.user));mpAuthEmit();completed=true;box.classList.add('is-success');action.textContent='Now playing updated';status.textContent=item.name;successTimer=setTimeout(function(){if(!box)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){remove();return;}var ending=box;ending.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-3px)'}],{duration:180,easing:'ease-in',fill:'forwards'}).finished.then(function(){if(box===ending)remove();},function(){});},1800);
+      }catch(e){if(version===epoch&&box){box.classList.add('is-error');status.textContent=e.name==='AbortError'?'Song lookup timed out. Tap to retry.':e.name==='NotAllowedError'||e.name==='SecurityError'?'Paste wasn’t allowed. Tap to try again.':e.message||'Could not read this song. Try again.';}}
+      finally{clearTimeout(timer);if(version===epoch){busy=false;controller=null;pasteResolve=null;if(box){box.classList.remove('is-updating');box.removeAttribute('aria-busy');action.disabled=completed;confirm.disabled=completed;action.removeAttribute('aria-disabled');confirm.removeAttribute('aria-disabled');confirm.innerHTML=icon;}}}
     }
     async function check(){
       if(document.hidden||!s||!d||busy||checking||outsideDismissed||Date.now()-lastRead<1500)return;lastRead=Date.now();checking=true;var version=++epoch,user=s.username;
@@ -5538,7 +5549,7 @@
       }catch(e){if(version===epoch&&!pasteOffered&&!document.hidden)show(null,true);}finally{checking=false;}
     }
     document.addEventListener('mp-auth',function(){if(!s||!d){epoch++;if(controller)controller.abort();busy=false;controller=null;pasteResolve=null;remove();lastUser='';candidate=null;return;}if(lastUser!==s.username){dismissed.clear();candidate=null;lastUser=s.username;outsideDismissed=false;pasteOffered=false;lastRead=0;check();}});
-    document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy){epoch++;remove();candidate=null;}else position();}else{outsideDismissed=false;pasteOffered=false;lastRead=0;check();position();}});
+    document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy){epoch++;remove();candidate=null;}else position();}else{outsideDismissed=false;if(!busy)pasteOffered=false;lastRead=0;check();position();}});
     window.addEventListener('pageshow',check);window.addEventListener('focus',check);window.addEventListener('resize',position);window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('hashchange',function(){position();setTimeout(position,400);});
     document.addEventListener('paste',function(e){if(!s||!d||outsideDismissed)return;var data=e.clipboardData,item=data&&(song(data.getData('text/uri-list'))||song(data.getData('text/plain'))||song(data.getData('text/html')));if(pasteResolve){e.preventDefault();pasteResolve(item||null);return;}if(!busy&&item){epoch++;show(item);}});
     document.addEventListener('mp-topbar-claim',function(e){if(e.detail&&e.detail.owner!=='clipboard')dismiss();});
