@@ -10,7 +10,8 @@ On pages without a status bar, account settings use the main navigation bar.
 The compact avatar is centered; expand and SVG star/points use bubble controls.
 Full profiles keep lowercase names, avatar rings/badges, points, complete bio,
 share artwork, whisper/hide and owner management. Photos are no longer shown or
-editable. Empty Listening renders nothing. There is no carousel, location section or divider. Existing stored
+editable. Empty Listening renders nothing. Song rows are static with a right-aligned equalizer;
+they have no link, chevron or tap action. There is no carousel, location section or divider. Existing stored
 photos/city values are preserved; listening saves omit both fields.
 
 Settings use compact expandable Profile, Listening, Notifications, Signature and
@@ -49,6 +50,9 @@ preview/production before fetching final versioned assets; verify the exact
 served bytes, not just Cloudflare's deployment status.
 
 Task #87 refinements: compact text is centered; equal star/expand circles sit
-beside it. VIP/07 chips match points chips. Badge boxes show artwork and selection
-checks only, retaining accessible labels. Sign out is a filled capsule. Orders
+beside it. VIP/07 chips match points chips. Badge boxes show artwork with a highlight-only selection state, retaining
+accessible labels. Sign out is a filled capsule. Orders
 shares the shop bag paths; Dashboard uses a rounded four-tile glyph.
+
+Task #89: Whisper from a profile switches to Chat before focusing the private
+composer, preserving the recipient and feature/authorization gates.
