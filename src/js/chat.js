@@ -1195,12 +1195,9 @@
     nm.appendChild(n1);
     var n2 = document.createElement("div");
     n2.className = "mp-pb-sub";
-    var hdl = document.createElement("span");
-    hdl.className = "mp-pb-handle";
-    hdl.textContent = mpAt(n.username);
-    n2.appendChild(hdl);
+    // Avoid repeating the username beneath the name line.
     var meta = [n.numId ? "#" + n.numId : "", n.createdAt ? "joined " + new Date(n.createdAt).toLocaleDateString(void 0, { month: "short", year: "numeric" }).toLowerCase() : ""].filter(Boolean).join(" · ");
-    meta && n2.insertAdjacentHTML("beforeend", '<span class="mp-pb-dot" aria-hidden="true">·</span><span class="mp-pb-meta"></span>');
+    meta && n2.insertAdjacentHTML("beforeend", '<span class="mp-pb-meta"></span>');
     meta && (n2.lastChild.textContent = meta);
     nm.appendChild(n2);
     hd.appendChild(nm);
@@ -1227,17 +1224,9 @@
     if (n.bio) bio.textContent = n.bio;
     else bio.setAttribute("hidden", "");
     body.appendChild(bio);
-    if (!n.bio && me) {
-      var addBio = document.createElement("button");
-      addBio.type = "button";
-      addBio.className = "mp-pb-addbio";
-      addBio.innerHTML = '<svg ' + MP_IC + ' width="14" height="14"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg><span>Add a bio</span>';
-      addBio.addEventListener("click", function (e) { e.stopPropagation(); mpPBclose(!0); mpProfileSheet(!0); });
-      body.appendChild(addBio);
-    }
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
-    /* Grim t535u: Edit + Share are small icon pills in the header corner; Whisper/Hide stay as actions */
+    /* Share/Edit sit above the name; Whisper/Hide remain secondary actions. */
     var tools = document.createElement("div");
     tools.className = "mp-pb-tools";
     function tool(label, icon, run) {
@@ -1275,7 +1264,7 @@
       }, "is-danger");
     }
     ac.childNodes.length && body.appendChild(ac);
-    hd.appendChild(tools);
+    nm.insertBefore(tools, n1);
     hd.classList.add("has-tools-" + tools.childNodes.length);
     var fp = document.createElement("button");
     fp.type = "button";
@@ -2586,7 +2575,7 @@
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu"); m._close = close;
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"/><path d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"/><path d="M21.5 6H18M18 6H14.5M18 6V2.5M18 6V9.5"/></svg><span>Add media</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg><span>Globe</span></button>' +
-            '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="music">' + mpMusicIcon() + '<span>Music</span></button>' +
+            '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="music">' + mpMusicMenuIcon() + '<span>Music</span></button>' +
             (window.mpPollOn
               ? mpIsVip()
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Poll</span></button>'
@@ -3175,6 +3164,10 @@
       .then(function (e) {
         return (e && e.results) || [];
       });
+  }
+  // Original menu-only double-note mark; catalog fallbacks retain mpMusicIcon().
+  function mpMusicMenuIcon() {
+    return '<svg class="chat-music-menu-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3.3a1 1 0 0 0-1.2-.98l-10 2A1 1 0 0 0 7 5.3v10.9a4.6 4.6 0 0 0-1.9.16c-1.72.5-2.76 1.86-2.38 3.05.38 1.2 2.03 1.76 3.74 1.26C8 20.23 9 19.1 9 17.8V9.15l8-1.6v6.65a4.6 4.6 0 0 0-1.9.16c-1.72.5-2.76 1.86-2.38 3.05.38 1.2 2.03 1.76 3.74 1.26C18 18.23 19 17.1 19 15.8V3.3ZM9 6.12l8-1.6v1L9 7.12v-1Z"/></svg>';
   }
   function mpMusicIcon() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>';
