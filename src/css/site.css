@@ -13121,3 +13121,10 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-live-ring{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border:1px solid rgba(191,225,255,.65);border-radius:50%;box-sizing:border-box;animation:fmGoRing .7s ease-out both}
 @keyframes fmGoRing{from{opacity:.7;transform:scale(.8)}to{opacity:0;transform:scale(3.2)}}
 @media(prefers-reduced-motion:reduce){.fm-golive:not(:disabled){animation:none}.fm-live-burst{display:none}}
+
+/* #93: live lettering shares the logo's 160-unit canvas and 12-unit round strokes.
+   Fixed artwork height also keeps icon-only Shop nav equal to Chat/Globe. */
+.fm-on .fm-hb-in{gap:4px;font-size:16px;line-height:1}
+.fm-on .fm-hb-logo{height:32px;width:144px;aspect-ratio:auto;margin:0;transform:none}
+.fm-on .fm-hb-is{display:block;flex:none;width:72px;height:32px;line-height:1}
+.fm-on .fm-hb-in .fm-hb-is svg{max-width:none;max-height:none;display:block;width:100%;height:100%}
