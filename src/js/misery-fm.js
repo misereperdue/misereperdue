@@ -291,7 +291,7 @@
     return n && n.getClientRects().length ? n : null;
   }
   function deco() {
-    if (morph || document.querySelector(".is-profile-bar,.is-clipboard-bar")) return;
+    if (morph || document.querySelector(".is-profile-bar")) return;
     var bar = live() ? topBar() : null;
     if (hb && hb !== bar) undeco(hb);
     if (!bar) return;
@@ -352,7 +352,7 @@
     if (hb === bar) { hb = null; clearInterval(phT); phT = 0; }
   }
   function barTap(e) {
-    if (!live() || (e.currentTarget.classList.contains("is-profile-bar")||e.currentTarget.classList.contains("is-clipboard-bar"))) return;
+    if (!live() || (e.currentTarget.classList.contains("is-profile-bar"))) return;
     var bar = e.currentTarget;
     if (e.target.closest(".chat-me")) return; // avatar taps always reach the profile bar
     if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
