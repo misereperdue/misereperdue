@@ -149,7 +149,7 @@
   document.addEventListener("visibilitychange", function () {
     clearTimeout(hideT);
     if (document.hidden) hideT = setTimeout(function () { if (document.hidden && ws && !on) ws.close(); }, 6e4);
-    else { connect(); refresh(); }
+    else { connect(); refresh(); vizStart(); }
   });
   function getMe() {
     if (meP) return meP;
@@ -526,14 +526,15 @@
     var cv = sheet && q(".fm-viz", sheet);
     if (!cv || !cv.isConnected) return;
     var dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight, N = 28;
-    if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    if (!W || !H) { if(!document.hidden)vizRaf=requestAnimationFrame(viz);return; }
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     var g = cv.getContext("2d"), c = calc(), t = performance.now() / 1e3, lv = [], src = "idle";
     if (on && c && !c.paused && actx && actx._an && actx.state === "running") {
       var fd = new Uint8Array(actx._an.frequencyBinCount);
       actx._an.getByteFrequencyData(fd);
       for (var i = 0; i < N; i++) { var a0 = Math.floor(Math.pow(i / N, 1.6) * (fd.length - 2)), a1 = Math.max(a0 + 1, Math.floor(Math.pow((i + 1) / N, 1.6) * (fd.length - 2))), sm = 0; for (var j = a0; j < a1; j++) sm += fd[j]; lv.push(sm / (a1 - a0) / 255); }
       src = "analyser";
-    } else if (c && !c.paused && waves[c.tr.id] && waves[c.tr.id].length) {
+    } else if (c && !c.paused && waves[c.tr.id] instanceof Uint8Array && waves[c.tr.id].length) {
       var wv = waves[c.tr.id], pt = c.t * 10, k0 = Math.min(wv.length - 1, Math.floor(pt)), amp = wv[k0] / 255;
       for (var b = 0; b < N; b++) { var wob = 0.55 + 0.45 * Math.sin(b * 1.9 + t * 7.3 + Math.sin(t * 2.1 + b)), tilt = 1 - Math.abs(b - N * 0.35) / N; lv.push(Math.max(0.04, amp * wob * (0.6 + 0.6 * tilt))); }
       src = on ? "map" : "map-idle";
@@ -544,6 +545,7 @@
     var en = 0;
     for (var m = 0; m < N; m++) en += Math.min(1, lv[m]);
     en = src === "idle" ? (c && !c.paused ? 0.3 : 0.12) : Math.min(1, en / N * 1.6);
+    if(!Number.isFinite(vizE))vizE=0;
     vizE += (en - vizE) * (RM.matches ? 1 : 0.06);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, W, H);
