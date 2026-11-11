@@ -967,6 +967,10 @@
     var y = q('[data-c="1"]', cf);
     y && y.focus();
   }
+  function goLiveBurst(button){
+    if(RM.matches||!button||button.disabled)return;var rect=button.getBoundingClientRect(),burst=document.createElement('div');burst.className='fm-live-burst';burst.setAttribute('aria-hidden','true');burst.style.left=(rect.left+rect.width/2)+'px';burst.style.top=(rect.top+rect.height/2)+'px';
+    for(var i=0;i<12;i++){var ray=document.createElement('i');ray.className='fm-live-ray';ray.style.setProperty('--ray-angle',(i*30)+'deg');ray.style.setProperty('--ray-length',(i%2?72:104)+'px');burst.appendChild(ray);}var ring=document.createElement('i');ring.className='fm-live-ring';burst.appendChild(ring);document.body.appendChild(burst);button.animate&&button.animate([{transform:'scale(.92)'},{transform:'scale(1.09)'},{transform:'scale(1)'}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});setTimeout(function(){burst.remove();},900);
+  }
   function onAct(e) {
     var b = e.target.closest("[data-a]");
     if (!b || b.disabled) return;
@@ -984,7 +988,7 @@
     else if (a === "restart" || a === "skip" || a === "pause" || a === "resume") ctl({ action: a });
     else if (a === "shuffle") ctl({ action: "shuffle", on: !S.shuffle });
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
-    else if (a === "golive") ctl({ action: "live" }); // dc t536u: no confirmation, act immediately
+    else if (a === "golive") {if(owner())goLiveBurst(b);ctl({ action: "live" });} // dc t536u: no confirmation, act immediately
     else if (a === "stop") ctl({ action: "stop" });
     else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else beginAdd(); }
     else if (a === "applelookup") matchApple();
