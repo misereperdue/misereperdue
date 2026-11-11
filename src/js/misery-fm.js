@@ -51,6 +51,7 @@
   }
   function sub(t) { return [t.artist, t.album, t.year].filter(Boolean).map(esc).join(" · "); }
   var ICO = {
+    queued: '<path d="M3 6h13M3 11h9M3 16h5M12 17l3 3 6-7"/>',
     play: '<path d="M18.8906 12.846C18.5371 14.189 16.8667 15.138 13.5257 17.0361C10.296 18.8709 8.6812 19.7884 7.37983 19.4196C6.8418 19.2671 6.35159 18.9776 5.95624 18.5787C5 17.6139 5 15.7426 5 12C5 8.2574 5 6.3861 5.95624 5.42132C6.35159 5.02245 6.8418 4.73288 7.37983 4.58042C8.6812 4.21165 10.296 5.12907 13.5257 6.96393C16.8667 8.86197 18.5371 9.811 18.8906 11.154C19.0365 11.7084 19.0365 12.2916 18.8906 12.846Z" fill="currentColor" stroke-width="1.5"/>',
     pause: '<path d="M4 7C4 5.58579 4 4.87868 4.43934 4.43934C4.87868 4 5.58579 4 7 4C8.41421 4 9.12132 4 9.56066 4.43934C10 4.87868 10 5.58579 10 7V17C10 18.4142 10 19.1213 9.56066 19.5607C9.12132 20 8.41421 20 7 20C5.58579 20 4.87868 20 4.43934 19.5607C4 19.1213 4 18.4142 4 17V7Z"/><path d="M14 7C14 5.58579 14 4.87868 14.4393 4.43934C14.8787 4 15.5858 4 17 4C18.4142 4 19.1213 4 19.5607 4.43934C20 4.87868 20 5.58579 20 7V17C20 18.4142 20 19.1213 19.5607 19.5607C19.1213 20 18.4142 20 17 20C15.5858 20 14.8787 20 14.4393 19.5607C14 19.1213 14 18.4142 14 17V7Z"/>',
     vol: '<path d="M14 14.8135V9.18646C14 6.04126 14 4.46866 13.0747 4.0773C12.1494 3.68593 11.0603 4.79793 8.88232 7.02192C7.75439 8.17365 7.11085 8.42869 5.50604 8.42869C4.10257 8.42869 3.40084 8.42869 2.89675 8.77262C1.85035 9.48655 2.00852 10.882 2.00852 12C2.00852 13.118 1.85035 14.5134 2.89675 15.2274C3.40084 15.5713 4.10257 15.5713 5.50604 15.5713C7.11085 15.5713 7.75439 15.8264 8.88232 16.9781C11.0603 19.2021 12.1494 20.3141 13.0747 19.9227C14 19.5313 14 17.9587 14 14.8135Z"/><path d="M17 9C17.6254 9.81968 18 10.8634 18 12C18 13.1366 17.6254 14.1803 17 15"/><path d="M20 7C21.2508 8.36613 22 10.1057 22 12C22 13.8943 21.2508 15.6339 20 17"/>',
@@ -650,9 +651,9 @@
     h += '<h3 class="fm-h">Library · ' + L.length + (L.length === 1 ? " song" : " songs") + " · " + fmt(tot) + '<small>Drag to reorder</small></h3><ol class="fm-list fm-q">';
     h += L.map(function (t, i) {
       var cur = c && c.i === i, qn = Q.indexOf(t.id);
-      return li(t, (qn >= 0 ? '<span class="fm-chip fm-chip-q">Next' + (qn ? " " + (qn + 1) : "") + "</span>" : "") + '<span class="fm-dur">' + fmt(t.dur) + "</span>" +
+      return li(t, '<span class="fm-dur">' + fmt(t.dur) + "</span>" +
         '<button type="button" class="fm-ib" data-a="playnow" aria-label="Play ' + esc(t.title) + ' now">' + ico(cur ? "restart" : "play") + "</button>" +
-        '<button type="button" class="fm-ib" data-a="playnext" aria-label="Play ' + esc(t.title) + ' next">' + ico("next1") + "</button>" +
+        '<button type="button" class="fm-ib'+(qn>=0?' is-queued':'')+'" data-a="playnext" aria-label="'+(qn>=0?'Queued '+esc(t.title):'Add '+esc(t.title)+' to queue')+'"'+(qn>=0?' disabled':'')+'>' + ico(qn>=0?'queued':'next1') + "</button>" +
         '<button type="button" class="fm-ib" data-a="edit" aria-label="Edit ' + esc(t.title) + '">' + ico("more") + "</button>", cur ? "is-cur" : "")
         .replace('<li class="fm-li', '<li class="fm-li fm-qi').replace(/(<li [^>]*>)/, '$1<button type="button" class="fm-drag" aria-label="Reorder ' + esc(t.title) + ' (arrow keys)">' + ico("grip") + "</button>");
     }).join("");
@@ -933,8 +934,16 @@
     y && y.focus();
   }
   function goLiveBurst(button){
-    if(RM.matches||!button||button.disabled)return;var rect=button.getBoundingClientRect(),burst=document.createElement('div');burst.className='fm-live-burst';burst.setAttribute('aria-hidden','true');burst.style.left=(rect.left+rect.width/2)+'px';burst.style.top=(rect.top+rect.height/2)+'px';
-    for(var i=0;i<12;i++){var ray=document.createElement('i');ray.className='fm-live-ray';ray.style.setProperty('--ray-angle',(i*30)+'deg');ray.style.setProperty('--ray-length',(i%2?72:104)+'px');burst.appendChild(ray);}var ring=document.createElement('i');ring.className='fm-live-ring';burst.appendChild(ring);document.body.appendChild(burst);button.animate&&button.animate([{transform:'scale(.92)'},{transform:'scale(1.09)'},{transform:'scale(1)'}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});setTimeout(function(){burst.remove();},900);
+    if(RM.matches||!button||button.disabled)return;
+    var rect=button.getBoundingClientRect(),burst=document.createElement('div'),w=innerWidth,h=innerHeight,length=Math.hypot(w,h)*1.4;
+    burst.className='fm-live-burst';burst.setAttribute('aria-hidden','true');
+    for(var i=0;i<12;i++){
+      var ray=document.createElement('i'),x=i<4?rect.left+rect.width/2:i%2?w:0,y=i<4?rect.top+rect.height/2:h*(.2+(i%4)*.23),angle=Math.atan2(h/2-y,w/2-x)*180/Math.PI;
+      ray.className='fm-live-ray';ray.style.left=x+'px';ray.style.top=y+'px';ray.style.setProperty('--ray-length',length+'px');ray.style.setProperty('--ray-from',(angle-38)+'deg');ray.style.setProperty('--ray-to',(angle+38)+'deg');ray.style.setProperty('--ray-hue',[325,185,130,265][i%4]);ray.style.setProperty('--ray-delay',(i%4)*90+'ms');burst.appendChild(ray);
+    }
+    document.querySelectorAll('.fm-live-burst').forEach(function(e){e.remove();});document.body.appendChild(burst);
+    button.animate&&button.animate([{transform:'scale(.92)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});
+    setTimeout(function(){burst.remove();},2400);
   }
   function onAct(e) {
     var b = e.target.closest("[data-a]");
@@ -960,7 +969,7 @@
     else if (a === "addaudio") chooseAddAudio();
     else if (a === "addcancel") {cancelLookup();pickMeta=null;addDraft=null;var url=q('.fm-apple-url',sheet);url&&url.blur();renderSheet();}
     else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
-    else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
+    else if (a === "playnext") { b.disabled=true; closeEdit(); ctl({ action: "next", id: id }).then(function (r) { if((!r||!r.ok)&&b.isConnected)b.disabled=false; }); }
     else if (a === "edit") openEdit(id);
     else if (a === "sched") {
       var si = q(".fm-sched-in", sheet), ts = si && si.value ? new Date(si.value).getTime() : 0;
@@ -1027,7 +1036,7 @@
     if (!t) return closeEdit();
     var keep = {};
     edit.querySelectorAll("[name]").forEach(function (i) { keep[i.name] = i.type === "checkbox" ? i.checked : i.value; });
-    var v = function (k) { return k in keep ? keep[k] : t[k]; };
+    var v = function (k) { return k in keep ? keep[k] : t[k]; }, queued=(S.q||[]).indexOf(t.id)>=0;
     edit.innerHTML = '<div class="chat-pbig-hd fm-ed-hd"><button type="button" class="chat-pbig-btn fm-back" data-a="edclose" aria-label="Back"><svg ' + SV + '><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>Edit song</b><i class="fm-ed-sp" aria-hidden="true"></i></div>' +
       '<div class="fm-ed-body"><div class="fm-ed-art">' + art(t, "fm-ed-cover") + '<div class="fm-ed-artb"><b class="fm-ed-artt">Cover</b><div class="fm-ed-cb"><button type="button" class="fm-btn" data-a="cover">' + (t.art ? "Replace" : "Upload") + "</button>" +
       (t.art ? '<button type="button" class="fm-btn fm-ed-rm" data-a="coverdel">Remove</button>' : "") + '</div><small class="fm-hint">Square JPEG or PNG works best</small></div></div><div class="fm-ed-fs">' +
@@ -1036,7 +1045,7 @@
       '<label class="fm-f"><span>Track notes</span><textarea name="notes" maxlength="280" rows="2" placeholder="Shown to listeners under the song">' + esc(v("notes") || "") + "</textarea></label>" +
       '<label class="fm-sw fm-ed-sw"><span class="fm-ed-swl"><span>Explicit <span class="fm-e" aria-hidden="true">E</span></span><small>Shows the E badge to listeners</small></span><input type="checkbox" name="explicit"' + (v("explicit") ? " checked" : "") + '><span class="fm-sw-k" aria-hidden="true"></span></label></div>' +
       '<div class="fm-row fm-ed-save"><button type="button" class="fm-btn fm-primary fm-wide" data-a="edsave">Save</button></div>' +
-      '<div class="fm-row fm-ed-more" data-id="' + esc(t.id) + '"><button type="button" class="fm-btn" data-a="playnow">' + ico("play") + 'Play now</button><button type="button" class="fm-btn" data-a="playnext">' + ico("next1") + 'Play next</button><button type="button" class="fm-btn fm-danger" data-a="remove">Remove</button></div></div>';
+      '<div class="fm-row fm-ed-more" data-id="' + esc(t.id) + '"><button type="button" class="fm-btn" data-a="playnow">' + ico("play") + 'Play now</button><button type="button" class="fm-btn'+(queued?' is-queued':'')+'" data-a="playnext"'+(queued?' disabled':'')+'>' + ico(queued?"queued":"next1") + (queued?'Added to queue':'Add to queue')+'</button><button type="button" class="fm-btn fm-danger" data-a="remove">Remove</button></div></div>';
   }
   function saveEdit() {
     var b = { action: "edit", id: edit._id };
@@ -1213,14 +1222,14 @@
   }
   function within(pr, ms, v) { return Promise.race([pr, new Promise(function (r) { setTimeout(function () { r(v); }, ms); })]); }
   var OKT = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mpeg3": 1, "audio/x-mpeg": 1, "audio/x-mpeg-3": 1, "audio/x-mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 }, EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", mp4: "audio/mp4" };
-  var upBusy = !1, batchN = 0;
+  var upBusy = !1;
   function addFiles(files, metadata) {
     [].slice.call(files || []).forEach(function (f) { ups.unshift({ f: f, meta: metadata?Object.assign({},metadata):null, name: f.name, st: "Waiting…", p: 0 }); });
     ups = ups.slice(0, 30);
     renderSheet();
     pump();
   }
-  function upPaint() { if (sheet && tab === "queue" && !drag) { var box = q(".fm-ups", sheet); box ? (box.outerHTML = queueHTML().match(/<ul class="fm-ups">[\s\S]*?<\/ul>/)[0]) : renderSheet(); } }
+  function upPaint() { if (sheet && tab === "queue" && !drag) { var box=q(".fm-ups",sheet),html=queueHTML().match(/<ul class="fm-ups">[\s\S]*?<\/ul>/);if(box){if(html)box.outerHTML=html[0];else box.remove();}else if(html)renderSheet(); } }
   function pump() {
     if (upBusy) return;
     var u = ups.filter(function (x) { return x.f && !x.done && !x.err && !x.run; }).pop();
@@ -1230,9 +1239,8 @@
       // iOS Files often reports "" or audio/mpeg3 for MP3s: trust the extension, then send a type the Worker accepts
       type = EXT[ext] || (OKT[ft] ? (/mp4|m4a/.test(ft) ? "audio/mp4" : /aac/.test(ft) ? "audio/aac" : "audio/mpeg") : "");
     var fin = function (st, err) {
-      u.st = st; u.err = !!err; u.done = !err; u.f = null; upBusy = !1; upPaint();
+      u.st = st; u.err = !!err; u.done = !err; u.f = null; u.meta = null; if(!err)ups=ups.filter(function(x){return x!==u;}); upBusy = !1; upPaint();
       if (err) toast((u.name || "Song") + ": " + st);
-      else { batchN++; if (!ups.some(function (x) { return x.f && !x.done && !x.err; })) { toast(batchN > 1 ? batchN + " songs added to the queue" : u.name + " added to the queue"); batchN = 0; } }
       pump();
     };
     if (!type) return fin("MP3, M4A or AAC only (this file is " + (ext && ext !== String(f.name) ? "." + ext : f.type || "an unknown type") + ")", 1);

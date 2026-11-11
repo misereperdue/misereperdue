@@ -148,7 +148,7 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  const hd=await p.locator('.fm-q li').nth(3).locator('.fm-drag').boundingBox(),row0=await p.locator('.fm-q li').nth(0).boundingBox();
  await p.mouse.move(hd.x+hd.width/2,hd.y+hd.height/2);await p.mouse.down();for(let k=1;k<=8;k++)await p.mouse.move(hd.x+hd.width/2,hd.y+hd.height/2-(hd.y-row0.y)*k/8-4);await p.mouse.up();await p.waitForTimeout(600);
  st=await srv.r.fmGet();assert.equal(st.list[0].id,D,'drag to top');assert.equal(await p.locator('.fm-q li').first().getAttribute('data-id'),D);
- await p.locator(`.fm-q li[data-id="${C}"] [data-a="playnext"]`).tap();await p.waitForTimeout(400);assert.equal((await srv.r.fmGet()).q[0],C);assert.equal(await p.locator(`.fm-q li[data-id="${C}"] .fm-chip-q`).count(),1);
+ await p.locator(`.fm-q li[data-id="${C}"] [data-a="playnext"]`).tap();await p.waitForTimeout(400);assert.equal((await srv.r.fmGet()).q[0],C);assert.equal(await p.locator(`.fm-q li[data-id="${C}"] .is-queued`).count(),1);assert.equal(await p.locator(".fm-chip-q").count(),0);
  await p.locator(`.fm-q li[data-id="${B}"] [data-a="edit"]`).tap();await p.waitForSelector('.fm-edit');await p.waitForTimeout(400);
  assert.equal(await p.inputValue('.fm-edit [name="title"]'),'Pink + White');assert.equal(await p.inputValue('.fm-edit [name="album"]'),'Blonde');
  await p.fill('.fm-edit [name="title"]','Pink + White (Live)');await p.fill('.fm-edit [name="genre"]','Soul');await p.fill('.fm-edit [name="notes"]','Recorded at the Blonded session.');await p.locator('.fm-edit .fm-sw').tap();
@@ -166,7 +166,7 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await p.evaluate(()=>{window.__A=window.Audio;window.Audio=function(){return {set src(v){},preload:''};};});
  const n0=(await srv.r.fmGet()).list.length;
  await pick(p,srv,'.fm-root [data-a="add"]',{name:'Real Artist - Real Song.mp3',mimeType:'',buffer:FX('fm-real.mp3')});
- await p.waitForSelector('.fm-ups li');await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+1,{timeout:25000});await toastIs(p,/Real Song · Real Artist added to the queue/);
+ await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+1,{timeout:25000});await p.locator('.fm-ups').waitFor({state:'detached'});
  let L=(await srv.r.fmGet()).list;assert.equal(L.length,n0+1,'mp3 with empty type added');let rt=L.at(-1);
  assert.deepEqual([rt.title,rt.artist,rt.type],['Real Song','Real Artist','audio/mpeg'],'empty-type mp3 '+JSON.stringify(rt));assert(Math.abs(rt.dur-4)<0.6,'decode fallback duration '+rt.dur);
  assert.equal(srv.objs.get('t/'+rt.id).ct,'audio/mpeg');assert(srv.objs.get('t/'+rt.id).b.length===FX('fm-real.mp3').length,'exact bytes stored');
@@ -174,7 +174,7 @@ async function openPanel(p,h){await p.evaluate(h=>{location.hash='#'+h;},h);awai
  await p.evaluate(()=>{window.Audio=window.__A;});
  // M4A as iOS reports it (audio/x-m4a) and an odd MP3 type (audio/mpeg3): both normalised for the Worker
  await pick(p,srv,'.fm-root [data-a="add"]',[{name:'memo.m4a',mimeType:'audio/x-m4a',buffer:FX('fm-real.m4a')},{name:'odd.mp3',mimeType:'audio/mpeg3',buffer:FX('fm-real.mp3')}]);
- await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+3,{timeout:20000});await toastIs(p,/2 songs added to the queue/);
+ await p.waitForFunction(n=>MPFM.state().list.length>=n,n0+3,{timeout:20000});await p.locator('.fm-ups').waitFor({state:'detached'});
  L=(await srv.r.fmGet()).list;assert.deepEqual(L.slice(-2).map(t=>t.type).sort(),['audio/mp4','audio/mpeg'],'normalised types');
  // a WAV is refused with a visible reason, and a lost owner session says so
  await p.evaluate(()=>{const t=document.querySelector('.fm-toast');t&&t.classList.remove('is-on');});await pick(p,srv,'.fm-root [data-a="add"]',{name:'voice.wav',mimeType:'',buffer:FX('fm-real.wav')});await toastIs(p,/MP3, M4A or AAC only/);
