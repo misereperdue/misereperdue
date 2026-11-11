@@ -36,9 +36,9 @@
   function q(sel, root) { return (root || document).querySelector(sel); }
   function countdown(){
     if(!S||live()||!S.sched)return '';
-    var seconds=Math.max(0,Math.ceil((S.sched-now())/1000));if(!seconds)return 'Going live…';
-    var units=seconds>=86400?[Math.floor(seconds/86400),'day']:seconds>=3600?[Math.floor(seconds/3600),'hour']:seconds>=60?[Math.floor(seconds/60),'minute']:[seconds,'second'];
-    return units[0]+' '+units[1]+(units[0]===1?'':'s')+' until live';
+    var seconds=Math.max(0,Math.ceil((S.sched-now())/1000));if(!seconds)return '0s';
+    var units=seconds>=86400?[Math.floor(seconds/86400),'d']:seconds>=3600?[Math.floor(seconds/3600),'h']:seconds>=60?[Math.floor(seconds/60),'m']:[seconds,'s'];
+    return units[0]+units[1];
   }
   function menuStatus(){return {live:live(),scheduled:!!countdown(),text:live()?'LIVE':countdown()};}
   function live() { return !!(S && S.live && S.list && S.list.length); }
