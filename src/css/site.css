@@ -13169,3 +13169,6 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-clipboard-song.is-success .mp-clipboard-mark{color:var(--ink)}
 @keyframes mpClipEnter{from{opacity:0;transform:translateY(4px);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.is-clipboard-bar>.mp-clipboard-song,.fm-on.is-clipboard-bar>.mp-clipboard-song{animation:none}.mp-clipboard-mark{transition:none}}
+
+.mp-clipboard-native{white-space:nowrap;overflow:hidden;caret-color:transparent;-webkit-user-select:text;user-select:text;cursor:text;outline-offset:3px;min-height:17px}
+.mp-clipboard-song.is-native-paste .mp-clipboard-status{max-height:26px;white-space:normal;line-height:1.3}
