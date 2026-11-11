@@ -14,7 +14,7 @@ const COVER=fs.readFileSync(ROOT+'/tools/fixtures/fm-cover.jpg'),COVER2=fs.readF
 const FX=n=>fs.readFileSync(ROOT+'/tools/fixtures/'+n);
 // iOS: the page is hidden while the Files picker is open and the sheet re-renders on return.
 // Open the real file chooser, force a state broadcast + re-render, THEN deliver the files.
-async function pick(p,srv,tapSel,files){const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.locator(tapSel).tap()]);
+async function pick(p,srv,tapSel,files){if(tapSel.includes('[data-a="add"]')){await p.locator(tapSel).tap();tapSel='.fm-root [data-a="addaudio"]';}const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.locator(tapSel).tap()]);
  await p.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'hidden'});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>'visible'});document.dispatchEvent(new Event('visibilitychange'));});
  srv.r.fmCast({t:'fm',fm:srv.r.fmPublic(await srv.r.fmGet())});await p.waitForTimeout(250);await fc.setFiles(files);}
 const toastIs=(p,re)=>p.waitForFunction(src=>{const t=document.querySelector('.fm-toast.is-on');return t&&new RegExp(src).test(t.textContent);},re.source,{timeout:20000}).catch(async e=>{console.log('TOAST?',await p.evaluate(()=>({t:(document.querySelector('.fm-toast')||{}).textContent,ups:[...document.querySelectorAll('.fm-ups li')].map(l=>l.textContent)})));throw e;});

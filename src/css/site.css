@@ -13060,3 +13060,37 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-settings-photo>.chat-avatar-wrap .chat-badge,.mp-settings-photo>.chat-avatar-wrap .chat-verified,.mp-settings-photo>.chat-avatar-wrap .chat-badge-kitty{width:18px!important;height:18px!important;font-size:16px!important;right:-3px!important;bottom:-3px!important;top:auto!important;left:auto!important}
 .mp-settings-photo>.chat-avatar-wrap .chat-badge-mask{width:26px!important;height:13px!important;right:-4px!important;bottom:-2px!important;top:auto!important;left:auto!important}
 .mp-badge-picker[data-mode="active"] .mp-badge-grid{grid-template-columns:repeat(auto-fit,minmax(60px,1fr))}
+/* #87: aligned controls, centered profile text, icon-only badges. */
+.chat-plus-menu .chat-pmenu-row[data-act="music"]>.chat-music-menu-icon{border-radius:50%;background:linear-gradient(145deg,#ff6685,#ec2450)}
+.mp-profile-summary-title{justify-content:center}
+.mp-profile-summary-title strong{flex:0 1 auto;max-width:100%;text-align:center}
+.mp-profile-summary-copy{text-align:center;align-items:stretch}
+.mp-profile-summary-copy small{text-align:center}
+.mp-profile-summary-score,.mp-profile-summary-chevron{box-sizing:border-box;width:30px;height:30px;min-width:30px;min-height:30px;padding:0;flex:none;align-self:center;border-radius:50%}
+.mp-profile-summary-score{display:flex;flex-direction:column;gap:0;line-height:10px;font-size:8px}
+.mp-profile-summary-score svg{width:10px;height:10px}
+.mp-profile-summary-score>span{display:block;max-width:28px;white-space:nowrap;line-height:10px}
+.mp-profile-bar .mp-pb-stats>.chat-badge-pill{height:26px;min-height:26px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 10px;margin:0;transform:none;line-height:1;font-size:11px;vertical-align:middle}
+.mp-profile-bar .mp-pb-stats>.chat-badge-pill .easyui-anim-num{font-size:11px;line-height:1}
+.mp-profile-bar .mp-pb-stats>.chat-badge-pill .chat-verified{width:16px;height:16px;margin:0}
+.mp-profile-bar .mp-pb-stats>.chat-badge-pill svg{width:16px;height:16px;display:block;flex:none}
+.mp-profile-bar .chat-sheet>.chat-logout{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;padding:9px 18px;border:0;border-radius:999px;background:var(--fill);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent);color:#df596a}
+.mp-badge-choice{display:grid;place-items:center;min-height:48px;padding:10px;gap:0}
+.mp-badge-picker[data-mode="grant"] .mp-badge-choice{min-height:48px;padding:10px}
+.mp-badge-check{position:absolute;right:4px;top:4px;display:grid;place-items:center;width:11px;height:11px;border-radius:50%;background:var(--accent);color:var(--ink)}
+.mp-badge-check svg{display:block;width:9px;height:9px;stroke-width:2}
+.fm-add-song{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:18px;background:var(--fill);border:1px solid color-mix(in srgb,var(--ink) 7%,transparent);margin-bottom:12px}
+.fm-add-hd{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fm-add-hd b{font-size:14px}
+.fm-add-label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)}
+.fm-add-label input{width:100%;min-width:0;box-sizing:border-box;padding:10px 11px;border:1px solid var(--stroke);border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-size:16px}
+.fm-add-song .fm-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:36px;padding:8px 12px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.fm-add-song .fm-btn:disabled{opacity:.45;cursor:default}
+.fm-add-audio svg{width:16px;height:16px;flex:none}
+.fm-match{display:flex;align-items:center;gap:10px;min-width:0;padding:8px;border-radius:12px;background:var(--fill)}
+.fm-match img{width:46px;height:46px;object-fit:cover;border-radius:9px;flex:none}
+.fm-match>span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fm-match strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-match small{font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-add-status,.fm-add-hint{font-size:10.5px;line-height:1.45;color:var(--muted);margin:0;overflow-wrap:anywhere}
+.fm-add-status:empty{display:none}

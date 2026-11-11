@@ -650,9 +650,35 @@
     }
     return h;
   }
+  var addDraft=null, lookupEpoch=0, lookupAbort=null, pickMeta=null;
+  function cancelLookup(){lookupEpoch++;if(lookupAbort)lookupAbort.abort();lookupAbort=null;}
+  function beginAdd(){if(!owner())return;cancelLookup();pickMeta=null;addDraft={url:'',meta:null,status:'',busy:false};tab='queue';renderSheet();}
+  function addFormHTML(){
+    if(!addDraft)return '';
+    var d=addDraft,m=d.meta;
+    return '<section class="fm-add-song" aria-label="Add a song"><div class="fm-add-hd"><b>Add a song</b><button type="button" class="fm-ib" data-a="addcancel" aria-label="Cancel adding song">'+ico('x')+'</button></div><label class="fm-add-label">Apple Music song URL<input class="fm-apple-url" type="url" inputmode="url" maxlength="2048" autocomplete="off" placeholder="https://music.apple.com/…" value="'+esc(d.url)+'"></label><button type="button" class="fm-btn" data-a="applelookup"'+(d.busy?' disabled':'')+'>'+ (d.busy?'Finding song…':'Match song')+'</button>'+
+      (m?'<div class="fm-match">'+(m.art?'<img src="'+esc(m.art)+'" alt="">':'')+'<span><strong>'+esc(m.title)+'</strong><small>'+esc(m.artist)+'</small><small>'+esc(m.album)+'</small></span></div>':'')+
+      '<p class="fm-add-status" role="status" aria-live="polite">'+esc(d.status)+'</p><button type="button" class="fm-btn fm-add-audio" data-a="addaudio"'+(d.busy||(d.url.trim()&&!m)?' disabled':'')+'>'+ico('plus')+'Choose audio file'+(m?' & add song':'')+'</button><p class="fm-add-hint">'+(m?'Attach your audio file. The matched metadata and artwork will be applied.':'Match an Apple Music link, or choose your own audio file directly.')+' MP3, M4A, AAC · 25 MB.</p></section>';
+  }
+  function appleSongRef(value){
+    try{var u=new URL(value.trim());if(u.protocol!=='https:'||u.hostname!=='music.apple.com'||u.port||u.username||u.password)return null;var id=u.searchParams.get('i')||(/\/song\/(?:[^/]+\/)?(\d+)\/?$/.exec(u.pathname)||[])[1];if(!/^\d{5,20}$/.test(id||''))return null;var country=(/^\/([a-z]{2})\//i.exec(u.pathname)||[])[1]||'us';return{id:id,country:country.toLowerCase()};}catch(e){return null;}
+  }
+  function catalogArt(value){try{var u=new URL(value);return u.protocol==='https:'&&/(^|\.)mzstatic\.com$/.test(u.hostname)?u.href.replace(/\/\d+x\d+bb\./,'/600x600bb.'):'';}catch(e){return '';}}
+  async function matchApple(){
+    if(!owner()||!addDraft)return;var input=q('.fm-apple-url',sheet);if(input){addDraft.url=input.value;input.blur();}
+    cancelLookup();var epoch=lookupEpoch,d=addDraft,ref=appleSongRef(d.url);d.meta=null;
+    if(!ref){d.status='Paste an Apple Music song link (album links need a selected song).';renderSheet();return;}
+    d.busy=true;d.status='';renderSheet();var ac=new AbortController();lookupAbort=ac;var timer=setTimeout(function(){ac.abort();},10000);
+    try{var response=await fetch('https://itunes.apple.com/lookup?id='+ref.id+'&entity=song&country='+ref.country,{signal:ac.signal});if(!response.ok)throw Error('Catalog unavailable. Try again.');var data=await response.json();if(epoch!==lookupEpoch||addDraft!==d)return;var track=(data.results||[]).find(function(t){return String(t.trackId)===ref.id&&t.trackName&&t.artistName;});if(!track)throw Error('Song not found in this storefront. Try another Apple Music song link.');
+      d.meta={title:String(track.trackName).slice(0,120),artist:String(track.artistName).slice(0,120),album:String(track.collectionName||'').slice(0,120),year:String(track.releaseDate||'').slice(0,4),genre:String(track.primaryGenreName||'').slice(0,120),explicit:track.trackExplicitness==='explicit',dur:(+track.trackTimeMillis||0)/1000,art:catalogArt(track.artworkUrl100)};d.status='Song matched. Choose your audio file to add it.';
+    }catch(e){if(epoch===lookupEpoch&&addDraft===d)d.status=e.name==='AbortError'?'Lookup timed out. Try again.':e.message||'Could not match this song. Try again.';}
+    finally{clearTimeout(timer);if(epoch===lookupEpoch&&addDraft===d){d.busy=false;lookupAbort=null;renderSheet();}}
+  }
+  function chooseAddAudio(){if(!owner()||!addDraft||addDraft.busy||(addDraft.url.trim()&&!addDraft.meta))return;pickMeta=addDraft.meta?Object.assign({},addDraft.meta):null;var file=picker('audio');file.multiple=!pickMeta;file.click();}
+  async function matchedCover(url){var ac=new AbortController(),timer=setTimeout(function(){ac.abort();},10000);try{var r=await fetch(url,{signal:ac.signal});return r.ok?await r.blob():null;}catch(e){return null;}finally{clearTimeout(timer);}}
   function queueHTML() {
     var c = calc(), L = S.list, Q = S.q || [];
-    var h = '<div class="fm-upl"><button type="button" class="fm-add" data-a="add">' + ico("plus") + "<span>Add songs</span><small>MP3, M4A, AAC · 25 MB</small></button>" +
+    var h = '<div class="fm-upl">'+addFormHTML()+(addDraft?'':'<button type="button" class="fm-add" data-a="add">' + ico("plus") + "<span>Add songs</span><small>Apple Music link or audio file</small></button>") +
       (ups.length ? '<ul class="fm-ups">' + ups.map(function (u) { return '<li class="' + (u.err ? "is-err" : u.done ? "is-done" : "") + '"><span><b>' + esc(u.name) + "</b><small>" + esc(u.st) + '</small></span><span class="fm-upbar"><i style="transform:scaleX(' + (u.p || 0).toFixed(3) + ')"></i></span></li>'; }).join("") + "</ul>" : "") + "</div>";
     if (!L.length) return h + '<p class="fm-empty">No songs yet.</p>';
     var tot = L.reduce(function (s, t) { return s + durOf(t); }, 0);
@@ -795,6 +821,7 @@
   }
   function wire(el) {
     el.addEventListener("click", onAct);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('fm-apple-url')){e.preventDefault();matchApple();}});
     el.addEventListener("input", onInput);
     el.addEventListener("change", onChange);
     el.addEventListener("focusout", function () { setTimeout(function () { dirty && renderSheet(); }, 0); });
@@ -829,12 +856,14 @@
     sheet.style.setProperty("--fm-mh", Math.max(260, Math.min(540, (r ? r.top : vh) - 8 - top - 12)) + "px");
   }
   function unmount(m) {
+    cancelLookup();if(addDraft)addDraft.busy=false;
     if (sheet !== m) return;
     closeEdit(!0);
     sheet = null;
     window.removeEventListener("resize", fitMnt);
   }
   function closeSheet() {
+    cancelLookup();if(addDraft)addDraft.busy=false;
     if (!sheet) return;
     if (sheet._mnt) { var mo = sheet._mnt; unmount(sheet); mo.close && mo.close(); return; }
     var sh = sheet, back = sh._back;
@@ -957,7 +986,10 @@
     else if (a === "repeat") ctl({ action: "repeat", mode: { all: "one", one: "off", off: "all" }[S.repeat] || "all" });
     else if (a === "golive") ctl({ action: "live" }); // dc t536u: no confirmation, act immediately
     else if (a === "stop") ctl({ action: "stop" });
-    else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else picker("audio").click(); }
+    else if (a === "add") { if (!tok()) toast("Sign in again to add songs"); else beginAdd(); }
+    else if (a === "applelookup") matchApple();
+    else if (a === "addaudio") chooseAddAudio();
+    else if (a === "addcancel") {cancelLookup();pickMeta=null;addDraft=null;var url=q('.fm-apple-url',sheet);url&&url.blur();renderSheet();}
     else if (a === "playnow") { closeEdit(); ctl({ action: "play", id: id }); }
     else if (a === "playnext") { closeEdit(); ctl({ action: "next", id: id }).then(function (r) { r && r.ok && toast("Plays next"); }); }
     else if (a === "edit") openEdit(id);
@@ -979,6 +1011,7 @@
   }
   function onInput(e) {
     var a = e.target.getAttribute("data-a");
+    if(e.target.classList.contains('fm-apple-url')&&addDraft){cancelLookup();addDraft.url=e.target.value;addDraft.meta=null;addDraft.busy=false;addDraft.status='';var match=q('.fm-match',sheet);match&&match.remove();var status=q('.fm-add-status',sheet);status&&(status.textContent='');var audio=q('[data-a="addaudio"]',sheet);audio&&(audio.disabled=!!addDraft.url.trim());var lookup=q('[data-a="applelookup"]',sheet);lookup&&(lookup.disabled=false,lookup.textContent='Match song');return;}
     if (a === "vol") { vol = +e.target.value; try { localStorage.setItem("mp-fm-vol", vol); } catch (_) {} applyVol(); }
     else if (a === "xf") { var v = q(".fm-xf-v", sheet); v && (v.textContent = e.target.value + " s"); }
     else if (e.target.classList.contains("fm-scrub")) { e.target._busy = 1; var c = calc(); if (c) { q(".fm-el", sheet).textContent = fmt(+e.target.value); q(".fm-rem", sheet).textContent = "-" + fmt(c.d - e.target.value); } }
@@ -1203,7 +1236,7 @@
     i.addEventListener("change", function () {
       var fs = [].slice.call(i.files || []);
       i.value = "";
-      if (kind === "audio") { if (fs.length) { tab = "queue"; addFiles(fs); } }
+      if (kind === "audio") { if (fs.length) {var meta=pickMeta;pickMeta=null;cancelLookup();addDraft=null;tab = "queue";addFiles(meta?fs.slice(0,1):fs,meta); } }
       else if (fs[0] && pickFor) coverUpload(pickFor, fs[0]);
     });
     document.body.appendChild(i);
@@ -1212,8 +1245,8 @@
   function within(pr, ms, v) { return Promise.race([pr, new Promise(function (r) { setTimeout(function () { r(v); }, ms); })]); }
   var OKT = { "audio/mpeg": 1, "audio/mp3": 1, "audio/mpeg3": 1, "audio/x-mpeg": 1, "audio/x-mpeg-3": 1, "audio/x-mp3": 1, "audio/mp4": 1, "audio/x-m4a": 1, "audio/m4a": 1, "audio/aac": 1, "audio/x-aac": 1 }, EXT = { mp3: "audio/mpeg", m4a: "audio/mp4", aac: "audio/aac", mp4: "audio/mp4" };
   var upBusy = !1, batchN = 0;
-  function addFiles(files) {
-    [].slice.call(files || []).forEach(function (f) { ups.unshift({ f: f, name: f.name, st: "Waiting…", p: 0 }); });
+  function addFiles(files, metadata) {
+    [].slice.call(files || []).forEach(function (f) { ups.unshift({ f: f, meta: metadata?Object.assign({},metadata):null, name: f.name, st: "Waiting…", p: 0 }); });
     ups = ups.slice(0, 30);
     renderSheet();
     pump();
@@ -1253,6 +1286,7 @@
     }).then(function (dur) {
       var base = String(f.name || "Untitled").replace(/\.[^.]+$/, "").replace(/_/g, " ").trim() || "Untitled", sp = base.split(/\s+[-–—]\s+/);
       var meta = { title: tg.title || (sp.length > 1 ? sp.slice(1).join(" - ") : base), artist: tg.artist || (sp.length > 1 ? sp[0] : ""), album: tg.album || "", year: tg.year || "", genre: tg.genre || "", explicit: tg.explicit ? "1" : "", dur: Math.round((+dur || 0) * 1e3) / 1e3 };
+      if(u.meta){['title','artist','album','year','genre'].forEach(function(k){meta[k]=u.meta[k]||'';});meta.explicit=u.meta.explicit?'1':'';if(!meta.dur)meta.dur=u.meta.dur||0;}
       var qs = Object.keys(meta).filter(function (k) { return meta[k] !== "" && meta[k] != null; }).map(function (k) { return k + "=" + encodeURIComponent(String(meta[k]).slice(0, 120)); }).join("&");
       u.name = meta.title + (meta.artist ? " · " + meta.artist : "");
       u.st = "Uploading 0%"; upPaint();
@@ -1261,7 +1295,8 @@
       if (!r || !r.ok) return fin(upErr(r), 1);
       set(r.fm);
       var id = r.id, extra = [];
-      if (tg.pic) { u.st = "Adding cover…"; upPaint(); extra.push(within(square(tg.pic, 600), 15e3, null).then(function (b) { return b && xhr("/api/fm/art?id=" + id, b, b.type || "image/jpeg"); })); }
+      if(u.meta&&u.meta.art){u.st='Adding matched artwork…';upPaint();extra.push(matchedCover(u.meta.art).then(function(blob){return blob&&square(blob,600);}).then(function(blob){return blob&&xhr('/api/fm/art?id='+encodeURIComponent(id),blob,blob.type||'image/jpeg');}).catch(function(){return null;}));}
+      else if (tg.pic) { u.st = "Adding cover…"; upPaint(); extra.push(within(square(tg.pic, 600), 15e3, null).then(function (b) { return b && xhr("/api/fm/art?id=" + id, b, b.type || "image/jpeg"); })); }
       // loudness map for the iOS visualizer: decode after the upload, without copying; skipped for big files on iOS (memory)
       if (!an && !big) extra.push(within(analyse(raw), 25e3, null).then(function (a2) { an = a2; }));
       return Promise.all(extra).then(function (rs) {
@@ -1270,7 +1305,7 @@
       }).then(function (x) {
         x && x.ok && x.fm && set(x.fm);
         u.p = 1;
-        fin("Added" + (tg.pic ? " with cover" : "") + (tg.title ? " · tags read" : ""));
+        fin("Added"+(u.meta?" · Apple Music metadata":"") + (tg.pic ? " with cover" : "") + (tg.title ? " · tags read" : ""));
       });
     }).catch(function (e) { fin("Could not add: " + ((e && e.message) || "unreadable file"), 1); });
   }
