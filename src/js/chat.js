@@ -5462,7 +5462,7 @@
   function mpProfileMusicResolve(url,signal){return E('/api/profile/music?url='+encodeURIComponent(url),{signal:signal}).then(function(r){if(!r||!r.ok||!r.listening)throw Error(r&&r.error||'Music metadata unavailable. Try again.');return r;});}
   // Foreground clipboard suggestions: resolve/save only after an explicit tap.
   (function(){
-    var box,action,status,candidate=null,busy=false,checking=false,epoch=0,controller,lastRead=0,lastUser='',outsideDismissed=false,dismissed=new Set(),hostState,barObserver,frame=0,successTimer;
+    var box,action,status,pasteResolve=null,pasteOffered=false,candidate=null,busy=false,checking=false,epoch=0,controller,lastRead=0,lastUser='',outsideDismissed=false,dismissed=new Set(),hostState,barObserver,frame=0,successTimer;
     function songURL(value){
       try{if(typeof value!=='string'||value.length>8192)return null;var u=new URL(value.trim());if(u.protocol!=='https:'||u.port||u.username||u.password)return null;
         var p=u.pathname.split('/').filter(Boolean),name,key=u.href;
@@ -5496,14 +5496,14 @@
     }
     function dismiss(){
       if(!box)return;outsideDismissed=true;epoch++;if(candidate){if(dismissed.size>=100)dismissed.clear();dismissed.add(candidate.key);}
-      if(controller)controller.abort();controller=null;busy=false;remove();
+      if(controller)controller.abort();controller=null;pasteResolve=null;busy=false;remove();
     }
     function restoreHost(){
       if(!hostState)return;var state=hostState;hostState=null;state.bar.classList.remove('is-clipboard-bar');state.children.forEach(function(s){s.el.inert=s.inert;if(s.hidden===null)s.el.removeAttribute('aria-hidden');else s.el.setAttribute('aria-hidden',s.hidden);});
       if(state.positionChanged){if(state.position)state.bar.style.setProperty('position',state.position,state.priority);else state.bar.style.removeProperty('position');}
       document.dispatchEvent(new Event('mp-topbar-release'));
     }
-    function remove(){clearTimeout(successTimer);if(barObserver)barObserver.disconnect();if(box)box.remove();box=action=status=null;restoreHost();}
+    function remove(){clearTimeout(successTimer);if(barObserver)barObserver.disconnect();if(box)box.remove();box=action=status=null;pasteResolve=null;restoreHost();}
     function place(){
       frame=0;if(!box)return;var bar=window.MPProfiles&&MPProfiles.topBar();if(!bar)return;
       if(bar.classList.contains('is-profile-bar')||bar.classList.contains('is-np')){dismiss();return;}
@@ -5512,35 +5512,35 @@
     }
     function position(){if(box&&!frame)frame=requestAnimationFrame(place);}
     function sameCurrent(item){var current=s&&s.listening&&song(s.listening.url);return current&&current.key===item.key;}
-    function show(item){
-      if(!item||!s||!d||busy||outsideDismissed)return;if(item&&(dismissed.has(item.key)||sameCurrent(item))){remove();return;}candidate=item||null;remove();
-      box=document.createElement('div');box.className='mp-clipboard-song';box.setAttribute('role','group');box.setAttribute('aria-label','Copied song');
-      action=document.createElement('button');action.type='button';action.className='mp-clipboard-action';action.textContent='Update your now playing?';action.addEventListener('click',use);box.appendChild(action);
+    function show(item,manual){
+      if((!item&&!manual)||!s||!d||busy||outsideDismissed)return;if(item&&(dismissed.has(item.key)||sameCurrent(item))){remove();return;}candidate=item||null;remove();
+      box=document.createElement('div');box.className='mp-clipboard-song';box.setAttribute('role','group');box.dataset.mode=item?'detected':'paste';box.setAttribute('aria-label',item?'Copied song':'Paste song');if(manual)pasteOffered=true;
+      action=document.createElement('button');action.type='button';action.className='mp-clipboard-action';action.textContent=item?'Update your now playing?':'Paste song';action.addEventListener('click',use);box.appendChild(action);
       var close=document.createElement('button');close.type='button';close.className='mp-clipboard-confirm';close.setAttribute('aria-label','Confirm now playing update');close.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';close.addEventListener('click',use);box.appendChild(close);
-      status=document.createElement('span');status.className='mp-clipboard-status';status.setAttribute('role','status');box.appendChild(status);place();if(box){barObserver=new MutationObserver(position);barObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});}
+      status=document.createElement('span');status.className='mp-clipboard-status';status.setAttribute('role','status');if(!item)status.textContent='Update your now playing';box.appendChild(status);place();if(box){barObserver=new MutationObserver(position);barObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});}
     }
     async function use(){
-      if(busy||!s||!d||!candidate)return;var token=d,user=s.username,version=++epoch,item=candidate,completed=false,confirm=box.querySelector('.mp-clipboard-confirm'),icon=confirm.innerHTML;
-      busy=true;action.disabled=true;confirm.disabled=true;box.classList.add('is-updating');box.setAttribute('aria-busy','true');confirm.innerHTML='<span class="mp-clipboard-spinner" aria-hidden="true"></span>';status.textContent='Updating now playing…';controller=new AbortController();var current=controller,timer=setTimeout(function(){current.abort();},23000);
+      if(busy||!s||!d||!box)return;var token=d,user=s.username,version=++epoch,item=box.dataset.mode==='paste'?null:candidate,completed=false,confirm=box.querySelector('.mp-clipboard-confirm'),icon=confirm.innerHTML;
+      busy=true;action.disabled=true;confirm.disabled=true;box.classList.add('is-updating');box.setAttribute('aria-busy','true');confirm.innerHTML='<span class="mp-clipboard-spinner" aria-hidden="true"></span>';status.textContent=item?'Updating now playing…':'Waiting for Paste…';controller=new AbortController();var current=controller,timer=setTimeout(function(){current.abort();},23000);
       try{
+        if(!item){item=await new Promise(function(resolve,reject){pasteResolve=resolve;current.signal.addEventListener('abort',function(){reject(new DOMException('Aborted','AbortError'));},{once:true});clipboardSong().then(resolve,function(e){if(e.name!=='NotAllowedError'&&e.name!=='SecurityError')reject(e);});});pasteResolve=null;if(!item){dismiss();return;}if(token!==d||!s||s.username!==user||version!==epoch)return;candidate=item;status.textContent='Updating now playing…';}
         var metadata=await mpProfileMusicResolve(item.url,current.signal);if(token!==d||!s||s.username!==user||version!==epoch)return;
         var result=await E('/api/profile',{method:'POST',body:{listening:metadata.listening},token:token,signal:current.signal});if(version!==epoch||token!==d||!s||s.username!==user)return;if(!result||!result.ok||!result.user)throw Error(result&&result.error||'Could not update now playing. Try again.');
         dismissed.add(item.key);s=mpProfileSynced(rcKeep(result.user));mpAuthEmit();completed=true;action.textContent='Now playing updated';status.textContent='';successTimer=setTimeout(remove,1800);
-      }catch(e){if(version===epoch&&box)status.textContent=e.name==='AbortError'?'Song lookup timed out. Tap to retry.':e.message||'Could not read this song. Try again.';}
-      finally{clearTimeout(timer);if(version===epoch){busy=false;controller=null;if(box){box.classList.remove('is-updating');box.removeAttribute('aria-busy');action.disabled=completed;confirm.disabled=completed;confirm.innerHTML=icon;}}}
+      }catch(e){if(version===epoch&&box)status.textContent=e.name==='AbortError'?'Paste or song lookup timed out. Tap to retry.':e.message||'Could not read this song. Try again.';}
+      finally{clearTimeout(timer);if(version===epoch){busy=false;controller=null;pasteResolve=null;if(box){box.classList.remove('is-updating');box.removeAttribute('aria-busy');action.disabled=completed;confirm.disabled=completed;confirm.innerHTML=icon;}}}
     }
     async function check(){
       if(document.hidden||!s||!d||busy||checking||outsideDismissed||Date.now()-lastRead<1500)return;lastRead=Date.now();checking=true;var version=++epoch,user=s.username;
       try{var permission=null;try{permission=await navigator.permissions.query({name:'clipboard-read'});}catch(e){}
         if(version!==epoch||!s||s.username!==user||document.hidden)return;
-        if(permission&&permission.state==='granted'&&navigator.clipboard){var item=await clipboardSong();if(version===epoch&&s&&s.username===user&&!document.hidden){if(item)show(item);else remove();}}
-
-      }catch(e){}finally{checking=false;}
+        if(permission&&permission.state==='granted'&&navigator.clipboard){var item=await clipboardSong();if(version===epoch&&s&&s.username===user&&!document.hidden){if(item)show(item);else remove();}}else if(!pasteOffered)show(null,true);
+      }catch(e){if(version===epoch&&!pasteOffered&&!document.hidden)show(null,true);}finally{checking=false;}
     }
-    document.addEventListener('mp-auth',function(){if(!s||!d){epoch++;if(controller)controller.abort();busy=false;controller=null;remove();lastUser='';candidate=null;return;}if(lastUser!==s.username){dismissed.clear();candidate=null;lastUser=s.username;outsideDismissed=false;lastRead=0;check();}});
-    document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy){epoch++;remove();candidate=null;}else position();}else{outsideDismissed=false;check();position();}});
+    document.addEventListener('mp-auth',function(){if(!s||!d){epoch++;if(controller)controller.abort();busy=false;controller=null;pasteResolve=null;remove();lastUser='';candidate=null;return;}if(lastUser!==s.username){dismissed.clear();candidate=null;lastUser=s.username;outsideDismissed=false;pasteOffered=false;lastRead=0;check();}});
+    document.addEventListener('visibilitychange',function(){if(document.hidden){if(!busy){epoch++;remove();candidate=null;}else position();}else{outsideDismissed=false;pasteOffered=false;lastRead=0;check();position();}});
     window.addEventListener('pageshow',check);window.addEventListener('focus',check);window.addEventListener('resize',position);window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('hashchange',function(){position();setTimeout(position,400);});
-    document.addEventListener('paste',function(e){if(!s||!d||outsideDismissed||busy)return;var data=e.clipboardData,item=data&&(song(data.getData('text/uri-list'))||song(data.getData('text/plain'))||song(data.getData('text/html')));if(item){epoch++;show(item);}});
+    document.addEventListener('paste',function(e){if(!s||!d||outsideDismissed)return;var data=e.clipboardData,item=data&&(song(data.getData('text/uri-list'))||song(data.getData('text/plain'))||song(data.getData('text/html')));if(pasteResolve){e.preventDefault();pasteResolve(item||null);return;}if(!busy&&item){epoch++;show(item);}});
     document.addEventListener('mp-topbar-claim',function(e){if(e.detail&&e.detail.owner!=='clipboard')dismiss();});
     document.addEventListener('pointerdown',function(e){if(box&&!box.contains(e.target))dismiss();},true);
     document.addEventListener('keydown',function(e){if(e.key==='Escape')dismiss();});
