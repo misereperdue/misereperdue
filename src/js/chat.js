@@ -5470,7 +5470,7 @@
         else if(u.hostname==='open.spotify.com'){if(p[0]&&p[0].indexOf('intl-')===0)p.shift();if(p.length!==2||p[0]!=='track'||!/^[A-Za-z0-9]{22}$/.test(p[1]))return null;name='Spotify';key='spotify:'+p[1];u=new URL('https://open.spotify.com/track/'+p[1]);}
         else if(u.hostname==='spotify.link'&&p.length===1)name='Spotify';
         else if(u.hostname==='on.soundcloud.com'&&p.length===1)name='SoundCloud';
-        else if(['soundcloud.com','www.soundcloud.com','m.soundcloud.com'].indexOf(u.hostname)>=0&&p.length===2&&p.every(function(x){return /^[A-Za-z0-9_-]+$/.test(x);})&&['discover','charts','search','you','sets','pages','settings','stations','stream','upload','terms','premium','pro','go'].indexOf(p[0])<0){u.hostname='soundcloud.com';u.search='';u.hash='';name='SoundCloud';key='soundcloud:'+p.join('/');}
+        else if(['soundcloud.com','www.soundcloud.com','m.soundcloud.com'].indexOf(u.hostname)>=0&&p.length===2&&p.every(function(x){return /^[A-Za-z0-9_-]+$/.test(x);})&&['discover','charts','search','you','sets','pages','settings','stations','stream','upload','terms','premium','pro','go'].indexOf(p[0])<0&&['sets','albums','tracks','reposts','likes','comments','popular-tracks'].indexOf(p[1])<0){u.hostname='soundcloud.com';u.search='';u.hash='';name='SoundCloud';key='soundcloud:'+p.join('/');}
         else return null;return {url:u.href,name:name,key:key};
       }catch(e){return null;}
     }
