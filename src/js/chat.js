@@ -156,7 +156,8 @@
     var r = null,
       o = { method: n.method || "GET", headers: a, body: n.body ? JSON.stringify(n.body) : void 0 };
     try {
-      if (window.AbortController) {
+      if(n.signal){o.signal=n.signal;}
+      else if (window.AbortController) {
         var i = new AbortController();
         ((o.signal = i.signal),
           (r = setTimeout(function () {
@@ -1180,7 +1181,7 @@
     hd.classList.add("has-tools-" + tools.childNodes.length);
     mpPBel = b;
     MPProfiles.openBar(b, body, n, {
-      origin:e, me:me, anchor:anchor,
+      origin:e, me:me, anchor:anchor, resolve:mpProfileMusicResolve,
       avatar:function(user,size){return J(user.username,user.avatar,size||"sm",user.hasAvatarImg ? user.avatarV : void 0);},
       current:function(){return me && s ? s : b._profile;},
       edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
@@ -5458,6 +5459,7 @@
   }
   /* Profile settings sheet (opened from the profile menu and, per dc, from the
      shop Globe tile via window.MPOpenProfile). */
+  function mpProfileMusicResolve(url,signal){return E('/api/profile/music?url='+encodeURIComponent(url),{signal:signal}).then(function(r){if(!r||!r.ok||!r.listening)throw Error(r&&r.error||'Music metadata unavailable. Try again.');return r;});}
   function mpProfileSheet(e, inline) {
     if (!s) return;
     if (!inline && window.MPProfiles && MPProfiles.topBar()) {
@@ -5744,7 +5746,7 @@
           });
     };
     I.addEventListener("blur", H);
-    window.MPProfiles && MPProfiles.editor(o, s, {origin:"https://api.misereperdue.com", api:E, search:mpMusicSearch, normalize:mpNPOut,
+    window.MPProfiles && MPProfiles.editor(o, s, {origin:"https://api.misereperdue.com", api:E, resolve:mpProfileMusicResolve,
       saved:function(user){s=mpProfileSynced(rcKeep(user));window.MPAuthUser=s;}
     });
     var j = document.createElement("div");

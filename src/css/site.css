@@ -13099,3 +13099,25 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-profile-song-copy{display:flex;flex-direction:column;flex:1;min-width:0;gap:2px}
 .mp-profile-bar .mp-profile-song-copy strong,.mp-profile-bar .mp-profile-song-copy>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mp-profile-bar .mp-profile-eq{margin-left:auto;align-self:center;flex:none}
+/* #91: richer linked listening and a short compact bio. */
+.mp-profile-bar .mp-profile-song-title{display:flex;align-items:center;gap:5px;min-width:0}
+.mp-profile-song-title strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-profile-explicit{display:inline-grid;place-items:center;flex:none;width:12px;height:12px;border-radius:2px;background:color-mix(in srgb,var(--ink) 55%,transparent);color:var(--sheet-bg);font:700 8px/1 system-ui;letter-spacing:0}
+.mp-profile-bar .mp-profile-song-artist{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
+.mp-profile-artist-avatar{position:relative;display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;overflow:hidden;background:var(--fill);font-size:9px;color:var(--muted)}
+.mp-profile-artist-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.mp-profile-artist-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted)}
+.mp-profile-summary-info.is-listening{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-profile-summary-info.is-listening strong{font-size:10px;font-weight:700}
+.mp-profile-summary-synth{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:4px}
+.mp-profile-summary-synth svg{display:block;width:12px;height:12px;stroke-width:2}
+.mp-profile-bar .mp-pb-bio{padding:10px 12px;border-radius:14px;background:var(--fill);box-sizing:border-box;width:fit-content;max-width:100%;text-align:center}
+.mp-profile-bar .mp-pb-bio[hidden]{display:none}
+.fm-golive:not(:disabled){box-shadow:0 0 0 1px rgba(170,216,255,.28),0 0 18px rgba(145,199,249,.32);animation:fmGoGlow 2.6s ease-in-out infinite}
+@keyframes fmGoGlow{0%,100%{box-shadow:0 0 0 1px rgba(170,216,255,.24),0 0 14px rgba(145,199,249,.25)}50%{box-shadow:0 0 0 1px rgba(190,226,255,.5),0 0 25px rgba(145,199,249,.5)}}
+.fm-live-burst{position:fixed;width:0;height:0;z-index:2147482000;pointer-events:none}
+.fm-live-ray{position:absolute;left:0;top:-1px;width:var(--ray-length);height:2px;border-radius:999px;background:linear-gradient(90deg,rgba(210,238,255,.9),rgba(154,197,255,.6),transparent);box-shadow:0 0 8px rgba(130,194,255,.7);transform-origin:0 50%;animation:fmGoLaser .75s cubic-bezier(.15,.7,.3,1) both}
+@keyframes fmGoLaser{0%{opacity:0;transform:rotate(var(--ray-angle)) scaleX(.05)}18%{opacity:.85}100%{opacity:0;transform:rotate(var(--ray-angle)) translateX(20px) scaleX(1.15)}}
+.fm-live-ring{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border:1px solid rgba(191,225,255,.65);border-radius:50%;box-sizing:border-box;animation:fmGoRing .7s ease-out both}
+@keyframes fmGoRing{from{opacity:.7;transform:scale(.8)}to{opacity:0;transform:scale(3.2)}}
+@media(prefers-reduced-motion:reduce){.fm-golive:not(:disabled){animation:none}.fm-live-burst{display:none}}
