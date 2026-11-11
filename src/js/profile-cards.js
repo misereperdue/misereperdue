@@ -12,15 +12,13 @@
   function details(user, options) {
     var out = el('div', 'mp-profile-details'), song = user.listening;
     if (song && song.title && song.artist) {
-      var music = section('Listening'), card = el(songUrl(song.url) ? 'a' : 'div', 'mp-profile-song');
-      if (card.tagName === 'A') { card.href = songUrl(song.url); card.target = '_blank'; card.rel = 'noopener noreferrer'; card.setAttribute('aria-label', song.title + ' by ' + song.artist + ', open in Apple Music'); }
+      var music = section('Listening'), card = el('div', 'mp-profile-song');
       var cov = el('span', 'mp-profile-song-art'), art = artUrl(song.art);
       if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); } else cov.classList.add('is-empty');
       cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
       card.appendChild(cov);
       var copy = el('span', 'mp-profile-song-copy'); copy.appendChild(el('strong', '', song.title)); copy.appendChild(el('span', '', song.artist)); card.appendChild(copy);
       var eq = el('span', 'mp-profile-eq'); eq.setAttribute('aria-hidden', 'true'); for (var i = 0; i < 4; i++) eq.appendChild(el('i')); card.appendChild(eq);
-      if (card.tagName === 'A') { var chev = el('span', 'mp-profile-song-go'); chev.setAttribute('aria-hidden', 'true'); chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"/></svg>'; card.appendChild(chev); }
       music.appendChild(card); out.appendChild(music);
     }
     // Owner editing is available in the toolbar above the name.
@@ -39,7 +37,7 @@
       if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'))ids.push(active);ids.unshift(null);}
       if(options.grant&&user.username.toLowerCase()==='grim')ids=['robot'];
       ids.forEach(function(id){var selected=options.grant?(user.badges||[]).indexOf(id)>=0:options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?'Toggle ':'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
-        var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);if(selected){var check=el('span','mp-badge-check');check.innerHTML=svg('M5 12 10 17 19 7');check.setAttribute('aria-hidden','true');b.appendChild(check);}grid.appendChild(b);});
+        var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);grid.appendChild(b);});
     }
     async function save(id){if(pending)return;pending=true;status.textContent='Saving…';paint();try{var body=options.grant?{username:user.username,badge:id}:{badge:id};var r=await options.api('/api/badge',{method:'POST',body:body});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not update badge.');user=r.user;options.changed(user);status.textContent=options.grant?'Badges updated.':'Display badge updated.';}catch(e){status.textContent=e.message||'Could not update badge.';}finally{pending=false;if(root.isConnected)paint();}}
     paint();return root;

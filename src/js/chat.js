@@ -1236,6 +1236,11 @@
   });
   function mpPMStart(e) {
     mpPM.to = e;
+    // A profile on Globe must reveal Chat before focusing its private composer.
+    if (!document.querySelector('#journal.on')) {
+      if (window.MPNav && MPNav.show) MPNav.show('journal');
+      else location.hash = '#chat';
+    }
     var t = mpPMRow();
     if (t) {
       var n = t.querySelector(".chat-pm-chip");
