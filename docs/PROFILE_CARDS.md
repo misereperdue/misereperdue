@@ -1,42 +1,40 @@
-# Expandable profile cards — Codex task #58
+# Profiles in the status bar — task #81
 
-The existing compact profile remains the entry point. Full profile is a filled
-bubble with no divider. It grows that same card from 280px to at most 340px and
-caps content height at 560px/the available viewport. Only the card scrolls.
+Avatar taps replace the active page's status-bar content with a compact profile
+summary. Tap that row to grow the same glass bar into a scrollable full profile.
+Edit morphs the same surface into the existing account editor. Back steps through
+edit → full → compact; Close restores the original status bar. Escape follows the
+same steps. Navigation closes the profile and restores inert/ARIA/style state.
+On pages without a status bar, account settings use the main navigation bar.
 
-Design (t537u): centred hero — ringed avatar (accent / VIP gold / owner shimmer) over a soft aura of the
-avatar, lowercase name + badge, @handle · #n · joined, chips (badge pill, points, badges), bio, pill actions.
+Full profiles keep lowercase names, avatar rings/badges, points, complete bio,
+share artwork, whisper/hide and owner management. Listening precedes up to three
+pinned photos in a **static grid**. There is no flickable stack, carousel, location
+section or divider. Existing photos and stored city values are preserved.
 
-Expanded sections: an explicitly user-picked song (Listening row with a small equaliser), then up to three
-pinned photos shown as the chat photo stack (flick the top photo sideways, arrow
-keys). No location section or dividers (t536u). Empty fields are optional. Edit →
-Expanded profile supports image upload, reordering/removal, song search/clear,
-explicit save and error retry; a stored city is preserved but no longer edited or shown.
+The existing editor retains avatar/username/bio, music/photo controls, account
+and recovery settings, signature and notification controls. Inputs remain 16px;
+opening the editor does not focus an input or open the keyboard. Upload/search,
+explicit save and error retry retain the existing API contracts. Completed saves
+refresh the profile without replacing its bar. No Worker changes or migrations.
 
-Implementation is in `src/js/profile-cards.js`, loaded before chat, with narrow
-hooks into the existing authenticated API, music catalog, popover glass mask and
-profile editor. Legacy owner badge/ban tools remain available as Manage user.
-No FM implementation is touched. Shared pins must be rebased against main before
-release. The earlier music waveform/alpha work is stashed and is not part of this
-task; Grim has already handled the music changes separately.
+Implementation: `src/js/profile-cards.js` owns bar state, size animation and cleanup;
+`src/js/chat.js` supplies authenticated profile data/actions and mounts the existing
+editor inline. `src/js/misery-fm.js` yields any now-playing morph and skips its bar
+capture/decorating while the profile is open. FM playback is unchanged. The bar's
+own backdrop never fades or scales during transitions. Reduced motion skips
+animations; visual-viewport changes recalculate the available editor height.
 
-Backend: linked misery-worker#18 / #17. Deploy its narrowly patched live Worker
-first, preserving all live FM source/settings/bindings; never upload stale Worker
-main wholesale. Fields: city, profilePhotos, listening (optional empty defaults).
-No migrations. Website works with old missing fields, but saving needs backend.
+Run `npm run check`, `npm run verify`, `git diff --check`, and
+`MP_PROFILE_ENGINES=chromium node tools/test-profile-cards.cjs`. The established
+`test-profile-expanded.cjs` command aliases the new status-bar suite. Browser
+checks mock account/catalog/upload/FM APIs, cover both phone widths/themes,
+reduced motion and desktop, real avatar taps, the same DOM bar through all phases,
+geometry/glass, no keyboard on entry, FM coexistence, static photos, upload/search,
+save failure/retry/reopen, Globe entry, shop settings and navigation cleanup.
+Native WebKit currently lacks required host libraries; Chromium mobile emulation
+is not native iOS verification.
 
-Validation: `npm run check`, `npm run verify`, `git diff --check`, and
-`MP_PROFILE_ENGINES=chromium node tools/test-profile-cards.cjs`. All writes are
-mocked. Includes phones 390x844/360x780 in both themes, desktop, growth/bounds,
-photo buttons/keyboard/swipe, scroll/collapse, safe text, upload, song search,
-failed save/retry and persisted reopen. WebKit is also supported by the suite;
-this environment lacks required GTK4/other libraries to launch the installed
-WebKit binary, so Chromium phone emulation is the current verification limit.
-
-Rollback: revert website PR; backend fields may remain harmlessly in user rows.
-Backend rollback uses the recorded previous live Worker version, no data purge.
-
-Publication follow-up: Pages reported successful profile deployments while the
-public module path returned 404 and root still served the prior shell. A fresh
-middleware bundle adds X-MP-Release: profile-cards-431 for public verification;
-nonce/CSP, streamed HTML body, asset routing and application code are unchanged.
+Rollback: revert the website PR. No stored data is removed or migrated. Probe
+preview/production before fetching final versioned assets; verify the exact
+served bytes, not just Cloudflare's deployment status.

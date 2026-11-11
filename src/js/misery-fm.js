@@ -283,7 +283,7 @@
     return n && n.getClientRects().length ? n : null;
   }
   function deco() {
-    if (morph) return;
+    if (morph || document.querySelector(".is-profile-bar")) return;
     var bar = live() ? topBar() : null;
     if (hb && hb !== bar) undeco(hb);
     if (!bar) return;
@@ -379,8 +379,9 @@
     if (hb === bar) { hb = null; clearInterval(phT); phT = 0; }
   }
   function barTap(e) {
-    if (!live()) return;
+    if (!live() || e.currentTarget.classList.contains("is-profile-bar")) return;
     var bar = e.currentTarget;
+    if (e.target.closest(".chat-me")) return; // avatar taps always reach the profile bar
     if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
     var hit = e.target.closest("button, a, input, select, textarea, [role=button], [role=tab], label");
     if (bar.classList.contains("is-fm") || !hit) {
@@ -1328,6 +1329,7 @@
   document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
 
   window.MPFM = {
+    yieldBar: function () { closeMorph(true); },
     open: function () { openSheet("now"); },
     mount: mount,
     isLive: live,

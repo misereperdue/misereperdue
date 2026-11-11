@@ -9,33 +9,11 @@
   function songUrl(value) { try { var u = new URL(value); return u.protocol === 'https:' && u.hostname === 'music.apple.com' ? u.href : ''; } catch (_) { return ''; } }
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function section(title) { var box = el('section', 'mp-profile-section'); box.appendChild(el('h3', '', title)); return box; }
-  /* Grim t536u: pinned photos use the chat photo stack (same card look, fan, dots and flick): drag the top
-     photo sideways, past 50px it flies off and the stack advances (right = previous); arrows step too.
-     data-index = the photo on top. */
-  function carousel(ids, origin) {
-    var root = el('div', 'mp-profile-carousel'), deck = el('div', 'mp-profile-deck mp-pstack'), dots = el('div', 'chat-stack-dots mp-pstack-dots'), announce = el('span', 'mp-profile-sr'), index = 0, start = null, busy = false;
-    root.setAttribute('role', 'region'); root.setAttribute('aria-label', 'Pinned photos'); root.setAttribute('aria-roledescription', 'carousel'); deck.tabIndex = 0; deck.setAttribute('aria-label', 'Pinned photos, swipe or use arrow keys'); announce.setAttribute('aria-live', 'polite');
-    var cards = ids.map(function (id, i) { var card = el('div', 'mp-profile-photo chat-photo-card'), image = el('img'); image.src = origin + '/api/media/' + encodeURIComponent(id); image.alt = 'Pinned photo ' + (i + 1); image.draggable = false; image.decoding = 'async'; card.appendChild(image); deck.appendChild(card); dots.appendChild(el('i')); return card; });
-    function paint() { var n = cards.length; cards.forEach(function (c, i) { var pos = (i - index + n) % n; c.dataset.pos = Math.min(pos, 3); c.style.zIndex = 10 + n - pos; c.setAttribute('aria-hidden', pos ? 'true' : 'false'); }); [].forEach.call(dots.children, function (d, i) { d.className = i === index ? 'on' : ''; }); root.dataset.index = index; announce.textContent = 'Photo ' + (index + 1) + ' of ' + n; }
-    function go(dir, top) {
-      if (busy || cards.length < 2) return; busy = true; top = top || cards[index];
-      var finished = false, timeout;
-      var done = function () { if (finished) return; finished = true; clearTimeout(timeout); top.removeEventListener('transitionend', ended); top.style.transition = ''; top.style.transform = ''; index = (index + dir + cards.length) % cards.length; paint(); busy = false; };
-      function ended(e) { if (e.target === top && e.propertyName === 'transform') done(); }
-      if (reduced()) return done();
-      top.style.transition = 'transform .32s cubic-bezier(.2,.8,.2,1)'; top.style.transform = 'translateX(' + (dir > 0 ? -130 : 130) + '%) rotate(' + (dir > 0 ? -14 : 14) + 'deg)';
-      top.addEventListener('transitionend', ended); window.haptic && window.haptic(8); timeout = setTimeout(done, 380);
-    }
-    deck.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(e.key === 'ArrowLeft' ? -1 : 1); } });
-    deck.addEventListener('touchstart', function (e) { if (busy || e.touches.length !== 1 || cards.length < 2) return; start = {x:e.touches[0].clientX, y:e.touches[0].clientY, h:false, dx:0}; }, {passive:true});
-    deck.addEventListener('touchmove', function (e) {
-      if (!start || !e.touches[0]) return; var dx = e.touches[0].clientX - start.x, dy = e.touches[0].clientY - start.y;
-      if (!start.h) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; if (Math.abs(dx) <= Math.abs(dy)) { start = null; return; } start.h = true; }
-      e.preventDefault(); start.dx = dx; var top = cards[index]; top.style.transition = 'none'; top.style.transform = 'translateX(' + dx + 'px) rotate(' + dx / 18 + 'deg)';
-    }, {passive:false});
-    function end(cancelled) { var st = start; start = null; if (!st || !st.h) return; var top = cards[index]; if (!cancelled && Math.abs(st.dx) > 50) go(st.dx < 0 ? 1 : -1, top); else { top.style.transition = 'transform .32s cubic-bezier(.2,.8,.2,1)'; top.style.transform = ''; setTimeout(function () { top.style.transition = ''; }, 340); } }
-    deck.addEventListener('touchend', function () { end(false); }); deck.addEventListener('touchcancel', function () { end(true); });
-    root.appendChild(deck); if (cards.length > 1) root.appendChild(dots); root.appendChild(announce); paint(); return root;
+  // Static gallery: all pinned photos are visible, with no flick/swipe behavior.
+  function gallery(ids, origin) {
+    var root = el('div', 'mp-profile-gallery');
+    ids.forEach(function(id,i){var image=el('img');image.src=origin+'/api/media/'+encodeURIComponent(id);image.alt='Pinned photo '+(i+1);image.loading='lazy';image.decoding='async';root.appendChild(image);});
+    return root;
   }
   /* Grim t537u redesign: Listening is one refined row (art, title/artist, a small live equaliser), then the
      pinned photo stack; empty states are a quiet glyph + line (own profile gets the way to fill them). */
@@ -53,7 +31,7 @@
       if (card.tagName === 'A') { var chev = el('span', 'mp-profile-song-go'); chev.setAttribute('aria-hidden', 'true'); chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"/></svg>'; card.appendChild(chev); }
       music.appendChild(card); out.appendChild(music);
     }
-    if (ids.length) { var p = el('section', 'mp-profile-section mp-profile-photos'); p.appendChild(carousel(ids, options.origin)); out.appendChild(p); }
+    if (ids.length) { var p = el('section', 'mp-profile-section mp-profile-photos'); p.appendChild(gallery(ids, options.origin)); out.appendChild(p); }
     if (!ids.length && !song) {
       var empty = el('div', 'mp-profile-empty');
       empty.innerHTML = '<span class="mp-profile-empty-g" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z"/><path d="M13 14.5C13 15.8807 11.8807 17 10.5 17C9.11929 17 8 15.8807 8 14.5C8 13.1193 9.11929 12 10.5 12C11.8807 12 13 13.1193 13 14.5ZM13 14.5V7C13.3333 7.5 13.6 9.6 16 10"/></svg></span>';
@@ -65,56 +43,77 @@
     [].forEach.call(out.children, function (c, i) { c.style.setProperty('--i', i); });
     return out;
   }
-  /* Grim (t529u): grow/shrink keeps the #48 tap anchoring. The stem tip stays on the tapped element, the
-     side (above/below) is re-chosen by room, the card stays inside the visible viewport minus safe areas
-     and below the top bars (falls back to the full viewport only when there's no room), and the
-     scrolling body is capped to that room instead of pushing the card off its anchor. During the size
-     animation the glass, outline and stem track the animated box every frame. */
-  function topBars(vh) { var y = 0; document.querySelectorAll('.panel.on .chat-head, .nav').forEach(function (h) { var r = h.getBoundingClientRect(), cs = getComputedStyle(h); if (r.height && cs.visibility !== 'hidden' && cs.display !== 'none' && r.bottom > y && r.bottom < vh / 2) y = r.bottom; }); return y; }
-  function resize(b, options, old) {
-    if (!b.isConnected || !b._a) return;
-    var vv = window.visualViewport, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight;
-    var ins = options.insets ? options.insets() : {t:0,r:0,b:0,l:0}, M = 10, TH = options.stem || 13, wasBelow = b.classList.contains('is-below');
-    var minX = ox + ins.l + M, maxX = ox + vw - ins.r - M, minY0 = oy + ins.t + M, maxY = oy + vh - ins.b - M, minY = Math.max(minY0, topBars(vh) + 8);
-    var expanded = b.classList.contains('is-expanded'), body = b.querySelector('.mp-pb-body');
-    if (b._profileAnimation) { b._profileAnimation.cancel(); b._profileAnimation = null; }
-    b.classList.remove('is-sizing', 'is-capped');
-    b.style.width = expanded ? Math.min(340, maxX - minX) + 'px' : '';
-    body.style.maxHeight = '';
-    var w = b.offsetWidth, h = b.offsetHeight, r = b._a.getBoundingClientRect(), t = b._tap, tx = t ? t.x : r.left + r.width / 2, ty = t ? t.y : r.top + r.height / 2;
-    var tipB = (t ? Math.min(r.bottom, ty + 28) : r.bottom) + 4, tipA = (t ? Math.max(r.top, ty - 28) : r.top) - 4;
-    function rooms(top) { return [maxY - tipB - TH, tipA - TH - top]; }
-    var rm = rooms(minY);
-    // the bars only limit the card while it can still be at least as tall as the compact card
-    if (Math.max(rm[0], rm[1]) < Math.min(h, Math.max(old ? old.height : 0, 220))) { minY = minY0; rm = rooms(minY); }
-    var below = h <= rm[0] || (h > rm[1] && rm[0] >= rm[1]), room = Math.max(120, below ? rm[0] : rm[1]);
-    b.classList.toggle('is-capped', h > room);
-    if (h > room) { body.style.maxHeight = Math.floor(room) + 'px'; h = b.offsetHeight; }
-    var top = below ? tipB + TH : tipA - TH - h, left = w > maxX - minX ? minX + (maxX - minX - w) / 2 : Math.max(minX, Math.min(tx - w / 2, maxX - w));
-    b.classList.toggle('is-below', below); b.classList.toggle('is-above', !below);
-    b.style.left = left + 'px'; b.style.top = top + 'px';
-    b.style.setProperty('--ay', (below ? -TH : h + TH) + 'px');
-    function mask() { var q = b.getBoundingClientRect(), ax = Math.max(26, Math.min(tx - q.left, q.width - 26)); b.style.setProperty('--ax', ax + 'px'); options.mask(q.width, q.height, ax, below); }
-    if (old && !reduced() && b.animate && wasBelow === below) {
-      b.classList.add('is-sizing');
-      var a = b.animate([{width:old.width+'px',height:old.height+'px',left:old.left+'px',top:old.top+'px'},{width:w+'px',height:h+'px',left:left+'px',top:top+'px'}], {duration:b.classList.contains('is-expanded')?420:340,easing:b.classList.contains('is-expanded')?'cubic-bezier(.3,1.12,.4,1)':'cubic-bezier(.25,1,.4,1)'});
-      b._profileAnimation = a;
-      var tick = function () { if (b._profileAnimation !== a) return; if (!b.isConnected || b.classList.contains('is-out')) { a.cancel(); return; } mask(); requestAnimationFrame(tick); };
-      var done = function () { if (b._profileAnimation !== a) return; b._profileAnimation = null; b.classList.remove('is-sizing'); mask(); };
-      a.onfinish = done; a.oncancel = function () { if (b._profileAnimation === a) { b._profileAnimation = null; b.classList.remove('is-sizing'); } };
-      mask(); requestAnimationFrame(tick);
-    } else {
-      mask();
-      if (old && !reduced() && b.animate) b.querySelector('.mp-pb-scale').animate([{opacity:.4,transform:'scale(.97)'},{opacity:1,transform:'none'}], {duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
+  function topBar() {
+    var bar=document.querySelector('.panel.on .chat-head');
+    return bar && bar.getClientRects().length ? bar : document.querySelector('.nav');
+  }
+  // The real status bar owns every phase. Only content crossfades; its glass never fades.
+  function openBar(root, body, user, options) {
+    var bar=topBar(); if(!bar)return;
+    if(bar._profileExit){bar._profileExit.cancel();bar._profileExit=null;}
+    window.MPFM && MPFM.yieldBar && MPFM.yieldBar();
+    var style=bar.getAttribute('style'), baseHeight=bar.getBoundingClientRect().height, animation=null, phase='compact', closed=false, detail=null;
+    var previous=[].map.call(bar.children,function(child){var state={el:child,inert:child.inert,hidden:child.getAttribute('aria-hidden')};child.inert=true;child.setAttribute('aria-hidden','true');return state;});
+    root.className='mp-profile-bar';root.id='mp-profile-bar';root.dataset.phase=phase;
+    root.setAttribute('role','region');root.setAttribute('aria-label',user.username.toLowerCase()+"'s profile");
+    bar.classList.add('is-profile-bar');bar.style.height=baseHeight+'px';bar.appendChild(root);
+    function current(){return options.current ? options.current() : user;}
+    function icon(label,path,run){var b=button('',function(e){e.stopPropagation();run();},'mp-profile-control');b.setAttribute('aria-label',label);b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';return b;}
+    function size(animate){
+      if(closed)return;
+      var before=bar.getBoundingClientRect().height;if(animation){animation.cancel();animation=null;}
+      var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
+      var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'?640:560,root.querySelector('.mp-profile-bar-head').offsetHeight+root.querySelector('.mp-profile-bar-scroll').scrollHeight);
+      bar.style.height=height+'px';
+      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:before+'px',borderRadius:before<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:phase==='compact'?'32px':'28px'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});animation.onfinish=function(){animation=null;};}
     }
+    function header(title,back){var h=el('div','mp-profile-bar-head');h.appendChild(icon('Back','M15 6 9 12 15 18',back));h.appendChild(el('strong','',title));h.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));return h;}
+    function render(next,editor){
+      if(closed)return;
+      // Keep the original body and its action listeners; the gallery is static.
+      phase=next;root.dataset.phase=next;root.replaceChildren();bar.classList.toggle('is-profile-expanded',next!=='compact');
+      var u=current();Object.assign(user,u);root.setAttribute('aria-label',u.username.toLowerCase()+"'s profile");
+      if(next==='compact'){
+        var row=el('div','mp-profile-summary');
+        row.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));
+        var expand=button('',function(){render('full');},'mp-profile-summary-open');expand.setAttribute('aria-label','Expand '+u.username.toLowerCase()+"'s profile");expand.setAttribute('aria-expanded','false');
+        expand.appendChild(options.avatar(u));var tx=el('span','mp-profile-summary-copy');tx.appendChild(el('strong','',u.username.toLowerCase()));tx.appendChild(el('small','',(u.bio||('★ '+(u.points||0)+' points')).replace(/\s+/g,' ')));expand.appendChild(tx);expand.appendChild(el('span','mp-profile-summary-chevron','⌄'));row.appendChild(expand);root.appendChild(row);
+      } else {
+        root.appendChild(header(next==='edit'?'Edit profile':'Profile',function(){render(next==='edit'?'full':'compact');}));
+        var scroll=el('div','mp-profile-bar-scroll');root.appendChild(scroll);
+        if(next==='edit'){scroll.appendChild(editor);}
+        else {
+          var nm=body.querySelector('.mp-pb-name-t'),bio=body.querySelector('.mp-pb-bio'),pts=body.querySelector('.mp-pb-pts b'),av=body.querySelector('.mp-pb-av');
+          if(nm)nm.textContent=u.username.toLowerCase();if(bio){bio.textContent=u.bio||'';bio.hidden=!u.bio;}if(pts)pts.textContent=u.points||0;
+          if(av){var old=av.querySelector('.chat-avatar-wrap');if(old)old.replaceWith(options.avatar(u,"lg"));}
+          if(detail)detail.remove();detail=details(u,options);body.appendChild(detail);scroll.appendChild(body);
+        }
+      }
+      size(true);
+      var focus=root.querySelector(next==='compact'?'.mp-profile-summary-open':'.mp-profile-bar-head button');focus&&focus.focus({preventScroll:true});
+      if(!reduced()&&root.animate)root.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'none'}],{duration:240,easing:'ease-out'});
+    }
+    root._edit=function(){options.edit(function(editor){render('edit',editor);},function(){render('full');});};
+    root._refresh=function(){if(phase!=='edit')render(phase);};
+    function outside(e){if(e.target.closest('.avatar-options-overlay,.rc-back,.chat-alert-backdrop'))return;if(phase!=='edit'&&!bar.contains(e.target)&&!options.anchor.contains(e.target))options.close();}
+    function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(phase==='edit')render('full');else if(phase==='full')render('compact');else options.close();}}
+    function navigate(){options.close();}
+    function resize(){size(false);}
+    root._close=function(fast){
+      if(closed)return;var closingHeight=bar.getBoundingClientRect().height;closed=true;if(animation)animation.cancel();
+      document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('hashchange',navigate);window.removeEventListener('popstate',navigate);window.removeEventListener('resize',resize);window.visualViewport&&visualViewport.removeEventListener('resize',resize);
+      observer.disconnect();root.remove();bar.classList.remove('is-profile-bar','is-profile-expanded');if(style===null)bar.removeAttribute('style');else bar.setAttribute('style',style);
+      previous.forEach(function(s){s.el.inert=s.inert;if(s.hidden===null)s.el.removeAttribute('aria-hidden');else s.el.setAttribute('aria-hidden',s.hidden);});
+      if(!fast&&!reduced()&&bar.animate){bar._profileExit=bar.animate([{height:closingHeight+'px',borderRadius:closingHeight>baseHeight?'28px':'32px'},{height:baseHeight+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)'});previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:1}],{duration:260});});}
+      if(!fast&&options.anchor.isConnected)options.anchor.focus&&options.anchor.focus({preventScroll:true});
+    };
+    var observer=new MutationObserver(function(){if(!bar.isConnected)options.close();});observer.observe(document.body,{childList:true,subtree:true});
+    // Defer the outside listener so the opening avatar tap is never treated as dismissal.
+    setTimeout(function(){if(!closed)document.addEventListener('pointerdown',outside,true);},0);
+    document.addEventListener('keydown',key,true);window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);window.addEventListener('resize',resize);window.visualViewport&&visualViewport.addEventListener('resize',resize);
+    render('compact');
+    root.querySelector('.mp-profile-summary-open').focus({preventScroll:true});
   }
-  function toggle(b, user, options) {
-    var old = b.getBoundingClientRect(), expanded = !b.classList.contains('is-expanded'), full = b.querySelector('.mp-pb-full');
-    if (b._profileDetails) b._profileDetails.remove(); b.classList.toggle('is-expanded', expanded); full.setAttribute('aria-expanded', expanded ? 'true' : 'false'); full.querySelector('span').textContent = expanded ? 'Show less' : 'Full profile';
-    if (expanded) { b._profileDetails = details(user, options); b._profileDetails.classList.add('is-reveal'); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); }
-    b._profileOptions = options; resize(b, options, old);
-  }
-  function refresh(b, user) { if (!b.classList.contains('is-expanded') || !b._profileOptions) return; b._profileDetails.remove(); b._profileDetails = details(user, b._profileOptions); b.querySelector('.mp-pb-body').appendChild(b._profileDetails); resize(b, b._profileOptions); }
   function readPhoto(file) {
     return new Promise(function (resolve, reject) { if (!file || !/^image\/(jpeg|png|webp|gif)$/.test(file.type) || file.size > 8 * 1024 * 1024) return reject(Error('Choose a JPEG, PNG, WebP, or GIF under 8 MB.')); var reader = new FileReader(); reader.onerror = function () { reject(Error('Could not read this photo.')); }; reader.onload = function () { var image = new Image(); image.onerror = function () { reject(Error('Could not open this photo.')); }; image.onload = function () { try { var scale = Math.min(1, 1400 / Math.max(image.width, image.height)), canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale)); var ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(image,0,0,canvas.width,canvas.height); resolve(canvas.toDataURL('image/jpeg', .88)); } catch (_) { reject(Error('Could not prepare this photo.')); } }; image.src = reader.result; }; reader.readAsDataURL(file); });
   }
@@ -130,5 +129,5 @@
     var save=button('Save profile details',async function(){if(uploading||saving)return;saving=true;save.disabled=true;paintPhotos();status.textContent='Saving…';try{var r=await options.api('/api/profile',{method:'POST',body:{city:user.city||'',profilePhotos:draft.profilePhotos.slice(),listening:draft.listening}});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not save profile.');options.saved(r.user);status.textContent='Profile details saved.';}catch(e){status.textContent=e.message||'Could not save profile.';}finally{saving=false;if(root.isConnected){save.disabled=false;paintPhotos();}}});root.appendChild(save);root.appendChild(status);paintPhotos();paintSong();container.appendChild(root);
     var observer=new MutationObserver(function(){if(!root.isConnected){epoch++;clearTimeout(timer);if(controller)controller.abort();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});return root;
   }
-  window.MPProfiles={place:function(b,o){resize(b,o);},toggle:toggle,refresh:refresh,editor:editor,dispose:function(b){if(b._profileAnimation)b._profileAnimation.cancel();}};
+  window.MPProfiles={topBar:topBar,openBar:openBar,editor:editor};
 })();
