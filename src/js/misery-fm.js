@@ -291,7 +291,7 @@
     return n && n.getClientRects().length ? n : null;
   }
   function deco() {
-    if (morph || document.querySelector(".is-profile-bar")) return;
+    if (morph || document.querySelector(".is-profile-bar,.is-clipboard-bar")) return;
     var bar = live() ? topBar() : null;
     if (hb && hb !== bar) undeco(hb);
     if (!bar) return;
@@ -352,7 +352,7 @@
     if (hb === bar) { hb = null; clearInterval(phT); phT = 0; }
   }
   function barTap(e) {
-    if (!live() || e.currentTarget.classList.contains("is-profile-bar")) return;
+    if (!live() || (e.currentTarget.classList.contains("is-profile-bar")||e.currentTarget.classList.contains("is-clipboard-bar"))) return;
     var bar = e.currentTarget;
     if (e.target.closest(".chat-me")) return; // avatar taps always reach the profile bar
     if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
@@ -376,6 +376,7 @@
       '<button type="button" class="fm-m-l fm-listen' + (on ? " is-on" : "") + '" data-a="listen" aria-pressed="' + on + '" aria-label="' + (on ? "Mute" : "Listen live") + '">' + ico(on ? "mute" : "play") + "</button></div>";
   }
   function openMorph(bar) {
+    document.dispatchEvent(new CustomEvent('mp-topbar-claim',{detail:{owner:'fm'}}));
     if (morph || !live()) return;
     bar = bar || hb || topBar();
     if (!bar || !bar._fm) return;
@@ -1334,6 +1335,7 @@
     if (RM.matches && sheet) viz();
     if (c && !c.paused && !S.paused && (now() - S.startedAt) / 1e3 > durOf(c.tr) + 4 && tickN % 10 === 0) refresh();
   }
+  document.addEventListener('mp-topbar-release',deco);
   window.addEventListener("resize", function () { hb && (q(".fm-ring", hb)._w = 0, hb._fmTy = 0); deco(); });
   window.addEventListener("hashchange", function () { setTimeout(deco, 60); setTimeout(deco, 400); });
   document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
