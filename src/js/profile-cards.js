@@ -75,6 +75,7 @@
   }
   // The real status bar owns every phase. Only content crossfades; its glass never fades.
   function openBar(root, body, user, options) {
+    document.dispatchEvent(new CustomEvent('mp-topbar-claim',{detail:{owner:'profile'}}));
     var bar=topBar(); if(!bar)return;
     if(bar._profileExit){bar._profileExit.cancel();bar._profileExit=null;}
     window.MPFM && MPFM.yieldBar && MPFM.yieldBar();
