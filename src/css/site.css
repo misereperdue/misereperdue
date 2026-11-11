@@ -13148,3 +13148,24 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 @keyframes mpClipSpin{to{transform:rotate(360deg)}}
 @keyframes mpClipEnter{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.is-clipboard-bar>.mp-clipboard-song,.fm-on.is-clipboard-bar>.mp-clipboard-song,.mp-clipboard-spinner{animation:none}.is-clipboard-bar>:not(.mp-clipboard-song){transition:none}}
+
+/* Clipboard morph: stable controls during the native Paste sheet, quiet progress. */
+.mp-clipboard-song{--clip-accent:var(--ink)}
+.mp-clipboard-action{letter-spacing:-.015em;transition:opacity .2s ease;color:var(--ink)}
+.mp-clipboard-confirm{border:1px solid var(--stroke);transition:background .25s ease,transform .25s ease,opacity .25s ease;position:relative}
+.mp-clipboard-confirm:active{transform:scale(.92)}
+.mp-clipboard-action:focus-visible,.mp-clipboard-confirm:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:999px}
+.mp-clipboard-song.is-updating .mp-clipboard-confirm svg{opacity:0}
+.mp-clipboard-song.is-updating .mp-clipboard-spinner{position:absolute;width:13px;height:13px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:mpClipSpin .75s linear infinite}
+.mp-clipboard-song.is-success .mp-clipboard-confirm{background:var(--ink);color:var(--bg);transform:scale(1.04)}
+.mp-clipboard-song.is-error .mp-clipboard-status{white-space:normal;max-height:28px;font-size:9px;line-height:1.3}
+@media(prefers-reduced-motion:reduce){.mp-clipboard-confirm,.mp-clipboard-action{transition:none}.mp-clipboard-song.is-updating .mp-clipboard-spinner{animation:none}}
+
+.is-clipboard-bar>.mp-clipboard-song,.fm-on.is-clipboard-bar>.mp-clipboard-song{grid-template-columns:30px minmax(0,1fr) 30px;gap:3px 9px;padding:8px 16px;animation:mpClipEnter .36s cubic-bezier(.2,.8,.2,1) both}
+.mp-clipboard-song .mp-clipboard-action,.mp-clipboard-song .mp-clipboard-status{grid-column:2}
+.mp-clipboard-song .mp-clipboard-confirm{grid-column:3}
+.mp-clipboard-mark{grid-column:1;grid-row:1/span 2;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--fill);color:var(--muted);border:1px solid var(--stroke);transition:color .25s ease,background .25s ease}
+.mp-clipboard-mark svg{width:15px;height:15px;display:block}
+.mp-clipboard-song.is-success .mp-clipboard-mark{color:var(--ink)}
+@keyframes mpClipEnter{from{opacity:0;transform:translateY(4px);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.is-clipboard-bar>.mp-clipboard-song,.fm-on.is-clipboard-bar>.mp-clipboard-song{animation:none}.mp-clipboard-mark{transition:none}}
