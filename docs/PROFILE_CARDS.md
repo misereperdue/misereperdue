@@ -47,3 +47,8 @@ is not native iOS verification.
 Rollback: revert the website PR. No stored data is removed or migrated. Probe
 preview/production before fetching final versioned assets; verify the exact
 served bytes, not just Cloudflare's deployment status.
+
+Task #87 refinements: compact text is centered; equal star/expand circles sit
+beside it. VIP/07 chips match points chips. Badge boxes show artwork and selection
+checks only, retaining accessible labels. Sign out is a filled capsule. Orders
+shares the shop bag paths; Dashboard uses a rounded four-tile glyph.

@@ -39,7 +39,7 @@
       if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'))ids.push(active);ids.unshift(null);}
       if(options.grant&&user.username.toLowerCase()==='grim')ids=['robot'];
       ids.forEach(function(id){var selected=options.grant?(user.badges||[]).indexOf(id)>=0:options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?'Toggle ':'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
-        var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);b.appendChild(el('span','mp-badge-label',labels[id]||'None'));b.appendChild(el('span','mp-badge-state',selected?(options.grant?'Granted':'Shown'):''));grid.appendChild(b);});
+        var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);if(selected){var check=el('span','mp-badge-check');check.innerHTML=svg('M5 12 10 17 19 7');check.setAttribute('aria-hidden','true');b.appendChild(check);}grid.appendChild(b);});
     }
     async function save(id){if(pending)return;pending=true;status.textContent='Saving…';paint();try{var body=options.grant?{username:user.username,badge:id}:{badge:id};var r=await options.api('/api/badge',{method:'POST',body:body});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not update badge.');user=r.user;options.changed(user);status.textContent=options.grant?'Badges updated.':'Display badge updated.';}catch(e){status.textContent=e.message||'Could not update badge.';}finally{pending=false;if(root.isConnected)paint();}}
     paint();return root;
@@ -110,12 +110,12 @@
         var expand=button('',function(){render('full');},'mp-profile-summary-open');expand.setAttribute('aria-label','Expand '+u.username.toLowerCase()+"'s profile");expand.setAttribute('aria-expanded','false');
         expand.appendChild(avatar);
         var tx=el('span','mp-profile-summary-copy'),title=el('span','mp-profile-summary-title');
-        title.appendChild(el('strong','',u.username.toLowerCase()));var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' points');score.innerHTML=svg('M12 3.5 14.6 8.8 20.5 9.7 16.2 13.8 17.2 19.6 12 16.9 6.8 19.6 7.8 13.8 3.5 9.7 9.4 8.8 12 3.5Z');score.appendChild(el('span','',String(u.points||0)));title.appendChild(score);tx.appendChild(title);
+        title.appendChild(el('strong','',u.username.toLowerCase()));var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' points');score.innerHTML=svg('M12 3.5 14.6 8.8 20.5 9.7 16.2 13.8 17.2 19.6 12 16.9 6.8 19.6 7.8 13.8 3.5 9.7 9.4 8.8 12 3.5Z');score.title=(u.points||0)+' points';score.appendChild(el('span','',new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(u.points||0)));tx.appendChild(title);
         if(u.bio)tx.appendChild(el('small','mp-profile-summary-bio',u.bio.replace(/\s+/g,' ')));
         var info=[];if(u.listening&&u.listening.title){info.push('♫ '+u.listening.title+(u.listening.artist?' · '+u.listening.artist:''));}
         else {if(u.member)info.push('VIP');if(u.numId)info.push('#'+u.numId);if(u.createdAt)info.push('joined '+new Date(u.createdAt).toLocaleDateString(undefined,{month:'short',year:'numeric'}).toLowerCase());}
         if(info.length)tx.appendChild(el('small','mp-profile-summary-info',info.join(' · ')));
-        expand.appendChild(tx);var chevron=el('span','mp-profile-summary-chevron');chevron.innerHTML=svg('M7 10c2 0 4 4 5 4s3-4 5-4');chevron.setAttribute('aria-hidden','true');expand.appendChild(chevron);row.appendChild(expand);root.appendChild(row);
+        expand.appendChild(tx);expand.appendChild(score);var chevron=el('span','mp-profile-summary-chevron');chevron.innerHTML=svg('M7 10c2 0 4 4 5 4s3-4 5-4');chevron.setAttribute('aria-hidden','true');expand.appendChild(chevron);row.appendChild(expand);root.appendChild(row);
       } else {
         root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage user':'Profile',function(){render(next==='edit'||next==='manage'?'full':'compact');}));
         var scroll=el('div','mp-profile-bar-scroll');root.appendChild(scroll);

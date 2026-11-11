@@ -1171,8 +1171,9 @@
       }, "is-danger");
     }
     if(me){
-      btn("Orders",'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
-      if(s && s.owner)btn("Dashboard",'<path d="M4 3v17h17M9 15V9m5 11V5m5 15v-7"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
+      var shopIcon=document.querySelector('.nav [data-view=shop] svg');
+      btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
+      if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
     }
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
@@ -2941,7 +2942,7 @@
   }
   // Original menu-only double-note mark; catalog fallbacks retain mpMusicIcon().
   function mpMusicMenuIcon() {
-    return '<svg class="chat-music-menu-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3.3a1 1 0 0 0-1.2-.98l-10 2A1 1 0 0 0 7 5.3v10.9a4.6 4.6 0 0 0-1.9.16c-1.72.5-2.76 1.86-2.38 3.05.38 1.2 2.03 1.76 3.74 1.26C8 20.23 9 19.1 9 17.8V9.15l8-1.6v6.65a4.6 4.6 0 0 0-1.9.16c-1.72.5-2.76 1.86-2.38 3.05.38 1.2 2.03 1.76 3.74 1.26C18 18.23 19 17.1 19 15.8V3.3ZM9 6.12l8-1.6v1L9 7.12v-1Z"/></svg>';
+    return '<svg class="chat-music-menu-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.4 2.8 8.3 4.9a1.4 1.4 0 0 0-1.1 1.4v10.1c-.7-.2-1.5-.2-2.3.1-1.8.5-2.9 1.9-2.5 3.2.4 1.2 2.2 1.8 4 1.3 1.7-.5 2.9-1.7 2.9-3.1V9.4l8.3-1.7v6.6c-.7-.2-1.5-.2-2.3.1-1.8.5-2.9 1.9-2.5 3.2.4 1.2 2.2 1.8 4 1.3 1.7-.5 2.9-1.7 2.9-3.1V4.1c0-.9-.6-1.5-1.3-1.3Z"/></svg>';
   }
   function mpMusicIcon() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>';
