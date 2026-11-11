@@ -45,10 +45,13 @@
     window.MPFM && MPFM.yieldBar && MPFM.yieldBar();
     var style=bar.getAttribute('style'), baseHeight=bar.getBoundingClientRect().height, animation=null, phase='compact', closed=false, detail=null, entering=true, entryTimer, fades=[];
     var backdrop=el('div','mp-profile-backdrop');backdrop.setAttribute('aria-hidden','true');
-    var previous=[].map.call(bar.children,function(child){var state={el:child,inert:child.inert,hidden:child.getAttribute('aria-hidden'),opacity:getComputedStyle(child).opacity};child.inert=true;child.setAttribute('aria-hidden','true');return state;});
+    var barRect=bar.getBoundingClientRect();
+    var previous=[].map.call(bar.children,function(child){var rect=child.getBoundingClientRect();var state={el:child,inert:child.inert,hidden:child.getAttribute('aria-hidden'),opacity:getComputedStyle(child).opacity,style:child.getAttribute('style'),rect:rect};child.inert=true;child.setAttribute('aria-hidden','true');return state;});
     root.className='mp-profile-bar';root.id='mp-profile-bar';root.dataset.phase=phase;
     root.setAttribute('role','region');root.setAttribute('aria-label',user.username.toLowerCase()+"'s profile");
     bar.classList.add('is-profile-bar');if(!reduced())bar.classList.add('is-profile-entering');bar.style.height=baseHeight+'px';bar.appendChild(root);
+    if(!reduced())previous.forEach(function(s){if(s.rect.width&&s.rect.height){Object.assign(s.el.style,{position:'absolute',left:(s.rect.left-barRect.left-bar.clientLeft)+'px',top:(s.rect.top-barRect.top-bar.clientTop)+'px',right:'auto',bottom:'auto',width:s.rect.width+'px',height:s.rect.height+'px',margin:'0'});}});
+    function restoreStyles(){previous.forEach(function(s){if(s.style===null)s.el.removeAttribute('style');else s.el.setAttribute('style',s.style);});}
     function current(){return options.current ? options.current() : user;}
     function icon(label,path,run){var b=button('',function(e){e.stopPropagation();run();},'mp-profile-control');b.setAttribute('aria-label',label);b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';return b;}
     function size(animate){
@@ -104,7 +107,7 @@
     root._close=function(fast){
       if(closed)return;clearTimeout(entryTimer);fades.forEach(function(a){a.cancel();});root.getAnimations().forEach(function(a){a.cancel();});var closingHeight=bar.getBoundingClientRect().height;closed=true;if(animation)animation.cancel();
       document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('hashchange',navigate);window.removeEventListener('popstate',navigate);window.removeEventListener('resize',resize);window.visualViewport&&visualViewport.removeEventListener('resize',resize);
-      observer.disconnect();root.remove();bar.classList.remove('is-profile-bar','is-profile-expanded','is-profile-entering');if(style===null)bar.removeAttribute('style');else bar.setAttribute('style',style);
+      observer.disconnect();root.remove();restoreStyles();bar.classList.remove('is-profile-bar','is-profile-expanded','is-profile-entering');if(style===null)bar.removeAttribute('style');else bar.setAttribute('style',style);
       previous.forEach(function(s){s.el.inert=s.inert;if(s.hidden===null)s.el.removeAttribute('aria-hidden');else s.el.setAttribute('aria-hidden',s.hidden);});
       if(!fast&&!reduced()&&bar.animate){bar._profileExit=bar.animate([{height:closingHeight+'px',borderRadius:closingHeight>baseHeight?'28px':'32px'},{height:baseHeight+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)'});previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:1}],{duration:260});});}
       if(!fast&&options.anchor.isConnected)options.anchor.focus&&options.anchor.focus({preventScroll:true});
@@ -114,7 +117,7 @@
     setTimeout(function(){if(!closed)document.addEventListener('pointerdown',outside,true);},0);
     document.addEventListener('keydown',key,true);window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);window.addEventListener('resize',resize);window.visualViewport&&visualViewport.addEventListener('resize',resize);
     render('compact');
-    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){bar.classList.remove('is-profile-entering');fades.forEach(function(a){a.cancel();});fades=[];},400);}
+    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
     entering=false;
     root.querySelector('.mp-profile-summary-open').focus({preventScroll:true});
   }
