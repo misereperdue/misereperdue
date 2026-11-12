@@ -13562,18 +13562,25 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 
-/* Now playing (per dc): synth rings. Three neon rings pulse out from the Apple Music note on a
-   steady 0.8s beat; the note thumps in time over a breathing glow. */
-.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate}
-.mp-am-np::before{content:"";position:absolute;inset:2px;border-radius:50%;background:radial-gradient(circle,rgba(255,45,85,.32),rgba(176,102,255,.12) 55%,transparent 72%);animation:mpSynthGlow .8s ease-in-out infinite}
-.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.55));transform-origin:50% 55%;animation:mpSynthThump .8s cubic-bezier(.3,.7,.4,1) infinite}
-.mp-am-np i{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,transparent 56%,rgba(255,45,85,.0) 58%,#ff2d55 63%,#ff8ac0 66%,rgba(176,102,255,.55) 70%,transparent 76%);opacity:0;transform:scale(.5);animation:mpSynthRing 2.4s cubic-bezier(.22,.61,.36,1) infinite}
-.mp-am-np i:nth-child(2){animation-delay:.8s}
-.mp-am-np i:nth-child(3){animation-delay:1.6s}
-@keyframes mpSynthRing{0%{transform:scale(.5);opacity:0;filter:hue-rotate(0deg)}10%{opacity:1}100%{transform:scale(1.75);opacity:0;filter:hue-rotate(-50deg)}}
-@keyframes mpSynthThump{0%,100%{transform:scale(1)}12%{transform:scale(1.13)}35%{transform:scale(.98)}}
-@keyframes mpSynthGlow{0%,100%{opacity:.55;transform:scale(.92)}15%{opacity:1;transform:scale(1.06)}}
+/* Now playing (per dc): synth rings. Five neon rings in different colours pulse out from the
+   Apple Music note on a 0.48s beat (each grows from the note's centre), over a breathing glow
+   and a slow colour sweep; the note thumps in time. */
+.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate;overflow:visible}
+.mp-am-np::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--amr,0deg),rgba(255,45,85,.35),rgba(176,102,255,.3),rgba(56,220,255,.28),rgba(255,170,60,.25),rgba(255,45,85,.35));filter:blur(5px);opacity:.75;animation:mpSynthSweep 4s linear infinite,mpSynthGlow .96s ease-in-out infinite}
+.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.6));transform-origin:50% 50%;animation:mpSynthThump .96s cubic-bezier(.3,.7,.4,1) infinite}
+.mp-am-np i{--c:#ff2d55;--c2:#ff8ac0;position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;transform-origin:50% 50%;background:radial-gradient(circle,transparent 55%,var(--c) 61%,var(--c2) 65%,transparent 73%);box-shadow:0 0 6px -1px var(--c);opacity:0;transform:scale(.45);animation:mpSynthRing 2.4s cubic-bezier(.2,.6,.35,1) infinite}
+.mp-am-np i:nth-child(2){--c:#b066ff;--c2:#e0b3ff;animation-delay:.48s}
+.mp-am-np i:nth-child(3){--c:#28d7ff;--c2:#a6f0ff;animation-delay:.96s}
+.mp-am-np i:nth-child(4){--c:#ff9f1c;--c2:#ffd38a;animation-delay:1.44s}
+.mp-am-np i:nth-child(5){--c:#ff3fb4;--c2:#ffa6dc;animation-delay:1.92s}
+@property --amr{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes mpSynthRing{0%{transform:scale(.45);opacity:0}12%{opacity:1}70%{opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes mpSynthThump{0%,100%{transform:scale(1)}12%{transform:scale(1.14)}35%{transform:scale(.97)}}
+@keyframes mpSynthGlow{0%,100%{opacity:.5}15%{opacity:.95}}
+@keyframes mpSynthSweep{to{--amr:360deg}}
 @media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.mp-am-np::before{animation:none!important}.mp-am-np i:first-of-type{opacity:.6;transform:scale(1)}}
+/* Sphere: badges inside the avatar sit above the glass */
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:not(img):not(.chat-avatar){z-index:4!important}
 /* Listening card: Safari ignores overflow+radius clipping for the masked album art behind the
    card (white corners); clip-path clips it everywhere. */
 .mp-profile-details .mp-profile-song{clip-path:inset(0 round 15px)}
