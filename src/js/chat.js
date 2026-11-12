@@ -7345,42 +7345,6 @@
     mpPBel && mpPBel.isConnected && mpPBel._page && mpPBclose(!0);
     location.hash = "#product/gid://shopify/Product/15505333813350"; // Stars; the page loads products itself
   }
-  /* Power tiles morph (per dc, no drop-down): a tile that gains settings grows from its square into
-     the wide card in place (clip reveal), one that loses them shrinks back, and every other tile
-     glides from its old spot. Record rects before a re-render, call the returned fn after it. */
-  function powFlipStart(root) {
-    var before = {}, R = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    root.querySelectorAll(".pow-tile[data-id]").forEach(function (t) {
-      before[t.getAttribute("data-id") + (t.classList.contains("is-shop") ? ":shop" : "")] = { r: t.getBoundingClientRect(), set: t.classList.contains("has-set") };
-    });
-    return function () {
-      if (R || !Element.prototype.animate) return;
-      var E2 = "cubic-bezier(.32,.72,0,1)";
-      root.querySelectorAll(".pow-tile[data-id]").forEach(function (t) {
-        var o = before[t.getAttribute("data-id") + (t.classList.contains("is-shop") ? ":shop" : "")];
-        if (!o) return;
-        var n = t.getBoundingClientRect(), set = t.classList.contains("has-set");
-        if (set && !o.set) {
-          var dy = o.r.top - n.top, left = Math.max(0, o.r.left - n.left),
-            right = Math.max(0, n.right - o.r.right), bottom = Math.max(0, n.height - o.r.height);
-          t.animate([
-            { transform: "translateY(" + dy + "px)", clipPath: "inset(0px " + right + "px " + bottom + "px " + left + "px round 14px)" },
-            { transform: "none", clipPath: "inset(0px 0px 0px 0px round 14px)" }
-          ], { duration: 500, easing: E2 });
-          var ps = t.querySelector(".pow-set"), mn = t.querySelector(".pow-tile-main");
-          ps && ps.animate([{ opacity: 0 }, { opacity: 0, offset: 0.35 }, { opacity: 1 }], { duration: 480, easing: "ease-out" });
-          mn && mn.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 300, easing: "ease-out" });
-          return;
-        }
-        if (!set && o.set) {
-          t.animate([{ transform: "translate(" + (o.r.left - n.left) + "px," + (o.r.top - n.top) + "px)", opacity: 0.3 }, { transform: "none", opacity: 1 }], { duration: 420, easing: E2 });
-          return;
-        }
-        var dx = o.r.left - n.left, dy = o.r.top - n.top;
-        (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) && t.animate([{ transform: "translate(" + dx + "px," + dy + "px)" }, { transform: "none" }], { duration: 420, easing: E2 });
-      });
-    };
-  }
   function powOpen() {
     if (!s || !d) return;
     var b = powSheet("Powers", "pow-back", "<div class='stars-bal pow-sum' role='img'></div><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Buy stars</button>"),
@@ -7429,6 +7393,39 @@
         "</button>"
       );
     }
+    /* Layout v2 (per dc): owned powers and charms are fixed-height rows with a switch (nothing reflows);
+       a power's settings live on its own page that slides in; the shop is a sideways row of cards. */
+    var detail = null, slideDir = 0;
+    function powSets(p) { return (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); }); }
+    function summary(p, sets) {
+      var cur = (st.settings && st.settings[p.id]) || {}, f = sets[0];
+      if (!f) return '<span class="pw-sub">' + x(p.desc || "") + "</span>";
+      var v = cur[f.key] != null ? cur[f.key] : f.def, o = (f.options || []).find(function (q) { return q.v === v; });
+      if (f.type === "color") {
+        var col = o ? o.color : /^#[0-9a-f]{6}$/i.test(v || "") ? v : "";
+        return '<span class="pw-sub"><i class="pw-dot" style="--sw:' + x(col) + '"></i>' + x(o ? o.label : "Custom") + "</span>";
+      }
+      return '<span class="pw-sub">' + x(f.label) + ": " + x(o ? o.label : v) + "</span>";
+    }
+    function sw(p, on) {
+      return '<button type="button" class="pw-switch" role="switch" aria-checked="' + on + '" aria-label="' + x(p.name) + '" data-id="' + x(p.id) + '"><i></i></button>';
+    }
+    function row(p) {
+      var on = st.on.indexOf(p.id) >= 0, sets = powSets(p);
+      return '<div class="pw-row' + (on ? " is-on" : "") + (sets.length ? " has-set" : "") + '" data-id="' + x(p.id) + '">' +
+        '<button type="button" class="pw-open" data-id="' + x(p.id) + '"' + (sets.length ? ' aria-label="' + x(p.name) + ' settings"' : ' tabindex="-1"') + '>' +
+        '<span class="pw-ico">' + x(p.icon || "\u2726") + '</span><span class="pw-copy"><b>' + x(p.name) + "</b>" + summary(p, sets) + "</span>" +
+        (sets.length ? '<span class="pw-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6c0 0 6 4.4 6 6s-6 6-6 6"/></svg></span>' : "") +
+        "</button>" + sw(p, on) + "</div>";
+    }
+    function page(p) {
+      var on = st.on.indexOf(p.id) >= 0;
+      return '<div class="pw-page" data-id="' + x(p.id) + '">' +
+        '<div class="pw-page-head"><button type="button" class="pw-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9 10.4 9 12s6 6 6 6"/></svg>Powers</button></div>' +
+        '<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + x(p.icon || "\u2726") + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
+        '<div class="pow-tile pw-set-card" data-id="' + x(p.id) + '">' + setPanel({ id: p.id, name: p.name, settings: powSets(p) }) + "</div>" +
+        '<p class="pow-status" role="status" aria-live="polite"></p></div>';
+    }
     function render(msg) {
       var sum = b.querySelector(".pow-sum");
       sum.innerHTML = STARS_SVG + "<b>" + x(st.stars) + "</b>";
@@ -7436,14 +7433,24 @@
       starsFit(sum);
       var cat = st.catalog || [],
         mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
-        rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
-      var flip = powFlipStart(body);
-      body.innerHTML =
-        '<div class="pow-h">Your powers</div>' +
-        (mine.length ? '<div class="pow-grid">' + mine.map(function (p) { return tile(p, !0); }).join("") + "</div>" : "<p class='pow-note'>You don't have any powers yet.</p>") +
+        rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; }),
+        dp = detail && mine.find(function (p) { return p.id === detail; });
+      if (!dp) detail = null;
+      var minePow = mine.filter(function (p) { return p.kind !== "charm"; }), mineCh = mine.filter(function (p) { return p.kind === "charm"; });
+      var keepX = body.querySelector(".pw-shop") ? body.querySelector(".pw-shop").scrollLeft : 0;
+      body.innerHTML = dp ? page(dp) :
+        (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
+        (minePow.length ? '<div class="pow-h">Your powers</div><div class="pw-list">' + minePow.map(row).join("") + "</div>" : "") +
+        (mineCh.length ? '<div class="pow-h">Your charms</div><div class="pw-list">' + mineCh.map(row).join("") + "</div>" : "") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
-        (rest.length ? '<div class="pow-h">Get more</div><div class="pow-grid">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
-      flip();
+        (rest.length ? '<div class="pow-h">Get more</div><div class="pw-shop">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
+      if (dp && msg) status(msg);
+      var shop = body.querySelector(".pw-shop");
+      shop && keepX && (shop.scrollLeft = keepX);
+      if (slideDir && body.firstElementChild && body.animate && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+        body.animate([{ transform: "translateX(" + 28 * slideDir + "px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 320, easing: "cubic-bezier(.32,.72,0,1)" });
+      }
+      slideDir = 0;
     }
     function status(t) {
       var el = body.querySelector(".pow-status");
@@ -7459,7 +7466,7 @@
     }
     var confirmT = 0, justOpened = null;
     function saveSetting(opt) {
-      var t = opt.closest(".pow-tile"),
+      var t = opt.closest("[data-id]"),
         id = t.getAttribute("data-id"),
         k = opt.getAttribute("data-k"),
         v = opt.getAttribute("data-v"),
@@ -7526,8 +7533,39 @@
         if (!busy && !opt.classList.contains("is-on")) saveSetting(opt);
         return;
       }
+      if (e.target.closest(".pw-back")) { detail = null; slideDir = -1; render(); return; }
+      var swb = e.target.closest(".pw-switch");
+      var openb = !swb && e.target.closest(".pw-open");
+      if (openb) {
+        var rr = openb.closest(".pw-row");
+        if (rr && rr.classList.contains("has-set")) { detail = openb.getAttribute("data-id"); slideDir = 1; render(); return; }
+        swb = rr && rr.querySelector(".pw-switch");
+      }
+      if (swb) {
+        if (busy) return;
+        var sid = swb.getAttribute("data-id"), nextOn = st.on.indexOf(sid) < 0;
+        busy = !0;
+        /* Optimistic: flip now, confirm with the server, roll back on failure. */
+        swb.setAttribute("aria-checked", String(nextOn));
+        var hostRow = swb.closest(".pw-row");
+        hostRow && hostRow.classList.toggle("is-on", nextOn);
+        E("/api/powers/set", { method: "POST", body: { id: sid, on: nextOn } })
+          .then(function (j) {
+            if (!j || !j.ok) throw j;
+            st.owned = j.owned;
+            st.on = j.on;
+            busy = !1;
+            powMe();
+            b.isConnected && render();
+          })
+          .catch(function (j) {
+            busy = !1;
+            b.isConnected && render((j && j.error) || "Couldn't update powers.");
+          });
+        return;
+      }
       var btn = e.target.closest(".pow-tile-main") ? e.target.closest(".pow-tile") : e.target.closest(".pow-tile");
-      if (!btn || busy || btn.disabled) return;
+      if (!btn || busy || btn.disabled || btn.classList.contains("pw-set-card")) return;
       var id = btn.getAttribute("data-id");
       if (btn.classList.contains("is-owned")) {
         var next = st.on.indexOf(id) < 0;
@@ -7578,7 +7616,7 @@
           st.on = j.on;
           powStars(j.stars);
           powMe();
-          b.isConnected && render(powName(id) + " is yours. Tap it to turn it on.");
+          b.isConnected && render(powName(id) + " is yours. Switch it on above.");
         })
         .catch(function () {
           busy = !1;
