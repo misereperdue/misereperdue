@@ -63,14 +63,14 @@
   // Group existing controls without recreating them or losing their save handlers.
   function settings(sheet) {
     var nodes=[].slice.call(sheet.children),groups={},current='Profile';
-    var hints={Profile:'Photo, name, bio & badge',Listening:'Choose your song',Signature:'Your forum signature',Notifications:'Push preferences',Account:'Password, connections & recovery'};
+    var hints={Profile:'Photo, name, bio & badge',Listening:'Choose your song',Signature:'Your forum signature',Notifications:'Push preferences',Account:'Password, connections & recovery',VIP:'Membership, renewal & cancel'};
     function group(name){if(groups[name])return groups[name];var d=el('details','mp-settings-group'),summary=el('summary'),text=el('span'),content=el('div','mp-settings-content');d.dataset.settings=name;d.open=name==='Profile';text.appendChild(el('strong','',name));text.appendChild(el('small','',hints[name]));summary.appendChild(text);summary.insertAdjacentHTML('beforeend',svg('M7 10c2 0 4 4 5 4s3-4 5-4'));d.appendChild(summary);d.appendChild(content);sheet.appendChild(d);groups[name]=content;return content;}
     nodes.forEach(function(node){
       if(node.matches('.chat-sheet-x,.chat-sheet-share,.chat-sheet-points')){node.remove();return;}
       if(node.matches('.chat-err')){sheet.prepend(node);return;}
       if(node.matches('.chat-logout')){sheet.appendChild(node);return;}
       if(node.matches('.mp-profile-editor')){group('Listening').appendChild(node);current='Listening';return;}
-      if(node.matches('.chat-pw-title')){var title=node.textContent.trim();if(['Notifications','Signature','Change password'].indexOf(title)>=0){current=title==='Change password'?'Account':title;node.remove();return;}}
+      if(node.matches('.chat-pw-title')){var title=node.textContent.trim();if(['Notifications','Signature','Change password','VIP'].indexOf(title)>=0){current=title==='Change password'?'Account':title;node.remove();return;}}
       group(current).appendChild(node);
     });
     var photo=sheet.querySelector('.chat-sheet-big');if(photo){photo.classList.add('mp-settings-photo');var copy=el('span');copy.appendChild(el('strong','','Profile photo'));copy.appendChild(el('small','','Tap your avatar to change it'));photo.appendChild(copy);}

@@ -89,7 +89,8 @@ var MPShop = (function () {
     );
   }
   var o = ["img/mask-front-light.jpg?v=4", "img/mask-back-light.jpg?v=4"],
-    i = "img/vip-card-light.jpg?v=4";
+    i = "img/vip-card-light.jpg?v=4",
+    starsLight = "img/stars-light.jpg?v=1";
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
@@ -97,10 +98,10 @@ var MPShop = (function () {
       : !(!window.matchMedia || !matchMedia("(prefers-color-scheme: light)").matches);
   }
   function c(t) {
-    return a(t) && r() ? o : n(t) && r() ? [i] : (t.images || []).filter(Boolean);
+    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) && r() ? [starsLight] : (t.images || []).filter(Boolean);
   }
   function s(t) {
-    return a(t) && r() ? o[0] : n(t) && r() ? i : t.image;
+    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) && r() ? starsLight : t.image;
   }
   function l(t) {
     return String(null == t ? "" : t).replace(/[&<>"']/g, function (t) {
@@ -1217,10 +1218,21 @@ var MPShop = (function () {
    * plan's recurring price each month until cancelled in the Seal portal. */
   function vipTerms(i) {
     var later = null != i.planRecurring ? i.planRecurring : 3;
-    return '<div class="vip-terms"><p class="vip-terms-price"><b>' + cad(i.price) + "</b> today, then <b>" + cad(later) + "</b>/month</p><ul>" +
-      "<li>Renews automatically every month until you cancel.</li>" +
-      "<li>Cancel anytime in Manage VIP. You keep VIP until the end of the month you paid for.</li>" +
-      "<li>Sign in required. VIP is added to your Mis\u00e8re account.</li></ul></div>";
+    function ico(d) {
+      return '<span class="vt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + "</svg></span>";
+    }
+    function row(d, h, t) {
+      return '<li>' + ico(d) + '<span><b>' + h + "</b><small>" + t + "</small></span></li>";
+    }
+    return '<div class="vip-terms">' +
+      '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(i.price) + '</span><span class="vt-when">today</span></div>' +
+      '<span class="vt-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="M15 17s5-3.682 5-5-5-5-5-5"/></svg></span>' +
+      '<div class="vt-step"><span class="vt-amt">' + cad(later) + '</span><span class="vt-when">every month after</span></div></div>' +
+      "<ul>" +
+      row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews monthly", "Charged automatically until you cancel.") +
+      row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the month you paid for.") +
+      row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.") +
+      "</ul></div>";
   }
   function vipAction(p, i) {
     var box = p.querySelector("#bag-action");
