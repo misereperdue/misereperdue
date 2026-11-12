@@ -32,7 +32,7 @@
       if(options.resolve&&song.url&&(song.artistArt===undefined||song.explicit===undefined||song.album===undefined)){cachedResolve(song.url,options.resolve).then(function(metadata){if(out.isConnected&&user.listening===song){Object.assign(song,metadata);options.enriched&&options.enriched();}}).catch(function(){});}
     }
     // Owner editing is available in the toolbar above the name.
-    if (options.manage) {var manage=button('Manage',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4'));out.appendChild(manage);}
+    if (options.manage) {var manage=button('Manage',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M13.5 7.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 1 1 7 0ZM3.5 20c0-3.6 2.9-6 6.5-6c1.1 0 2.1.2 3 .7M17.5 13.2l3 1.1v2.5c0 1.9-1.3 3.4-3 4c-1.7-.6-3-2.1-3-4v-2.5Z'));out.appendChild(manage);}
     [].forEach.call(out.children, function (c, i) { c.style.setProperty('--i', i); });
     return out;
   }
