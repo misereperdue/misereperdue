@@ -13563,16 +13563,16 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 
 /* Now playing (per dc): synth rings. Five neon rings in different colours pulse out from the
-   Apple Music note on a 0.48s beat (each grows from the note's centre), over a breathing glow
+   Apple Music note on a 0.72s beat (each grows from the note's centre), over a breathing glow
    and a slow colour sweep; the note thumps in time. */
-.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate;overflow:visible}
-.mp-am-np::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--amr,0deg),rgba(255,45,85,.35),rgba(176,102,255,.3),rgba(56,220,255,.28),rgba(255,170,60,.25),rgba(255,45,85,.35));filter:blur(5px);opacity:.75;animation:mpSynthSweep 4s linear infinite,mpSynthGlow .96s ease-in-out infinite}
-.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.6));transform-origin:50% 50%;animation:mpSynthThump .96s cubic-bezier(.3,.7,.4,1) infinite}
-.mp-am-np i{--c:#ff2d55;--c2:#ff8ac0;position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;transform-origin:50% 50%;background:radial-gradient(circle,transparent 55%,var(--c) 61%,var(--c2) 65%,transparent 73%);box-shadow:0 0 6px -1px var(--c);opacity:0;transform:scale(.45);animation:mpSynthRing 2.4s cubic-bezier(.2,.6,.35,1) infinite}
-.mp-am-np i:nth-child(2){--c:#b066ff;--c2:#e0b3ff;animation-delay:.48s}
-.mp-am-np i:nth-child(3){--c:#28d7ff;--c2:#a6f0ff;animation-delay:.96s}
-.mp-am-np i:nth-child(4){--c:#ff9f1c;--c2:#ffd38a;animation-delay:1.44s}
-.mp-am-np i:nth-child(5){--c:#ff3fb4;--c2:#ffa6dc;animation-delay:1.92s}
+.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate;overflow:visible;margin-right:10px!important}
+.mp-am-np::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--amr,0deg),rgba(255,45,85,.35),rgba(176,102,255,.3),rgba(56,220,255,.28),rgba(255,170,60,.25),rgba(255,45,85,.35));filter:blur(5px);opacity:.75;animation:mpSynthSweep 6s linear infinite,mpSynthGlow 1.44s ease-in-out infinite}
+.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.6));transform-origin:50% 50%;animation:mpSynthThump 1.44s cubic-bezier(.3,.7,.4,1) infinite}
+.mp-am-np i{--c:#ff2d55;--c2:#ff8ac0;position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;transform-origin:50% 50%;background:radial-gradient(circle,transparent 55%,var(--c) 61%,var(--c2) 65%,transparent 73%);box-shadow:0 0 6px -1px var(--c);opacity:0;transform:scale(.45);animation:mpSynthRing 3.6s cubic-bezier(.2,.6,.35,1) infinite}
+.mp-am-np i:nth-child(2){--c:#b066ff;--c2:#e0b3ff;animation-delay:.72s}
+.mp-am-np i:nth-child(3){--c:#28d7ff;--c2:#a6f0ff;animation-delay:1.44s}
+.mp-am-np i:nth-child(4){--c:#ff9f1c;--c2:#ffd38a;animation-delay:2.16s}
+.mp-am-np i:nth-child(5){--c:#ff3fb4;--c2:#ffa6dc;animation-delay:2.88s}
 @property --amr{syntax:"<angle>";inherits:false;initial-value:0deg}
 @keyframes mpSynthRing{0%{transform:scale(.45);opacity:0}12%{opacity:1}70%{opacity:.5}100%{transform:scale(1.9);opacity:0}}
 @keyframes mpSynthThump{0%,100%{transform:scale(1)}12%{transform:scale(1.14)}35%{transform:scale(.97)}}
