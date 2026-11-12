@@ -1,4 +1,4 @@
-// Info footer link + /info text page, and a dark Powers→Bubble screenshot
+// Info footer link + /info text page (floating Back pill), and a dark Powers→Bubble screenshot
 // (no inline back). Run: node tools/test-info.cjs
 const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-info';
@@ -25,14 +25,14 @@ const CAT=[{id:'bubble',name:'Bubble',price:120,icon:'○',desc:'Tint your chat 
   await p.goto(ORIGIN+'/#shop');
   await p.waitForSelector('.mp-end-info a');
   const info=p.locator('.mp-end-info a');
-  assert.equal((await info.innerText()).trim(),'Info');
-  const color=await info.evaluate(e=>getComputedStyle(e).color);
-  const copy=await p.locator('.mp-end-copy').evaluate(e=>getComputedStyle(e).color);
-  assert.equal(color,copy,'Info matches footer ink');
-  await info.click();
+  assert.equal((await info.innerText()).trim(),'INFO');
+  const typo=await info.evaluate(e=>{const s=getComputedStyle(e);return {color:s.color,fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,letterSpacing:s.letterSpacing};});
+  const copy=await p.locator('.mp-end-copy').evaluate(e=>{const s=getComputedStyle(e);return {color:s.color,fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,letterSpacing:s.letterSpacing};});
+  assert.deepEqual(typo,copy,'INFO matches footer copyright type');
+  await info.evaluate(e=>e.click());
   await p.waitForURL('**/info');
   assert.equal(await p.title(),'Misère Perdue · Info');
-  assert.equal(await p.locator('img, picture, svg, video, canvas').count(),0,'text-only page');
+  assert.equal(await p.locator('main img, main picture, main svg, main video, main canvas').count(),0,'text-only page');
   assert.match(await p.locator('h1').innerText(),/^Info$/);
   assert.match(await p.locator('.updated').innerText(),/Last updated Nov 12, 2026/);
   const body=(await p.locator('main').innerText()).toLowerCase();
@@ -40,7 +40,21 @@ const CAT=[{id:'bubble',name:'Bubble',price:120,icon:'○',desc:'Tint your chat 
     assert(body.includes(needle), 'missing '+needle);
   }
   assert(!body.includes('not legal advice'));
-  await p.locator('nav a',{hasText:'Home'}).click();
+  const back=p.locator('#info-back');
+  await back.waitFor();
+  assert.equal((await back.innerText()).replace(/\s+/g,' ').trim(),'Back');
+  const pos=await back.evaluate(e=>{const s=getComputedStyle(e);const r=e.getBoundingClientRect();return {pos:s.position,top:parseFloat(s.top),left:parseFloat(s.left),radius:s.borderRadius,color:s.color};});
+  assert.equal(pos.pos,'fixed','back pill is fixed');
+  assert.ok(pos.top>=16 && pos.top<=48,'back pill under safe area, got top '+pos.top);
+  assert.ok(pos.left>=12 && pos.left<=24,'back pill left inset, got '+pos.left);
+  assert.equal(pos.radius,'999px');
+  await p.evaluate(()=>window.scrollTo(0,200));
+  await p.waitForTimeout(50);
+  const faded=await back.evaluate(e=>parseFloat(getComputedStyle(e).opacity));
+  assert.ok(faded<1,'back pill fades on scroll, opacity='+faded);
+  await p.evaluate(()=>window.scrollTo(0,0));
+  await p.screenshot({path:path.join(OUT,'info-back-dark.png')});
+  await back.click();
   await p.waitForURL(/misereperdue\.com\/?($|#)/);
   assert.ok(errors.every(e=>!/info/i.test(e)), 'info page errors: '+errors.join('; '));
   await c.close();

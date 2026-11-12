@@ -6015,7 +6015,7 @@ body.home:has(#product.on) {
   50% { opacity: .14; transform: translateY(2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-end-eyes, .mp-end-copy, .mp-end-tag { animation: none; }
+  .mp-end-eyes, .mp-end-copy, .mp-end-tag, .mp-end-info { animation: none; }
 }
 /* Twemoji credit (CC BY 4.0, per dc): only where the Twemoji images are
    actually drawn (js/emoji.js adds .mp-emoji-img; Apple devices keep native
@@ -6036,15 +6036,16 @@ body.home:has(#product.on) {
   text-decoration: none;
   pointer-events: auto;
 }
-/* Info link under the footer (per dc). Same ink as the credit links; always shown. */
+/* Info link under the footer (per dc). Same type as the copyright line; always shown. */
 .mp-end-info {
   display: block;
   margin: 6px 0 0;
-  font: 400 8px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: .08em;
+  font: 700 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .24em;
   color: var(--accent);
   opacity: .26;
   pointer-events: auto;
+  animation: shop-end-breathe 7s ease-in-out infinite;
 }
 .mp-end-info a {
   color: inherit;
@@ -12216,7 +12217,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-pb-badges,.mp-pb-ib{display:none!important}
 .chat-msg .chat-avatar-wrap>.chat-badge,.chat-msg .chat-avatar-wrap>.chat-badge-kitty,.chat-msg .chat-avatar-wrap>.chat-badge-mask{display:none!important}
 /* Custom colour swatch in power settings */
-.pow-sw-custom{overflow:hidden;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom{overflow:visible;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
 .pow-sw-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 /* Custom gift amount */
 .gift-custom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 0;background:var(--fill);font-size:13px;font-weight:650;color:var(--muted)}
@@ -12279,7 +12280,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::after{left:64%;width:.26em;animation-delay:1.3s;animation-duration:3.3s}
 @keyframes mpDrip{0%{height:.3em;transform:translateY(0);opacity:1}62%{height:1em;transform:translateY(0);opacity:1}78%{height:.5em;transform:translateY(.55em);opacity:1}100%{height:.3em;transform:translateY(1.15em);opacity:0}}
 /* Custom colour swatch + inline picker */
-.pow-sw-custom{position:relative;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom{position:relative;overflow:visible;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
 .pow-sw-custom[style*="--sw"]{background:var(--sw)}
 .pow-sw-custom:not([style*="--sw"])::before{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .pow-sw-custom::after{content:none!important}
