@@ -6,9 +6,11 @@ const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-powers-stars';fs.mkdirSync(OUT,{recursive:true});
 const T={'.html':'text/html','.css':'text/css','.js':'application/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.mp4':'video/mp4','.woff2':'font/woff2'};
 const CAT=[['glow','Glow',50],['ink','Ink',75],['halo','Halo',100],['bubble','Bubble',120],['spark','Spark',150],['banner','Banner',200],['echo','Echo',250],['crown','Crown',500]].map(([id,name,price])=>({id,name,price,icon:'*',desc:name+' power'}));
+const COLORS=[['ice','#a9d7f5'],['pink','#ff7fb8'],['gold','#f5bf45']].map(([v,color])=>({v,label:v,color}));
+CAT.find(c=>c.id==='halo').settings=[{key:'color',label:'Colour',type:'color',options:COLORS,def:'gold'},{key:'style',label:'Style',type:'choice',options:[{v:'solid',label:'Solid'},{v:'dotted',label:'Dotted'},{v:'spin',label:'Spin'}],def:'solid'}];
 (async()=>{const browser=await pw.chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
 for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
- const st={stars:180,owned:[],on:[],log:[{t:'gift-in',n:1,from:'friend',at:Date.now()}]};
+ const st={stars:180,owned:[],on:[],settings:{},log:[{t:'gift-in',n:1,from:'friend',at:Date.now()}]};
  const me={username:'tester',points:st.stars,hasRecovery:true,hasPassword:true,member:true,owner};
  const other={username:'rich',member:true,badges:['member','kitty'],activeBadge:'kitty',points:9,powers:['glow','ink','halo','bubble','spark','banner','echo'],powersOn:['halo']};
  const c=await browser.newContext({viewport:{width,height:844},deviceScaleFactor:2,colorScheme:theme,serviceWorkers:'block'});const errors=[];
@@ -21,8 +23,9 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
   else if(u.pathname==='/api/user/tester')d={ok:true,user:{...me,points:st.stars,powers:st.owned,powersOn:st.on}};
   else if(u.pathname==='/api/user/rich')d={ok:true,user:other};
   else if(u.pathname==='/api/user/kit')d={ok:true,user:{username:'kit',points:1,badges:['kitty'],activeBadge:'kitty'}};
-  else if(u.pathname==='/api/powers')d={ok:true,catalog:CAT,owned:st.owned,on:st.on,stars:st.stars};
-  else if(u.pathname==='/api/powers/buy'){const p=CAT.find(x=>x.id===body.id);if(st.stars<p.price)d={ok:false,error:'not enough stars'};else{st.stars-=p.price;st.owned=[...st.owned,p.id];st.log.unshift({t:'buy',n:-p.price,power:p.id,at:Date.now()});d={ok:true,stars:st.stars,owned:st.owned,on:st.on};}}
+  else if(u.pathname==='/api/powers')d={ok:true,catalog:CAT,owned:st.owned,on:st.on,settings:st.settings,stars:st.stars};
+  else if(u.pathname==='/api/powers/settings'){st.settings[body.id]={color:'gold',style:'solid',...(st.settings[body.id]||{}),...body.settings};d={ok:true,id:body.id,settings:st.settings[body.id]};}
+  else if(u.pathname==='/api/powers/buy'){const p=CAT.find(x=>x.id===body.id);if(st.stars<p.price)d={ok:false,error:'not enough stars'};else{st.stars-=p.price;st.owned=[...st.owned,p.id];if(p.settings)st.settings[p.id]={color:'gold',style:'solid'};st.log.unshift({t:'buy',n:-p.price,power:p.id,at:Date.now()});d={ok:true,stars:st.stars,owned:st.owned,on:st.on};}}
   else if(u.pathname==='/api/powers/set'){st.on=body.on===false?st.on.filter(x=>x!==body.id):[...st.on,body.id];d={ok:true,owned:st.owned,on:st.on};}
   else if(u.pathname==='/api/analytics/stats')d={ok:true,stats:{days:[],totalNewUsers:3}};
   else if(u.pathname==='/api/stars')d={ok:true,stars:st.stars,log:st.log};
@@ -53,8 +56,15 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.deepEqual(st.owned,['halo']);assert.equal((await sheet.locator('.pow-sum').innerText()).trim(),'80');
  assert.equal(await halo.getAttribute('aria-pressed'),'false');assert(await sheet.locator('.pow-tile[data-id=banner]').isDisabled(),'balance refresh disables banner');
  // Selecting works like badges: tap highlights (aria-pressed), status confirms, tap again clears.
- await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=halo]')?.getAttribute('aria-pressed')==='true');
+ await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=halo] .pow-tile-main')?.getAttribute('aria-pressed')==='true');
  assert.deepEqual(st.on,['halo']);assert(await halo.evaluate(e=>e.classList.contains('is-selected')));assert.equal((await sheet.locator('.pow-status').innerText()).trim(),'Powers updated.');
+ // Settings open inside the selected power's box (full width), selected like badges; saved.
+ assert(await halo.evaluate(e=>e.classList.contains('has-set')));const hb=await halo.boundingBox(),gb=await sheet.locator('.pow-grid').first().boundingBox();assert(Math.abs(hb.width-gb.width)<=1,'settings box spans the row');
+ assert.equal(await halo.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'gold');assert.equal(await halo.locator('.pow-ch[aria-pressed=true]').innerText(),'Solid');
+ await halo.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.');
+ assert.equal(st.settings.halo.color,'pink');assert.equal(await sheet.locator('.pow-tile[data-id=halo] .pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
+ await sheet.locator('.pow-tile[data-id=halo] .pow-ch[data-v=spin]').click();await p.waitForFunction(()=>document.querySelector('.pow-tile[data-id=halo] .pow-ch.is-on')?.textContent==='Spin');assert.equal(st.settings.halo.style,'spin');assert.equal(st.settings.halo.color,'pink','other setting kept');
+ await p.screenshot({path:`${OUT}/${tag}-settings.png`});
  const sel=await halo.evaluate(e=>getComputedStyle(e).borderTopColor),off=await sheet.locator('.pow-tile.is-shop').first().evaluate(e=>getComputedStyle(e).borderTopColor);assert.notEqual(sel,off,'selected tile highlighted');
  // 2-column grid of squares.
  const boxes=await sheet.locator('.pow-grid').last().locator('.pow-tile').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),Math.round(r.height)];}));

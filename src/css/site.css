@@ -13226,10 +13226,66 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .msg-popup.is-embedded{position:static;inset:auto;z-index:auto;display:block;padding:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none}
 .msg-popup.is-embedded .dashboard-sheet-wrap{position:static}
 .msg-popup.is-embedded .dashboard-sheet-blur{display:none}
-.msg-popup.is-embedded .msg-popup-inner.dashboard-sheet{max-width:none;width:auto;max-height:none;overflow:visible;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none;opacity:1;transform:none}
+.msg-popup.is-embedded .msg-popup-inner.dashboard-sheet,html .msg-popup.is-embedded .msg-popup-inner.dashboard-sheet{max-width:none!important;width:auto!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;animation:none!important;opacity:1;transform:none}
+html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{background:none!important;box-shadow:none!important}
 .msg-popup.is-embedded .dash-head h3,.msg-popup.is-embedded .dash-head>button,.msg-popup.is-embedded .msg-popup-close{display:none!important}
 .msg-popup.is-embedded .dash-head{justify-content:flex-start!important;min-height:0}
 .msg-popup.is-embedded .dash-head:not(:has(.dashboard-online-badge:not([hidden]))){display:none!important}
 .msg-popup.is-embedded .dash-hero-tile{border-radius:14px;background:var(--fill);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent)}
 .msg-popup.is-embedded .dash-pill{border-radius:999px}
 .dash-page{min-height:120px}
+
+/* ===== Dashboard restyle inside the profile bar (per dc) =====
+   One visual language with the profile views: soft fills, hairlines, 14px cards, pill buttons,
+   uppercase muted section labels, system-font numbers. The dashboard's inline styles read
+   --glass-clear-tint / --glass-hairline, so redefining them restyles every card, input and button. */
+.msg-popup.is-embedded{--glass-clear-tint:var(--fill);--glass-hairline:1px solid color-mix(in srgb,var(--ink) 7%,transparent);--glass-clear:none;font-variant-numeric:tabular-nums}
+.msg-popup.is-embedded .dashboard-sheet *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.msg-popup.is-embedded .dashboard-sheet,.msg-popup.is-embedded .dashboard-sheet *:not(svg):not(svg *){font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",sans-serif!important}
+/* tabs: segmented control */
+.msg-popup.is-embedded .dash-tabs{width:100%!important;box-sizing:border-box;background:var(--fill)!important;border:1px solid color-mix(in srgb,var(--ink) 7%,transparent)!important;box-shadow:none!important}
+.msg-popup.is-embedded .dash-tab-ind{background:color-mix(in srgb,var(--accent) 16%,var(--fill))!important;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)!important;box-shadow:none!important}
+/* section labels */
+.msg-popup.is-embedded .dash-sec-hd,.msg-popup.is-embedded .dash-label{margin:18px 2px 8px!important;padding:0!important;font-size:11px!important;font-weight:700!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:var(--muted)!important;background:none!important;border:0!important}
+.msg-popup.is-embedded .dash-sec{margin:0!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+/* tiles: headline + members share one look */
+.msg-popup.is-embedded .dash-hero{gap:8px!important}
+.msg-popup.is-embedded .dash-hero-tile,.msg-popup.is-embedded .dash-sec-body [style*="text-align: center"][style*="border-radius: 16px"]{border-radius:14px!important;background:var(--fill)!important;border:1px solid color-mix(in srgb,var(--ink) 6%,transparent)!important;box-shadow:none!important}
+.msg-popup.is-embedded .dash-hero-num{font-size:24px!important;font-weight:750!important;letter-spacing:-.01em}
+.msg-popup.is-embedded .dash-hero-lbl{font-size:12.5px!important;font-weight:600!important;color:var(--ink)!important;opacity:.85}
+.msg-popup.is-embedded .dash-hero-sub{font-size:10.5px!important;letter-spacing:.05em;color:var(--muted)!important}
+/* chart and cards */
+.msg-popup.is-embedded .dash-chart{border-radius:16px!important;border:1px solid color-mix(in srgb,var(--ink) 6%,transparent)!important;box-shadow:none!important}
+.msg-popup.is-embedded .dash-caption{color:var(--muted)!important;font-size:11.5px!important}
+.msg-popup.is-embedded .dash-urow{border-color:color-mix(in srgb,var(--ink) 7%,transparent)!important}
+/* inputs */
+.msg-popup.is-embedded .dash-input,.msg-popup.is-embedded .dashboard-sheet select{border-radius:12px!important;background:color-mix(in srgb,var(--ink) 5%,transparent)!important;border:1px solid color-mix(in srgb,var(--ink) 8%,transparent)!important;box-shadow:none!important;color:var(--ink)!important}
+/* buttons: pills, tinted by role */
+.msg-popup.is-embedded .dash-btn{min-height:34px;border-radius:999px!important;font-weight:650!important;font-size:13px!important;border:0!important;box-shadow:none!important;background:color-mix(in srgb,var(--ink) 7%,transparent)!important;transition:transform .2s cubic-bezier(.32,.72,0,1),background .2s}
+.msg-popup.is-embedded .dash-btn:active{transform:scale(.97)}
+.msg-popup.is-embedded .dash-btn.t-orange{background:color-mix(in srgb,#ff9f0a 15%,transparent)!important}
+.msg-popup.is-embedded .dash-btn.t-red{background:color-mix(in srgb,#ff453a 14%,transparent)!important}
+.msg-popup.is-embedded .dash-btn.t-yellow{background:color-mix(in srgb,#f5bf45 16%,transparent)!important}
+.msg-popup.is-embedded .dash-btn.t-green{background:color-mix(in srgb,#30d158 15%,transparent)!important}
+.msg-popup.is-embedded .dash-btn.accent{background:var(--accent)!important;color:var(--bg)!important}
+.msg-popup.is-embedded .dash-pill{background:var(--fill)!important;border:1px solid color-mix(in srgb,var(--ink) 7%,transparent)!important}
+.msg-popup.is-embedded .dash-vis{border-color:color-mix(in srgb,var(--ink) 12%,transparent)!important}
+.msg-popup.is-embedded .dash-actions{gap:8px!important;margin-top:18px!important}
+
+/* ===== Power settings inside the selected power's box (per dc) ===== */
+.pow-tile.has-set{grid-column:1/-1;aspect-ratio:auto;display:block;padding:0;text-align:left;cursor:default}
+.pow-tile-main{display:flex;align-items:center;gap:12px;width:100%;padding:12px 12px 10px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pow-tile-main .pow-ico{width:40px;height:40px;font-size:26px;flex:none}
+.pow-tile-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pow-set{display:flex;flex-direction:column;gap:10px;padding:2px 12px 14px;border-top:1px solid color-mix(in srgb,var(--accent) 22%,transparent);margin:0 12px;padding-left:0;padding-right:0;padding-top:12px}
+.pow-set-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pow-set-k{font-size:12px;font-weight:650;color:var(--muted);flex:none}
+.pow-set-opts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.pow-sw{width:28px;height:28px;padding:0;border-radius:50%;border:0;background:var(--sw);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s cubic-bezier(.32,.72,0,1),box-shadow .2s}
+.pow-sw.is-on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--sw)}
+.pow-sw:active{transform:scale(.9)}
+.pow-ch{min-height:30px;padding:0 12px;border-radius:999px;border:1px solid transparent;background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,border-color .2s}
+.pow-ch.is-on{border-color:color-mix(in srgb,var(--accent) 60%,transparent);background:color-mix(in srgb,var(--accent) 14%,var(--fill))}
+.pow-sw:focus-visible,.pow-ch:focus-visible,.pow-tile-main:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.pow-sw,.pow-ch{transition:none}}
+
