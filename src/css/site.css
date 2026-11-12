@@ -10888,7 +10888,9 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-pow-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pow-sheet{max-height:min(640px,calc(100dvh - 48px));overflow-y:auto;-webkit-overflow-scrolling:touch}
 .pow-star{color:#f5c542}
+.pow-bal{margin:2px 0 0;text-align:center;font-size:14px;color:var(--muted)}
 .pow-bal b{color:var(--ink)}
+.pow-page .pow-h:first-child,.pow-page>.pow-bal+.pow-body>.pow-h:first-child{margin-top:12px}
 .pow-h{margin:16px 2px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pow-note{margin:6px 2px;font-size:13px;color:var(--muted)}
 .pow-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}

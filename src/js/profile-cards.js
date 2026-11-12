@@ -95,10 +95,11 @@
       var before=bar.getBoundingClientRect().height;if(animation){animation.cancel();animation=null;}
       var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
       var natural=baseHeight;if(phase!=='compact'){var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll.firstElementChild,cs=getComputedStyle(scroll),ms=content?getComputedStyle(content):null;if(content)contentSize={w:content.offsetWidth,h:content.offsetHeight};natural=root.querySelector('.mp-profile-bar-head').offsetHeight+(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0)+(content?content.offsetHeight+(parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0):0);}
-      var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'?640:560,natural);
+      var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'||phase==='page'?640:560,natural);
       bar.style.height=height+'px';
       if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:before+'px',borderRadius:before<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:phase==='compact'?'32px':'28px'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});animation.onfinish=function(){animation=null;};}
     }
+    var pageTitle='';function sub(p){return p==='edit'||p==='manage'||p==='page';}
     function header(title,back){var h=el('div','mp-profile-bar-head');h.appendChild(icon('Back','M15 6 9 12 15 18',back));h.appendChild(el('strong','',title));h.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));return h;}
     function render(next,editor){
       if(closed)return;
@@ -121,9 +122,9 @@
         if(info.length)tx.appendChild(el('small','mp-profile-summary-info',info.join(' · ')));
         expand.appendChild(tx);expand.appendChild(score);var chevron=el('span','mp-profile-summary-chevron');chevron.innerHTML=svg('M7 10c2 0 4 4 5 4s3-4 5-4');chevron.setAttribute('aria-hidden','true');expand.appendChild(chevron);row.appendChild(expand);root.appendChild(row);
       } else {
-        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage user':'Profile',function(){render(next==='edit'||next==='manage'?'full':'compact');}));
+        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage user':next==='page'?pageTitle:'Profile',function(){render(sub(next)?'full':'compact');}));
         var scroll=el('div','mp-profile-bar-scroll');root.appendChild(scroll);
-        if(next==='edit'||next==='manage'){scroll.appendChild(editor);}
+        if(sub(next)){scroll.appendChild(editor);}
         else {
           if(options.sync)options.sync(u);
           var nm=body.querySelector('.mp-pb-name-t'),bio=body.querySelector('.mp-pb-bio'),pts=body.querySelector('.mp-pb-pts b'),av=body.querySelector('.mp-pb-av');
@@ -139,10 +140,12 @@
     }
     root._edit=function(){options.edit(function(editor){render('edit',editor);},function(){render('full');});};
     root._manage=function(){if(options.manage)render('manage',options.manage());};
-    root._refresh=function(){if(phase!=='edit'&&phase!=='manage')render(phase);};
+    root._refresh=function(){if(!sub(phase))render(phase);};
+    /* Generic sub-page (Powers, Stars): the profile morphs into it; Back returns to the profile. */
+    root._page=function(title,page){pageTitle=title;render('page',page);};
     root.addEventListener('toggle',function(){size(true);},true);
-    function outside(e){if(e.target.closest('.avatar-options-overlay,.rc-back,.chat-alert-backdrop'))return;if(phase!=='edit'&&phase!=='manage'&&!bar.contains(e.target)&&!options.anchor.contains(e.target))options.close();}
-    function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(phase==='edit'||phase==='manage')render('full');else if(phase==='full')render('compact');else options.close();}}
+    function outside(e){if(e.target.closest('.avatar-options-overlay,.rc-back,.chat-alert-backdrop'))return;if(!sub(phase)&&!bar.contains(e.target)&&!options.anchor.contains(e.target))options.close();}
+    function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}}
     function navigate(){options.close();}
     function resize(){size(false);}
     root._close=function(fast){
