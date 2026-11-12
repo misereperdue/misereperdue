@@ -257,24 +257,39 @@
     var m = navigator.mediaSession;
     try {
       if (c && on) {
-        var k = c.tr.id + "|" + c.tr.title + "|" + c.tr.artist + "|" + c.tr.art;
+        var k = c.tr.id + "|" + c.tr.title + "|" + c.tr.artist + "|" + c.tr.art + "|" + live();
         if (k !== msKey && window.MediaMetadata) {
           msKey = k;
-          m.metadata = new MediaMetadata({ title: c.tr.title || "Misery FM", artist: c.tr.artist || "Misery FM", album: c.tr.album || "Misery FM · Live",
+          m.metadata = new MediaMetadata({ title: c.tr.title || "Misery FM", artist: live() ? "LIVE \u00b7 " + (c.tr.artist || "Misery FM") : c.tr.artist || "Misery FM", album: live() ? "MISERY FM" : c.tr.album || "Misery FM \u00b7 Live",
             artwork: c.tr.art ? [{ src: artUrl(c.tr), sizes: "600x600", type: "image/jpeg" }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }, { src: "/img/icon-512.png", sizes: "512x512", type: "image/png" }] });
         }
         m.playbackState = c.paused ? "paused" : "playing";
-        m.setPositionState && m.setPositionState({ duration: c.d, position: Math.min(c.t, c.d), playbackRate: 1 });
+        msControls(!live());
+        if (live()) {
+          /* Live (per dc): Control Center shows LIVE, not a scrubber or skip buttons. An infinite duration is
+             the live signal; if the browser rejects it, clear the position so no scrubber shows. */
+          try { m.setPositionState && m.setPositionState({ duration: Infinity, position: 0, playbackRate: 1 }); } catch (e1) { try { m.setPositionState && m.setPositionState(); } catch (e2) {} }
+        } else m.setPositionState && m.setPositionState({ duration: c.d, position: Math.min(c.t, c.d), playbackRate: 1 });
       } else m.playbackState = "paused";
     } catch (e) {}
+  }
+  /* Track controls only when not live; live sessions get play/pause only (no skip, back or seeking). */
+  var msTrack = null;
+  function msControls(on2) {
+    var MS = navigator.mediaSession;
+    if (!MS || !MS.setActionHandler || msTrack === on2) return;
+    msTrack = on2;
+    var set = function (a, f) { try { MS.setActionHandler(a, f); } catch (e) {} };
+    set("nexttrack", on2 ? function () { owner() && ctl({ action: "skip" }); } : null);
+    set("previoustrack", on2 ? function () { owner() && ctl({ action: "prev" }); } : null);
+    ["seekto", "seekbackward", "seekforward"].forEach(function (a) { set(a, null); });
   }
   try {
     var MS = navigator.mediaSession;
     if (MS && MS.setActionHandler) {
       MS.setActionHandler("play", function () { listen(!0); });
       MS.setActionHandler("pause", function () { listen(!1); });
-      MS.setActionHandler("nexttrack", function () { owner() && ctl({ action: "skip" }); });
-      MS.setActionHandler("previoustrack", function () { owner() && ctl({ action: "prev" }); });
+      msControls(!live());
     }
   } catch (e) {}
   function wave(t) {

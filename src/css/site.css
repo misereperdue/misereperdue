@@ -13029,7 +13029,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-profile-eq.mp-am-np{position:relative;width:52px;height:52px;display:block;flex:none;align-self:center;overflow:visible;margin-right:4px!important}
 .mp-am-np .mp-am-dots{position:absolute;inset:0;display:block;will-change:transform;animation:mpDotsTurn 40s linear infinite}
 .mp-am-np .mp-am-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:.75;transform:scale(.94);will-change:transform,opacity;animation:mpRingWave 3.6s cubic-bezier(.45,0,.35,1) infinite;animation-delay:calc(var(--r) * .3s - 3.6s)}
-.mp-am-np>svg:not(.mp-am-ring){position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;color:var(--ink);filter:drop-shadow(0 1px 2px rgba(0,0,0,.18));transform-origin:50% 50%;will-change:transform;animation:mpNoteBreath 3.6s ease-in-out infinite}
+.mp-am-np>svg:not(.mp-am-ring){position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;color:var(--ink);filter:none;transform-origin:50% 50%;will-change:transform;animation:mpNoteBreath 3.6s ease-in-out infinite}
 @keyframes mpRingWave{0%,100%{opacity:.72;transform:scale(.94)}25%{opacity:1;transform:scale(1.07)}50%{opacity:.85;transform:scale(.98)}}
 @keyframes mpDotsTurn{to{transform:rotate(360deg)}}
 @keyframes mpNoteBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -13044,6 +13044,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    text starts, title in the theme ink, album/artist tinted toward the cover colour; no shadows. */
 .mp-profile-details .mp-profile-song-art{-webkit-mask-image:linear-gradient(to right,#000 25%,transparent 72%)!important;mask-image:linear-gradient(to right,#000 25%,transparent 72%)!important}
 .mp-profile-details .mp-profile-song-copy strong{color:var(--ink)}
+.mp-profile-details .mp-profile-song[style*="--song-tint"] .mp-profile-song-copy strong{color:color-mix(in srgb,var(--song-tint) 30%,var(--ink))}
 .mp-profile-details .mp-profile-song[style*="--song-tint"] :is(.mp-profile-song-album,.mp-profile-song-artist,.mp-profile-song-artist>span:last-child){color:color-mix(in srgb,var(--song-tint) 38%,var(--muted))}
 .mp-profile-details .mp-profile-song :is(.mp-profile-song-copy,.mp-profile-song-copy *){text-shadow:none!important}
 /* Smoothness: always-on decorations pause while a morph runs (html.mp-morphing, set in profile-cards). */
