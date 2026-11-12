@@ -864,7 +864,7 @@
             if (
               ((v.className = "chat-sheet-points"),
               (v.innerHTML =
-                '<span aria-hidden="true">★</span> <span>' + x(n.points || 0) + "</span> points"),
+                '<span aria-hidden="true">★</span> <span>' + x(n.points || 0) + "</span> stars"),
               r.appendChild(v),
               n.createdAt)
             ) {
@@ -1112,7 +1112,7 @@
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = (pill || "") + '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> points</span>";
+    st.innerHTML = (pill || "") + '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> stars</span>";
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
@@ -1127,6 +1127,8 @@
       br.childNodes.length && st.appendChild(br);
     }
     body.appendChild(st);
+    var pw = powRow(n);
+    pw && body.appendChild(pw);
     var bio = document.createElement("div");
     bio.className = "mp-pb-bio" + (n.bio ? "" : " is-empty");
     if (n.bio) bio.textContent = n.bio;
@@ -1172,6 +1174,8 @@
       }, "is-danger");
     }
     if(me){
+      btn("Powers",POW_ICON,function(){mpPBclose(true);powOpen();});
+      btn("Stars",STAR_ICON,function(){mpPBclose(true);starsOpen();});
       var shopIcon=document.querySelector('.nav [data-view=shop] svg');
       btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
       if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
@@ -1187,8 +1191,9 @@
       edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
       close:function(){mpPBclose();},
       sync:function(user){
+        var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
         var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=O(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
-        st.innerHTML=(pill||'')+'<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>'+x(user.points||0)+'</b> points</span>';
+        st.innerHTML=(pill||'')+'<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>'+x(user.points||0)+'</b> stars</span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===N(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         avw.classList.toggle('is-vip',N(user)==='member');avw.classList.toggle('is-verified',N(user)==='verified');
       },
@@ -5713,7 +5718,7 @@
       (C.innerHTML =
         '<span aria-hidden="true">★</span> <span>' +
         x(s.points || 0) +
-        "</span> points"),
+        "</span> stars"),
       o.appendChild(C));
     o.appendChild(MPProfiles.badgePicker(s,{api:E,art:M,allowed:function(user,id){return id!=='robot'||user==='grim';},active:N,changed:function(user){s=mpProfileSynced(rcKeep(user));T[user.username]=N(user);h();}}));
     var A = document.createElement("div");
@@ -6970,6 +6975,211 @@
     });
     return row;
   }
+  /* ---------- Powers & Stars (per dc) ----------
+     Stars are the existing points balance. Powers are bought with Stars in the
+     Powers sheet and switched on/off there. The Stars sheet shows the balance,
+     recent purchases and gifts, and a Get stars button to the shop's Stars packs.
+     API: GET /api/powers, POST /api/powers/buy|set, GET /api/stars (misery-worker). */
+  var POW_ICON = '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/>',
+    STAR_ICON = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
+    POW_X = "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button>",
+    powMap = {},
+    powCat = null;
+  function powKeep(j) {
+    j && (j.catalog || []).forEach(function (p) { powMap[p.id] = p; });
+    return j;
+  }
+  function powCatalog() {
+    powCat ||
+      ((powCat = E("/api/powers").then(function (j) {
+        if (!j || !j.ok) throw j;
+        return powKeep(j);
+      })),
+      powCat.catch(function () { powCat = null; }));
+    return powCat;
+  }
+  function powIco(p) {
+    return '<span class="pow-ico" aria-hidden="true">' + x((p && p.icon) || "✦") + "</span>";
+  }
+  function powName(id) {
+    return (powMap[id] && powMap[id].name) || id;
+  }
+  /* Pill under the stars/badges row: up to 5 power icons and a +N; tap to list them all. */
+  function powRow(user) {
+    var ids = (user && user.powers) || [];
+    if (!ids.length) return null;
+    var on = user.powersOn || [],
+      w = document.createElement("div"),
+      b = document.createElement("button"),
+      list = document.createElement("div"),
+      MAX = 5;
+    w.className = "mp-pb-pow";
+    b.type = "button";
+    b.className = "mp-pb-pow-pill";
+    b.setAttribute("aria-expanded", "false");
+    list.className = "mp-pb-pow-list";
+    list.hidden = !0;
+    w.appendChild(b);
+    w.appendChild(list);
+    function paint() {
+      b.innerHTML =
+        '<span class="mp-pb-pow-k">Powers</span><span class="mp-pb-pow-icons">' +
+        ids.slice(0, MAX).map(function (id) { return powIco(powMap[id]); }).join("") +
+        (ids.length > MAX ? '<span class="mp-pb-pow-more">+' + (ids.length - MAX) + "</span>" : "") +
+        "</span>";
+      b.setAttribute("aria-label", ids.length + (ids.length === 1 ? " power" : " powers") + ", show all");
+      list.innerHTML = ids
+        .map(function (id) {
+          return '<div class="mp-pb-pow-item' + (on.indexOf(id) >= 0 ? " on" : "") + '">' + powIco(powMap[id]) + "<span>" + x(powName(id)) + "</span></div>";
+        })
+        .join("");
+    }
+    paint();
+    powCatalog().then(function () { w.isConnected && paint(); }, function () {});
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = list.hidden;
+      list.hidden = !open;
+      w.classList.toggle("is-open", open);
+      b.setAttribute("aria-expanded", String(open));
+    });
+    return w;
+  }
+  function powSheet(title, cls, inner) {
+    var b = rcLayer(POW_X + "<h2 class='rc-title'>" + title + "</h2>" + inner, cls);
+    b.querySelector(".rc-card").classList.add("pow-sheet");
+    b.querySelector(".rc-x-close").addEventListener("click", rcClose);
+    b.addEventListener("click", function (e) { e.target === b && rcClose(); });
+    return b;
+  }
+  function powStars(n) {
+    s && ((s.points = n), te(n));
+  }
+  function starsGo() {
+    rcClose();
+    location.hash = "#shop";
+  }
+  function powOpen() {
+    if (!s || !d) return;
+    var b = powSheet("Powers", "pow-back", "<p class='rc-sub pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Get stars</button>"),
+      body = b.querySelector(".pow-body"),
+      st = null,
+      busy = !1;
+    b.querySelector(".pow-get").addEventListener("click", starsGo);
+    function row(p, mine) {
+      var on = mine && st.on.indexOf(p.id) >= 0;
+      return (
+        '<div class="pow-row" data-id="' + x(p.id) + '">' + powIco(p) +
+        '<div class="pow-t"><b>' + x(p.name) + "</b><span>" + x(p.desc || "") + "</span></div>" +
+        (mine
+          ? '<button type="button" class="pow-tog' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="' + x(p.name) + '"><i></i></button>'
+          : '<button type="button" class="pow-buy"' + (st.stars < p.price ? " disabled" : "") + ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"><span aria-hidden="true">★</span> ' + x(p.price) + "</button>") +
+        "</div>"
+      );
+    }
+    function render() {
+      b.querySelector(".pow-bal").innerHTML = '<span class="pow-star" aria-hidden="true">★</span> <b>' + x(st.stars) + "</b> stars";
+      var cat = st.catalog || [],
+        mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
+        rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
+      body.innerHTML =
+        '<div class="pow-h">Your powers</div>' +
+        (mine.length ? mine.map(function (p) { return row(p, !0); }).join("") : "<p class='pow-note'>You don't have any powers yet.</p>") +
+        (rest.length ? '<div class="pow-h">Get more</div>' + rest.map(function (p) { return row(p, !1); }).join("") : "");
+    }
+    function fail(btn, msg) {
+      busy = !1;
+      btn.disabled = !1;
+      btn.classList.remove("is-confirm");
+      btn.textContent = msg;
+      setTimeout(function () { b.isConnected && render(); }, 1800);
+    }
+    body.addEventListener("click", function (e) {
+      var btn = e.target.closest("button"),
+        r = btn && btn.closest(".pow-row");
+      if (!r || busy) return;
+      var id = r.getAttribute("data-id");
+      if (btn.classList.contains("pow-tog")) {
+        var next = st.on.indexOf(id) < 0;
+        busy = !0;
+        E("/api/powers/set", { method: "POST", body: { id: id, on: next } })
+          .then(function (j) {
+            busy = !1;
+            if (!j || !j.ok) throw j;
+            st.owned = j.owned;
+            st.on = j.on;
+            render();
+          })
+          .catch(function () { fail(btn, "!"); });
+        return;
+      }
+      if (!btn.classList.contains("pow-buy")) return;
+      /* Two taps to buy: the first asks, the second spends. */
+      if (!btn.classList.contains("is-confirm")) {
+        body.querySelectorAll(".pow-buy.is-confirm").forEach(function (o) { o !== btn && render(); });
+        btn = body.querySelector('.pow-row[data-id="' + id + '"] .pow-buy') || btn;
+        btn.classList.add("is-confirm");
+        btn.textContent = "Buy?";
+        setTimeout(function () { btn.isConnected && btn.classList.contains("is-confirm") && !busy && render(); }, 3500);
+        return;
+      }
+      busy = !0;
+      btn.disabled = !0;
+      btn.innerHTML = '<span class="btn-spin"></span>';
+      E("/api/powers/buy", { method: "POST", body: { id: id } })
+        .then(function (j) {
+          if (!j || !j.ok) return fail(btn, j && j.error === "not enough stars" ? "Not enough" : "Try again");
+          busy = !1;
+          st.stars = j.stars;
+          st.owned = j.owned;
+          st.on = j.on;
+          powStars(j.stars);
+          render();
+        })
+        .catch(function () { fail(btn, "Try again"); });
+    });
+    E("/api/powers")
+      .then(function (j) {
+        if (!b.isConnected) return;
+        if (!j || !j.ok) throw j;
+        powKeep(j);
+        st = { catalog: j.catalog || [], owned: j.owned || [], on: j.on || [], stars: j.stars || 0 };
+        render();
+      })
+      .catch(function () {
+        b.isConnected && (body.innerHTML = "<p class='pow-note'>Couldn't load powers. Try again soon.</p>");
+      });
+  }
+  function starsLine(e) {
+    var who = function (u) { return u ? mpAt(u) : "someone"; },
+      t = { buy: "Bought " + powName(e.power), "gift-in": "Gift from " + who(e.from), "gift-out": "Gift to " + who(e.to), pack: "Stars pack", grant: "Added by " + who(e.from) }[e.t] || "Stars";
+    var n = Number(e.n) || 0;
+    return (
+      '<div class="stars-row"><span class="stars-what">' + x(t) + '</span><span class="stars-when">' +
+      x(e.at ? new Date(e.at).toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "") +
+      '</span><b class="stars-n' + (n > 0 ? " is-plus" : "") + '">' + (n > 0 ? "+" : "−") + x(Math.abs(n)) + "</b></div>"
+    );
+  }
+  function starsOpen() {
+    if (!s || !d) return;
+    var b = powSheet("Stars", "stars-back", "<div class='stars-bal'><span class='pow-star' aria-hidden='true'>★</span><b>" + x(s.points || 0) + "</b><span>stars</span></div><button type='button' class='pow-get stars-get'>Get stars</button><div class='pow-h'>Recent</div><div class='stars-log'><p class='pow-note'>Loading…</p></div>"),
+      log = b.querySelector(".stars-log");
+    b.querySelector(".stars-get").addEventListener("click", starsGo);
+    Promise.all([E("/api/stars"), powCatalog().catch(function () {})])
+      .then(function (r) {
+        var j = r[0];
+        if (!b.isConnected) return;
+        if (!j || !j.ok) throw j;
+        b.querySelector(".stars-bal b").textContent = j.stars || 0;
+        powStars(j.stars || 0);
+        log.innerHTML = (j.log || []).length ? j.log.map(starsLine).join("") : "<p class='pow-note'>Power purchases and gifted stars show up here.</p>";
+      })
+      .catch(function () {
+        b.isConnected && (log.innerHTML = "<p class='pow-note'>Couldn't load your stars. Try again soon.</p>");
+      });
+  }
+  window.MPOpenPowers = powOpen;
+  window.MPOpenStars = starsOpen;
   /* ---------- Orders (per dc): link a checkout email with one order, then see every order + tracking ---------- */
   var ordTitle = null;
   var ORD_ICON =
