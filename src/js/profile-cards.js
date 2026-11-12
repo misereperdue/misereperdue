@@ -35,7 +35,7 @@
   var resolvedSongs=new Map();
   function cachedResolve(url,resolve){var hit=resolvedSongs.get(url);if(hit&&Date.now()-hit.t<300000)return hit.p;var p=resolve(url).then(function(value){return value.listening||value;}).catch(function(e){resolvedSongs.delete(url);throw e;});if(resolvedSongs.size>100)resolvedSongs.clear();resolvedSongs.set(url,{t:Date.now(),p:p});return p;}
   /* Now playing (per dc): the Apple Music note bouncing, with synth bubbles bouncing up behind it. */
-  function amNote(){return '<i></i><i></i><i></i><svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
+  function amNote(){return '<i></i><i></i><i></i><i></i><i></i><svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
   function synth(){return svg('M4 9v6M8 5v14M12 8v8M16 3v18M20 7v10');}
   function svg(path) {return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';}
   function badgePicker(user, options) {
