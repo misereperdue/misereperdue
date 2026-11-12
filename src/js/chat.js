@@ -1113,7 +1113,7 @@
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = (pill || "") + '<span class="mp-pb-pts">' + mpStar() + ' <b>' + x(n.points || 0) + "</b> stars</span>";
+    st.innerHTML = (pill || "") + '<span class="mp-pb-pts" aria-label="' + x(n.points || 0) + ' stars">' + mpStar() + ' <b>' + x(n.points || 0) + "</b></span>";
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
@@ -1134,7 +1134,7 @@
     bio.className = "mp-pb-bio" + (n.bio ? "" : " is-empty");
     if (n.bio) bio.textContent = n.bio;
     else bio.setAttribute("hidden", "");
-    body.appendChild(bio);
+    nm.appendChild(bio);
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
     /* Share/Edit sit above the name; Whisper/Hide remain secondary actions. */
@@ -1170,10 +1170,18 @@
     !me && s && d && btn("Gift", STAR_ICON, function () { giftOpen(b._profile || n, b); });
     if (!me && window.mpHide) {
       mpHide.seen(n.username, n.numId);
-      btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/>', function () {
+      var hideK = document.createElement("button");
+      hideK.type = "button";
+      hideK.className = "mp-pb-hide" + (mpHide.is(n.username) ? " is-on" : "");
+      hideK.setAttribute("aria-label", (mpHide.is(n.username) ? "Unhide " : "Hide ") + mpName(n.username));
+      hideK.title = mpHide.is(n.username) ? "Unhide" : "Hide";
+      hideK.innerHTML = '<svg ' + MP_IC + '><path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/></svg>';
+      hideK.addEventListener("click", function (ev) {
+        ev.stopPropagation();
         mpHide.is(n.username) ? (mpHide.unhide(n.username), mpHide.toast(mpAt(n.username) + " is visible again")) : mpHideUser(n.username, n.numId);
         mpPBclose();
-      }, "is-danger");
+      });
+      n1.appendChild(hideK);
     }
     if(me){
       btn("Powers",POW_ICON,function(){powOpen();});
@@ -1195,7 +1203,7 @@
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
         mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
-        st.innerHTML=(pill||'')+'<span class="mp-pb-pts">'+mpStar()+' <b>'+x(user.points||0)+'</b> stars</span>';
+        st.innerHTML=(pill||'')+'<span class="mp-pb-pts" aria-label="'+x(user.points||0)+' stars">'+mpStar()+' <b>'+x(user.points||0)+'</b></span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
@@ -1254,6 +1262,31 @@
     })();
     return !0;
   };
+  /* Own messages show your name and time above the bubble, like everyone else's (per dc). */
+  function mpRelTime(ts) {
+    if (!ts) return "";
+    var t = Math.max(1, Math.floor((Date.now() - ts) / 1e3));
+    if (t < 60) return t + "s";
+    var n = Math.floor(t / 60);
+    if (n < 60) return n + "m";
+    var a = Math.floor(n / 60);
+    if (a < 24) return a + "h";
+    var r = Math.floor(a / 24);
+    return r < 7 ? r + "d" : new Date(ts).toLocaleDateString();
+  }
+  function mpMineMain(o, e) {
+    var w = document.createElement("div"), h = document.createElement("div"), nm = document.createElement("strong"), tm = document.createElement("span");
+    w.className = "chat-msg-main is-mine";
+    h.className = "chat-msg-head";
+    nm.textContent = mpName(e.user) || "";
+    tm.className = "chat-time";
+    tm.textContent = mpRelTime(e.ts);
+    h.appendChild(nm);
+    h.appendChild(tm);
+    w.appendChild(h);
+    o.appendChild(w);
+    return w;
+  }
   function mpStar(c) { return window.MPStar ? MPStar(c) : '<span class="mp-star' + (c ? " " + c : "") + '" aria-hidden="true">★</span>'; }
   function mpPB(u, anchor) {
     if (!u) return;
@@ -4844,8 +4877,8 @@
           if (cP && l) {
             ((i.className = "chat-bubble"), o.classList.add("chat-photo-text"));
             var cW = document.createElement("div");
-            ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), o.appendChild(cW));
-          } else (!e.media && mpNowListening(i, mpMusicRef(e.text) ? e.text : l, e.user, o), mpGlobeEmbed(i, e.text), mpPollRender(i, e), o.appendChild(i));
+            ((cW.className = "chat-photo-col"), cW.appendChild(cP), cW.appendChild(i), mpMineMain(o, e).appendChild(cW));
+          } else (!e.media && mpNowListening(i, mpMusicRef(e.text) ? e.text : l, e.user, o), mpGlobeEmbed(i, e.text), mpPollRender(i, e), mpMineMain(o, e).appendChild(i));
           var f = J(e.user, e.avatar, "sm", void 0 !== e.av ? e.av : X()),
             g = _(e);
           (g && f.insertAdjacentHTML("beforeend", g), ee(f, e.user), o.appendChild(f));
