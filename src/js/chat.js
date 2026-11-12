@@ -7154,7 +7154,7 @@
         '<div class="vip-row-top"><span class="rc-row-icon" aria-hidden="true">' + mpStar() + '</span><span class="rc-row-text"><span class="rc-row-title"></span><span class="rc-row-status"></span></span></div>' +
         (v.vip ? '<div class="vip-row-facts"></div>' : "") +
         '<div class="vip-row-btns"></div>';
-      row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? "VIP \u00b7 Monthly" : "VIP") : "Not VIP yet";
+      row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? (v.cancelled ? "VIP \u00b7 Cancelled" : "VIP \u00b7 Monthly") : "VIP") : "Not VIP yet";
       row.querySelector(".rc-row-status").textContent = v.vip
         ? since ? vipSince(since) : "Active"
         : "CA$10 today, then CA$3/month";
@@ -7162,7 +7162,7 @@
       if (facts) {
         var f = [];
         since && f.push(["Member since", fmt(since)]);
-        sub && v.paidThrough && f.push(["Renews around", fmt(v.paidThrough)]);
+        sub && v.paidThrough && f.push([v.cancelled ? "VIP ends" : "Renews around", fmt(v.paidThrough)]);
         !sub && f.push(["Plan", "Granted VIP \u00b7 no billing"]);
         facts.innerHTML = f.map(function (x) { return "<div><span></span><b></b></div>"; }).join("");
         facts.querySelectorAll("div").forEach(function (el, k) {
@@ -7171,17 +7171,41 @@
         });
       }
       var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login";
-      if (v.vip && sub) {
-        btns.innerHTML = '<a class="btn chat-xlink vip-row-manage" target="_blank" rel="noopener">Manage</a><button type="button" class="btn chat-xlink vip-row-cancel">Cancel VIP</button><p class="vip-row-note" hidden>Opens the subscription portal. Enter your checkout email to get a sign-in link, then choose Cancel. VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + ".</p>";
+      if (v.vip && sub && v.cancelled) {
+        btns.innerHTML = '<p class="vip-row-note">Cancelled. You won\u2019t be charged again, and VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + '.</p>';
+      } else if (v.vip && sub) {
+        var until = v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for";
+        btns.innerHTML = '<a class="btn chat-xlink vip-row-manage" target="_blank" rel="noopener">Manage</a><button type="button" class="btn chat-xlink vip-row-cancel">Cancel VIP</button><p class="vip-row-note" hidden>Cancel your VIP? You won\u2019t be charged again and VIP stays on until ' + until + '.</p>';
         btns.querySelector(".vip-row-manage").href = url;
-        var cb = btns.querySelector(".vip-row-cancel"), note = btns.querySelector(".vip-row-note");
+        var cb = btns.querySelector(".vip-row-cancel"), note = btns.querySelector(".vip-row-note"), portal = !1;
         cb.addEventListener("click", function () {
+          if (portal) return void window.open(url, "_blank", "noopener");
           if (note.hidden) {
             note.hidden = !1;
-            cb.textContent = "Continue to cancel";
+            cb.textContent = "Yes, cancel VIP";
             return;
           }
-          window.open(url, "_blank", "noopener");
+          cb.disabled = !0;
+          cb.innerHTML = '<span class="btn-spin"></span>';
+          fetch("https://api.misereperdue.com/api/vip/cancel", { method: "POST", headers: { Authorization: "Bearer " + tok } })
+            .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
+            .then(function (x) {
+              if (x.r.ok && x.j.ok) return void paint(x.j);
+              /* Not set up in the Worker yet (503) or not found in Seal: finish in the Seal portal. */
+              if (503 === x.r.status || 404 === x.r.status) {
+                note.textContent = "Finish in the subscription portal: enter your checkout email to get a sign-in link, then choose Cancel.";
+                cb.disabled = !1;
+                cb.textContent = "Open subscription portal";
+                portal = !0;
+                return;
+              }
+              throw new Error(x.j && x.j.error || "cancel");
+            })
+            .catch(function (e) {
+              cb.disabled = !1;
+              cb.textContent = "Yes, cancel VIP";
+              note.textContent = (e && e.message && "cancel" !== e.message ? e.message.charAt(0).toUpperCase() + e.message.slice(1) : "Couldn\u2019t cancel") + ". Try again.";
+            });
         });
       } else if (!v.vip) {
         btns.innerHTML = '<button type="button" class="btn chat-xlink">Become VIP</button>';
@@ -7190,9 +7214,9 @@
         });
       }
     }
-    paint({ vip: !!(s && s.member), source: null });
     var tok = null;
     try { tok = localStorage.getItem("chat_token"); } catch (e) {}
+    paint({ vip: !!(s && s.member), source: null });
     tok && fetch("https://api.misereperdue.com/api/vip", { headers: { Authorization: "Bearer " + tok } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (v) { v && row.isConnected && paint(v); })
@@ -7321,6 +7345,42 @@
     mpPBel && mpPBel.isConnected && mpPBel._page && mpPBclose(!0);
     location.hash = "#product/gid://shopify/Product/15505333813350"; // Stars; the page loads products itself
   }
+  /* Power tiles morph (per dc, no drop-down): a tile that gains settings grows from its square into
+     the wide card in place (clip reveal), one that loses them shrinks back, and every other tile
+     glides from its old spot. Record rects before a re-render, call the returned fn after it. */
+  function powFlipStart(root) {
+    var before = {}, R = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    root.querySelectorAll(".pow-tile[data-id]").forEach(function (t) {
+      before[t.getAttribute("data-id") + (t.classList.contains("is-shop") ? ":shop" : "")] = { r: t.getBoundingClientRect(), set: t.classList.contains("has-set") };
+    });
+    return function () {
+      if (R || !Element.prototype.animate) return;
+      var E2 = "cubic-bezier(.32,.72,0,1)";
+      root.querySelectorAll(".pow-tile[data-id]").forEach(function (t) {
+        var o = before[t.getAttribute("data-id") + (t.classList.contains("is-shop") ? ":shop" : "")];
+        if (!o) return;
+        var n = t.getBoundingClientRect(), set = t.classList.contains("has-set");
+        if (set && !o.set) {
+          var dy = o.r.top - n.top, left = Math.max(0, o.r.left - n.left),
+            right = Math.max(0, n.right - o.r.right), bottom = Math.max(0, n.height - o.r.height);
+          t.animate([
+            { transform: "translateY(" + dy + "px)", clipPath: "inset(0px " + right + "px " + bottom + "px " + left + "px round 14px)" },
+            { transform: "none", clipPath: "inset(0px 0px 0px 0px round 14px)" }
+          ], { duration: 500, easing: E2 });
+          var ps = t.querySelector(".pow-set"), mn = t.querySelector(".pow-tile-main");
+          ps && ps.animate([{ opacity: 0 }, { opacity: 0, offset: 0.35 }, { opacity: 1 }], { duration: 480, easing: "ease-out" });
+          mn && mn.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 300, easing: "ease-out" });
+          return;
+        }
+        if (!set && o.set) {
+          t.animate([{ transform: "translate(" + (o.r.left - n.left) + "px," + (o.r.top - n.top) + "px)", opacity: 0.3 }, { transform: "none", opacity: 1 }], { duration: 420, easing: E2 });
+          return;
+        }
+        var dx = o.r.left - n.left, dy = o.r.top - n.top;
+        (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) && t.animate([{ transform: "translate(" + dx + "px," + dy + "px)" }, { transform: "none" }], { duration: 420, easing: E2 });
+      });
+    };
+  }
   function powOpen() {
     if (!s || !d) return;
     var b = powSheet("Powers", "pow-back", "<div class='stars-bal pow-sum' role='img'></div><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Buy stars</button>"),
@@ -7377,11 +7437,13 @@
       var cat = st.catalog || [],
         mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
         rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
+      var flip = powFlipStart(body);
       body.innerHTML =
         '<div class="pow-h">Your powers</div>' +
         (mine.length ? '<div class="pow-grid">' + mine.map(function (p) { return tile(p, !0); }).join("") + "</div>" : "<p class='pow-note'>You don't have any powers yet.</p>") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
         (rest.length ? '<div class="pow-h">Get more</div><div class="pow-grid">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
+      flip();
     }
     function status(t) {
       var el = body.querySelector(".pow-status");

@@ -1263,8 +1263,8 @@ var MPShop = (function () {
         if (v.vip) {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
           box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re VIP</p><p class="vip-status-s">' +
-            ("subscription" === v.source && when ? "Renews around " + l(when) : "VIP is on your account") + "</p>" +
-            ("subscription" === v.source
+            ("subscription" === v.source && when ? (v.cancelled ? "Cancelled \u00b7 VIP ends " : "Renews around ") + l(when) : "VIP is on your account") + "</p>" +
+            ("subscription" === v.source && !v.cancelled
               ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
           return;
