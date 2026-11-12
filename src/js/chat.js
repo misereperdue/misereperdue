@@ -1174,8 +1174,8 @@
       }, "is-danger");
     }
     if(me){
-      btn("Powers",POW_ICON,function(){mpPBclose(true);powOpen();});
-      btn("Stars",STAR_ICON,function(){mpPBclose(true);starsOpen();});
+      btn("Powers",POW_ICON,function(){powOpen();});
+      btn("Stars",STAR_ICON,function(){starsOpen();});
       var shopIcon=document.querySelector('.nav [data-view=shop] svg');
       btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
       if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
@@ -7045,23 +7045,35 @@
     });
     return w;
   }
+  /* Powers/Stars pages: the open profile morphs into them (Back returns to the
+     profile). Opened without a profile (MPOpenPowers/MPOpenStars), they fall
+     back to a sheet. */
   function powSheet(title, cls, inner) {
-    var b = rcLayer(POW_X + "<h2 class='rc-title'>" + title + "</h2>" + inner, cls);
+    var w = document.createElement("div");
+    w.className = "pow-page " + cls;
+    w.innerHTML = inner;
+    if (mpPBel && mpPBel.isConnected && mpPBel._page) {
+      mpPBel._page(title, w);
+      return w;
+    }
+    var b = rcLayer(POW_X + "<h2 class='rc-title'>" + title + "</h2>", cls);
     b.querySelector(".rc-card").classList.add("pow-sheet");
+    b.querySelector(".rc-card").appendChild(w);
     b.querySelector(".rc-x-close").addEventListener("click", rcClose);
     b.addEventListener("click", function (e) { e.target === b && rcClose(); });
-    return b;
+    return w;
   }
   function powStars(n) {
     s && ((s.points = n), te(n));
   }
   function starsGo() {
     rcClose();
+    mpPBel && mpPBel.isConnected && mpPBel._page && mpPBclose(!0);
     location.hash = "#shop";
   }
   function powOpen() {
     if (!s || !d) return;
-    var b = powSheet("Powers", "pow-back", "<p class='rc-sub pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Get stars</button>"),
+    var b = powSheet("Powers", "pow-back", "<p class='pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Get stars</button>"),
       body = b.querySelector(".pow-body"),
       st = null,
       busy = !1;

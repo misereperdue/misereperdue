@@ -41,7 +41,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.screenshot({path:`${OUT}/${tag}-profile.png`});
 
  // Powers sheet: two-tap buy, unaffordable disabled, equip toggle.
- await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.pow-sheet');await sheet.locator('.pow-tile').first().waitFor();
+ await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.mp-profile-bar .pow-page');await sheet.locator('.pow-tile').first().waitFor();
  assert.match(await sheet.locator('.pow-bal').innerText(),/180 stars/);
  assert(await sheet.locator('.pow-tile[data-id=crown]').isDisabled(),'crown unaffordable');
  const buy=sheet.locator('.pow-tile.is-shop[data-id=halo]');await buy.click();assert.equal((await buy.locator('.pow-price').innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
@@ -55,16 +55,20 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // 2-column grid of squares.
  const boxes=await sheet.locator('.pow-grid').last().locator('.pow-tile').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),Math.round(r.height)];}));
  assert.equal(new Set(boxes.map(b=>b[0])).size,2,'two columns');boxes.forEach(b=>assert(Math.abs(b[1]-b[2])<=1,'square tile '+b));
- const sb=await p.locator('.rc-card').boundingBox();assert(sb.x>=0&&sb.x+sb.width<=width+0.5,tag+' sheet fits');
+ // Morphs inside the profile bar: no separate sheet, header names the page.
+ assert.equal(await p.locator('.rc-back').count(),0,'no separate sheet');assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
+ const sb=await p.locator('.mp-profile-bar').boundingBox();assert(sb.x>=0&&sb.x+sb.width<=width+0.5,tag+' page fits');
  await p.screenshot({path:`${OUT}/${tag}-powers.png`});
- await p.locator('.rc-x-close').click();await p.waitForTimeout(350);
+ // Back returns to the profile, with the new balance.
+ await p.locator('.mp-profile-bar-head button').first().click();await acts.waitFor();await p.waitForTimeout(450);
+ assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/80\s+stars/,'profile shows new balance');
 
  // Stars sheet: balance, log lines, Get stars -> shop.
- await p.evaluate(()=>MPOpenStars());const ss=p.locator('.pow-sheet');await ss.locator('.stars-row').first().waitFor();
+ await acts.locator('.mp-pb-act',{hasText:'Stars'}).click();const ss=p.locator('.mp-profile-bar .pow-page');assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');await ss.locator('.stars-row').first().waitFor();
  assert.equal((await ss.locator('.stars-bal b').innerText()).trim(),'80');
  const rows=await ss.locator('.stars-row').allInnerTexts();assert.match(rows[0],/Bought Halo[\s\S]*−100/);assert.match(rows[1],/Gift from @?friend[\s\S]*\+1/i);
  await p.screenshot({path:`${OUT}/${tag}-stars.png`});
- await ss.locator('.stars-get').click();await p.waitForFunction(()=>location.hash==='#shop');await p.waitForTimeout(300);assert.equal(await p.locator('.rc-back').count(),0,'sheet closed');
+ await ss.locator('.stars-get').click();await p.waitForFunction(()=>location.hash==='#shop');await p.waitForTimeout(300);assert.equal(await p.locator('.rc-back').count(),0,'no sheet');assert.equal(await p.locator('.mp-profile-bar .pow-page').count(),0,'profile closed on Get stars');
 
  // Someone else's profile: Powers pill with +2 overflow, expands to all 7; no own-only pills.
  await p.goto(ORIGIN+'/#journal');await p.waitForFunction(()=>window.MPChat&&MPChat.openUserSheet);await p.waitForTimeout(600);
