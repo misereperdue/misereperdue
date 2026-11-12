@@ -1190,6 +1190,11 @@
       var shopIcon=document.querySelector('.nav [data-view=shop] svg');
       btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
       if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){dashOpen();});
+      /* Sign out right from your profile (per dc): first tap asks, second signs out. */
+      var so=btn("Sign out",'<path d="M15 17.6C14.9 19.6 13.3 21.3 11.3 21.3C10.9 21.3 10.4 21.3 9.9 21.2C6.6 20.9 3.9 18.1 3.7 14.7C3.6 13.8 3.6 12.9 3.6 12C3.6 11.1 3.6 10.2 3.7 9.3C3.9 5.9 6.6 3.1 9.9 2.8C10.4 2.7 10.9 2.7 11.3 2.7C13.3 2.7 14.9 4.4 15 6.4"/><path d="M21 12H10M21 12C21 11.3 19.1 9.9 18.5 9.3M21 12C21 12.7 19.1 14.1 18.5 14.7"/>',function(k){
+        if(!k.classList.contains("is-confirm")){k.classList.add("is-confirm");k.querySelector("span").textContent="Sign out?";clearTimeout(k._t);k._t=setTimeout(function(){k.classList.remove("is-confirm");k.querySelector("span").textContent="Sign out";},3000);return;}
+        clearTimeout(k._t);mpPBclose(true);ft();
+      },"mp-pb-signout");
     }
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
@@ -1618,11 +1623,32 @@
       } else T();
     }
     var A = c.querySelector(".cf-turnstile-wrap");
+    /* Turnstile only auto-renders when its script first loads. After sign-out the card is rebuilt and the
+       script is already there, so render the widget ourselves whenever Sign up shows it empty. */
+    function tsEnsure(wrap, tries) {
+      var el = wrap && wrap.querySelector(".cf-turnstile");
+      if (!el || el.querySelector("iframe") || el.getAttribute("data-mp-rendered") === "1") return;
+      if (!document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]')) {
+        var t0 = document.createElement("script");
+        t0.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+        t0.async = !0;
+        document.head.appendChild(t0);
+      }
+      if (!window.turnstile || !window.turnstile.render) {
+        (tries || 0) < 40 && setTimeout(function () { tsEnsure(wrap, (tries || 0) + 1); }, 150);
+        return;
+      }
+      if (el.querySelector("iframe")) return;
+      try {
+        el.setAttribute("data-mp-rendered", "1");
+        window.turnstile.render(el, { sitekey: el.getAttribute("data-sitekey"), theme: el.getAttribute("data-theme") || "auto" });
+      } catch (e) { el.removeAttribute("data-mp-rendered"); }
+    }
     c.querySelectorAll(".chat-tabs button").forEach(function (t) {
       t.addEventListener("click", function () {
         var n,
           a = "register" === (e = t.getAttribute("data-tab"));
-        (A && (A.hidden = !a),
+        (A && (A.hidden = !a), a && tsEnsure(A),
           c.querySelectorAll(".chat-tabs button").forEach(function (e) {
             e.classList.toggle("on", e === t);
           }),
