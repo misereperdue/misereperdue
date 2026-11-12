@@ -1127,7 +1127,7 @@
                   t.appendChild(r));
                 var s = document.createElement("div");
                 ((s.style.cssText = "font-size:13px;color:var(--muted);flex:none;"),
-                  (s.textContent = "★ " + (e.points || 0)),
+                  (s.innerHTML = (window.MPStar ? MPStar() : "★") + " " + (Number(e.points) || 0)),
                   t.appendChild(s),
                   te.appendChild(t));
               }),
@@ -1785,7 +1785,7 @@
                   ((x.style.cssText = "font-size:12px;color:var(--muted);"),
                     x.setAttribute("data-stars-display", ""));
                   var f = document.createElement("span");
-                  ((f.textContent = "★ " + (e.points || 0)),
+                  ((f.innerHTML = (window.MPStar ? MPStar() : "★") + " " + (Number(e.points) || 0)),
                     f.setAttribute("data-stars-display", ""),
                     x.appendChild(f),
                     x.appendChild(

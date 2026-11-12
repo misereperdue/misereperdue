@@ -864,7 +864,7 @@
             if (
               ((v.className = "chat-sheet-points"),
               (v.innerHTML =
-                '<span aria-hidden="true">★</span> <span>' + x(n.points || 0) + "</span> stars"),
+                mpStar() + ' <span>' + x(n.points || 0) + "</span> stars"),
               r.appendChild(v),
               n.createdAt)
             ) {
@@ -1072,11 +1072,11 @@
     /* Grim t537u redesign: avatar sits in a ring (accent; VIP gold, owner shimmer), with a soft aura of the
        avatar itself behind the header; name, @handle + meta, then chips, bio, actions. */
     var av = J(n.username, n.avatar, "lg", n.hasAvatarImg ? n.avatarV : void 0),
-      pill = O(n);
+      pill = pbPill(n);
     var bd = pill ? "" : P(n),
       isOwn = String(n.username).toLowerCase() === "dc",
       avw = document.createElement("div");
-    avw.className = "mp-pb-av" + (isOwn ? " is-owner" : N(n) === "member" ? " is-vip" : N(n) === "verified" ? " is-verified" : "");
+    avw.className = "mp-pb-av" + (isOwn ? " is-owner" : pbRing(n));
     avw.innerHTML = '<i class="mp-pb-ring" aria-hidden="true"></i>';
     avw.appendChild(av);
     hd.appendChild(avw);
@@ -1112,12 +1112,12 @@
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = (pill || "") + '<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>' + x(n.points || 0) + "</b> stars</span>";
+    st.innerHTML = (pill || "") + '<span class="mp-pb-pts">' + mpStar() + ' <b>' + x(n.points || 0) + "</b> stars</span>";
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
       n.badges.forEach(function (e) {
-        if (A(n.username, e) && !((bd || pill) && e === N(n))) {
+        if (A(n.username, e) && !((bd || pill) && e === pbPillBadge(n))) {
           var i = document.createElement("span");
           i.className = "mp-pb-badge" + ((n.activeBadge || null) === e ? " on" : "");
           i.innerHTML = M(e);
@@ -1154,7 +1154,7 @@
       var k = document.createElement("button");
       k.type = "button";
       k.className = "mp-pb-act" + (cls ? " " + cls : "");
-      k.innerHTML = "<svg " + MP_IC + ">" + icon + "</svg><span></span>";
+      k.innerHTML = "<svg " + MP_IC + (/mp-star-p/.test(icon) ? ' data-ph="1"' : "") + ">" + icon + "</svg><span></span>";
       k.querySelector("span").textContent = label;
       k.addEventListener("click", function (e) { e.stopPropagation(); run(k); });
       ac.appendChild(k);
@@ -1166,7 +1166,7 @@
     tool("Share profile", '<path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/>', function (k) {
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
-    !me && s && d && btn("Gift stars", STAR_ICON, function () { giftOpen(b._profile || n, b); });
+    !me && s && d && btn("Gift", STAR_ICON, function () { giftOpen(b._profile || n, b); });
     if (!me && window.mpHide) {
       mpHide.seen(n.username, n.numId);
       btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/>', function () {
@@ -1193,14 +1193,23 @@
       close:function(){mpPBclose();},
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
-        var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=O(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
-        st.innerHTML=(pill||'')+'<span class="mp-pb-pts"><span aria-hidden="true">★</span> <b>'+x(user.points||0)+'</b> stars</span>';
-        if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===N(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
-        avw.classList.toggle('is-vip',N(user)==='member');avw.classList.toggle('is-verified',N(user)==='verified');
+        var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
+        st.innerHTML=(pill||'')+'<span class="mp-pb-pts">'+mpStar()+' <b>'+x(user.points||0)+'</b> stars</span>';
+        if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
+        if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
       manage:!me && s && s.owner ? function(){return MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}});} : null
     });
   }
+  /* Profile view rings and pill (per dc): VIP keeps its gold ring and VIP pill whatever badge is
+     displayed; Hello Kitty badge holders get a pink ring; otherwise the verified ring. */
+  function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)); }
+  function pbPillBadge(u) { return pbVip(u) ? "member" : N(u); }
+  function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : O(u); }
+  function pbRing(u) {
+    return pbVip(u) ? " is-vip" : u && ((u.badges || []).indexOf("kitty") >= 0 || N(u) === "kitty") ? " is-kitty" : N(u) === "verified" ? " is-verified" : "";
+  }
+  function mpStar(c) { return window.MPStar ? MPStar(c) : '<span class="mp-star' + (c ? " " + c : "") + '" aria-hidden="true">★</span>'; }
   function mpPB(u, anchor) {
     if (!u) return;
     if (!anchor || !anchor.isConnected) anchor = MPProfiles.topBar();
@@ -1997,7 +2006,7 @@
       (Ue = []),
       (m = 0),
       (c.innerHTML =
-        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" data-hi="wiggle"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add to chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
+        '<div class="chat-head glassbar"><div class="chat-title" style="display:flex;align-items:center;gap:6px;">Chat <span class="online-pill-wrap" style="position:relative;display:inline-flex;align-items:center;"><button type="button" class="easyui-live-badge chat-online" hidden style="cursor:pointer;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:4px;animation:onlinePulse 2s ease-in-out infinite;box-shadow:0 0 4px 1px rgba(74,222,128,0.5);"><span class="live-dot"></span><span class="live-num chat-online-num"></span></button></span></div><div class="chat-head-right"><span class="chat-points" title="Your points"><span class="chat-star" aria-hidden="true">' + mpStar() + '</span> <span class="chat-points-num">0</span></span><button type="button" class="forum-bell" id="chat-bell" aria-label="Notifications" data-ph-bell="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" data-hi="wiggle"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg><span id="chat-bell-badge" class="forum-bell-badge hidden"></span></button><button type="button" class="chat-me" aria-label="Profile"></button></div></div><div class="chat-msgs" aria-live="polite"></div><div class="chat-attach" hidden></div><div class="chat-typing" hidden></div><div class="chat-inputrow"><button type="button" class="chat-plus" aria-label="Add to chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></button><form class="chat-inputbar"><input type="text" maxlength="500" placeholder="Message" autocomplete="off" aria-label="Message"><button type="submit" class="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg></button></form></div><input type="file" class="chat-file" accept="image/*,video/*" hidden>'),
       window.MPForum && MPForum.updateBellBadge)
     )
       try {
@@ -2073,6 +2082,7 @@
               a = { t: "send", text: e, cid: n };
             mpPM.to && (a.to = mpPM.to);
             t && (a.media = t);
+            !mpPM.to && !t && window.MPProfiles && MPProfiles.songUrl && MPProfiles.songUrl(String(e).trim()) && mpListenFromSong(String(e).trim());
             if (p && 1 === p.readyState) {
               if (s && s.username) {
                 var r =
@@ -3454,13 +3464,14 @@
       if (ev) { ev.preventDefault(); ev.stopPropagation(); }
       if (mpGpBusy || !mpGpDraft) return;
       if (mpGpDraft.kind === "music") {
-        var songDraft = mpGpDraft;
+        var songDraft = mpGpDraft, songPublic = !mpPM.to;
         mpGpBusy = true; snd.disabled = true; row.classList.add("is-gp-sending");
         if (!songDraft.cid) songDraft.cid = "music-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
         E("/api/send", {method:"POST",body:{text:songDraft.url,cid:songDraft.cid,to:mpPM.to || void 0}}).then(function(response){
           if (!response || !response.ok) throw new Error(response && response.error || "Couldn’t send. Try again.");
           if (response.message) Fe(response.message);
           if (typeof response.points === "number") te(response.points);
+          songPublic && mpListenFromSong(songDraft.url);
           Ne(true); if (mpGpDraft === songDraft) mpGpClearPreview();
         }).catch(function(error){if(mpGpDraft!==songDraft)return;mpGpBusy=false;snd.disabled=false;row.classList.remove("is-gp-sending");mpToast(error.message);});
         return;
@@ -3685,7 +3696,9 @@
     if (!red) {
       var r1 = m.getBoundingClientRect();
       m.style.transformOrigin = "0 100%";
-      m.animate([{ width:r0.width + "px", height:r0.height + "px", opacity:.8 }, { width:r1.width + "px", height:r1.height + "px", opacity:1 }], { duration:320, easing:"cubic-bezier(.22,.8,.25,1)" });
+      var ease = window.MP_EASE || "cubic-bezier(.32,.72,0,1)";
+      m.animate([{ width:r0.width + "px", height:r0.height + "px" }, { width:r1.width + "px", height:r1.height + "px" }], { duration:440, easing:ease });
+      [].forEach.call(m.children, function (c) { c.animate([{ opacity:0, transform:"translateY(6px)" }, { opacity:1, transform:"none" }], { duration:320, delay:70, fill:"backwards", easing:ease }); });
     }
     if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); mpMusicWire(m, close); }
     else if (kind !== "fm") kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
@@ -5465,6 +5478,14 @@
   }
   /* Profile settings sheet (opened from the profile menu and, per dc, from the
      shop Globe tile via window.MPOpenProfile). */
+  /* Sharing a song in public chat updates your profile's Listening to that song (per dc). */
+  function mpListenFromSong(url){
+    if(!s||!d||!url)return;
+    mpProfileMusicResolve(url).then(function(r){var g=r.listening;if(!g||!g.title||!g.artist||!g.url)return null;
+      if(s.listening&&s.listening.url===g.url)return null;
+      return E('/api/profile',{method:'POST',body:{listening:{title:g.title,artist:g.artist,url:g.url,art:g.art||null,artistArt:g.artistArt||null,explicit:typeof g.explicit==='boolean'?g.explicit:null,provider:g.provider||null}}});
+    }).then(function(r){r&&r.ok&&r.user&&(s=mpProfileSynced(rcKeep(r.user)));}).catch(function(){});
+  }
   function mpProfileMusicResolve(url,signal){return E('/api/profile/music?url='+encodeURIComponent(url),{signal:signal}).then(function(r){if(!r||!r.ok||!r.listening)throw Error(r&&r.error||'Music metadata unavailable. Try again.');return r;});}
   function mpProfileSheet(e, inline) {
     if (!s) return;
@@ -5717,7 +5738,7 @@
     var C = document.createElement("div");
     ((C.className = "chat-sheet-points"),
       (C.innerHTML =
-        '<span aria-hidden="true">★</span> <span>' +
+        mpStar() + ' <span>' +
         x(s.points || 0) +
         "</span> stars"),
       o.appendChild(C));
@@ -6982,10 +7003,10 @@
      recent purchases and gifts, and a Get stars button to the shop's Stars packs.
      API: GET /api/powers, POST /api/powers/buy|set, GET /api/stars (misery-worker). */
   var POW_ICON = '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/>',
-    STAR_ICON = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
+    STAR_ICON = '<path class="mp-star-p" fill="currentColor" stroke-width="2.4" d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
     POW_X = "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button>",
     /* Tight viewBox around the star so its drawn height equals the CSS box (sized to the digits' cap height). */
-    STARS_SVG = "<svg class='stars-ico' viewBox='3.5 3.5 17 16.1' aria-hidden='true'><path fill='currentColor' d='M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z'/></svg>",
+    STARS_SVG = "<svg data-ph='1' class='stars-ico mp-star' viewBox='2.3 2.3 19.4 18.5' aria-hidden='true'><path fill='currentColor' stroke='currentColor' stroke-width='2.4' stroke-linejoin='round' d='M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z'/></svg>",
     powMap = {},
     powCat = null;
   function powKeep(j) {
@@ -7091,12 +7112,12 @@
         '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
         (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"' + (poor ? " disabled" : "")) +
         ">" + powIco(p) + '<b class="pow-tn">' + x(p.name) + "</b>" +
-        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price"><span aria-hidden="true">★</span> ' + x(p.price) + "</span>") +
+        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + mpStar() + " " + x(p.price) + "</span>") +
         "</button>"
       );
     }
     function render(msg) {
-      b.querySelector(".pow-bal").innerHTML = '<span class="pow-star" aria-hidden="true">★</span> <b>' + x(st.stars) + "</b> stars";
+      b.querySelector(".pow-bal").innerHTML = mpStar("pow-star") + ' <b>' + x(st.stars) + "</b> stars";
       var cat = st.catalog || [],
         mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
         rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
@@ -7138,7 +7159,7 @@
       if (!btn.classList.contains("is-confirm")) {
         body.querySelectorAll(".pow-tile.is-confirm").forEach(function (t) {
           t.classList.remove("is-confirm");
-          t.querySelector(".pow-price").innerHTML = '<span aria-hidden="true">★</span> ' + x(t.getAttribute("data-price"));
+          t.querySelector(".pow-price").innerHTML = mpStar() + " " + x(t.getAttribute("data-price"));
         });
         btn.setAttribute("data-price", (st.catalog.find(function (p) { return p.id === id; }) || {}).price);
         btn.classList.add("is-confirm");
@@ -7199,7 +7220,7 @@
       c.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
       var m = c.measureText(n.textContent || "0"),
         h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-      h > 0 && ((i.style.height = h + "px"), (i.style.width = h * (17 / 16.1) + "px"), (i.style.marginBottom = -m.actualBoundingBoxDescent + "px"));
+      h > 0 && ((i.style.height = h + "px"), (i.style.width = h * (19.4 / 18.5) + "px"), (i.style.marginBottom = -m.actualBoundingBoxDescent + "px"));
     } catch (e) {}
   }
   function starsOpen() {
@@ -7238,10 +7259,10 @@
       st = w.querySelector(".pow-status");
     w.querySelector(".gift-to").textContent = "To " + mpAt(user.username);
     function paint() {
-      w.querySelector(".pow-bal").innerHTML = '<span class="pow-star" aria-hidden="true">★</span> <b>' + x(s.points || 0) + "</b> stars to give";
+      w.querySelector(".pow-bal").innerHTML = mpStar("pow-star") + ' <b>' + x(s.points || 0) + "</b> stars to give";
       grid.innerHTML = AMTS.map(function (n) {
         var on = n === pick;
-        return '<button type="button" class="pow-tile gift-amt' + (on ? " is-selected" : "") + '" data-n="' + n + '" aria-pressed="' + on + '"' + ((s.points || 0) < n || busy ? " disabled" : "") + '><span class="gift-n"><span aria-hidden="true">★</span> ' + n + "</span></button>";
+        return '<button type="button" class="pow-tile gift-amt' + (on ? " is-selected" : "") + '" data-n="' + n + '" aria-pressed="' + on + '"' + ((s.points || 0) < n || busy ? " disabled" : "") + '><span class="gift-n">' + mpStar() + " " + n + "</span></button>";
       }).join("");
       send.disabled = busy || !pick;
       send.textContent = pick ? "Send " + pick + (pick === 1 ? " star" : " stars") : "Choose an amount";

@@ -2002,7 +2002,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         ? ""
         : '<button type="button" class="btn forum-topbar-signin" id="forum-signin-top">Sign in</button>') +
       (g()
-        ? '<span class="chat-points" title="Your stars"><span class="chat-star" aria-hidden="true">★</span> <span class="chat-points-num" id="forum-points">' +
+        ? '<span class="chat-points" title="Your stars"><span class="chat-star" aria-hidden="true">' + (window.MPStar ? MPStar() : "★") + '</span> <span class="chat-points-num" id="forum-points">' +
           e +
           "</span></span>"
         : "") +

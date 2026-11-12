@@ -1,10 +1,14 @@
 /* Status-bar profiles. Auth, avatar rendering and catalog access are injected by chat.js. */
+  /* One curve for every morph and menu (per dc): iOS-style ease-out, no overshoot. */
+  var MP_EASE='cubic-bezier(.32,.72,0,1)';window.MP_EASE=MP_EASE;
 (function () {
   'use strict';
   var seq = 0;
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function button(label, run, cls) { var b = el('button', cls || 'mp-profile-button', label); b.type = 'button'; b.addEventListener('click', run); return b; }
   function artUrl(value) { try { var u = new URL(value); return u.protocol === 'https:' && /(^|\.)(mzstatic\.com|dzcdn\.net|deezer\.com|scdn\.co|sndcdn\.com)$/.test(u.hostname) ? u.href : ''; } catch (_) { return ''; } }
+  /* The site's star (per dc): the top bar's filled, rounded, accent-blue star, used in every menu. */
+  window.MPStar=function(cls){return '<svg data-ph="1" class="mp-star'+(cls?' '+cls:'')+'" viewBox="2.3 2.3 19.4 18.5" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';};
   function songUrl(value) { try { var u = new URL(value); return u.protocol === 'https:' && ['music.apple.com','open.spotify.com','spotify.link','soundcloud.com','www.soundcloud.com','on.soundcloud.com'].indexOf(u.hostname)>=0&&!u.port&&!u.username&&!u.password ? u.href : ''; } catch (_) { return ''; } }
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function section(title) { var box = el('section', 'mp-profile-section'); box.appendChild(el('h3', '', title)); return box; }
@@ -97,7 +101,7 @@
       var natural=baseHeight;if(phase!=='compact'){var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll.firstElementChild,cs=getComputedStyle(scroll),ms=content?getComputedStyle(content):null;if(content)contentSize={w:content.offsetWidth,h:content.offsetHeight};natural=root.querySelector('.mp-profile-bar-head').offsetHeight+(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0)+(content?content.offsetHeight+(parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0):0);}
       var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'||phase==='page'?640:560,natural);
       bar.style.height=height+'px';
-      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:before+'px',borderRadius:before<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:phase==='compact'?'32px':'28px'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});animation.onfinish=function(){animation=null;};}
+      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:before+'px',borderRadius:before<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:phase==='compact'?'32px':'28px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
     }
     var pageTitle='';function sub(p){return p==='edit'||p==='manage'||p==='page';}
     function header(title,back){var h=el('div','mp-profile-bar-head');h.appendChild(icon('Back','M15 6 9 12 15 18',back));h.appendChild(el('strong','',title));h.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));return h;}
@@ -115,7 +119,7 @@
         var expand=button('',function(){render('full');},'mp-profile-summary-open');expand.setAttribute('aria-label','Expand '+u.username.toLowerCase()+"'s profile");expand.setAttribute('aria-expanded','false');
         expand.appendChild(avatar);
         var tx=el('span','mp-profile-summary-copy'),title=el('span','mp-profile-summary-title');
-        title.appendChild(el('strong','',u.username.toLowerCase()));var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' stars');score.innerHTML=svg('M12 3.5 14.6 8.8 20.5 9.7 16.2 13.8 17.2 19.6 12 16.9 6.8 19.6 7.8 13.8 3.5 9.7 9.4 8.8 12 3.5Z');score.title=(u.points||0)+' points';score.appendChild(el('span','',new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(u.points||0)));tx.appendChild(title);
+        title.appendChild(el('strong','',u.username.toLowerCase()));var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' stars');score.innerHTML=window.MPStar();score.title=(u.points||0)+' stars';score.appendChild(el('span','',new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(u.points||0)));tx.appendChild(title);
         if(u.bio){var bioText=u.bio.replace(/\s+/g,' ').trim(),letters=Array.from(bioText);tx.appendChild(el('small','mp-profile-summary-bio',letters.slice(0,60).join('')+(letters.length>60?'…':'')));}
         var info=[];if(u.listening&&u.listening.title){var playing=el('small','mp-profile-summary-info is-listening'),mark=el('span','mp-profile-summary-synth');mark.innerHTML=synth();mark.setAttribute('aria-hidden','true');playing.appendChild(mark);playing.appendChild(el('strong','',u.listening.title));if(u.listening.artist)playing.appendChild(el('span','',' · '+u.listening.artist));tx.appendChild(playing);}
         else {if(u.member)info.push('VIP');if(u.numId)info.push('#'+u.numId);if(u.createdAt)info.push('joined '+new Date(u.createdAt).toLocaleDateString(undefined,{month:'short',year:'numeric'}).toLowerCase());}
@@ -136,7 +140,7 @@
       size(true);
       if(contentObserver){contentObserver.disconnect();var content=root.querySelector('.mp-profile-bar-scroll>*');if(content)contentObserver.observe(content);}
       var focus=root.querySelector(next==='compact'?'.mp-profile-summary-open':'.mp-profile-bar-head button');focus&&focus.focus({preventScroll:true});
-      if(!reduced()&&root.animate){root.getAnimations().forEach(function(a){a.cancel();});var frames=[{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'none'}];if(entering)root.animate(frames,{duration:300,delay:80,fill:'backwards',easing:'ease-out'});else [].forEach.call(root.children,function(child){if(child!==backdrop)child.animate(frames,{duration:220,easing:'ease-out'});});}
+      if(!reduced()&&root.animate){root.getAnimations().forEach(function(a){a.cancel();});var frames=[{opacity:0,transform:'translateY(6px) scale(.985)'},{opacity:1,transform:'none'}];if(entering)root.animate(frames,{duration:340,delay:80,fill:'backwards',easing:MP_EASE});else [].forEach.call(root.children,function(child){if(child!==backdrop)child.animate(frames,{duration:320,delay:50,fill:'backwards',easing:MP_EASE});});}
     }
     root._edit=function(){options.edit(function(editor){render('edit',editor);},function(){render('full');});};
     root._manage=function(){if(options.manage)render('manage',options.manage());};
@@ -184,5 +188,5 @@
     var save=button('Save profile details',async function(){if(saving||loading)return;saving=true;save.disabled=true;status.textContent='Saving…';try{var r=await options.api('/api/profile',{method:'POST',body:{listening:draft.listening}});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not save profile.');options.saved(r.user);status.textContent='Profile details saved.';}catch(e){status.textContent=e.message||'Could not save profile.';}finally{saving=false;if(root.isConnected)save.disabled=loading;}});root.appendChild(save);root.appendChild(status);paint();container.appendChild(root);
     var observer=new MutationObserver(function(){if(!root.isConnected){epoch++;clearTimeout(timer);if(controller)controller.abort();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});return root;
   }
-  window.MPProfiles={topBar:topBar,openBar:openBar,editor:editor,badgePicker:badgePicker,management:management,settings:settings};
+  window.MPProfiles={songUrl:songUrl,topBar:topBar,openBar:openBar,editor:editor,badgePicker:badgePicker,management:management,settings:settings};
 })();
