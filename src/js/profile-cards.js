@@ -143,6 +143,7 @@
     root._refresh=function(){if(!sub(phase))render(phase);};
     /* Generic sub-page (Powers, Stars): the profile morphs into it; Back returns to the profile. */
     root._page=function(title,page){pageTitle=title;render('page',page);};
+    root._back=function(){if(sub(phase))render('full');};
     root.addEventListener('toggle',function(){size(true);},true);
     function outside(e){if(e.target.closest('.avatar-options-overlay,.rc-back,.chat-alert-backdrop'))return;if(!sub(phase)&&!bar.contains(e.target)&&!options.anchor.contains(e.target))options.close();}
     function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}}

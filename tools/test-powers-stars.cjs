@@ -24,6 +24,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
   else if(u.pathname==='/api/powers/buy'){const p=CAT.find(x=>x.id===body.id);if(st.stars<p.price)d={ok:false,error:'not enough stars'};else{st.stars-=p.price;st.owned=[...st.owned,p.id];st.log.unshift({t:'buy',n:-p.price,power:p.id,at:Date.now()});d={ok:true,stars:st.stars,owned:st.owned,on:st.on};}}
   else if(u.pathname==='/api/powers/set'){st.on=body.on===false?st.on.filter(x=>x!==body.id):[...st.on,body.id];d={ok:true,owned:st.owned,on:st.on};}
   else if(u.pathname==='/api/stars')d={ok:true,stars:st.stars,log:st.log};
+  else if(u.pathname==='/api/stars/gift'){if(st.stars<body.n)d={ok:false,error:'not enough stars'};else{st.stars-=body.n;other.points+=body.n;st.gift=body;d={ok:true,stars:st.stars,theirStars:other.points,to:other.username};}}
   else if(u.pathname==='/api/ws-ticket')d={ticket:'t'};else if(u.pathname==='/api/messages')d={ok:true,messages:[],badges:{}};
   return r.fulfill({json:d,headers:{'access-control-allow-origin':'*'}});});
  const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(ORIGIN+'/#journal');
@@ -66,6 +67,14 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // Stars sheet: balance, log lines, Get stars -> shop.
  await acts.locator('.mp-pb-act',{hasText:'Stars'}).click();const ss=p.locator('.mp-profile-bar .pow-page');assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');await ss.locator('.stars-row').first().waitFor();
  assert.equal((await ss.locator('.stars-bal b').innerText()).trim(),'80');
+ // Balance row: left-aligned icon + count only; icon height matches the digits' height.
+ assert.equal((await ss.locator('.stars-bal').innerText()).trim(),'80','no trailing stars label');
+ const geo=await ss.evaluate(()=>{const row=document.querySelector('.stars-bal'),ico=row.querySelector('.stars-ico'),num=row.querySelector('b'),page=document.querySelector('.mp-profile-bar .pow-page');
+   const c=document.createElement('canvas').getContext('2d');const cs=getComputedStyle(num);c.font=cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;const m=c.measureText(num.textContent);const ir=ico.getBoundingClientRect(),nr=num.getBoundingClientRect(),pr=page.getBoundingClientRect();
+   const z=document.createElement('span');z.style.cssText='display:inline-block;width:0;height:0';num.appendChild(z);const base=z.getBoundingClientRect().bottom;z.remove();
+   return {icoH:ir.height,digitH:m.actualBoundingBoxAscent+m.actualBoundingBoxDescent,icoLeft:ir.left-pr.left,icoTop:ir.top,digitTop:base-m.actualBoundingBoxAscent,icoBottom:ir.bottom,digitBottom:base+m.actualBoundingBoxDescent};});
+ assert(geo.icoLeft<=6,'left aligned '+geo.icoLeft);assert(Math.abs(geo.icoH-geo.digitH)<=1.5,'icon '+geo.icoH+' vs digits '+geo.digitH);assert(Math.abs(geo.icoTop-geo.digitTop)<=1.5&&Math.abs(geo.icoBottom-geo.digitBottom)<=1.5,'icon spans the digits '+JSON.stringify(geo));
+ assert.equal((await ss.locator('.stars-get').innerText()).trim(),'Buy stars');
  const rows=await ss.locator('.stars-row').allInnerTexts();assert.match(rows[0],/Bought Halo[\s\S]*−100/);assert.match(rows[1],/Gift from @?friend[\s\S]*\+1/i);
  await p.screenshot({path:`${OUT}/${tag}-stars.png`});
  await ss.locator('.stars-get').click();await p.waitForFunction(()=>location.hash==='#shop');await p.waitForTimeout(300);assert.equal(await p.locator('.rc-back').count(),0,'no sheet');assert.equal(await p.locator('.mp-profile-bar .pow-page').count(),0,'profile closed on Get stars');
@@ -78,6 +87,15 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await p.locator('.mp-pb-pow-list .mp-pb-pow-item').count(),7);assert.equal(await pill.getAttribute('aria-expanded'),'true');
  assert.match(await p.locator('.mp-pb-pow-item.on').innerText(),/Halo$/);
  assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Powers|Stars|Orders|Dashboard)$/}).count(),0,'own-only pills hidden on others');
+ // Gift stars from someone else's profile: morphs into the gift page, pick like a badge, send, back to profile.
+ await p.locator('.mp-pb-act',{hasText:'Gift stars'}).click();const gp=p.locator('.mp-profile-bar .gift-page');await gp.waitFor();
+ assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Gift stars');assert.match(await gp.locator('.gift-to').innerText(),/rich/);
+ assert(await gp.locator('.gift-send').isDisabled());assert(await gp.locator('.gift-amt[data-n="100"]').isDisabled(),'cannot gift more than balance');
+ await gp.locator('.gift-amt[data-n="10"]').click();assert.equal(await gp.locator('.gift-amt[data-n="10"]').getAttribute('aria-pressed'),'true');assert.equal((await gp.locator('.gift-send').innerText()).trim(),'Send 10 stars');
+ await p.screenshot({path:`${OUT}/${tag}-gift.png`});
+ await gp.locator('.gift-send').click();await p.waitForFunction(()=>/Sent 10 stars/.test(document.querySelector('.gift-page .pow-status')?.textContent||''));
+ assert.equal(JSON.stringify(st.gift),JSON.stringify({to:'rich',n:10}));
+ await p.locator('.mp-pb-acts').waitFor({timeout:4000});await p.waitForTimeout(500);assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/19\s+stars/,'recipient balance updated');
  const pb=await p.locator('.mp-pb-pow').boundingBox();assert(pb.x>=0&&pb.x+pb.width<=width+0.5,tag+' pill fits');
  await p.screenshot({path:`${OUT}/${tag}-other.png`});
  assert.deepEqual(errors,[],tag+' page errors');await c.close();console.log('passed',tag);
