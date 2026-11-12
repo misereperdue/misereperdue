@@ -12056,8 +12056,6 @@ html[data-gcards="g3"] .forum-thread-more {
 /* Retail content may overlap the decorative sky, never the navigation. */
 /* Shop grid scrolls under the sky and fades like Chat/Globe (per dc); product pages keep their own layering. */
 body.home:has(#shop.on) .hero{-webkit-mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px));mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px))}
-body.home:has(#product.on) .hero { z-index:1; }
-body.home:has(#product.on) > .page { position:relative;z-index:2;isolation:isolate; }
 /* Product pages scroll under the sky like Chat/Globe; only Back sits above the sky
    (below the nav) at rest and fades as it rises into the header band (shop.js). */
 #product .shop-product-head { position:relative;z-index:28; }
