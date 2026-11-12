@@ -2532,6 +2532,7 @@
           if (m) m.remove();
           var ico = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
           m = document.createElement("div"); m.className = "chat-plus-menu"; m.setAttribute("role", "menu"); m._close = close;
+          function fillPlus() {
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"/><path d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"/><path d="M21.5 6H18M18 6H14.5M18 6V2.5M18 6V9.5"/></svg><span>Add media</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg><span>Globe</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="music">' + mpMusicMenuIcon() + '<span>Music</span></button>' +
@@ -2549,6 +2550,23 @@
           pq && pq.addEventListener("click", function (e) { e.stopPropagation(); if (!mpIsVip()) return mpToast("Polls are a VIP perk"); mpMorph(m, "poll", close); });
           var plk = m.querySelector('[data-act="poll-locked"]');
           plk && plk.addEventListener("click", function (e) { e.stopPropagation(); mpToast("Polls are a VIP perk"); });
+            ["music","globe","poll"].forEach(function (k) {
+              var b = m.querySelector('[data-act="' + k + '"]');
+              if (b) b.addEventListener("pointerdown", function () { prefetchKind(k); }, { passive: !0 });
+            });
+            var fmBtn = m.querySelector(".chat-misery-fm");
+            if (fmBtn) fmBtn.addEventListener("pointerdown", function () { prefetchKind("fm"); }, { passive: !0 });
+            window.MPFM && MPFM.updateMenuStatus && MPFM.updateMenuStatus();
+          }
+          function prefetchKind(kind) {
+            if (kind === "music" && !window.__mpMusicPrefetch) {
+              window.__mpMusicPrefetch = 1;
+              ["/assets/apple-music/official-icon-still.webp?v=1","/assets/apple-music/official-icon-loop.mp4?v=1"].forEach(function (src) {
+                var l = document.createElement("link"); l.rel = "preload"; l.as = /\.mp4$/.test(src) ? "video" : "image"; l.href = src; document.head.appendChild(l);
+              });
+            }
+          }
+          fillPlus(); m._rebuildPlus = fillPlus;
           row.appendChild(m); window.MPFM && MPFM.updateMenuStatus && MPFM.updateMenuStatus(); g.classList.add("is-open"); g.setAttribute("aria-expanded", "true");
           mpScrollLock(m);
           requestAnimationFrame(function () { m.classList.add("is-in"); });
@@ -3171,9 +3189,12 @@
       });
       if (inTitle && inArtist) total += 3;
       /* the query names the artist: songs BY them beat songs titled after them */
-      if (words.every(function (w) { return hit(main, w); })) total += main.every(function (t) { return words.indexOf(t) >= 0; }) ? 8 : 4;
-      /* the whole title asked for (minus the artist words) */
-      if (inTitle && title.every(function (t) { return words.indexOf(t) >= 0 || (t.indexOf(last) === 0 && last.length > 1); })) total += 4;
+      if (primary(track) === words.join(" ")) total += 16;
+      else if (words.every(function (w) { return hit(main, w); })) total += main.every(function (t) { return words.indexOf(t) >= 0; }) ? 10 : 4;
+      /* exact title, or the query as a leading title prefix ("pink pony" → Pink Pony Club).
+         Keep these tied so Apple's own order can prefer the well-known recording. */
+      if (title.join(" ") === words.join(" ") || (words.length && title.length >= words.length && title.slice(0, words.length).join(" ") === words.join(" "))) total += 8;
+      else if (inTitle && title.every(function (t) { return words.indexOf(t) >= 0 || (t.indexOf(last) === 0 && last.length > 1); })) total += 6;
       else if (inTitle && (" " + title.join(" ")).indexOf(" " + words.filter(function (w) { return !hit(main, w) || hit(title, w); }).join(" ")) === 0) total += 2;
       var text = lower(track.trackName + " " + track.artistName + " " + track.collectionName);
       if (unasked(junk, text)) total -= 8;
@@ -3219,10 +3240,17 @@
         });
       });
       if (dz && dz.length) {
-        /* Deezer order first (covers/karaoke after the rest unless asked), then the iTunes ranking for anything else */
-        var keys = Object.create(null), lead = [], tail = [];
-        dz.forEach(function (t) { var k = songKey(t); if (keys[k] || keys["#" + t.trackId]) return; keys[k] = keys["#" + t.trackId] = 1; (unasked(junk, lower(t.trackName + " " + t.artistName + " " + t.collectionName)) ? tail : lead).push(t); });
-        return lead.concat(tail, rank(tracks).filter(function (t) { return !keys[songKey(t)] && !keys["#" + t.trackId]; }));
+        /* Merge Worker tracks into the same pool and re-rank everything so an exact
+           iTunes title+artist can beat a sparse or wrong Worker lead (dc t554u). */
+        dz.forEach(function (t, i) {
+          if (!t || !t.trackId) return;
+          t.artistName = String(t.artistName || "").replace(/^(Song|Album|Single|EP|Music Video|Playlist|Artist|Compilation)\s*[\u00b7\u2022\u2027\u2219.•.\-–—]\s*/i, "").replace(/\s+/g, " ").trim();
+          pop[primary(t)] = (pop[primary(t)] || 0) + 1;
+          var key = songKey(t), had = byKey[key];
+          if (had) { had._mpPos = Math.min(had._mpPos, i * 0.25); return; }
+          if (ids[t.trackId]) return;
+          ids[t.trackId] = 1; t._mpPos = i * 0.25; byKey[key] = t; tracks.push(t);
+        });
       }
       /* split the query into an artist (a leading or trailing run of words that is exactly a returned
          artist's name) and a title (the rest), so either order and short names like "Future" work */
@@ -3845,10 +3873,26 @@
   function mpMorph(m, kind, close) {
     mpGpClearPreview();
     var r0 = m.getBoundingClientRect(), row = m.parentNode, red = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var back = function () { close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200); };
+    var back = function () {
+      if (typeof m._rebuildPlus === "function") {
+        if (m._dispose) { try { m._dispose(); } catch (e) {} m._dispose = null; }
+        var rBig = m.getBoundingClientRect();
+        m.classList.remove("chat-pbig", "chat-pbig-poll", "chat-pbig-music", "chat-pbig-fm", "chat-pbig-globe");
+        m.style.height = ""; m.style.width = ""; m.style.maxHeight = ""; m.style.bottom = ""; m.style.transformOrigin = "";
+        m.setAttribute("role", "menu"); m.removeAttribute("aria-label");
+        m._rebuildPlus();
+        if (!red) {
+          var rSmall = m.getBoundingClientRect(), easeB = window.MP_EASE || "cubic-bezier(.32,.72,0,1)";
+          m.style.transformOrigin = "0 100%";
+          m.animate([{ width: rBig.width + "px", height: rBig.height + "px" }, { width: rSmall.width + "px", height: rSmall.height + "px" }], { duration: 440, easing: easeB });
+          [].forEach.call(m.children, function (c) { c.animate([{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], { duration: 320, delay: 70, fill: "backwards", easing: easeB }); });
+        }
+        return;
+      }
+      close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200);
+    };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
     var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
-    if(kind === "music")m.style.height="340px";
     // Misery FM renders its own body and the same header (Back, logo, Close) into the morphed menu
     if (kind === "fm") { m.innerHTML = ""; MPFM.mount(m, { back: back, close: close }); }
     else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
@@ -3863,8 +3907,9 @@
       m.animate([{ width:r0.width + "px", height:r0.height + "px" }, { width:r1.width + "px", height:r1.height + "px" }], { duration:440, easing:ease });
       [].forEach.call(m.children, function (c) { c.animate([{ opacity:0, transform:"translateY(6px)" }, { opacity:1, transform:"none" }], { duration:320, delay:70, fill:"backwards", easing:ease }); });
     }
-    if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); mpMusicWire(m, close); }
-    else if (kind !== "fm") kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close);
+    function afterOpen(fn) { red ? fn() : setTimeout(fn, 40); }
+    if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); afterOpen(function () { if (m.isConnected && m.classList.contains("chat-pbig-music")) mpMusicWire(m, close); }); }
+    else if (kind !== "fm") afterOpen(function () { if (!m.isConnected || !m.classList.contains("chat-pbig")) return; kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close); });
   }
   function mpMusicForm() {
     return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
@@ -3913,10 +3958,15 @@
       if(!branding.isConnected)menu.appendChild(branding);
       brandRun();
     }
+    var brandLater = 0;
+    function mountBrandLater() {
+      if (brandLater) return;
+      brandLater = setTimeout(function () { if (!dead) mountBrand(); }, 420);
+    }
     function state(title, detail, retry) {
       menu.classList.remove("has-results");fit();
       list.innerHTML = '<li class="chat-music-empty"><span class="chat-music-idle-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><strong></strong><span class="chat-music-detail"></span></li>';
-      mountBrand();
+      mountBrandLater();
       list.querySelector("strong").textContent = title;
       list.querySelector("strong").hidden = !title;
       list.querySelector(".chat-music-detail").textContent = detail;
@@ -3979,7 +4029,7 @@
       controller = new AbortController(); status.textContent = "SEARCHING…"; list.setAttribute("aria-busy", "true");
       state("Finding your sound…", "Searching Apple Music");
       mpMusicSearch(query, controller.signal).then(function (tracks) {
-        if (dead || version !== epoch || !menu.isConnected) return;
+        if (dead || version !== epoch || !menu.isConnected || input.value.trim() !== query) return;
         list.removeAttribute("aria-busy"); render(tracks);
       }).catch(function (error) {
         if (dead || version !== epoch || error.name === "AbortError") return;
@@ -4015,7 +4065,7 @@
       });
     }
     function dispose() {
-      if (dead) return; dead = true; if(branding)branding.querySelector("video").pause(); if(brandIO)brandIO.disconnect(); document.removeEventListener("visibilitychange",brandRun); invalidate(); cancelAnimationFrame(sizeFrame);
+      if (dead) return; dead = true; if (brandLater) clearTimeout(brandLater); if(branding)branding.querySelector("video").pause(); if(brandIO)brandIO.disconnect(); document.removeEventListener("visibilitychange",brandRun); invalidate(); cancelAnimationFrame(sizeFrame);
       window.removeEventListener("resize", fit); if (window.visualViewport) { window.visualViewport.removeEventListener("resize", fit); window.visualViewport.removeEventListener("scroll", fit); }
       observer.disconnect();
     }
