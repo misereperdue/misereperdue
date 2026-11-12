@@ -115,6 +115,10 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const preset=await setPage.locator('.pow-sw[data-v=pink]').evaluate(el=>getComputedStyle(el).boxShadow);
  // ring language matches presets: outer rings, not only an inset hairline
  assert.ok((ring.shadow.match(/rgb/g)||[]).length>=2,'custom ring uses the same stacked ring as presets');
+ const pick=setPage.locator('.pow-sw-custom .pow-sw-pick');
+ assert.equal(await pick.count(),1,'selected custom swatch shows picker glyph');
+ const ink=await setPage.locator('.pow-sw-custom').evaluate(el=>getComputedStyle(el).getPropertyValue('--picker-ink').trim());
+ assert.ok(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(ink),'picker ink by luminance, got '+ink);
  await p.evaluate(()=>document.documentElement.setAttribute('data-theme','light'));
  const ringL=await setPage.locator('.pow-sw-custom').evaluate(el=>{const s=getComputedStyle(el);return {shadow:s.boxShadow,overflow:s.overflow,bg:s.getPropertyValue('--bg').trim()||getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()};});
  assert.ok(ringL.shadow&&ringL.shadow!=='none'&&/px/.test(ringL.shadow),'custom swatch ring visible in light, got '+ringL.shadow);

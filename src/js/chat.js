@@ -3247,7 +3247,11 @@
           t.artistName = String(t.artistName || "").replace(/^(Song|Album|Single|EP|Music Video|Playlist|Artist|Compilation)\s*[\u00b7\u2022\u2027\u2219.•.\-–—]\s*/i, "").replace(/\s+/g, " ").trim();
           pop[primary(t)] = (pop[primary(t)] || 0) + 1;
           var key = songKey(t), had = byKey[key];
-          if (had) { had._mpPos = Math.min(had._mpPos, i * 0.25); return; }
+          if (had) {
+            had._mpPos = Math.min(had._mpPos, i * 0.25);
+            if (!had.collectionName && t.collectionName) had.collectionName = t.collectionName;
+            return;
+          }
           if (ids[t.trackId]) return;
           ids[t.trackId] = 1; t._mpPos = i * 0.25; byKey[key] = t; tracks.push(t);
         });
@@ -4000,11 +4004,20 @@
       tracks.forEach(function (track) {
         var item = document.createElement("li"), button = document.createElement("button"), ref = mpMusicRef(track.trackViewUrl), result = mpNPOut(track);
         button.type = "button"; button.className = "chat-music-track"; button.setAttribute("aria-label", "Add " + track.trackName + " by " + track.artistName);
-        button.innerHTML = '<span class="chat-music-art">' + mpMusicIcon() + '</span><span class="chat-music-copy"><strong></strong><span class="chat-music-artist"></span><span class="chat-music-album"></span></span><span class="chat-music-choice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></span>';
+        button.innerHTML = '<span class="chat-music-art">' + mpMusicIcon() + '</span><span class="chat-music-copy"><span class="chat-music-title"><strong></strong></span><span class="chat-music-artist"></span></span><span class="chat-music-choice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.001 4.00101V20.001"/><path d="M20.001 12.001L4.00098 12.001"/></svg></span>';
         button.querySelector("strong").textContent = track.trackName;
-        button.querySelector(".chat-music-artist").textContent = track.artistName;
-        var seconds = Math.floor((Number(track.trackTimeMillis) || 0) / 1000);
-        button.querySelector(".chat-music-album").textContent = (track.collectionName || "") + (seconds ? " · " + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") : "") + (track.trackExplicitness === "explicit" ? " · E" : "");
+        if (track.trackExplicitness === "explicit") {
+          var badge = document.createElement("span");
+          badge.className = "fm-e";
+          badge.setAttribute("role", "img");
+          badge.setAttribute("aria-label", "Explicit");
+          badge.title = "Explicit";
+          badge.textContent = "E";
+          button.querySelector(".chat-music-title").appendChild(badge);
+        }
+        var sub = [track.artistName, track.collectionName].filter(Boolean);
+        button.querySelector(".chat-music-artist").textContent = sub.join(" \u00b7 ");
+        button.setAttribute("aria-label", "Add " + track.trackName + " by " + track.artistName + (track.collectionName ? " from " + track.collectionName : "") + (track.trackExplicitness === "explicit" ? ", explicit" : ""));
         if (/^https:\/\//.test(result.art || "")) {
           var image = document.createElement("img"); image.src = result.art; image.alt = ""; image.loading = "lazy"; image.decoding = "async";
           image.addEventListener("error", function () { image.remove(); }); button.querySelector(".chat-music-art").appendChild(image);
@@ -7432,6 +7445,14 @@
     /* Square tiles in a 2-column grid. Owned powers select like badges (tap to
        highlight, tap again to clear; several can be active); others show a price
        and buy on a second tap. */
+    /* Hugeicons Color Picker (stroke), MIT. Ink flips by swatch luminance so it stays legible. */
+    var POW_PICKER = '<svg class="pow-sw-pick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.435 7L7.15915 13.2759M7.15915 13.2759L4.82728 15.6077C3.92569 16.5093 3.47489 16.9601 3.23745 17.5334C3 18.1066 3 18.7441 3 20.0192V21H3.98082C5.25586 21 5.89338 21 6.46663 20.7626C7.03988 20.5251 7.49068 20.0743 8.39227 19.1727L14.2891 13.2759M7.15915 13.2759H14.2891M14.2891 13.2759L17 10.565"/><path d="M19.2087 8.38869L20.82 10M19.2087 8.38869L20.0705 7.52682C20.363 7.23431 20.5093 7.08805 20.611 6.94529C21.1297 6.21676 21.1297 5.23953 20.611 4.511C20.5093 4.36824 20.363 4.22198 20.0705 3.92947C19.778 3.63697 19.6318 3.4907 19.489 3.38905C18.7605 2.87032 17.7832 2.87032 17.0547 3.38905C16.912 3.4907 16.7657 3.63695 16.4732 3.92947L15.6113 4.79133M19.2087 8.38869L15.6113 4.79133M14 3.18002L15.6113 4.79133"/></svg>';
+    function powSwInk(hex) {
+      if (!/^#[0-9a-f]{6}$/i.test(hex || "")) return "#fff";
+      function lin(c) { c = c / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+      var r = lin(parseInt(hex.slice(1, 3), 16)), g = lin(parseInt(hex.slice(3, 5), 16)), b = lin(parseInt(hex.slice(5, 7), 16));
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) > 0.55 ? "#111" : "#fff";
+    }
     /* Settings (per dc): a selected power that has settings opens into a full-width box with its
        options (colour swatches, choices) selected like badges. */
     function setPanel(p) {
@@ -7447,7 +7468,7 @@
           }).join("") +
           (f.type === "color" && f.custom ? (function () {
             var hex = /^#[0-9a-f]{6}$/i.test(val || "");
-            return '<button type="button" class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour" aria-expanded="false"></button>';
+            return '<button type="button" class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '" style="--picker-ink:' + powSwInk(hex ? val : "") + (hex ? ';--sw:' + x(val) : "") + '" aria-label="Custom colour" aria-expanded="false"' + (hex ? ' aria-pressed="true"' : "") + '>' + POW_PICKER + "</button>";
           })() : "") + "</div></div>";
       }).join("") + "</div>";
     }
