@@ -1179,7 +1179,7 @@
       btn("Stars",STAR_ICON,function(){starsOpen();});
       var shopIcon=document.querySelector('.nav [data-view=shop] svg');
       btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
-      if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){mpPBclose(true);window.openAnalytics&&window.openAnalytics();});
+      if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){dashOpen();});
     }
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
@@ -7003,7 +7003,7 @@
      recent purchases and gifts, and a Get stars button to the shop's Stars packs.
      API: GET /api/powers, POST /api/powers/buy|set, GET /api/stars (misery-worker). */
   var POW_ICON = '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/>',
-    STAR_ICON = '<path class="mp-star-p" fill="currentColor" stroke-width="2.4" d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
+    STAR_ICON = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
     POW_X = "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button>",
     /* Tight viewBox around the star so its drawn height equals the CSS box (sized to the digits' cap height). */
     STARS_SVG = "<svg data-ph='1' class='stars-ico mp-star' viewBox='2.3 2.3 19.4 18.5' aria-hidden='true'><path fill='currentColor' stroke='currentColor' stroke-width='2.4' stroke-linejoin='round' d='M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z'/></svg>",
@@ -7047,10 +7047,10 @@
     w.appendChild(list);
     function paint() {
       b.innerHTML =
-        '<span class="mp-pb-pow-k">Powers</span><span class="mp-pb-pow-icons">' +
+        '<span class="mp-pb-pow-k"><svg ' + MP_IC + ">" + POW_ICON + '</svg>Powers</span><span class="mp-pb-pow-icons">' +
         ids.slice(0, MAX).map(function (id) { return powIco(powMap[id]); }).join("") +
         (ids.length > MAX ? '<span class="mp-pb-pow-more">+' + (ids.length - MAX) + "</span>" : "") +
-        "</span>";
+        '<svg class="mp-pb-pow-chev" ' + MP_IC + '><path d="M7 10c2 0 4 4 5 4s3-4 5-4"/></svg></span>';
       b.setAttribute("aria-label", ids.length + (ids.length === 1 ? " power" : " powers") + ", show all");
       list.innerHTML = ids
         .map(function (id) {
@@ -7097,7 +7097,7 @@
   }
   function powOpen() {
     if (!s || !d) return;
-    var b = powSheet("Powers", "pow-back", "<p class='pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Buy stars</button>"),
+    var b = powSheet("Powers", "pow-back", "<div class='stars-bal pow-sum' role='img'></div><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Buy stars</button>"),
       body = b.querySelector(".pow-body"),
       st = null,
       busy = !1;
@@ -7117,7 +7117,10 @@
       );
     }
     function render(msg) {
-      b.querySelector(".pow-bal").innerHTML = mpStar("pow-star") + ' <b>' + x(st.stars) + "</b> stars";
+      var sum = b.querySelector(".pow-sum");
+      sum.innerHTML = STARS_SVG + "<b>" + x(st.stars) + "</b>";
+      sum.setAttribute("aria-label", st.stars + " stars");
+      starsFit(sum);
       var cat = st.catalog || [],
         mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
         rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
@@ -7305,6 +7308,18 @@
         });
     });
     paint();
+  }
+  /* Dashboard (owner): the profile morphs into it like Powers/Stars (per dc). */
+  function dashOpen() {
+    var w = powSheet("Dashboard", "dash-page", "<p class='pow-note'>Loading\u2026</p>"),
+      inBar = !w.closest(".rc-card");
+    if (inBar) {
+      window.MPDashHost = function () { return w.isConnected ? w : (window.MPDashHost = null, false); };
+    } else {
+      rcClose();
+      window.MPDashHost = null;
+    }
+    window.openAnalytics && window.openAnalytics();
   }
   window.MPOpenPowers = powOpen;
   window.MPOpenStars = starsOpen;

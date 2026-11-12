@@ -62,7 +62,15 @@
         });
       }));
   }
+  /* Profile bar host (per dc): when the Dashboard pill opens the dashboard inside the profile view,
+     window.MPDashHost() returns that page element; false means the page was left (draw nothing);
+     null/undefined means no host (classic full-screen sheet). */
+  function dashHost() {
+    try { return window.MPDashHost ? window.MPDashHost() : null; } catch (e) { return null; }
+  }
   function buildDashboard(o, quiet) {
+    var host = dashHost();
+    if (host === false) return;
     n();
     var d = document.createElement("div");
     ((d.className = "msg-popup"), (d.id = "msg-popup"), (d.style.animation = "none"));
@@ -82,6 +90,7 @@
     c.style.cssText =
       "display:flex;flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px;";
     var p = document.createElement("div");
+    p.className = "dash-head";
     p.style.cssText = "display:flex;align-items:center;justify-content:space-between;";
     var u = document.createElement("div");
     u.style.cssText = "display:flex;align-items:center;gap:10px;";
@@ -2077,8 +2086,14 @@
         (e.stopPropagation(), n());
       }),
       l.appendChild(ce),
-      d.appendChild(__dw),
-      (d.onclick = function (e) {
+      d.appendChild(__dw));
+    if (host) {
+      /* Inside the profile bar: the bar supplies the header, Back, close, scrolling and the morph. */
+      d.classList.add("is-embedded");
+      host.replaceChildren(d);
+      return;
+    }
+    ((d.onclick = function (e) {
         e.target === d && n();
       }),
       document.body.appendChild(d),
@@ -2137,6 +2152,12 @@
       })
       .catch(function (e) {
         if (document.querySelector(".dashboard-sheet")) return;
+        var host = dashHost();
+        if (host === false) return;
+        if (host) {
+          host.innerHTML = "<p class='pow-note'>Couldn't load analytics. Try again soon.</p>";
+          return;
+        }
         n();
         var t = document.createElement("div");
         ((t.className = "msg-popup"), (t.id = "msg-popup"));

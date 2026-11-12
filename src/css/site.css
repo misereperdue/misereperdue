@@ -10882,15 +10882,23 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-full{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;margin:6px 0 0;padding:0 4px;border:0;border-top:1px solid var(--stroke,rgba(128,128,128,.2));background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
 .mp-pb-full svg{width:14px;height:14px}
 /* ===== Powers & Stars (per dc) ===== */
-.mp-pb-pow{margin:6px 0 0}
-.mp-pb-pow-pill{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:38px;padding:6px 10px;border:0;border-radius:12px;background:var(--fill,rgba(128,128,128,.12));color:var(--muted);font:inherit;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.mp-pb-pow{margin:8px 0 0}
+.mp-pb-pow-pill{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:42px;padding:5px 8px 5px 14px;border:0;border-radius:999px;background:var(--fill,rgba(128,128,128,.12));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,transform .2s cubic-bezier(.32,.72,0,1)}
+.mp-pb-pow-pill:active{transform:scale(.98)}
+.mp-pb-pow-k{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13px}
+.mp-pb-pow-k svg{width:16px;height:16px;color:var(--accent)}
+.mp-pb-pow-icons .pow-ico{width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:15px}
+.mp-pb-pow-chev{width:15px;height:15px;margin-left:2px;color:var(--muted);transition:transform .32s cubic-bezier(.32,.72,0,1)}
+.mp-pb-pow.is-open .mp-pb-pow-chev{transform:rotate(180deg)}
 .mp-pb-pow-pill:active{background:rgba(128,128,128,.22)}
 .mp-pb-pow-icons{display:flex;align-items:center;gap:4px;min-width:0}
-.mp-pb-pow-more{min-width:22px;height:22px;padding:0 6px;display:grid;place-items:center;border-radius:999px;background:rgba(128,128,128,.18);color:var(--ink);font-size:11.5px;font-weight:700}
+.mp-pb-pow-more{min-width:28px;height:28px;padding:0 8px;display:grid;place-items:center;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink);font-size:12px;font-weight:700}
 .pow-ico{display:grid;place-items:center;width:22px;height:22px;font-size:16px;line-height:1}
-.mp-pb-pow-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:6px 0 0;transform-origin:50% 0;animation:menuPop .3s cubic-bezier(.32,.72,0,1)}
+.mp-pb-pow-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin:8px 0 0;transform-origin:50% 0;animation:menuPop .3s cubic-bezier(.32,.72,0,1)}
 .mp-pb-pow-list[hidden]{display:none}
-.mp-pb-pow-item{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;border-radius:10px;background:var(--fill,rgba(128,128,128,.12));color:var(--ink);font-size:12.5px;font-weight:600;opacity:.7}
+.mp-pb-pow-item{display:flex;align-items:center;gap:7px;min-width:0;padding:4px 12px 4px 4px;border-radius:999px;background:var(--fill,rgba(128,128,128,.12));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink);font-size:12.5px;font-weight:600;opacity:.72}
+.mp-pb-pow-item .pow-ico{width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:14px}
+.mp-pb-pow-item.on{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 12%,var(--fill))}
 .mp-pb-pow-item.on{opacity:1}
 .mp-pb-pow-item span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pow-sheet{max-height:min(640px,calc(100dvh - 48px));overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -13208,3 +13216,20 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 #chat .chat-pbig-music .chat-music-copy{gap:2px}
 #chat .chat-pbig-music .chat-music-art{width:44px;height:44px;border-radius:10px}
 #chat .chat-pbig-music .chat-music-branding{padding-top:8px;gap:8px}
+
+/* Powers page balance: left-aligned star + count, like the Stars page (per dc). */
+.stars-bal.pow-sum{font-size:28px;margin:2px 2px 4px}
+
+/* ===== Dashboard inside the profile bar (per dc) =====
+   The bar supplies header, Back/close, scrolling and the morph; the dashboard drops its own popup chrome
+   and adopts the profile views' fills, radii and spacing. */
+.msg-popup.is-embedded{position:static;inset:auto;z-index:auto;display:block;padding:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none}
+.msg-popup.is-embedded .dashboard-sheet-wrap{position:static}
+.msg-popup.is-embedded .dashboard-sheet-blur{display:none}
+.msg-popup.is-embedded .msg-popup-inner.dashboard-sheet{max-width:none;width:auto;max-height:none;overflow:visible;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;animation:none;opacity:1;transform:none}
+.msg-popup.is-embedded .dash-head h3,.msg-popup.is-embedded .dash-head>button,.msg-popup.is-embedded .msg-popup-close{display:none!important}
+.msg-popup.is-embedded .dash-head{justify-content:flex-start!important;min-height:0}
+.msg-popup.is-embedded .dash-head:not(:has(.dashboard-online-badge:not([hidden]))){display:none!important}
+.msg-popup.is-embedded .dash-hero-tile{border-radius:14px;background:var(--fill);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent)}
+.msg-popup.is-embedded .dash-pill{border-radius:999px}
+.dash-page{min-height:120px}
