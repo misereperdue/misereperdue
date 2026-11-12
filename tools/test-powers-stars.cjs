@@ -109,6 +109,18 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await cp.locator('.pow-cp-h').evaluate(e=>{e.value='130';e.dispatchEvent(new Event('input',{bubbles:true}));});await cp.locator('.pow-cp-l').evaluate(e=>{e.value='45';e.dispatchEvent(new Event('input',{bubbles:true}));});
  const hex=await cp.getAttribute('data-hex');assert.match(hex,/^#[0-9a-f]{6}$/);await p.screenshot({path:`${OUT}/${tag}-picker.png`});
  await cp.locator('.pow-cp-use').click();await p.waitForFunction(()=>document.querySelector('.pw-page[data-id=ink] .pow-status')?.textContent==='Saved.'&&document.querySelector('.pw-page[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,hex,'inline picker colour saved');
+ const ring=await setPage.locator('.pow-sw-custom').evaluate(el=>{const s=getComputedStyle(el);return {shadow:s.boxShadow,overflow:s.overflow};});
+ assert.ok(ring.shadow&&ring.shadow!=='none'&&/px/.test(ring.shadow),'custom swatch has selected ring, got '+ring.shadow);
+ assert.notEqual(ring.overflow,'hidden','custom ring must not be clipped');
+ const preset=await setPage.locator('.pow-sw[data-v=pink]').evaluate(el=>getComputedStyle(el).boxShadow);
+ // ring language matches presets: outer rings, not only an inset hairline
+ assert.ok((ring.shadow.match(/rgb/g)||[]).length>=2,'custom ring uses the same stacked ring as presets');
+ await p.evaluate(()=>document.documentElement.setAttribute('data-theme','light'));
+ const ringL=await setPage.locator('.pow-sw-custom').evaluate(el=>{const s=getComputedStyle(el);return {shadow:s.boxShadow,overflow:s.overflow,bg:s.getPropertyValue('--bg').trim()||getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()};});
+ assert.ok(ringL.shadow&&ringL.shadow!=='none'&&/px/.test(ringL.shadow),'custom swatch ring visible in light, got '+ringL.shadow);
+ assert.notEqual(ringL.overflow,'hidden','custom ring must not be clipped in light');
+ await p.evaluate(()=>document.documentElement.setAttribute('data-theme','dark'));
+
  await p.screenshot({path:`${OUT}/${tag}-settings.png`});
  // Top-bar Back from a power's settings returns to the Powers list (not the profile).
  await p.locator('.mp-profile-bar-head button').first().click();await root.locator('.pw-row[data-id=ink]').waitFor();
