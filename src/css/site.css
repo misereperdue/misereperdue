@@ -13352,8 +13352,6 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .chat-msg.pw-halo .chat-avatar-wrap{border-radius:50%;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--pw-halo)}
 .mp-pb-av.pw-halo:not(.is-owner) .mp-pb-ring{background:var(--pw-halo)!important}
 /* Sphere: avatar inside a glass orb */
-.chat-msg.pw-sphere .chat-avatar-wrap,.mp-pb-av.pw-sphere .chat-avatar-wrap{position:relative;border-radius:50%;box-shadow:inset 0 -6px 12px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.28)}
-.chat-msg.pw-sphere .chat-avatar-wrap::after,.mp-pb-av.pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.85),rgba(255,255,255,.18) 28%,transparent 52%),radial-gradient(circle at 70% 86%,rgba(255,255,255,.28),transparent 38%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 -8px 16px rgba(0,0,0,.25)}
 @media (prefers-reduced-motion:reduce){.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t,.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-rgb .chat-msg-head strong,.pw-rgb .mp-pb-name-t{animation:none!important}}
 /* Charms next to the name; the old badge row, inline badge and avatar badges give way to them */
 .mp-charms{display:inline-flex;align-items:center;gap:3px;flex:none;margin-left:4px;vertical-align:-2px}
@@ -13400,11 +13398,8 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .pow-sw{flex:none}
 .pow-sw-custom:not([style*="--sw"])::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none}
 /* Sphere: a prominent, animated glass orb */
-.chat-msg.pw-sphere .chat-avatar-wrap,.mp-pb-av.pw-sphere .chat-avatar-wrap{box-shadow:inset 0 -8px 14px rgba(0,0,0,.4),0 0 0 2px rgba(255,255,255,.45),0 6px 18px rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--accent) 55%,transparent);animation:mpOrbFloat 4.5s ease-in-out infinite}
-.chat-msg.pw-sphere .chat-avatar-wrap::after,.mp-pb-av.pw-sphere .chat-avatar-wrap::after{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.95),rgba(255,255,255,.25) 26%,transparent 50%),radial-gradient(circle at 72% 84%,rgba(255,255,255,.35),transparent 36%),conic-gradient(from 0deg,transparent,rgba(255,255,255,.18),transparent 30%,rgba(169,215,245,.22),transparent 60%);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55),inset 0 -10px 18px rgba(0,0,0,.3);animation:mpOrbShine 6s linear infinite}
 @keyframes mpOrbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 @keyframes mpOrbShine{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::after,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 /* Charms: uniform size, centred, consistent spacing */
 .mp-charms{gap:4px;margin-left:5px;vertical-align:middle}
 .chat-msg-head .mp-charms{align-self:center;margin-left:-2px}
@@ -13482,21 +13477,13 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .gift-custom input::-webkit-inner-spin-button,.gift-custom input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .gift-custom input:focus{outline:2px solid var(--accent);outline-offset:0}
 .gift-to{text-transform:none}
-/* Power settings come into view smoothly */
-.pow-tile.has-set.is-new{animation:powOpenTile .42s cubic-bezier(.32,.72,0,1)}
-.pow-tile.has-set.is-new .pow-set{animation:powOpenSet .46s cubic-bezier(.32,.72,0,1) .06s backwards}
-@keyframes powOpenTile{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}}
-@keyframes powOpenSet{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.pow-tile.has-set.is-new,.pow-tile.has-set.is-new .pow-set{animation:none}}
+/* Power settings: tiles morph in place (powFlipStart in chat.js) */
 /* Echo: lighter shades of your text trailing through the bubble */
 .chat-msg.pw-echo .chat-bubble{overflow:hidden}
 .chat-msg.pw-echo .chat-bubble .chat-text{padding-bottom:0;padding-right:1em;padding-top:.15em;text-shadow:.24em -.06em 0 color-mix(in srgb,currentColor 34%,transparent),.52em -.12em .4px color-mix(in srgb,currentColor 18%,transparent),.84em -.18em .8px color-mix(in srgb,currentColor 9%,transparent)!important}
 
 /* ===== Round 5 (per dc) ===== */
 /* Sphere on the profile avatar: overlay only, keep the profile's own avatar positioning */
-.mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important;transform:none!important}
-.mp-pb-av.pw-sphere{animation:mpOrbFloat 4.5s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.mp-pb-av.pw-sphere{animation:none}}
 /* Melt + RGB: drips keep falling, filled with the same animated gradient */
 .chat-msg.pw-melt.pw-rgb .chat-msg-head strong::before,.chat-msg.pw-melt.pw-rgb .chat-msg-head strong::after,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::before,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::after{background:linear-gradient(90deg,#ff004c,#ffb800,#3bff8f,#00c8ff,#b44cff,#ff004c)!important;background-size:600% 100%!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;-webkit-text-fill-color:initial;animation:mpDrip 2.8s cubic-bezier(.55,0,.85,.35) infinite,mpRgb 7s linear infinite!important}
 .chat-msg.pw-melt.pw-rgb .chat-msg-head strong::after,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::after{animation:mpDrip 3.3s cubic-bezier(.55,0,.85,.35) 1.3s infinite,mpRgb 7s linear infinite!important}
@@ -13565,3 +13552,25 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .vip-row-btns .btn{flex:1;text-align:center;text-decoration:none}
 .vip-row-cancel{color:#ff5a5f}
 .vip-row-note{flex-basis:100%;margin:0;font-size:12.5px;line-height:1.45;opacity:.7}
+
+/* ===== Sphere v3 (per dc): the avatar sealed in a glass marble =====
+   Avatar magnified inside (lens), dark edge falloff, sharp window highlight, pearly thin-film rim
+   that slowly drifts, a coloured caustic pooling at the bottom (custom colour or pearl), and a
+   contact shadow so the orb floats. Colour: --pw-sphere (power setting) else pearl blue. */
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{--sph:var(--pw-sphere,#9fd3ff);border-radius:50%;isolation:isolate;overflow:visible;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 0 0 2px color-mix(in srgb,var(--sph) 45%,transparent),0 7px 14px -6px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--sph) 60%,transparent);animation:mpSphFloat 5s ease-in-out infinite}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){border-radius:50%;transform:scale(1.08);filter:saturate(1.12) contrast(1.04)}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-1px;border-radius:50%;pointer-events:none;z-index:2;padding:2px;background:conic-gradient(from var(--sph-a,0deg),#ffd6f5,#bfe9ff,#d8ffe9,#fff4c4,#e4d2ff,#ffd6f5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);opacity:.85;mix-blend-mode:screen;animation:mpSphFilm 7s linear infinite}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:
+  radial-gradient(ellipse 34% 22% at 34% 22%,rgba(255,255,255,.98),rgba(255,255,255,.55) 45%,transparent 72%),
+  radial-gradient(circle at 70% 30%,rgba(255,255,255,.35),transparent 9%),
+  radial-gradient(ellipse 70% 40% at 50% 96%,color-mix(in srgb,var(--sph) 75%,transparent),transparent 70%),
+  radial-gradient(circle at 50% 45%,transparent 52%,rgba(8,14,36,.18) 68%,rgba(8,14,36,.55) 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),inset 0 -6px 10px -4px color-mix(in srgb,var(--sph) 70%,transparent),inset 0 4px 8px -4px rgba(255,255,255,.6)}
+.mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important}
+.mp-pb-av.pw-sphere{animation:mpSphFloat 5s ease-in-out infinite}
+.mp-pb-av.pw-sphere .chat-avatar-wrap::before{inset:-2px;padding:3px}
+@property --sph-a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes mpSphFilm{to{--sph-a:360deg}}
+@keyframes mpSphFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
