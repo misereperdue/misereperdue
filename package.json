@@ -7,7 +7,8 @@
     "build": "node tools/build.mjs",
     "verify": "node tools/build.mjs --verify",
     "check": "node tools/check.mjs",
-    "sitemap": "python3 build-sitemap.py"
+    "sitemap": "python3 build-sitemap.py",
+    "audit:assets": "node tools/audit-assets.mjs"
   },
   "devDependencies": {
     "clean-css": "5.3.3",
