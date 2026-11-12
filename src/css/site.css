@@ -13333,3 +13333,56 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .chat-np.show-am .chat-np-info,.chat-np:not(.show-am) .chat-np-am{transition-delay:.08s}
 @media (prefers-reduced-motion:reduce){.chat-np .chat-np-info,.chat-np .chat-np-am{transition:opacity .2s linear;transform:none!important;filter:none!important}}
 
+/* ===== #129: new powers, charms, owner powers, gift amount, album, feature stats ===== */
+/* Echo: faint duplicate layers behind your message text */
+.chat-msg.pw-echo .chat-bubble .chat-text{text-shadow:2px 2px 0 color-mix(in srgb,var(--pw-echo,currentColor) 34%,transparent),4px 4px 0 color-mix(in srgb,var(--pw-echo,currentColor) 18%,transparent),6px 6px 1px color-mix(in srgb,var(--pw-echo,currentColor) 9%,transparent)}
+/* Aura: faint ambient colour around your messages (matches Bubble when set to) */
+.chat-msg.pw-aura .chat-bubble:not(.chat-photo-only){box-shadow:0 0 22px 3px color-mix(in srgb,var(--pw-aura) 42%,transparent)!important}
+.chat-msg.pw-aura.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pw-bubble) 45%,transparent),0 0 22px 3px color-mix(in srgb,var(--pw-aura) 42%,transparent)!important}
+/* Name effects (chat + profile) */
+.chat-msg.pw-glitch .chat-msg-head strong,.mp-pb-name.pw-glitch .mp-pb-name-t,.chat-msg.pw-melt .chat-msg-head strong,.mp-pb-name.pw-melt .mp-pb-name-t{display:inline-block}
+.chat-msg.pw-glitch .chat-msg-head strong,.mp-pb-name.pw-glitch .mp-pb-name-t{animation:mpGlitch 3.4s steps(1,end) infinite}
+@keyframes mpGlitch{0%,86%,100%{text-shadow:none;transform:none;clip-path:none}88%{text-shadow:-2px 0 #ff2a6d,2px 0 #05d9e8;transform:translateX(1px) skewX(-8deg)}90%{text-shadow:2px 0 #ff2a6d,-2px 0 #05d9e8;transform:translateX(-2px);clip-path:inset(30% 0 20% 0)}92%{text-shadow:-1px 0 #05d9e8,1px 0 #ff2a6d;transform:translateX(1px) skewX(6deg);clip-path:inset(0 0 55% 0)}94%{text-shadow:none;transform:none;clip-path:none}96%{text-shadow:1px 0 #ff2a6d,-1px 0 #05d9e8;transform:translateY(-1px)}}
+.chat-msg.pw-melt .chat-msg-head strong,.mp-pb-name.pw-melt .mp-pb-name-t{transform-origin:50% 0;animation:mpMelt 4s ease-in-out infinite alternate;text-shadow:0 2px 0 color-mix(in srgb,currentColor 55%,transparent),0 5px 1px color-mix(in srgb,currentColor 30%,transparent),0 9px 3px color-mix(in srgb,currentColor 14%,transparent)}
+@keyframes mpMelt{0%{transform:scaleY(1) skewX(0)}50%{transform:scaleY(1.1) skewX(-2deg)}100%{transform:scaleY(1.18) skewX(1.5deg);filter:blur(.3px)}}
+.chat-msg.pw-rgb .chat-msg-head strong,.mp-pb-name.pw-rgb .mp-pb-name-t{background:linear-gradient(90deg,#ff004c,#ffb800,#3bff8f,#00c8ff,#b44cff,#ff004c);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;animation:mpRgb 7s linear infinite}
+[data-rgb=fast].pw-rgb .chat-msg-head strong,.mp-pb-name[data-rgb=fast].pw-rgb .mp-pb-name-t{animation-duration:2.6s}
+@keyframes mpRgb{to{background-position:300% 0}}
+/* Halo: custom ring colour (chat avatar + profile ring); never the VIP gold / 07 ring (enforced by the Worker) */
+.chat-msg.pw-halo .chat-avatar-wrap{border-radius:50%;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--pw-halo)}
+.mp-pb-av.pw-halo:not(.is-owner) .mp-pb-ring{background:var(--pw-halo)!important}
+/* Sphere: avatar inside a glass orb */
+.chat-msg.pw-sphere .chat-avatar-wrap,.mp-pb-av.pw-sphere .chat-avatar-wrap{position:relative;border-radius:50%;box-shadow:inset 0 -6px 12px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.28)}
+.chat-msg.pw-sphere .chat-avatar-wrap::after,.mp-pb-av.pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.85),rgba(255,255,255,.18) 28%,transparent 52%),radial-gradient(circle at 70% 86%,rgba(255,255,255,.28),transparent 38%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 -8px 16px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t,.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-rgb .chat-msg-head strong,.pw-rgb .mp-pb-name-t{animation:none!important}}
+/* Charms next to the name; the old badge row, inline badge and avatar badges give way to them */
+.mp-charms{display:inline-flex;align-items:center;gap:3px;flex:none;margin-left:4px;vertical-align:-2px}
+.mp-charm{display:inline-grid;place-items:center;width:15px;height:15px;line-height:1}
+.mp-charm svg,.mp-charm img{width:15px;height:15px;display:block}
+.mp-charm .chat-badge,.mp-charm .chat-badge-kitty,.mp-charm .chat-badge-mask,.mp-charm .chat-verified{position:static!important;inset:auto!important;transform:none!important;width:15px!important;height:15px!important;font-size:12px!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
+.mp-pb-name .mp-charms{margin-left:6px}.mp-pb-name .mp-charm,.mp-pb-name .mp-charm svg,.mp-pb-name .mp-charm img{width:18px;height:18px}
+.mp-pb-badges,.mp-pb-ib{display:none!important}
+.chat-msg .chat-avatar-wrap>.chat-badge,.chat-msg .chat-avatar-wrap>.chat-badge-kitty,.chat-msg .chat-avatar-wrap>.chat-badge-mask{display:none!important}
+/* Custom colour swatch in power settings */
+.pow-sw-custom{position:relative;overflow:hidden;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom[style*="--sw"]{background:var(--sw)}
+.pow-sw-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+/* Custom gift amount */
+.gift-custom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 0;padding:6px 6px 6px 14px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:650;color:var(--muted)}
+.gift-custom input{width:110px;height:32px;padding:0 12px;border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);border-radius:999px;background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink);font:inherit;font-size:15px;text-align:right}
+/* Owner: powers in Manage user */
+.mp-own-pw{margin-top:8px}
+.mp-own-row{display:flex;align-items:center;gap:8px;min-height:44px;border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent)}
+.mp-own-row:first-child{border-top:0}
+.mp-own-row b{flex:1;min-width:0;font-size:13.5px}
+.mp-own-row .pow-ico{width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:15px}
+.mp-own-col{width:30px;height:30px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+/* Album under the song title in the profile music box */
+.mp-profile-song-album{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Dashboard: Powers & Stars */
+.msg-popup.is-embedded .dash-feat{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}
+.dash-feat-list{margin-top:8px}
+.dash-feat-row{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent);font-size:13px}
+.dash-feat-row:first-child{border-top:0}
+.dash-feat-row span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+

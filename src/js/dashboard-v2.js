@@ -600,6 +600,41 @@
     var __mem = __sec("Members");
     k.appendChild(__mem.root);
     __overview(__mem.body);
+    /* Powers & Stars stats (per dc) */
+    if (o.features) {
+      var __pf = __sec("Powers & Stars"), F = o.features, fmt = function (n) { return Number(n || 0).toLocaleString(); };
+      k.appendChild(__pf.root);
+      var fg = document.createElement("div");
+      fg.className = "dash-hero dash-feat";
+      [["Stars held", F.stars], ["Packs sold", F.packs, fmt(F.packStars) + " stars"], ["Stars gifted", F.giftedStars, fmt(F.gifts) + " gifts"], ["Stars spent", F.spentStars, "on powers"], ["Listening", F.listening, "profiles"]].forEach(function (row) {
+        var t = document.createElement("div"), nn = document.createElement("div"), lb = document.createElement("div");
+        t.className = "dash-hero-tile";
+        nn.className = "dash-hero-num";
+        nn.textContent = fmt(row[1]);
+        lb.className = "dash-hero-lbl";
+        lb.textContent = row[0];
+        t.appendChild(nn);
+        t.appendChild(lb);
+        if (row[2]) { var sb = document.createElement("div"); sb.className = "dash-hero-sub"; sb.textContent = row[2]; t.appendChild(sb); }
+        fg.appendChild(t);
+      });
+      __pf.body.appendChild(fg);
+      var ids = Object.keys(F.owned || {}).sort(function (a, b) { return (F.owned[b] || 0) - (F.owned[a] || 0); });
+      if (ids.length) {
+        var tbl = document.createElement("div");
+        tbl.className = "dash-feat-list";
+        ids.forEach(function (id) {
+          var r = document.createElement("div"), a = document.createElement("span"), b = document.createElement("span");
+          r.className = "dash-feat-row";
+          a.textContent = id.charAt(0).toUpperCase() + id.slice(1);
+          b.textContent = fmt(F.owned[id]) + " owned \u00b7 " + fmt((F.active || {})[id]) + " on";
+          r.appendChild(a);
+          r.appendChild(b);
+          tbl.appendChild(r);
+        });
+        __pf.body.appendChild(tbl);
+      }
+    }
     /* Views/Visitors 30d totals remain reachable via the Activity metric menu */
     var S = "views",
       P = {
