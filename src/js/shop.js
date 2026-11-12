@@ -1230,7 +1230,7 @@ var MPShop = (function () {
       "<ul>" +
       row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews monthly", "Charged automatically until you cancel.") +
       row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the month you paid for.") +
-      row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.") +
+      (mpTok() ? "" : row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.")) +
       "</ul></div>";
   }
   function vipAction(p, i) {
@@ -1261,8 +1261,8 @@ var MPShop = (function () {
         if (v.signedOut) return void (btn("Sign in to upgrade").onclick = function () { y("journal"); });
         if (v.vip) {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
-          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re VIP</p><p class="vip-status-s">' +
-            ("subscription" === v.source && when ? (v.cancelled ? "Cancelled \u00b7 VIP ends " : "Renews around ") + l(when) : "VIP is on your account") + "</p>" +
+          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed!</p><p class="vip-status-s">' +
+            (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for subscribing!") + "</p>" +
             ("subscription" === v.source && !v.cancelled
               ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";

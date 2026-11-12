@@ -12955,7 +12955,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-profile-details .mp-profile-song-art{position:absolute!important;left:0;top:0;bottom:0;width:48%!important;height:auto!important;border-radius:0!important;margin:0!important;z-index:-1;-webkit-mask-image:linear-gradient(to right,#000 35%,transparent 100%);mask-image:linear-gradient(to right,#000 35%,transparent 100%)}
 .mp-profile-details .mp-profile-song-art img{width:100%!important;height:100%!important;object-fit:cover;border-radius:0!important}
 .mp-profile-details .mp-profile-song-art.is-empty{background:linear-gradient(135deg,rgba(250,35,59,.35),rgba(251,92,116,.12))}
-.mp-profile-details .mp-profile-song-copy{margin-left:36%;flex:1;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 70%,transparent)}
+.mp-profile-details .mp-profile-song-copy{margin-left:36%;flex:1;text-shadow:none}
 
 /* #133 Stars packs + VIP subscription view */
 .stars-packs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
@@ -13009,7 +13009,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    contact shadow so the orb floats. Colour: --pw-sphere (power setting) else pearl blue. */
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{--sph:var(--pw-sphere,#9fd3ff);border-radius:50%;isolation:isolate;overflow:visible;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 0 0 2px color-mix(in srgb,var(--sph) 45%,transparent),0 7px 14px -6px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--sph) 60%,transparent);animation:mpSphFloat 5s ease-in-out infinite}
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){border-radius:50%;transform:scale(1.08);filter:saturate(1.12) contrast(1.04)}
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-1px;border-radius:50%;pointer-events:none;z-index:2;padding:2px;background:conic-gradient(from var(--sph-a,0deg),#ffd6f5,#bfe9ff,#d8ffe9,#fff4c4,#e4d2ff,#ffd6f5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);opacity:.85;mix-blend-mode:screen;animation:mpSphFilm 7s linear infinite}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-1px;border-radius:50%;pointer-events:none;z-index:2;padding:2px;background:conic-gradient(#ffd6f5,#bfe9ff,#d8ffe9,#fff4c4,#e4d2ff,#ffd6f5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);opacity:.85;mix-blend-mode:screen;will-change:transform;animation:mpSphSpin 7s linear infinite}
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:
   radial-gradient(ellipse 34% 22% at 34% 22%,rgba(255,255,255,.98),rgba(255,255,255,.55) 45%,transparent 72%),
   radial-gradient(circle at 70% 30%,rgba(255,255,255,.35),transparent 9%),
@@ -13019,8 +13019,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important}
 .mp-pb-av.pw-sphere{animation:mpSphFloat 5s ease-in-out infinite}
 .mp-pb-av.pw-sphere .chat-avatar-wrap::before{inset:-2px;padding:3px}
-@property --sph-a{syntax:"<angle>";inherits:false;initial-value:0deg}
-@keyframes mpSphFilm{to{--sph-a:360deg}}
+@keyframes mpSphSpin{to{transform:rotate(360deg)}}
 @keyframes mpSphFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
 @media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
@@ -13028,15 +13027,26 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 /* Now playing (per dc): Apple Account-style dot rings around the Apple Music note. The rings turn
    slowly while a ripple runs outward and around them (each dot swells and brightens in turn). */
 .mp-profile-eq.mp-am-np{position:relative;width:52px;height:52px;display:block;flex:none;align-self:center;overflow:visible;margin-right:4px!important}
-.mp-am-np .mp-am-dots{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:mpDotsTurn 40s linear infinite}
-.mp-am-np .mp-am-dots circle{transform-box:fill-box;transform-origin:50% 50%;opacity:.72;transform:scale(.8);animation:mpDotWave 3.6s cubic-bezier(.45,0,.35,1) infinite;animation-delay:calc(var(--r) * .22s + var(--a) * 1.8s - 3.6s)}
-.mp-am-np>svg:not(.mp-am-dots){position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;filter:drop-shadow(0 1px 3px rgba(250,35,59,.35));transform-origin:50% 50%;animation:mpNoteBreath 3.6s ease-in-out infinite}
-@keyframes mpDotWave{0%,100%{opacity:.7;transform:scale(.78)}22%{opacity:1;transform:scale(1.16)}48%{opacity:.85;transform:scale(.92)}}
+.mp-am-np .mp-am-dots{position:absolute;inset:0;display:block;will-change:transform;animation:mpDotsTurn 40s linear infinite}
+.mp-am-np .mp-am-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:.75;transform:scale(.94);will-change:transform,opacity;animation:mpRingWave 3.6s cubic-bezier(.45,0,.35,1) infinite;animation-delay:calc(var(--r) * .3s - 3.6s)}
+.mp-am-np>svg:not(.mp-am-ring){position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;color:var(--ink);filter:drop-shadow(0 1px 2px rgba(0,0,0,.18));transform-origin:50% 50%;will-change:transform;animation:mpNoteBreath 3.6s ease-in-out infinite}
+@keyframes mpRingWave{0%,100%{opacity:.72;transform:scale(.94)}25%{opacity:1;transform:scale(1.07)}50%{opacity:.85;transform:scale(.98)}}
 @keyframes mpDotsTurn{to{transform:rotate(360deg)}}
 @keyframes mpNoteBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@media (prefers-reduced-motion:reduce){.mp-am-np .mp-am-dots,.mp-am-np .mp-am-dots circle,.mp-am-np>svg{animation:none!important}.mp-am-np .mp-am-dots circle{opacity:.9;transform:none}}
+@media (prefers-reduced-motion:reduce){.mp-am-np .mp-am-dots,.mp-am-np .mp-am-ring,.mp-am-np>svg{animation:none!important}.mp-am-np .mp-am-ring{opacity:.9;transform:none}}
 /* Sphere: badges inside the avatar sit above the glass */
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:not(img):not(.chat-avatar){z-index:4!important}
 /* Listening card: Safari ignores overflow+radius clipping for the masked album art behind the
    card (white corners); clip-path clips it everywhere. */
 .mp-profile-details .mp-profile-song{clip-path:inset(0 round 15px)}
+
+/* Listening text follows the album cover (profile-cards songTone): the cover is fully faded before the
+   text starts, title in the theme ink, album/artist tinted toward the cover colour; no shadows. */
+.mp-profile-details .mp-profile-song-art{-webkit-mask-image:linear-gradient(to right,#000 25%,transparent 72%)!important;mask-image:linear-gradient(to right,#000 25%,transparent 72%)!important}
+.mp-profile-details .mp-profile-song-copy strong{color:var(--ink)}
+.mp-profile-details .mp-profile-song[style*="--song-tint"] :is(.mp-profile-song-album,.mp-profile-song-artist,.mp-profile-song-artist>span:last-child){color:color-mix(in srgb,var(--song-tint) 38%,var(--muted))}
+.mp-profile-details .mp-profile-song :is(.mp-profile-song-copy,.mp-profile-song-copy *){text-shadow:none!important}
+/* Smoothness: always-on decorations pause while a morph runs (html.mp-morphing, set in profile-cards). */
+html.mp-morphing :is(.mp-am-np .mp-am-dots,.mp-am-np .mp-am-ring,.mp-am-np>svg,.mp-pb-av.pw-sphere,.mp-pb-av.is-owner .mp-pb-ring,.chat-verified,.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-rgb .chat-msg-head strong,.pw-rgb .mp-pb-name-t,.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t,:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap),
+html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t,:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap)::before,
+html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t)::after{animation-play-state:paused!important}

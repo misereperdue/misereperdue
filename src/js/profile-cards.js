@@ -1,6 +1,10 @@
 /* Status-bar profiles. Auth, avatar rendering and catalog access are injected by chat.js. */
   /* One curve for every morph and menu (per dc): iOS-style ease-out, no overshoot. */
   var MP_EASE='cubic-bezier(.32,.72,0,1)';window.MP_EASE=MP_EASE;
+  /* Smoothness (per dc): while any morph/transition (finite WAAPI animation of 150ms+) runs, html gets
+     .mp-morphing and the always-on decorations pause (site.css), so the morph gets the frames. */
+  (function(){var E=Element.prototype,orig=E.animate;if(!orig||orig._mp)return;var n=0,H=document.documentElement;
+    E.animate=function(k,o){var a=orig.apply(this,arguments);try{var d=typeof o==='number'?o:o&&o.duration,it=o&&typeof o==='object'?o.iterations:1;if(d>=150&&it!==Infinity){n++;H.classList.add('mp-morphing');var end=function(){if(--n<=0){n=0;H.classList.remove('mp-morphing');}};a.finished.then(end,end);}}catch(e){}return a;};E.animate._mp=1;})();
 (function () {
   'use strict';
   var seq = 0;
@@ -18,7 +22,7 @@
     if (song && song.title && song.artist) {
       var music = section('Listening'), card = el('div', 'mp-profile-song');
       var cov = el('span', 'mp-profile-song-art'), art = artUrl(song.art);
-      if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); } else cov.classList.add('is-empty');
+      if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); songTone(art, card); } else cov.classList.add('is-empty');
       cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
       card.appendChild(cov);
       var copy=el('span','mp-profile-song-copy'),title=el('span','mp-profile-song-title');title.appendChild(el('strong','',song.title));if(song.explicit===true){var explicit=el('span','mp-profile-explicit fm-e','E');explicit.setAttribute('aria-label','Explicit');explicit.setAttribute('role','img');title.appendChild(explicit);}copy.appendChild(title);if(song.album)copy.appendChild(el('span','mp-profile-song-album',song.album));
@@ -40,9 +44,15 @@
   var AM_DOTS=(function(){var stops=[[0,[159,191,196]],[40,[76,195,236]],[90,[91,143,240]],[130,[143,108,240]],[165,[200,74,224]],[195,[232,63,168]],[230,[240,87,122]],[270,[247,136,120]],[315,[237,180,138]],[360,[159,191,196]]];
     function col(a){for(var k=1;k<stops.length;k++)if(a<=stops[k][0]){var A=stops[k-1],B=stops[k],t=(a-A[0])/(B[0]-A[0]);return 'rgb('+A[1].map(function(v,n){return Math.round(v+(B[1][n]-v)*t);}).join(',')+')';}return 'rgb(159,191,196)';}
     var rings=[[53,2.8,0],[64,3.3,-6],[77,3.9,-12],[92,4.6,-18]],out='';
-    rings.forEach(function(r,ri){for(var d=0;d<24;d++){var a=(7.5+r[2]+d*15+360)%360,rad=(a-90)*Math.PI/180;out+='<circle cx="'+(r[0]*Math.cos(rad)).toFixed(1)+'" cy="'+(r[0]*Math.sin(rad)).toFixed(1)+'" r="'+r[1]+'" fill="'+col(a)+'" style="--r:'+ri+';--a:'+(a/360).toFixed(3)+'"/>';}});
-    return '<svg class="mp-am-dots" viewBox="-100 -100 200 200" aria-hidden="true">'+out+'</svg>';})();
-  function amNote(){return AM_DOTS+'<svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
+    /* One <svg> per ring so each ring is its own GPU layer: the ripple and the turn are composited. */
+    rings.forEach(function(r,ri){var g='';for(var d=0;d<24;d++){var a=(7.5+r[2]+d*15+360)%360,rad=(a-90)*Math.PI/180;g+='<circle cx="'+(r[0]*Math.cos(rad)).toFixed(1)+'" cy="'+(r[0]*Math.sin(rad)).toFixed(1)+'" r="'+r[1]+'" fill="'+col(a)+'"/>';}out+='<svg class="mp-am-ring" style="--r:'+ri+'" viewBox="-100 -100 200 200">'+g+'</svg>';});
+    return '<span class="mp-am-dots" aria-hidden="true">'+out+'</span>';})();
+  /* Song text adapts to the album cover (per dc): the cover fades out before the text, so text sits on the
+     card in theme colours, and the album/artist lines take a tint of the cover's colour (greys skipped).
+     Needs a CORS image; otherwise plain theme colours. */
+  function songTone(src,card){try{var im=new Image();im.crossOrigin='anonymous';im.decoding='async';im.onload=function(){try{var c=document.createElement('canvas');c.width=c.height=12;var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0,12,12);var d=x.getImageData(6,0,6,12).data,r=0,g=0,b=0,k=0;for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];k++;}r/=k;g/=k;b/=k;
+      var m=Math.max(r,g,b),n=Math.min(r,g,b);if(m-n<18){card.style.removeProperty('--song-tint');return;}card.style.setProperty('--song-tint','rgb('+Math.round(r)+','+Math.round(g)+','+Math.round(b)+')');}catch(e){}};im.src=src;}catch(e){}}
+  function amNote(){return AM_DOTS+'<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
   function synth(){return svg('M4 9v6M8 5v14M12 8v8M16 3v18M20 7v10');}
   function svg(path) {return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';}
   function badgePicker(user, options) {

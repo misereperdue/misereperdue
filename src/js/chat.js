@@ -7154,7 +7154,7 @@
         '<div class="vip-row-top"><span class="rc-row-icon" aria-hidden="true">' + mpStar() + '</span><span class="rc-row-text"><span class="rc-row-title"></span><span class="rc-row-status"></span></span></div>' +
         (v.vip ? '<div class="vip-row-facts"></div>' : "") +
         '<div class="vip-row-btns"></div>';
-      row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? (v.cancelled ? "VIP \u00b7 Cancelled" : "VIP \u00b7 Monthly") : "VIP") : "Not VIP yet";
+      row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? (v.cancelled ? "VIP \u00b7 Cancelled" : "VIP \u00b7 Monthly") : "VIP") : "Not subscribed";
       row.querySelector(".rc-row-status").textContent = v.vip
         ? since ? vipSince(since) : "Active"
         : "CA$10 today, then CA$3/month";
