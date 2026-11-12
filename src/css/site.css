@@ -13522,3 +13522,25 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-profile-details .mp-profile-song-art.is-empty{background:linear-gradient(135deg,rgba(250,35,59,.35),rgba(251,92,116,.12))}
 .mp-profile-details .mp-profile-song-copy{margin-left:36%;flex:1;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 70%,transparent)}
 
+/* #133 Stars packs + VIP subscription view */
+.stars-packs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.stars-packs button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:16px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);cursor:pointer;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
+[data-theme="light"] .stars-packs button{background:rgba(10,18,48,.05)}
+.stars-packs .sp-n{display:inline-flex;align-items:center;gap:6px;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars-packs .sp-n .mp-star{width:16px;height:16px}
+.stars-packs .sp-p{font-size:13px;opacity:.7}
+.stars-packs button.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(10,18,48,.3)}
+.stars-packs button.on .sp-p{opacity:.9}
+.stars-packs button.on .mp-star{color:#fff}
+.stars-note,.vip-err{margin:0 0 12px;font-size:13px;opacity:.75}
+.vip-err:empty{display:none}
+.vip-terms{margin:16px 0;padding:14px 16px;border-radius:16px;border:var(--glass-hairline);background:var(--glass-clear-tint)}
+[data-theme="light"] .vip-terms{background:rgba(10,18,48,.05)}
+.vip-terms-price{margin:0 0 8px;font-size:17px}
+.vip-terms ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5;opacity:.8}
+.vip-buy{width:100%}
+.vip-status{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;border-radius:16px;border:var(--glass-hairline);background:var(--glass-clear-tint);text-align:center}
+.vip-status p{margin:0}
+.vip-status-h{font-size:17px;font-weight:700}
+.vip-status-s{font-size:13px;opacity:.75}
+.vip-manage{margin-top:6px;text-decoration:none}

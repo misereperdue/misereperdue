@@ -7241,14 +7241,14 @@
   function starsGo() {
     rcClose();
     var packs = [], P = (window.MP && MP.PRODUCTS) || {};
-    Object.keys(P).forEach(function (k) { var p = P[k], m = p && /^(\d+)\s+stars?$/i.exec(String(p.name || "").trim()); m && packs.push([+m[1], p.id]); });
+    Object.keys(P).forEach(function (k) { var p = P[k], nm = p && String(p.name || "").trim(), m = p && /^(\d+)\s+stars?$/i.exec(nm); p && ("stars" === p.handle || /^stars$/i.test(nm)) ? packs.push([0, p.id]) : m && packs.push([+m[1], p.id]); });
     packs.sort(function (a, b) { return a[0] - b[0]; });
     if (packs.length) {
       mpPBel && mpPBel.isConnected && mpPBclose(!0);
-      return void (location.hash = "#product-" + packs[0][1]);
+      return void (location.hash = "#product/" + packs[0][1]);
     }
     mpPBel && mpPBel.isConnected && mpPBel._page && mpPBclose(!0);
-    location.hash = "#shop";
+    location.hash = "#product/gid://shopify/Product/15505333813350"; // Stars; the page loads products itself
   }
   function powOpen() {
     if (!s || !d) return;

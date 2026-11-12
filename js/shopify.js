@@ -45,7 +45,7 @@ var MPShopify = (function () {
         optValues[o.name][o.value] = true;
         chosen[o.name] = o.value;
       });
-      if (v.id) rawVariants.push({ id: v.id, opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable, price: v.price ? parseFloat(v.price.amount || "0") : null });
+      if (v.id) rawVariants.push({ id: v.id, sku: v.sku || "", opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable, price: v.price ? parseFloat(v.price.amount || "0") : null });
     });
     var optionName = null;
     for (var oi = 0; oi < optOrder.length; oi++) {
@@ -59,7 +59,19 @@ var MPShopify = (function () {
     if (!optionName && optOrder.length) optionName = optOrder[0];
     var sizes = optionName ? Object.keys(optValues[optionName]) : [];
     var variantList = rawVariants.map(function (rv) {
-      return { id: rv.id, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty, price: rv.price };
+      return { id: rv.id, sku: rv.sku, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty, price: rv.price };
+    });
+    // Subscription products (VIP): first selling plan and its recurring price.
+    var plan = null, planRecurring = null;
+    ((n.sellingPlanGroups || {}).edges || []).some(function (g) {
+      var e = (((g.node || {}).sellingPlans || {}).edges || [])[0];
+      if (!e || !e.node) return false;
+      plan = e.node.id;
+      (e.node.priceAdjustments || []).forEach(function (a) {
+        var pr = a && a.adjustmentValue && a.adjustmentValue.price;
+        if (a && a.orderCount == null && pr) planRecurring = parseFloat(pr.amount);
+      });
+      return true;
     });
     var stockQty = 0, stockTracked = false;
     variantList.forEach(function (vv) { if (vv.qty != null) { stockTracked = true; stockQty += vv.qty; } });
@@ -85,15 +97,18 @@ var MPShopify = (function () {
       variantList: variantList,
       priceBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.price != null) m[vv.size] = vv.price; return m; }, {}),
       stock: stockTracked ? stockQty : null,
-      available: n.availableForSale !== false
+      available: n.availableForSale !== false,
+      requiresSellingPlan: !!n.requiresSellingPlan,
+      sellingPlanId: plan,
+      planRecurring: planRecurring
     };
   }
 
   function fetchProducts() {
     var query = "{ products(first: 24) { edges { node { id title handle description descriptionHtml " +
-      "availableForSale priceRange { minVariantPrice { amount currencyCode } } " +
+      "availableForSale requiresSellingPlan sellingPlanGroups(first: 3) { edges { node { sellingPlans(first: 3) { edges { node { id priceAdjustments { orderCount adjustmentValue { ... on SellingPlanFixedPriceAdjustment { price { amount } } } } } } } } } } priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title availableForSale quantityAvailable price { amount currencyCode } selectedOptions { name value } } } } } } } }";
+      "variants(first: 25) { edges { node { id title sku availableForSale quantityAvailable price { amount currencyCode } selectedOptions { name value } } } } } } } }";
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
@@ -124,7 +139,7 @@ var MPShopify = (function () {
 
   function createCheckout(lines, attributes) {
     var query = "mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }";
-    var input = { lines: lines.map(function (l) { return { merchandiseId: l.variantId, quantity: l.qty }; }) };
+    var input = { lines: lines.map(function (l) { var o = { merchandiseId: l.variantId, quantity: l.qty }; if (l.sellingPlanId) o.sellingPlanId = l.sellingPlanId; return o; }) };
     if (attributes && attributes.length) input.attributes = attributes;
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
