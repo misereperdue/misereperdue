@@ -5329,7 +5329,8 @@
                   }
                 })(e, t.user);
               });
-            } else if ("pw" === t.t && t.user) mpPwSet(t.user, t.pw);
+            } else if ("notif" === t.t && t.n) mpNotifPop(t.n);
+            else if ("pw" === t.t && t.user) mpPwSet(t.user, t.pw);
             else if ("points" === t.t && t.user) s && t.user === s.username && te(t.points || 0);
             else if ("paused" === t.t && "boolean" == typeof t.paused) st(t.paused);
             else if ("ban" === t.t && t.user) {
@@ -7267,7 +7268,7 @@
       var sets = (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); });
       if (on && sets.length)
         return (
-          '<div class="pow-tile is-owned is-selected has-set" data-id="' + x(p.id) + '">' +
+          '<div class="pow-tile is-owned is-selected has-set' + (justOpened === p.id ? " is-new" : "") + '" data-id="' + x(p.id) + '">' +
           '<button type="button" class="pow-tile-main" aria-pressed="true" aria-label="' + x(p.name) + ', on">' + powIco(p) +
           '<span class="pow-tile-copy"><b class="pow-tn">' + x(p.name) + '</b><span class="pow-td">' + x(p.desc || "") + "</span></span></button>" +
           setPanel({ id: p.id, name: p.name, settings: sets }) + "</div>"
@@ -7306,7 +7307,7 @@
       s.powerSettings = Object.assign({}, st.settings || {});
       mpPBput(s);
     }
-    var confirmT = 0;
+    var confirmT = 0, justOpened = null;
     function saveSetting(opt) {
       var t = opt.closest(".pow-tile"),
         id = t.getAttribute("data-id"),
@@ -7325,6 +7326,7 @@
           st.settings = st.settings || {};
           st.settings[id] = j.settings;
           powMe();
+          justOpened = null;
           b.isConnected && render("Saved.");
         })
         .catch(function (j) {
@@ -7389,7 +7391,10 @@
             st.on = j.on;
             busy = !1;
             powMe();
+            justOpened = next ? id : null;
             b.isConnected && render("Powers updated.");
+            var opened = next && body.querySelector('.pow-tile.has-set[data-id="' + id + '"]');
+            opened && setTimeout(function () { try { opened.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (_) {} }, 60);
           })
           .catch(function (j) {
             busy = !1;
@@ -7496,11 +7501,11 @@
       pick = 0,
       busy = !1,
       w = powSheet("Gift stars", "gift-page",
-        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><label class='gift-custom'><span>Custom</span><input type='number' inputmode='numeric' min='1' max='1000' step='1' placeholder='Amount' aria-label='Custom amount'></label><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
+        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><label class='gift-custom'><span>Custom</span><input type='number' inputmode='numeric' min='1' max='1000' step='1' placeholder='20' aria-label='Custom amount'></label><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
       grid = w.querySelector(".gift-grid"),
       send = w.querySelector(".gift-send"),
       st = w.querySelector(".pow-status");
-    w.querySelector(".gift-to").textContent = "To " + mpAt(user.username);
+    w.querySelector(".gift-to").textContent = "to " + mpAt(user.username);
     function paint() {
       w.querySelector(".pow-bal").innerHTML = mpStar("pow-star") + ' <b>' + x(s.points || 0) + "</b> stars to give";
       grid.innerHTML = AMTS.map(function (n) {
@@ -7615,6 +7620,67 @@
     root && root.appendChild(sec);
     return root;
   }
+  /* Notification popup (per dc): the top bar morphs for 2 s into the notification (who it's from or
+     the Misery eyes for site notices, what happened, and its kind), then morphs back. Tap opens the tray. */
+  var ntfQ = [], ntfBusy = !1;
+  function mpNotifInfo(n) {
+    var who = n.from && n.from !== "MISERY" ? mpAt(n.from) : "", name = n.name || powName(n.power || "");
+    var k = n.type, t = "", chip = "";
+    if (k === "reply") { t = who + " replied to you"; chip = "Globe reply"; }
+    else if (k === "reaction") { t = who + (n.kind === "chat" ? " reacted to your message" : " liked your post"); chip = n.kind === "chat" ? "Reaction" : "Globe like"; }
+    else if (k === "mention") { t = who + " mentioned you" + (n.kind === "chat" ? " in Chat" : " on the Globe"); chip = "Mention"; }
+    else if (k === "whisper" || n.kind === "whisper") { t = who + " whispered you"; chip = "Whisper"; }
+    else if (k === "vip") { t = "You're VIP now"; chip = "VIP"; }
+    else if (k === "milestone") { t = n.text || "You hit a milestone"; chip = "Milestone"; }
+    else if (k === "gift") { t = who + " gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars"); chip = "Gifted stars"; }
+    else if (k === "power") { t = "You got " + (name || "a power"); chip = n.kind === "charm" ? "Gifted charm" : "Gifted power"; }
+    else if (k === "purchase") { t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours"; chip = "Purchase"; }
+    else { t = n.text || n.preview || "New notification"; chip = "Notification"; }
+    return { title: t, sub: n.preview && k !== "milestone" ? String(n.preview) : "", chip: chip, site: !who };
+  }
+  function mpNotifPop(n) {
+    try { window.MPForum && MPForum.refreshNotifs && MPForum.refreshNotifs(); } catch (_) {}
+    ntfQ.push(n);
+    ntfBusy || mpNotifNext();
+  }
+  function mpNotifNext() {
+    var n = ntfQ.shift();
+    if (!n) return void (ntfBusy = !1);
+    var bar = window.MPProfiles && MPProfiles.topBar ? MPProfiles.topBar() : document.querySelector(".nav");
+    if (!bar || bar.classList.contains("is-profile-bar") || document.hidden) { ntfQ.length = 0; return void (ntfBusy = !1); }
+    ntfBusy = !0;
+    var info = mpNotifInfo(n), lay = document.createElement("button"), av;
+    lay.type = "button";
+    lay.className = "mp-ntf";
+    lay.setAttribute("aria-live", "polite");
+    if (info.site) av = '<span class="mp-ntf-av is-site"><img src="/img/favicon-eyes-96.png?v=17" alt=""></span>';
+    else { var c = Je[String(n.from).toLowerCase()] || {}, a = J(n.from, c.avatar, "sm", c.hasImg ? c.imgV : void 0); av = '<span class="mp-ntf-av"></span>'; }
+    lay.innerHTML = av + '<span class="mp-ntf-tx"><b></b><small></small></span><span class="mp-ntf-chip"></span>';
+    if (!info.site) lay.querySelector(".mp-ntf-av").appendChild(a);
+    lay.querySelector("b").textContent = info.title;
+    lay.querySelector("small").textContent = info.sub;
+    lay.querySelector("small").hidden = !info.sub;
+    lay.querySelector(".mp-ntf-chip").textContent = info.chip;
+    lay.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var bell = document.querySelector(".panel.on #chat-bell, .panel.on #forum-bell, #chat-bell, #forum-bell");
+      done();
+      bell && bell.click();
+    });
+    var pos = getComputedStyle(bar).position, setPos = pos === "static";
+    setPos && (bar.style.position = "relative");
+    bar.appendChild(lay);
+    requestAnimationFrame(function () { bar.classList.add("is-ntf"); });
+    var tmr = setTimeout(done, 2000), fin = !1;
+    function done() {
+      if (fin) return;
+      fin = !0;
+      clearTimeout(tmr);
+      bar.classList.remove("is-ntf");
+      setTimeout(function () { lay.remove(); setPos && (bar.style.position = ""); mpNotifNext(); }, 360);
+    }
+  }
+  window.MPNotifPop = mpNotifPop;
   window.MPOpenPowers = powOpen;
   window.MPOpenStars = starsOpen;
   /* ---------- Orders (per dc): link a checkout email with one order, then see every order + tracking ---------- */

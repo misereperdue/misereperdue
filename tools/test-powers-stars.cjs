@@ -51,6 +51,15 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#5fe3b0'}}));await p.waitForFunction(()=>!document.querySelector('.chat-msg[data-user=rich]').classList.contains('pw-bubble'));
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(95, 227, 176)','live ink change');assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow off live');
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff'}}));
+ // Notification popup: the top bar morphs for ~2 s into the notification, then back.
+ ws.send(JSON.stringify({t:'notif',n:{id:'n1',type:'gift',from:'rich',n:5,ts:Date.now()}}));
+ const ntf=p.locator('.is-ntf .mp-ntf');await ntf.waitFor({timeout:3000});
+ assert.equal((await ntf.locator('b').innerText()).trim(),'@rich gifted you 5 stars');assert.equal((await ntf.locator('.mp-ntf-chip').innerText()).trim(),'Gifted stars');assert.equal(await ntf.locator('.mp-ntf-av.is-site').count(),0,'sender avatar');
+ await p.waitForTimeout(450);await p.screenshot({path:`${OUT}/${tag}-notif.png`});
+ await p.waitForFunction(()=>!document.querySelector('.mp-ntf'),null,{timeout:4000});
+ ws.send(JSON.stringify({t:'notif',n:{id:'n2',type:'purchase',kind:'stars',from:'MISERY',n:100,ts:Date.now()}}));
+ await p.locator('.is-ntf .mp-ntf .mp-ntf-av.is-site').waitFor({timeout:3000});assert.equal((await p.locator('.mp-ntf b').innerText()).trim(),'100 stars added');
+ await p.waitForFunction(()=>!document.querySelector('.mp-ntf'),null,{timeout:4000});
 
  // Own profile: Powers, Stars, Orders (+ Dashboard for owner only); stars label.
  const expand=async u=>{await p.evaluate(u=>MPChat.openUserSheet(u),u);const o=p.locator('.mp-profile-summary-open');await o.waitFor({timeout:8000});await p.waitForTimeout(350);await o.click();await p.waitForTimeout(500);};
@@ -77,7 +86,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=ink] .pow-tile-main')?.getAttribute('aria-pressed')==='true');
  assert.deepEqual(st.on,['ink']);assert(await halo.evaluate(e=>e.classList.contains('is-selected')));assert.equal((await sheet.locator('.pow-status').innerText()).trim(),'Powers updated.');
  // Settings open inside the selected power's box (full width), selected like badges; saved.
- assert(await halo.evaluate(e=>e.classList.contains('has-set')));const hb=await halo.boundingBox(),gb=await sheet.locator('.pow-grid').first().boundingBox();assert(Math.abs(hb.width-gb.width)<=1,'settings box spans the row');
+ assert(await halo.evaluate(e=>e.classList.contains('has-set')));const hbw=await halo.evaluate(e=>e.offsetWidth),gbw=await sheet.locator('.pow-grid').first().evaluate(e=>e.clientWidth);assert(Math.abs(hbw-gbw)<=1,'settings box spans the row');assert(await halo.evaluate(e=>e.classList.contains('is-new')),'opens with animation');
  assert.equal(await halo.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'gold');assert.equal(await halo.locator('.pow-ch[aria-pressed=true]').innerText(),'Solid');
  await halo.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.');
  assert.equal(st.settings.ink.color,'pink');assert.equal(await sheet.locator('.pow-tile[data-id=ink] .pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
@@ -149,7 +158,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert(await p.locator('.mp-pb-stats svg.mp-star').count()>=1);assert(await p.locator('.chat-points svg.mp-star').count()>=1,'top bar star');
  const starFill=await p.locator('.mp-pb-stats svg.mp-star path').evaluate(e=>getComputedStyle(e).fill),accent=await p.evaluate(()=>{const t=document.createElement('i');t.style.color='var(--accent)';document.body.appendChild(t);const c=getComputedStyle(t).color;t.remove();return c;});assert.equal(starFill,accent,'star filled with accent');
  await p.locator('.mp-pb-act',{hasText:/^Gift$/}).click();const gp=p.locator('.mp-profile-bar .gift-page');await gp.waitFor();
- assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Gift stars');assert.match(await gp.locator('.gift-to').innerText(),/rich/);
+ assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Gift stars');assert.equal((await gp.locator('.gift-to').innerText()).trim(),'to @rich');assert.equal(await gp.locator('.gift-custom input').getAttribute('placeholder'),'20');
  assert(await gp.locator('.gift-send').isDisabled());assert(await gp.locator('.gift-amt[data-n="100"]').isDisabled(),'cannot gift more than balance');
  await gp.locator('.gift-custom input').fill('7');assert.equal((await gp.locator('.gift-send').innerText()).trim(),'Send 7 stars','custom amount');
  await gp.locator('.gift-custom input').fill('5000');assert(await gp.locator('.gift-send').isDisabled(),'over balance/limit blocked');

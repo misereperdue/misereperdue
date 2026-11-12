@@ -4847,6 +4847,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   }
   /* Comment bubble glyph: K3 body + half-extent stem (tighter iMessage curl) per dc. Before/after: misery-notes/screenshots/comment-icon-stem.png. */
   window.MPForum = window.MPForum || {};
+  window.MPForum.refreshNotifs = function () { q(!0); };
   window.MPForum.setCards = function (v) {
     v = String(v || "g1").toLowerCase();
     -1 === ["g1", "g2", "g3"].indexOf(v) && (v = "g1");

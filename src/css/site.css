@@ -13462,3 +13462,33 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @keyframes mpBubble{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:.95}50%{transform:translateY(-12px) scale(1)}65%{transform:translateY(-9px) scale(1.05)}100%{transform:translateY(-24px) scale(.7);opacity:0}}
 @media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.pw-melt .chat-msg-head strong::before,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::before,.pw-melt .mp-pb-name-t::after{animation:none!important}.mp-am-np i{opacity:.6}}
 
+/* ===== Notification popup in the top bar (per dc) ===== */
+.is-ntf>*:not(.mp-ntf){opacity:0!important;transform:scale(.97);transition:opacity .28s cubic-bezier(.32,.72,0,1),transform .34s cubic-bezier(.32,.72,0,1)}
+.mp-ntf{position:absolute;inset:0;z-index:5;display:flex;align-items:center;gap:10px;width:100%;padding:0 12px;border:0;border-radius:inherit;background:var(--glass-regular-tint,var(--bg));-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);color:var(--ink);font:inherit;text-align:left;cursor:pointer;opacity:0;transform:translateY(5px) scale(.98);pointer-events:none;transition:opacity .3s cubic-bezier(.32,.72,0,1),transform .38s cubic-bezier(.32,.72,0,1);-webkit-tap-highlight-color:transparent}
+.is-ntf .mp-ntf{opacity:1;transform:none;pointer-events:auto}
+.mp-ntf-av{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;overflow:hidden}
+.mp-ntf-av .chat-avatar-wrap,.mp-ntf-av img{width:32px!important;height:32px!important}
+.mp-ntf-av.is-site{background:#0a1230}
+.mp-ntf-av.is-site img{width:24px!important;height:24px!important}
+.mp-ntf-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mp-ntf-tx b{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ntf-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ntf-chip{flex:none;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);font-size:11px;font-weight:700;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.is-ntf>*:not(.mp-ntf),.mp-ntf{transform:none!important;transition:opacity .2s linear}}
+/* Custom gift amount: a clean field */
+.gift-custom{padding:6px 6px 6px 16px;border-radius:14px}
+.gift-custom input{width:96px;height:36px;padding:0 10px;border:0;border-radius:10px;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:17px;font-weight:750;text-align:center;-moz-appearance:textfield;appearance:textfield}
+.gift-custom input::placeholder{color:var(--muted);opacity:.6;font-weight:600}
+.gift-custom input::-webkit-inner-spin-button,.gift-custom input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.gift-custom input:focus{outline:2px solid var(--accent);outline-offset:0}
+.gift-to{text-transform:none}
+/* Power settings come into view smoothly */
+.pow-tile.has-set.is-new{animation:powOpenTile .42s cubic-bezier(.32,.72,0,1)}
+.pow-tile.has-set.is-new .pow-set{animation:powOpenSet .46s cubic-bezier(.32,.72,0,1) .06s backwards}
+@keyframes powOpenTile{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}}
+@keyframes powOpenSet{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pow-tile.has-set.is-new,.pow-tile.has-set.is-new .pow-set{animation:none}}
+/* Echo: lighter shades of your text trailing through the bubble */
+.chat-msg.pw-echo .chat-bubble{overflow:hidden}
+.chat-msg.pw-echo .chat-bubble .chat-text{padding-bottom:0;padding-right:1em;padding-top:.15em;text-shadow:.24em -.06em 0 color-mix(in srgb,currentColor 34%,transparent),.52em -.12em .4px color-mix(in srgb,currentColor 18%,transparent),.84em -.18em .8px color-mix(in srgb,currentColor 9%,transparent)!important}
+
