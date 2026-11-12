@@ -157,7 +157,8 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(JSON.stringify(st.gift),JSON.stringify({to:'rich',n:10}));
  await p.locator('.mp-pb-acts').waitFor({timeout:4000});await p.waitForTimeout(500);assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*19\s*$/,'recipient balance updated');
  if(owner){
-  await p.locator('.mp-profile-bar').getByRole('button',{name:/Manage user/}).click();const own=p.locator('.mp-own-pw');await own.locator('.mp-own-row').first().waitFor({timeout:6000});
+  await p.locator('.mp-profile-bar').getByRole('button',{name:/^Manage$/}).click();const own=p.locator('.mp-own-pw');await own.locator('.mp-own-row').first().waitFor({timeout:6000});
+  await p.screenshot({path:`${OUT}/${tag}-manage.png`});
   await own.locator('.mp-own-row[data-id=bubble] .mp-own-give').click();await p.waitForFunction(()=>document.querySelector('.mp-own-pw .pow-status')?.textContent==='Saved.');
   assert.equal(JSON.stringify(st.ownerCall),JSON.stringify({owned:false,id:'bubble'}),'owner remove request');
   await p.locator('.mp-profile-bar-head button').first().click();await p.locator('.mp-pb-pow-pill').waitFor();await p.waitForTimeout(400);

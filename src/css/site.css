@@ -13126,7 +13126,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-pb-ib:has(.chat-badge-mask){width:28px;min-width:28px}
 .mp-profile-bar .mp-pb-ib .chat-badge-mask{width:28px!important;height:14px!important}
 .mp-profile-bar .mp-pb-ib img,.mp-profile-bar .mp-pb-ib svg{width:100%;height:100%;display:block;object-fit:contain}
-.mp-badge-picker[data-mode="grant"] .mp-badge-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.mp-badge-picker[data-mode="grant"] .mp-badge-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .mp-badge-picker[data-mode="grant"] .mp-badge-choice{min-height:76px;padding-inline:3px}
 .mp-badge-picker[data-mode="grant"] .mp-badge-label{font-size:9.5px;letter-spacing:-.01em;min-height:22px;display:grid;place-items:center}
 .mp-profile-bar .mp-settings-content .chat-bio{margin:0;height:72px;min-height:64px}
@@ -13385,4 +13385,45 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .dash-feat-row{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-top:1px solid color-mix(in srgb,var(--ink) 7%,transparent);font-size:13px}
 .dash-feat-row:first-child{border-top:0}
 .dash-feat-row span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* ===== #129 fixes (per dc) ===== */
+/* Echo: clearly visible layers in the text colour */
+.chat-msg.pw-echo .chat-bubble{overflow:visible}
+.chat-msg.pw-echo .chat-bubble .chat-text{text-shadow:3px 3px 0 color-mix(in srgb,currentColor 48%,transparent),6px 6px 0 color-mix(in srgb,currentColor 28%,transparent),9px 9px 1px color-mix(in srgb,currentColor 14%,transparent)!important;padding-bottom:4px}
+/* Melt: wobbling letters + a dripping, stretched copy below */
+.chat-msg.pw-melt .chat-msg-head strong,.mp-pb-name.pw-melt .mp-pb-name-t{position:relative;animation:none!important;text-shadow:none!important;transform:none!important;filter:url(#mp-melt);overflow:visible}
+.chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;color:inherit;pointer-events:none;transform-origin:50% 0;filter:blur(.6px);-webkit-mask-image:linear-gradient(to bottom,transparent 38%,#000 55%,rgba(0,0,0,.55) 78%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 38%,#000 55%,rgba(0,0,0,.55) 78%,transparent 100%);animation:mpMeltDrip 3.8s cubic-bezier(.45,0,.55,1) infinite alternate}
+@keyframes mpMeltDrip{0%{transform:scaleY(1.25)}100%{transform:scaleY(2.1) translateY(1px)}}
+/* Colour picker: label above, swatches wrap evenly, custom swatch last */
+.pow-set-row{flex-direction:column;align-items:stretch;gap:8px}
+.pow-set-opts{justify-content:flex-start;gap:10px}
+.pow-sw{flex:none}
+.pow-sw-custom:not([style*="--sw"])::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none}
+/* Sphere: a prominent, animated glass orb */
+.chat-msg.pw-sphere .chat-avatar-wrap,.mp-pb-av.pw-sphere .chat-avatar-wrap{box-shadow:inset 0 -8px 14px rgba(0,0,0,.4),0 0 0 2px rgba(255,255,255,.45),0 6px 18px rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--accent) 55%,transparent);animation:mpOrbFloat 4.5s ease-in-out infinite}
+.chat-msg.pw-sphere .chat-avatar-wrap::after,.mp-pb-av.pw-sphere .chat-avatar-wrap::after{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.95),rgba(255,255,255,.25) 26%,transparent 50%),radial-gradient(circle at 72% 84%,rgba(255,255,255,.35),transparent 36%),conic-gradient(from 0deg,transparent,rgba(255,255,255,.18),transparent 30%,rgba(169,215,245,.22),transparent 60%);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55),inset 0 -10px 18px rgba(0,0,0,.3);animation:mpOrbShine 6s linear infinite}
+@keyframes mpOrbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes mpOrbShine{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::after,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
+/* Charms: uniform size, centred, consistent spacing */
+.mp-charms{gap:4px;margin-left:5px;vertical-align:middle}
+.chat-msg-head .mp-charms{align-self:center;margin-left:-2px}
+.mp-charm{width:16px;height:16px}
+.mp-charm svg,.mp-charm img{width:16px;height:16px;object-fit:contain}
+.mp-charm .chat-badge,.mp-charm .chat-badge-kitty,.mp-charm .chat-badge-mask,.mp-charm .chat-verified{display:grid!important;place-items:center;width:16px!important;height:16px!important;font-size:13px!important;line-height:16px!important}
+.mp-charm .chat-badge-kitty img,.mp-charm .chat-badge-mask img{width:16px!important;height:16px!important}
+.mp-pb-name .mp-charms{gap:5px;margin-left:7px}
+.mp-pb-name .mp-charm,.mp-pb-name .mp-charm svg,.mp-pb-name .mp-charm img,.mp-pb-name .mp-charm .chat-badge,.mp-pb-name .mp-charm .chat-badge-kitty,.mp-pb-name .mp-charm .chat-badge-kitty img,.mp-pb-name .mp-charm .chat-badge-mask img{width:19px!important;height:19px!important}
+.mp-pb-name .mp-charm .chat-badge{font-size:15px!important;line-height:19px!important}
+/* Manage window (per dc): even, tighter rhythm; round colour chooser */
+.mp-profile-bar [data-phase="manage"] .mp-profile-section{margin:0 0 14px!important;padding:0!important}
+.mp-profile-bar [data-phase="manage"] .mp-profile-section>h3,.mp-own-pw>.pow-h{margin:0 2px 8px!important;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mp-profile-bar [data-phase="manage"] .mp-settings-hint{margin:-2px 2px 8px!important}
+.mp-own-pw{margin:0!important}
+.mp-own-row{min-height:46px;gap:8px;padding:0 2px}
+.mp-own-row .pow-ch{min-height:30px;padding:0 12px}
+.mp-own-col{-webkit-appearance:none;appearance:none;width:26px;height:26px;padding:0;border:0;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px color-mix(in srgb,var(--ink) 18%,transparent)}
+.mp-own-col::-webkit-color-swatch-wrapper{padding:0}
+.mp-own-col::-webkit-color-swatch{border:0;border-radius:50%}
+.mp-own-col::-moz-color-swatch{border:0;border-radius:50%}
 

@@ -25,10 +25,10 @@
       var artist=el('span','mp-profile-song-artist'),avatar=el('span','mp-profile-artist-avatar'),artistImage=artUrl(song.artistArt);avatar.setAttribute('aria-hidden','true');avatar.appendChild(el('span','',Array.from(song.artist.trim())[0]||'♪'));if(artistImage){var artistImg=el('img');artistImg.src=artistImage;artistImg.alt='';artistImg.loading='lazy';artistImg.onerror=function(){artistImg.remove();};avatar.appendChild(artistImg);}artist.appendChild(avatar);artist.appendChild(el('span','mp-profile-artist-name',song.artist));copy.appendChild(artist);card.appendChild(copy);
       var eq = el('span', 'mp-profile-eq'); eq.setAttribute('aria-hidden', 'true'); for (var i = 0; i < 4; i++) eq.appendChild(el('i')); card.appendChild(eq);
       music.appendChild(card); out.appendChild(music);
-      if(options.resolve&&song.url&&(song.artistArt===undefined||song.explicit===undefined)){cachedResolve(song.url,options.resolve).then(function(metadata){if(out.isConnected&&user.listening===song){Object.assign(song,metadata);options.enriched&&options.enriched();}}).catch(function(){});}
+      if(options.resolve&&song.url&&(song.artistArt===undefined||song.explicit===undefined||song.album===undefined)){cachedResolve(song.url,options.resolve).then(function(metadata){if(out.isConnected&&user.listening===song){Object.assign(song,metadata);options.enriched&&options.enriched();}}).catch(function(){});}
     }
     // Owner editing is available in the toolbar above the name.
-    if (options.manage) {var manage=button('Manage user',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M12 3 4 6v6c0 4 8 9 8 9s8-5 8-9V6L12 3Z'));out.appendChild(manage);}
+    if (options.manage) {var manage=button('Manage',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4'));out.appendChild(manage);}
     [].forEach.call(out.children, function (c, i) { c.style.setProperty('--i', i); });
     return out;
   }
@@ -42,7 +42,7 @@
     if(options.grant)root.appendChild(el('p','mp-settings-hint','Tap a badge to grant or remove it.'));
     root.appendChild(grid);root.appendChild(status);
     var labels={'100':'100',heart:'Heart',member:'VIP',kitty:'Hello Kitty',mask:'Sleep mask',verified:'Verified',robot:'Bot'};
-    function paint(){grid.replaceChildren();var ids=options.grant?['100','heart','member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified')&&options.allowed(user.username,id);});
+    function paint(){grid.replaceChildren();var ids=options.grant?['member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified')&&options.allowed(user.username,id);});
       if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'))ids.push(active);ids.unshift(null);}
       if(options.grant&&user.username.toLowerCase()==='grim')ids=['robot'];
       ids.forEach(function(id){var selected=options.grant?(user.badges||[]).indexOf(id)>=0:options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?'Toggle ':'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
@@ -126,7 +126,7 @@
         if(info.length)tx.appendChild(el('small','mp-profile-summary-info',info.join(' · ')));
         expand.appendChild(tx);expand.appendChild(score);var chevron=el('span','mp-profile-summary-chevron');chevron.innerHTML=svg('M7 10c2 0 4 4 5 4s3-4 5-4');chevron.setAttribute('aria-hidden','true');expand.appendChild(chevron);row.appendChild(expand);root.appendChild(row);
       } else {
-        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage user':next==='page'?pageTitle:'Profile',function(){render(sub(next)?'full':'compact');}));
+        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage':next==='page'?pageTitle:'Profile',function(){render(sub(next)?'full':'compact');}));
         var scroll=el('div','mp-profile-bar-scroll');root.appendChild(scroll);
         if(sub(next)){scroll.appendChild(editor);}
         else {

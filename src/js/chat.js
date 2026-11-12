@@ -927,7 +927,7 @@
                   (S.title = "Bot badge (permanent)"),
                   L.appendChild(S));
               } else
-                ["100", "heart", "member", "kitty", "mask"].forEach(function (e) {
+                ["member", "kitty", "mask"].forEach(function (e) {
                   var t = document.createElement("button");
                   t.type = "button";
                   var a = n.badges && -1 !== n.badges.indexOf(e);
@@ -947,7 +947,7 @@
                             if (((t.disabled = !1), e && e.ok && e.user)) {
                               var a = (n = e.user).badges || [];
                               L.querySelectorAll(".chat-badge-opt").forEach(function (e, n) {
-                                var r = ["100", "heart", "member", "kitty", "mask"][n],
+                                var r = ["member", "kitty", "mask"][n],
                                   o = -1 !== a.indexOf(r);
                                 (e.classList.toggle("on", e === t && o),
                                   e.classList.toggle("has", o),
@@ -1230,17 +1230,27 @@
   function mpPwApply(el, user, look) {
     var pw = look !== void 0 ? look : PW[pwKey(user)] || null;
     PW_KEYS.forEach(function (k) {
-      var v = pw && pw[k], c = typeof v === "string" && v.charAt(0) === "#" ? v : null;
+      var v = pw && pw[k], c = typeof v === "string" && v.charAt(0) === "#" && !PW_NOCOLOR[k] ? v : null;
       el.classList.toggle("pw-" + k, !!v);
       c ? el.style.setProperty("--pw-" + k, c) : el.style.removeProperty("--pw-" + k);
     });
     pw && pw.rgb ? el.setAttribute("data-rgb", pw.rgb) : el.removeAttribute("data-rgb");
     var ch = (pw && pw.charms) || [];
-    if (el.classList.contains("mp-pb-name")) mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch);
+    pw && pw.melt && mpMeltFilter();
+    if (el.classList.contains("mp-pb-name")) { mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch); mpMeltText(el.querySelector(".mp-pb-name-t")); }
     else if (el.classList.contains("chat-msg")) {
-      var put = function () { var h = el.querySelector(".chat-msg-head"); h && mpCharmsInto(h, h.querySelector("strong"), ch); };
+      var put = function () { var h = el.querySelector(".chat-msg-head"); h && (mpCharmsInto(h, h.querySelector("strong"), ch), mpMeltText(h.querySelector("strong"))); };
       el.querySelector(".chat-msg-head") ? put() : setTimeout(put, 0);
     }
+  }
+  var PW_NOCOLOR = { echo: 1 };
+  function mpMeltText(n) { n && n.setAttribute("data-text", n.textContent || ""); }
+  /* Melt: an SVG noise filter wobbles the letters while a stretched, masked copy drips below them. */
+  function mpMeltFilter() {
+    if (document.getElementById("mp-melt-f")) return;
+    var d = document.createElement("div");
+    d.innerHTML = '<svg id="mp-melt-f" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><filter id="mp-melt" x="-10%" y="-30%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="2" seed="7" result="n"><animate attributeName="baseFrequency" dur="7s" values="0.012 0.11;0.018 0.16;0.012 0.11" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
+    document.body.appendChild(d.firstChild);
   }
   /* Charms (per dc, replacing badges): next to the name in chat and the profile view. */
   var GEM = { diamond: ["#e9fbff", "#9be7ff", "#4fb7e8"], emerald: ["#c9ffe0", "#2ecc71", "#138a49"], ruby: ["#ffd0dc", "#e0115f", "#8f0a3b"] };
@@ -7237,27 +7247,28 @@
       return '<div class="pow-set">' + p.settings.map(function (f) {
         var val = cur[f.key] != null ? cur[f.key] : f.def;
         return '<div class="pow-set-row"><span class="pow-set-k">' + x(f.label) + '</span><div class="pow-set-opts" role="group" aria-label="' + x(p.name + " " + f.label) + '">' +
-          (f.type === "color" && f.custom ? (function () {
-            var hex = /^#[0-9a-f]{6}$/i.test(val || "");
-            return '<label class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour"><input type="color" value="' + x(hex ? val : "#ffffff") + '" data-custom="1"></label>';
-          })() : "") +
           f.options.map(function (o) {
             var on = o.v === val;
             return f.type === "color"
               ? '<button type="button" class="pow-sw' + (on ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(o.v) + '" style="--sw:' + x(o.color) + '" aria-pressed="' + on + '" aria-label="' + x(o.label) + '"></button>'
               : '<button type="button" class="pow-ch' + (on ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(o.v) + '" aria-pressed="' + on + '">' + x(o.label) + "</button>";
-          }).join("") + "</div></div>";
+          }).join("") +
+          (f.type === "color" && f.custom ? (function () {
+            var hex = /^#[0-9a-f]{6}$/i.test(val || "");
+            return '<label class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour"><input type="color" value="' + x(hex ? val : "#ffffff") + '" data-custom="1"></label>';
+          })() : "") + "</div></div>";
       }).join("") + "</div>";
     }
     function tile(p, mine) {
       var on = mine && st.on.indexOf(p.id) >= 0,
         poor = !mine && st.stars < p.price;
-      if (on && p.settings && p.settings.length)
+      var sets = (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); });
+      if (on && sets.length)
         return (
           '<div class="pow-tile is-owned is-selected has-set" data-id="' + x(p.id) + '">' +
           '<button type="button" class="pow-tile-main" aria-pressed="true" aria-label="' + x(p.name) + ', on">' + powIco(p) +
           '<span class="pow-tile-copy"><b class="pow-tn">' + x(p.name) + '</b><span class="pow-td">' + x(p.desc || "") + "</span></span></button>" +
-          setPanel(p) + "</div>"
+          setPanel({ id: p.id, name: p.name, settings: sets }) + "</div>"
         );
       return (
         '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
