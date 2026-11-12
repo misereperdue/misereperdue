@@ -13427,3 +13427,38 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-own-col::-webkit-color-swatch{border:0;border-radius:50%}
 .mp-own-col::-moz-color-swatch{border:0;border-radius:50%}
 
+/* ===== #129 fixes 2 (per dc) ===== */
+/* Melt: drops of the name's colour grow from the letters and fall; a goo filter fuses them into the text */
+.chat-msg.pw-melt .chat-msg-head strong,.mp-pb-name.pw-melt .mp-pb-name-t{position:relative;display:inline-block;padding-bottom:12px;margin-bottom:-12px;filter:url(#mp-goo)!important;animation:none!important;text-shadow:none!important;transform:none!important;overflow:visible}
+.chat-msg.pw-melt .chat-msg-head strong::before,.chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::before,.mp-pb-name.pw-melt .mp-pb-name-t::after{content:""!important;position:absolute;top:52%;width:.3em;height:.3em;border-radius:40% 40% 50% 50%;background:currentColor;-webkit-mask:none!important;mask:none!important;filter:none!important;transform:none;animation:mpDrip 2.8s cubic-bezier(.55,0,.85,.35) infinite}
+.chat-msg.pw-melt .chat-msg-head strong::before,.mp-pb-name.pw-melt .mp-pb-name-t::before{left:22%}
+.chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::after{left:64%;width:.26em;animation-delay:1.3s;animation-duration:3.3s}
+@keyframes mpDrip{0%{height:.3em;transform:translateY(0);opacity:1}62%{height:1em;transform:translateY(0);opacity:1}78%{height:.5em;transform:translateY(.55em);opacity:1}100%{height:.3em;transform:translateY(1.15em);opacity:0}}
+/* Custom colour swatch + inline picker */
+.pow-sw-custom{position:relative;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom[style*="--sw"]{background:var(--sw)}
+.pow-sw-custom:not([style*="--sw"])::before{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.pow-sw-custom::after{content:none!important}
+.pow-sw-custom[aria-expanded=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.pow-cp{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--ink) 5%,transparent);animation:menuPop .28s cubic-bezier(.32,.72,0,1)}
+.pow-cp-prev{flex:none;width:34px;height:34px;border-radius:50%;background:var(--cp,#a9d7f5);box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--cp,#a9d7f5)}
+.pow-cp-sl{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+.pow-cp input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:999px;margin:0;outline:none;border:0}
+.pow-cp-h{background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.pow-cp-l{background:linear-gradient(90deg,#111,var(--cp-mid,#3aa0ff),#fff)}
+.pow-cp input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.08)}
+.pow-cp input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pow-cp-use{flex:none}
+/* Now playing: bouncing Apple Music note with synth bubbles */
+.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center}
+.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:1;filter:drop-shadow(0 2px 4px rgba(250,35,59,.45));transform-origin:50% 100%;animation:mpNoteBounce .9s cubic-bezier(.3,.7,.4,1) infinite}
+.mp-am-np i{position:absolute;bottom:3px;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(251,92,116,.85) 45%,rgba(250,35,59,.55));opacity:0;animation:mpBubble 1.8s ease-out infinite}
+.mp-am-np i:nth-child(1){left:2px}
+.mp-am-np i:nth-child(2){left:11px;width:5px;height:5px;animation-delay:.35s;animation-duration:1.5s}
+.mp-am-np i:nth-child(3){left:20px;animation-delay:.7s;animation-duration:2s}
+.mp-am-np i:nth-child(4){left:7px;width:4px;height:4px;animation-delay:1.05s;animation-duration:1.6s}
+.mp-am-np i:nth-child(5){left:16px;width:6px;height:6px;animation-delay:1.35s}
+@keyframes mpNoteBounce{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-5px) scale(.94,1.06)}55%{transform:translateY(0) scale(1.08,.92)}70%{transform:translateY(-1.5px) scale(1,1)}}
+@keyframes mpBubble{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:.95}50%{transform:translateY(-12px) scale(1)}65%{transform:translateY(-9px) scale(1.05)}100%{transform:translateY(-24px) scale(.7);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.pw-melt .chat-msg-head strong::before,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::before,.pw-melt .mp-pb-name-t::after{animation:none!important}.mp-am-np i{opacity:.6}}
+

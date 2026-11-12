@@ -1206,7 +1206,7 @@
         mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
         st.innerHTML=(pill||'')+'<span class="mp-pb-pts" aria-label="'+x(user.points||0)+' stars">'+mpStar()+' <b>'+x(user.points||0)+'</b></span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
-        if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
+        mpPwApply(avw,user.username,mpPwFromProfile(user));if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
       manage:!me && s && s.owner ? function(){return mpOwnerPowers(b, MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}}));} : null
     });
@@ -1214,9 +1214,10 @@
   /* Profile view rings and pill (per dc): VIP keeps its gold ring and VIP pill whatever badge is
      displayed; Hello Kitty badge holders get a pink ring; otherwise the verified ring. */
   /* VIP outranks other badges, except 07 (verified), which outranks VIP when displayed (per dc). */
-  function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)) && N(u) !== "verified"; }
+  function pbHas07(u) { return !!(u && (u.verified || (u.badges || []).indexOf("verified") >= 0)); }
+  function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)) && !pbHas07(u); }
   function pbPillBadge(u) { return pbVip(u) ? "member" : N(u); }
-  function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : O(u); }
+  function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : pbHas07(u) && (N(u) === "member" || !N(u)) ? O(Object.assign({}, u, { activeBadge: "verified" })) : O(u); }
   function pbRing(u) {
     return pbVip(u) ? " is-vip" : u && ((u.badges || []).indexOf("kitty") >= 0 || N(u) === "kitty") ? " is-kitty" : N(u) === "verified" ? " is-verified" : "";
   }
@@ -1249,7 +1250,7 @@
   function mpMeltFilter() {
     if (document.getElementById("mp-melt-f")) return;
     var d = document.createElement("div");
-    d.innerHTML = '<svg id="mp-melt-f" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><filter id="mp-melt" x="-10%" y="-30%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="2" seed="7" result="n"><animate attributeName="baseFrequency" dur="7s" values="0.012 0.11;0.018 0.16;0.012 0.11" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
+    d.innerHTML = '<svg id="mp-melt-f" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><filter id="mp-goo" x="-20%" y="-40%" width="140%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="1.3" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="mp-melt" x="-10%" y="-30%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="2" seed="7" result="n"><animate attributeName="baseFrequency" dur="7s" values="0.012 0.11;0.018 0.16;0.012 0.11" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
     document.body.appendChild(d.firstChild);
   }
   /* Charms (per dc, replacing badges): next to the name in chat and the profile view. */
@@ -1264,6 +1265,7 @@
   function mpCharmsInto(host, after, list) {
     var old = host.querySelector(":scope > .mp-charms");
     old && old.remove();
+    list && list.indexOf("verified") >= 0 && (list = list.filter(function (c) { return c !== "member"; }));
     if (!list || !list.length) return;
     var w = document.createElement("span");
     w.className = "mp-charms";
@@ -7255,7 +7257,7 @@
           }).join("") +
           (f.type === "color" && f.custom ? (function () {
             var hex = /^#[0-9a-f]{6}$/i.test(val || "");
-            return '<label class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour"><input type="color" value="' + x(hex ? val : "#ffffff") + '" data-custom="1"></label>';
+            return '<button type="button" class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour" aria-expanded="false"></button>';
           })() : "") + "</div></div>";
       }).join("") + "</div>";
     }
@@ -7296,6 +7298,14 @@
       var el = body.querySelector(".pow-status");
       el && (el.textContent = t);
     }
+    /* Your profile view reads your account object: keep its powers in step (per dc). */
+    function powMe() {
+      if (!s) return;
+      s.powers = st.owned.slice();
+      s.powersOn = st.on.slice();
+      s.powerSettings = Object.assign({}, st.settings || {});
+      mpPBput(s);
+    }
     var confirmT = 0;
     function saveSetting(opt) {
       var t = opt.closest(".pow-tile"),
@@ -7314,6 +7324,7 @@
           if (!j || !j.ok) throw j;
           st.settings = st.settings || {};
           st.settings[id] = j.settings;
+          powMe();
           b.isConnected && render("Saved.");
         })
         .catch(function (j) {
@@ -7321,16 +7332,43 @@
           b.isConnected && render((j && j.error) || "Couldn't save that setting.");
         });
     }
-    body.addEventListener("change", function (e) {
-      var inp = e.target.closest("input[data-custom]");
-      if (!inp || busy) return;
-      var lab = inp.closest(".pow-sw-custom");
-      lab.setAttribute("data-v", inp.value);
-      lab.style.setProperty("--sw", inp.value);
-      saveSetting(lab);
+    /* Custom colour (per dc): an instant inline picker (hue + lightness + preview), no native dialog. */
+    function cpHex(h, l) {
+      var s1 = 0.85, L = l / 100, a = s1 * Math.min(L, 1 - L), f = function (n) { var k = (n + h / 30) % 12, c = L - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); return ("0" + Math.round(c * 255).toString(16)).slice(-2); };
+      return "#" + f(0) + f(8) + f(4);
+    }
+    function cpPaint(cp) {
+      var h = +cp.querySelector(".pow-cp-h").value, l = +cp.querySelector(".pow-cp-l").value, hex = cpHex(h, l);
+      cp.setAttribute("data-hex", hex);
+      cp.style.setProperty("--cp", hex);
+      cp.style.setProperty("--cp-mid", cpHex(h, 52));
+    }
+    body.addEventListener("input", function (e) {
+      var cp = e.target.closest(".pow-cp");
+      cp && cpPaint(cp);
     });
     body.addEventListener("click", function (e) {
-      if (e.target.closest(".pow-sw-custom")) return;
+      var use = e.target.closest(".pow-cp-use");
+      if (use) {
+        var cp = use.closest(".pow-cp"), cb = cp.parentNode.querySelector(".pow-sw-custom");
+        if (busy || !cb) return;
+        cb.setAttribute("data-v", cp.getAttribute("data-hex"));
+        saveSetting(cb);
+        return;
+      }
+      var cbtn = e.target.closest(".pow-sw-custom");
+      if (cbtn) {
+        var row = cbtn.closest(".pow-set-row"), open = row.querySelector(".pow-cp");
+        if (open) { open.remove(); cbtn.setAttribute("aria-expanded", "false"); return; }
+        var p0 = document.createElement("div");
+        p0.className = "pow-cp";
+        p0.innerHTML = '<span class="pow-cp-prev" aria-hidden="true"></span><div class="pow-cp-sl"><input type="range" class="pow-cp-h" min="0" max="359" value="200" aria-label="Hue"><input type="range" class="pow-cp-l" min="28" max="78" value="58" aria-label="Lightness"></div><button type="button" class="pow-ch pow-cp-use">Use</button>';
+        row.appendChild(p0);
+        cbtn.setAttribute("aria-expanded", "true");
+        cpPaint(p0);
+        return;
+      }
+      if (e.target.closest(".pow-cp")) return;
       var opt = e.target.closest(".pow-sw,.pow-ch");
       if (opt) {
         if (!busy && !opt.classList.contains("is-on")) saveSetting(opt);
@@ -7350,6 +7388,7 @@
             st.owned = j.owned;
             st.on = j.on;
             busy = !1;
+            powMe();
             b.isConnected && render("Powers updated.");
           })
           .catch(function (j) {
@@ -7383,6 +7422,7 @@
           st.owned = j.owned;
           st.on = j.on;
           powStars(j.stars);
+          powMe();
           b.isConnected && render(powName(id) + " is yours. Tap it to turn it on.");
         })
         .catch(function () {

@@ -83,8 +83,10 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(st.settings.ink.color,'pink');assert.equal(await sheet.locator('.pow-tile[data-id=ink] .pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
  await sheet.locator('.pow-tile[data-id=ink] .pow-ch[data-v=spin]').click();await p.waitForFunction(()=>document.querySelector('.pow-tile[data-id=ink] .pow-ch.is-on')?.textContent==='Spin');assert.equal(st.settings.ink.style,'spin');assert.equal(st.settings.ink.color,'pink','other setting kept');
  // Custom colour: the custom swatch saves a hex colour.
- await sheet.locator('.pow-tile[data-id=ink] .pow-sw-custom input').evaluate(e=>{e.value='#12ab34';e.dispatchEvent(new Event('change',{bubbles:true}));});
- await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.'&&document.querySelector('.pow-tile[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,'#12ab34');
+ await sheet.locator('.pow-tile[data-id=ink] .pow-sw-custom').click();const cp=sheet.locator('.pow-tile[data-id=ink] .pow-cp');await cp.waitFor({timeout:1000});
+ await cp.locator('.pow-cp-h').evaluate(e=>{e.value='130';e.dispatchEvent(new Event('input',{bubbles:true}));});await cp.locator('.pow-cp-l').evaluate(e=>{e.value='45';e.dispatchEvent(new Event('input',{bubbles:true}));});
+ const hex=await cp.getAttribute('data-hex');assert.match(hex,/^#[0-9a-f]{6}$/);await p.screenshot({path:`${OUT}/${tag}-picker.png`});
+ await cp.locator('.pow-cp-use').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.'&&document.querySelector('.pow-tile[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,hex,'inline picker colour saved');
  await p.screenshot({path:`${OUT}/${tag}-settings.png`});
  const sel=await halo.evaluate(e=>getComputedStyle(e).borderTopColor),off=await sheet.locator('.pow-tile.is-shop').first().evaluate(e=>getComputedStyle(e).borderTopColor);assert.notEqual(sel,off,'selected tile highlighted');
  // 2-column grid of squares.
