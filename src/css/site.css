@@ -13534,13 +13534,36 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .stars-packs button.on .mp-star{color:#fff}
 .stars-note,.vip-err{margin:0 0 12px;font-size:13px;opacity:.75}
 .vip-err:empty{display:none}
-.vip-terms{margin:16px 0;padding:14px 16px;border-radius:16px;border:var(--glass-hairline);background:var(--glass-clear-tint)}
-[data-theme="light"] .vip-terms{background:rgba(10,18,48,.05)}
-.vip-terms-price{margin:0 0 8px;font-size:17px}
-.vip-terms ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5;opacity:.8}
+.vip-terms{margin:18px 0;padding:18px;border-radius:22px;border:var(--glass-hairline);background:var(--glass-clear-tint);box-shadow:0 10px 30px rgba(10,18,48,.08)}
+[data-theme="light"] .vip-terms{background:rgba(255,255,255,.72)}
+.vt-price{display:flex;align-items:center;gap:12px;padding-bottom:16px;margin-bottom:14px;border-bottom:var(--glass-hairline)}
+.vt-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.vt-amt{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.vt-when{font-size:12px;opacity:.6}
+.vt-arrow{width:20px;height:20px;flex:none;opacity:.45}
+.vt-arrow svg,.vt-ico svg{width:100%;height:100%}
+.vip-terms ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.vip-terms li{display:flex;align-items:flex-start;gap:12px}
+.vt-ico{width:32px;height:32px;flex:none;display:grid;place-items:center;padding:7px;border-radius:10px;background:var(--glass-clear-tint);border:var(--glass-hairline);box-sizing:border-box}
+.vip-terms li>span:last-child{display:flex;flex-direction:column;gap:2px;padding-top:1px}
+.vip-terms li b{font-size:14px;font-weight:600}
+.vip-terms li small{font-size:12.5px;line-height:1.4;opacity:.65}
 .vip-buy{width:100%}
 .vip-status{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;border-radius:16px;border:var(--glass-hairline);background:var(--glass-clear-tint);text-align:center}
 .vip-status p{margin:0}
 .vip-status-h{font-size:17px;font-weight:700}
 .vip-status-s{font-size:13px;opacity:.75}
 .vip-manage{margin-top:6px;text-decoration:none}
+/* VIP in profile settings */
+.chat-xbox.vip-row{flex-direction:column;align-items:stretch;gap:12px}
+.vip-row-top{display:flex;align-items:center;gap:12px}
+.vip-row .rc-row-icon .mp-star{width:100%;height:100%;color:var(--accent)}
+.vip-row-facts{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;border:var(--glass-hairline);background:var(--glass-clear-tint)}
+.vip-row-facts div{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.vip-row-facts span{opacity:.6}
+.vip-row-facts b{font-weight:600;text-align:right}
+.vip-row-btns{display:flex;flex-wrap:wrap;gap:8px}
+.vip-row-btns:empty{display:none}
+.vip-row-btns .btn{flex:1;text-align:center;text-decoration:none}
+.vip-row-cancel{color:#ff5a5f}
+.vip-row-note{flex-basis:100%;margin:0;font-size:12.5px;line-height:1.45;opacity:.7}

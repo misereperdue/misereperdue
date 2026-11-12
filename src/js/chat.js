@@ -6516,6 +6516,11 @@
     }
     o.appendChild(Be);
     o.appendChild(rcSettingsRow());
+    var vt = document.createElement("p");
+    vt.className = "chat-pw-title";
+    vt.textContent = "VIP";
+    o.appendChild(vt);
+    o.appendChild(vipSettingsRow());
     var ze = document.createElement("button");
     ze.type = "button";
     ze.className = "chat-logout";
@@ -7127,6 +7132,72 @@
       !(k in n) && k in s && (n[k] = s[k]);
     });
     return n;
+  }
+  /* VIP in profile settings (#133): membership length, renewal, and Cancel,
+     which opens the Seal subscription portal (cancellation is confirmed there). */
+  function vipSince(ms) {
+    var d = Math.max(0, Math.floor((Date.now() - ms) / 864e5));
+    if (d < 1) return "Joined today";
+    if (d < 31) return "VIP for " + d + (1 === d ? " day" : " days");
+    var m = Math.floor(d / 30.44);
+    if (m < 12) return "VIP for " + m + (1 === m ? " month" : " months");
+    var y = Math.floor(m / 12), r = m % 12;
+    return "VIP for " + y + (1 === y ? " year" : " years") + (r ? " " + r + (1 === r ? " month" : " months") : "");
+  }
+  function vipSettingsRow() {
+    var row = document.createElement("div");
+    row.className = "chat-xbox vip-row";
+    var fmt = function (t) { return new Date(t).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }); };
+    function paint(v) {
+      var sub = "subscription" === v.source, since = v.since || v.memberSince;
+      row.innerHTML =
+        '<div class="vip-row-top"><span class="rc-row-icon" aria-hidden="true">' + mpStar() + '</span><span class="rc-row-text"><span class="rc-row-title"></span><span class="rc-row-status"></span></span></div>' +
+        (v.vip ? '<div class="vip-row-facts"></div>' : "") +
+        '<div class="vip-row-btns"></div>';
+      row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? "VIP \u00b7 Monthly" : "VIP") : "Not VIP yet";
+      row.querySelector(".rc-row-status").textContent = v.vip
+        ? since ? vipSince(since) : "Active"
+        : "CA$10 today, then CA$3/month";
+      var facts = row.querySelector(".vip-row-facts");
+      if (facts) {
+        var f = [];
+        since && f.push(["Member since", fmt(since)]);
+        sub && v.paidThrough && f.push(["Renews around", fmt(v.paidThrough)]);
+        !sub && f.push(["Plan", "Granted VIP \u00b7 no billing"]);
+        facts.innerHTML = f.map(function (x) { return "<div><span></span><b></b></div>"; }).join("");
+        facts.querySelectorAll("div").forEach(function (el, k) {
+          el.firstChild.textContent = f[k][0];
+          el.lastChild.textContent = f[k][1];
+        });
+      }
+      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login";
+      if (v.vip && sub) {
+        btns.innerHTML = '<a class="btn chat-xlink vip-row-manage" target="_blank" rel="noopener">Manage</a><button type="button" class="btn chat-xlink vip-row-cancel">Cancel VIP</button><p class="vip-row-note" hidden>Opens the subscription portal. Enter your checkout email to get a sign-in link, then choose Cancel. VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + ".</p>";
+        btns.querySelector(".vip-row-manage").href = url;
+        var cb = btns.querySelector(".vip-row-cancel"), note = btns.querySelector(".vip-row-note");
+        cb.addEventListener("click", function () {
+          if (note.hidden) {
+            note.hidden = !1;
+            cb.textContent = "Continue to cancel";
+            return;
+          }
+          window.open(url, "_blank", "noopener");
+        });
+      } else if (!v.vip) {
+        btns.innerHTML = '<button type="button" class="btn chat-xlink">Become VIP</button>';
+        btns.firstChild.addEventListener("click", function () {
+          location.hash = "#product/gid://shopify/Product/15416182014054";
+        });
+      }
+    }
+    paint({ vip: !!(s && s.member), source: null });
+    var tok = null;
+    try { tok = localStorage.getItem("chat_token"); } catch (e) {}
+    tok && fetch("https://api.misereperdue.com/api/vip", { headers: { Authorization: "Bearer " + tok } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (v) { v && row.isConnected && paint(v); })
+      .catch(function () {});
+    return row;
   }
   function rcSettingsRow() {
     var row = document.createElement("div");
