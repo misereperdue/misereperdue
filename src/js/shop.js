@@ -45,6 +45,11 @@ var MPShop = (function () {
   function n(t) {
     return !!t && ("membership" === t.handle || /membership/i.test(t.name || ""));
   }
+  // Stars packs (per dc): Shopify product titled "<n> Stars". Credited to the
+  // signed-in account by the Worker's orders/paid webhook.
+  function starsPack(t) {
+    return !!t && /^\d+\s+stars?$/i.test(String(t.name || "").trim());
+  }
   function a(t) {
     return (
       !!t &&
@@ -1158,7 +1163,8 @@ var MPShop = (function () {
             .then(function () {
               var t = [],
                 e = !1,
-                o = !1;
+                o = !1,
+                sp = !1;
               if (
                 (MP.readCart().forEach(function (i) {
                   var r = MP.PRODUCTS[i.id];
@@ -1167,7 +1173,7 @@ var MPShop = (function () {
                       s = parseInt(i.qty, 10) || 0;
                     c &&
                       s > 0 &&
-                      (t.push({ variantId: c, qty: s }), n(r) && (e = !0), a(r) && (o = !0));
+                      (t.push({ variantId: c, qty: s }), n(r) && (e = !0), a(r) && (o = !0), starsPack(r) && (o = sp = !0));
                   }
                 }),
                 !t.length)
@@ -1194,6 +1200,7 @@ var MPShop = (function () {
                           })
                       : Promise.resolve(null);
                   })().then(function (n) {
+                    if (sp && !n) throw new Error("stars-signin");
                     var a = [];
                     return (
                       e && a.push({ key: "membership", value: "yes" }),
@@ -1227,11 +1234,13 @@ var MPShop = (function () {
               } catch (t) {}
               window.location.href = n;
             })
-            .catch(function () {
+            .catch(function (n) {
               (t && ((t.disabled = !1), (t.textContent = "Checkout")),
                 e &&
                   (e.textContent =
-                    "Couldn't start checkout. Check your connection and try again."));
+                    n && "stars-signin" === n.message
+                      ? "Sign in to Chat first so your Stars land on your account."
+                      : "Couldn't start checkout. Check your connection and try again."));
             }))
         : e && (e.textContent = "Checkout isn't available right now."));
   }
