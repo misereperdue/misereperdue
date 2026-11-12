@@ -13562,23 +13562,16 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 
-/* Now playing (per dc): synth rings. Five neon rings in different colours pulse out from the
-   Apple Music note on a 0.72s beat (each grows from the note's centre), over a breathing glow
-   and a slow colour sweep; the note thumps in time. */
-.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate;overflow:visible;margin-right:10px!important}
-.mp-am-np::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from var(--amr,0deg),rgba(255,45,85,.35),rgba(176,102,255,.3),rgba(56,220,255,.28),rgba(255,170,60,.25),rgba(255,45,85,.35));filter:blur(5px);opacity:.75;animation:mpSynthSweep 6s linear infinite,mpSynthGlow 1.44s ease-in-out infinite}
-.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.6));transform-origin:50% 50%;animation:mpSynthThump 1.44s cubic-bezier(.3,.7,.4,1) infinite}
-.mp-am-np i{--c:#ff2d55;--c2:#ff8ac0;position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;transform-origin:50% 50%;background:radial-gradient(circle,transparent 55%,var(--c) 61%,var(--c2) 65%,transparent 73%);box-shadow:0 0 6px -1px var(--c);opacity:0;transform:scale(.45);animation:mpSynthRing 3.6s cubic-bezier(.2,.6,.35,1) infinite}
-.mp-am-np i:nth-child(2){--c:#b066ff;--c2:#e0b3ff;animation-delay:.72s}
-.mp-am-np i:nth-child(3){--c:#28d7ff;--c2:#a6f0ff;animation-delay:1.44s}
-.mp-am-np i:nth-child(4){--c:#ff9f1c;--c2:#ffd38a;animation-delay:2.16s}
-.mp-am-np i:nth-child(5){--c:#ff3fb4;--c2:#ffa6dc;animation-delay:2.88s}
-@property --amr{syntax:"<angle>";inherits:false;initial-value:0deg}
-@keyframes mpSynthRing{0%{transform:scale(.45);opacity:0}12%{opacity:1}70%{opacity:.5}100%{transform:scale(1.9);opacity:0}}
-@keyframes mpSynthThump{0%,100%{transform:scale(1)}12%{transform:scale(1.14)}35%{transform:scale(.97)}}
-@keyframes mpSynthGlow{0%,100%{opacity:.5}15%{opacity:.95}}
-@keyframes mpSynthSweep{to{--amr:360deg}}
-@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.mp-am-np::before{animation:none!important}.mp-am-np i:first-of-type{opacity:.6;transform:scale(1)}}
+/* Now playing (per dc): Apple Account-style dot rings around the Apple Music note. The rings turn
+   slowly while a ripple runs outward and around them (each dot swells and brightens in turn). */
+.mp-profile-eq.mp-am-np{position:relative;width:52px;height:52px;display:block;flex:none;align-self:center;overflow:visible;margin-right:4px!important}
+.mp-am-np .mp-am-dots{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:mpDotsTurn 40s linear infinite}
+.mp-am-np .mp-am-dots circle{transform-box:fill-box;transform-origin:50% 50%;opacity:.72;transform:scale(.8);animation:mpDotWave 3.6s cubic-bezier(.45,0,.35,1) infinite;animation-delay:calc(var(--r) * .22s + var(--a) * 1.8s - 3.6s)}
+.mp-am-np>svg:not(.mp-am-dots){position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:2;filter:drop-shadow(0 1px 3px rgba(250,35,59,.35));transform-origin:50% 50%;animation:mpNoteBreath 3.6s ease-in-out infinite}
+@keyframes mpDotWave{0%,100%{opacity:.7;transform:scale(.78)}22%{opacity:1;transform:scale(1.16)}48%{opacity:.85;transform:scale(.92)}}
+@keyframes mpDotsTurn{to{transform:rotate(360deg)}}
+@keyframes mpNoteBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.mp-am-np .mp-am-dots,.mp-am-np .mp-am-dots circle,.mp-am-np>svg{animation:none!important}.mp-am-np .mp-am-dots circle{opacity:.9;transform:none}}
 /* Sphere: badges inside the avatar sit above the glass */
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:not(img):not(.chat-avatar){z-index:4!important}
 /* Listening card: Safari ignores overflow+radius clipping for the masked album art behind the

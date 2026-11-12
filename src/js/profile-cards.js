@@ -35,7 +35,14 @@
   var resolvedSongs=new Map();
   function cachedResolve(url,resolve){var hit=resolvedSongs.get(url);if(hit&&Date.now()-hit.t<300000)return hit.p;var p=resolve(url).then(function(value){return value.listening||value;}).catch(function(e){resolvedSongs.delete(url);throw e;});if(resolvedSongs.size>100)resolvedSongs.clear();resolvedSongs.set(url,{t:Date.now(),p:p});return p;}
   /* Now playing (per dc): the Apple Music note bouncing, with synth bubbles bouncing up behind it. */
-  function amNote(){return '<i></i><i></i><i></i><i></i><i></i><svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
+  /* Now playing (per dc): the Apple Account dot rings. 4 offset rings of 24 dots that grow outward,
+     coloured clockwise teal > cyan > blue > violet > magenta > pink > coral > peach; built once. */
+  var AM_DOTS=(function(){var stops=[[0,[159,191,196]],[40,[76,195,236]],[90,[91,143,240]],[130,[143,108,240]],[165,[200,74,224]],[195,[232,63,168]],[230,[240,87,122]],[270,[247,136,120]],[315,[237,180,138]],[360,[159,191,196]]];
+    function col(a){for(var k=1;k<stops.length;k++)if(a<=stops[k][0]){var A=stops[k-1],B=stops[k],t=(a-A[0])/(B[0]-A[0]);return 'rgb('+A[1].map(function(v,n){return Math.round(v+(B[1][n]-v)*t);}).join(',')+')';}return 'rgb(159,191,196)';}
+    var rings=[[53,2.8,0],[64,3.3,-6],[77,3.9,-12],[92,4.6,-18]],out='';
+    rings.forEach(function(r,ri){for(var d=0;d<24;d++){var a=(7.5+r[2]+d*15+360)%360,rad=(a-90)*Math.PI/180;out+='<circle cx="'+(r[0]*Math.cos(rad)).toFixed(1)+'" cy="'+(r[0]*Math.sin(rad)).toFixed(1)+'" r="'+r[1]+'" fill="'+col(a)+'" style="--r:'+ri+';--a:'+(a/360).toFixed(3)+'"/>';}});
+    return '<svg class="mp-am-dots" viewBox="-100 -100 200 200" aria-hidden="true">'+out+'</svg>';})();
+  function amNote(){return AM_DOTS+'<svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
   function synth(){return svg('M4 9v6M8 5v14M12 8v8M16 3v18M20 7v10');}
   function svg(path) {return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';}
   function badgePicker(user, options) {
