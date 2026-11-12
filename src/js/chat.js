@@ -1099,6 +1099,7 @@
     n1t.className = "mp-pb-name-t";
     n1t.textContent = mpName(n.username);
     n1.appendChild(n1t);
+    mpPwApply(n1, n.username, mpPwFromProfile(n));
     bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
     nm.appendChild(n1);
     var n2 = document.createElement("div");
@@ -1193,7 +1194,7 @@
       close:function(){mpPBclose();},
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
-        var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
+        mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
         st.innerHTML=(pill||'')+'<span class="mp-pb-pts">'+mpStar()+' <b>'+x(user.points||0)+'</b> stars</span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
@@ -1209,6 +1210,49 @@
   function pbRing(u) {
     return pbVip(u) ? " is-vip" : u && ((u.badges || []).indexOf("kitty") >= 0 || N(u) === "kitty") ? " is-kitty" : N(u) === "verified" ? " is-verified" : "";
   }
+  /* Powers (per dc): Glow (glow around your name), Ink (name colour), Bubble (bubble tint). The
+     Worker sends each user's active looks as colours: maps on hello / message history, m.pw on
+     each message, and live {t:"pw"} events when someone changes a power. */
+  var PW = Object.create(null),
+    PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
+  function pwKey(u) { return String(u || "").toLowerCase(); }
+  function mpPwApply(el, user, look) {
+    var pw = look !== void 0 ? look : PW[pwKey(user)] || null;
+    ["glow", "ink", "bubble"].forEach(function (k) {
+      var c = pw && pw[k];
+      el.classList.toggle("pw-" + k, !!c);
+      c ? el.style.setProperty("--pw-" + k, c) : el.style.removeProperty("--pw-" + k);
+    });
+  }
+  function mpPwRefresh(user) {
+    document.querySelectorAll(".chat-msg[data-user]").forEach(function (m) {
+      var u = m.getAttribute("data-user");
+      (!user || pwKey(u) === pwKey(user)) && mpPwApply(m, u);
+    });
+  }
+  function mpPwMerge(map, reset) {
+    reset && (PW = Object.create(null));
+    for (var k in map) PW[pwKey(k)] = map[k];
+    mpPwRefresh();
+  }
+  function mpPwTake(e) { e && e.user && "pw" in e && (PW[pwKey(e.user)] = e.pw || null); }
+  function mpPwSet(user, pw) { PW[pwKey(user)] = pw || null; mpPwRefresh(user); }
+  function mpPwFromProfile(u) {
+    var out = {}, st = (u && u.powerSettings) || {};
+    ((u && u.powersOn) || []).forEach(function (id) { var c = st[id] && PW_COLORS[st[id].color]; c && (out[id] = c); });
+    return out;
+  }
+  window.MPOpenMyProfileView = function () {
+    if (!s) return !1;
+    vt();
+    var n = 0;
+    (function expand() {
+      var o = document.querySelector(".mp-profile-summary-open");
+      if (o) return void o.click();
+      ++n < 30 && setTimeout(expand, 80);
+    })();
+    return !0;
+  };
   function mpStar(c) { return window.MPStar ? MPStar(c) : '<span class="mp-star' + (c ? " " + c : "") + '" aria-hidden="true">★</span>'; }
   function mpPB(u, anchor) {
     if (!u) return;
@@ -2082,7 +2126,7 @@
               a = { t: "send", text: e, cid: n };
             mpPM.to && (a.to = mpPM.to);
             t && (a.media = t);
-            !mpPM.to && !t && window.MPProfiles && MPProfiles.songUrl && MPProfiles.songUrl(String(e).trim()) && mpListenFromSong(String(e).trim());
+            !mpPM.to && !t && mpListenFromText(String(e).trim());
             if (p && 1 === p.readyState) {
               if (s && s.username) {
                 var r =
@@ -2421,6 +2465,7 @@
           if (
             (e && e.caps && e.caps.private && mpPMEnable(), e && e.caps && e.caps.poll && (window.mpPollOn = !0),
             e && e.badges && (T = Object.assign(Object.create(null), e.badges)),
+            e && e.pw && mpPwMerge(e.pw, !0),
             (window.__chatBatchLoading = !0),
             e && e.messages)
           ) {
@@ -4766,6 +4811,8 @@
           e.private && o.classList.add("chat-private"),
           o.setAttribute("data-id", e.id),
           o.setAttribute("data-user", e.user || ""),
+          mpPwTake(e),
+          mpPwApply(o, e.user),
           e.ts && o.setAttribute("data-ts", String(e.ts)),
           e.user &&
             (Je[e.user.toLowerCase()] = {
@@ -5179,6 +5226,7 @@
               ("number" == typeof t.online && Xe(t.online),
                 "boolean" == typeof t.paused && st(t.paused),
                 t.badges && (T = Object.assign(Object.create(null), t.badges)),
+                t.pw && mpPwMerge(t.pw, !0),
                 t.you && te((s = rcKeep(t.you)).points || 0),
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
                 t.messages && t.messages.forEach(Fe),
@@ -5200,7 +5248,8 @@
                   }
                 })(e, t.user);
               });
-            } else if ("points" === t.t && t.user) s && t.user === s.username && te(t.points || 0);
+            } else if ("pw" === t.t && t.user) mpPwSet(t.user, t.pw);
+            else if ("points" === t.t && t.user) s && t.user === s.username && te(t.points || 0);
             else if ("paused" === t.t && "boolean" == typeof t.paused) st(t.paused);
             else if ("ban" === t.t && t.user) {
               if (s && t.user === s.username && t.banned) {
@@ -5479,6 +5528,13 @@
   /* Profile settings sheet (opened from the profile menu and, per dc, from the
      shop Globe tile via window.MPOpenProfile). */
   /* Sharing a song in public chat updates your profile's Listening to that song (per dc). */
+  /* A song link, or a "+song name" line (the + prefix embed), shared publicly updates Listening. */
+  function mpListenFromText(text){
+    if(window.MPProfiles&&MPProfiles.songUrl&&MPProfiles.songUrl(text))return mpListenFromSong(text);
+    var r=/^\+\s*(\S.{1,120})$/.exec(text);
+    if(!r||/^\+\d/.test(text))return;
+    mpNPLookup(r[1].trim()).then(function(n){/* only a real track link (not the search fallback) */n&&n.url&&/^https:\/\/(music|itunes)\.apple\.com\/.*([?&]i=\d+|\/song\/)/.test(n.url)&&mpListenFromSong(n.url);}).catch(function(){});
+  }
   function mpListenFromSong(url){
     if(!s||!d||!url)return;
     mpProfileMusicResolve(url).then(function(r){var g=r.listening;if(!g||!g.title||!g.artist||!g.url)return null;
