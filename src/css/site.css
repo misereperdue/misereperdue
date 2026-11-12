@@ -12452,5 +12452,6 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .pw-set-card:active{transform:none}
 .pw-set-card .pow-set{border-top:0;margin:0;padding:0}
 @media (prefers-reduced-motion:reduce){.pw-switch,.pw-switch i,.pw-ico{transition:none}}
-/* Profile Sign out (two taps): the second tap is confirmed in red */
-.mp-pb-act.mp-pb-signout.is-confirm{color:#ff5a5f;background:color-mix(in srgb,#ff5a5f 14%,transparent)}
+/* Profile Sign out under the Listening box (two taps): red text, the confirm tap gets a red fill */
+.mp-profile-manage-link.mp-profile-signout{color:#ff5a5f;margin-top:4px}
+.mp-profile-manage-link.mp-profile-signout.is-confirm{background:color-mix(in srgb,#ff5a5f 15%,transparent)}
