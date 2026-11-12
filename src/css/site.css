@@ -6036,6 +6036,21 @@ body.home:has(#product.on) {
   text-decoration: none;
   pointer-events: auto;
 }
+/* Info link under the footer (per dc). Same ink as the credit links; always shown. */
+.mp-end-info {
+  display: block;
+  margin: 6px 0 0;
+  font: 400 8px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .08em;
+  color: var(--accent);
+  opacity: .26;
+  pointer-events: auto;
+}
+.mp-end-info a {
+  color: inherit;
+  text-decoration: none;
+}
+
 
 /* Native share (product + Globe thread); hidden when navigator.share is missing. */
 .share-btn[hidden] {
@@ -12440,9 +12455,6 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .pw-shop{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .pw-shop::-webkit-scrollbar{display:none}
 .pw-shop .pow-tile{flex:0 0 112px;aspect-ratio:auto;height:128px;scroll-snap-align:start}
-.pw-page-head{display:flex;align-items:center;margin:2px 0 10px}
-.pw-back{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--accent);font:600 15px/1 inherit;font-family:inherit;padding:6px 6px 6px 0;cursor:pointer}
-.pw-back svg{width:18px;height:18px}
 .pw-hero{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:color-mix(in srgb,var(--ink) 5%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 8%,transparent)}
 .pw-ico-lg{width:56px;height:56px;border-radius:16px;font-size:32px}
 .pw-hero-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}

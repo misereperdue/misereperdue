@@ -10,7 +10,7 @@ URLs are clean (no .html): Cloudflare Pages serves /t/t29 from t/t29.html and
 clean form or Google sees a redirect for every entry.
 
 Also writes globe.html (/globe, crawlable Misery Globe landing) and sitemap.xml
-(/, /shop, /globe, p/*, t/*; no noindex pages; git-based lastmod; product images).
+(/, /shop, /info, /globe, p/*, t/*; no noindex pages; git-based lastmod; product images).
 tools/build-products.py runs this automatically after regenerating p/*.
 
 Usage:  python3 build-sitemap.py            # regenerate t/*.html + sitemap.xml
@@ -254,6 +254,7 @@ def write_sitemap(threads, threads_out):
         entries.append((loc, file_date(path) if path else iso(None), list(images)))
     add(f"{SITE}/", os.path.join(OUT, "index.html"))
     add(f"{SITE}/shop", os.path.join(OUT, "shop.html"))
+    add(f"{SITE}/info", os.path.join(OUT, "info.html"))
     pdir = os.path.join(OUT, "p")
     for fn in sorted(os.listdir(pdir)) if os.path.isdir(pdir) else []:
         if not fn.endswith(".html"):

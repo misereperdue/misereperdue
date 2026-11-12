@@ -124,6 +124,8 @@
       if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:before+'px',borderRadius:before<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:phase==='compact'?'32px':'28px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
     }
     var pageTitle='';function sub(p){return p==='edit'||p==='manage'||p==='page';}
+    function pageBack(){var page=root.querySelector('.mp-profile-bar-scroll>*');return !!(page&&typeof page._back==='function'&&page._back());}
+    function goBack(){if(pageBack())return;if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}
     function header(title,back){var h=el('div','mp-profile-bar-head');h.appendChild(icon('Back','M15 6 9 12 15 18',back));h.appendChild(el('strong','',title));h.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));return h;}
     function render(next,editor){
       if(closed)return;
@@ -146,7 +148,7 @@
         if(info.length)tx.appendChild(el('small','mp-profile-summary-info',info.join(' · ')));
         expand.appendChild(tx);expand.appendChild(score);var chevron=el('span','mp-profile-summary-chevron');chevron.innerHTML=svg('M7 10c2 0 4 4 5 4s3-4 5-4');chevron.setAttribute('aria-hidden','true');expand.appendChild(chevron);row.appendChild(expand);root.appendChild(row);
       } else {
-        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage':next==='page'?pageTitle:'Profile',function(){render(sub(next)?'full':'compact');}));
+        root.appendChild(header(next==='edit'?'Settings':next==='manage'?'Manage':next==='page'?pageTitle:'Profile',goBack));
         var scroll=el('div','mp-profile-bar-scroll');root.appendChild(scroll);
         if(sub(next)){scroll.appendChild(editor);}
         else {
@@ -167,10 +169,10 @@
     root._refresh=function(){if(!sub(phase))render(phase);};
     /* Generic sub-page (Powers, Stars): the profile morphs into it; Back returns to the profile. */
     root._page=function(title,page){pageTitle=title;render('page',page);};
-    root._back=function(){if(sub(phase))render('full');};
+    root._back=goBack;
     root.addEventListener('toggle',function(){size(true);},true);
     function outside(e){if(e.target.closest('.avatar-options-overlay,.rc-back,.chat-alert-backdrop'))return;if(!sub(phase)&&!bar.contains(e.target)&&!options.anchor.contains(e.target))options.close();}
-    function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}}
+    function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();goBack();}}
     function navigate(){options.close();}
     function resize(){size(false);}
     root._close=function(fast){

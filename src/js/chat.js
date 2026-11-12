@@ -7423,6 +7423,13 @@
     /* Layout v2 (per dc): owned powers and charms are fixed-height rows with a switch (nothing reflows);
        a power's settings live on its own page that slides in; the shop is a sideways row of cards. */
     var detail = null, slideDir = 0;
+    b._back = function () {
+      if (!detail) return !1;
+      detail = null;
+      slideDir = -1;
+      render();
+      return !0;
+    };
     function powSets(p) { return (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); }); }
     function summary(p, sets) {
       var cur = (st.settings && st.settings[p.id]) || {}, f = sets[0];
@@ -7448,8 +7455,7 @@
     function page(p) {
       var on = st.on.indexOf(p.id) >= 0;
       return '<div class="pw-page" data-id="' + x(p.id) + '">' +
-        '<div class="pw-page-head"><button type="button" class="pw-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9 10.4 9 12s6 6 6 6"/></svg>Powers</button></div>' +
-        '<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + x(p.icon || "\u2726") + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
+'<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + x(p.icon || "\u2726") + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
         '<div class="pow-tile pw-set-card" data-id="' + x(p.id) + '">' + setPanel({ id: p.id, name: p.name, settings: powSets(p) }) + "</div>" +
         '<p class="pow-status" role="status" aria-live="polite"></p></div>';
     }
@@ -7560,7 +7566,6 @@
         if (!busy && !opt.classList.contains("is-on")) saveSetting(opt);
         return;
       }
-      if (e.target.closest(".pw-back")) { detail = null; slideDir = -1; render(); return; }
       var swb = e.target.closest(".pw-switch");
       var openb = !swb && e.target.closest(".pw-open");
       if (openb) {
