@@ -81,39 +81,45 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const ab=await acts.boundingBox();assert(ab.x>=0&&ab.x+ab.width<=width+0.5,tag+' actions fit');
  await p.screenshot({path:`${OUT}/${tag}-profile.png`});
 
- // Powers sheet: two-tap buy, unaffordable disabled, equip toggle.
- await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.mp-profile-bar .pow-page');await sheet.locator('.pow-tile').first().waitFor();
+ // Powers sheet: two-tap buy, unaffordable disabled, switch to equip, settings page.
+ await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();
+ const root=p.locator('.mp-profile-bar-scroll > .pow-page');
+ await root.locator('.pow-tile').first().waitFor();
  // Balance row: left-aligned star + count only (no 'stars' label).
- assert.equal((await sheet.locator('.pow-sum').innerText()).trim(),'180');const sumL=await sheet.locator('.pow-sum .stars-ico').evaluate(e=>e.getBoundingClientRect().left-e.closest('.pow-page').getBoundingClientRect().left);assert(sumL<=6,'powers balance left aligned '+sumL);
- assert(!(await sheet.locator('.pow-tile[data-id=bubble]').isDisabled()),'bubble affordable at 180');
- const buy=sheet.locator('.pow-tile.is-shop[data-id=ink]');await buy.click();assert.equal((await buy.locator('.pow-price').innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
- await buy.click();const halo=sheet.locator('.pow-tile.is-owned[data-id=ink]');await halo.waitFor();
- assert.deepEqual(st.owned,['ink']);assert.equal((await sheet.locator('.pow-sum').innerText()).trim(),'80');
- assert.equal(await halo.getAttribute('aria-pressed'),'false');assert(await sheet.locator('.pow-tile[data-id=bubble]').isDisabled(),'balance refresh disables bubble');
- // Selecting works like badges: tap highlights (aria-pressed), status confirms, tap again clears.
- await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=ink] .pow-tile-main')?.getAttribute('aria-pressed')==='true');
- assert.deepEqual(st.on,['ink']);assert(await halo.evaluate(e=>e.classList.contains('is-selected')));assert.equal((await sheet.locator('.pow-status').innerText()).trim(),'Powers updated.');
- // Settings open inside the selected power's box (full width), selected like badges; saved.
- assert(await halo.evaluate(e=>e.classList.contains('has-set')));const hbw=await halo.evaluate(e=>e.offsetWidth),gbw=await sheet.locator('.pow-grid').first().evaluate(e=>e.clientWidth);assert(Math.abs(hbw-gbw)<=1,'settings box spans the row');assert(await halo.evaluate(e=>e.classList.contains('is-new')),'opens with animation');
- assert.equal(await halo.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'gold');assert.equal(await halo.locator('.pow-ch[aria-pressed=true]').innerText(),'Solid');
- await halo.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.');
- assert.equal(st.settings.ink.color,'pink');assert.equal(await sheet.locator('.pow-tile[data-id=ink] .pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
- await sheet.locator('.pow-tile[data-id=ink] .pow-ch[data-v=spin]').click();await p.waitForFunction(()=>document.querySelector('.pow-tile[data-id=ink] .pow-ch.is-on')?.textContent==='Spin');assert.equal(st.settings.ink.style,'spin');assert.equal(st.settings.ink.color,'pink','other setting kept');
+ assert.equal((await root.locator('.pow-sum').innerText()).trim(),'180');const sumL=await root.locator('.pow-sum .stars-ico').evaluate(e=>e.getBoundingClientRect().left-e.closest('.pow-page').getBoundingClientRect().left);assert(sumL<=6,'powers balance left aligned '+sumL);
+ assert(!(await root.locator('.pow-tile[data-id=bubble]').isDisabled()),'bubble affordable at 180');
+ const buy=root.locator('.pow-tile.is-shop[data-id=ink]');await buy.click();assert.equal((await buy.locator('.pow-price').innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
+ await buy.click();const inkRow=root.locator('.pw-row[data-id=ink]');await inkRow.waitFor();
+ assert.deepEqual(st.owned,['ink']);assert.equal((await root.locator('.pow-sum').innerText()).trim(),'80');
+ assert.equal(await inkRow.locator('.pw-switch').getAttribute('aria-checked'),'false');assert(await root.locator('.pow-tile[data-id=bubble]').isDisabled(),'balance refresh disables bubble');
+ // Switch on.
+ await inkRow.locator('.pw-switch').click();await p.waitForFunction(()=>document.querySelector('.pw-row[data-id=ink]')?.classList.contains('is-on'));
+ assert.deepEqual(st.on,['ink']);assert.equal(await inkRow.locator('.pw-switch').getAttribute('aria-checked'),'true');
+ // Settings open as a nested page. No inline '< Powers' back: the top-bar Back is the only back.
+ await inkRow.locator('.pw-open').click();const setPage=root.locator('.pw-page[data-id=ink]');await setPage.waitFor();
+ assert.equal(await root.locator('.pw-back, .pw-page-head').count(),0,'no inline back on settings');
+ assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
+ assert.equal((await setPage.locator('.pw-hero-copy b').innerText()).trim(),'Ink');
+ assert.equal(await setPage.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'gold');assert.equal(await setPage.locator('.pow-ch[aria-pressed=true]').innerText(),'Solid');
+ await setPage.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pw-page[data-id=ink] .pow-status')?.textContent==='Saved.');
+ assert.equal(st.settings.ink.color,'pink');assert.equal(await setPage.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
+ await setPage.locator('.pow-ch[data-v=spin]').click();await p.waitForFunction(()=>document.querySelector('.pw-page[data-id=ink] .pow-ch.is-on')?.textContent==='Spin');assert.equal(st.settings.ink.style,'spin');assert.equal(st.settings.ink.color,'pink','other setting kept');
  // Custom colour: the custom swatch saves a hex colour.
- await sheet.locator('.pow-tile[data-id=ink] .pow-sw-custom').click();const cp=sheet.locator('.pow-tile[data-id=ink] .pow-cp');await cp.waitFor({timeout:1000});
+ await setPage.locator('.pow-sw-custom').click();const cp=setPage.locator('.pow-cp');await cp.waitFor({timeout:1000});
  await cp.locator('.pow-cp-h').evaluate(e=>{e.value='130';e.dispatchEvent(new Event('input',{bubbles:true}));});await cp.locator('.pow-cp-l').evaluate(e=>{e.value='45';e.dispatchEvent(new Event('input',{bubbles:true}));});
  const hex=await cp.getAttribute('data-hex');assert.match(hex,/^#[0-9a-f]{6}$/);await p.screenshot({path:`${OUT}/${tag}-picker.png`});
- await cp.locator('.pow-cp-use').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.'&&document.querySelector('.pow-tile[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,hex,'inline picker colour saved');
+ await cp.locator('.pow-cp-use').click();await p.waitForFunction(()=>document.querySelector('.pw-page[data-id=ink] .pow-status')?.textContent==='Saved.'&&document.querySelector('.pw-page[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,hex,'inline picker colour saved');
  await p.screenshot({path:`${OUT}/${tag}-settings.png`});
- const sel=await halo.evaluate(e=>getComputedStyle(e).borderTopColor),off=await sheet.locator('.pow-tile.is-shop').first().evaluate(e=>getComputedStyle(e).borderTopColor);assert.notEqual(sel,off,'selected tile highlighted');
- // 2-column grid of squares.
- const boxes=await sheet.locator('.pow-grid').last().locator('.pow-tile').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),Math.round(r.height)];}));
- assert.equal(new Set(boxes.map(b=>b[0])).size,2,'two columns');boxes.forEach(b=>assert(Math.abs(b[1]-b[2])<=1,'square tile '+b));
+ // Top-bar Back from a power's settings returns to the Powers list (not the profile).
+ await p.locator('.mp-profile-bar-head button').first().click();await root.locator('.pw-row[data-id=ink]').waitFor();
+ assert.equal(await root.locator('.pw-page[data-id=ink]').count(),0,'settings closed');
+ assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
+ assert.equal(await root.locator('.pw-back, .pw-page-head').count(),0);
  // Morphs inside the profile bar: no separate sheet, header names the page.
- assert.equal(await p.locator('.rc-back').count(),0,'no separate sheet');assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
+ assert.equal(await p.locator('.rc-back').count(),0,'no separate sheet');
  const sb=await p.locator('.mp-profile-bar').boundingBox();assert(sb.x>=0&&sb.x+sb.width<=width+0.5,tag+' page fits');
  await p.screenshot({path:`${OUT}/${tag}-powers.png`});
- // Back returns to the profile, with the new balance.
+ // Top-bar Back from the Powers list returns to the profile, with the new balance.
  await p.locator('.mp-profile-bar-head button').first().click();await acts.waitFor();await p.waitForTimeout(450);
  assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*80\s*$/,'profile shows new balance');
  // Stars action pill: hollow star like the other pill icons.
