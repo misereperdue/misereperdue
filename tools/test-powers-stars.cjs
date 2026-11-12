@@ -15,7 +15,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const other={username:'rich',member:true,badges:['member','kitty'],activeBadge:'kitty',points:9,powers:['glow','ink','bubble','g4','g5','g6','g7'],powersOn:['ink']};
  const c=await browser.newContext({viewport:{width,height:844},deviceScaleFactor:2,colorScheme:theme,serviceWorkers:'block'});const errors=[];
  await c.addInitScript(()=>{localStorage.setItem('chat_token','test-only');sessionStorage.setItem('rc_later','1');});
- let ws=null;await c.routeWebSocket(/api\.misereperdue\.com/,s=>{ws=s;setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'r1',user:'rich',text:'hello from rich',ts:Date.now()-5000}],pw:{rich:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff'}},online:1,caps:{}})),40);});
+ let ws=null;await c.routeWebSocket(/api\.misereperdue\.com/,s=>{ws=s;setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'r1',user:'rich',text:'hello from rich',ts:Date.now()-5000},{id:'m0',user:'tester',text:'my own message',ts:Date.now()-3000}],pw:{rich:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff'}},online:1,caps:{}})),40);});
  await c.route('**/*',async r=>{const u=new URL(r.request().url());if(u.origin===ORIGIN){const f=path.join(ROOT,u.pathname==='/'?'index.html':decodeURIComponent(u.pathname));if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({path:f,contentType:T[path.extname(f)]||'application/octet-stream'});return r.fulfill({status:404,body:''});}
   if(u.pathname.startsWith('/api/avatarimg/'))return r.fulfill({path:ROOT+'/img/icon-192.png',contentType:'image/png'});
   let d={ok:true,messages:[],count:0};const body=r.request().postDataJSON&&r.request().method()==='POST'?r.request().postDataJSON():null;
@@ -41,6 +41,9 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(255, 127, 184)','ink name colour');
  assert.notEqual(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow');
  assert.match(await rm.locator('.chat-bubble').evaluate(e=>getComputedStyle(e).backgroundImage),/gradient/,'bubble tint');
+ // Own messages show name + time above the bubble.
+ const mine=p.locator('.chat-msg.mine[data-id=m0]');assert.equal((await mine.locator('.chat-msg-head strong').innerText()).trim(),'tester');assert.match(await mine.locator('.chat-msg-head .chat-time').innerText(),/^\d+s$/);
+ const mh=await mine.locator('.chat-msg-head').boundingBox(),mbub=await mine.locator('.chat-bubble').boundingBox();assert(mh.y+mh.height<=mbub.y+1,'head above bubble');assert(Math.abs((mh.x+mh.width)-(mbub.x+mbub.width))<=4,'right aligned');
  await p.screenshot({path:`${OUT}/${tag}-chat-powers.png`});
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#5fe3b0'}}));await p.waitForFunction(()=>!document.querySelector('.chat-msg[data-user=rich]').classList.contains('pw-bubble'));
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(95, 227, 176)','live ink change');assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow off live');
@@ -51,8 +54,10 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await expand('tester');const acts=p.locator('.mp-pb-acts');await acts.waitFor({timeout:8000});await p.waitForTimeout(500);
  const labels=await acts.locator('.mp-pb-act span').allTextContents();
  assert.deepEqual(labels,owner?['Powers','Stars','Orders','Dashboard']:['Powers','Stars','Orders'],tag+' action pills');
- assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/180\s+stars/);
+ assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*180\s*$/);
  assert.equal(await p.locator('.mp-pb-pow').count(),0,'no powers pill when none owned');
+ // Batch 1 layout: bio under the meta line in the header; no 'stars' label in the pill.
+ assert.equal(await p.locator('.mp-pb-nm .mp-pb-bio').count(),1,'bio in header');
  const ab=await acts.boundingBox();assert(ab.x>=0&&ab.x+ab.width<=width+0.5,tag+' actions fit');
  await p.screenshot({path:`${OUT}/${tag}-profile.png`});
 
@@ -85,7 +90,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.screenshot({path:`${OUT}/${tag}-powers.png`});
  // Back returns to the profile, with the new balance.
  await p.locator('.mp-profile-bar-head button').first().click();await acts.waitFor();await p.waitForTimeout(450);
- assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/80\s+stars/,'profile shows new balance');
+ assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*80\s*$/,'profile shows new balance');
  // Stars action pill: hollow star like the other pill icons.
  assert.equal(await acts.locator('.mp-pb-act',{hasText:/^Stars$/}).locator('svg path').evaluate(e=>getComputedStyle(e).fill),'none','hollow star icon');
  if(owner){
@@ -122,6 +127,9 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await p.locator('.mp-pb-pow-list .mp-pb-pow-item').count(),7);assert.equal(await pill.getAttribute('aria-expanded'),'true');
  assert.match(await p.locator('.mp-pb-pow-item.on').innerText(),/Ink$/);
  assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Powers|Stars|Orders|Dashboard)$/}).count(),0,'own-only pills hidden on others');
+ // Hide is a circular icon next to the username (not a pill).
+ assert.equal(await p.locator('.mp-pb-name .mp-pb-hide').count(),1,'hide icon by name');assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Hide|Unhide)$/}).count(),0,'no Hide pill');
+ const hb2=await p.locator('.mp-pb-hide').boundingBox();assert(Math.abs(hb2.width-hb2.height)<1,'circular');
  // Gift stars from someone else's profile: morphs into the gift page, pick like a badge, send, back to profile.
  assert.equal(await p.locator('.mp-pb-act',{hasText:/^Gift$/}).count(),1,'pill says Gift');
  // VIP + another displayed badge: gold ring and VIP pill still show; the displayed badge stays in the row.
@@ -139,7 +147,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.screenshot({path:`${OUT}/${tag}-gift.png`});
  await gp.locator('.gift-send').click();await p.waitForFunction(()=>/Sent 10 stars/.test(document.querySelector('.gift-page .pow-status')?.textContent||''));
  assert.equal(JSON.stringify(st.gift),JSON.stringify({to:'rich',n:10}));
- await p.locator('.mp-pb-acts').waitFor({timeout:4000});await p.waitForTimeout(500);assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/19\s+stars/,'recipient balance updated');
+ await p.locator('.mp-pb-acts').waitFor({timeout:4000});await p.waitForTimeout(500);assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*19\s*$/,'recipient balance updated');
  const pb=await p.locator('.mp-pb-pow').boundingBox();assert(pb.x>=0&&pb.x+pb.width<=width+0.5,tag+' pill fits');
  await p.screenshot({path:`${OUT}/${tag}-other.png`});
  // Hello Kitty badge (no VIP): pink ring.

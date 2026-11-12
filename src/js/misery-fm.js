@@ -722,7 +722,7 @@
   }
   function lcText() {
     var c = calc();
-    if (!live()) return S && S.sched ? "Offline · scheduled" : "Offline";
+    if (!live()) return "Offline";
     return (c && c.paused ? "Paused" : '<i class="fm-lc-dot"></i>Live') + " · " + ((S && S.listeners) || 0) + " listening";
   }
   /* Same spot as the + menu panels: above the composer on Chat, bottom-centred elsewhere. */
