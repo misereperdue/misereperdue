@@ -128,10 +128,12 @@
       p.appendChild(x),
       c.appendChild(p));
     var f = document.createElement("div");
+    f.className = "dash-tabs";
     f.style.cssText =
       "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:var(--glass-hairline);";
     var h = document.createElement("span");
-    ((h.style.cssText =
+    ((h.className = "dash-tab-ind"),
+      (h.style.cssText =
       "position:absolute;top:3px;bottom:3px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);pointer-events:none;left:3px;width:calc(33.333% - 3px);"),
       f.appendChild(h),
       setTimeout(function () {
@@ -1167,9 +1169,7 @@
         if (!ne.childNodes.length) ne.hidden = !0;
       })(),
       __co.body.appendChild(ae));
-    var __sh = __sec("Shop");
-    k.appendChild(__sh.root);
-    __shop(__sh.body);
+    /* Shop section removed (per dc); Sales stays in the headline tiles. */
     var re = document.createElement("div");
     re.className = "dash-actions";
     var ie = document.createElement("button");

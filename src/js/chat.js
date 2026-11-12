@@ -7105,9 +7105,31 @@
     /* Square tiles in a 2-column grid. Owned powers select like badges (tap to
        highlight, tap again to clear; several can be active); others show a price
        and buy on a second tap. */
+    /* Settings (per dc): a selected power that has settings opens into a full-width box with its
+       options (colour swatches, choices) selected like badges. */
+    function setPanel(p) {
+      var cur = (st.settings && st.settings[p.id]) || {};
+      return '<div class="pow-set">' + p.settings.map(function (f) {
+        var val = cur[f.key] != null ? cur[f.key] : f.def;
+        return '<div class="pow-set-row"><span class="pow-set-k">' + x(f.label) + '</span><div class="pow-set-opts" role="group" aria-label="' + x(p.name + " " + f.label) + '">' +
+          f.options.map(function (o) {
+            var on = o.v === val;
+            return f.type === "color"
+              ? '<button type="button" class="pow-sw' + (on ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(o.v) + '" style="--sw:' + x(o.color) + '" aria-pressed="' + on + '" aria-label="' + x(o.label) + '"></button>'
+              : '<button type="button" class="pow-ch' + (on ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(o.v) + '" aria-pressed="' + on + '">' + x(o.label) + "</button>";
+          }).join("") + "</div></div>";
+      }).join("") + "</div>";
+    }
     function tile(p, mine) {
       var on = mine && st.on.indexOf(p.id) >= 0,
         poor = !mine && st.stars < p.price;
+      if (on && p.settings && p.settings.length)
+        return (
+          '<div class="pow-tile is-owned is-selected has-set" data-id="' + x(p.id) + '">' +
+          '<button type="button" class="pow-tile-main" aria-pressed="true" aria-label="' + x(p.name) + ', on">' + powIco(p) +
+          '<span class="pow-tile-copy"><b class="pow-tn">' + x(p.name) + '</b><span class="pow-td">' + x(p.desc || "") + "</span></span></button>" +
+          setPanel(p) + "</div>"
+        );
       return (
         '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
         (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"' + (poor ? " disabled" : "")) +
@@ -7135,14 +7157,43 @@
       el && (el.textContent = t);
     }
     var confirmT = 0;
+    function saveSetting(opt) {
+      var t = opt.closest(".pow-tile"),
+        id = t.getAttribute("data-id"),
+        k = opt.getAttribute("data-k"),
+        v = opt.getAttribute("data-v"),
+        patch = {};
+      patch[k] = v;
+      busy = !0;
+      /* Optimistic: highlight now, roll back if the save fails. */
+      opt.parentNode.querySelectorAll("button").forEach(function (o) { var on = o === opt; o.classList.toggle("is-on", on); o.setAttribute("aria-pressed", String(on)); });
+      status("Saving\u2026");
+      E("/api/powers/settings", { method: "POST", body: { id: id, settings: patch } })
+        .then(function (j) {
+          busy = !1;
+          if (!j || !j.ok) throw j;
+          st.settings = st.settings || {};
+          st.settings[id] = j.settings;
+          b.isConnected && render("Saved.");
+        })
+        .catch(function (j) {
+          busy = !1;
+          b.isConnected && render((j && j.error) || "Couldn't save that setting.");
+        });
+    }
     body.addEventListener("click", function (e) {
-      var btn = e.target.closest(".pow-tile");
+      var opt = e.target.closest(".pow-sw,.pow-ch");
+      if (opt) {
+        if (!busy && !opt.classList.contains("is-on")) saveSetting(opt);
+        return;
+      }
+      var btn = e.target.closest(".pow-tile-main") ? e.target.closest(".pow-tile") : e.target.closest(".pow-tile");
       if (!btn || busy || btn.disabled) return;
       var id = btn.getAttribute("data-id");
       if (btn.classList.contains("is-owned")) {
         var next = st.on.indexOf(id) < 0;
         busy = !0;
-        body.querySelectorAll(".pow-tile").forEach(function (t) { t.disabled = !0; });
+        body.querySelectorAll(".pow-tile,.pow-tile-main").forEach(function (t) { t.disabled = !0; });
         status("Saving…");
         E("/api/powers/set", { method: "POST", body: { id: id, on: next } })
           .then(function (j) {
@@ -7195,7 +7246,7 @@
         if (!b.isConnected) return;
         if (!j || !j.ok) throw j;
         powKeep(j);
-        st = { catalog: j.catalog || [], owned: j.owned || [], on: j.on || [], stars: j.stars || 0 };
+        st = { catalog: j.catalog || [], owned: j.owned || [], on: j.on || [], settings: j.settings || {}, stars: j.stars || 0 };
         render();
       })
       .catch(function () {
