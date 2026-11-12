@@ -13445,17 +13445,9 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .pow-cp input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .pow-cp-use{flex:none}
 /* Now playing: bouncing Apple Music note with synth bubbles */
-.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center}
-.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:1;filter:drop-shadow(0 2px 4px rgba(250,35,59,.45));transform-origin:50% 100%;animation:mpNoteBounce .9s cubic-bezier(.3,.7,.4,1) infinite}
-.mp-am-np i{position:absolute;bottom:3px;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(251,92,116,.85) 45%,rgba(250,35,59,.55));opacity:0;animation:mpBubble 1.8s ease-out infinite}
-.mp-am-np i:nth-child(1){left:2px}
-.mp-am-np i:nth-child(2){left:11px;width:5px;height:5px;animation-delay:.35s;animation-duration:1.5s}
-.mp-am-np i:nth-child(3){left:20px;animation-delay:.7s;animation-duration:2s}
-.mp-am-np i:nth-child(4){left:7px;width:4px;height:4px;animation-delay:1.05s;animation-duration:1.6s}
-.mp-am-np i:nth-child(5){left:16px;width:6px;height:6px;animation-delay:1.35s}
 @keyframes mpNoteBounce{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-5px) scale(.94,1.06)}55%{transform:translateY(0) scale(1.08,.92)}70%{transform:translateY(-1.5px) scale(1,1)}}
 @keyframes mpBubble{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:.95}50%{transform:translateY(-12px) scale(1)}65%{transform:translateY(-9px) scale(1.05)}100%{transform:translateY(-24px) scale(.7);opacity:0}}
-@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.pw-melt .chat-msg-head strong::before,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::before,.pw-melt .mp-pb-name-t::after{animation:none!important}.mp-am-np i{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::before,.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::before,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 
 /* ===== Notification popup in the top bar (per dc) ===== */
 .is-ntf>*:not(.mp-ntf){opacity:0!important;transform:scale(.97);transition:opacity .28s cubic-bezier(.32,.72,0,1),transform .34s cubic-bezier(.32,.72,0,1)}
@@ -13493,13 +13485,8 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 [data-theme=light] .chat-msg.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){background:color-mix(in srgb,var(--pw-bubble) 78%,#fff)!important;color:#0b1022!important}
 .chat-msg.pw-aura.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pw-bubble) 80%,#fff 20%),0 0 22px 3px color-mix(in srgb,var(--pw-aura) 42%,transparent)!important}
 /* Now playing: the note pulses, with pulsing rings */
-.mp-am-np svg{animation:mpNotePulse 1.4s cubic-bezier(.32,.72,0,1) infinite!important;transform-origin:50% 50%}
-.mp-am-np i{left:3px!important;top:3px;bottom:auto!important;width:24px!important;height:24px!important;border-radius:50%;background:none!important;border:1.5px solid rgba(250,35,59,.7);opacity:0;animation:mpRing 2.1s cubic-bezier(.2,.6,.3,1) infinite!important}
-.mp-am-np i:nth-child(2){animation-delay:.7s!important}
-.mp-am-np i:nth-child(3){animation-delay:1.4s!important}
 @keyframes mpNotePulse{0%,100%{transform:scale(1)}18%{transform:scale(1.16)}36%{transform:scale(.98)}54%{transform:scale(1.07)}}
 @keyframes mpRing{0%{transform:scale(.55);opacity:.85}100%{transform:scale(1.55);opacity:0}}
-@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i{animation:none!important}.mp-am-np i{opacity:.35}}
 /* Listening card: album cover fills the left side and fades to the right */
 .mp-profile-details .mp-profile-song{position:relative;overflow:hidden;min-height:68px;padding:12px 12px 12px 0;isolation:isolate}
 .mp-profile-details .mp-profile-song-art{position:absolute!important;left:0;top:0;bottom:0;width:48%!important;height:auto!important;border-radius:0!important;margin:0!important;z-index:-1;-webkit-mask-image:linear-gradient(to right,#000 35%,transparent 100%);mask-image:linear-gradient(to right,#000 35%,transparent 100%)}
@@ -13574,3 +13561,19 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @keyframes mpSphFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
 @media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
+
+/* Now playing (per dc): synth rings. Three neon rings pulse out from the Apple Music note on a
+   steady 0.8s beat; the note thumps in time over a breathing glow. */
+.mp-profile-eq.mp-am-np{position:relative;width:30px;height:30px;display:block;flex:none;align-self:center;isolation:isolate}
+.mp-am-np::before{content:"";position:absolute;inset:2px;border-radius:50%;background:radial-gradient(circle,rgba(255,45,85,.32),rgba(176,102,255,.12) 55%,transparent 72%);animation:mpSynthGlow .8s ease-in-out infinite}
+.mp-am-np svg{position:absolute;left:5px;top:5px;width:20px;height:20px;z-index:2;filter:drop-shadow(0 0 4px rgba(255,45,85,.55));transform-origin:50% 55%;animation:mpSynthThump .8s cubic-bezier(.3,.7,.4,1) infinite}
+.mp-am-np i{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,transparent 56%,rgba(255,45,85,.0) 58%,#ff2d55 63%,#ff8ac0 66%,rgba(176,102,255,.55) 70%,transparent 76%);opacity:0;transform:scale(.5);animation:mpSynthRing 2.4s cubic-bezier(.22,.61,.36,1) infinite}
+.mp-am-np i:nth-child(2){animation-delay:.8s}
+.mp-am-np i:nth-child(3){animation-delay:1.6s}
+@keyframes mpSynthRing{0%{transform:scale(.5);opacity:0;filter:hue-rotate(0deg)}10%{opacity:1}100%{transform:scale(1.75);opacity:0;filter:hue-rotate(-50deg)}}
+@keyframes mpSynthThump{0%,100%{transform:scale(1)}12%{transform:scale(1.13)}35%{transform:scale(.98)}}
+@keyframes mpSynthGlow{0%,100%{opacity:.55;transform:scale(.92)}15%{opacity:1;transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i,.mp-am-np::before{animation:none!important}.mp-am-np i:first-of-type{opacity:.6;transform:scale(1)}}
+/* Listening card: Safari ignores overflow+radius clipping for the masked album art behind the
+   card (white corners); clip-path clips it everywhere. */
+.mp-profile-details .mp-profile-song{clip-path:inset(0 round 15px)}
