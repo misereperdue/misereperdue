@@ -24,6 +24,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
   else if(u.pathname==='/api/powers')d={ok:true,catalog:CAT,owned:st.owned,on:st.on,stars:st.stars};
   else if(u.pathname==='/api/powers/buy'){const p=CAT.find(x=>x.id===body.id);if(st.stars<p.price)d={ok:false,error:'not enough stars'};else{st.stars-=p.price;st.owned=[...st.owned,p.id];st.log.unshift({t:'buy',n:-p.price,power:p.id,at:Date.now()});d={ok:true,stars:st.stars,owned:st.owned,on:st.on};}}
   else if(u.pathname==='/api/powers/set'){st.on=body.on===false?st.on.filter(x=>x!==body.id):[...st.on,body.id];d={ok:true,owned:st.owned,on:st.on};}
+  else if(u.pathname==='/api/analytics/stats')d={ok:true,stats:{days:[],totalNewUsers:3}};
   else if(u.pathname==='/api/stars')d={ok:true,stars:st.stars,log:st.log};
   else if(u.pathname==='/api/stars/gift'){if(st.stars<body.n)d={ok:false,error:'not enough stars'};else{st.stars-=body.n;other.points+=body.n;st.gift=body;d={ok:true,stars:st.stars,theirStars:other.points,to:other.username};}}
   else if(u.pathname==='/api/ws-ticket')d={ticket:'t'};else if(u.pathname==='/api/messages')d={ok:true,messages:[],badges:{}};
@@ -44,11 +45,12 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
 
  // Powers sheet: two-tap buy, unaffordable disabled, equip toggle.
  await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.mp-profile-bar .pow-page');await sheet.locator('.pow-tile').first().waitFor();
- assert.match(await sheet.locator('.pow-bal').innerText(),/180 stars/);
+ // Balance row: left-aligned star + count only (no 'stars' label).
+ assert.equal((await sheet.locator('.pow-sum').innerText()).trim(),'180');const sumL=await sheet.locator('.pow-sum .stars-ico').evaluate(e=>e.getBoundingClientRect().left-e.closest('.pow-page').getBoundingClientRect().left);assert(sumL<=6,'powers balance left aligned '+sumL);
  assert(await sheet.locator('.pow-tile[data-id=crown]').isDisabled(),'crown unaffordable');
  const buy=sheet.locator('.pow-tile.is-shop[data-id=halo]');await buy.click();assert.equal((await buy.locator('.pow-price').innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
  await buy.click();const halo=sheet.locator('.pow-tile.is-owned[data-id=halo]');await halo.waitFor();
- assert.deepEqual(st.owned,['halo']);assert.match(await sheet.locator('.pow-bal').innerText(),/80 stars/);
+ assert.deepEqual(st.owned,['halo']);assert.equal((await sheet.locator('.pow-sum').innerText()).trim(),'80');
  assert.equal(await halo.getAttribute('aria-pressed'),'false');assert(await sheet.locator('.pow-tile[data-id=banner]').isDisabled(),'balance refresh disables banner');
  // Selecting works like badges: tap highlights (aria-pressed), status confirms, tap again clears.
  await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=halo]')?.getAttribute('aria-pressed')==='true');
@@ -64,6 +66,18 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // Back returns to the profile, with the new balance.
  await p.locator('.mp-profile-bar-head button').first().click();await acts.waitFor();await p.waitForTimeout(450);
  assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/80\s+stars/,'profile shows new balance');
+ // Stars action pill: hollow star like the other pill icons.
+ assert.equal(await acts.locator('.mp-pb-act',{hasText:/^Stars$/}).locator('svg path').evaluate(e=>getComputedStyle(e).fill),'none','hollow star icon');
+ if(owner){
+  // Dashboard morphs inside the profile bar (no full-screen popup), Back returns to the profile.
+  await acts.locator('.mp-pb-act',{hasText:'Dashboard'}).click();await p.locator('.mp-profile-bar .msg-popup.is-embedded .dashboard-sheet').waitFor({timeout:8000});await p.waitForTimeout(600);
+  assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Dashboard');assert.equal(await p.locator('body > #msg-popup').count(),0,'no full-screen dashboard');
+  assert(await p.locator('.mp-profile-bar .dash-head h3').isHidden(),'duplicate title hidden');
+  const db=await p.locator('.mp-profile-bar').boundingBox();assert(db.x>=0&&db.x+db.width<=width+0.5,'dashboard fits');
+  await p.screenshot({path:`${OUT}/${tag}-dashboard.png`});
+  await p.locator('.mp-profile-bar-head button').first().click();await acts.waitFor();await p.waitForTimeout(500);
+  await p.waitForTimeout(400);assert.equal(await p.locator('#msg-popup').count(),0,'late stats do not reopen a popup');
+ }
 
  // Stars sheet: balance, log lines, Get stars -> shop.
  await acts.locator('.mp-pb-act',{hasText:'Stars'}).click();const ss=p.locator('.mp-profile-bar .pow-page');assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');await ss.locator('.stars-row').first().waitFor();
@@ -83,7 +97,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // Someone else's profile: Powers pill with +2 overflow, expands to all 7; no own-only pills.
  await p.goto(ORIGIN+'/#journal');await p.waitForFunction(()=>window.MPChat&&MPChat.openUserSheet);await p.waitForTimeout(600);
  await expand('rich');const pill=p.locator('.mp-pb-pow-pill');await pill.waitFor({timeout:8000});await p.waitForTimeout(300);
- assert.equal(await pill.locator('.mp-pb-pow-icons .pow-ico').count(),5);assert.equal((await pill.locator('.mp-pb-pow-more').innerText()).trim(),'+2');
+ assert.equal(await pill.locator('.mp-pb-pow-icons .pow-ico').count(),5);assert.equal(await pill.evaluate(e=>getComputedStyle(e).borderTopLeftRadius),'999px','rounded pill');assert.equal((await pill.locator('.mp-pb-pow-more').innerText()).trim(),'+2');
  assert(await p.locator('.mp-pb-pow-list').isHidden());await pill.click();
  assert.equal(await p.locator('.mp-pb-pow-list .mp-pb-pow-item').count(),7);assert.equal(await pill.getAttribute('aria-expanded'),'true');
  assert.match(await p.locator('.mp-pb-pow-item.on').innerText(),/Halo$/);
@@ -95,7 +109,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await p.locator('.mp-pb-badges .mp-pb-badge.on').count(),1,'kitty badge still listed');
  // Site star: rounded filled accent star in stats, pills and top bar.
  // The Hugeicons swapper (forum-mount-patch, first 20s) must not replace the site star with an outline.
- await p.evaluate(()=>new Promise(r=>setTimeout(r,2300)));assert.equal(await p.locator('.mp-pb-act',{hasText:/^Gift$/}).locator('path.mp-star-p').count(),1,'Gift pill keeps the site star');assert.equal(await p.locator('.chat-points svg.mp-star').count(),1,'top bar keeps the site star');
+ await p.evaluate(()=>new Promise(r=>setTimeout(r,2300)));assert.match(await p.locator('.mp-pb-act',{hasText:/^Gift$/}).locator('svg path').getAttribute('d'),/^M12 3\.5l2\.6/,'Gift pill keeps the site star outline');assert.equal(await p.locator('.chat-points svg.mp-star').count(),1,'top bar keeps the site star');
  assert(await p.locator('.mp-pb-stats svg.mp-star').count()>=1);assert(await p.locator('.chat-points svg.mp-star').count()>=1,'top bar star');
  const starFill=await p.locator('.mp-pb-stats svg.mp-star path').evaluate(e=>getComputedStyle(e).fill),accent=await p.evaluate(()=>{const t=document.createElement('i');t.style.color='var(--accent)';document.body.appendChild(t);const c=getComputedStyle(t).color;t.remove();return c;});assert.equal(starFill,accent,'star filled with accent');
  await p.locator('.mp-pb-act',{hasText:/^Gift$/}).click();const gp=p.locator('.mp-profile-bar .gift-page');await gp.waitFor();
