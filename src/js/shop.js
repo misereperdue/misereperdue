@@ -45,10 +45,42 @@ var MPShop = (function () {
   function n(t) {
     return !!t && ("membership" === t.handle || /membership/i.test(t.name || ""));
   }
-  // Stars packs (per dc): Shopify product titled "<n> Stars". Credited to the
-  // signed-in account by the Worker's orders/paid webhook.
+  // Stars (per dc): the Shopify "Stars" product (handle stars, variant SKUs
+  // STARS-<n>), or an older "<n> Stars" product. Credited to the signed-in
+  // account by the Worker's orders/paid webhook via a checkout link.
   function starsPack(t) {
-    return !!t && /^\d+\s+stars?$/i.test(String(t.name || "").trim());
+    if (!t) return !1;
+    var nm = String(t.name || "").trim();
+    return "stars" === t.handle || /^stars$/i.test(nm) || /^\d+\s+stars?$/i.test(nm) ||
+      (t.variantList || []).some(function (v) { return /^STARS-\d+$/i.test(v.sku || ""); });
+  }
+  function cad(v) {
+    return "CA$" + (Number(v) || 0).toFixed(2).replace(/\.00$/, "");
+  }
+  function mpTok() {
+    try { return localStorage.getItem("chat_token"); } catch (e) { return null; }
+  }
+  /* Cart attributes that tie a paid order to the signed-in account: a single-use
+   * link from the Worker. Falls back to the username while the Worker without
+   * /api/checkout/link is live. Resolves null when signed out. */
+  function linkAttrs() {
+    var tok = mpTok();
+    if (!tok) return Promise.resolve(null);
+    var H = { Authorization: "Bearer " + tok };
+    return fetch("https://api.misereperdue.com/api/checkout/link", { method: "POST", headers: H })
+      .then(function (r) {
+        if (401 === r.status) return null;
+        if (r.ok) return r.json().then(function (j) { return j && j.link ? [{ key: "link", value: j.link }] : null; });
+        if (404 !== r.status) throw new Error("link");
+        return fetch("https://api.misereperdue.com/api/me", { headers: H })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { var u = j && j.user && j.user.username; return u ? [{ key: "account", value: u }] : null; });
+      });
+  }
+  function goCheckout(url) {
+    var h = new URL(url).hostname;
+    if ("shop.misereperdue.com" !== h && !h.endsWith(".myshopify.com") && "checkout.shopify.com" !== h) throw new Error("bad checkout host");
+    window.location.href = url;
   }
   function a(t) {
     return (
@@ -252,7 +284,7 @@ var MPShop = (function () {
     var cart = MP.readCart();
     return cart.length > 0 && cart.every(function (line) {
       var product = MP.PRODUCTS[line.id];
-      return product && n(product) && Number(line.qty) > 0;
+      return product && (n(product) || starsPack(product)) && Number(line.qty) > 0;
     });
   }
   function checkoutLocked() {
@@ -885,13 +917,24 @@ var MPShop = (function () {
         s = c(i),
         p = document.getElementById("product-view"),
         f = null;
+      var sk = starsPack(i) && i.sizes && i.sizes.length ? starsSizes(i) : null;
       (n(i) &&
         i.sizes &&
         i.sizes.length > 1 &&
         (f = i.sizes.slice().sort(function (t, e) {
           return parseFloat(t) - parseFloat(e);
         })),
-        (r = f
+        (r = n(i)
+          ? vipTerms(i)
+          : sk
+          ? '<div class="stars-packs" role="group" aria-label="Star packs">' +
+            sk.map(function (t, e) {
+              return '<button type="button" data-size="' + l(t) + '"' + (0 === e ? ' class="on"' : "") + '><span class="sp-n">' +
+                (window.MPStar ? MPStar() : "\u2605") + " " + l(t) + '</span><span class="sp-p">' + cad(i.priceBySize[t]) + "</span></button>";
+            }).join("") +
+            "</div>" +
+            (mpTok() ? "" : '<p class="stars-note">Sign in first so your Stars land on your account.</p>')
+          : f
           ? '<div class="member-segs" role="group" aria-label="Membership amount">' +
             f
               .map(function (t, e) {
@@ -1057,7 +1100,9 @@ var MPShop = (function () {
               }));
           }
         })(p));
-      var y = i.sizes && i.sizes.length ? i.sizes[0] : "one";
+      var y = sk ? sk[0] : i.sizes && i.sizes.length ? i.sizes[0] : "one";
+      var pe = p.querySelector(".price");
+      sk && pe && (pe.textContent = cad(i.priceBySize[y]));
       if (
         (p.querySelectorAll("[data-size]").forEach(function (t) {
           t.onclick = function () {
@@ -1066,6 +1111,7 @@ var MPShop = (function () {
                 t.classList.remove("on");
               }),
               t.classList.add("on"),
+              sk && pe && (pe.textContent = cad(i.priceBySize[y])),
               B());
           };
         }),
@@ -1088,7 +1134,7 @@ var MPShop = (function () {
           };
         });
       }
-      B();
+      n(i) ? vipAction(p, i) : B();
       var k = p.querySelector(".share-btn");
       if (
         (k &&
@@ -1162,6 +1208,77 @@ var MPShop = (function () {
       });
     }
   }
+  function starsSizes(i) {
+    return i.sizes.filter(function (s) { return null != (i.priceBySize || {})[s]; }).sort(function (a, b) {
+      return parseFloat(String(a).replace(/,/g, "")) - parseFloat(String(b).replace(/,/g, ""));
+    });
+  }
+  /* VIP (#133): a Seal subscription. First order is the variant price, then the
+   * plan's recurring price each month until cancelled in the Seal portal. */
+  function vipTerms(i) {
+    var later = null != i.planRecurring ? i.planRecurring : 3;
+    return '<div class="vip-terms"><p class="vip-terms-price"><b>' + cad(i.price) + "</b> today, then <b>" + cad(later) + "</b>/month</p><ul>" +
+      "<li>Renews automatically every month until you cancel.</li>" +
+      "<li>Cancel anytime in Manage VIP. You keep VIP until the end of the month you paid for.</li>" +
+      "<li>Sign in required. VIP is added to your Mis\u00e8re account.</li></ul></div>";
+  }
+  function vipAction(p, i) {
+    var box = p.querySelector("#bag-action");
+    if (!box) return;
+    var tok = mpTok();
+    function btn(label) {
+      box.innerHTML = '<button class="btn accent vip-buy" id="vip-buy" type="button">' + label + '</button><p class="vip-err" id="vip-err" role="alert"></p>';
+      return box.querySelector("#vip-buy");
+    }
+    if (!tok) {
+      btn("Sign in to become VIP").onclick = function () { y("journal"); };
+      return;
+    }
+    box.innerHTML = '<button class="btn accent vip-buy" type="button" disabled><span class="btn-spin"></span></button>';
+    var H = { Authorization: "Bearer " + tok };
+    fetch("https://api.misereperdue.com/api/vip", { headers: H })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        if (401 === r.status) return { signedOut: !0 };
+        return fetch("https://api.misereperdue.com/api/me", { headers: H })
+          .then(function (r) { return r.ok ? r.json() : { signedOut: 401 === r.status }; })
+          .then(function (j) { return j.user ? { vip: !!j.user.member, source: j.user.member ? "manual" : null } : j; });
+      })
+      .catch(function () { return {}; })
+      .then(function (v) {
+        if (!box.isConnected) return;
+        if (v.signedOut) return void (btn("Sign in to become VIP").onclick = function () { y("journal"); });
+        if (v.vip) {
+          var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
+          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re VIP</p><p class="vip-status-s">' +
+            ("subscription" === v.source && when ? "Renews around " + l(when) : "VIP is on your account") + "</p>" +
+            ("subscription" === v.source
+              ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
+              : "") + "</div>";
+          return;
+        }
+        var b = btn("Become VIP");
+        b.onclick = function () { vipCheckout(i, b); };
+      });
+  }
+  function vipCheckout(i, b) {
+    var er = document.getElementById("vip-err"),
+      vid = MPShopify.variantIdFor(i, null);
+    if (!vid || !i.sellingPlanId) return void (er && (er.textContent = "VIP isn't available right now."));
+    b.disabled = !0;
+    b.innerHTML = '<span class="btn-spin"></span>';
+    linkAttrs()
+      .then(function (a) {
+        if (!a) return void y("journal");
+        a.push({ key: "membership", value: "yes" });
+        return MPShopify.createCheckout([{ variantId: vid, qty: 1, sellingPlanId: i.sellingPlanId }], a).then(goCheckout);
+      })
+      .catch(function () {
+        b.disabled = !1;
+        b.textContent = "Become VIP";
+        er && (er.textContent = "Couldn't start checkout. Check your connection and try again.");
+      });
+  }
   function S() {
     var t = document.getElementById("checkout-btn"),
       e = document.getElementById("checkout-err");
@@ -1183,40 +1300,18 @@ var MPShop = (function () {
                       s = parseInt(i.qty, 10) || 0;
                     c &&
                       s > 0 &&
-                      (t.push({ variantId: c, qty: s }), n(r) && (e = !0), a(r) && (o = !0), starsPack(r) && (o = sp = !0));
+                      (t.push({ variantId: c, qty: n(r) ? 1 : s, sellingPlanId: r.requiresSellingPlan || n(r) ? r.sellingPlanId || void 0 : void 0 }), n(r) && (e = sp = !0), a(r) && (o = !0), starsPack(r) && (o = sp = !0));
                   }
                 }),
                 !t.length)
               )
                 throw new Error("empty");
               return e || o
-                ? (function () {
-                    var t = null;
-                    try {
-                      t = localStorage.getItem("chat_token");
-                    } catch (t) {}
-                    return t
-                      ? fetch("https://api.misereperdue.com/api/me", {
-                          headers: { Authorization: "Bearer " + t },
-                        })
-                          .then(function (t) {
-                            return t.ok ? t.json() : null;
-                          })
-                          .then(function (t) {
-                            return (t && t.user && t.user.username) || null;
-                          })
-                          .catch(function () {
-                            return null;
-                          })
-                      : Promise.resolve(null);
-                  })().then(function (n) {
-                    if (sp && !n) throw new Error("stars-signin");
-                    var a = [];
-                    return (
-                      e && a.push({ key: "membership", value: "yes" }),
-                      n && a.push({ key: "account", value: n }),
-                      MPShopify.createCheckout(t, a)
-                    );
+                ? linkAttrs().then(function (a) {
+                    if (sp && !a) throw new Error("stars-signin");
+                    a = a || [];
+                    e && a.push({ key: "membership", value: "yes" });
+                    return MPShopify.createCheckout(t, a);
                   })
                 : MPShopify.createCheckout(t);
             })
@@ -1249,7 +1344,7 @@ var MPShop = (function () {
                 e &&
                   (e.textContent =
                     n && "stars-signin" === n.message
-                      ? "Sign in to Chat first so your Stars land on your account."
+                      ? "Sign in first so your Stars and VIP land on your account."
                       : "Couldn't start checkout. Check your connection and try again."));
             }))
         : e && (e.textContent = "Checkout isn't available right now."));
