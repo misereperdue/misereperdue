@@ -7066,77 +7066,90 @@
       st = null,
       busy = !1;
     b.querySelector(".pow-get").addEventListener("click", starsGo);
-    function row(p, mine) {
-      var on = mine && st.on.indexOf(p.id) >= 0;
+    /* Square tiles in a 2-column grid. Owned powers select like badges (tap to
+       highlight, tap again to clear; several can be active); others show a price
+       and buy on a second tap. */
+    function tile(p, mine) {
+      var on = mine && st.on.indexOf(p.id) >= 0,
+        poor = !mine && st.stars < p.price;
       return (
-        '<div class="pow-row" data-id="' + x(p.id) + '">' + powIco(p) +
-        '<div class="pow-t"><b>' + x(p.name) + "</b><span>" + x(p.desc || "") + "</span></div>" +
-        (mine
-          ? '<button type="button" class="pow-tog' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="' + x(p.name) + '"><i></i></button>'
-          : '<button type="button" class="pow-buy"' + (st.stars < p.price ? " disabled" : "") + ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"><span aria-hidden="true">★</span> ' + x(p.price) + "</button>") +
-        "</div>"
+        '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
+        (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"' + (poor ? " disabled" : "")) +
+        ">" + powIco(p) + '<b class="pow-tn">' + x(p.name) + "</b>" +
+        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price"><span aria-hidden="true">★</span> ' + x(p.price) + "</span>") +
+        "</button>"
       );
     }
-    function render() {
+    function render(msg) {
       b.querySelector(".pow-bal").innerHTML = '<span class="pow-star" aria-hidden="true">★</span> <b>' + x(st.stars) + "</b> stars";
       var cat = st.catalog || [],
         mine = cat.filter(function (p) { return st.owned.indexOf(p.id) >= 0; }),
         rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; });
       body.innerHTML =
         '<div class="pow-h">Your powers</div>' +
-        (mine.length ? mine.map(function (p) { return row(p, !0); }).join("") : "<p class='pow-note'>You don't have any powers yet.</p>") +
-        (rest.length ? '<div class="pow-h">Get more</div>' + rest.map(function (p) { return row(p, !1); }).join("") : "");
+        (mine.length ? '<div class="pow-grid">' + mine.map(function (p) { return tile(p, !0); }).join("") + "</div>" : "<p class='pow-note'>You don't have any powers yet.</p>") +
+        '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
+        (rest.length ? '<div class="pow-h">Get more</div><div class="pow-grid">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
     }
-    function fail(btn, msg) {
-      busy = !1;
-      btn.disabled = !1;
-      btn.classList.remove("is-confirm");
-      btn.textContent = msg;
-      setTimeout(function () { b.isConnected && render(); }, 1800);
+    function status(t) {
+      var el = body.querySelector(".pow-status");
+      el && (el.textContent = t);
     }
+    var confirmT = 0;
     body.addEventListener("click", function (e) {
-      var btn = e.target.closest("button"),
-        r = btn && btn.closest(".pow-row");
-      if (!r || busy) return;
-      var id = r.getAttribute("data-id");
-      if (btn.classList.contains("pow-tog")) {
+      var btn = e.target.closest(".pow-tile");
+      if (!btn || busy || btn.disabled) return;
+      var id = btn.getAttribute("data-id");
+      if (btn.classList.contains("is-owned")) {
         var next = st.on.indexOf(id) < 0;
         busy = !0;
+        body.querySelectorAll(".pow-tile").forEach(function (t) { t.disabled = !0; });
+        status("Saving…");
         E("/api/powers/set", { method: "POST", body: { id: id, on: next } })
           .then(function (j) {
-            busy = !1;
             if (!j || !j.ok) throw j;
             st.owned = j.owned;
             st.on = j.on;
-            render();
+            busy = !1;
+            b.isConnected && render("Powers updated.");
           })
-          .catch(function () { fail(btn, "!"); });
+          .catch(function (j) {
+            busy = !1;
+            b.isConnected && render((j && j.error) || "Couldn't update powers.");
+          });
         return;
       }
-      if (!btn.classList.contains("pow-buy")) return;
       /* Two taps to buy: the first asks, the second spends. */
       if (!btn.classList.contains("is-confirm")) {
-        body.querySelectorAll(".pow-buy.is-confirm").forEach(function (o) { o !== btn && render(); });
-        btn = body.querySelector('.pow-row[data-id="' + id + '"] .pow-buy') || btn;
+        body.querySelectorAll(".pow-tile.is-confirm").forEach(function (t) {
+          t.classList.remove("is-confirm");
+          t.querySelector(".pow-price").innerHTML = '<span aria-hidden="true">★</span> ' + x(t.getAttribute("data-price"));
+        });
+        btn.setAttribute("data-price", (st.catalog.find(function (p) { return p.id === id; }) || {}).price);
         btn.classList.add("is-confirm");
-        btn.textContent = "Buy?";
-        setTimeout(function () { btn.isConnected && btn.classList.contains("is-confirm") && !busy && render(); }, 3500);
+        btn.querySelector(".pow-price").textContent = "Buy?";
+        clearTimeout(confirmT);
+        confirmT = setTimeout(function () { btn.isConnected && btn.classList.contains("is-confirm") && !busy && render(); }, 3500);
         return;
       }
+      clearTimeout(confirmT);
       busy = !0;
       btn.disabled = !0;
-      btn.innerHTML = '<span class="btn-spin"></span>';
+      btn.querySelector(".pow-price").innerHTML = '<span class="btn-spin"></span>';
       E("/api/powers/buy", { method: "POST", body: { id: id } })
         .then(function (j) {
-          if (!j || !j.ok) return fail(btn, j && j.error === "not enough stars" ? "Not enough" : "Try again");
           busy = !1;
+          if (!j || !j.ok) return void (b.isConnected && render(j && j.error === "not enough stars" ? "Not enough stars." : "Couldn't buy that power."));
           st.stars = j.stars;
           st.owned = j.owned;
           st.on = j.on;
           powStars(j.stars);
-          render();
+          b.isConnected && render(powName(id) + " is yours. Tap it to turn it on.");
         })
-        .catch(function () { fail(btn, "Try again"); });
+        .catch(function () {
+          busy = !1;
+          b.isConnected && render("Couldn't buy that power.");
+        });
     });
     E("/api/powers")
       .then(function (j) {

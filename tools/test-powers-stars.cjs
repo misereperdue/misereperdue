@@ -41,14 +41,20 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.screenshot({path:`${OUT}/${tag}-profile.png`});
 
  // Powers sheet: two-tap buy, unaffordable disabled, equip toggle.
- await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.pow-sheet');await sheet.locator('.pow-row').first().waitFor();
+ await acts.locator('.mp-pb-act',{hasText:'Powers'}).click();const sheet=p.locator('.pow-sheet');await sheet.locator('.pow-tile').first().waitFor();
  assert.match(await sheet.locator('.pow-bal').innerText(),/180 stars/);
- assert(await sheet.locator('.pow-row[data-id=crown] .pow-buy').isDisabled(),'crown unaffordable');
- const buy=sheet.locator('.pow-row[data-id=halo] .pow-buy');await buy.click();assert.equal((await buy.innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
- await buy.click();await sheet.locator('.pow-row[data-id=halo] .pow-tog').waitFor();
+ assert(await sheet.locator('.pow-tile[data-id=crown]').isDisabled(),'crown unaffordable');
+ const buy=sheet.locator('.pow-tile.is-shop[data-id=halo]');await buy.click();assert.equal((await buy.locator('.pow-price').innerText()).trim(),'Buy?');assert.deepEqual(st.owned,[],'first tap only asks');
+ await buy.click();const halo=sheet.locator('.pow-tile.is-owned[data-id=halo]');await halo.waitFor();
  assert.deepEqual(st.owned,['halo']);assert.match(await sheet.locator('.pow-bal').innerText(),/80 stars/);
- assert(await sheet.locator('.pow-row[data-id=banner] .pow-buy').isDisabled(),'balance refresh disables banner');
- await sheet.locator('.pow-row[data-id=halo] .pow-tog').click();await p.waitForFunction(()=>document.querySelector('.pow-row[data-id=halo] .pow-tog.on'));assert.deepEqual(st.on,['halo']);
+ assert.equal(await halo.getAttribute('aria-pressed'),'false');assert(await sheet.locator('.pow-tile[data-id=banner]').isDisabled(),'balance refresh disables banner');
+ // Selecting works like badges: tap highlights (aria-pressed), status confirms, tap again clears.
+ await halo.click();await p.waitForFunction(()=>document.querySelector('.pow-tile.is-owned[data-id=halo]')?.getAttribute('aria-pressed')==='true');
+ assert.deepEqual(st.on,['halo']);assert(await halo.evaluate(e=>e.classList.contains('is-selected')));assert.equal((await sheet.locator('.pow-status').innerText()).trim(),'Powers updated.');
+ const sel=await halo.evaluate(e=>getComputedStyle(e).borderTopColor),off=await sheet.locator('.pow-tile.is-shop').first().evaluate(e=>getComputedStyle(e).borderTopColor);assert.notEqual(sel,off,'selected tile highlighted');
+ // 2-column grid of squares.
+ const boxes=await sheet.locator('.pow-grid').last().locator('.pow-tile').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),Math.round(r.height)];}));
+ assert.equal(new Set(boxes.map(b=>b[0])).size,2,'two columns');boxes.forEach(b=>assert(Math.abs(b[1]-b[2])<=1,'square tile '+b));
  const sb=await p.locator('.rc-card').boundingBox();assert(sb.x>=0&&sb.x+sb.width<=width+0.5,tag+' sheet fits');
  await p.screenshot({path:`${OUT}/${tag}-powers.png`});
  await p.locator('.rc-x-close').click();await p.waitForTimeout(350);
