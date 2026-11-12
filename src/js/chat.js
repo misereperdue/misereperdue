@@ -1190,11 +1190,6 @@
       var shopIcon=document.querySelector('.nav [data-view=shop] svg');
       btn("Orders",shopIcon?shopIcon.innerHTML:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',function(){mpPBclose(true);ordOpen();});
       if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){dashOpen();});
-      /* Sign out right from your profile (per dc): first tap asks, second signs out. */
-      var so=btn("Sign out",'<path d="M15 17.6C14.9 19.6 13.3 21.3 11.3 21.3C10.9 21.3 10.4 21.3 9.9 21.2C6.6 20.9 3.9 18.1 3.7 14.7C3.6 13.8 3.6 12.9 3.6 12C3.6 11.1 3.6 10.2 3.7 9.3C3.9 5.9 6.6 3.1 9.9 2.8C10.4 2.7 10.9 2.7 11.3 2.7C13.3 2.7 14.9 4.4 15 6.4"/><path d="M21 12H10M21 12C21 11.3 19.1 9.9 18.5 9.3M21 12C21 12.7 19.1 14.1 18.5 14.7"/>',function(k){
-        if(!k.classList.contains("is-confirm")){k.classList.add("is-confirm");k.querySelector("span").textContent="Sign out?";clearTimeout(k._t);k._t=setTimeout(function(){k.classList.remove("is-confirm");k.querySelector("span").textContent="Sign out";},3000);return;}
-        clearTimeout(k._t);mpPBclose(true);ft();
-      },"mp-pb-signout");
     }
     ac.childNodes.length && body.appendChild(ac);
     nm.insertBefore(tools, n1);
@@ -1202,6 +1197,12 @@
     mpPBel = b;
     MPProfiles.openBar(b, body, n, {
       origin:e, me:me, anchor:anchor, resolve:mpProfileMusicResolve,
+      /* Sign out under the Listening box (per dc): first tap asks, second signs out. */
+      signout: me ? function(k){
+        var t=k.querySelector("span")||k;
+        if(!k.classList.contains("is-confirm")){k.classList.add("is-confirm");t.textContent="Tap again to sign out";clearTimeout(k._t);k._t=setTimeout(function(){k.classList.remove("is-confirm");t.textContent="Sign out";},3000);return;}
+        clearTimeout(k._t);mpPBclose(true);ft();
+      } : null,
       avatar:function(user,size){return J(user.username,user.avatar,size||"sm",user.hasAvatarImg ? user.avatarV : void 0);},
       current:function(){return me && s ? s : b._profile;},
       edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
