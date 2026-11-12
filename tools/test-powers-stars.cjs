@@ -22,6 +22,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
   if(u.pathname==='/api/me')d={ok:true,user:{...me,points:st.stars,powers:st.owned,powersOn:st.on}};
   else if(u.pathname==='/api/user/tester')d={ok:true,user:{...me,points:st.stars,powers:st.owned,powersOn:st.on}};
   else if(u.pathname==='/api/user/rich')d={ok:true,user:other};
+  else if(u.pathname==='/api/user/v07')d={ok:true,user:{username:'v07',verified:true,member:true,points:3,badges:['verified','member'],activeBadge:'verified'}};
   else if(u.pathname==='/api/user/kit')d={ok:true,user:{username:'kit',points:1,badges:['kitty'],activeBadge:'kitty'}};
   else if(u.pathname==='/api/powers')d={ok:true,catalog:CAT,owned:st.owned,on:st.on,settings:st.settings,stars:st.stars};
   else if(u.pathname==='/api/powers/settings'){st.settings[body.id]={color:'gold',style:'solid',...(st.settings[body.id]||{}),...body.settings};d={ok:true,id:body.id,settings:st.settings[body.id]};}
@@ -146,6 +147,10 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert(await p.locator('.mp-pb-av').evaluate(e=>e.classList.contains('is-kitty')&&!e.classList.contains('is-vip')),'pink kitty ring');
  const ringBg=await p.locator('.mp-pb-av .mp-pb-ring').evaluate(e=>getComputedStyle(e).backgroundImage);assert.match(ringBg,/255, 127, 184/,'pink gradient');
  await p.screenshot({path:`${OUT}/${tag}-kitty.png`});
+ // 07 (verified) outranks VIP: 07 pill and ring, no VIP pill.
+ await p.goto(ORIGIN+'/#journal');await p.waitForFunction(()=>window.MPChat&&MPChat.openUserSheet);await p.waitForTimeout(600);await expand('v07');
+ assert.equal(await p.locator('.mp-pb-stats .chat-badge-pill-07').count(),1,'07 pill');assert.equal(await p.locator('.mp-pb-stats .chat-badge-pill-vip').count(),0,'no VIP pill');
+ assert(await p.locator('.mp-pb-av').evaluate(e=>e.classList.contains('is-verified')&&!e.classList.contains('is-vip')),'07 ring, not VIP gold');
  assert.deepEqual(errors,[],tag+' page errors');await c.close();console.log('passed',tag);
 }
 await browser.close();console.log('Powers & Stars UI passed; screenshots in '+OUT);})().catch(e=>{console.error(e);process.exit(1);});

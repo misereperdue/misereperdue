@@ -1204,7 +1204,8 @@
   }
   /* Profile view rings and pill (per dc): VIP keeps its gold ring and VIP pill whatever badge is
      displayed; Hello Kitty badge holders get a pink ring; otherwise the verified ring. */
-  function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)); }
+  /* VIP outranks other badges, except 07 (verified), which outranks VIP when displayed (per dc). */
+  function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)) && N(u) !== "verified"; }
   function pbPillBadge(u) { return pbVip(u) ? "member" : N(u); }
   function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : O(u); }
   function pbRing(u) {
