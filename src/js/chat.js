@@ -1166,6 +1166,7 @@
     tool("Share profile", '<path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/>', function (k) {
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
+    !me && s && d && btn("Gift stars", STAR_ICON, function () { giftOpen(b._profile || n, b); });
     if (!me && window.mpHide) {
       mpHide.seen(n.username, n.numId);
       btn(mpHide.is(n.username) ? "Unhide" : "Hide", '<path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/>', function () {
@@ -6983,6 +6984,8 @@
   var POW_ICON = '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/>',
     STAR_ICON = '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
     POW_X = "<button type='button' class='rc-x-close' aria-label='Close'><svg class='mp-x-ico' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M18.9991 19L5 5.00098'/><path d='M19 5L5.00092 18.999'/></svg></button>",
+    /* Tight viewBox around the star so its drawn height equals the CSS box (sized to the digits' cap height). */
+    STARS_SVG = "<svg class='stars-ico' viewBox='3.5 3.5 17 16.1' aria-hidden='true'><path fill='currentColor' d='M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z'/></svg>",
     powMap = {},
     powCat = null;
   function powKeep(j) {
@@ -7073,7 +7076,7 @@
   }
   function powOpen() {
     if (!s || !d) return;
-    var b = powSheet("Powers", "pow-back", "<p class='pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Get stars</button>"),
+    var b = powSheet("Powers", "pow-back", "<p class='pow-bal'></p><div class='pow-body'><p class='pow-note'>Loading…</p></div><button type='button' class='pow-get'>Buy stars</button>"),
       body = b.querySelector(".pow-body"),
       st = null,
       busy = !1;
@@ -7185,23 +7188,102 @@
       '</span><b class="stars-n' + (n > 0 ? " is-plus" : "") + '">' + (n > 0 ? "+" : "−") + x(Math.abs(n)) + "</b></div>"
     );
   }
+  /* Size the star to the drawn height of the digits (ascent+descent of the
+     actual glyphs), so icon and number are exactly the same height. */
+  function starsFit(row) {
+    try {
+      var n = row.querySelector("b"),
+        i = row.querySelector(".stars-ico"),
+        cs = getComputedStyle(n),
+        c = document.createElement("canvas").getContext("2d");
+      c.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+      var m = c.measureText(n.textContent || "0"),
+        h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+      h > 0 && ((i.style.height = h + "px"), (i.style.width = h * (17 / 16.1) + "px"), (i.style.marginBottom = -m.actualBoundingBoxDescent + "px"));
+    } catch (e) {}
+  }
   function starsOpen() {
     if (!s || !d) return;
-    var b = powSheet("Stars", "stars-back", "<div class='stars-bal'><span class='pow-star' aria-hidden='true'>★</span><b>" + x(s.points || 0) + "</b><span>stars</span></div><button type='button' class='pow-get stars-get'>Get stars</button><div class='pow-h'>Recent</div><div class='stars-log'><p class='pow-note'>Loading…</p></div>"),
-      log = b.querySelector(".stars-log");
+    var b = powSheet("Stars", "stars-back", "<div class='stars-bal' role='img' aria-label='" + x(s.points || 0) + " stars'>" + STARS_SVG + "<b>" + x(s.points || 0) + "</b></div><button type='button' class='pow-get stars-get'>Buy stars</button><div class='pow-h'>Recent</div><div class='stars-log'><p class='pow-note'>Loading…</p></div>"),
+      log = b.querySelector(".stars-log"),
+      row = b.querySelector(".stars-bal");
     b.querySelector(".stars-get").addEventListener("click", starsGo);
+    starsFit(row);
+    document.fonts && document.fonts.ready && document.fonts.ready.then(function () { row.isConnected && starsFit(row); });
     Promise.all([E("/api/stars"), powCatalog().catch(function () {})])
       .then(function (r) {
         var j = r[0];
         if (!b.isConnected) return;
         if (!j || !j.ok) throw j;
         b.querySelector(".stars-bal b").textContent = j.stars || 0;
+        b.querySelector(".stars-bal").setAttribute("aria-label", (j.stars || 0) + " stars");
+        starsFit(row);
         powStars(j.stars || 0);
         log.innerHTML = (j.log || []).length ? j.log.map(starsLine).join("") : "<p class='pow-note'>Power purchases and gifted stars show up here.</p>";
       })
       .catch(function () {
         b.isConnected && (log.innerHTML = "<p class='pow-note'>Couldn't load your stars. Try again soon.</p>");
       });
+  }
+  /* Gift stars (others' profiles): pick an amount like a badge, then send. */
+  function giftOpen(user, bar) {
+    if (!s || !d || !user) return;
+    var AMTS = [1, 5, 10, 25, 50, 100],
+      pick = 0,
+      busy = !1,
+      w = powSheet("Gift stars", "gift-page",
+        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
+      grid = w.querySelector(".gift-grid"),
+      send = w.querySelector(".gift-send"),
+      st = w.querySelector(".pow-status");
+    w.querySelector(".gift-to").textContent = "To " + mpAt(user.username);
+    function paint() {
+      w.querySelector(".pow-bal").innerHTML = '<span class="pow-star" aria-hidden="true">★</span> <b>' + x(s.points || 0) + "</b> stars to give";
+      grid.innerHTML = AMTS.map(function (n) {
+        var on = n === pick;
+        return '<button type="button" class="pow-tile gift-amt' + (on ? " is-selected" : "") + '" data-n="' + n + '" aria-pressed="' + on + '"' + ((s.points || 0) < n || busy ? " disabled" : "") + '><span class="gift-n"><span aria-hidden="true">★</span> ' + n + "</span></button>";
+      }).join("");
+      send.disabled = busy || !pick;
+      send.textContent = pick ? "Send " + pick + (pick === 1 ? " star" : " stars") : "Choose an amount";
+    }
+    grid.addEventListener("click", function (e) {
+      var t = e.target.closest(".gift-amt");
+      if (!t || t.disabled || busy) return;
+      var n = +t.getAttribute("data-n");
+      pick = pick === n ? 0 : n;
+      st.textContent = "";
+      paint();
+    });
+    send.addEventListener("click", function () {
+      if (!pick || busy) return;
+      busy = !0;
+      paint();
+      send.innerHTML = '<span class="btn-spin"></span>';
+      st.textContent = "Sending…";
+      E("/api/stars/gift", { method: "POST", body: { to: user.username, n: pick } })
+        .then(function (j) {
+          busy = !1;
+          if (!j || !j.ok) {
+            st.textContent = j && j.error === "not enough stars" ? "Not enough stars." : (j && j.error) || "Couldn't send stars.";
+            return void (w.isConnected && paint());
+          }
+          powStars(j.stars);
+          user.points = j.theirStars;
+          bar && bar._profile && (bar._profile.points = j.theirStars);
+          mpPBput(user);
+          var sent = pick;
+          pick = 0;
+          paint();
+          st.textContent = "Sent " + sent + (sent === 1 ? " star" : " stars") + " to " + mpAt(user.username) + ".";
+          setTimeout(function () { w.isConnected && bar && bar._back && bar._back(); }, 1100);
+        })
+        .catch(function () {
+          busy = !1;
+          st.textContent = "Couldn't send stars.";
+          w.isConnected && paint();
+        });
+    });
+    paint();
   }
   window.MPOpenPowers = powOpen;
   window.MPOpenStars = starsOpen;
