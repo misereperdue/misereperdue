@@ -36,5 +36,8 @@ for(let i=0;i<40&&!saved.length;i++)await p.waitForTimeout(100);
  await inp.fill(URL2);await p.locator('#chat .chat-inputbar .chat-send').click();await inp.fill('hello there');await p.locator('#chat .chat-inputbar .chat-send').click();await p.waitForTimeout(1200);
  assert.equal(saved.length,2,'no save for repeat song or plain text');
 
- assert.deepEqual(errors,[]);await browser.close();console.log('Listening from chat passed (picker, pasted link, dedupe, plain text)');
+ // 4. "+song name" line (the + prefix embed) -> resolved to the track -> Listening updated.
+ await inp.fill('+nights frank ocean');await p.locator('#chat .chat-inputbar .chat-send').click();
+ for(let i=0;i<50&&saved.length<3;i++)await p.waitForTimeout(100);assert.equal(saved.length,3,'+ prefix line saves Listening');assert.equal(saved[2].listening.url,URL1);
+ assert.deepEqual(errors,[]);await browser.close();console.log('Listening from chat passed (picker, pasted link, dedupe, plain text, + prefix)');
 })().catch(e=>{console.error(e);process.exit(1);});

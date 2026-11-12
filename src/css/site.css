@@ -10887,6 +10887,7 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-pow-pill:active{transform:scale(.98)}
 .mp-pb-pow-k{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13px}
 .mp-pb-pow-k svg{width:16px;height:16px;color:var(--accent)}
+.mp-pb-pow-k svg path{fill:currentColor}
 .mp-pb-pow-icons .pow-ico{width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:15px}
 .mp-pb-pow-chev{width:15px;height:15px;margin-left:2px;color:var(--muted);transition:transform .32s cubic-bezier(.32,.72,0,1)}
 .mp-pb-pow.is-open .mp-pb-pow-chev{transform:rotate(180deg)}
@@ -13288,4 +13289,9 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .pow-ch.is-on{border-color:color-mix(in srgb,var(--accent) 60%,transparent);background:color-mix(in srgb,var(--accent) 14%,var(--fill))}
 .pow-sw:focus-visible,.pow-ch:focus-visible,.pow-tile-main:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.pow-sw,.pow-ch{transition:none}}
+
+/* ===== Powers that work (per dc): Glow, Ink, Bubble ===== */
+.chat-msg.pw-ink .chat-msg-head strong,.mp-pb-name.pw-ink .mp-pb-name-t{color:var(--pw-ink)!important}
+.chat-msg.pw-glow .chat-msg-head strong,.mp-pb-name.pw-glow .mp-pb-name-t{text-shadow:0 0 7px color-mix(in srgb,var(--pw-glow) 90%,transparent),0 0 16px color-mix(in srgb,var(--pw-glow) 55%,transparent)}
+.chat-msg.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){background-image:linear-gradient(color-mix(in srgb,var(--pw-bubble) 34%,transparent),color-mix(in srgb,var(--pw-bubble) 34%,transparent))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pw-bubble) 45%,transparent)!important}
 

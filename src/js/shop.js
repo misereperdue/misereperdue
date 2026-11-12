@@ -700,7 +700,17 @@ var MPShop = (function () {
   // replaced it, until the composer is up (gives up after ~6 s).
   function gpAct(act) {
     if (!gpSignedIn()) return y("journal");
-    if ("profile" === act) return window.MPOpenProfile && window.MPOpenProfile();
+    /* Avatar (per dc): go to the Globe, then open your profile view there. */
+    if ("profile" === act) {
+      y("forum");
+      var tries = 0;
+      /* Start after the route's hashchange has fired: profiles close on navigation. */
+      return void setTimeout(function open() {
+        var bar = document.querySelector("#forum.on .chat-head");
+        if (bar && bar.getClientRects().length && window.MPOpenMyProfileView) return void window.MPOpenMyProfileView();
+        ++tries < 40 ? setTimeout(open, 100) : window.MPOpenProfile && window.MPOpenProfile();
+      }, 160);
+    }
     if ("orders" === act) return window.MPOpenOrders && window.MPOpenOrders();
     y("forum");
     var n = 0;
