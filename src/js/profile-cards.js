@@ -32,7 +32,7 @@
       if(options.resolve&&song.url&&(song.artistArt===undefined||song.explicit===undefined||song.album===undefined)){cachedResolve(song.url,options.resolve).then(function(metadata){if(out.isConnected&&user.listening===song){Object.assign(song,metadata);options.enriched&&options.enriched();}}).catch(function(){});}
     }
     // Owner editing is available in the toolbar above the name.
-    if (options.manage) {var manage=button('Manage',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M13.5 7.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 1 1 7 0ZM3.5 20c0-3.6 2.9-6 6.5-6c1.1 0 2.1.2 3 .7M17.5 13.2l3 1.1v2.5c0 1.9-1.3 3.4-3 4c-1.7-.6-3-2.1-3-4v-2.5Z'));out.appendChild(manage);}
+    if (options.manage) {var manage=button('Manage',options.manage,'mp-profile-manage-link');manage.insertAdjacentHTML('afterbegin',svg('M12 7.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 1 1 7 0ZM2.5 20c0-3.6 2.7-6 6-6c1.2 0 2.3.3 3.2.9M20.6 13.4a1.5 1.5 0 0 1 0 2.1L15.5 20.6l-3 .8l.8-3l5.1-5.1a1.5 1.5 0 0 1 2.1 0Z'));out.appendChild(manage);}
     if (options.me && options.signout) {var so=button('',function(){options.signout(so);},'mp-profile-manage-link mp-profile-signout');so.innerHTML=svg('M15 17.6c-.1 2-1.7 3.7-3.7 3.7c-.4 0-.9 0-1.4-.1c-3.3-.3-6-3.1-6.2-6.5c-.1-.9-.1-1.8-.1-2.7s0-1.8.1-2.7c.2-3.4 2.9-6.2 6.2-6.5c.5-.1 1-.1 1.4-.1c2 0 3.6 1.7 3.7 3.7M21 12H10M21 12c0-.7-1.9-2.1-2.5-2.7M21 12c0 .7-1.9 2.1-2.5 2.7')+'<span>Sign out</span>';out.appendChild(so);}
     [].forEach.call(out.children, function (c, i) { c.style.setProperty('--i', i); });
     return out;
