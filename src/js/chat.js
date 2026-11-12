@@ -1360,6 +1360,15 @@
     return document.querySelector("#chat .chat-inputrow");
   }
   var MP_IC = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  /* Typing !username mutes or unmutes that user (per dc); nothing is sent. */
+  function mpBangMute(text) {
+    var m = /^!([a-z0-9_]{1,16})$/i.exec(text);
+    if (!m || !window.mpHide) return !1;
+    var u = m[1].toLowerCase();
+    if (s && u === String(s.username).toLowerCase()) return mpHide.toast("You can't mute yourself"), !0;
+    mpHide.is(u) ? (mpHide.unhide(u), mpHide.toast(mpAt(u) + " is unmuted")) : mpHideUser(u);
+    return !0;
+  }
   function mpHideUser(u, id) {
     mpHide.hide(u, id);
     window.haptic && window.haptic(12);
@@ -2202,6 +2211,7 @@
           var t = tL[tI];
           /* one message per photo (the Worker takes one media each); the text rides on the last */
           (function (e, t) {
+            if (!t && mpBangMute(String(e || "").trim())) return;
             window.haptic && window.haptic(15);
             var n = "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
               a = { t: "send", text: e, cid: n };
@@ -7230,6 +7240,13 @@
   }
   function starsGo() {
     rcClose();
+    var packs = [], P = (window.MP && MP.PRODUCTS) || {};
+    Object.keys(P).forEach(function (k) { var p = P[k], m = p && /^(\d+)\s+stars?$/i.exec(String(p.name || "").trim()); m && packs.push([+m[1], p.id]); });
+    packs.sort(function (a, b) { return a[0] - b[0]; });
+    if (packs.length) {
+      mpPBel && mpPBel.isConnected && mpPBclose(!0);
+      return void (location.hash = "#product-" + packs[0][1]);
+    }
     mpPBel && mpPBel.isConnected && mpPBel._page && mpPBclose(!0);
     location.hash = "#shop";
   }
@@ -7501,7 +7518,7 @@
       pick = 0,
       busy = !1,
       w = powSheet("Gift stars", "gift-page",
-        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><label class='gift-custom'><span>Custom</span><input type='number' inputmode='numeric' min='1' max='1000' step='1' placeholder='20' aria-label='Custom amount'></label><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
+        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><label class='gift-custom'><span>Custom</span><input type='number' inputmode='numeric' min='1' step='1' placeholder='20' aria-label='Custom amount'></label><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
       grid = w.querySelector(".gift-grid"),
       send = w.querySelector(".gift-send"),
       st = w.querySelector(".pow-status");
@@ -7518,8 +7535,8 @@
     var custom = w.querySelector(".gift-custom input");
     custom.addEventListener("input", function () {
       var n = Math.floor(Number(custom.value));
-      pick = n >= 1 && n <= 1000 && n <= (s.points || 0) ? n : 0;
-      st.textContent = custom.value && !pick ? (n > (s.points || 0) ? "Not enough stars." : "Choose 1 to 1000.") : "";
+      pick = n >= 1 && n <= (s.points || 0) ? n : 0;
+      st.textContent = custom.value && !pick ? (n > (s.points || 0) ? "Not enough stars." : "Choose an amount.") : "";
       paint();
     });
     grid.addEventListener("click", function (e) {
@@ -7681,6 +7698,18 @@
     }
   }
   window.MPNotifPop = mpNotifPop;
+  document.addEventListener("click", function (e) {
+    var pill = e.target.closest && e.target.closest(".chat-points");
+    if (!pill || !s) return;
+    e.preventDefault();
+    if (mpPBel && mpPBel.isConnected && mpPBel._page) return void starsOpen();
+    window.MPOpenMyProfileView && MPOpenMyProfileView();
+    var n = 0;
+    (function wait() {
+      if (document.querySelector(".mp-pb-acts")) return void starsOpen();
+      ++n < 40 && setTimeout(wait, 80);
+    })();
+  });
   window.MPOpenPowers = powOpen;
   window.MPOpenStars = starsOpen;
   /* ---------- Orders (per dc): link a checkout email with one order, then see every order + tracking ---------- */

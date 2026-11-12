@@ -12054,8 +12054,10 @@ html[data-gcards="g3"] .forum-thread-more {
 @media(prefers-reduced-motion:reduce){ .chat-music-idle-wave i { animation:none;will-change:auto; } }
 
 /* Retail content may overlap the decorative sky, never the navigation. */
-body.home:has(#shop.on) .hero { z-index:1; }
-body.home:has(#shop.on) > .page { position:relative;z-index:2;isolation:isolate; }
+/* Shop grid scrolls under the sky and fades like Chat/Globe (per dc); product pages keep their own layering. */
+body.home:has(#shop.on) .hero{-webkit-mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px));mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px))}
+body.home:has(#product.on) .hero { z-index:1; }
+body.home:has(#product.on) > .page { position:relative;z-index:2;isolation:isolate; }
 /* Product pages scroll under the sky like Chat/Globe; only Back sits above the sky
    (below the nav) at rest and fades as it rises into the header band (shop.js). */
 #product .shop-product-head { position:relative;z-index:28; }
@@ -13491,4 +13493,32 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 /* Echo: lighter shades of your text trailing through the bubble */
 .chat-msg.pw-echo .chat-bubble{overflow:hidden}
 .chat-msg.pw-echo .chat-bubble .chat-text{padding-bottom:0;padding-right:1em;padding-top:.15em;text-shadow:.24em -.06em 0 color-mix(in srgb,currentColor 34%,transparent),.52em -.12em .4px color-mix(in srgb,currentColor 18%,transparent),.84em -.18em .8px color-mix(in srgb,currentColor 9%,transparent)!important}
+
+/* ===== Round 5 (per dc) ===== */
+/* Sphere on the profile avatar: overlay only, keep the profile's own avatar positioning */
+.mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important;transform:none!important}
+.mp-pb-av.pw-sphere{animation:mpOrbFloat 4.5s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.mp-pb-av.pw-sphere{animation:none}}
+/* Melt + RGB: drips keep falling, filled with the same animated gradient */
+.chat-msg.pw-melt.pw-rgb .chat-msg-head strong::before,.chat-msg.pw-melt.pw-rgb .chat-msg-head strong::after,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::before,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::after{background:linear-gradient(90deg,#ff004c,#ffb800,#3bff8f,#00c8ff,#b44cff,#ff004c)!important;background-size:600% 100%!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;-webkit-text-fill-color:initial;animation:mpDrip 2.8s cubic-bezier(.55,0,.85,.35) infinite,mpRgb 7s linear infinite!important}
+.chat-msg.pw-melt.pw-rgb .chat-msg-head strong::after,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t::after{animation:mpDrip 3.3s cubic-bezier(.55,0,.85,.35) 1.3s infinite,mpRgb 7s linear infinite!important}
+.chat-msg.pw-melt.pw-rgb .chat-msg-head strong,.mp-pb-name.pw-melt.pw-rgb .mp-pb-name-t{animation:mpRgb 7s linear infinite!important}
+/* Bubble: a strong, clear tint */
+.chat-msg.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){background:color-mix(in srgb,var(--pw-bubble) 72%,#0b1022)!important;background-image:none!important;color:#fff!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pw-bubble) 80%,#fff 20%),0 2px 10px color-mix(in srgb,var(--pw-bubble) 35%,transparent)!important}
+[data-theme=light] .chat-msg.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){background:color-mix(in srgb,var(--pw-bubble) 78%,#fff)!important;color:#0b1022!important}
+.chat-msg.pw-aura.pw-bubble .chat-bubble:not(.chat-photo-only):not(.chat-np-bubble){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pw-bubble) 80%,#fff 20%),0 0 22px 3px color-mix(in srgb,var(--pw-aura) 42%,transparent)!important}
+/* Now playing: the note pulses, with pulsing rings */
+.mp-am-np svg{animation:mpNotePulse 1.4s cubic-bezier(.32,.72,0,1) infinite!important;transform-origin:50% 50%}
+.mp-am-np i{left:3px!important;top:3px;bottom:auto!important;width:24px!important;height:24px!important;border-radius:50%;background:none!important;border:1.5px solid rgba(250,35,59,.7);opacity:0;animation:mpRing 2.1s cubic-bezier(.2,.6,.3,1) infinite!important}
+.mp-am-np i:nth-child(2){animation-delay:.7s!important}
+.mp-am-np i:nth-child(3){animation-delay:1.4s!important}
+@keyframes mpNotePulse{0%,100%{transform:scale(1)}18%{transform:scale(1.16)}36%{transform:scale(.98)}54%{transform:scale(1.07)}}
+@keyframes mpRing{0%{transform:scale(.55);opacity:.85}100%{transform:scale(1.55);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mp-am-np svg,.mp-am-np i{animation:none!important}.mp-am-np i{opacity:.35}}
+/* Listening card: album cover fills the left side and fades to the right */
+.mp-profile-details .mp-profile-song{position:relative;overflow:hidden;min-height:68px;padding:12px 12px 12px 0;isolation:isolate}
+.mp-profile-details .mp-profile-song-art{position:absolute!important;left:0;top:0;bottom:0;width:48%!important;height:auto!important;border-radius:0!important;margin:0!important;z-index:-1;-webkit-mask-image:linear-gradient(to right,#000 35%,transparent 100%);mask-image:linear-gradient(to right,#000 35%,transparent 100%)}
+.mp-profile-details .mp-profile-song-art img{width:100%!important;height:100%!important;object-fit:cover;border-radius:0!important}
+.mp-profile-details .mp-profile-song-art.is-empty{background:linear-gradient(135deg,rgba(250,35,59,.35),rgba(251,92,116,.12))}
+.mp-profile-details .mp-profile-song-copy{margin-left:36%;flex:1;text-shadow:0 1px 6px color-mix(in srgb,var(--bg) 70%,transparent)}
 

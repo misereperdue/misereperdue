@@ -41,7 +41,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const rm=p.locator('.chat-msg[data-user=rich]');await rm.waitFor({timeout:8000});
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(255, 127, 184)','ink name colour');
  assert.notEqual(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow');
- assert.match(await rm.locator('.chat-bubble').evaluate(e=>getComputedStyle(e).backgroundImage),/gradient/,'bubble tint');
+ const tint=await rm.locator('.chat-bubble').evaluate(e=>getComputedStyle(e).backgroundColor),plain=await p.locator('.chat-msg.mine[data-id=m0] .chat-bubble').evaluate(e=>getComputedStyle(e).backgroundColor);assert.notEqual(tint,plain,'bubble tint');assert.notEqual(tint,'rgba(0, 0, 0, 0)');
  // Own messages show name + time above the bubble.
  const mine=p.locator('.chat-msg.mine[data-id=m0]');assert.equal((await mine.locator('.chat-msg-head strong').innerText()).trim(),'tester');assert.match(await mine.locator('.chat-msg-head .chat-time').innerText(),/^\d+s$/);
  const mh=await mine.locator('.chat-msg-head').boundingBox(),mbub=await mine.locator('.chat-bubble').boundingBox();assert(mh.y+mh.height<=mbub.y+1,'head above bubble');assert(Math.abs((mh.x+mh.width)-(mbub.x+mbub.width))<=4,'right aligned');
@@ -52,6 +52,14 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(95, 227, 176)','live ink change');assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow off live');
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff'}}));
  // Notification popup: the top bar morphs for ~2 s into the notification, then back.
+ // !username mutes / unmutes without sending.
+ const inpM=p.locator('#chat .chat-inputbar input');const sendM=p.locator('#chat .chat-inputbar .chat-send');
+ await inpM.fill('!rich');await sendM.click();await p.waitForFunction(()=>window.mpHide&&mpHide.is('rich'));
+ await inpM.fill('!rich');await sendM.click();await p.waitForFunction(()=>window.mpHide&&!mpHide.is('rich'));
+ await p.waitForTimeout(300);
+ // Tapping the stars pill in the top bar opens the Stars page.
+ await p.locator('.panel.on .chat-points').click();await p.locator('.mp-profile-bar .stars-bal').waitFor({timeout:6000});assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');
+ await p.locator('.mp-profile-bar-head button').nth(1).click();await p.waitForTimeout(500);
  ws.send(JSON.stringify({t:'notif',n:{id:'n1',type:'gift',from:'rich',n:5,ts:Date.now()}}));
  const ntf=p.locator('.is-ntf .mp-ntf');await ntf.waitFor({timeout:3000});
  assert.equal((await ntf.locator('b').innerText()).trim(),'@rich gifted you 5 stars');assert.equal((await ntf.locator('.mp-ntf-chip').innerText()).trim(),'Gifted stars');assert.equal(await ntf.locator('.mp-ntf-av.is-site').count(),0,'sender avatar');
