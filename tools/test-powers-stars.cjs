@@ -7,7 +7,7 @@ const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=pr
 const T={'.html':'text/html','.css':'text/css','.js':'application/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.mp4':'video/mp4','.woff2':'font/woff2'};
 const CAT=[['glow','Glow',50],['ink','Ink',100],['bubble','Bubble',120]].map(([id,name,price])=>({id,name,price,icon:'*',desc:name+' power'}));
 const COLORS=[['ice','#a9d7f5'],['pink','#ff7fb8'],['gold','#f5bf45']].map(([v,color])=>({v,label:v,color}));
-CAT.find(c=>c.id==='ink').settings=[{key:'color',label:'Colour',type:'color',options:COLORS,def:'gold'},{key:'style',label:'Style',type:'choice',options:[{v:'solid',label:'Solid'},{v:'dotted',label:'Dotted'},{v:'spin',label:'Spin'}],def:'solid'}];
+CAT.find(c=>c.id==='ink').settings=[{key:'color',label:'Colour',type:'color',options:COLORS,def:'gold',custom:true},{key:'style',label:'Style',type:'choice',options:[{v:'solid',label:'Solid'},{v:'dotted',label:'Dotted'},{v:'spin',label:'Spin'}],def:'solid'}];
 (async()=>{const browser=await pw.chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
 for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const st={stars:180,owned:[],on:[],settings:{},log:[{t:'gift-in',n:1,from:'friend',at:Date.now()}]};
@@ -15,7 +15,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const other={username:'rich',member:true,badges:['member','kitty'],activeBadge:'kitty',points:9,powers:['glow','ink','bubble','g4','g5','g6','g7'],powersOn:['ink']};
  const c=await browser.newContext({viewport:{width,height:844},deviceScaleFactor:2,colorScheme:theme,serviceWorkers:'block'});const errors=[];
  await c.addInitScript(()=>{localStorage.setItem('chat_token','test-only');sessionStorage.setItem('rc_later','1');});
- let ws=null;await c.routeWebSocket(/api\.misereperdue\.com/,s=>{ws=s;setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'r1',user:'rich',text:'hello from rich',ts:Date.now()-5000},{id:'m0',user:'tester',text:'my own message',ts:Date.now()-3000}],pw:{rich:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff'}},online:1,caps:{}})),40);});
+ let ws=null;await c.routeWebSocket(/api\.misereperdue\.com/,s=>{ws=s;setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'r1',user:'rich',text:'hello from rich',ts:Date.now()-5000},{id:'m0',user:'tester',text:'my own message',ts:Date.now()-3000}],pw:{rich:{ink:'#ff7fb8',glow:'#a9d7f5',bubble:'#b18cff',charms:['member','kitty','diamond']}},online:1,caps:{}})),40);});
  await c.route('**/*',async r=>{const u=new URL(r.request().url());if(u.origin===ORIGIN){const f=path.join(ROOT,u.pathname==='/'?'index.html':decodeURIComponent(u.pathname));if(fs.existsSync(f)&&fs.statSync(f).isFile())return r.fulfill({path:f,contentType:T[path.extname(f)]||'application/octet-stream'});return r.fulfill({status:404,body:''});}
   if(u.pathname.startsWith('/api/avatarimg/'))return r.fulfill({path:ROOT+'/img/icon-192.png',contentType:'image/png'});
   let d={ok:true,messages:[],count:0};const body=r.request().postDataJSON&&r.request().method()==='POST'?r.request().postDataJSON():null;
@@ -30,6 +30,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
   else if(u.pathname==='/api/powers/set'){st.on=body.on===false?st.on.filter(x=>x!==body.id):[...st.on,body.id];d={ok:true,owned:st.owned,on:st.on};}
   else if(u.pathname==='/api/analytics/stats')d={ok:true,stats:{days:[],totalNewUsers:3}};
   else if(u.pathname==='/api/stars')d={ok:true,stars:st.stars,log:st.log};
+  else if(u.pathname==='/api/user/rich/powers'){st.ownerCall=body;if(body.owned===true)other.powers=[...new Set([...(other.powers||[]),body.id])];d={ok:true,user:other};}
   else if(u.pathname==='/api/stars/gift'){if(st.stars<body.n)d={ok:false,error:'not enough stars'};else{st.stars-=body.n;other.points+=body.n;st.gift=body;d={ok:true,stars:st.stars,theirStars:other.points,to:other.username};}}
   else if(u.pathname==='/api/ws-ticket')d={ticket:'t'};else if(u.pathname==='/api/messages')d={ok:true,messages:[],badges:{}};
   return r.fulfill({json:d,headers:{'access-control-allow-origin':'*'}});});
@@ -44,6 +45,8 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // Own messages show name + time above the bubble.
  const mine=p.locator('.chat-msg.mine[data-id=m0]');assert.equal((await mine.locator('.chat-msg-head strong').innerText()).trim(),'tester');assert.match(await mine.locator('.chat-msg-head .chat-time').innerText(),/^\d+s$/);
  const mh=await mine.locator('.chat-msg-head').boundingBox(),mbub=await mine.locator('.chat-bubble').boundingBox();assert(mh.y+mh.height<=mbub.y+1,'head above bubble');assert(Math.abs((mh.x+mh.width)-(mbub.x+mbub.width))<=4,'right aligned');
+ // Charms next to the name in chat (VIP star, Hello Kitty, Diamond).
+ assert.equal(await rm.locator('.chat-msg-head .mp-charms .mp-charm').count(),3,'three charms by name');assert.equal(await rm.locator('.mp-charm-diamond svg').count(),1);
  await p.screenshot({path:`${OUT}/${tag}-chat-powers.png`});
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#5fe3b0'}}));await p.waitForFunction(()=>!document.querySelector('.chat-msg[data-user=rich]').classList.contains('pw-bubble'));
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(95, 227, 176)','live ink change');assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow off live');
@@ -79,6 +82,9 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await halo.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.');
  assert.equal(st.settings.ink.color,'pink');assert.equal(await sheet.locator('.pow-tile[data-id=ink] .pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
  await sheet.locator('.pow-tile[data-id=ink] .pow-ch[data-v=spin]').click();await p.waitForFunction(()=>document.querySelector('.pow-tile[data-id=ink] .pow-ch.is-on')?.textContent==='Spin');assert.equal(st.settings.ink.style,'spin');assert.equal(st.settings.ink.color,'pink','other setting kept');
+ // Custom colour: the custom swatch saves a hex colour.
+ await sheet.locator('.pow-tile[data-id=ink] .pow-sw-custom input').evaluate(e=>{e.value='#12ab34';e.dispatchEvent(new Event('change',{bubbles:true}));});
+ await p.waitForFunction(()=>document.querySelector('.pow-status')?.textContent==='Saved.'&&document.querySelector('.pow-tile[data-id=ink] .pow-sw-custom.is-on'));assert.equal(st.settings.ink.color,'#12ab34');
  await p.screenshot({path:`${OUT}/${tag}-settings.png`});
  const sel=await halo.evaluate(e=>getComputedStyle(e).borderTopColor),off=await sheet.locator('.pow-tile.is-shop').first().evaluate(e=>getComputedStyle(e).borderTopColor);assert.notEqual(sel,off,'selected tile highlighted');
  // 2-column grid of squares.
@@ -143,11 +149,19 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.locator('.mp-pb-act',{hasText:/^Gift$/}).click();const gp=p.locator('.mp-profile-bar .gift-page');await gp.waitFor();
  assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Gift stars');assert.match(await gp.locator('.gift-to').innerText(),/rich/);
  assert(await gp.locator('.gift-send').isDisabled());assert(await gp.locator('.gift-amt[data-n="100"]').isDisabled(),'cannot gift more than balance');
- await gp.locator('.gift-amt[data-n="10"]').click();assert.equal(await gp.locator('.gift-amt[data-n="10"]').getAttribute('aria-pressed'),'true');assert.equal((await gp.locator('.gift-send').innerText()).trim(),'Send 10 stars');
+ await gp.locator('.gift-custom input').fill('7');assert.equal((await gp.locator('.gift-send').innerText()).trim(),'Send 7 stars','custom amount');
+ await gp.locator('.gift-custom input').fill('5000');assert(await gp.locator('.gift-send').isDisabled(),'over balance/limit blocked');
+ await gp.locator('.gift-amt[data-n="10"]').click();assert.equal(await gp.locator('.gift-custom input').inputValue(),'','tile clears custom');assert.equal(await gp.locator('.gift-amt[data-n="10"]').getAttribute('aria-pressed'),'true');assert.equal((await gp.locator('.gift-send').innerText()).trim(),'Send 10 stars');
  await p.screenshot({path:`${OUT}/${tag}-gift.png`});
  await gp.locator('.gift-send').click();await p.waitForFunction(()=>/Sent 10 stars/.test(document.querySelector('.gift-page .pow-status')?.textContent||''));
  assert.equal(JSON.stringify(st.gift),JSON.stringify({to:'rich',n:10}));
  await p.locator('.mp-pb-acts').waitFor({timeout:4000});await p.waitForTimeout(500);assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*19\s*$/,'recipient balance updated');
+ if(owner){
+  await p.locator('.mp-profile-bar').getByRole('button',{name:/Manage user/}).click();const own=p.locator('.mp-own-pw');await own.locator('.mp-own-row').first().waitFor({timeout:6000});
+  await own.locator('.mp-own-row[data-id=bubble] .mp-own-give').click();await p.waitForFunction(()=>document.querySelector('.mp-own-pw .pow-status')?.textContent==='Saved.');
+  assert.equal(JSON.stringify(st.ownerCall),JSON.stringify({owned:false,id:'bubble'}),'owner remove request');
+  await p.locator('.mp-profile-bar-head button').first().click();await p.locator('.mp-pb-pow-pill').waitFor();await p.waitForTimeout(400);
+ }
  const pb=await p.locator('.mp-pb-pow').boundingBox();assert(pb.x>=0&&pb.x+pb.width<=width+0.5,tag+' pill fits');
  await p.screenshot({path:`${OUT}/${tag}-other.png`});
  // Hello Kitty badge (no VIP): pink ring.

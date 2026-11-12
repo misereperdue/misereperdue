@@ -1078,6 +1078,7 @@
       avw = document.createElement("div");
     avw.className = "mp-pb-av" + (isOwn ? " is-owner" : pbRing(n));
     avw.innerHTML = '<i class="mp-pb-ring" aria-hidden="true"></i>';
+    mpPwApply(avw, n.username, mpPwFromProfile(n));
     avw.appendChild(av);
     hd.appendChild(avw);
     var avImg = av.querySelector("img");
@@ -1207,7 +1208,7 @@
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
-      manage:!me && s && s.owner ? function(){return MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}});} : null
+      manage:!me && s && s.owner ? function(){return mpOwnerPowers(b, MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}}));} : null
     });
   }
   /* Profile view rings and pill (per dc): VIP keeps its gold ring and VIP pill whatever badge is
@@ -1225,13 +1226,39 @@
   var PW = Object.create(null),
     PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
   function pwKey(u) { return String(u || "").toLowerCase(); }
+  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "diamond", "emerald", "ruby"];
   function mpPwApply(el, user, look) {
     var pw = look !== void 0 ? look : PW[pwKey(user)] || null;
-    ["glow", "ink", "bubble"].forEach(function (k) {
-      var c = pw && pw[k];
-      el.classList.toggle("pw-" + k, !!c);
+    PW_KEYS.forEach(function (k) {
+      var v = pw && pw[k], c = typeof v === "string" && v.charAt(0) === "#" ? v : null;
+      el.classList.toggle("pw-" + k, !!v);
       c ? el.style.setProperty("--pw-" + k, c) : el.style.removeProperty("--pw-" + k);
     });
+    pw && pw.rgb ? el.setAttribute("data-rgb", pw.rgb) : el.removeAttribute("data-rgb");
+    var ch = (pw && pw.charms) || [];
+    if (el.classList.contains("mp-pb-name")) mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch);
+    else if (el.classList.contains("chat-msg")) {
+      var put = function () { var h = el.querySelector(".chat-msg-head"); h && mpCharmsInto(h, h.querySelector("strong"), ch); };
+      el.querySelector(".chat-msg-head") ? put() : setTimeout(put, 0);
+    }
+  }
+  /* Charms (per dc, replacing badges): next to the name in chat and the profile view. */
+  var GEM = { diamond: ["#e9fbff", "#9be7ff", "#4fb7e8"], emerald: ["#c9ffe0", "#2ecc71", "#138a49"], ruby: ["#ffd0dc", "#e0115f", "#8f0a3b"] };
+  function mpCharm(id) {
+    var g = GEM[id], t = { verified: "07", member: "VIP", kitty: "Hello Kitty", mask: "Sleep mask", robot: "Bot", diamond: "Diamond", emerald: "Emerald", ruby: "Ruby" }[id] || id, inner;
+    if (g) inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10l4 5.2L12 20.5 3 8.7z" fill="' + g[1] + '"/><path d="M3 8.7h18L12 20.5z" fill="' + g[2] + '" opacity=".55"/><path d="M7 3.5 9.5 8.7 12 3.5l2.5 5.2L17 3.5" fill="none" stroke="' + g[0] + '" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 8.7 12 20.5l2.5-11.8" fill="none" stroke="' + g[0] + '" stroke-width="1" opacity=".8"/></svg>';
+    else if (id === "member") inner = '<svg viewBox="2.3 2.3 19.4 18.5" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="#f5bf45" stroke="#f5bf45" stroke-width="2" stroke-linejoin="round"/></svg>';
+    else inner = M(id);
+    return '<span class="mp-charm mp-charm-' + x(id) + '" title="' + x(t) + '" role="img" aria-label="' + x(t) + ' charm">' + inner + "</span>";
+  }
+  function mpCharmsInto(host, after, list) {
+    var old = host.querySelector(":scope > .mp-charms");
+    old && old.remove();
+    if (!list || !list.length) return;
+    var w = document.createElement("span");
+    w.className = "mp-charms";
+    w.innerHTML = list.map(mpCharm).join("");
+    after && after.nextSibling ? host.insertBefore(w, after.nextSibling) : host.appendChild(w);
   }
   function mpPwRefresh(user) {
     document.querySelectorAll(".chat-msg[data-user]").forEach(function (m) {
@@ -1248,7 +1275,15 @@
   function mpPwSet(user, pw) { PW[pwKey(user)] = pw || null; mpPwRefresh(user); }
   function mpPwFromProfile(u) {
     var out = {}, st = (u && u.powerSettings) || {};
-    ((u && u.powersOn) || []).forEach(function (id) { var c = st[id] && PW_COLORS[st[id].color]; c && (out[id] = c); });
+    ((u && u.powersOn) || []).forEach(function (id) {
+      var s1 = st[id] || {}, c = s1.color ? PW_COLORS[s1.color] || (/^#[0-9a-f]{6}$/i.test(s1.color) ? s1.color : null) : null;
+      out[id] = c || (id === "rgb" ? s1.speed || "slow" : 1);
+    });
+    out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
+    var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
+    u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
+    ["diamond", "emerald", "ruby"].forEach(function (g) { out[g] && ch.push(g); });
+    ch.length && (out.charms = ch);
     return out;
   }
   window.MPOpenMyProfileView = function () {
@@ -5573,7 +5608,7 @@
     if(!s||!d||!url)return;
     mpProfileMusicResolve(url).then(function(r){var g=r.listening;if(!g||!g.title||!g.artist||!g.url)return null;
       if(s.listening&&s.listening.url===g.url)return null;
-      return E('/api/profile',{method:'POST',body:{listening:{title:g.title,artist:g.artist,url:g.url,art:g.art||null,artistArt:g.artistArt||null,explicit:typeof g.explicit==='boolean'?g.explicit:null,provider:g.provider||null}}});
+      return E('/api/profile',{method:'POST',body:{listening:{title:g.title,artist:g.artist,album:g.album||'',url:g.url,art:g.art||null,artistArt:g.artistArt||null,explicit:typeof g.explicit==='boolean'?g.explicit:null,provider:g.provider||null}}});
     }).then(function(r){r&&r.ok&&r.user&&(s=mpProfileSynced(rcKeep(r.user)));}).catch(function(){});
   }
   function mpProfileMusicResolve(url,signal){return E('/api/profile/music?url='+encodeURIComponent(url),{signal:signal}).then(function(r){if(!r||!r.ok||!r.listening)throw Error(r&&r.error||'Music metadata unavailable. Try again.');return r;});}
@@ -7202,6 +7237,10 @@
       return '<div class="pow-set">' + p.settings.map(function (f) {
         var val = cur[f.key] != null ? cur[f.key] : f.def;
         return '<div class="pow-set-row"><span class="pow-set-k">' + x(f.label) + '</span><div class="pow-set-opts" role="group" aria-label="' + x(p.name + " " + f.label) + '">' +
+          (f.type === "color" && f.custom ? (function () {
+            var hex = /^#[0-9a-f]{6}$/i.test(val || "");
+            return '<label class="pow-sw pow-sw-custom' + (hex ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(hex ? val : "") + '"' + (hex ? ' style="--sw:' + x(val) + '"' : "") + ' aria-label="Custom colour"><input type="color" value="' + x(hex ? val : "#ffffff") + '" data-custom="1"></label>';
+          })() : "") +
           f.options.map(function (o) {
             var on = o.v === val;
             return f.type === "color"
@@ -7271,7 +7310,16 @@
           b.isConnected && render((j && j.error) || "Couldn't save that setting.");
         });
     }
+    body.addEventListener("change", function (e) {
+      var inp = e.target.closest("input[data-custom]");
+      if (!inp || busy) return;
+      var lab = inp.closest(".pow-sw-custom");
+      lab.setAttribute("data-v", inp.value);
+      lab.style.setProperty("--sw", inp.value);
+      saveSetting(lab);
+    });
     body.addEventListener("click", function (e) {
+      if (e.target.closest(".pow-sw-custom")) return;
       var opt = e.target.closest(".pow-sw,.pow-ch");
       if (opt) {
         if (!busy && !opt.classList.contains("is-on")) saveSetting(opt);
@@ -7397,7 +7445,7 @@
       pick = 0,
       busy = !1,
       w = powSheet("Gift stars", "gift-page",
-        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
+        "<p class='pow-bal'></p><p class='gift-to'></p><div class='pow-grid gift-grid'></div><label class='gift-custom'><span>Custom</span><input type='number' inputmode='numeric' min='1' max='1000' step='1' placeholder='Amount' aria-label='Custom amount'></label><p class='pow-status' role='status' aria-live='polite'></p><button type='button' class='pow-get gift-send' disabled>Choose an amount</button>"),
       grid = w.querySelector(".gift-grid"),
       send = w.querySelector(".gift-send"),
       st = w.querySelector(".pow-status");
@@ -7411,11 +7459,19 @@
       send.disabled = busy || !pick;
       send.textContent = pick ? "Send " + pick + (pick === 1 ? " star" : " stars") : "Choose an amount";
     }
+    var custom = w.querySelector(".gift-custom input");
+    custom.addEventListener("input", function () {
+      var n = Math.floor(Number(custom.value));
+      pick = n >= 1 && n <= 1000 && n <= (s.points || 0) ? n : 0;
+      st.textContent = custom.value && !pick ? (n > (s.points || 0) ? "Not enough stars." : "Choose 1 to 1000.") : "";
+      paint();
+    });
     grid.addEventListener("click", function (e) {
       var t = e.target.closest(".gift-amt");
       if (!t || t.disabled || busy) return;
       var n = +t.getAttribute("data-n");
       pick = pick === n ? 0 : n;
+      custom.value = "";
       st.textContent = "";
       paint();
     });
@@ -7461,6 +7517,52 @@
       window.MPDashHost = null;
     }
     window.openAnalytics && window.openAnalytics();
+  }
+  /* Owner (per dc): give / remove powers, switch them, set colours for another user, in Manage user. */
+  function mpOwnerPowers(bar, root) {
+    var sec = document.createElement("section");
+    sec.className = "mp-own-pw";
+    sec.innerHTML = '<div class="pow-h">Powers</div><div class="mp-own-pw-list"><p class="pow-note">Loading\u2026</p></div><p class="pow-status" role="status" aria-live="polite"></p>';
+    var list = sec.querySelector(".mp-own-pw-list"), status = sec.querySelector(".pow-status");
+    function u() { return bar._profile || {}; }
+    function paint() {
+      var cat = powCat && powMap ? Object.keys(powMap).map(function (k) { return powMap[k]; }) : [];
+      var owned = u().powers || [], on = u().powersOn || [], st = u().powerSettings || {};
+      list.innerHTML = cat.map(function (p) {
+        var has = owned.indexOf(p.id) >= 0, act = on.indexOf(p.id) >= 0, col = p.settings && p.settings[0] && p.settings[0].type === "color";
+        var cur = (st[p.id] && st[p.id].color) || (col ? p.settings[0].def : ""), hex = PW_COLORS[cur] || (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#ffffff");
+        return '<div class="mp-own-row" data-id="' + x(p.id) + '">' + powIco(p) + '<b>' + x(p.name) + "</b>" +
+          (has && col ? '<input type="color" class="mp-own-col" value="' + x(hex) + '" aria-label="' + x(p.name) + ' colour">' : "") +
+          (has ? '<button type="button" class="pow-ch mp-own-on' + (act ? " is-on" : "") + '" aria-pressed="' + act + '">' + (act ? "On" : "Off") + "</button>" : "") +
+          '<button type="button" class="pow-ch mp-own-give">' + (has ? "Remove" : "Give") + "</button></div>";
+      }).join("") || "<p class='pow-note'>No powers yet.</p>";
+    }
+    function send(id, body) {
+      status.textContent = "Saving\u2026";
+      body.id = id;
+      return E("/api/user/" + encodeURIComponent(u().username) + "/powers", { method: "POST", body: body })
+        .then(function (j) {
+          if (!j || !j.ok || !j.user) throw j;
+          bar._profile = Object.assign({}, u(), j.user);
+          mpPBput(bar._profile);
+          status.textContent = "Saved.";
+          paint();
+        })
+        .catch(function (j) { status.textContent = (j && j.error) || "Couldn't save."; });
+    }
+    sec.addEventListener("click", function (e) {
+      var r = e.target.closest(".mp-own-row"), id = r && r.getAttribute("data-id");
+      if (!id) return;
+      if (e.target.closest(".mp-own-give")) send(id, { owned: (u().powers || []).indexOf(id) < 0 });
+      else if (e.target.closest(".mp-own-on")) send(id, { on: (u().powersOn || []).indexOf(id) < 0 });
+    });
+    sec.addEventListener("change", function (e) {
+      var c = e.target.closest(".mp-own-col"), r = c && c.closest(".mp-own-row");
+      r && send(r.getAttribute("data-id"), { settings: { color: c.value } });
+    });
+    powCatalog().then(paint, function () { list.innerHTML = "<p class='pow-note'>Couldn't load powers.</p>"; });
+    root && root.appendChild(sec);
+    return root;
   }
   window.MPOpenPowers = powOpen;
   window.MPOpenStars = starsOpen;
