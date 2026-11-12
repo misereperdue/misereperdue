@@ -23,7 +23,7 @@
       card.appendChild(cov);
       var copy=el('span','mp-profile-song-copy'),title=el('span','mp-profile-song-title');title.appendChild(el('strong','',song.title));if(song.explicit===true){var explicit=el('span','mp-profile-explicit fm-e','E');explicit.setAttribute('aria-label','Explicit');explicit.setAttribute('role','img');title.appendChild(explicit);}copy.appendChild(title);if(song.album)copy.appendChild(el('span','mp-profile-song-album',song.album));
       var artist=el('span','mp-profile-song-artist'),avatar=el('span','mp-profile-artist-avatar'),artistImage=artUrl(song.artistArt);avatar.setAttribute('aria-hidden','true');avatar.appendChild(el('span','',Array.from(song.artist.trim())[0]||'♪'));if(artistImage){var artistImg=el('img');artistImg.src=artistImage;artistImg.alt='';artistImg.loading='lazy';artistImg.onerror=function(){artistImg.remove();};avatar.appendChild(artistImg);}artist.appendChild(avatar);artist.appendChild(el('span','mp-profile-artist-name',song.artist));copy.appendChild(artist);card.appendChild(copy);
-      var eq = el('span', 'mp-profile-eq'); eq.setAttribute('aria-hidden', 'true'); for (var i = 0; i < 4; i++) eq.appendChild(el('i')); card.appendChild(eq);
+      var eq = el('span', 'mp-profile-eq mp-am-np'); eq.setAttribute('aria-hidden', 'true'); eq.innerHTML = amNote(); card.appendChild(eq);
       music.appendChild(card); out.appendChild(music);
       if(options.resolve&&song.url&&(song.artistArt===undefined||song.explicit===undefined||song.album===undefined)){cachedResolve(song.url,options.resolve).then(function(metadata){if(out.isConnected&&user.listening===song){Object.assign(song,metadata);options.enriched&&options.enriched();}}).catch(function(){});}
     }
@@ -34,6 +34,8 @@
   }
   var resolvedSongs=new Map();
   function cachedResolve(url,resolve){var hit=resolvedSongs.get(url);if(hit&&Date.now()-hit.t<300000)return hit.p;var p=resolve(url).then(function(value){return value.listening||value;}).catch(function(e){resolvedSongs.delete(url);throw e;});if(resolvedSongs.size>100)resolvedSongs.clear();resolvedSongs.set(url,{t:Date.now(),p:p});return p;}
+  /* Now playing (per dc): the Apple Music note bouncing, with synth bubbles bouncing up behind it. */
+  function amNote(){return '<i></i><i></i><i></i><i></i><i></i><svg viewBox="0 0 24 24"><defs><linearGradient id="mpAmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa233b"/></linearGradient></defs><path fill="url(#mpAmG)" d="M19.2 3.1 9.6 5.2c-.5.1-.9.6-.9 1.1v9.4a3.1 3.1 0 1 0 1.6 2.7V9.6l8.1-1.8v6.1a3.1 3.1 0 1 0 1.6 2.7V4.1c0-.7-.6-1.2-1.3-1Z"/></svg>';}
   function synth(){return svg('M4 9v6M8 5v14M12 8v8M16 3v18M20 7v10');}
   function svg(path) {return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';}
   function badgePicker(user, options) {
