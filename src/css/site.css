@@ -10838,6 +10838,9 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-art > img { position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover; }
 .chat-music-copy { display:flex;flex:1;min-width:0;flex-direction:column; }
 .chat-music-copy > * { overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.25; }
+.chat-music-title { display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden; }
+.chat-music-title strong { flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
+.chat-music-title .fm-e { margin-left:0; }
 .chat-music-artist { font-size:11.5px;color:var(--muted); }
 .chat-music-album {color:var(--muted); }
 .chat-music-choice {display:grid;place-items:center;box-sizing:border-box;flex:none;border-radius:50%;color:transparent;transition:background .18s,border-color .18s,color .18s; }
@@ -10936,7 +10939,7 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-search {background:color-mix(in srgb,var(--ink) 5%,transparent);border-color:color-mix(in srgb,var(--ink) 9%,transparent);padding-inline:14px; }
 .chat-music-search > svg { color:var(--muted); }
 .chat-music-status { margin:0 5px;color:var(--music-accent);font-size:9px; }
-.chat-music-copy strong {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
+.chat-music-copy strong {white-space:nowrap;display:block;overflow:hidden;text-overflow:ellipsis; }
 .chat-music-choice {border:0;background:color-mix(in srgb,var(--music-accent) 11%,transparent); }
 .chat-gp-flyer .chat-send { flex:none; }
 @media(prefers-reduced-motion:reduce){.chat-plus-menu.chat-pbig-music{transition:none}}
@@ -11533,7 +11536,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .fm-c .fm-viz,[data-theme="light"] .fm-c .fm-viz{color:var(--accent);--fm-viz2:var(--ink)}
 [data-theme="light"] .fm-c .fm-viz{--fm-viz2:#5a7492}
 .fm-c .fm-sched-in:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
-.fm-e{background:rgba(127,127,127,.32)!important;color:inherit!important}
+.fm-e{background:rgba(127,127,127,.32)!important;color:inherit!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 55%,transparent)}
 /* dc t529u: Misery FM edit-song form — one spacing scale (12px between fields, 6px label→input),
    + menu sub-panel header, compact cover row, a settings-style explicit row, iOS-safe 16px inputs */
 .chat-plus-menu.fm-mnt.fm-editing{height:var(--fm-mh,520px)}
@@ -12248,7 +12251,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .pow-set-row{flex-direction:column;align-items:stretch;gap:8px}
 .pow-set-opts{justify-content:flex-start;gap:10px}
 .pow-sw{flex:none}
-.pow-sw-custom:not([style*="--sw"])::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none}
+.pow-sw-custom:not([style*="--sw"])::after{content:none}
 /* Sphere: a prominent, animated glass orb */
 /* Charms: uniform size, centred, consistent spacing */
 .mp-charms{gap:4px;margin-left:5px;vertical-align:middle}
@@ -12280,10 +12283,11 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::after{left:64%;width:.26em;animation-delay:1.3s;animation-duration:3.3s}
 @keyframes mpDrip{0%{height:.3em;transform:translateY(0);opacity:1}62%{height:1em;transform:translateY(0);opacity:1}78%{height:.5em;transform:translateY(.55em);opacity:1}100%{height:.3em;transform:translateY(1.15em);opacity:0}}
 /* Custom colour swatch + inline picker */
-.pow-sw-custom{position:relative;overflow:visible;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
-.pow-sw-custom[style*="--sw"]{background:var(--sw)}
-.pow-sw-custom:not([style*="--sw"])::before{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
-.pow-sw-custom::after{content:none!important}
+.pow-sw-custom{position:relative;overflow:visible;background:radial-gradient(circle at center,var(--sw,transparent) 0 61%,transparent 62%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom[style*="--sw"]{background:radial-gradient(circle at center,var(--sw) 0 61%,transparent 62%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom::before,.pow-sw-custom::after{content:none!important}
+.pow-sw-pick{position:absolute;inset:0;width:13px;height:13px;margin:auto;pointer-events:none;color:var(--picker-ink,#fff);filter:drop-shadow(0 0 1px rgba(0,0,0,.55));z-index:1}
+.pow-sw-custom[style*="--picker-ink:#111"] .pow-sw-pick{filter:drop-shadow(0 0 1px rgba(255,255,255,.85))}
 .pow-sw-custom[aria-expanded=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
 .pow-cp{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--ink) 5%,transparent);animation:menuPop .28s cubic-bezier(.32,.72,0,1)}
 .pow-cp-prev{flex:none;width:34px;height:34px;border-radius:50%;background:var(--cp,#a9d7f5);box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--cp,#a9d7f5)}
