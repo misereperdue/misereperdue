@@ -12089,6 +12089,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 
 /* Powers page balance: left-aligned star + count, like the Stars page (per dc). */
 .stars-bal.pow-sum{font-size:28px;margin:2px 2px 4px}
+.pow-body>.pw-page{margin-top:14px}
 
 /* ===== Dashboard inside the profile bar (per dc) =====
    The bar supplies header, Back/close, scrolling and the morph; the dashboard drops its own popup chrome
@@ -12290,10 +12291,10 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .chat-msg.pw-melt .chat-msg-head strong::after,.mp-pb-name.pw-melt .mp-pb-name-t::after{left:64%;width:.26em;animation-delay:1.3s;animation-duration:3.3s}
 @keyframes mpDrip{0%{height:.3em;transform:translateY(0);opacity:1}62%{height:1em;transform:translateY(0);opacity:1}78%{height:.5em;transform:translateY(.55em);opacity:1}100%{height:.3em;transform:translateY(1.15em);opacity:0}}
 /* Custom colour swatch + inline picker */
-.pow-sw-custom{position:relative;overflow:visible;background:radial-gradient(circle at center,var(--sw,transparent) 0 61%,transparent 62%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
-.pow-sw-custom[style*="--sw"]{background:radial-gradient(circle at center,var(--sw) 0 61%,transparent 62%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom{position:relative;overflow:visible;background:radial-gradient(circle at center,var(--sw,transparent) 0 70%,transparent 72%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
+.pow-sw-custom[style*="--sw"]{background:radial-gradient(circle at center,var(--sw) 0 70%,transparent 72%),conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
 .pow-sw-custom::before,.pow-sw-custom::after{content:none!important}
-.pow-sw-pick{position:absolute;inset:0;width:13px;height:13px;margin:auto;pointer-events:none;color:var(--picker-ink,#fff);filter:drop-shadow(0 0 1px rgba(0,0,0,.55));z-index:1}
+.pow-sw-pick{position:absolute;inset:0;width:14px;height:14px;margin:auto;pointer-events:none;color:var(--picker-ink,#fff);filter:drop-shadow(0 0 1px rgba(0,0,0,.55));z-index:1}
 .pow-sw-custom[style*="--picker-ink:#111"] .pow-sw-pick{filter:drop-shadow(0 0 1px rgba(255,255,255,.85))}
 .pow-sw-custom[aria-expanded=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
 .pow-cp{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--ink) 5%,transparent);animation:menuPop .28s cubic-bezier(.32,.72,0,1)}
@@ -12485,11 +12486,10 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .pw-combo-h:not(:first-child){margin-top:14px}
 .pw-combo-all{margin:0;font-size:13px;color:var(--muted);line-height:1.4}
 .pw-chips{display:flex;flex-wrap:wrap;gap:6px}
-.pw-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px 6px 7px;border-radius:999px;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:13px;line-height:1.2;max-width:100%}
-.pw-chip i{font-style:normal;font-size:15px;line-height:1}
-.pw-chip b{font-weight:600}
-.pw-chip small{flex-basis:100%;margin-left:21px;margin-top:-2px;font-size:11.5px;color:var(--muted);font-weight:500}
-.pw-chip:has(small){flex-wrap:wrap;border-radius:14px}
+.pw-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px 6px 7px;border-radius:999px;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:13px;line-height:1.2;max-width:100%;min-width:0;flex-wrap:nowrap}
+.pw-chip i{flex:none;font-style:normal;font-size:15px;line-height:1}
+.pw-chip b{flex:none;font-weight:600}
+.pw-chip small{min-width:0;margin:0;font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pw-chip.is-on{background:color-mix(in srgb,var(--accent) 20%,transparent)}
 .pw-chip.is-locked{opacity:.6}
 .pw-chips.is-clash .pw-chip{background:color-mix(in srgb,#ff5a5f 12%,transparent)}
