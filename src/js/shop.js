@@ -90,10 +90,13 @@ var MPShop = (function () {
   }
   var o = ["img/mask-front-light.jpg?v=8", "img/mask-back-light.jpg?v=4"],
     i = "img/vip-card-light.jpg?v=8",
-    STARS_PACK_IMGS = [100, 500, 1000, 1100, 2400, 2500, 6500];
+    STARS_PACK_IMGS = [100, 500, 1000, 1100, 2400, 2500, 6500],
+    STARS_VARIANT_IMGS = [500, 1100, 2400, 6500];
   // Stars art: hero coin, or the stack for a pack size, in the current theme (falls back to the hero).
-  function starsImg(size) {
+  // variant: the cart's photo, matching the Shopify variant images (no amount, stack centred).
+  function starsImg(size, variant) {
     var n = parseInt(String(size == null ? "" : size).replace(/[^\d]/g, ""), 10);
+    if (variant && STARS_VARIANT_IMGS.indexOf(n) > -1) return "img/stars-variant-" + n + "-" + (r() ? "light" : "dark") + ".jpg?v=2";
     return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=11";
   }
   function r() {
@@ -174,7 +177,7 @@ var MPShop = (function () {
   // Shopify variant image), falling back to the product photo. Mask/VIP keep their themed art.
   function lineArt(prod, line) {
     var sz = line.size && "one" !== line.size ? line.size : null,
-      v = prod && sz ? (starsPack(prod) ? starsImg(sz) : !a(prod) && !n(prod) && prod.imageBySize ? prod.imageBySize[sz] : null) : null;
+      v = prod && sz ? (starsPack(prod) ? starsImg(sz, !0) : !a(prod) && !n(prod) && prod.imageBySize ? prod.imageBySize[sz] : null) : null;
     return v
       ? '<img src="' + l(d(v, 800)) + '" alt="' + l(line.name) + '" decoding="async" draggable="false">'
       : p(prod || line, !0);

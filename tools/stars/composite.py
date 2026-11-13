@@ -36,20 +36,32 @@ def main():
     p.add_argument("--ink", required=True)
     p.add_argument("--pack", type=int, default=0)
     p.add_argument("--mh", type=int, required=True)
+    # Variant mode (cart / Shopify variant photos): no pack label, stack centred on its own bounds.
+    p.add_argument("--center", action="store_true")
+    p.add_argument("--fill", type=float, default=0.64)
     args = p.parse_args()
     S, MH = args.size, args.mh
 
     bg = radial(S, args.c0, args.c1)
     model = Image.open(args.model).convert("RGBA")
     # Lanczos downscale of the supersampled render (exact CSS aspect S×MH)
-    if model.size != (S, MH):
+    if model.size != (S, MH) and not args.center:
         model = model.resize((S, MH), Image.Resampling.LANCZOS)
-    y = round(S * 0.02) if args.pack else round((S - MH) / 2)
     bg = bg.convert("RGBA")
-    bg.alpha_composite(model, (0, y))
+    if args.center:
+        # Centre the visible stack (alpha bounds) in the square, both axes.
+        # Crop at full supersampled resolution, then scale so the stack's longest side is FILL of S.
+        box = model.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox() or (0, 0) + model.size
+        model = model.crop(box)
+        k = args.fill * S / max(model.size)
+        model = model.resize((max(1, round(model.width * k)), max(1, round(model.height * k))), Image.Resampling.LANCZOS)
+        bg.alpha_composite(model, ((S - model.width) // 2, (S - model.height) // 2))
+    else:
+        y = round(S * 0.02) if args.pack else round((S - MH) / 2)
+        bg.alpha_composite(model, (0, y))
     out = bg.convert("RGB")
 
-    if args.pack:
+    if args.pack and not args.center:
         # Match ImageMagick -gravity south -annotate +0+(0.07S) with pointsize 0.075S.
         # On the 1254 stills the ink sat ~98px above the bottom (≈0.078S).
         text = format(args.pack, ",")

@@ -1,6 +1,7 @@
 // Render the flat Stars product images from the real 3D models in js/stars3d.js, so tiles and fallbacks match the viewer.
 // MP_PLAYWRIGHT=<playwright> [STARS_SIZE=2508] [STARS_SS=2] [STARS_PACKS=500,1100] node tools/stars/render-stills.cjs [outdir]
 //   -> img/stars-{light,dark}.jpg + stars-<n>-<theme>.jpg
+// STARS_VARIANT=1 -> img/stars-variant-<n>-<theme>.jpg only: no pack label, stack centred and scaled to fill ~64%, so it clears the 64x80 cover-cropped cart thumb (cart + Shopify variant photos).
 // Each still is rendered STARS_SS times larger (Playwright deviceScaleFactor + three.js pixel ratio),
 // then Lanczos-downscaled onto the product-photo backdrop so chip edges stay crisp at 3x DPR.
 // Default STARS_SIZE=2508 is 2× the original 1254, enough for the 688px product stage at 3x.
@@ -11,6 +12,7 @@ const PACKS = process.env.STARS_PACKS ? process.env.STARS_PACKS.split(',').map(N
 const S = +process.env.STARS_SIZE || 2508, MH = Math.round(S * 0.8), SS = Math.max(1, +process.env.STARS_SS || 2);
 const BG = { light: ['#e6e7ea', '#d8d9dd'], dark: ['#18234f', '#0c1230'] }, INK = { light: '#0a0f29', dark: '#f5f5f7' };
 const T = { '.js': 'application/javascript', '.html': 'text/html' };
+const VARIANT = !!process.env.STARS_VARIANT;
 const COMPOSITE = path.join(__dirname, 'composite.py');
 (async () => {
   const launch = { args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] };
@@ -27,7 +29,7 @@ const COMPOSITE = path.join(__dirname, 'composite.py');
       return fs.existsSync(f) ? r.fulfill({ path: f, contentType: T[path.extname(f)] || 'application/octet-stream' }) : r.fulfill({ status: 404, body: '' });
     });
     const p = await c.newPage();
-    for (const pack of [0, ...PACKS]) {
+    for (const pack of VARIANT ? PACKS : [0, ...PACKS]) {
       await p.goto(ORIGIN + '/still.html');
       await p.evaluate(([n, bg]) => { const st = document.getElementById('st'); st.setAttribute('data-pack', String(n || 100)); st.setAttribute('data-still', n ? '-0.45' : '-0.2'); st.setAttribute('data-bg', bg); window.__d = MPStars3D.mount(st); }, [pack, BG[theme][1]]);
       await p.waitForSelector('#st[data-ready]', { timeout: 180000 });
@@ -36,8 +38,8 @@ const COMPOSITE = path.join(__dirname, 'composite.py');
       // multiply deviceScaleFactor again and inflate a 2× render to 4×.
       const data = await p.evaluate(() => document.querySelector('#st canvas').toDataURL('image/png'));
       fs.writeFileSync(model, Buffer.from(data.split(',')[1], 'base64'));
-      const name = pack ? `stars-${pack}-${theme}.jpg` : `stars-${theme}.jpg`;
-      execFileSync('python3', [COMPOSITE, '--size', String(S), '--mh', String(MH), '--model', model, '--out', path.join(OUT, name), '--c0', BG[theme][0], '--c1', BG[theme][1], '--ink', INK[theme], '--pack', String(pack)], { stdio: 'inherit' });
+      const name = VARIANT ? `stars-variant-${pack}-${theme}.jpg` : pack ? `stars-${pack}-${theme}.jpg` : `stars-${theme}.jpg`;
+      execFileSync('python3', [COMPOSITE, '--size', String(S), '--mh', String(MH), '--model', model, '--out', path.join(OUT, name), '--c0', BG[theme][0], '--c1', BG[theme][1], '--ink', INK[theme], '--pack', String(pack), ...(VARIANT ? ['--center'] : [])], { stdio: 'inherit' });
     }
     await c.close();
   }
