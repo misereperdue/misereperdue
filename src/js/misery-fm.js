@@ -1363,6 +1363,9 @@
     menuStatus:menuStatus, updateMenuStatus:menuPill,
     setMe: function (u) { me = u || null; meP = Promise.resolve(me); sheet && renderSheet(); },
     state: function () { return S; },
+    /* song previews pause the station while they play */
+    listening: function () { return !!on; },
+    listen: function (v) { listen(v); },
     _calc: calc
   };
   function init() { connect(); refresh(); }

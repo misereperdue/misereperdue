@@ -25,6 +25,7 @@
       if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); songTone(art, card); } else cov.classList.add('is-empty');
       cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
       card.appendChild(cov);
+      window.MPPreview && MPPreview.attach(cov, song);
       var copy=el('span','mp-profile-song-copy'),title=el('span','mp-profile-song-title');title.appendChild(el('strong','',song.title));if(song.explicit===true){var explicit=el('span','mp-profile-explicit fm-e','E');explicit.setAttribute('aria-label','Explicit');explicit.setAttribute('role','img');title.appendChild(explicit);}copy.appendChild(title);if(song.album)copy.appendChild(el('span','mp-profile-song-album',song.album));
       var artist=el('span','mp-profile-song-artist'),avatar=el('span','mp-profile-artist-avatar'),artistImage=artUrl(song.artistArt);avatar.setAttribute('aria-hidden','true');avatar.appendChild(el('span','',Array.from(song.artist.trim())[0]||'♪'));if(artistImage){var artistImg=el('img');artistImg.src=artistImage;artistImg.alt='';artistImg.loading='lazy';artistImg.onerror=function(){artistImg.remove();};avatar.appendChild(artistImg);}artist.appendChild(avatar);artist.appendChild(el('span','mp-profile-artist-name',song.artist));copy.appendChild(artist);card.appendChild(copy);
       var eq = el('span', 'mp-profile-eq mp-am-np'); eq.setAttribute('aria-hidden', 'true'); eq.innerHTML = amNote(); card.appendChild(eq);
