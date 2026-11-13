@@ -11901,7 +11901,8 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 [data-theme="light"] .chat-head.is-profile-bar,[data-theme="light"] .nav.is-profile-bar{background:rgba(245,248,255,.58)}
 .is-profile-bar.is-profile-bar>.mp-profile-bar{opacity:1;transform:none}
 .is-profile-entering>:not(.mp-profile-bar){visibility:visible!important}
-.is-profile-leaving>:not(.mp-profile-bar){visibility:visible!important}
+.is-profile-leaving>:not(.mp-profile-bar){visibility:visible!important;pointer-events:none!important}
+.is-profile-leaving>.mp-profile-bar{pointer-events:none!important}
 .mp-profile-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;background:radial-gradient(ellipse at 20% 0%,rgba(135,176,214,.2),transparent 70%)}
 .mp-profile-backdrop img{position:absolute;inset:-45px;width:calc(100% + 90px);height:calc(100% + 90px);max-width:none;object-fit:cover;filter:blur(34px) saturate(135%);opacity:.3;pointer-events:none}
 [data-theme="light"] .mp-profile-backdrop img{opacity:.18}
@@ -12335,27 +12336,43 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-ntf-tx b{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mp-ntf-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mp-ntf-chip{flex:none;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);font-size:11px;font-weight:700;white-space:nowrap}
-/* Notification tray: morphs out of the Chat/Globe top bar (same bar morph as the profile). */
-.mp-ntf-morph-hd{justify-content:flex-start;gap:8px;padding:2px 4px 0;min-height:40px}
-.mp-ntf-morph-hd strong{flex:1;min-width:0;font-size:16px;font-weight:650;letter-spacing:0;text-align:left}
-.mp-ntf-morph .mp-profile-bar-scroll{padding:0 2px 8px}
+/* Notification tray: morphs out of the Chat/Globe top bar. Glass, radius, chrome match the + menu. */
+.chat-head.is-ntf-bar,.nav.is-ntf-bar{
+  background:var(--menu-glass-bg)!important;
+  background-image:none!important;
+  -webkit-backdrop-filter:var(--menu-glass-filter)!important;
+  backdrop-filter:var(--menu-glass-filter)!important;
+  border:1px solid var(--menu-glass-border)!important;
+  box-shadow:var(--sheet-shadow,0 12px 40px rgba(0,0,0,.35))!important;
+  overflow:hidden!important;
+  transition:none;
+}
+.chat-head.is-ntf-bar::before,.nav.is-ntf-bar::before{content:none!important;display:none!important}
+.chat-head.is-ntf-bar.is-profile-expanded,.nav.is-ntf-bar.is-profile-expanded{border-radius:16px}
+.mp-ntf-morph{padding:12px 10px 10px;box-sizing:border-box;gap:10px}
+.mp-ntf-morph>.mp-profile-backdrop{display:none!important}
+.mp-ntf-morph-hd{justify-content:flex-start;gap:8px;padding:0 2px;min-height:32px}
+.mp-ntf-morph-hd strong{flex:none;min-width:0;margin:0 auto 0 6px;font-size:17px;font-weight:650;letter-spacing:-.02em;line-height:1.1;text-align:left}
+.mp-ntf-morph-hd .mp-profile-control{width:30px!important;height:30px!important;min-width:30px;padding:0!important;background:rgba(127,127,127,.18)!important;color:inherit!important;box-shadow:none!important}
+.mp-ntf-morph-hd .mp-profile-control svg{width:16px!important;height:16px!important}
+.mp-ntf-morph .mp-profile-bar-scroll{padding:0}
 .mp-ntf-list{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:0;width:100%;text-align:left}
 .mp-ntf-list.is-status{color:var(--muted);text-align:center;padding:28px 12px;font-size:14px}
-.mp-ntf-h{display:block;width:100%;box-sizing:border-box;padding:6px 6px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left}
+.mp-ntf-h{display:block;width:100%;box-sizing:border-box;padding:8px 10px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left}
 .mp-ntf-h:first-child{padding-top:2px}
-.mp-ntf-row{display:flex;align-items:flex-start;gap:10px;width:100%;box-sizing:border-box;margin:0;padding:10px 6px;min-height:56px;border:0;border-radius:16px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:default;-webkit-tap-highlight-color:transparent}
+.mp-ntf-row{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:0;padding:10px 10px;min-height:56px;border:0;border-radius:11px;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:default;-webkit-tap-highlight-color:transparent}
 .mp-ntf-row.is-link{cursor:pointer}
 .mp-ntf-row.is-link:active{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .mp-ntf-row.is-unread{background:color-mix(in srgb,var(--accent) 12%,transparent)}
-.mp-ntf-row-av{flex:none;display:grid;place-items:center;width:38px;height:38px;margin-top:1px;border-radius:50%;overflow:hidden;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.mp-ntf-row-av{flex:none;display:grid;place-items:center;width:38px;height:38px;margin:0;border-radius:50%;overflow:hidden;background:color-mix(in srgb,var(--ink) 8%,transparent)}
 .mp-ntf-row-av img,.mp-ntf-row-av .chat-avatar-wrap,.mp-ntf-row-av .chat-avatar-img,.mp-ntf-row-av .chat-avatar{width:38px!important;height:38px!important}
 .mp-ntf-row-av.is-site{background:#0a1230}
 .mp-ntf-row-av.is-site img{width:24px!important;height:24px!important}
-.mp-ntf-row-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding-top:2px}
+.mp-ntf-row-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:0}
 .mp-ntf-row-line{font-size:14px;line-height:1.3;color:var(--ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mp-ntf-row-line b{font-weight:700}
 .mp-ntf-row-tx small{font-size:12.5px;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mp-ntf-row-meta{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding-top:2px}
+.mp-ntf-row-meta{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:0}
 .mp-ntf-row-when{font-size:11px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
 .mp-ntf-row .mp-ntf-chip{flex:none}
 .mp-ntf-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 16px 32px;text-align:center;color:var(--muted)}
