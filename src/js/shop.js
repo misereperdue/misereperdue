@@ -485,6 +485,16 @@ var MPShop = (function () {
     var TILT = 0.38,
       PERIOD = 24000,
       t0 = performance.now();
+    // Unit sphere geometry is invariant. Project once per frame and reuse both
+    // hemisphere passes instead of recomputing trig for every sampled vertex.
+    var mesh=[];
+    function makeCurve(n,lat,lon,meridian,equator){
+      var points=new Float64Array((n+1)*3),screen=new Float64Array(points.length);
+      for(var i=0;i<=n;i++){var la=meridian?-Math.PI/2+i/n*Math.PI:lat,lo=meridian?lon:i/n*Math.PI*2,c=Math.cos(la),j=i*3;points[j]=c*Math.sin(lo);points[j+1]=Math.sin(la);points[j+2]=c*Math.cos(lo);}
+      mesh.push({points:points,screen:screen,meridian:meridian,equator:equator});
+    }
+    for(var mi=0;mi<12;mi++)makeCurve(72,0,mi/12*Math.PI*2,true,false);
+    [-60,-30,0,30,60].forEach(function(lat){makeCurve(120,lat*Math.PI/180,0,false,lat===0);});
     function size() {
       var r = cv.getBoundingClientRect();
       dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -545,48 +555,20 @@ var MPShop = (function () {
         out[1] = cy - (x * sr + y2 * cr) * R;
         out[2] = z2;
       }
-      var pt = [0, 0, 0];
-      function curve(fn, n, front, alpha, width) {
-        ctx.beginPath();
-        var pen = false;
-        for (var i = 0; i <= n; i++) {
-          fn(i / n, pt);
-          var on = front ? pt[2] >= 0 : pt[2] < 0;
-          if (on) pen ? ctx.lineTo(pt[0], pt[1]) : (ctx.moveTo(pt[0], pt[1]), (pen = true));
-          else pen = false;
-        }
-        ctx.strokeStyle = rgba(alpha);
-        ctx.lineWidth = width;
-        ctx.stroke();
-      }
-      var MER = 12,
-        PAR = [-60, -30, 0, 30, 60];
-      for (var pass = 0; pass < 2; pass++) {
-        var front = pass === 1;
-        for (var m = 0; m < MER; m++)
-          (function (lon) {
-            curve(
-              function (u, o) {
-                P(-Math.PI / 2 + u * Math.PI, lon, o);
-              },
-              72,
-              front,
-              front ? 0.7 : 0.14,
-              front ? 1.1 : 0.8,
-            );
-          })((m / MER) * Math.PI * 2);
-        for (var k = 0; k < PAR.length; k++)
-          (function (lat, eq) {
-            curve(
-              function (u, o) {
-                P(lat, u * Math.PI * 2, o);
-              },
-              120,
-              front,
-              front ? (eq ? 0.85 : 0.6) : 0.12,
-              front ? (eq ? 1.4 : 1) : 0.8,
-            );
-          })((PAR[k] * Math.PI) / 180, PAR[k] === 0);
+      var pt=[0,0,0],cosRot=Math.cos(rot),sinRot=Math.sin(rot);
+      mesh.forEach(function(line){
+        var p=line.points,out=line.screen;
+        for(var j=0;j<p.length;j+=3){var x=p[j]*cosRot+p[j+2]*sinRot,z=p[j+2]*cosRot-p[j]*sinRot,y2=p[j+1]*ct-z*st;
+          out[j]=cx+(x*cr-y2*sr)*R;out[j+1]=cy-(x*sr+y2*cr)*R;out[j+2]=p[j+1]*st+z*ct;}
+      });
+      for(var pass=0;pass<2;pass++){
+        var front=pass===1;
+        mesh.forEach(function(line){
+          ctx.beginPath();var pen=false,p=line.screen;
+          for(var j=0;j<p.length;j+=3){var on=front?p[j+2]>=0:p[j+2]<0;if(on){if(pen)ctx.lineTo(p[j],p[j+1]);else{ctx.moveTo(p[j],p[j+1]);pen=true;}}else pen=false;}
+          ctx.strokeStyle=rgba(front?(line.meridian ? .7 : line.equator ? .85 : .6):(line.meridian ? .14 : .12));
+          ctx.lineWidth=front?(line.meridian?1.1:line.equator?1.4:1):.8;ctx.stroke();
+        });
       }
       // outline
       ctx.beginPath();

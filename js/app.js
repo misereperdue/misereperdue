@@ -450,19 +450,13 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
     paypal: "images/pay-paypal.png?v=1",
     visa: "images/pay-visa.png?v=1"
   };
-  // Badges only show on the Bag panel: fetch them when it opens, or once
-  // the page is idle, instead of competing with the first paint.
-  var done = false;
-  function go(){ if (done) return; done = true; Object.keys(badges).forEach(load); }
-  if (location.hash === "#cart") go();
-  else {
-    window.addEventListener("hashchange", function(){ if (location.hash === "#cart") go(); });
-    document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest('[data-view="cart"]'); if (b) go(); }, true);
-    window.addEventListener("load", function(){ setTimeout(go, 4000); });
-  }
+  // Load Bag-only artwork on entry, including pushState/programmatic routes.
+  var done = false, badgeObserver, bag = document.getElementById("cart");
+  function go(){if(done||!bag||!bag.classList.contains("on"))return;done=true;if(badgeObserver)badgeObserver.disconnect();Object.keys(badges).forEach(load);}
+  if(bag){badgeObserver=new MutationObserver(go);badgeObserver.observe(bag,{attributes:true,attributeFilter:["class"]});go();}
   function load(k){
     var el = document.querySelector('img[data-paybadge="' + k + '"]');
-    if (el) el.src = badges[k];
+    if (el) { el.decoding="async";el.src = badges[k]; }
   }
 })();
 

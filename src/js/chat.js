@@ -1586,32 +1586,26 @@
     }
     var k = c.querySelector(".chat-tabs"),
       L = c.querySelector(".chat-tabs-slider");
-    function S(e) {
-      if (!k || !L) return !1;
-      var t = k.querySelector("button.on") || k.querySelector("button");
-      return (
-        !(!t || !t.offsetWidth) &&
-        (e || L.classList.add("no-anim"),
-        (L.style.width = t.offsetWidth + "px"),
-        (L.style.height = t.offsetHeight + "px"),
-        (L.style.transform =
-          "translate3d(" + (t.offsetLeft - 3) + "px," + (t.offsetTop - 3) + "px,0)"),
-        e || (L.offsetWidth, L.classList.remove("no-anim")),
-        !0)
-      );
+    var slideLayout="";
+    function S(animate) {
+      if(!k||!L)return false;
+      var button=k.querySelector('button.on')||k.querySelector('button'),width=button&&button.offsetWidth;
+      if(!width)return false;
+      var height=button.offsetHeight,left=button.offsetLeft,top=button.offsetTop;
+      var layout=[width,height,left,top].join('|');
+      if(layout===slideLayout)return true;slideLayout=layout;
+      if(!animate)L.classList.add('no-anim');
+      L.style.width=width+'px';L.style.height=height+'px';
+      L.style.transform='translate3d('+(left-3)+'px,'+(top-3)+'px,0)';
+      if(!animate){void L.offsetWidth;L.classList.remove('no-anim');}
+      return true;
     }
-    var M = 0;
     if (
-      ((function e() {
-        S(!1) || (++M < 180 && requestAnimationFrame(e));
-      })(),
+      (S(false),
       window.ResizeObserver && k
-        ? new ResizeObserver(function () {
-            S(!1);
-          }).observe(k)
-        : window.addEventListener("resize", function () {
-            S(!1);
-          }),
+        ? new ResizeObserver(function () { S(false); }).observe(k)
+        : (window.addEventListener("resize",function(){S(false);}),
+          new MutationObserver(function(){S(false);}).observe(document.getElementById('journal'),{attributes:true,attributeFilter:['class']})),
       !document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]'))
     ) {
       // Turnstile loads only once the sign-in card is actually on screen
