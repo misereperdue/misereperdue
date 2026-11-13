@@ -12,7 +12,10 @@ const notices=[
   {id:'n3',type:'mention',kind:'chat',from:'mira',preview:'hey @tester',ts:now-8.64e7,read:true},
   {id:'n4',type:'power',kind:'charm',from:'MISERY',name:'Halo',ts:now-1.8e5,read:true},
   {id:'n5',type:'whisper',kind:'whisper',from:'eden',preview:'psst',ts:now-7200e3,read:true},
-  {id:'n6',type:'vip',kind:'vip-upgrade',from:'MISERY',ts:now-8.64e7*3,read:true}
+  {id:'n6',type:'vip',kind:'vip-upgrade',from:'MISERY',ts:now-8.64e7*3,read:true},
+  {id:'n7',type:'reaction',kind:'thread',from:'ava',threadId:'t2',preview:'liked this',ts:now-9e5,read:false},
+  {id:'n8',type:'follow',kind:'forum',from:'jules',text:'@jules followed you',ts:now-1.2e8,read:true},
+  {id:'n9',type:'gift',kind:'stars',from:'rich',n:20,ts:now-2.5e5,read:true}
 ];
 (async()=>{
   const browser=await pw.chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -32,7 +35,7 @@ const notices=[
     if(u.pathname==='/api/me')d={ok:true,user:me};
     else if(u.pathname==='/api/messages')d={ok:true,messages:[],badges:{}};
     else if(u.pathname==='/api/ws-ticket')d={ticket:'t'};
-    else if(u.pathname==='/api/notifications')d={ok:true,notifications:notices,unread:2};
+    else if(u.pathname==='/api/notifications')d={ok:true,notifications:notices,unread:3};
     else if(u.pathname==='/api/notifications/read')d={ok:true};
     else if(u.pathname==='/api/forum/threads')d={ok:true,threads:[]};
     else if(u.pathname.startsWith('/api/user/'))d={ok:true,user:{username:u.pathname.split('/').pop()}};
@@ -47,11 +50,15 @@ const notices=[
   await menu.waitFor({timeout:8000});
   assert.equal((await menu.locator('.mp-ntf-morph-hd strong').innerText()).trim(),'Notifications');
   assert.equal(await menu.locator('.mp-ntf-morph-hd [aria-label="Back"]').count(),1);
+  await menu.locator('.mp-ntf-row').first().waitFor({timeout:8000});
   const chips=(await menu.locator('.mp-ntf-chip').allInnerTexts()).map(s=>s.trim());
-  assert.deepEqual(chips,['Gift','Globe','Mention','Gift','Whisper','VIP']);
+  // Today newest-first, then Earlier: gift, gift, halo, globe-like, globe-reply, whisper / mention, follow, vip
+  assert.deepEqual(chips,['Gift','Gift','Gift','Globe','Globe','Whisper','Mention','Globe','VIP']);
+  assert.deepEqual((await menu.locator('.mp-ntf-h').allTextContents()).map(s=>s.trim()),['Today','Earlier']);
+  assert.ok(await menu.locator('.mp-ntf-row.is-unread').count()>=1);
   assert.equal(await p.locator('.nav.is-ntf-bar, .nav .mp-ntf-morph').count(),0,'not on the shop nav');
-  await p.waitForTimeout(500);
-  await p.screenshot({path:`${OUT}/notif-morph-dark.png`,fullPage:false});
+  await p.waitForTimeout(700);
+  await p.screenshot({path:process.env.MP_SHOT||`${OUT}/notif-morph-v2-dark.png`,fullPage:false});
   // shop: opening should not morph the nav
   await p.locator('.mp-ntf-morph-hd [aria-label="Back"]').click();
   await p.waitForFunction(()=>!document.querySelector('.is-ntf-bar'),null,{timeout:5000});
