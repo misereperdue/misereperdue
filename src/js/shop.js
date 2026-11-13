@@ -88,9 +88,14 @@ var MPShop = (function () {
       ("misery-v_v-sleeping-mask" === t.handle || "gid://shopify/Product/8161016414310" === t.id)
     );
   }
-  var o = ["img/mask-front-light.jpg?v=4", "img/mask-back-light.jpg?v=4"],
-    i = "img/vip-card-light.jpg?v=4",
-    starsLight = "img/stars-light.jpg?v=1";
+  var o = ["img/mask-front-light.jpg?v=7", "img/mask-back-light.jpg?v=4"],
+    i = "img/vip-card-light.jpg?v=7",
+    STARS_PACK_IMGS = [100, 500, 1000, 1100, 2400, 2500, 6500];
+  // Stars art: hero coin, or the stack for a pack size, in the current theme (falls back to the hero).
+  function starsImg(size) {
+    var n = parseInt(String(size == null ? "" : size).replace(/[^\d]/g, ""), 10);
+    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=7";
+  }
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
@@ -98,10 +103,10 @@ var MPShop = (function () {
       : !(!window.matchMedia || !matchMedia("(prefers-color-scheme: light)").matches);
   }
   function c(t) {
-    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) && r() ? [starsLight] : (t.images || []).filter(Boolean);
+    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) ? [starsImg()] : (t.images || []).filter(Boolean);
   }
   function s(t) {
-    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) && r() ? starsLight : t.image;
+    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) ? starsImg() : t.image;
   }
   function l(t) {
     return String(null == t ? "" : t).replace(/[&<>"']/g, function (t) {
@@ -978,6 +983,8 @@ var MPShop = (function () {
           ? '<div class="vip-3d"><div class="vip-3d-stage"></div>' + h
           : a(i)
             ? '<div class="vip-3d mask-3d"><div class="vip-3d-stage"></div>' + h
+            : sk
+              ? '<div class="vip-3d stars-3d"><div class="vip-3d-stage" data-pack="' + l(sk[0]) + '"></div>' + h
             : (function (t, e) {
                 var n = (t && t.length ? t : []).filter(Boolean);
                 if (!n.length)
@@ -1103,6 +1110,13 @@ var MPShop = (function () {
       var y = sk ? sk[0] : i.sizes && i.sizes.length ? i.sizes[0] : "one";
       var pe = p.querySelector(".price");
       sk && pe && (pe.textContent = cad(i.priceBySize[y]));
+      function starsArt() {
+        var im = sk && p.querySelector(".carousel-track img"),
+          st = sk && p.querySelector(".stars-3d .vip-3d-stage");
+        im && (im.src = starsImg(y));
+        st && st.setAttribute("data-pack", y);
+      }
+      starsArt();
       if (
         (p.querySelectorAll("[data-size]").forEach(function (t) {
           t.onclick = function () {
@@ -1112,6 +1126,7 @@ var MPShop = (function () {
               }),
               t.classList.add("on"),
               sk && pe && (pe.textContent = cad(i.priceBySize[y])),
+              starsArt(),
               B());
           };
         }),
@@ -1176,6 +1191,24 @@ var MPShop = (function () {
           }),
             window.addEventListener("pointerup", z),
             window.addEventListener("pointercancel", z));
+        }
+      }
+      if (sk) {
+        var sx = p.querySelector(".stars-3d .vip-3d-stage"),
+          sh = p.querySelector(".stars-3d .vip-3d-hint");
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=9", sx)), sh)) {
+          var sT = 0,
+            sz = function () {
+              (sT && clearTimeout(sT),
+                (sT = setTimeout(function () {
+                  sh.classList.remove("gone");
+                }, 800)));
+            };
+          (sx.addEventListener("pointerdown", function () {
+            (sT && (clearTimeout(sT), (sT = 0)), sh.classList.add("gone"));
+          }),
+            window.addEventListener("pointerup", sz),
+            window.addEventListener("pointercancel", sz));
         }
       }
 
