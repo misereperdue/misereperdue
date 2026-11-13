@@ -90,7 +90,12 @@ var MPShop = (function () {
   }
   var o = ["img/mask-front-light.jpg?v=4", "img/mask-back-light.jpg?v=4"],
     i = "img/vip-card-light.jpg?v=4",
-    starsLight = "img/stars-light.jpg?v=1";
+    STARS_PACK_IMGS = [100, 500, 1000, 2500];
+  // Stars art: hero coin, or the stack for a pack size, in the current theme (falls back to the hero).
+  function starsImg(size) {
+    var n = parseInt(String(size == null ? "" : size).replace(/[^\d]/g, ""), 10);
+    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=2";
+  }
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
     return t
@@ -98,10 +103,10 @@ var MPShop = (function () {
       : !(!window.matchMedia || !matchMedia("(prefers-color-scheme: light)").matches);
   }
   function c(t) {
-    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) && r() ? [starsLight] : (t.images || []).filter(Boolean);
+    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) ? [starsImg()] : (t.images || []).filter(Boolean);
   }
   function s(t) {
-    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) && r() ? starsLight : t.image;
+    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) ? starsImg() : t.image;
   }
   function l(t) {
     return String(null == t ? "" : t).replace(/[&<>"']/g, function (t) {
@@ -1103,6 +1108,11 @@ var MPShop = (function () {
       var y = sk ? sk[0] : i.sizes && i.sizes.length ? i.sizes[0] : "one";
       var pe = p.querySelector(".price");
       sk && pe && (pe.textContent = cad(i.priceBySize[y]));
+      function starsArt() {
+        var im = sk && p.querySelector(".carousel-track img");
+        im && (im.src = starsImg(y));
+      }
+      starsArt();
       if (
         (p.querySelectorAll("[data-size]").forEach(function (t) {
           t.onclick = function () {
@@ -1112,6 +1122,7 @@ var MPShop = (function () {
               }),
               t.classList.add("on"),
               sk && pe && (pe.textContent = cad(i.priceBySize[y])),
+              starsArt(),
               B());
           };
         }),
