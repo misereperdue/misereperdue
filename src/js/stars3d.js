@@ -27,7 +27,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=9";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=10";
   }
 
   return {
