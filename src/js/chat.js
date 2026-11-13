@@ -8131,8 +8131,9 @@
     root && root.appendChild(sec);
     return root;
   }
-  /* Notification popup (per dc): the top bar morphs for 2 s into the notification (who it's from or
-     the Misery eyes for site notices, what happened, and its kind), then morphs back. Tap opens the tray. */
+  /* Notification popup (per dc): a visible Chat or Globe header morphs for 2 s into the notification
+     (who it's from or the Misery eyes for site notices, what happened, and its kind), then morphs
+     back. Never the nav pill (shop, etc.). Tap opens the tray. */
   var ntfQ = [], ntfBusy = !1;
   function mpNotifInfo(n) {
     var who = n.from && n.from !== "MISERY" ? mpAt(n.from) : "", name = n.name || powName(n.power || "");
@@ -8157,7 +8158,8 @@
   function mpNotifNext() {
     var n = ntfQ.shift();
     if (!n) return void (ntfBusy = !1);
-    var bar = window.MPProfiles && MPProfiles.topBar ? MPProfiles.topBar() : document.querySelector(".nav");
+    var bar, heads = document.querySelectorAll(".panel.on .chat-head"), i;
+    for (i = 0; i < heads.length; i++) if (heads[i].getClientRects().length) { bar = heads[i]; break; }
     if (!bar || bar.classList.contains("is-profile-bar") || document.hidden) { ntfQ.length = 0; return void (ntfBusy = !1); }
     ntfBusy = !0;
     var info = mpNotifInfo(n), lay = document.createElement("button"), av;
