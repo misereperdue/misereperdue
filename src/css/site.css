@@ -12597,4 +12597,5 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .mp-ntf-morph .mp-ntf-row{padding:10px 10px;gap:11px}
 .mp-ntf-morph .mp-ntf-list .mp-ntf-h{padding-left:10px}
 /* Home screen app (per dc): no scroll sliders anywhere; scrolling itself is unchanged. */
-@media (display-mode: standalone){*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}}
+@media (display-mode: standalone){html,body,*{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar,*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important}*::-webkit-scrollbar-thumb,*::-webkit-scrollbar-track{display:none!important;background:transparent!important}}
+html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-scrollbar,html.mp-app *::-webkit-scrollbar,html.mp-app *::-webkit-scrollbar-thumb,html.mp-app *::-webkit-scrollbar-track{display:none!important;width:0!important;height:0!important;background:transparent!important}

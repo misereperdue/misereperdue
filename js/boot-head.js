@@ -1,3 +1,5 @@
+// Home screen app flag (iOS also reports navigator.standalone): lets CSS hide scrollbars there.
+try { if ((window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone) document.documentElement.classList.add("mp-app"); } catch (e) {}
 
     // Splash (M on navy) shows on first load of a session, and on
     // pull-to-refresh reloads (covers the reload glitch). Plain
