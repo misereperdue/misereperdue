@@ -15,7 +15,7 @@ var EMOJI_MAX = 800;
 var SHELL = [
   "/",
   "/webapp.json?v=23",
-  "/css/site.css?v=891",
+  "/css/site.css?v=892",
   "/js/theme.js?v=10",
   "/js/rain.js?v=24",
   "/js/emoji.js?v=2",
