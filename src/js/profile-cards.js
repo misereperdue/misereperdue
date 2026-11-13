@@ -102,9 +102,14 @@
     var bar=document.querySelector('.panel.on .chat-head');
     return bar && bar.getClientRects().length ? bar : null;
   }
+  function commitPendingExit(bar) {
+    if(bar&&bar._mpCommitExit)bar._mpCommitExit();
+    else if(bar&&bar._profileExit){try{bar._profileExit.cancel()}catch(e){}bar._profileExit=null;}
+  }
   function closeBar(fast) {
     var root=document.querySelector('.mp-profile-bar');
     if(root&&root._close)root._close(!!fast);
+    commitPendingExit(document.querySelector('.panel.on .chat-head')||document.querySelector('.nav'));
   }
   /* Generic top-bar morph sheet (per dc): same machinery as the profile bar — the status bar
      keeps its glass (no transparent flash), height eases open, Back closes with a reverse morph.
@@ -192,10 +197,14 @@
       pinChrome();
       bar.classList.add('is-profile-leaving');
       bar.classList.remove('is-profile-entering');
+      root.style.pointerEvents='none';
       if(root.animate)root.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards',easing:MP_EASE});
       previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:s.opacity}],{duration:260,easing:MP_EASE});});
       bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'28px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
-      bar._profileExit.onfinish=function(){commitRestore();};
+      var done=function(){commitRestore();};
+      bar._profileExit.onfinish=done;
+      if(bar._profileExit.finished)bar._profileExit.finished.then(done,done);
+      setTimeout(done,450);
     }
     root._close=close;
     var head=el('div','mp-profile-bar-head mp-ntf-morph-hd');
@@ -212,7 +221,7 @@
     function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();}}
     function navigate(){close(true);}
     function resize(){size(false);}
-    function onClaim(ev){if(committed||closed)return;if(ev.detail&&ev.detail.owner&&ev.detail.owner!==(opts.owner||'sheet'))close(true);}
+    function onClaim(ev){if(committed)return;if(ev.detail&&ev.detail.owner&&ev.detail.owner!==(opts.owner||'sheet'))close(true);}
     var observer=new MutationObserver(function(){if(!bar.isConnected)close(true);});observer.observe(document.body,{childList:true,subtree:true});
     setTimeout(function(){if(!closed&&!committed)document.addEventListener('pointerdown',outside,true);},0);
     document.addEventListener('mp-topbar-claim',onClaim);
@@ -225,9 +234,13 @@
   }
   // The real status bar owns every phase. Only content crossfades; its glass never fades.
   function openBar(root, body, user, options) {
+    closeBar(true);
+    var bar=topBar();
+    commitPendingExit(bar);
     document.dispatchEvent(new CustomEvent('mp-topbar-claim',{detail:{owner:'profile'}}));
-    var bar=topBar(); if(!bar)return;
-    if(bar._profileExit){bar._profileExit.cancel();bar._profileExit=null;}
+    bar=topBar(); if(!bar)return;
+    commitPendingExit(bar);
+    if(bar._profileExit){try{bar._profileExit.cancel()}catch(e){}bar._profileExit=null;}
     window.MPFM && MPFM.yieldBar && MPFM.yieldBar();
     var style=bar.getAttribute('style'), baseHeight=bar.getBoundingClientRect().height, animation=null, phase='compact', closed=false, detail=null, entering=true, entryTimer, fades=[], contentObserver=null, contentSize={w:0,h:0};
     var backdrop=el('div','mp-profile-backdrop');backdrop.setAttribute('aria-hidden','true');
@@ -301,6 +314,7 @@
     function key(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();goBack();}}
     function navigate(){options.close();}
     function resize(){size(false);}
+    function onClaim(ev){if(closed)return;if(ev.detail&&ev.detail.owner&&ev.detail.owner!=='profile')root._close(true);}
     root._close=function(fast){
       if(closed)return;clearTimeout(entryTimer);fades.forEach(function(a){a.cancel();});root.getAnimations().forEach(function(a){a.cancel();});var closingHeight=bar.getBoundingClientRect().height;closed=true;if(animation)animation.cancel();
       document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',key,true);window.removeEventListener('hashchange',navigate);window.removeEventListener('popstate',navigate);window.removeEventListener('resize',resize);window.visualViewport&&visualViewport.removeEventListener('resize',resize);document.removeEventListener('mp-topbar-claim',onClaim);
@@ -313,6 +327,7 @@
     if(window.ResizeObserver)contentObserver=new ResizeObserver(function(){var content=root.querySelector('.mp-profile-bar-scroll>*');if(content&&(Math.abs(content.offsetWidth-contentSize.w)>.5||Math.abs(content.offsetHeight-contentSize.h)>.5))size(true);});
     // Defer the outside listener so the opening avatar tap is never treated as dismissal.
     setTimeout(function(){if(!closed)document.addEventListener('pointerdown',outside,true);},0);
+    document.addEventListener('mp-topbar-claim',onClaim);
     document.addEventListener('keydown',key,true);window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);window.addEventListener('resize',resize);window.visualViewport&&visualViewport.addEventListener('resize',resize);
     render('compact');
     if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}

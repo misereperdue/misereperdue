@@ -11901,7 +11901,8 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 [data-theme="light"] .chat-head.is-profile-bar,[data-theme="light"] .nav.is-profile-bar{background:rgba(245,248,255,.58)}
 .is-profile-bar.is-profile-bar>.mp-profile-bar{opacity:1;transform:none}
 .is-profile-entering>:not(.mp-profile-bar){visibility:visible!important}
-.is-profile-leaving>:not(.mp-profile-bar){visibility:visible!important}
+.is-profile-leaving>:not(.mp-profile-bar){visibility:visible!important;pointer-events:none!important}
+.is-profile-leaving>.mp-profile-bar{pointer-events:none!important}
 .mp-profile-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;background:radial-gradient(ellipse at 20% 0%,rgba(135,176,214,.2),transparent 70%)}
 .mp-profile-backdrop img{position:absolute;inset:-45px;width:calc(100% + 90px);height:calc(100% + 90px);max-width:none;object-fit:cover;filter:blur(34px) saturate(135%);opacity:.3;pointer-events:none}
 [data-theme="light"] .mp-profile-backdrop img{opacity:.18}
