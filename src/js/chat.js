@@ -5707,6 +5707,7 @@
                   (delete We[e.cid],
                   a.setAttribute("data-id", e.id),
                   e.ts && a.setAttribute("data-ts", String(e.ts)),
+                  "pw" in e && mpPwSet(e.user, e.pw),
                   De[n] && ((De[e.id] = e), delete De[n]),
                   u[n] && ((u[e.id] = !0), delete u[n]),
                   e.ts && e.ts > m && (m = e.ts),
@@ -7743,6 +7744,8 @@
       s.powersOn = st.on.slice();
       s.powerSettings = Object.assign({}, st.settings || {});
       mpPBput(s);
+      /* Your own chat name follows the change right away; the Worker's {t:"pw"} and the next message's m.pw confirm it. */
+      mpPwSet(s.username, mpPwFromProfile(s));
     }
     var confirmT = 0, justOpened = null;
     function saveSetting(opt) {
