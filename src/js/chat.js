@@ -8200,6 +8200,7 @@
       setTimeout(function () { lay.remove(); setPos && (bar.style.position = ""); mpNotifNext(); }, 360);
     }
   }
+  window.MPNotifInfo = mpNotifInfo;
   window.MPNotifPop = mpNotifPop;
   document.addEventListener("click", function (e) {
     var pill = e.target.closest && e.target.closest(".chat-points");
