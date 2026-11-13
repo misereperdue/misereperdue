@@ -247,7 +247,7 @@ var MPShop = (function () {
               .sort(function (t, e) {
                 return t - e;
               });
-            if (e.length > 1) return "$" + e[0] + "-" + e[e.length - 1] + " CAD";
+            if (e.length > 1) return "Starting from $" + e[0];
           }
           return t.priceLabel || (null != t.price ? MP.money(t.price) : "Coming soon");
         })(t),
@@ -1294,8 +1294,8 @@ var MPShop = (function () {
         if (v.signedOut) return void (btn("Sign in to upgrade").onclick = function () { y("journal"); });
         if (v.vip) {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
-          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed!</p><p class="vip-status-s">' +
-            (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for subscribing!") + "</p>" +
+          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed</p><p class="vip-status-s">' +
+            (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for your contribution!") + "</p>" +
             ("subscription" === v.source && !v.cancelled
               ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
