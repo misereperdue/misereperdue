@@ -12638,6 +12638,15 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-profile-song-art .mp-pv-play{width:12px;height:12px}
 .mp-profile-song-art .mp-pv-pause{width:11px;height:11px}
 @media (prefers-reduced-motion:reduce){.mp-pv.is-loading .mp-pv-ring{animation:none}.mp-pv-g,.mp-pv-disc{transition:none}}
+/* Beat (per dc): while a preview plays, the song card's gradient moves to the music. chat.js sets --pv-beat
+   (bass kick, 0-1, fast attack / soft release) and --pv-e (overall energy) on the card every frame. */
+.chat-np.is-pv-live{box-shadow:var(--sheet-shadow,var(--shadow)),0 0 calc(4px + var(--pv-beat,0) * 22px) rgba(255,255,255,calc(.06 + var(--pv-beat,0) * .22))}
+.chat-np.is-pv-live .chat-np-grad{background-size:240% 240%;animation:mpPvFlow 7s ease-in-out infinite alternate;filter:saturate(calc(1.05 + var(--pv-e,0) * .5 + var(--pv-beat,0) * .55)) brightness(calc(1 + var(--pv-beat,0) * .32));transform:scale(calc(1.02 + var(--pv-beat,0) * .06));will-change:transform,filter}
+.chat-np.is-pv-live .chat-np-grad::after{opacity:calc(1 - var(--pv-beat,0) * .55)}
+.chat-np.is-pv-live .chat-np-glow{opacity:calc(.24 + var(--pv-e,0) * .2 + var(--pv-beat,0) * .4);transform:scale(calc(1 + var(--pv-beat,0) * .14)) rotate(calc(var(--pv-e,0) * 14deg));transition:none}
+@keyframes mpPvFlow{0%{background-position:0% 30%}50%{background-position:70% 100%}100%{background-position:100% 0%}}
+.mp-profile-song.is-pv-live{background:color-mix(in srgb,var(--song-tint,#8a7dff) calc(8% + var(--pv-beat,0) * 22%),var(--fill,rgba(128,128,128,.12)));box-shadow:0 0 calc(var(--pv-beat,0) * 18px) color-mix(in srgb,var(--song-tint,#8a7dff) calc(var(--pv-beat,0) * 55%),transparent)}
+@media (prefers-reduced-motion:reduce){.chat-np.is-pv-live .chat-np-grad{animation:none}}
 
 /* Cart (per dc): the pack size sits right under the product title. */
 .line-mid strong+.meta{margin-top:-5px}

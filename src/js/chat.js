@@ -4925,12 +4925,72 @@
       btn.setAttribute("aria-pressed", state === "idle" ? "false" : "true");
       if (state === "idle") btn._arc.style.strokeDashoffset = C;
     }
+    /* Beat (per dc): while a preview plays, the song card's gradient moves to the music. The clip is
+       analysed through Web Audio (bass energy -> --pv-beat kick pulses, overall level -> --pv-e) when
+       Apple serves it with CORS; if not, a plain element plays it and a soft tempo pulse stands in.
+       Two elements because an element routed into Web Audio can never be un-routed, and a non-CORS
+       clip routed there would play silent. */
+    var A = null, P = null, ac = null, an = null, fq = null, corsOk = null, played = false;
+    var bt = { slow: 0, peak: 0.2, beat: 0, e: 0 };
+    var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+    function cardOf(btn) { return btn && btn.closest(".chat-np,.mp-profile-song"); }
+    function graph() {
+      if (ac) { ac.state === "suspended" && ac.resume().catch(function () {}); return !!an; }
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        /* iOS: keep previews audible with the ringer switch on silent once audio runs through Web Audio */
+        try { navigator.audioSession && (navigator.audioSession.type = "playback"); } catch (e) {}
+        ac = new AC();
+        an = ac.createAnalyser();
+        an.fftSize = 1024;
+        an.smoothingTimeConstant = 0.55;
+        fq = new Uint8Array(an.frequencyBinCount);
+        ac.createMediaElementSource(A).connect(an);
+        an.connect(ac.destination);
+        ac.state === "suspended" && ac.resume().catch(function () {});
+        return true;
+      } catch (e) { an = null; corsOk = false; return false; }
+    }
+    function beat() {
+      var card = cardOf(cur);
+      if (!card || RM.matches) return;
+      var L, E;
+      if (an && audio === A && corsOk !== false) {
+        an.getByteFrequencyData(fq);
+        var b = 0, all = 0, i;
+        for (i = 1; i <= 5; i++) b += fq[i]; /* ~40-220 Hz at 44.1 kHz */
+        for (i = 1; i < 96; i++) all += fq[i];
+        L = b / (5 * 255);
+        E = all / (95 * 255);
+      } else {
+        /* no analyser: a soft pulse at 116 bpm so the card still breathes with the clip */
+        var ph = ((audio.currentTime || 0) * 116 / 60) % 1;
+        L = 0.35 + 0.5 * Math.pow(1 - ph, 4);
+        E = 0.35;
+      }
+      bt.slow = bt.slow * 0.96 + L * 0.04;
+      bt.peak = Math.max(L, bt.peak * 0.993);
+      var floor = bt.slow * 0.92, raw = Math.max(0, Math.min(1, (L - floor) / Math.max(0.06, bt.peak - floor)));
+      bt.beat = raw > bt.beat ? bt.beat + (raw - bt.beat) * 0.65 : bt.beat * 0.86;
+      bt.e = bt.e * 0.9 + E * 0.1;
+      card.style.setProperty("--pv-beat", bt.beat.toFixed(3));
+      card.style.setProperty("--pv-e", Math.min(1, bt.e * 1.6).toFixed(3));
+    }
+    function live(btn, on) {
+      var card = cardOf(btn);
+      if (!card) return;
+      card.classList.toggle("is-pv-live", on);
+      if (!on) { card.style.removeProperty("--pv-beat"); card.style.removeProperty("--pv-e"); }
+      bt.beat = bt.e = 0;
+    }
     function tick() {
       raf = 0;
       if (!cur || !audio) return;
       if (!cur.isConnected) return stop();
       var d = audio.duration || 30, k = Math.min(1, (audio.currentTime || 0) / d);
       cur._arc.style.strokeDashoffset = C * (1 - k);
+      beat();
       raf = requestAnimationFrame(tick);
     }
     function fmPause() {
@@ -4944,8 +5004,8 @@
     function stop(keepFm) {
       clearInterval(fadeT);
       cancelAnimationFrame(raf); raf = 0;
-      if (audio) { try { audio.pause(); } catch (e) {} audio.removeAttribute("src"); try { audio.load(); } catch (e) {} }
-      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); msOff(); }
+      [A, P].forEach(function (el) { if (el && el.getAttribute("src")) { try { el.pause(); } catch (e) {} el.removeAttribute("src"); try { el.load(); } catch (e) {} } });
+      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); live(cur, false); msOff(); }
       cur = null;
       keepFm || fmResume();
     }
@@ -4971,28 +5031,53 @@
     function play(btn) {
       if (cur === btn) return stop();
       stop(true);
-      if (!audio) {
-        audio = new Audio();
-        audio.preload = "none";
-        audio.setAttribute("playsinline", "");
-        audio.addEventListener("ended", function () { stop(); });
-        audio.addEventListener("error", function () { cur && stop(); });
-        audio.addEventListener("playing", function () { cur && (paint(cur, "play"), raf || (raf = requestAnimationFrame(tick))); });
-        audio.addEventListener("waiting", function () { cur && paint(cur, "load"); });
+      if (!P) {
+        A = mk(true);
+        P = mk(false);
       }
+      /* the analysed element (and the AudioContext) start inside this tap, which iOS requires */
+      audio = corsOk !== false && graph() ? A : P;
       cur = btn;
       paint(btn, "load");
       var host = btn.closest(".mp-pv-host");
       host && host.classList.add("is-pv-playing");
       fmPause();
       msOn(btn);
-      audio.src = btn._src;
-      audio.volume = 0;
-      var p = audio.play();
-      p && p.catch && p.catch(function () { cur === btn && stop(); });
+      start(btn);
       /* short fade-in so the clip doesn't start with a click */
       var v = 0;
       fadeT = setInterval(function () { v = Math.min(1, v + 0.1); try { audio.volume = v * 0.9; } catch (e) {} v >= 1 && clearInterval(fadeT); }, 25);
+    }
+    function start(btn) {
+      played = false;
+      audio.src = btn._src;
+      audio.volume = 0;
+      var el = audio, p = el.play();
+      /* the analysed element falls back from its error event; anything else (or autoplay refusal) stops */
+      p && p.catch && p.catch(function (e) { cur === btn && audio === el && ((e && e.name === "NotAllowedError") || el === P) && stop(); });
+    }
+    function mk(cors) {
+      var el = new Audio();
+      cors && (el.crossOrigin = "anonymous");
+      el.preload = "none";
+      el.setAttribute("playsinline", "");
+      el.addEventListener("ended", function () { audio === el && stop(); });
+      el.addEventListener("error", function () {
+        if (audio !== el || !cur || !el.getAttribute("src")) return;
+        /* CORS refused (or the analysed load failed) before anything played: replay on the plain element */
+        if (el === A && !played && corsOk !== true) { corsOk = false; audio = P; return start(cur); }
+        stop();
+      });
+      el.addEventListener("playing", function () {
+        if (audio !== el || !cur) return;
+        played = true;
+        el === A && (corsOk = true);
+        paint(cur, "play");
+        live(cur, true);
+        raf || (raf = requestAnimationFrame(tick));
+      });
+      el.addEventListener("waiting", function () { audio === el && cur && paint(cur, "load"); });
+      return el;
     }
     document.addEventListener("visibilitychange", function () { document.hidden && cur && stop(); });
     /* host = the cover element; the button appears once a preview is known to exist */
