@@ -4,7 +4,7 @@
 const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-stars-images';fs.mkdirSync(OUT,{recursive:true});
 const T={'.html':'text/html','.css':'text/css','.js':'application/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.mp4':'video/mp4','.glb':'model/gltf-binary'};
-const products=[{id:'gid://shopify/Product/9',handle:'stars',name:'Stars',price:2,currency:'CAD',available:true,sizes:['100','500','1,000','2400','6500','7777'],priceBySize:{'100':2,'500':8,'1,000':15,'2400':30,'6500':70,'7777':80},image:'https://cdn.shopify.com/old-stars.jpg',images:['https://cdn.shopify.com/old-stars.jpg'],variantList:[{sku:'STARS-100'}]}];
+const products=[{id:'gid://shopify/Product/9',handle:'stars',name:'Stars',price:2,currency:'CAD',available:true,sizes:['100','500','1,100','2400','6500','7777'],priceBySize:{'100':2,'500':8,'1,100':10,'2400':30,'6500':70,'7777':80},image:'https://cdn.shopify.com/old-stars.jpg',images:['https://cdn.shopify.com/old-stars.jpg'],variantList:[{sku:'STARS-100'}]}];
 (async()=>{const KIND=process.env.MP_BROWSER||'chromium';const browser=await pw[KIND].launch(KIND==='chromium'?{executablePath:process.env.MP_CHROMIUM_PATH||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{});
 for(const theme of ['dark','light']){
  const c=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,colorScheme:theme,serviceWorkers:'block'});
@@ -21,7 +21,7 @@ for(const theme of ['dark','light']){
  assert.equal(await pack(),'100','first pack on the 3D stage');
  await stage.locator('canvas').waitFor({timeout:15000});
  await p.waitForTimeout(1500);await p.screenshot({path:`${OUT}/product-100-${theme}.png`});
- for(const sz of ['500','1,000','2400','6500']){await p.locator(`.stars-packs [data-size="${sz}"]`).click();assert.equal(await pack(),sz,sz+' on stage');
+ for(const sz of ['500','1,100','2400','6500']){await p.locator(`.stars-packs [data-size="${sz}"]`).click();assert.equal(await pack(),sz,sz+' on stage');
   await p.waitForTimeout(1800);await p.screenshot({path:`${OUT}/product-${sz.replace(',','')}-${theme}.png`});}
  // drag to spin
  const bb=await stage.boundingBox();await p.mouse.move(bb.x+bb.width*0.3,bb.y+bb.height/2);await p.mouse.down();await p.mouse.move(bb.x+bb.width*0.8,bb.y+bb.height*0.35,{steps:8});await p.mouse.up();

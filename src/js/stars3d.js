@@ -1,25 +1,25 @@
 // Stars product viewer: frosted-glass casino chips with a star set inside, more of them the bigger the pack, built in three.js like vip3d.js /
-// mask3d.js. The glass is real transmission (frosted, it softly shows the chips behind it). Every chip is identical;
+// mask3d.js. The glass is real transmission (heavily frosted: a soft glow of what's behind, not a clear view). Every chip is identical;
 // each pack size has its own composed arrangement (stacks and standing coins placed so no two coins ever touch):
-//   <=100: 1   <=500: 3   <=1000: 7   <=2500: 15   above: 31
+//   <=100: 1   <=500: 3   <=1500 (1,100): 7   <=4000 (2,400): 15   above (6,500): 31
 // The stage's data-pack attribute picks the arrangement; changing it swaps with a small pop.
 var MPStars3D = (function () {
   "use strict";
-  var PACK_IMGS = [100, 500, 1000, 2400, 2500, 6500];
+  var PACK_IMGS = [100, 500, 1000, 1100, 2400, 2500, 6500];
   function packNum(el) {
     return parseInt(String(el.getAttribute("data-pack") || "").replace(/[^\d]/g, ""), 10) || 0;
   }
   function tierFor(n) {
-    return !n || n <= 100 ? 0 : n <= 500 ? 1 : n <= 1000 ? 2 : n <= 2500 ? 3 : 4;
+    return !n || n <= 100 ? 0 : n <= 500 ? 1 : n <= 1500 ? 2 : n <= 4000 ? 3 : 4;
   }
   // Arrangements in chip radii. s: stacks on the floor [x, z, count], tallest at the back; u: standing chips [x, z, yaw].
-  // Stack centres are >= 2.16 apart, so chips in neighbouring stacks never touch.
+  // Stacks sit in a tight honeycomb, centres 2.04 apart (chips are 2.0 wide), so they group closely but never touch.
   var LAYOUTS = [
     { s: [], u: [[0, 0, 0]], pitch: 0.1 },
     { s: [[0, 0, 3]], u: [], pitch: 0.42 },
-    { s: [[-1.08, -0.2, 5], [1.08, 0.25, 2]], u: [], pitch: 0.42 },
-    { s: [[-1.1, -0.65, 7], [1.1, -0.65, 5], [0, 1.25, 3]], u: [], pitch: 0.44 },
-    { s: [[-1.1, -1.15, 10], [1.1, -1.15, 8], [-2.2, 0.75, 4], [0, 0.75, 6], [2.2, 0.75, 3]], u: [], pitch: 0.42 },
+    { s: [[-1.02, -0.25, 4], [1.02, 0.25, 3]], u: [], pitch: 0.42 },
+    { s: [[-1.02, -0.59, 6], [1.02, -0.59, 5], [0, 1.18, 4]], u: [], pitch: 0.44 },
+    { s: [[-2.04, -0.885, 6], [0, -0.885, 9], [2.04, -0.885, 7], [-1.02, 0.885, 5], [1.02, 0.885, 4]], u: [], pitch: 0.44 },
   ];
   function isLight() {
     var t = document.documentElement.getAttribute("data-theme");
@@ -27,7 +27,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=6";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=7";
   }
 
   return {
@@ -104,11 +104,11 @@ var MPStars3D = (function () {
         // ---- materials: frosted glass body, a solid star set inside it, satin bezel ----
         var glass = new THREE.MeshPhysicalMaterial({
           color: light ? 0xeaf3fb : 0xb9cde6,
-          transmission: 1,
-          roughness: 0.4,
+          transmission: 0.55,
+          roughness: 0.62,
           metalness: 0,
           ior: 1.45,
-          thickness: 0.35,
+          thickness: 0.6,
           attenuationColor: light ? 0x6f9fd0 : 0x6f9fd0,
           attenuationDistance: light ? 0.9 : 0.9,
           clearcoat: 1,

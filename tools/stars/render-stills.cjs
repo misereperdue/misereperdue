@@ -3,7 +3,7 @@
 // Each still: the model (transparent canvas) composited on the product-photo backdrop, pack amount underneath.
 const pw = require(process.env.MP_PLAYWRIGHT || 'playwright'), fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '../..'), ORIGIN = 'https://misereperdue.com', OUT = process.argv[2] || path.join(ROOT, 'img');
-const PACKS = [100, 500, 1000, 2400, 2500, 6500], S = 1254, MH = 1000;
+const PACKS = [100, 500, 1000, 1100, 2400, 2500, 6500], S = 1254, MH = 1000;
 const BG = { light: ['#e6e7ea', '#d8d9dd'], dark: ['#18234f', '#0c1230'] }, INK = { light: '#0a0f29', dark: '#f5f5f7' };
 const T = { '.js': 'application/javascript', '.html': 'text/html' };
 (async () => {
