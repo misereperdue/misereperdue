@@ -8138,16 +8138,23 @@
   function mpNotifInfo(n) {
     var who = n.from && n.from !== "MISERY" ? mpAt(n.from) : "", name = n.name || powName(n.power || "");
     var k = n.type, t = "", chip = "";
-    if (k === "reply") { t = who + " replied to you"; chip = "Globe reply"; }
-    else if (k === "reaction") { t = who + (n.kind === "chat" ? " reacted to your message" : " liked your post"); chip = n.kind === "chat" ? "Reaction" : "Globe like"; }
-    else if (k === "mention") { t = who + " mentioned you" + (n.kind === "chat" ? " in Chat" : " on the Globe"); chip = "Mention"; }
-    else if (k === "whisper" || n.kind === "whisper") { t = who + " whispered you"; chip = "Whisper"; }
-    else if (k === "vip") { t = "You're VIP now"; chip = "VIP"; }
-    else if (k === "milestone") { t = n.text || "You hit a milestone"; chip = "Milestone"; }
-    else if (k === "gift") { t = who + " gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars"); chip = "Gifted stars"; }
-    else if (k === "power") { t = "You got " + (name || "a power"); chip = n.kind === "charm" ? "Gifted charm" : "Gifted power"; }
-    else if (k === "purchase") { t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours"; chip = "Purchase"; }
-    else { t = n.text || n.preview || "New notification"; chip = "Notification"; }
+    if (k === "reply") t = who + " replied to you";
+    else if (k === "reaction") t = who + (n.kind === "chat" ? " reacted to your message" : " liked your post");
+    else if (k === "mention") t = who + " mentioned you" + (n.kind === "chat" ? " in Chat" : " on the Globe");
+    else if (k === "whisper" || n.kind === "whisper") t = who + " whispered you";
+    else if (k === "vip") t = "You're VIP now";
+    else if (k === "milestone") t = n.text || "You hit a milestone";
+    else if (k === "gift") t = who + " gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars");
+    else if (k === "power") t = "You got " + (name || "a power");
+    else if (k === "purchase") t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours";
+    else t = n.text || n.preview || "New notification";
+    /* Pills: every gift is "Gift"; everything from the Globe/forum is "Globe". Body text stays. */
+    var gift = k === "gift" || k === "power" || /gift/i.test(String(k || "")) || /gift/i.test(String(n.kind || ""));
+    var globe = k === "reply" || k === "repost" || k === "follow" || k === "quote" || k === "like" ||
+      ((k === "reaction" || k === "mention") && n.kind !== "chat");
+    chip = gift ? "Gift" : globe ? "Globe" : k === "reaction" ? "Reaction" : k === "mention" ? "Mention" :
+      (k === "whisper" || n.kind === "whisper") ? "Whisper" : k === "vip" ? "VIP" : k === "milestone" ? "Milestone" :
+      k === "purchase" ? "Purchase" : "Notification";
     return { title: t, sub: n.preview && k !== "milestone" ? String(n.preview) : "", chip: chip, site: !who };
   }
   function mpNotifPop(n) {
