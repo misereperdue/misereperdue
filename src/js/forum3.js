@@ -528,183 +528,116 @@
           .catch(function () {}));
     }
   }
-  var notificationEpoch = 0;
-  function closeNotifications() { notificationEpoch++; document.querySelectorAll(".forum-notif-panel").forEach(function (node) { node.remove(); }); }
-  function positionNotifications(panel) {
-    var header = Array.from(document.querySelectorAll(".chat-head")).find(function (node) { var r=node.getBoundingClientRect();return r.width>0&&r.height>0; });
-    var rect=header&&header.getBoundingClientRect();
-    panel.style.top=Math.max(80,rect?rect.bottom+8:80)+"px";
-    panel.style.right=Math.max(8,rect?innerWidth-rect.right:12)+"px";
-    panel.style.width="min(280px, calc(100vw - 24px))";
+  var notificationEpoch = 0, ntfSheet = null;
+  function dismissNotifPop() {
+    document.querySelectorAll(".mp-ntf").forEach(function (n) { n.remove(); });
+    document.querySelectorAll(".is-ntf").forEach(function (b) { b.classList.remove("is-ntf"); });
   }
-  document.addEventListener("pointerdown",function(e){var panel=document.querySelector(".forum-notif-panel");if(panel&&!panel.contains(e.target)&&!e.target.closest("#chat-bell,#forum-bell"))closeNotifications();},true);
-  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeNotifications();});
-  window.addEventListener("hashchange",closeNotifications);
-  window.addEventListener("resize",function(){var panel=document.querySelector(".forum-notif-panel");if(panel)positionNotifications(panel);});
+  function closeNotifications(fast) {
+    notificationEpoch++;
+    document.querySelectorAll(".forum-notif-panel").forEach(function (node) { node.remove(); });
+    if (ntfSheet) { var s = ntfSheet; ntfSheet = null; s.close && s.close(!!fast); }
+  }
+  function ntfAvatar(n, site) {
+    var wrap = document.createElement("span");
+    wrap.className = "mp-ntf-row-av" + (site ? " is-site" : "");
+    if (site) {
+      wrap.innerHTML = '<img src="/img/favicon-eyes-96.png?v=17" alt="">';
+    } else if (window.MPChat && MPChat.avatarNode) {
+      wrap.appendChild(MPChat.avatarNode(n.from, null, "sm"));
+    } else {
+      var img = document.createElement("img");
+      img.src = e + "/api/avatarimg/" + encodeURIComponent(n.from || "") + "?v=0";
+      img.alt = "";
+      img.onerror = function () { img.src = "img/default-avatar.jpg"; };
+      wrap.appendChild(img);
+    }
+    return wrap;
+  }
+  function ntfRow(n) {
+    var info = (window.MPNotifInfo && MPNotifInfo(n)) || {
+      title: n.text || n.preview || "New notification",
+      sub: n.preview || "",
+      chip: "Notification",
+      site: !n.from || n.from === "MISERY"
+    };
+    var canGo = !!n.threadId;
+    var row = document.createElement(canGo ? "button" : "div");
+    if (canGo) row.type = "button";
+    row.className = "mp-ntf-row" + (n.read ? "" : " is-unread") + (canGo ? " is-link" : "");
+    row.appendChild(ntfAvatar(n, info.site));
+    var tx = document.createElement("span");
+    tx.className = "mp-ntf-row-tx";
+    var b = document.createElement("b");
+    b.textContent = info.title;
+    tx.appendChild(b);
+    if (info.sub && n.type !== "milestone") {
+      var sm = document.createElement("small");
+      sm.textContent = info.sub;
+      tx.appendChild(sm);
+    }
+    var time = document.createElement("time");
+    time.className = "mp-ntf-row-when";
+    time.textContent = k(n.ts);
+    tx.appendChild(time);
+    row.appendChild(tx);
+    if (info.chip) {
+      var chip = document.createElement("span");
+      chip.className = "mp-ntf-chip";
+      chip.textContent = info.chip;
+      row.appendChild(chip);
+    }
+    if (canGo) {
+      row.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        closeNotifications(true);
+        location.hash = "#globe/" + encodeURIComponent(n.threadId);
+      });
+    }
+    return row;
+  }
   function P() {
-    var existing = document.querySelector(".forum-notif-panel");
-    closeNotifications();
-    if (existing) return;
-    var epoch = notificationEpoch, route = location.hash;
-    var shell = document.createElement("div"); shell.className="forum-notif-panel";
-    shell.setAttribute("role","dialog"); shell.setAttribute("aria-label","Notifications"); shell.textContent="Loading notifications…";
-    shell._posFixed = true; positionNotifications(shell); document.body.appendChild(shell);
+    if (ntfSheet && ntfSheet.bar && ntfSheet.bar.isConnected) {
+      closeNotifications();
+      return;
+    }
+    var bar = window.MPProfiles && MPProfiles.chatHead && MPProfiles.chatHead();
+    if (!bar || !window.MPProfiles || !MPProfiles.openSheet) return;
+    dismissNotifPop();
     document.querySelectorAll(".chat-me-menu").forEach(function (node) { node.remove(); });
-    (      y("/api/notifications").then(function (e) {
-        if (e && e.ok) {
-          if (epoch !== notificationEpoch || route !== location.hash || !shell.isConnected) return;
-          var t = shell;
-          var i =
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:700;color:var(--ink);">Notifications</span><button type="button" id="forum-notif-close" style="width:28px;height:28px;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="14" height="14" data-hi="fade"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
-          if (!e.notifications.length)
-            return (
-              (i +=
-                '<div style="text-align:center;color:var(--muted);padding:20px;">No notifications</div>'),
-              void u()
-            );
-          var l = {};
-          e.notifications.forEach(function (e) {
-            e.from && "milestone" !== e.type && (l[String(e.from).toLowerCase()] = !0);
-          });
-          var s = Object.keys(l),
-            d = {},
-            c = s.map(function (e) {
-              return y("/api/user/" + encodeURIComponent(e))
-                .then(function (t) {
-                  t && t.ok && t.user && (d[e] = t.user.activeBadge || "");
-                })
-                .catch(function () {});
-            });
-          Promise.all(c).then(function () {
-            (e.notifications.forEach(function (e) {
-              var t = e.read ? "rgba(127,127,127,.06)" : "rgba(80,140,255,.1)";
-              if ("milestone" === e.type)
-                return (
-                  (i +=
-                    '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' +
-                    t +
-                    ';">'),
-                  (i +=
-                    '<div style="font-size:14px;color:var(--ink);">🏆 <strong>' +
-                    w(e.text || e.preview || "You hit a milestone") +
-                    "</strong></div>"),
-                  e.threadId &&
-                    (i +=
-                      '<div style="font-size:12px;margin-top:4px;"><a href="#" data-thread="' +
-                      w(e.threadId) +
-                      '" class="forum-notif-link" style="color:#6ea8ff;">View post</a></div>'),
-                  void (i +=
-                    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
-                    k(e.ts) +
-                    "</div></div>")
-                );
-              if ("vip" === e.type)
-                return (
-                  (i +=
-                    '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' +
-                    t +
-                    ';">'),
-                  (i +=
-                    '<div style="font-size:14px;color:var(--ink);">⭐ <strong>You\'ve been upgraded to VIP</strong></div>'),
-                  void (i +=
-                    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
-                    k(e.ts) +
-                    "</div></div>")
-                );
-              if ("whisper" === e.type || "whisper" === e.kind)
-                return (
-                  (i +=
-                    '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' +
-                    t +
-                    ';">'),
-                  (i +=
-                    '<div style="font-size:14px;color:var(--ink);"><strong>@' +
-                    w(e.from) +
-                    "</strong> whispered to you</div>"),
-                  e.preview &&
-                    (i +=
-                      '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' +
-                      w(e.preview) +
-                      "</div>"),
-                  void (i +=
-                    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
-                    k(e.ts) +
-                    "</div></div>")
-                );
-              var r = C(d[String(e.from || "").toLowerCase()] || "", e.from),
-                n = r
-                  ? '<span style="display:inline-block;vertical-align:middle;">' + r + "</span>"
-                  : "";
-              ((i +=
-                '<div style="padding:10px;border-radius:10px;margin-bottom:8px;background:' +
-                t +
-                ';">'),
-                "chat" === e.kind
-                  ? (i +=
-                      '<div style="font-size:14px;color:var(--ink);"><strong>@' +
-                      w(e.from) +
-                      "</strong>" +
-                      n +
-                      " mentioned you in Chat</div>")
-                  : "mention" === e.type
-                    ? (i +=
-                        '<div style="font-size:14px;color:var(--ink);"><strong>@' +
-                        w(e.from) +
-                        "</strong>" +
-                        n +
-                        ' mentioned you in <a href="#" data-thread="' +
-                        w(e.threadId) +
-                        '" class="forum-notif-link" style="color:#6ea8ff;">' +
-                        w(e.threadTitle || "a thread") +
-                        "</a></div>")
-                    : "reply" === e.type
-                      ? (i +=
-                          '<div style="font-size:14px;color:var(--ink);"><strong>@' +
-                          w(e.from) +
-                          "</strong>" +
-                          n +
-                          ' replied in <a href="#" data-thread="' +
-                          w(e.threadId) +
-                          '" class="forum-notif-link" style="color:#6ea8ff;">' +
-                          w(e.threadTitle || "a thread") +
-                          "</a></div>")
-                      : (i +=
-                          '<div style="font-size:14px;color:var(--ink);"><strong>@' +
-                          w(e.from) +
-                          "</strong>" +
-                          n +
-                          " notified you</div>"),
-                (i +=
-                  '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' +
-                  k(e.ts) +
-                  "</div></div>"));
-            }),
-              u());
-          });
+    var epoch = ++notificationEpoch, route = location.hash;
+    var sheet = MPProfiles.openSheet({
+      title: "Notifications",
+      owner: "notifications",
+      onClose: function () { if (ntfSheet === sheet) ntfSheet = null; }
+    });
+    if (!sheet) return;
+    ntfSheet = sheet;
+    sheet.body.textContent = "Loading…";
+    sheet.body.classList.add("is-status");
+    sheet.resize();
+    y("/api/notifications")
+      .then(function (res) {
+        if (epoch !== notificationEpoch || route !== location.hash || !sheet.body.isConnected) return;
+        sheet.body.classList.remove("is-status");
+        sheet.body.replaceChildren();
+        var list = (res && res.ok && res.notifications) || [];
+        if (!list.length) {
+          sheet.body.classList.add("is-status");
+          sheet.body.textContent = "No notifications";
+        } else {
+          list.forEach(function (n) { sheet.body.appendChild(ntfRow(n)); });
         }
-        function u() {
-          if (epoch !== notificationEpoch || route !== location.hash || !shell.isConnected) return;
-          positionNotifications(t);
-          ((t.innerHTML = i),
-            document.body.appendChild(t),
-            t.querySelector("#forum-notif-close").addEventListener("click", function () {
-              t.remove();
-            }),
-            g() &&
-              y("/api/notifications/read", { method: "POST" })
-                .then(function () {
-                  q(!0);
-                })
-                .catch(function () {}),
-            t.querySelectorAll(".forum-notif-link").forEach(function (e) {
-              e.addEventListener("click", function (r) {
-                (r.preventDefault(), t.remove());
-                var n = e.getAttribute("data-thread");
-                if (n) location.hash = "#globe/" + encodeURIComponent(n);
-              });
-            }));
-        }
-      }).catch(function () { if (shell.isConnected) shell.textContent="Couldn’t load notifications. Close and try again."; }));
+        sheet.resize();
+        if (g()) y("/api/notifications/read", { method: "POST" }).then(function () { q(!0); }).catch(function () {});
+      })
+      .catch(function () {
+        if (epoch !== notificationEpoch || !sheet.body.isConnected) return;
+        sheet.body.classList.add("is-status");
+        sheet.body.textContent = "Couldn’t load notifications.";
+        sheet.resize();
+      });
   }
   function I(e) {
     var t = document.querySelector(".forum-copy-dialog-back");
@@ -772,9 +705,7 @@
     ((document._notifHideWired = !0),
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) {
-        document.querySelectorAll(".forum-notif-panel").forEach(function (e) {
-          e.remove();
-        });
+        closeNotifications(true);
         return;
       }
       // Quiet refetch when returning — Globe list no longer has pull-to-refresh (per dc).
@@ -804,48 +735,14 @@
         (e.stopPropagation(), P());
       }));
     var t = document.getElementById("forum-me");
-    if (
-      (t &&
-        !t._notifWired &&
-        ((t._notifWired = !0),
-        t.addEventListener("click", function () {
-          document.querySelectorAll(".forum-notif-panel").forEach(function (e) {
-            e.remove();
-          });
-        })),
-      !document._notifOutsideWired)
-    ) {
-      ((document._notifOutsideWired = !0),
-        document.addEventListener("click", function (e) {
-          var t = document.querySelector(".forum-notif-panel");
-          !t ||
-            t.contains(e.target) ||
-            e.target.closest("#forum-bell") ||
-            e.target.closest("#chat-bell") ||
-            t.remove();
-        }));
-      try {
-        new MutationObserver(function (e) {
-          var t = document.querySelector(".forum-notif-panel");
-          if (t)
-            for (var r = 0; r < e.length; r++)
-              for (var n = e[r].addedNodes, a = 0; a < n.length; a++) {
-                var o = n[a];
-                if (1 === o.nodeType) {
-                  var i = o.className || "",
-                    l = o.outerHTML || "";
-                  if (
-                    /chat.*menu|me.*menu|profile.*dropdown|user.*sheet/i.test(
-                      i + " " + l.slice(0, 500),
-                    )
-                  )
-                    return void t.remove();
-                }
-              }
-        }).observe(document.body, { childList: !0, subtree: !0 });
-      } catch (e) {}
-    }
+    t &&
+      !t._notifWired &&
+      ((t._notifWired = !0),
+      t.addEventListener("click", function () {
+        closeNotifications(true);
+      }));
   }
+
   function B() {
     t.querySelectorAll(".forum-mention").forEach(function (e) {
       e.dataset.wired ||
