@@ -27,7 +27,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=7";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=9";
   }
 
   return {
@@ -68,13 +68,13 @@ var MPStars3D = (function () {
         } catch (e) {
           return fallback();
         }
-        renderer.setPixelRatio(still ? 1 : Math.min(window.devicePixelRatio || 1, 1.75));
+        renderer.setPixelRatio(still ? Math.max(1, window.devicePixelRatio || 1) : Math.min(window.devicePixelRatio || 1, 3));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = light ? 1.0 : 1.1;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         // The frosted glass samples what's behind it; with a black clear colour the gaps between chips and the rounded
         // edges picked up black lines. Clearing to the page colour (still alpha 0) makes them pick up the page instead.
-        renderer.setClearColor(light ? 0xffffff : 0x070f29, 0);
+        renderer.setClearColor(el.getAttribute("data-bg") || (light ? 0xffffff : 0x070f29), 0); // stills pass their backdrop colour
         el.appendChild(renderer.domElement);
 
         var scene = new THREE.Scene();
