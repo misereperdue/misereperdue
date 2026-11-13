@@ -12596,3 +12596,5 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .mp-ntf-morph .mp-profile-bar-scroll{padding:0 6px 8px}
 .mp-ntf-morph .mp-ntf-row{padding:10px 10px;gap:11px}
 .mp-ntf-morph .mp-ntf-list .mp-ntf-h{padding-left:10px}
+/* Home screen app (per dc): no scroll sliders anywhere; scrolling itself is unchanged. */
+@media (display-mode: standalone){*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}}
