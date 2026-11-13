@@ -12578,3 +12578,14 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 [data-pw="diamond"]:is(.pow-ico,.pw-ico,i){color:#0a3560!important;background:conic-gradient(from 45deg,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff)!important}
 [data-pw="emerald"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd)!important}
 [data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
+
+/* Notification avatars open that person's profile */
+.mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
+.mp-ntf-row-av.is-tap:active{transform:scale(.92)}
+.mp-ntf-row-av.is-tap:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Chat @mentions: a bordered pill you can tap to open that person's profile card (per dc) */
+.chat-msg .chat-mention[data-u]{display:inline-block;padding:0 7px;margin:0 1px;border:1px solid color-mix(in srgb,#7aa7ff 60%,transparent);border-radius:999px;background:color-mix(in srgb,#7aa7ff 14%,transparent);line-height:1.45;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,background .15s ease}
+.chat-msg.mine .chat-mention[data-u]{color:inherit;text-decoration:none;border-color:color-mix(in srgb,currentColor 38%,transparent);background:color-mix(in srgb,currentColor 9%,transparent)}
+.chat-msg .chat-mention[data-u]:active{transform:scale(.95)}
+.chat-msg .chat-mention[data-u]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
