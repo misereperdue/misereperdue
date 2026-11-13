@@ -12546,3 +12546,35 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .mp-ntf-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;border-radius:14px;background:none;color:var(--ink);font:inherit;text-align:left;-webkit-tap-highlight-color:transparent}
 .mp-ntf-row.is-link:active{background:color-mix(in srgb,var(--ink) 6%,transparent);transform:scale(.985)}
 .mp-ntf-list .mp-ntf-h{padding-left:12px}
+/* ===== Power bubbles (per dc): every power's round icon bubble has its own look, on profiles
+   (Powers row + list), in the Powers menu (rows, page hero, shop cards) and in the combo chips. ===== */
+.pw-ico,.pw-ico-lg{border-radius:50%!important}
+:is(.pow-ico,.pw-ico,.pw-chip i)[data-pw]{position:relative;display:grid;place-items:center;border-radius:50%;overflow:hidden;color:#fff;background:#3a4258;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -6px 10px -6px rgba(0,0,0,.35)}
+.pw-chip i[data-pw]{width:22px;height:22px}
+.pw-chip i[data-pw] .mp-pow-svg{width:66%;height:66%}
+:is(.pow-ico,.pw-ico,.pw-chip i)[data-pw] .mp-pow-svg{position:relative;z-index:1}
+/* Glow: a lit ice orb with a soft halo */
+[data-pw="glow"]:is(.pow-ico,.pw-ico,i){color:#0a1d3a!important;background:radial-gradient(circle at 50% 45%,#f4fbff 0,#c4e6fb 42%,#7fbde9 100%)!important;box-shadow:0 0 10px rgba(169,215,245,.75),inset 0 1px 0 rgba(255,255,255,.7)!important}
+/* Ink: deep pink ink with a wet sheen */
+[data-pw="ink"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 30%),linear-gradient(150deg,#ff7fb8 0,#d81b6b 55%,#6a0a3d 100%)!important}
+/* Bubble: a glossy soap bubble */
+[data-pw="bubble"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 30% 26%,#fff 0 7%,rgba(255,255,255,.35) 8% 18%,transparent 19%),radial-gradient(circle at 50% 55%,#c9b2ff 0,#9b74f7 55%,#5b37c7 100%)!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35),inset 0 -6px 10px -6px rgba(0,0,0,.3)!important}
+/* Echo: rings spreading out */
+[data-pw="echo"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle,#2fc4b8 0 26%,transparent 27%),repeating-radial-gradient(circle,#1a9e94 0 3px,#27b8ad 3px 6px)!important}
+/* Glitch: dark screen with a red/cyan split */
+[data-pw="glitch"]:is(.pow-ico,.pw-ico,i){color:#e9fdff!important;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 2px,transparent 2px 4px),#141a2e!important;box-shadow:inset 2px 0 0 rgba(255,42,109,.9),inset -2px 0 0 rgba(5,217,232,.9),inset 0 1px 0 rgba(255,255,255,.15)!important}
+/* Melt: warm molten amber, darker where it pools */
+[data-pw="melt"]:is(.pow-ico,.pw-ico,i){color:#3b1400!important;background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.45),transparent 30%),linear-gradient(180deg,#ffe08a 0,#ffb020 50%,#e8641a 100%)!important}
+/* Aura: soft pastel mist with a glow */
+[data-pw="aura"]:is(.pow-ico,.pw-ico,i){color:#4a2d8f!important;background:radial-gradient(circle at 28% 30%,#ffd9f0,transparent 60%),radial-gradient(circle at 72% 72%,#c4e3ff,transparent 62%),#e6dcff!important;box-shadow:0 0 10px rgba(196,160,255,.55),inset 0 1px 0 rgba(255,255,255,.6)!important}
+/* Halo: a mint ring around a dark centre */
+[data-pw="halo"]:is(.pow-ico,.pw-ico,i){color:#7dffb2!important;background:#10203a!important;box-shadow:inset 0 0 0 2px #7dffb2,0 0 8px rgba(125,255,178,.45)!important}
+/* RGB: a full rainbow wheel */
+[data-pw="rgb"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 210deg,#ff3b30,#ff9500,#ffcc00,#34c759,#5ac8fa,#007aff,#af52de,#ff3b30)!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)!important}
+[data-pw="rgb"]:is(.pow-ico,.pw-ico,i) .mp-pow-svg{filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.45))}
+/* Sphere: a glass marble */
+[data-pw="sphere"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 34% 28%,#fff 0 9%,#d6eeff 20%,#6fb3ea 55%,#1d3d72 100%)!important;box-shadow:inset 0 -4px 8px rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.4)!important}
+/* Gem charms: faceted cuts */
+[data-pw="diamond"]:is(.pow-ico,.pw-ico,i){color:#0a3560!important;background:conic-gradient(from 45deg,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff)!important}
+[data-pw="emerald"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd)!important}
+[data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
