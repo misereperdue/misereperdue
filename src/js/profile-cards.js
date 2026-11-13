@@ -116,10 +116,16 @@
      Only a visible Chat/Globe header; never the shop nav pill.
      Close keeps the sheet in the bar until the reverse morph finishes so the chrome is never
      left as a tall empty shell (WebKit especially); a later open/fast close commits immediately. */
+  /* Morph hand-off between top-bar menus (per dc): the next menu to open grows/shrinks from the current
+     menu's height instead of collapsing first, and can open straight into a phase ('full'). One-shot. */
+  var MORPH=null;
+  function morphFrom(h){MORPH=h?Object.assign({at:Date.now()},h):null;}
+  function takeMorph(){var h=MORPH;MORPH=null;return h&&Date.now()-h.at<4000?h:null;}
   function openSheet(opts) {
     opts=opts||{};
     var bar=chatHead();
     if(!bar)return null;
+    var hint=takeMorph(),pendingFrom=hint?bar.getBoundingClientRect().height:0;
     closeBar(true);
     if(bar._mpCommitExit)bar._mpCommitExit();
     window.MPFM && MPFM.yieldBar && MPFM.yieldBar();
@@ -150,7 +156,7 @@
     }
     function size(animate){
       if(closed||committed)return;
-      var before=bar.getBoundingClientRect(), beforeH=before.height, beforeW=before.width;
+      var before=bar.getBoundingClientRect(), beforeH=pendingFrom||before.height, beforeW=before.width;pendingFrom=0;
       if(animation){animation.cancel();animation=null;}
       var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
       var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.mp-profile-bar-head');
@@ -220,7 +226,7 @@
     setTimeout(function(){if(!closed&&!committed)document.addEventListener('pointerdown',outside,true);},0);
     document.addEventListener('mp-topbar-claim',onClaim);
     document.addEventListener('keydown',key,true);window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);window.addEventListener('resize',resize);window.visualViewport&&visualViewport.addEventListener('resize',resize);
-    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){if(closed||committed)return;bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
+    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:hint?0:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){if(closed||committed)return;bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
     if(!reduced()&&root.animate)root.animate([{opacity:0,transform:'translateY(6px) scale(.985)'},{opacity:1,transform:'none'}],{duration:340,delay:80,fill:'backwards',easing:MP_EASE});
     size(true);
     root.focus({preventScroll:true});
@@ -228,6 +234,7 @@
   }
   // The real status bar owns every phase. Only content crossfades; its glass never fades.
   function openBar(root, body, user, options) {
+    var hint=takeMorph(),pre=topBar(),pendingFrom=hint&&pre?pre.getBoundingClientRect().height:0;
     closeBar(true);
     var bar=topBar();
     commitPendingExit(bar);
@@ -249,7 +256,7 @@
     function icon(label,path,run){var b=button('',function(e){e.stopPropagation();run();},'mp-profile-control');b.setAttribute('aria-label',label);b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';return b;}
     function size(animate){
       if(closed)return;
-      var before=bar.getBoundingClientRect().height;if(animation){animation.cancel();animation=null;}
+      var before=pendingFrom||bar.getBoundingClientRect().height;pendingFrom=0;if(animation){animation.cancel();animation=null;}
       var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
       var natural=baseHeight;if(phase!=='compact'){var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll.firstElementChild,cs=getComputedStyle(scroll),ms=content?getComputedStyle(content):null;if(content)contentSize={w:content.offsetWidth,h:content.offsetHeight};natural=root.querySelector('.mp-profile-bar-head').offsetHeight+(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0)+(content?content.offsetHeight+(parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0):0);}
       var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'||phase==='page'?640:560,natural);
@@ -258,7 +265,7 @@
     }
     var pageTitle='';function sub(p){return p==='edit'||p==='manage'||p==='page';}
     function pageBack(){var page=root.querySelector('.mp-profile-bar-scroll>*');return !!(page&&typeof page._back==='function'&&page._back());}
-    function goBack(){if(pageBack())return;if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}
+    function goBack(){if(pageBack())return;if(hint&&hint.back&&phase==='full'){var f=hint.back;hint=null;morphFrom({});f();return;}if(sub(phase))render('full');else if(phase==='full')render('compact');else options.close();}
     function header(title,back){var h=el('div','mp-profile-bar-head');h.appendChild(icon('Back','M15 6 9 12 15 18',back));h.appendChild(el('strong','',title));h.appendChild(icon('Close profile','M6 6 18 18M18 6 6 18',options.close));return h;}
     function render(next,editor){
       if(closed)return;
@@ -323,10 +330,10 @@
     setTimeout(function(){if(!closed)document.addEventListener('pointerdown',outside,true);},0);
     document.addEventListener('mp-topbar-claim',onClaim);
     document.addEventListener('keydown',key,true);window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);window.addEventListener('resize',resize);window.visualViewport&&visualViewport.addEventListener('resize',resize);
-    render('compact');
-    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
+    render(hint&&hint.phase==='full'?'full':'compact');
+    if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:hint?0:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
     entering=false;
-    root.querySelector('.mp-profile-summary-open').focus({preventScroll:true});
+    (root.querySelector('.mp-profile-summary-open')||root.querySelector('.mp-profile-bar-head button')||root).focus({preventScroll:true});
   }
   function editor(container, user, options) {
     var root=section('Listening'),draft={listening:user.listening?Object.assign({},user.listening):null},status=el('p','mp-profile-edit-status'),saving=false,loading=false,epoch=0,timer,controller;
@@ -345,5 +352,5 @@
     var save=button('Save profile details',async function(){if(saving||loading)return;saving=true;save.disabled=true;status.textContent='Saving…';try{var r=await options.api('/api/profile',{method:'POST',body:{listening:draft.listening}});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not save profile.');options.saved(r.user);status.textContent='Profile details saved.';}catch(e){status.textContent=e.message||'Could not save profile.';}finally{saving=false;if(root.isConnected)save.disabled=loading;}});root.appendChild(save);root.appendChild(status);paint();container.appendChild(root);
     var observer=new MutationObserver(function(){if(!root.isConnected){epoch++;clearTimeout(timer);if(controller)controller.abort();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});return root;
   }
-  window.MPProfiles={songUrl:songUrl,topBar:topBar,chatHead:chatHead,openBar:openBar,openSheet:openSheet,closeBar:closeBar,editor:editor,badgePicker:badgePicker,management:management,settings:settings};
+  window.MPProfiles={songUrl:songUrl,topBar:topBar,chatHead:chatHead,openBar:openBar,openSheet:openSheet,morphFrom:morphFrom,closeBar:closeBar,editor:editor,badgePicker:badgePicker,management:management,settings:settings};
 })();

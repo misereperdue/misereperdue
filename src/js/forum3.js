@@ -543,8 +543,9 @@
     wrap.className = "mp-ntf-row-av" + (site ? " is-site" : "");
     if (site) {
       wrap.innerHTML = '<img src="/img/favicon-eyes-96.png?v=17" alt="">';
-    } else if (window.MPChat && MPChat.avatarNode) {
-      wrap.appendChild(MPChat.avatarNode(n.from, null, "sm"));
+    } else if (window.MPChat && MPChat.avatarNode && n.av !== void 0) {
+      /* The Worker attaches the sender's photo version (n.av; null = no photo). */
+      wrap.appendChild(MPChat.avatarNode(n.from, null, "sm", n.av === null ? void 0 : n.av));
     } else {
       var img = document.createElement("img");
       img.src = e + "/api/avatarimg/" + encodeURIComponent(n.from || "") + "?v=0";
@@ -582,7 +583,23 @@
     var row = document.createElement(canGo ? "button" : "div");
     if (canGo) row.type = "button";
     row.className = "mp-ntf-row" + (n.read ? "" : " is-unread") + (canGo ? " is-link" : "");
-    row.appendChild(ntfAvatar(n, info.site));
+    var avEl = ntfAvatar(n, info.site);
+    /* Tapping a person's avatar morphs this menu into their profile; Back returns here (per dc). */
+    if (!info.site && n.from && window.MPChat && MPChat.openUserSheet && window.MPProfiles && MPProfiles.morphFrom) {
+      avEl.classList.add("is-tap");
+      avEl.setAttribute("role", "button");
+      avEl.setAttribute("tabindex", "0");
+      avEl.setAttribute("aria-label", "Open " + (window.mpAt ? mpAt(n.from) : "@" + n.from) + "'s profile");
+      var openWho = function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        MPProfiles.morphFrom({ phase: "full", back: function () { MPProfiles.morphFrom({}); P(); } });
+        MPChat.openUserSheet(n.from, MPProfiles.chatHead ? MPProfiles.chatHead() : null);
+      };
+      avEl.addEventListener("click", openWho);
+      avEl.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") openWho(ev); });
+    }
+    row.appendChild(avEl);
     var tx = document.createElement("span");
     tx.className = "mp-ntf-row-tx";
     var who = n.from && n.from !== "MISERY" ? (window.mpAt ? mpAt(n.from) : "@" + String(n.from).replace(/^@/, "").toLowerCase()) : "";

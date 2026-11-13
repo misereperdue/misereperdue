@@ -1341,6 +1341,17 @@
     return w;
   }
   function mpStar(c) { return window.MPStar ? MPStar(c) : '<span class="mp-star' + (c ? " " + c : "") + '" aria-hidden="true">★</span>'; }
+  /* Tapping an @mention in a chat bubble opens that person's compact profile card in the top bar (per dc). */
+  function mpMentionOpen(e) {
+    var m = e.target && e.target.closest && e.target.closest(".chat-msg .chat-mention[data-u]");
+    if (!m) return;
+    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    e.stopPropagation();
+    mpPB(m.getAttribute("data-u"), window.MPProfiles && MPProfiles.topBar ? MPProfiles.topBar() : null);
+  }
+  document.addEventListener("click", mpMentionOpen, true);
+  document.addEventListener("keydown", mpMentionOpen, true);
   function mpPB(u, anchor) {
     if (!u) return;
     if (!anchor || !anchor.isConnected) anchor = MPProfiles.topBar();
@@ -2780,7 +2791,7 @@
         "</a>" +
         e.slice(t.length)
       );
-    }).replace(/(^|[\s(])@([A-Za-z0-9_.]{1,30}[A-Za-z0-9_])/g, function (_m, a, u) { return a + '<span class="chat-mention">@' + String(u).toLowerCase() + '</span>'; });
+    }).replace(/(^|[\s(])@([A-Za-z0-9_.]{1,30}[A-Za-z0-9_])/g, function (_m, a, u) { return a + '<span class="chat-mention" role="button" tabindex="0" data-u="' + String(u).toLowerCase() + '">@' + String(u).toLowerCase() + '</span>'; });
   }
   /* @mentions autocomplete (per dc): users from chat authors seen (Je) + /api/online.
      The Worker's full user lists are owner-only, so this is client-side. */
