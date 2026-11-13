@@ -632,8 +632,9 @@
   }
   function P() {
     if (ntfSheet && ntfSheet.bar && ntfSheet.bar.isConnected) {
-      closeNotifications();
-      return;
+      var leaving = ntfSheet.bar.classList.contains("is-profile-leaving");
+      closeNotifications(leaving);
+      if (!leaving) return;
     }
     var bar = window.MPProfiles && MPProfiles.chatHead && MPProfiles.chatHead();
     if (!bar || !window.MPProfiles || !MPProfiles.openSheet) return;
