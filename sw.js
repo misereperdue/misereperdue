@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 542;
+var SW_VERSION = 543;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.svg, Twemoji, see js/emoji.js) live in
 // their own cache: filled on first use (never precached: ~4,000 files), kept
@@ -15,13 +15,13 @@ var EMOJI_MAX = 800;
 var SHELL = [
   "/",
   "/webapp.json?v=23",
-  "/css/site.css?v=910",
+  "/css/site.css?v=911",
   "/js/theme.js?v=10",
   "/js/rain.js?v=24",
   "/js/emoji.js?v=2",
   "/js/boot-head.js?v=3",
   "/js/beacon.js?v=1",
-  "/js/app.js?v=14",
+  "/js/app.js?v=15",
   "/js/swipe-tabs.js?v=3",
   "/js/shopify.js?v=13",
   "/js/cart.js?v=2",
@@ -70,6 +70,10 @@ self.addEventListener("activate", function (e) {
       return Promise.all(keys.map(function (k) {
         if (k !== CACHE && k !== EMOJI_CACHE) return caches.delete(k);
       }));
+    }).then(function () {
+      // Speed: let the browser start fetching the page while this worker is still booting.
+      var np = self.registration.navigationPreload;
+      return np ? np.enable().catch(function () {}) : null;
     }).then(function () { return self.clients.claim(); })
   );
 });
@@ -115,8 +119,10 @@ self.addEventListener("fetch", function (e) {
       return caches.match(e.request);
     };
     if (isNav && self.navigator && self.navigator.onLine === false) { e.respondWith(offline()); return; }
+    // Navigation preload: use the response the browser already started fetching, if any.
+    var pre = isNav && e.preloadResponse ? Promise.resolve(e.preloadResponse).catch(function () {}) : Promise.resolve();
     e.respondWith(
-      fetch(e.request).then(function (res) {
+      pre.then(function (hit) { return hit || fetch(e.request); }).then(function (res) {
         if (res.ok) {
           var copy = res.clone();
           caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });

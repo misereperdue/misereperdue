@@ -251,7 +251,22 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
         // Wait 500ms to let Safari's async restoration fire (and be held
         // at 0 by holdScrollAtTop) before revealing.
         window.scrollTo(0, 0);
-        setTimeout(revealPage, 500);
+        // Speed: the 500ms wait is for Safari's scroll restoration, which only happens on
+        // reload / back-forward. A fresh open has nothing to restore, so the Store reveals
+        // as soon as it has drawn its products (never later than the old 500ms).
+        var fresh = false;
+        try {
+          var ne = performance.getEntriesByType("navigation")[0];
+          fresh = ne ? ne.type === "navigate" : performance.navigation.type === 0;
+        } catch (e) {}
+        if (!fresh || current.type !== "shop") { setTimeout(revealPage, 500); return; }
+        var t0 = Date.now();
+        (function waitShop() {
+          var el = Date.now() - t0, g = document.getElementById("shop-grid");
+          var ready = !!(g && g.firstElementChild && !g.querySelector(".lg-spin-wrap"));
+          if (el >= 500 || (el >= 60 && ready)) revealPage();
+          else setTimeout(waitShop, 30);
+        })();
       }
     });
     // Disable bfcache entirely: Safari's scroll restoration is tied to it.
