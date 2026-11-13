@@ -10838,9 +10838,9 @@ html[data-gcards="g3"] .forum-thread-more {
 .chat-music-art > img { position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover; }
 .chat-music-copy { display:flex;flex:1;min-width:0;flex-direction:column; }
 .chat-music-copy > * { overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.25; }
-.chat-music-title { display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden; }
-.chat-music-title strong { flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
-.chat-music-title .fm-e { margin-left:0; }
+.chat-music-title { display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0;overflow:hidden; }
+.chat-music-title strong { min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
+.chat-music-title .fm-e { margin-left:0;flex:none; }
 .chat-music-artist { font-size:11.5px;color:var(--muted); }
 .chat-music-album {color:var(--muted); }
 .chat-music-choice {display:grid;place-items:center;box-sizing:border-box;flex:none;border-radius:50%;color:transparent;transition:background .18s,border-color .18s,color .18s; }
@@ -12035,7 +12035,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-profile-song-copy strong,.mp-profile-bar .mp-profile-song-copy>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mp-profile-bar .mp-profile-eq{margin-left:auto;flex:none}
 /* #91: richer linked listening and a short compact bio. */
-.mp-profile-bar .mp-profile-song-title{display:flex;align-items:center;gap:5px;min-width:0}
+.mp-profile-bar .mp-profile-song-title{display:inline-flex;align-items:center;gap:4px;max-width:100%;min-width:0}
 .mp-profile-song-title strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mp-profile-explicit.fm-e{margin:0}
 .mp-profile-bar .mp-profile-song-artist{display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}

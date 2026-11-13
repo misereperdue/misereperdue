@@ -51,6 +51,16 @@ const track=(id,title,artist)=>({trackId:id,trackName:title,artistName:artist,co
   assert.ok(badge.shadow && badge.shadow!=='none' || parseFloat(badge.radius)>=2,'E is boxed');
   assert.match((await row.locator('.chat-music-artist').innerText()).trim(),/Frank Ocean\s*·\s*Blonde/);
   assert.ok(!(await row.innerText()).includes('· E'),'no loose · E');
-  console.log('music rows: Artist · Album, boxed E after title');
+  const geo=await row.evaluate(el=>{
+    const t=el.querySelector('.chat-music-title'),s=t&&t.querySelector('strong'),e=t&&t.querySelector('.fm-e');
+    const sr=s.getBoundingClientRect(),er=e.getBoundingClientRect(),rr=el.getBoundingClientRect();
+    let specified='';
+    try{for(const sh of document.styleSheets){for(const r of sh.cssRules){if(r.selectorText==='.chat-music-title')specified=r.style.display;}}}catch(err){}
+    return {gap:+(er.left-sr.right).toFixed(2),slack:+(rr.right-er.right).toFixed(2),specified};
+  });
+  assert.equal(geo.specified,'inline-flex','title is specified inline-flex, got '+geo.specified);
+  assert.ok(geo.gap>=1 && geo.gap<=8,'E hugs title (~4px), gap='+geo.gap);
+  assert.ok(geo.slack>24,'E is not at the far edge of the row, slack='+geo.slack);
+  console.log('music rows: Artist · Album, boxed E hugs title',geo);
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

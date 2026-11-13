@@ -2577,47 +2577,20 @@
         window.addEventListener(
           "scroll",
           function () {
-            if (!ze && Ue.length && !(window.scrollY > 200)) {
-              var e = document.getElementById("journal");
-              if (e && e.classList.contains("on")) {
-                ze = !0;
-                for (
-                  var t = document.documentElement.scrollHeight,
-                    n = Ue.splice(Math.max(0, Ue.length - 20), 20),
-                    a = n.length - 1;
-                  a >= 0;
-                  a--
-                )
-                  Fe(n[a], !0);
-                var r = document.documentElement.scrollHeight;
-                (window.scrollTo(0, window.scrollY + (r - t)), qe(), (ze = !1));
-              }
-            }
+            requestAnimationFrame(mpFillOlder);
           },
           { passive: !0 },
         )),
       E("/api/messages?limit=200&_=" + Date.now())
         .then(function (e) {
-          if (
-            (e && e.caps && e.caps.private && mpPMEnable(), e && e.caps && e.caps.poll && (window.mpPollOn = !0),
-            e && e.badges && (T = Object.assign(Object.create(null), e.badges)),
-            e && e.pw && mpPwMerge(e.pw, !0),
-            (window.__chatBatchLoading = !0),
-            e && e.messages)
-          ) {
-            var t = e.messages,
-              n = t.slice(-20);
-            ((Ue = t.slice(0, Math.max(0, t.length - 20))).forEach(function (e) {
-              e && e.id && (De[e.id] = e);
-            }),
-              n.forEach(function (e) {
-                Fe(e);
-              }));
-          }
-          ((window.__chatBatchLoading = !1), Ae(!0), qe(), (window.__chatMsgsLoaded = !0));
+          e && e.caps && e.caps.private && mpPMEnable();
+          e && e.caps && e.caps.poll && (window.mpPollOn = !0);
+          e && e.badges && (T = Object.assign(Object.create(null), e.badges));
+          e && e.pw && mpPwMerge(e.pw, !0);
+          mpIngestHistory(e && e.messages);
         })
         .catch(function () {
-          window.__chatMsgsLoaded = !0;
+          if (window.__chatMsgsLoaded) return;
           var e = Le();
           if (e && !e.querySelector(".chat-load-err")) {
             var t = document.createElement("div");
@@ -2658,6 +2631,66 @@
           { passive: !0 },
         )),
       qe());
+  }
+
+  function mpIngestHistory(list) {
+    list = list || [];
+    if (window.__chatMsgsLoaded) {
+      for (var i = 0; i < list.length; i++) {
+        var m = list[i];
+        if (m && m.id && !u[m.id] && !De[m.id]) Fe(m);
+      }
+      return;
+    }
+    window.__chatMsgsLoaded = !0;
+    window.__chatBatchLoading = !0;
+    var box = Le(),
+      vis = list.slice(-20),
+      frag = box && !box.querySelector(".chat-msg") ? document.createDocumentFragment() : null;
+    Ue = list.slice(0, Math.max(0, list.length - 20));
+    list.forEach(function (e) {
+      e && e.id && (De[e.id] = e);
+      e && e.ts && e.ts > m && 0 !== String(e.id).indexOf("opt-") && (m = e.ts);
+    });
+    if (frag) window.__chatBatchRoot = frag;
+    try {
+      vis.forEach(function (e) {
+        Fe(e);
+      });
+      if (frag && box) box.appendChild(frag);
+    } finally {
+      window.__chatBatchRoot = null;
+    }
+    if (box) {
+      box.querySelectorAll(".chat-msg").forEach(function (n) {
+        mpClampMsg(n);
+      });
+      mpPhotoStack(box);
+    }
+    Ae(!0);
+    window.__chatBatchLoading = !1;
+    qe();
+    requestAnimationFrame(mpFillOlder);
+  }
+  function mpFillOlder() {
+    if (ze || !Ue.length || window.__chatBatchLoading) return;
+    var e = document.getElementById("journal");
+    if (!e || !e.classList.contains("on")) return;
+    if (window.scrollY > 200) return;
+    ze = !0;
+    window.__chatBatchLoading = !0;
+    var t = document.documentElement.scrollHeight,
+      n = Ue.splice(Math.max(0, Ue.length - 20), 20);
+    try {
+      for (var a = n.length - 1; a >= 0; a--) Fe(n[a], !0);
+    } finally {
+      window.__chatBatchLoading = !1;
+    }
+    var r = document.documentElement.scrollHeight;
+    window.scrollTo(0, window.scrollY + (r - t));
+    qe();
+    ze = !1;
+    if (Ue.length && window.scrollY <= 200) requestAnimationFrame(mpFillOlder);
   }
   function Le() {
     return c.querySelector(".chat-msgs");
@@ -4979,7 +5012,7 @@
         }
       (e.user && Ge[e.user] && (delete Ge[e.user], nt()),
         e.ts && e.ts > m && 0 !== String(e.id).indexOf("opt-") && (m = e.ts));
-      var a = Le();
+      var a = window.__chatBatchRoot || Le();
       if (a) {
         var r = Se(),
           o = document.createElement("div");
@@ -5088,11 +5121,13 @@
             }
             a.appendChild(o);
           })(),
-          mpPhotoStack(a),
+          !window.__chatBatchLoading && mpPhotoStack(a),
           e.private && mpPMCaption(o, e),
+          !window.__chatBatchLoading &&
           a.querySelectorAll(".chat-typing-msg").forEach(function (e) {
             a.appendChild(e);
           }),
+          !window.__chatBatchLoading &&
           (function (e) {
             e.querySelectorAll(".chat-text").forEach(function (t) {
               if (!t.dataset.clamped)
@@ -5159,9 +5194,60 @@
           }
           P.length <= 100 && Te() && window.scrollTo(0, document.documentElement.scrollHeight);
         }
-        qe();
+        !window.__chatBatchLoading && qe();
       }
     }
+  }
+  function mpClampMsg(e) {
+    e &&
+      e.querySelectorAll(".chat-text").forEach(function (t) {
+        if (!t.dataset.clamped)
+          if (
+            ((t.dataset.clamped = "1"),
+            t.classList.add("clamped"),
+            t.offsetHeight,
+            t.scrollHeight > t.clientHeight + 4)
+          ) {
+            var n = t.textContent,
+              a = e.getAttribute("data-user") || "",
+              r = e.querySelector(".chat-time"),
+              o = r ? r.textContent : "",
+              i = document.createElement("span");
+            ((i.className = "chat-more"), (i.textContent = "··· more"));
+            var c = function (ev) {
+              (ev.stopPropagation(),
+                (function (e, t, n) {
+                  Ve();
+                  var a = document.createElement("div");
+                  ((a.className = "msg-popup"), (a.id = "msg-popup"));
+                  var r = document.createElement("div");
+                  r.className = "msg-popup-inner";
+                  var o = document.createElement("div");
+                  ((o.innerHTML = _e(e)), r.appendChild(o));
+                  var i = document.createElement("div");
+                  ((i.className = "msg-popup-meta"),
+                    (i.textContent = t + (n ? " · " + n : "")),
+                    r.appendChild(i));
+                  var c = document.createElement("button");
+                  ((c.className = "msg-popup-close"),
+                    (c.textContent = "Close"),
+                    (c.onclick = function (e) {
+                      (e.stopPropagation(), Ve());
+                    }),
+                    r.appendChild(c),
+                    a.appendChild(r),
+                    (a.onclick = function (e) {
+                      e.target === a && Ve();
+                    }),
+                    document.body.appendChild(a));
+                })(n, a, o));
+            };
+            (i.addEventListener("click", c),
+              (t.style.cursor = "pointer"),
+              t.addEventListener("click", c),
+              t.parentNode.insertBefore(i, t.nextSibling));
+          } else t.classList.remove("clamped");
+      });
   }
   function Ve() {
     var e = document.getElementById("msg-popup");
@@ -5410,7 +5496,7 @@
                 t.pw && mpPwMerge(t.pw, !0),
                 t.you && te((s = rcKeep(t.you)).points || 0),
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
-                t.messages && t.messages.forEach(Fe),
+                mpIngestHistory(t.messages),
                 followHello && Ne(!0),
                 window.MPFM && MPFM.setMe(s));
             } else if ("badge" === t.t && t.user) {
@@ -5663,7 +5749,7 @@
       .then(function (e) {
         if (token !== d) return;
         if (e && e.badges) for (var t in e.badges) T[t] = e.badges[t];
-        e && e.messages && e.messages.length && e.messages.forEach(Fe);
+        mpIngestHistory(e && e.messages);
       })
       .catch(function () {})
       .finally(function () { catchUpRequest = null; });
