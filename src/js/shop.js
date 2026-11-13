@@ -94,7 +94,7 @@ var MPShop = (function () {
   // Stars art: hero coin, or the stack for a pack size, in the current theme (falls back to the hero).
   function starsImg(size) {
     var n = parseInt(String(size == null ? "" : size).replace(/[^\d]/g, ""), 10);
-    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=8";
+    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=9";
   }
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
@@ -1196,7 +1196,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=10", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=11", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),
