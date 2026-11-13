@@ -57,8 +57,14 @@ const notices=[
   assert.deepEqual((await menu.locator('.mp-ntf-h').allTextContents()).map(s=>s.trim()),['Today','Earlier']);
   assert.ok(await menu.locator('.mp-ntf-row.is-unread').count()>=1);
   assert.equal(await p.locator('.nav.is-ntf-bar, .nav .mp-ntf-morph').count(),0,'not on the shop nav');
-  await p.waitForTimeout(700);
-  await p.screenshot({path:process.env.MP_SHOT||`${OUT}/notif-morph-v2-dark.png`,fullPage:false});
+    await p.waitForFunction(()=>{const b=document.querySelector('.panel.on .chat-head.is-ntf-bar');return b&&b.getBoundingClientRect().height>120;},null,{timeout:5000});
+  const barBox=await p.locator('.panel.on .chat-head.is-ntf-bar').boundingBox();
+  const view=p.viewportSize();
+  assert.ok(barBox.height<=520,'sheet stays at the #187-sized cap, not full screen ('+barBox.height+')');
+  assert.ok(barBox.height<view.height-120,'sheet is not near full screen');
+  assert.ok(barBox.width>=view.width-24,'sheet uses nearly the full width ('+barBox.width+' vs '+view.width+')');
+  await p.waitForTimeout(300);
+  await p.screenshot({path:process.env.MP_SHOT||`${OUT}/notif-morph-v3-dark.png`,fullPage:false});
   // shop: opening should not morph the nav
   await p.locator('.mp-ntf-morph-hd [aria-label="Back"]').click();
   await p.waitForFunction(()=>!document.querySelector('.is-ntf-bar'),null,{timeout:5000});
