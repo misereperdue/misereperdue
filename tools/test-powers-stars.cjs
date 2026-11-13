@@ -62,7 +62,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.locator('.mp-profile-bar-head button').nth(1).click();await p.waitForTimeout(500);
  ws.send(JSON.stringify({t:'notif',n:{id:'n1',type:'gift',from:'rich',n:5,ts:Date.now()}}));
  const ntf=p.locator('.is-ntf .mp-ntf');await ntf.waitFor({timeout:3000});
- assert.equal((await ntf.locator('b').innerText()).trim(),'@rich gifted you 5 stars');assert.equal((await ntf.locator('.mp-ntf-chip').innerText()).trim(),'Gifted stars');assert.equal(await ntf.locator('.mp-ntf-av.is-site').count(),0,'sender avatar');
+ assert.equal((await ntf.locator('b').innerText()).trim(),'@rich gifted you 5 stars');assert.equal((await ntf.locator('.mp-ntf-chip').innerText()).trim(),'Gift');assert.equal(await ntf.locator('.mp-ntf-av.is-site').count(),0,'sender avatar');
  await p.waitForTimeout(450);await p.screenshot({path:`${OUT}/${tag}-notif.png`});
  await p.waitForFunction(()=>!document.querySelector('.mp-ntf'),null,{timeout:4000});
  ws.send(JSON.stringify({t:'notif',n:{id:'n2',type:'purchase',kind:'stars',from:'MISERY',n:100,ts:Date.now()}}));
