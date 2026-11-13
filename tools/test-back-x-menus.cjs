@@ -42,7 +42,7 @@ const notices=[
   if(await splash.count())await splash.waitFor({state:'hidden',timeout:10000}).catch(()=>{});
 
   const bell=p.locator('#chat-bell');
-  const ntfBack=()=>p.locator('.mp-ntf-morph-hd [aria-label="Back"]');
+  const ntfBack=()=>p.locator('.is-ntf-bar .chat-pbig-hd [aria-label="Back"]');
   async function openNtf(){
     await bell.click();
     await ntfBack().waitFor({timeout:8000});

@@ -129,7 +129,7 @@
     if(bar._mpCommitExit)bar._mpCommitExit();
     if(bar._profileExit){try{bar._profileExit.cancel()}catch(e){}bar._profileExit=null;}
     var style=bar.getAttribute('style'), barRect=bar.getBoundingClientRect(), baseHeight=barRect.height, baseWidth=barRect.width, animation=null, closed=false, committed=false, fades=[], entryTimer;
-    var root=el('div','mp-profile-bar mp-ntf-morph');
+    var root=el('div','mp-profile-bar mp-ntf-morph chat-pbig');
     root.setAttribute('role','dialog');
     root.setAttribute('aria-label',opts.title||'Menu');
     root.tabIndex=-1;
@@ -207,12 +207,15 @@
       setTimeout(done,450);
     }
     root._close=close;
-    var head=el('div','mp-profile-bar-head mp-ntf-morph-hd');
-    var back=el('button','mp-profile-control');back.type='button';back.setAttribute('aria-label','Back');
+    var head=el('div','chat-pbig-hd');
+    var back=el('button','chat-pbig-btn');back.type='button';back.setAttribute('data-x','back');back.setAttribute('aria-label','Back');
     back.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg>';
     back.addEventListener('click',function(e){e.stopPropagation();close();});
-    var title=el('strong','',opts.title||'');
-    head.appendChild(back);head.appendChild(title);
+    var title=el('b','',opts.title||'');
+    var xbtn=el('button','chat-pbig-btn');xbtn.type='button';xbtn.setAttribute('data-x','close');xbtn.setAttribute('aria-label','Close');
+    xbtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
+    xbtn.addEventListener('click',function(e){e.stopPropagation();close();});
+    head.appendChild(back);head.appendChild(title);head.appendChild(xbtn);
     var scroll=el('div','mp-profile-bar-scroll');
     var body=el('div',opts.bodyClass||'mp-ntf-list');
     scroll.appendChild(body);
