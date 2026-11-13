@@ -12601,29 +12601,43 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-scrollbar,html.mp-app *::-webkit-scrollbar,html.mp-app *::-webkit-scrollbar-thumb,html.mp-app *::-webkit-scrollbar-track{display:none!important;width:0!important;height:0!important;background:transparent!important}
 /* Speed: power animations on messages that are fully faded out (scrolled off screen) pause; they resume when the message fades back in. */
 .chat-msg.chat-msg[data-fade="0.00"][class*="pw-"] :is(.chat-msg-head strong,.chat-avatar-wrap),.chat-msg.chat-msg[data-fade="0.00"][class*="pw-"] :is(.chat-msg-head strong,.chat-avatar-wrap)::before,.chat-msg.chat-msg[data-fade="0.00"][class*="pw-"] :is(.chat-msg-head strong,.chat-avatar-wrap)::after{animation-play-state:paused!important}
-/* Song previews (per dc): a glass play disc centred on the cover, with a progress ring while playing. */
+/* Song previews (per dc): a frosted glass play disc centred on the cover. While a clip plays the cover dims,
+   the glyph cross-fades to pause and a glowing ring traces the 30 seconds; while it loads a short arc spins. */
 .mp-pv-host{position:relative}
-.mp-pv{position:absolute;inset:0;z-index:3;display:grid;place-items:center;margin:0;padding:0;border:0;background:0 0;color:#fff;cursor:pointer;opacity:0;transition:opacity .25s ease,background-color .25s ease;-webkit-tap-highlight-color:transparent;border-radius:inherit}
+.mp-pv{position:absolute;inset:0;z-index:3;display:grid;place-items:center;margin:0;padding:0;border:0;background:0 0;color:#fff;cursor:pointer;opacity:0;transition:opacity .3s ease,background-color .3s ease;-webkit-tap-highlight-color:transparent;border-radius:inherit}
+/* soft shade behind the disc so it reads on pale covers */
+.mp-pv::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.16),rgba(0,0,0,0) 60%);pointer-events:none;transition:opacity .3s ease}
 .mp-pv.is-in{opacity:1}
-.mp-pv-disc{position:relative;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(10,14,30,.46);-webkit-backdrop-filter:blur(8px) saturate(1.4);backdrop-filter:blur(8px) saturate(1.4);box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 0 .5px rgba(255,255,255,.35);transition:transform .2s cubic-bezier(.3,1.4,.5,1),background-color .2s ease}
-.mp-pv:active .mp-pv-disc{transform:scale(.88)}
-.mp-pv-g{display:grid;place-items:center;width:12px;height:12px}
-.mp-pv-g svg{width:12px;height:12px;display:block}
-.mp-pv:not(.is-playing):not(.is-loading) .mp-pv-g svg{transform:translateX(.5px)}
-.mp-pv-ring{position:absolute;inset:-3px;width:calc(100% + 6px);height:calc(100% + 6px);transform:rotate(-90deg);pointer-events:none;overflow:visible}
-.mp-pv-ring circle{fill:none;stroke-width:2.2}
-.mp-pv-track{stroke:rgba(255,255,255,0);transition:stroke .25s ease}
-.mp-pv-arc{stroke:#fff;stroke-linecap:round;transition:stroke-dashoffset .12s linear}
-.mp-pv.is-playing .mp-pv-track,.mp-pv.is-loading .mp-pv-track{stroke:rgba(255,255,255,.28)}
-.mp-pv.is-playing,.mp-pv.is-loading{background:rgba(0,0,0,.22)}
-.mp-pv.is-loading .mp-pv-ring{animation:mpPvSpin 1s linear infinite}
-.mp-pv.is-loading .mp-pv-arc{stroke-dashoffset:70!important}
+.mp-pv-disc{position:relative;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#0a0f29;background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(12px) saturate(1.8);backdrop-filter:blur(12px) saturate(1.8);box-shadow:0 4px 12px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.18),0 0 0 .5px rgba(255,255,255,.9) inset;transition:transform .28s cubic-bezier(.3,1.5,.5,1),background-color .25s ease}
+.mp-pv:active .mp-pv-disc{transform:scale(.86)}
+@media (hover:hover){.mp-pv:hover .mp-pv-disc{transform:scale(1.07)}}
+.mp-pv-g{grid-area:1/1;display:grid;place-items:center;width:13px;height:13px;transition:opacity .22s ease,transform .3s cubic-bezier(.3,1.4,.5,1)}
+.mp-pv-g svg{width:100%;height:100%;display:block}
+.mp-pv-play{transform:translateX(.75px)}
+.mp-pv-pause{width:12px;height:12px;opacity:0;transform:scale(.4) rotate(-90deg)}
+.mp-pv.is-playing .mp-pv-play,.mp-pv.is-loading .mp-pv-play{opacity:0;transform:translateX(.75px) scale(.4) rotate(90deg)}
+.mp-pv.is-playing .mp-pv-pause,.mp-pv.is-loading .mp-pv-pause{opacity:1;transform:none}
+.mp-pv-ring{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.mp-pv-ring circle{fill:none;stroke-width:2.3}
+.mp-pv-track{stroke:rgba(255,255,255,0);transition:stroke .3s ease}
+.mp-pv-arc{stroke:#fff;stroke-linecap:round;opacity:0;transition:stroke-dashoffset .12s linear,opacity .25s ease;filter:drop-shadow(0 0 2px rgba(255,255,255,.75))}
+.mp-pv.is-playing .mp-pv-track,.mp-pv.is-loading .mp-pv-track{stroke:rgba(255,255,255,.3)}
+.mp-pv.is-playing .mp-pv-arc,.mp-pv.is-loading .mp-pv-arc{opacity:1}
+.mp-pv.is-playing,.mp-pv.is-loading{background:rgba(6,8,20,.4)}
+.mp-pv.is-playing::before,.mp-pv.is-loading::before{opacity:0}
+.mp-pv.is-playing .mp-pv-disc,.mp-pv.is-loading .mp-pv-disc{transform:scale(.86)}
+.mp-pv.is-playing:active .mp-pv-disc,.mp-pv.is-loading:active .mp-pv-disc{transform:scale(.76)}
+/* loading: a short arc spins around the disc (distinct from the progress ring) */
+.mp-pv.is-loading .mp-pv-ring{animation:mpPvSpin .9s linear infinite}
+.mp-pv.is-loading .mp-pv-arc{stroke-dasharray:24 200!important;stroke-dashoffset:0!important}
 @keyframes mpPvSpin{to{transform:rotate(270deg)}}
-.mp-pv:focus-visible .mp-pv-disc{outline:2px solid #fff;outline-offset:2px}
+.mp-pv:focus-visible .mp-pv-disc{outline:2px solid #fff;outline-offset:3px}
 /* the equaliser and note glyph step aside while a preview button sits on the cover */
 .mp-pv-host.is-pv-playing .chat-np-eq{opacity:0}
-.mp-profile-song-art .mp-pv-disc{width:24px;height:24px}
-@media (prefers-reduced-motion:reduce){.mp-pv.is-loading .mp-pv-ring{animation:none}}
+.mp-profile-song-art .mp-pv-disc{width:25px;height:25px}
+.mp-profile-song-art .mp-pv-play{width:12px;height:12px}
+.mp-profile-song-art .mp-pv-pause{width:11px;height:11px}
+@media (prefers-reduced-motion:reduce){.mp-pv.is-loading .mp-pv-ring{animation:none}.mp-pv-g,.mp-pv-disc{transition:none}}
 
 /* Cart (per dc): the pack size sits right under the product title. */
 .line-mid strong+.meta{margin-top:-5px}
