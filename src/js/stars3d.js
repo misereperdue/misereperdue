@@ -27,7 +27,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=10";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=11";
   }
 
   return {
@@ -59,7 +59,7 @@ var MPStars3D = (function () {
         .catch(fallback);
 
       function build(THREE, RoomEnvironment, BGU) {
-        var light = isLight();
+        var light = isLight(), lit = !1; // per dc: the coin keeps its dark-mode look in light mode too (only the backdrop follows the theme)
         var still = el.hasAttribute("data-still"); // single frame, used by tools/stars/render-stills.cjs
         var reduce = still || !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
         try {
@@ -70,7 +70,7 @@ var MPStars3D = (function () {
         }
         renderer.setPixelRatio(still ? Math.max(1, window.devicePixelRatio || 1) : Math.min(window.devicePixelRatio || 1, 3));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = light ? 1.0 : 1.1;
+        renderer.toneMappingExposure = lit ? 1.0 : 1.1;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         // The frosted glass samples what's behind it; with a black clear colour the gaps between chips and the rounded
         // edges picked up black lines. Clearing to the page colour (still alpha 0) makes them pick up the page instead.
@@ -96,40 +96,40 @@ var MPStars3D = (function () {
         }
         if (window.ResizeObserver) (ro = new ResizeObserver(resize)).observe(el);
 
-        var key = new THREE.DirectionalLight(0xffffff, light ? 1.6 : 1.8);
+        var key = new THREE.DirectionalLight(0xffffff, lit ? 1.6 : 1.8);
         key.position.set(2, 4, 7);
         scene.add(key);
-        var rim = new THREE.DirectionalLight(light ? 0xcfe2ff : 0xa9d7f5, light ? 1.6 : 2.2);
+        var rim = new THREE.DirectionalLight(lit ? 0xcfe2ff : 0xa9d7f5, lit ? 1.6 : 2.2);
         rim.position.set(-5, 3, -4);
         scene.add(rim);
-        var spot = new THREE.PointLight(0xffffff, light ? 10 : 16, 30);
+        var spot = new THREE.PointLight(0xffffff, lit ? 10 : 16, 30);
         spot.position.set(2.5, 1.5, 4);
         scene.add(spot);
 
         // ---- materials: frosted glass body, a solid star set inside it, satin bezel ----
         var glass = new THREE.MeshPhysicalMaterial({
-          color: light ? 0xeaf3fb : 0xb9cde6,
+          color: lit ? 0xeaf3fb : 0xb9cde6,
           transmission: 0.55,
           roughness: 0.62,
           metalness: 0,
           ior: 1.45,
           thickness: 0.6,
-          attenuationColor: light ? 0x6f9fd0 : 0x6f9fd0,
-          attenuationDistance: light ? 0.9 : 0.9,
+          attenuationColor: lit ? 0x6f9fd0 : 0x6f9fd0,
+          attenuationDistance: lit ? 0.9 : 0.9,
           clearcoat: 1,
           clearcoatRoughness: 0.12,
           specularIntensity: 1,
-          envMapIntensity: light ? 1.1 : 0.5,
+          envMapIntensity: lit ? 1.1 : 0.5,
         });
         var inlay = new THREE.MeshPhysicalMaterial({
-          color: light ? 0x14204a : 0xd7ecfb,
+          color: lit ? 0x14204a : 0xd7ecfb,
           roughness: 0.35,
           metalness: 0,
           clearcoat: 0.6,
-          emissive: light ? 0x000000 : 0x5b9fd0,
-          emissiveIntensity: light ? 0 : 0.12,
+          emissive: lit ? 0x000000 : 0x5b9fd0,
+          emissiveIntensity: lit ? 0 : 0.12,
         });
-        var line = new THREE.MeshStandardMaterial({ color: light ? 0x4f7fb5 : 0xcfe6f8, roughness: 0.4, emissive: light ? 0 : 0x6fa8d6, emissiveIntensity: light ? 0 : 0.1 });
+        var line = new THREE.MeshStandardMaterial({ color: lit ? 0x4f7fb5 : 0xcfe6f8, roughness: 0.4, emissive: lit ? 0 : 0x6fa8d6, emissiveIntensity: lit ? 0 : 0.1 });
         
         // ---- geometry ----
         var P = [[12, 3.5], [14.6, 8.8], [20.5, 9.7], [16.2, 13.8], [17.2, 19.6], [12, 16.9], [6.8, 19.6], [7.8, 13.8], [3.5, 9.7], [9.4, 8.8]];
@@ -239,7 +239,7 @@ var MPStars3D = (function () {
           insParts.push([new THREE.RingGeometry(0.8 * D.R, D.R - 0.035, 10, 1, c0 - Math.PI / 2, INS), mat4(0, D.T / 2 + LIFT, 0, -Math.PI / 2, 0, 0)]);
           insParts.push([new THREE.RingGeometry(0.8 * D.R, D.R - 0.035, 10, 1, Math.PI / 2 - c0 - INS, INS), mat4(0, -D.T / 2 - LIFT, 0, Math.PI / 2, 0, 0)]);
         }
-        var insMat = new THREE.MeshPhysicalMaterial({ color: light ? 0x14204a : 0xeaf4fd, roughness: 0.38, clearcoat: 0.8, clearcoatRoughness: 0.2, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+        var insMat = new THREE.MeshPhysicalMaterial({ color: lit ? 0x14204a : 0xeaf4fd, roughness: 0.38, clearcoat: 0.8, clearcoatRoughness: 0.2, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
         line.polygonOffset = inlay.polygonOffset = true;
         line.polygonOffsetFactor = inlay.polygonOffsetFactor = -1;
         line.polygonOffsetUnits = inlay.polygonOffsetUnits = -1;
