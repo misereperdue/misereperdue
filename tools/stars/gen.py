@@ -19,7 +19,7 @@ THEMES = {
     "dark": dict(
         bg="#0c1230", bg_hi="#18234f", shadow="#000000", shadow_op=0.55,
         face0="#26335f", face1="#121b3e", side0="#1c2850", side1="#080d24",
-        rim="#a9d7f5", rim_dark="#050a1e", inlay0="#e3f3fd", inlay1="#a9d7f5",
+        rim="#a9d7f5", rim_dark="#050a1e", inlay0="#cfe6f6", inlay1="#9cc9e8",
         inlay_edge="#6fa3c8", spec="#ffffff", ink="#f5f5f7", ink_op=0.92,
     ),
 }
@@ -47,7 +47,7 @@ def defs(t):
   </linearGradient>
   <filter id="soft" filterUnits="userSpaceOnUse" x="-{S}" y="-{S}" width="{3*S}" height="{3*S}"><feGaussianBlur stdDeviation="22"/></filter>
   <filter id="soft2" filterUnits="userSpaceOnUse" x="-{S}" y="-{S}" width="{3*S}" height="{3*S}"><feGaussianBlur stdDeviation="6"/></filter>
-  <filter id="glow" filterUnits="userSpaceOnUse" x="-{S}" y="-{S}" width="{3*S}" height="{3*S}"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="glow" filterUnits="userSpaceOnUse" x="-{S}" y="-{S}" width="{3*S}" height="{3*S}"><feGaussianBlur stdDeviation="12"/></filter>
 </defs>"""
 
 
@@ -59,7 +59,7 @@ def star_inlay(t, cx, cy, size, sy=1.0, dark=False):
         f'<path d="{STAR}" fill="{fill}" stroke="{fill}" stroke-width="2.4" stroke-linejoin="round" {extra} {tr(dx,dy)}/>')
     out = []
     if dark:
-        out.append(p(t["inlay1"], 'opacity="0.55" filter="url(#glow)"'))
+        out.append(p(t["inlay1"], 'opacity="0.16" filter="url(#glow)"'))
     out.append(p(t["inlay_edge"], dy=-size * 0.018))  # upper inner wall (shadowed)
     out.append(p("url(#inlay)", dy=size * 0.006))
     out.append(p(t["spec"], 'opacity="0.35" filter="url(#soft2)"', dx=-size * 0.06, dy=-size * 0.07 * sy))
@@ -103,39 +103,42 @@ def hero(name):
     return svg_wrap(t, coin_flat(t, S / 2, S * 0.47, S * 0.30, name == "dark"))
 
 
-def stack_counts(n_packs):
-    # coins per pack tier, smallest pack = 1 coin
-    base = [1, 3, 6, 10, 14, 18]
-    return base[:n_packs] if n_packs <= len(base) else [2 * i + 1 for i in range(n_packs)]
+# Coins per pack and how they split into stacks. Must match coinsFor()/STACKS in src/js/stars3d.js.
+def coins_for(n):
+    return 1 if n <= 100 else 3 if n <= 500 else 6 if n <= 1000 else 10 if n <= 2400 else 15 if n <= 5000 else 21
 
 
-def pack(name, size, coins):
+STACKS = {1: [1], 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3]}
+# Stack centres in coin radii (x, depth); >= 2.1 apart so neighbouring stacks never touch. Back row first.
+SPOTS = {1: [(0, 0)], 2: [(-1.05, -0.35), (1.05, 0.35)], 3: [(-1.1, -0.6), (1.1, -0.6), (0, 1.3)],
+         4: [(-1.05, -1.05), (1.05, -1.05), (-1.05, 1.05), (1.05, 1.05)]}
+
+
+def pack(name, size):
     t = THEMES[name]
     dark = name == "dark"
     sy = 0.42
-    two = coins > 6
-    r = S * (0.23 if two else 0.27)
+    counts = STACKS[coins_for(size)]
+    spots = SPOTS[len(counts)]
+    r = S * {1: 0.27, 2: 0.19, 3: 0.165, 4: 0.15}[len(counts)]
     th = r * 0.15
     ry = r * sy
-    if two:
-        back = coins // 2 + coins % 2
-        front = coins - back
-        stacks = [(S / 2 - r * 0.62, back, 0.0), (S / 2 + r * 0.62, front, r * 0.30)]
-    else:
-        stacks = [(S / 2, coins, 0.0)]
-    tallest = max(n for _, n, _ in stacks)
-    # vertically centre the whole group (top face of tallest .. bottom of base) above the label
-    group_h = ry * 2 + th * tallest + (r * 0.30 if two else 0)
-    top = S * 0.44 - group_h / 2
-    base_y = top + ry + th * (tallest - 1)
+    stacks = [(spots[i][0] * r, spots[i][1] * r * sy, counts[i]) for i in range(len(counts))]
+    # vertical extent of the group, to centre it above the label
+    tops = [dy - ry - th * (n - 1) for _, dy, n in stacks]
+    bottoms = [dy + ry + th for _, dy, n in stacks]
+    span_top, span_bot = min(tops), max(bottoms)
+    off = S * 0.44 - (span_top + span_bot) / 2
     body = []
-    for x, n, dy in stacks:
-        body.append(f'<ellipse cx="{x}" cy="{base_y + dy + th + ry*0.35}" rx="{r*1.05}" ry="{ry*0.8}" '
+    for x, dy, n in stacks:
+        body.append(f'<ellipse cx="{S/2 + x}" cy="{off + dy + th + ry*0.35}" rx="{r*1.05}" ry="{ry*0.8}" '
                     f'fill="{t["shadow"]}" opacity="{t["shadow_op"]}" filter="url(#soft)"/>')
-    for x, n, dy in stacks:
+    idx = 0
+    for x, dy, n in sorted(stacks, key=lambda s: s[1]):  # back to front
         for k in range(n):
-            jitter = ((k * 37 + int(x)) % 7 - 3) * r * 0.010
-            body.append(coin_tilted(t, x + jitter, base_y + dy - k * th, r, th, dark, sy))
+            jitter = ((idx * 37) % 7 - 3) * r * 0.008
+            body.append(coin_tilted(t, S / 2 + x + jitter, off + dy - k * th, r, th, dark, sy))
+            idx += 1
     body.append(f'<text x="{S/2}" y="{S*0.87}" text-anchor="middle" font-family="DejaVu Sans Mono, Menlo, monospace" '
                 f'font-weight="700" font-size="{S*0.085:.0f}" letter-spacing="-3" fill="{t["ink"]}" '
                 f'fill-opacity="{t["ink_op"]}">{size:,}</text>')
@@ -155,8 +158,8 @@ def main():
     os.makedirs(out, exist_ok=True)
     for name in THEMES:
         render(hero(name), f"{out}/stars-{name}.jpg")
-        for size, coins in zip(sizes, stack_counts(len(sizes))):
-            render(pack(name, size, coins), f"{out}/stars-{size}-{name}.jpg")
+        for size in sizes:
+            render(pack(name, size), f"{out}/stars-{size}-{name}.jpg")
 
 
 if __name__ == "__main__":

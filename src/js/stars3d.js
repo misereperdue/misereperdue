@@ -3,20 +3,29 @@
 // The stage's data-pack attribute picks the stack; changing it re-stacks with a drop-in animation.
 var MPStars3D = (function () {
   "use strict";
-  var PACK_IMGS = [100, 500, 1000, 2500];
+  var PACK_IMGS = [100, 500, 1000, 2400, 2500, 6500];
   function packNum(el) {
     return parseInt(String(el.getAttribute("data-pack") || "").replace(/[^\d]/g, ""), 10) || 0;
   }
   function coinsFor(n) {
-    return !n || n <= 100 ? 1 : n <= 500 ? 3 : n <= 1000 ? 6 : 10;
+    return !n || n <= 100 ? 1 : n <= 500 ? 3 : n <= 1000 ? 6 : n <= 2400 ? 10 : n <= 5000 ? 15 : 21;
   }
+  // How each coin count splits into stacks, and where stacks stand (coin radii, x/z). Centres are >= 2.1 apart so
+  // neighbouring stacks never touch. Must match tools/stars/gen.py.
+  var STACKS = { 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3] };
+  var SPOTS = {
+    1: [[0, 0]],
+    2: [[-1.05, -0.35], [1.05, 0.35]],
+    3: [[-1.1, -0.6], [1.1, -0.6], [0, 1.3]],
+    4: [[-1.05, -1.05], [1.05, -1.05], [-1.05, 1.05], [1.05, 1.05]],
+  };
   function isLight() {
     var t = document.documentElement.getAttribute("data-theme");
     return t ? t === "light" : !!(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=2";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=3";
   }
 
   return {
@@ -148,10 +157,10 @@ var MPStars3D = (function () {
 
         var coinMat = light
           ? new THREE.MeshPhysicalMaterial({ color: 0xf4f5f8, roughness: 0.4, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.28, envMapIntensity: 0.75 })
-          : new THREE.MeshPhysicalMaterial({ color: 0x1c2852, roughness: 0.3, metalness: 0.35, clearcoat: 0.9, clearcoatRoughness: 0.18, envMapIntensity: 0.9 });
+          : new THREE.MeshPhysicalMaterial({ color: 0x3a4f8c, roughness: 0.32, metalness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.18, envMapIntensity: 1 });
         var starMat = light
           ? new THREE.MeshPhysicalMaterial({ color: 0x86b4da, roughness: 0.16, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.1 })
-          : new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0x5b9fd0, emissiveIntensity: 0.45, envMapIntensity: 1 });
+          : new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0x5b9fd0, emissiveIntensity: 0.18, envMapIntensity: 1 });
         var ringMat = new THREE.MeshStandardMaterial({ color: 0xa9d7f5, emissive: 0x6fa8d6, emissiveIntensity: light ? 0 : 0.6, roughness: 0.3 });
         var ringGeo = light ? null : new THREE.TorusGeometry(0.815, 0.007, 8, 128);
 
@@ -207,23 +216,29 @@ var MPStars3D = (function () {
             ground.position.set(0, 0, -1.3);
             scene.add(ground);
           } else {
-            var stacks = count > 6 ? [[-0.62, -0.28, 6], [0.62, 0.32, count - 6]] : [[0, 0, count]];
-            var idx = 0;
-            stacks.forEach(function (s, si) {
-              for (var k = 0; k < s[2]; k++, idx++) {
+            var counts = STACKS[count],
+              spots = SPOTS[counts.length],
+              idx = 0,
+              spread = 0;
+            counts.forEach(function (cnt, si) {
+              var sx = spots[si][0],
+                sz = spots[si][1];
+              spread = Math.max(spread, Math.sqrt(sx * sx + sz * sz));
+              for (var k = 0; k < cnt; k++, idx++) {
                 var c2 = makeCoin();
-                var y = T / 2 + k * (T + 0.003);
-                c2.position.set(s[0] + (seeded(idx) - 0.5) * 0.06, y, s[1] + (seeded(idx + 50) - 0.5) * 0.06);
-                c2.rotation.set((seeded(idx + 9) - 0.5) * 0.03, seeded(idx + 3) * Math.PI * 2, (seeded(idx + 21) - 0.5) * 0.03);
+                var y = T / 2 + k * (T + 0.004);
+                // coins in a stack only shift sideways and turn about their axis: no tilt, so they never cut into each other
+                c2.position.set(sx + (seeded(idx) - 0.5) * 0.05, y, sz + (seeded(idx + 50) - 0.5) * 0.05);
+                c2.rotation.set(0, seeded(idx + 3) * Math.PI * 2, 0);
                 content.add(c2);
-                coins.push({ obj: c2, y: y, delay: idx * 70 + si * 40 });
+                coins.push({ obj: c2, y: y, delay: idx * 55 + si * 40 });
               }
             });
-            var h = T * (stacks[0][2] + 0.4);
-            content.position.y = -h / 2; // centre the stack on the turntable
+            var h = T * (counts[0] + 0.4);
+            content.position.y = -h / 2; // centre the stacks on the turntable
             basePitch = 0.52;
+            frameR = counts.length > 1 ? spread + 1.15 : Math.max(1.25, h * 0.75 + 0.9);
             key.position.set(2, 6, 6);
-            frameR = count > 6 ? 1.95 : Math.max(1.25, h * 0.75 + 0.9);
             ground.rotation.set(-Math.PI / 2, 0, 0);
             ground.position.set(0, 0, 0);
             content.add(ground);
