@@ -63,7 +63,8 @@ var MPStars3D = (function () {
         var still = el.hasAttribute("data-still"); // single frame, used by tools/stars/render-stills.cjs
         var reduce = still || !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
         try {
-          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: still });
+          // premultipliedAlpha off so the clear colour below can be the page colour while staying fully transparent
+          renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: still });
         } catch (e) {
           return fallback();
         }
@@ -71,7 +72,9 @@ var MPStars3D = (function () {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = light ? 1.0 : 1.1;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.setClearColor(0x000000, 0);
+        // The frosted glass samples what's behind it; with a black clear colour the gaps between chips and the rounded
+        // edges picked up black lines. Clearing to the page colour (still alpha 0) makes them pick up the page instead.
+        renderer.setClearColor(light ? 0xffffff : 0x070f29, 0);
         el.appendChild(renderer.domElement);
 
         var scene = new THREE.Scene();
@@ -251,7 +254,7 @@ var MPStars3D = (function () {
           var L = LAYOUTS[tier],
             mats = [],
             box = new THREE.Box3(),
-            gap = D.T + 0.003,
+            gap = D.T + 0.0008,
             v = new THREE.Vector3();
           L.s.forEach(function (st, si) {
             for (var k = 0; k < st[2]; k++) {

@@ -1196,7 +1196,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=8", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=9", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),
