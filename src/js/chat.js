@@ -3371,7 +3371,7 @@
     return String(title || "").replace(/\s*[([]\s*(?:feat(?:uring)?\.?|ft\.?)\s+[^)\]]*[)\]]/gi, "").replace(/\s+(?:[-–—]\s*)?(?:feat(?:uring)?\.?|ft\.?)\s+.+$/i, "").trim();
   }
   function mpNPOut(e, t) {
-    return { title: t || e.trackName, artist: e.artistName, art: String(e.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: t ? e.artistViewUrl || "" : e.trackViewUrl || "" };
+    return { title: t || e.trackName, artist: e.artistName, art: String(e.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: t ? e.artistViewUrl || "" : e.trackViewUrl || "", preview: t ? "" : e.previewUrl || "" };
   }
   function mpNPLookup(e) {
     if (mpNP[e]) return mpNP[e];
@@ -4882,6 +4882,127 @@
     mpAmStart(card);
   }
 
+  /* Song previews (per dc): a play button on the cover of song cards in chat and the profile
+     "Listening" card plays Apple's 30-second preview. One preview at a time; Misery FM pauses
+     while it plays and picks back up after. Tap only, never auto-play. */
+  var MPPreview = (function () {
+    var memo = Object.create(null), audio = null, cur = null, raf = 0, fmWas = false, fadeT = 0;
+    var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8c0 .9 1 1.4 1.7.9l9.4-6.4c.6-.4.6-1.4 0-1.8l-9.4-6.4c-.7-.5-1.7 0-1.7.9Z" fill="currentColor"/></svg>';
+    var PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>';
+    var C = 2 * Math.PI * 15;
+    function okUrl(u) {
+      try { var x = new URL(u); return x.protocol === "https:" && /(^|\.)(apple\.com|mzstatic\.com)$/.test(x.hostname) ? x.href : ""; } catch (e) { return ""; }
+    }
+    function keyOf(song) {
+      var ref = mpMusicRef(song.url);
+      return ref ? ref.key : "q:" + mpNPq(song.title + " " + song.artist);
+    }
+    function find(song) {
+      if (!song || !song.title || !song.artist) return Promise.resolve("");
+      if (song.preview && okUrl(song.preview)) return Promise.resolve(okUrl(song.preview));
+      var k = keyOf(song), lk = "mp-pv1:" + k;
+      if (memo[k]) return memo[k];
+      try {
+        var hit = JSON.parse(localStorage.getItem(lk) || "null");
+        if (hit && Date.now() - hit.t < 7 * 864e5) return (memo[k] = Promise.resolve(hit.u || ""));
+      } catch (e) {}
+      var ref = mpMusicRef(song.url), q = song.title + " " + song.artist;
+      var req = ref
+        ? fetch("https://itunes.apple.com/lookup?id=" + ref.id + "&entity=song&country=" + ref.country)
+            .then(function (r) { return r.json(); })
+            .then(function (d) { var tr = (d.results || []).find(function (x) { return String(x.trackId) === ref.id; }); return tr && tr.previewUrl; })
+        : mpNPSearch(q, { limit: 10 }).then(function (list) { var m = mpNPPick(list || [], q); return m.r && m.s >= 5 ? m.r.previewUrl : ""; });
+      return (memo[k] = req.then(function (u) {
+        u = okUrl(u || "");
+        try { localStorage.setItem(lk, JSON.stringify({ u: u, t: Date.now() })); } catch (e) {}
+        return u;
+      }, function () { delete memo[k]; return ""; }));
+    }
+    function paint(btn, state) {
+      btn.classList.toggle("is-playing", state === "play");
+      btn.classList.toggle("is-loading", state === "load");
+      btn.querySelector(".mp-pv-g").innerHTML = state === "play" || state === "load" ? PAUSE : PLAY;
+      btn.setAttribute("aria-label", (state === "idle" ? "Play preview of " : "Pause preview of ") + btn._title);
+      btn.setAttribute("aria-pressed", state === "idle" ? "false" : "true");
+      if (state === "idle") btn._arc.style.strokeDashoffset = C;
+    }
+    function tick() {
+      raf = 0;
+      if (!cur || !audio) return;
+      if (!cur.isConnected) return stop();
+      var d = audio.duration || 30, k = Math.min(1, (audio.currentTime || 0) / d);
+      cur._arc.style.strokeDashoffset = C * (1 - k);
+      raf = requestAnimationFrame(tick);
+    }
+    function fmPause() {
+      try { if (window.MPFM && MPFM.listening && MPFM.listening()) { fmWas = true; MPFM.listen(false); } } catch (e) {}
+    }
+    function fmResume() {
+      if (!fmWas) return;
+      fmWas = false;
+      try { window.MPFM && MPFM.listen && MPFM.listen(true); } catch (e) {}
+    }
+    function stop(keepFm) {
+      clearInterval(fadeT);
+      cancelAnimationFrame(raf); raf = 0;
+      if (audio) { try { audio.pause(); } catch (e) {} audio.removeAttribute("src"); try { audio.load(); } catch (e) {} }
+      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); }
+      cur = null;
+      keepFm || fmResume();
+    }
+    function play(btn) {
+      if (cur === btn) return stop();
+      stop(true);
+      if (!audio) {
+        audio = new Audio();
+        audio.preload = "none";
+        audio.setAttribute("playsinline", "");
+        audio.addEventListener("ended", function () { stop(); });
+        audio.addEventListener("error", function () { cur && stop(); });
+        audio.addEventListener("playing", function () { cur && (paint(cur, "play"), raf || (raf = requestAnimationFrame(tick))); });
+        audio.addEventListener("waiting", function () { cur && paint(cur, "load"); });
+      }
+      cur = btn;
+      paint(btn, "load");
+      var host = btn.closest(".mp-pv-host");
+      host && host.classList.add("is-pv-playing");
+      fmPause();
+      audio.src = btn._src;
+      audio.volume = 0;
+      var p = audio.play();
+      p && p.catch && p.catch(function () { cur === btn && stop(); });
+      /* short fade-in so the clip doesn't start with a click */
+      var v = 0;
+      fadeT = setInterval(function () { v = Math.min(1, v + 0.1); try { audio.volume = v * 0.9; } catch (e) {} v >= 1 && clearInterval(fadeT); }, 25);
+    }
+    document.addEventListener("visibilitychange", function () { document.hidden && cur && stop(); });
+    /* host = the cover element; the button appears once a preview is known to exist */
+    function attach(host, song) {
+      if (!host || host.querySelector(".mp-pv")) return;
+      find(song).then(function (src) {
+        if (!src || !host.isConnected || host.querySelector(".mp-pv")) return;
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "mp-pv";
+        b._src = src;
+        b._title = mpMusicTitle(song.title) + " by " + song.artist;
+        b.innerHTML = '<span class="mp-pv-disc"><svg class="mp-pv-ring" viewBox="0 0 34 34" aria-hidden="true"><circle class="mp-pv-track" cx="17" cy="17" r="15"/><circle class="mp-pv-arc" cx="17" cy="17" r="15"/></svg><span class="mp-pv-g"></span></span>';
+        b._arc = b.querySelector(".mp-pv-arc");
+        b._arc.style.strokeDasharray = C;
+        paint(b, "idle");
+        ["click", "pointerdown", "touchstart", "mousedown"].forEach(function (ev) {
+          b.addEventListener(ev, function (e) { e.stopPropagation(); ev === "click" && (e.preventDefault(), play(b)); }, ev === "touchstart" ? { passive: true } : false);
+        });
+        b.addEventListener("keydown", function (e) { e.stopPropagation(); });
+        host.classList.add("mp-pv-host");
+        host.appendChild(b);
+        requestAnimationFrame(function () { b.classList.add("is-in"); });
+      });
+    }
+    return { attach: attach, find: find, stop: stop };
+  })();
+  window.MPPreview = MPPreview;
+
   function mpNowListening(e, t, n, a) {
     var ref = mpMusicRef(t), r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
     if (!ref && (!r || /^\+\d/.test(String(t).trim()))) return;
@@ -4933,6 +5054,7 @@
       var u = document.createElement("span");
       ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), (u.setAttribute("aria-hidden", "true"), a.appendChild(u)));
       mpAmWire(c);
+      MPPreview.attach(a, n);
       if (n.url && /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url)) {
         c.setAttribute("role", "link"); c.tabIndex = 0;
         function openSong(event) {
