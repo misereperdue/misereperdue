@@ -129,7 +129,7 @@
     if(bar._mpCommitExit)bar._mpCommitExit();
     if(bar._profileExit){try{bar._profileExit.cancel()}catch(e){}bar._profileExit=null;}
     var style=bar.getAttribute('style'), barRect=bar.getBoundingClientRect(), baseHeight=barRect.height, baseWidth=barRect.width, animation=null, closed=false, committed=false, fades=[], entryTimer;
-    var root=el('div','mp-profile-bar mp-ntf-morph chat-pbig');
+    var root=el('div','mp-profile-bar mp-ntf-morph');
     root.setAttribute('role','dialog');
     root.setAttribute('aria-label',opts.title||'Menu');
     root.tabIndex=-1;
@@ -148,28 +148,20 @@
         Object.assign(s.el.style,{position:'absolute',left:(s.rect.left-now.left-bar.clientLeft)+'px',top:(s.rect.top-now.top-bar.clientTop)+'px',right:'auto',bottom:'auto',width:s.rect.width+'px',height:s.rect.height+'px',margin:'0'});
       });
     }
-    function expandedWidth(){
-      var vw=window.visualViewport?visualViewport.width:innerWidth;
-      return Math.min(760, Math.max(baseWidth, Math.round(vw-16)));
-    }
     function size(animate){
       if(closed||committed)return;
       var before=bar.getBoundingClientRect(), beforeH=before.height, beforeW=before.width;
       if(animation){animation.cancel();animation=null;}
       var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
-      var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.chat-pbig-hd,.mp-profile-bar-head');
+      var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.mp-profile-bar-head');
       /* Natural height = the sheet's own padding + header + the real header-to-list gap + the list. */
       var rs=getComputedStyle(root),rootPad=(parseFloat(rs.paddingTop)||0)+(parseFloat(rs.paddingBottom)||0);
       var gap=head&&scroll?Math.max(0,scroll.getBoundingClientRect().top-head.getBoundingClientRect().bottom):0;
       var natural=rootPad+(head?head.offsetHeight:0)+gap+(cs?(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0):0)+(content?content.offsetHeight+(ms?((parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0)):0):0)+2;
       var cap=opts.maxHeight!=null?opts.maxHeight:480;
       var height=Math.min(available, cap, Math.max(baseHeight,natural||baseHeight));
-      var wide=expandedWidth();
       bar.style.height=height+'px';
-      bar.style.width=wide+'px';
-      bar.style.marginLeft='auto';
-      bar.style.marginRight='auto';
-      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',width:beforeW+'px',borderRadius:beforeH<=baseHeight+1?'32px':'20px'},{height:height+'px',width:wide+'px',borderRadius:'20px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
+      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',borderRadius:beforeH<=baseHeight+1?'32px':'28px'},{height:height+'px',borderRadius:'28px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
     }
     function commitRestore(){
       if(committed)return;
@@ -203,21 +195,17 @@
       root.style.pointerEvents='none';
       if(root.animate)root.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards',easing:MP_EASE});
       previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:s.opacity}],{duration:260,easing:MP_EASE});});
-      bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'20px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      bar._profileExit=bar.animate([{height:closing.height+'px',borderRadius:'28px'},{height:baseHeight+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
       var done=function(){commitRestore();};
       bar._profileExit.onfinish=done;
       if(bar._profileExit.finished)bar._profileExit.finished.then(done,done);
       setTimeout(done,450);
     }
     root._close=close;
-    var head=el('div','chat-pbig-hd');
-    var back=el('button','chat-pbig-btn');back.type='button';back.setAttribute('data-x','back');back.setAttribute('aria-label','Back');
-    back.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg>';
-    back.addEventListener('click',function(e){e.stopPropagation();close();});
-    var title=el('b','',opts.title||'');
-    var xbtn=el('button','chat-pbig-btn');xbtn.type='button';xbtn.setAttribute('data-x','close');xbtn.setAttribute('aria-label','Close');
-    xbtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg>';
-    xbtn.addEventListener('click',function(e){e.stopPropagation();close();});
+    /* Same header as the other top-bar menus (profile, Powers, Stars): round Back, centred title, round Close. */
+    var head=el('div','mp-profile-bar-head');
+    var ctl=function(label,x,path){var b=el('button','mp-profile-control');b.type='button';b.setAttribute('aria-label',label);b.setAttribute('data-x',x);b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';b.addEventListener('click',function(e){e.stopPropagation();close();});return b;};
+    var back=ctl('Back','back','M15 6 9 12 15 18'),title=el('strong','',opts.title||''),xbtn=ctl('Close','close','M6 6 18 18M18 6 6 18');
     head.appendChild(back);head.appendChild(title);head.appendChild(xbtn);
     var scroll=el('div','mp-profile-bar-scroll');
     var body=el('div',opts.bodyClass||'mp-ntf-list');

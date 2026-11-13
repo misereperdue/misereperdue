@@ -9439,7 +9439,7 @@ html[data-gprows="r3"] .chat-gp-row.is-pinned .chat-gp-pin{display:flex}
 /* One menu glass for every menu/popover: the profile card's look (its glass over the .45 scrim) without needing a scrim (per dc) */
 [data-theme] { --menu-glass-bg: rgba(250, 250, 252, 0.78); --menu-glass-filter: blur(24px) saturate(160%); --menu-glass-border: rgba(0, 0, 0, 0.08); }
 [data-theme="dark"] { --menu-glass-bg: rgba(13, 13, 17, 0.72); --menu-glass-border: rgba(255, 255, 255, 0.1); }
-.chat-plus-menu, .mp-ctx-menu, .chat-mention-menu, .chat-me-menu, .online-dropdown, .avatar-options-menu, .chat-react-picker, .forum-mention-dropdown, .forum-menu, .forum-more-menu, .chat-head.is-ntf-bar, .nav.is-ntf-bar {
+.chat-plus-menu, .mp-ctx-menu, .chat-mention-menu, .chat-me-menu, .online-dropdown, .avatar-options-menu, .chat-react-picker, .forum-mention-dropdown, .forum-menu, .forum-more-menu {
   background: var(--menu-glass-bg) !important;
   -webkit-backdrop-filter: var(--menu-glass-filter) !important;
   backdrop-filter: var(--menu-glass-filter) !important;
@@ -12341,13 +12341,8 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 /* Notifications sheet reuses .chat-pbig / .chat-pbig-hd / .chat-pbig-btn / .chat-pmenu-row.
    The morphing chat-head can't take .chat-plus-menu (that class is a bottom-anchored popover),
    so it joins the shared menu-glass list and only drops the capsule rim. */
-.chat-head.is-ntf-bar,.nav.is-ntf-bar{background-image:none!important;border:1px solid var(--menu-glass-border);box-shadow:var(--sheet-shadow,0 12px 40px rgba(0,0,0,.35));transition:none}
-.chat-head.is-ntf-bar::before,.nav.is-ntf-bar::before{content:none!important;display:none!important}
-.chat-head.is-ntf-bar.is-profile-expanded,.nav.is-ntf-bar.is-profile-expanded{border-radius:20px}
 .mp-ntf-morph:focus{outline:none}
 .mp-ntf-list.is-status .mp-loading-bubble{display:flex;justify-content:center;padding:28px 0}
-.mp-ntf-morph>.mp-profile-backdrop{display:none!important}
-.mp-ntf-morph .mp-profile-bar-scroll{padding:0}
 .mp-ntf-list{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:0;width:100%;text-align:left}
 .mp-ntf-list.is-status{color:var(--muted);text-align:center;padding:28px 12px;font-size:14px}
 .mp-ntf-h{display:block;width:100%;box-sizing:border-box;padding:8px 10px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left}
@@ -12546,3 +12541,8 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .pw-chip.is-locked{opacity:.6}
 .pw-chips.is-clash .pw-chip{background:color-mix(in srgb,#ff5a5f 12%,transparent)}
 .pw-chip.is-note{background:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 14%,transparent)}
+
+/* Notifications use the top-bar menu chrome (profile/Powers/Stars), not the + menu: rows lay out on their own. */
+.mp-ntf-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;border-radius:14px;background:none;color:var(--ink);font:inherit;text-align:left;-webkit-tap-highlight-color:transparent}
+.mp-ntf-row.is-link:active{background:color-mix(in srgb,var(--ink) 6%,transparent);transform:scale(.985)}
+.mp-ntf-list .mp-ntf-h{padding-left:12px}

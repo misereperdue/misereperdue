@@ -581,7 +581,7 @@
     var canGo = !!n.threadId;
     var row = document.createElement(canGo ? "button" : "div");
     if (canGo) row.type = "button";
-    row.className = "mp-ntf-row chat-pmenu-row" + (n.read ? "" : " is-unread") + (canGo ? " is-link" : "");
+    row.className = "mp-ntf-row" + (n.read ? "" : " is-unread") + (canGo ? " is-link" : "");
     row.appendChild(ntfAvatar(n, info.site));
     var tx = document.createElement("span");
     tx.className = "mp-ntf-row-tx";
