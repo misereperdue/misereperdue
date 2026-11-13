@@ -648,13 +648,16 @@
     });
     if (!sheet) return;
     ntfSheet = sheet;
-    sheet.body.textContent = "Loading…";
+    /* Own spinner, not the text "Loading…": forum-mount-patch rewrites any "Loading…" node and leaves
+       inline padding/centering behind, which pushed every row 20px in. */
+    sheet.body.innerHTML = '<div class="mp-loading-bubble"><span class="mp-spinner"></span></div>';
     sheet.body.classList.add("is-status");
     sheet.resize();
     y("/api/notifications")
       .then(function (res) {
         if (epoch !== notificationEpoch || route !== location.hash || !sheet.body.isConnected) return;
         sheet.body.classList.remove("is-status");
+        sheet.body.removeAttribute("style");
         sheet.body.replaceChildren();
         var list = (res && res.ok && res.notifications) || [];
         if (!list.length) {

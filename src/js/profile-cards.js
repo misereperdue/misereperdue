@@ -157,8 +157,11 @@
       var before=bar.getBoundingClientRect(), beforeH=before.height, beforeW=before.width;
       if(animation){animation.cancel();animation=null;}
       var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
-      var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.mp-profile-bar-head');
-      var natural=(head?head.offsetHeight:0)+(cs?(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0):0)+(content?content.offsetHeight+(ms?((parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0)):0):0);
+      var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.chat-pbig-hd,.mp-profile-bar-head');
+      /* Natural height = the sheet's own padding + header + the real header-to-list gap + the list. */
+      var rs=getComputedStyle(root),rootPad=(parseFloat(rs.paddingTop)||0)+(parseFloat(rs.paddingBottom)||0);
+      var gap=head&&scroll?Math.max(0,scroll.getBoundingClientRect().top-head.getBoundingClientRect().bottom):0;
+      var natural=rootPad+(head?head.offsetHeight:0)+gap+(cs?(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0):0)+(content?content.offsetHeight+(ms?((parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0)):0):0)+2;
       var cap=opts.maxHeight!=null?opts.maxHeight:480;
       var height=Math.min(available, cap, Math.max(baseHeight,natural||baseHeight));
       var wide=expandedWidth();
@@ -166,7 +169,7 @@
       bar.style.width=wide+'px';
       bar.style.marginLeft='auto';
       bar.style.marginRight='auto';
-      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',width:beforeW+'px',borderRadius:beforeH<=baseHeight+1?'32px':'16px'},{height:height+'px',width:wide+'px',borderRadius:'16px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
+      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',width:beforeW+'px',borderRadius:beforeH<=baseHeight+1?'32px':'20px'},{height:height+'px',width:wide+'px',borderRadius:'20px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
     }
     function commitRestore(){
       if(committed)return;
@@ -200,7 +203,7 @@
       root.style.pointerEvents='none';
       if(root.animate)root.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards',easing:MP_EASE});
       previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:s.opacity}],{duration:260,easing:MP_EASE});});
-      bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'16px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'20px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
       var done=function(){commitRestore();};
       bar._profileExit.onfinish=done;
       if(bar._profileExit.finished)bar._profileExit.finished.then(done,done);
@@ -232,7 +235,7 @@
     if(!reduced()){previous.forEach(function(s){if(s.el.animate)fades.push(s.el.animate([{opacity:s.opacity},{opacity:0}],{duration:180,fill:'forwards',easing:'ease-out'}));});entryTimer=setTimeout(function(){if(closed||committed)return;bar.classList.remove('is-profile-entering');restoreStyles();fades.forEach(function(a){a.cancel();});fades=[];},400);}
     if(!reduced()&&root.animate)root.animate([{opacity:0,transform:'translateY(6px) scale(.985)'},{opacity:1,transform:'none'}],{duration:340,delay:80,fill:'backwards',easing:MP_EASE});
     size(true);
-    back.focus({preventScroll:true});
+    root.focus({preventScroll:true});
     return {root:root,body:body,bar:bar,resize:function(){size(true);},close:close};
   }
   // The real status bar owns every phase. Only content crossfades; its glass never fades.
