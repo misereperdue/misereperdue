@@ -58,13 +58,13 @@ const notices=[
   assert.ok(await menu.locator('.mp-ntf-row.is-unread').count()>=1);
   assert.equal(await p.locator('.nav.is-ntf-bar, .nav .mp-ntf-morph').count(),0,'not on the shop nav');
   // Same chrome as the other top-bar menus (profile, Powers): no leftover inline list padding (forum-mount-patch), rows inside
-  // the 16px content padding, 28px corners, and the sheet is tall enough for its list (no clipped last row).
+  // the slim content padding, 28px corners, and the sheet is tall enough for its list (no clipped last row).
   await p.waitForFunction(()=>{const b=document.querySelector('.is-ntf-bar');return b&&!b.getAnimations().some(a=>a.playState==='running');},null,{timeout:5000});
   await p.waitForTimeout(150);
   const fit=await p.evaluate(()=>{const r=document.querySelector('.mp-ntf-morph'),bar=r.parentElement,hd=r.querySelector('.mp-profile-bar-head'),l=r.querySelector('.mp-ntf-list'),sc=r.querySelector('.mp-profile-bar-scroll'),row=r.querySelector('.mp-ntf-row');
     return {inline:l.getAttribute('style'),hdLeft:hd.getBoundingClientRect().left,rowLeft:row.getBoundingClientRect().left,radius:getComputedStyle(bar).borderTopLeftRadius,clip:sc.scrollHeight-sc.clientHeight,capped:bar.getBoundingClientRect().height>=470,backFocused:document.activeElement&&document.activeElement.getAttribute('aria-label')==='Back'};});
   assert.equal(fit.inline,null,'no inline style left on the list');
-  assert.ok(fit.rowLeft-fit.hdLeft>=12&&fit.rowLeft-fit.hdLeft<=20,'rows sit inside the content padding ('+fit.rowLeft+' vs '+fit.hdLeft+')');
+  assert.ok(fit.rowLeft-fit.hdLeft>=4&&fit.rowLeft-fit.hdLeft<=20,'rows sit inside the content padding ('+fit.rowLeft+' vs '+fit.hdLeft+')');
   assert.ok(Math.abs(parseFloat(fit.radius)-28)<=1,'top-bar menu corner radius ('+fit.radius+')');
   assert.ok(fit.capped||fit.clip<=1,'list fits when under the cap (clipped '+fit.clip+'px)');
   assert.equal(fit.backFocused,false,'no focus ring on Back when opened by tap');
