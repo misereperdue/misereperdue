@@ -224,11 +224,11 @@ var MPShop = (function () {
   function g(t) {
     return (
       '<div role="button" tabindex="0" class="product-card' +
-      (n(t) ? " is-vip" : a(t) ? " is-mask" : "") +
+      (n(t) ? " is-vip" : a(t) ? " is-mask" : starsPack(t) ? " is-stars" : "") +
       '" data-product="' +
       l(t.id) +
       '"><div class="tile-wrap' +
-      (n(t) ? " is-vip" : a(t) ? " is-mask" : "") +
+      (n(t) ? " is-vip" : a(t) ? " is-mask" : starsPack(t) ? " is-stars" : "") +
       '">' +
       p(t) +
       '</div><div class="product-meta"><strong>' +

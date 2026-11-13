@@ -1232,6 +1232,19 @@ textarea {
   object-fit: cover;
   transform: none;
 }
+/* Stars hero stills are square with a large centred chip. Cover in the 4:5
+   tile cropped the sides and made the chip fill the cell; contain keeps the
+   whole still, with the tile backdrop matching the photo so letterboxing is seamless. */
+#shop-grid .tile-wrap.is-stars {
+  background: #d8d9dd;
+}
+[data-theme="dark"] #shop-grid .tile-wrap.is-stars {
+  background: #0d1230;
+}
+#shop-grid .tile-wrap.is-stars > img {
+  object-fit: contain;
+  transform: none;
+}
 #shop-grid .product-meta {
   margin-top: 8px;
 }
