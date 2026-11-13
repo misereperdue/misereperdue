@@ -554,6 +554,23 @@
     }
     return wrap;
   }
+  function ntfToday(ts) {
+    if (!ts) return !1;
+    var d = new Date(ts), n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+  function ntfHeading(label) {
+    var h = document.createElement("div");
+    h.className = "mp-ntf-h";
+    h.textContent = label;
+    return h;
+  }
+  function ntfEmpty() {
+    var box = document.createElement("div");
+    box.className = "mp-ntf-empty";
+    box.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 18C15.5 19.933 13.933 21.5 12 21.5C10.067 21.5 8.5 19.933 8.5 18"/><path d="M19.2311 18H4.76887C3.79195 18 3 17.208 3 16.2311C3 15.762 3.18636 15.3121 3.51809 14.9803L4.12132 14.3771C4.68393 13.8145 5 13.0514 5 12.2558V9.5C5 5.63401 8.13401 2.5 12 2.5C15.866 2.5 19 5.634 19 9.5V12.2558C19 13.0514 19.3161 13.8145 19.8787 14.3771L20.4819 14.9803C20.8136 15.3121 21 15.762 21 16.2311C21 17.208 20.208 18 19.2311 18Z"/></svg><strong>No notifications</strong><span>You\u2019re all caught up</span>';
+    return box;
+  }
   function ntfRow(n) {
     var info = (window.MPNotifInfo && MPNotifInfo(n)) || {
       title: n.text || n.preview || "New notification",
@@ -568,25 +585,41 @@
     row.appendChild(ntfAvatar(n, info.site));
     var tx = document.createElement("span");
     tx.className = "mp-ntf-row-tx";
-    var b = document.createElement("b");
-    b.textContent = info.title;
-    tx.appendChild(b);
+    var who = n.from && n.from !== "MISERY" ? (window.mpAt ? mpAt(n.from) : "@" + String(n.from).replace(/^@/, "").toLowerCase()) : "";
+    var title = info.title || "";
+    var action = who && title.indexOf(who) === 0 ? title.slice(who.length).replace(/^\s+/, "") : "";
+    var line = document.createElement("span");
+    line.className = "mp-ntf-row-line";
+    if (who && action) {
+      var nm = document.createElement("b");
+      nm.textContent = who;
+      line.appendChild(nm);
+      line.appendChild(document.createTextNode(" " + action));
+    } else {
+      var solo = document.createElement("b");
+      solo.textContent = title;
+      line.appendChild(solo);
+    }
+    tx.appendChild(line);
     if (info.sub && n.type !== "milestone") {
       var sm = document.createElement("small");
       sm.textContent = info.sub;
       tx.appendChild(sm);
     }
-    var time = document.createElement("time");
-    time.className = "mp-ntf-row-when";
-    time.textContent = k(n.ts);
-    tx.appendChild(time);
     row.appendChild(tx);
+    var meta = document.createElement("span");
+    meta.className = "mp-ntf-row-meta";
     if (info.chip) {
       var chip = document.createElement("span");
       chip.className = "mp-ntf-chip";
       chip.textContent = info.chip;
-      row.appendChild(chip);
+      meta.appendChild(chip);
     }
+    var time = document.createElement("time");
+    time.className = "mp-ntf-row-when";
+    time.textContent = k(n.ts);
+    meta.appendChild(time);
+    row.appendChild(meta);
     if (canGo) {
       row.addEventListener("click", function (ev) {
         ev.preventDefault();
@@ -599,8 +632,9 @@
   }
   function P() {
     if (ntfSheet && ntfSheet.bar && ntfSheet.bar.isConnected) {
-      closeNotifications();
-      return;
+      var leaving = ntfSheet.bar.classList.contains("is-profile-leaving");
+      closeNotifications(leaving);
+      if (!leaving) return;
     }
     var bar = window.MPProfiles && MPProfiles.chatHead && MPProfiles.chatHead();
     if (!bar || !window.MPProfiles || !MPProfiles.openSheet) return;
@@ -624,10 +658,17 @@
         sheet.body.replaceChildren();
         var list = (res && res.ok && res.notifications) || [];
         if (!list.length) {
-          sheet.body.classList.add("is-status");
-          sheet.body.textContent = "No notifications";
+          sheet.body.appendChild(ntfEmpty());
         } else {
-          list.forEach(function (n) { sheet.body.appendChild(ntfRow(n)); });
+          var today = [], earlier = [];
+          list.forEach(function (n) { (ntfToday(n.ts) ? today : earlier).push(n); });
+          function byTs(a, b) { return (b.ts || 0) - (a.ts || 0); }
+          today.sort(byTs); earlier.sort(byTs);
+          var split = today.length && earlier.length;
+          if (split) sheet.body.appendChild(ntfHeading("Today"));
+          today.forEach(function (n) { sheet.body.appendChild(ntfRow(n)); });
+          if (split) sheet.body.appendChild(ntfHeading("Earlier"));
+          earlier.forEach(function (n) { sheet.body.appendChild(ntfRow(n)); });
         }
         sheet.resize();
         if (g()) y("/api/notifications/read", { method: "POST" }).then(function () { q(!0); }).catch(function () {});

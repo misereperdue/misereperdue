@@ -14,6 +14,8 @@ for(const theme of ['dark','light']){
  const p=await c.newPage();await p.goto(ORIGIN+'/#shop');
  const tile=p.locator('[data-product="gid://shopify/Product/9"] img');await tile.waitFor({timeout:10000});
  assert.match(await tile.getAttribute('src'),new RegExp('img/stars-'+theme+'\\.jpg'),theme+' tile hero');
+ assert.ok(await tile.evaluate(el=>el.closest('.tile-wrap')&&el.closest('.tile-wrap').classList.contains('is-stars')),theme+' is-stars');
+ assert.equal(await tile.evaluate(el=>getComputedStyle(el).objectFit),'contain',theme+' tile contain');
  await p.waitForTimeout(1500);await p.screenshot({path:`${OUT}/grid-${theme}.png`});
  await p.locator('[data-product="gid://shopify/Product/9"]').click();
  const stage=p.locator('#product-view .stars-3d .vip-3d-stage');await stage.waitFor({timeout:6000});
