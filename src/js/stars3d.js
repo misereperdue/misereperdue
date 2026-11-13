@@ -27,7 +27,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=8";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=9";
   }
 
   return {
@@ -280,7 +280,7 @@ var MPStars3D = (function () {
             im.frustumCulled = false;
             g.add(im);
           });
-          return { obj: g, pitch: L.pitch, box: box };
+          return { obj: g, pitch: L.pitch, box: box, stacks: L.s };
         }
 
         // ---- scene graph: turntable (yaw + pitch from drag) > content ----
@@ -303,7 +303,17 @@ var MPStars3D = (function () {
           var box = made.box,
             size = box.getSize(new THREE.Vector3());
           made.obj.position.sub(box.getCenter(new THREE.Vector3())); // centre on the turntable
-          frameR = 0.5 * Math.max(size.x, size.y, size.z * 0.75) * 1.22 + 0.1;
+          if (made.stacks.length) {
+            // Fit the circle the stacks sweep while spinning (not their box), so big packs fill the stage without ever
+            // clipping as they turn.
+            var c = box.getCenter(new THREE.Vector3()),
+              reach = 0;
+            made.stacks.forEach(function (st) {
+              reach = Math.max(reach, Math.hypot(st[0] - c.x, st[1] - c.z) + D.R);
+            });
+            frameR = Math.hypot(reach, size.y / 2) * 1.13; // headroom for perspective: the near edge looks bigger
+          } else frameR = 0.5 * Math.max(size.x, size.y, size.z * 0.75) * 1.22 + 0.1;
+          frameR *= parseFloat(el.getAttribute("data-fit")) || 1; // stills frame tighter: they never turn
           basePitch = made.pitch;
           turntable.add(content);
           pop = animate && !reduce ? performance.now() : 0;
