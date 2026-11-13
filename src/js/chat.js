@@ -4921,7 +4921,6 @@
     function paint(btn, state) {
       btn.classList.toggle("is-playing", state === "play");
       btn.classList.toggle("is-loading", state === "load");
-      btn.querySelector(".mp-pv-g").innerHTML = state === "play" || state === "load" ? PAUSE : PLAY;
       btn.setAttribute("aria-label", (state === "idle" ? "Play preview of " : "Pause preview of ") + btn._title);
       btn.setAttribute("aria-pressed", state === "idle" ? "false" : "true");
       if (state === "idle") btn._arc.style.strokeDashoffset = C;
@@ -5007,7 +5006,8 @@
         b._src = src;
         b._title = mpMusicTitle(song.title) + " by " + song.artist;
         b._song = song;
-        b.innerHTML = '<span class="mp-pv-disc"><svg class="mp-pv-ring" viewBox="0 0 34 34" aria-hidden="true"><circle class="mp-pv-track" cx="17" cy="17" r="15"/><circle class="mp-pv-arc" cx="17" cy="17" r="15"/></svg><span class="mp-pv-g"></span></span>';
+        /* both glyphs stay in the DOM so play <-> pause cross-fades instead of swapping */
+        b.innerHTML = '<span class="mp-pv-disc"><svg class="mp-pv-ring" viewBox="0 0 34 34" aria-hidden="true"><circle class="mp-pv-track" cx="17" cy="17" r="15"/><circle class="mp-pv-arc" cx="17" cy="17" r="15"/></svg><span class="mp-pv-g mp-pv-play">' + PLAY + '</span><span class="mp-pv-g mp-pv-pause">' + PAUSE + "</span></span>";
         b._arc = b.querySelector(".mp-pv-arc");
         b._arc.style.strokeDasharray = C;
         paint(b, "idle");
