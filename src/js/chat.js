@@ -2586,7 +2586,7 @@
           },
           { passive: !0 },
         )),
-      E("/api/messages?limit=200&_=" + Date.now())
+      (bootTake("msgs") || E("/api/messages?limit=200&_=" + Date.now()))
         .then(function (e) {
           e && e.caps && e.caps.private && mpPMEnable();
           e && e.caps && e.caps.poll && (window.mpPollOn = !0);
@@ -2736,34 +2736,35 @@
   }
   var Pe = 0;
   function Ie() {
-    if (((Pe = 0), c))
-      for (
-        var e = c.querySelector(".fm-bar:not([hidden])") || c.querySelector(".chat-head"),
-          t = c.querySelector(".chat-inputrow"),
-          n = e ? e.getBoundingClientRect().bottom : 120,
-          a = t ? t.getBoundingClientRect().top : window.innerHeight - 90,
-          r = c.querySelectorAll(".chat-msg"),
-          o = 0;
-        o < r.length;
-        o++
-      ) {
-        var i = r[o].getBoundingClientRect(),
-          s = (i.top + i.bottom) / 2,
-          l = 1;
-        i.bottom < n ? (l = 0) : s < n + 44 && (l = Math.max(0, (s - n) / 44));
-        var d = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200,
-          u = 1;
-        if (i.top > a) u = 0;
-        else if (!d) {
-          s > a - 48 && (u = Math.max(0, (a - s) / 48));
-        }
-        var m = (l = Math.min(l, u)).toFixed(2);
-        (r[o].getAttribute("data-fade") !== m &&
-          (r[o].setAttribute("data-fade", m),
-          (r[o].style.opacity = m),
-          (r[o].style.pointerEvents = l < 0.2 ? "none" : "")),
-          r[o].style.filter && (r[o].style.filter = ""));
+    if (((Pe = 0), !c)) return;
+    /* Speed: measure every message first, then write. Reading a box right after writing a style on
+       the previous message made the browser redo layout once per message on every scroll frame. */
+    var e = c.querySelector(".fm-bar:not([hidden])") || c.querySelector(".chat-head"),
+      t = c.querySelector(".chat-inputrow"),
+      n = e ? e.getBoundingClientRect().bottom : 120,
+      a = t ? t.getBoundingClientRect().top : window.innerHeight - 90,
+      r = c.querySelectorAll(".chat-msg"),
+      d = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200,
+      boxes = new Array(r.length),
+      o;
+    for (o = 0; o < r.length; o++) boxes[o] = r[o].getBoundingClientRect();
+    for (o = 0; o < r.length; o++) {
+      var i = boxes[o],
+        s = (i.top + i.bottom) / 2,
+        l = 1;
+      i.bottom < n ? (l = 0) : s < n + 44 && (l = Math.max(0, (s - n) / 44));
+      var u = 1;
+      if (i.top > a) u = 0;
+      else if (!d) {
+        s > a - 48 && (u = Math.max(0, (a - s) / 48));
       }
+      var m = (l = Math.min(l, u)).toFixed(2);
+      (r[o].getAttribute("data-fade") !== m &&
+        (r[o].setAttribute("data-fade", m),
+        (r[o].style.opacity = m),
+        (r[o].style.pointerEvents = l < 0.2 ? "none" : "")),
+        r[o].style.filter && (r[o].style.filter = ""));
+    }
   }
   function qe() {
     Pe || (Pe = requestAnimationFrame(Ie));
@@ -5065,7 +5066,8 @@
         e.ts && e.ts > m && 0 !== String(e.id).indexOf("opt-") && (m = e.ts));
       var a = window.__chatBatchRoot || Le();
       if (a) {
-        var r = Se(),
+        /* Speed: "am I at the bottom" forces a layout; it is only used outside batch loads. */
+        var r = window.__chatBatchLoading ? !1 : Se(),
           o = document.createElement("div");
         if (
           ((o.className =
@@ -5499,7 +5501,7 @@
         (f ||
           (d
             ? ((f = !0),
-              E("/api/ws-ticket", { method: "POST", body: {} })
+              (bootTake("ticket") || E("/api/ws-ticket", { method: "POST", body: {} }))
                 .then(function (e) {
                   ((f = !1), v || (e && e.ticket ? it(e.ticket) : ct()));
                 })
@@ -8533,6 +8535,27 @@
           ". If that wasn't you, use your recovery code now.",
       );
   }
+  /* Speed: the first history load and the socket ticket used to wait for /api/me to answer. They
+     only need the same token, so they start alongside it and chat is on screen a round trip sooner.
+     Each result is used once, only for the token it was fetched with, and only while fresh (the
+     ticket lives 60s on the Worker). */
+  var bootPre = null;
+  function bootPrefetch() {
+    if (!d || (p && p.readyState <= 1)) return;
+    var b = { at: Date.now(), tok: d };
+    b.msgs = E("/api/messages?limit=200&_=" + Date.now());
+    b.ticket = E("/api/ws-ticket", { method: "POST", body: {} });
+    b.msgs.catch(function () {});
+    b.ticket.catch(function () {});
+    bootPre = b;
+  }
+  function bootTake(k) {
+    var b = bootPre, v;
+    if (!b || b.tok !== d || Date.now() - b.at > 15e3 || !b[k]) return null;
+    v = b[k];
+    b[k] = null;
+    return v;
+  }
   function wt(e) {
     if (e && e.token) {
       try {
@@ -8546,7 +8569,7 @@
       d = null;
     }
     if (d)
-      E("/api/me")
+      (bootPrefetch(), E("/api/me"))
         .then(function (e) {
           if (e && e.user) ((s = e.user), window.mpHide && mpHide.setViewer(s.username), ke(), rcAfterX(), rcMaybePrompt());
           else {
