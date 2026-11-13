@@ -4631,24 +4631,40 @@
       if (!showing && video) {
         video.classList.remove("is-playing");
         try {
-          video.currentTime = 0;
-          // Keep the text visible until playback has a decoded frame. If iOS
-          // blocks autoplay or loading is slow, use the official final still.
+          mpAmWarm();
+          if (video.currentTime && video.readyState < 2) video.currentTime = 0;
+          else if (video.readyState >= 2 && video.currentTime > 0.04) video.currentTime = 0;
+          // Keep the text visible until a solid keyed frame is on the canvas, so
+          // a black/empty first film frame cannot flash through the crossfade.
           var playing = video.play();
           var started = await Promise.race([
             Promise.resolve(playing).then(function () { return true; }, function () { return false; }),
             new Promise(function (resolve) { setTimeout(function () { resolve(false); }, 1500); })
           ]);
           if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
-          if (started && video.requestVideoFrameCallback) {
+          var keyed = card.querySelector(".chat-np-official-key"),
+            host = card.querySelector(".chat-np-am-mark");
+          if (started) {
             await new Promise(function (resolve) {
-              var timeout = setTimeout(resolve, 250);
-              video.requestVideoFrameCallback(function () { clearTimeout(timeout); resolve(); });
+              var t0 = Date.now();
+              function check() {
+                if (epoch !== playbackEpoch) return resolve();
+                if (keyed && video.readyState >= 2 && mpAmKey(keyed, video) && keyed._mpCover >= 0.035) {
+                  host && host.classList.add("is-keyed");
+                  video.classList.add("is-playing");
+                  return resolve();
+                }
+                if (Date.now() - t0 > 1500) return resolve();
+                video.requestVideoFrameCallback ? video.requestVideoFrameCallback(check) : requestAnimationFrame(check);
+              }
+              check();
             });
           }
           if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
-          if (started && video.readyState >= 2) video.classList.add("is-playing");
-          else { video.pause(); var still = card.querySelector(".chat-np-official-key"); still && still._mpStill && still._mpStill(); }
+          if (!video.classList.contains("is-playing")) {
+            video.pause();
+            keyed && keyed._mpStill && keyed._mpStill();
+          }
         } catch (_) { video.pause(); }
       } else if (video) video.pause();
       if (epoch !== playbackEpoch || !onScreen || !pageOn || !card.isConnected) return;
@@ -4706,7 +4722,26 @@
     });
     arm();
   }
+  function mpAmWarm() {
+    if (window.__mpAmWarm) return;
+    window.__mpAmWarm = 1;
+    ["/assets/apple-music/official-wordmark.webp?v=2", "/assets/apple-music/official-icon-still.webp?v=1"].forEach(function (src) {
+      var img = new Image();
+      img.decoding = "async";
+      img.src = src;
+      if (img.decode) img.decode().catch(function () {});
+    });
+    ["/assets/apple-music/official-wordmark.mp4?v=1", "/assets/apple-music/official-icon-loop.mp4?v=1"].forEach(function (src) {
+      var v = document.createElement("video");
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = "auto";
+      v.src = src;
+      try { v.load(); } catch (_) {}
+    });
+  }
   function mpAmBuildMark() {
+    mpAmWarm();
     var mark = document.createElement("span");
     mark.className = "chat-np-am-mark";
     var poster = document.createElement("img");
@@ -4755,6 +4790,7 @@
         edge = canvas._mpEdge = new Float32Array(w * h);
         for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) edge[y * w + x] = Math.min(1, Math.min(x, y, w - 1 - x, h - 1 - y) / e);
       }
+      var cover = 0, px = d.length / 4;
       for (var i = 0; i < d.length; i += 4) {
         var r = d[i], g = d[i + 1], b = d[i + 2], hi = r > g ? (r > b ? r : b) : (g > b ? g : b);
         if (hi <= K) { d[i + 3] = 0; continue; }
@@ -4762,8 +4798,18 @@
         r = r > K ? (r - K) * f : 0; g = g > K ? (g - K) * f : 0; b = b > K ? (b - K) * f : 0;
         if (ink) { var lo = r < g ? (r < b ? r : b) : (g < b ? g : b); r -= lo; g -= lo; b -= lo; }
         d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = (hi - K) * S * edge[i >> 2];
+        if (d[i + 3] > 12) cover++;
+      }
+      canvas._mpCover = cover / px;
+      // A fade-to-black or a loop reset would flash an empty canvas; keep the last solid frame.
+      if (canvas._mpCover < 0.035 && canvas._mpGood) {
+        ctx.putImageData(canvas._mpGood, 0, 0);
+        canvas._mpLast = source;
+        canvas._mpInk = ink;
+        return true;
       }
       ctx.putImageData(img, 0, 0);
+      if (canvas._mpCover >= 0.035) canvas._mpGood = ctx.getImageData(0, 0, w, h);
       canvas._mpLast = source;
       canvas._mpInk = ink;
       return true;
@@ -7824,15 +7870,69 @@
         b.isConnected && (body.innerHTML = "<p class='pow-note'>Couldn't load powers. Try again soon.</p>");
       });
   }
+  function starsWho(e) {
+    return e.t === "gift-out" ? e.to : e.t === "gift-in" || e.t === "grant" ? e.from : "";
+  }
+  function starsAv(name) {
+    var info = (Je && Je[String(name).toLowerCase()]) || {},
+      wrap;
+    if (info.hasImg || info.imgV != null) wrap = J(name, info.avatar, "sm", info.imgV);
+    else if (s && String(name).toLowerCase() === String(s.username).toLowerCase() && X() != null)
+      wrap = J(name, s.avatar, "sm", X());
+    else {
+      wrap = document.createElement("span");
+      wrap.className = "chat-avatar-wrap";
+      var i = document.createElement("span");
+      i.className = "chat-avatar sm";
+      i.textContent = String(name || "?").replace(/^@/, "").charAt(0).toUpperCase() || "?";
+      wrap.appendChild(i);
+    }
+    ee(wrap, name);
+    return wrap;
+  }
   function starsLine(e) {
-    var who = function (u) { return u ? mpAt(u) : "someone"; },
-      t = { buy: "Bought " + powName(e.power), "gift-in": "Gift from " + who(e.from), "gift-out": "Gift to " + who(e.to), pack: "Stars pack", grant: "Added by " + who(e.from) }[e.t] || "Stars";
-    var n = Number(e.n) || 0;
-    return (
-      '<div class="stars-row"><span class="stars-what">' + x(t) + '</span><span class="stars-when">' +
-      x(e.at ? new Date(e.at).toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "") +
-      '</span><b class="stars-n' + (n > 0 ? " is-plus" : "") + '">' + (n > 0 ? "+" : "−") + x(Math.abs(n)) + "</b></div>"
-    );
+    var row = document.createElement("div");
+    row.className = "stars-row";
+    var lead = document.createElement("span");
+    lead.className = "stars-lead";
+    lead.setAttribute("aria-hidden", "true");
+    var who = starsWho(e);
+    if (who) lead.appendChild(starsAv(who));
+    else if (e.t === "buy" && e.power) {
+      if (GEM[e.power]) lead.innerHTML = mpCharm(e.power);
+      else lead.innerHTML = powIco(powMap[e.power]);
+    } else {
+      lead.innerHTML = '<span class="stars-lead-ico"><svg ' + MP_IC + ">" + STAR_ICON + "</svg></span>";
+    }
+    row.appendChild(lead);
+    var what = document.createElement("span");
+    what.className = "stars-what";
+    var prefix = { buy: "Bought ", "gift-in": "Gift from ", "gift-out": "Gift to ", pack: "Stars pack", grant: "Added by ", refund: "Refund" }[e.t] || "Stars";
+    if (e.t === "buy") what.appendChild(document.createTextNode(prefix + powName(e.power)));
+    else if (who) {
+      what.appendChild(document.createTextNode(prefix));
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "stars-who";
+      btn.textContent = mpAt(who) || "someone";
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        mpPB(who);
+      });
+      what.appendChild(btn);
+    } else what.appendChild(document.createTextNode(prefix));
+    row.appendChild(what);
+    var when = document.createElement("span");
+    when.className = "stars-when";
+    when.textContent = e.at ? new Date(e.at).toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "";
+    row.appendChild(when);
+    var n = Number(e.n) || 0,
+      amt = document.createElement("b");
+    amt.className = "stars-n" + (n > 0 ? " is-plus" : "");
+    amt.textContent = (n > 0 ? "+" : "−") + String(Math.abs(n));
+    row.appendChild(amt);
+    return row;
   }
   /* Size the star to the drawn height of the digits (ascent+descent of the
      actual glyphs), so icon and number are exactly the same height. */
@@ -7865,7 +7965,12 @@
         b.querySelector(".stars-bal").setAttribute("aria-label", (j.stars || 0) + " stars");
         starsFit(row);
         powStars(j.stars || 0);
-        log.innerHTML = (j.log || []).length ? j.log.map(starsLine).join("") : "<p class='pow-note'>Power purchases and gifted stars show up here.</p>";
+        var items = j.log || [];
+        if (!items.length) log.innerHTML = "<p class='pow-note'>Power purchases and gifted stars show up here.</p>";
+        else {
+          log.innerHTML = "";
+          items.forEach(function (e) { log.appendChild(starsLine(e)); });
+        }
       })
       .catch(function () {
         b.isConnected && (log.innerHTML = "<p class='pow-note'>Couldn't load your stars. Try again soon.</p>");
