@@ -164,6 +164,10 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal((await ss.locator('.stars-get').innerText()).trim(),'Buy stars');
  const rows=await ss.locator('.stars-row').allInnerTexts();assert.match(rows[0],/Bought Ink[\s\S]*−100/);assert.match(rows[1],/Gift from @?friend[\s\S]*\+1/i);
  assert.equal(await ss.locator('.stars-row').first().locator('.stars-lead .pow-ico').count(),1,'buy lead is the power icon');
+ const bubble=await ss.evaluate(()=>{const r=document.querySelector('.stars-row'),log=document.querySelector('.stars-log'),s=getComputedStyle(r),l=getComputedStyle(log);return{radius:parseFloat(s.borderTopLeftRadius),gap:parseFloat(l.gap||l.rowGap||'0'),top:s.borderTopColor,bottom:s.borderBottomColor,bg:s.backgroundColor};});
+ assert(bubble.radius>=12,'row is a rounded bubble, radius='+bubble.radius);
+ assert(bubble.gap>=6,'gap between bubbles, gap='+bubble.gap);
+ assert.equal(bubble.top,bubble.bottom,'no divider-only top border');
  assert.equal(await ss.locator('.stars-row').nth(1).locator('.stars-lead .chat-avatar-wrap').count(),1,'gift lead is an avatar');
  assert.equal((await ss.locator('.stars-row').nth(1).locator('button.stars-who').innerText()).trim(),'@friend','@username is tappable');
  await p.screenshot({path:`${OUT}/${tag}-stars.png`});
