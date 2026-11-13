@@ -12343,7 +12343,9 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    so it joins the shared menu-glass list and only drops the capsule rim. */
 .chat-head.is-ntf-bar,.nav.is-ntf-bar{background-image:none!important;border:1px solid var(--menu-glass-border);box-shadow:var(--sheet-shadow,0 12px 40px rgba(0,0,0,.35));transition:none}
 .chat-head.is-ntf-bar::before,.nav.is-ntf-bar::before{content:none!important;display:none!important}
-.chat-head.is-ntf-bar.is-profile-expanded,.nav.is-ntf-bar.is-profile-expanded{border-radius:16px}
+.chat-head.is-ntf-bar.is-profile-expanded,.nav.is-ntf-bar.is-profile-expanded{border-radius:20px}
+.mp-ntf-morph:focus{outline:none}
+.mp-ntf-list.is-status .mp-loading-bubble{display:flex;justify-content:center;padding:28px 0}
 .mp-ntf-morph>.mp-profile-backdrop{display:none!important}
 .mp-ntf-morph .mp-profile-bar-scroll{padding:0}
 .mp-ntf-list{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:0;width:100%;text-align:left}
