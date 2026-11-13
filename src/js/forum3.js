@@ -472,19 +472,12 @@
   }
   var T = -1,
     M = 0;
-  function q(e) {
-    if (g()) {
-      var t = Date.now();
-      (!e && t - M < 3e4 && T >= 0) ||
-        ((M = t),
-        y("/api/notifications")
-          .then(function (e) {
-            if (e && e.ok) {
+  function paintUnread(count) {
               var t = document.getElementById("forum-bell-badge"),
                 r = document.getElementById("forum-bell"),
                 n = document.getElementById("chat-bell-badge"),
                 a = document.getElementById("chat-bell"),
-                o = e.unread || 0;
+                o = Math.max(0, Number(count) || 0);
               try {
                 "setAppBadge" in navigator &&
                   (o > 0
@@ -506,6 +499,7 @@
                   } else e.classList.add("hidden");
               }),
                 [r, a].forEach(function (e) {
+                  if(e)e.setAttribute("aria-label",o>0?"Notifications, "+o+" unread":"Notifications");
                   if (o > 0 && e && e.animate && (T < 0 || o > T))
                     try {
                       e.animate(
@@ -523,11 +517,19 @@
                     } catch (e) {}
                 }),
                 (T = o));
-            }
-          })
-          .catch(function () {}));
-    }
   }
+  var bellEpoch=0;
+  function q(force) {
+    var token=g();if(!token){bellEpoch++;paintUnread(0);return;}
+    if(T>=0)paintUnread(T); // Headers can be rebuilt during the fetch throttle.
+    var now=Date.now();if(!force&&now-M<30000&&T>=0)return;
+    M=now;var version=++bellEpoch;
+    return y('/api/notifications').then(function(res){if(version===bellEpoch&&g()===token&&res&&res.ok)paintUnread(res.unread);}).catch(function(){});
+  }
+  document.addEventListener('mp-auth',function(){bellEpoch++;M=0;paintUnread(0);T=-1;setTimeout(function(){q(true);},0);});
+  window.addEventListener('focus',function(){q(false);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)q(false);});
+  setTimeout(function(){q(false);},0);
   var notificationEpoch = 0, ntfSheet = null;
   function dismissNotifPop() {
     document.querySelectorAll(".mp-ntf").forEach(function (n) { n.remove(); });
@@ -775,19 +777,8 @@
         if (f && f.classList.contains("on") && "list" === r.name) p();
       } catch (e) {}
     }));
-  var N = !1;
   function H() {
-    if ((q(), !N && g())) {
-      // Signed out: no /api/notifications/read (it only 401s).
-      N = !0;
-      try {
-        y("/api/notifications/read", { method: "POST" })
-          .then(function () {
-            q(!0);
-          })
-          .catch(function () {});
-      } catch (e) {}
-    }
+    q();
     var e = document.getElementById("forum-bell");
     e &&
       !e._wired &&
@@ -4805,7 +4796,6 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
   }
   /* Comment bubble glyph: K3 body + half-extent stem (tighter iMessage curl) per dc. Before/after: misery-notes/screenshots/comment-icon-stem.png. */
   window.MPForum = window.MPForum || {};
-  window.MPForum.refreshNotifs = function () { q(!0); };
   window.MPForum.setCards = function (v) {
     v = String(v || "g1").toLowerCase();
     -1 === ["g1", "g2", "g3"].indexOf(v) && (v = "g1");
@@ -5034,6 +5024,8 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         ((O = null), (Ne = !1), Be());
       },
       showNotifications: P,
+      updateBellBadge: q,
+      refreshNotifs: function(){return q(true);},
     }));
 })();
 

@@ -5,6 +5,7 @@ const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=pr
 fs.mkdirSync(OUT,{recursive:true});
 const T={'.html':'text/html','.css':'text/css','.js':'application/javascript','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.mp4':'video/mp4','.woff2':'font/woff2'};
 const me={username:'tester',member:true,vip:true,points:80,hasRecovery:true,hasPassword:true};
+let unread=3,readCalls=0,socket;
 const now=Date.now();
 const notices=[
   {id:'n1',type:'gift',kind:'stars',from:'eden',n:5,ts:now-4e4,read:false},
@@ -21,7 +22,7 @@ const notices=[
   const browser=await pw.chromium.launch({executablePath:process.env.MP_CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const c=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,colorScheme:'dark',serviceWorkers:'block'});
   await c.addInitScript(()=>{localStorage.setItem('chat_token','test-only');localStorage.setItem('theme','dark');document.documentElement.setAttribute('data-theme','dark');sessionStorage.setItem('rc_later','1');});
-  await c.routeWebSocket(/api\.misereperdue\.com/,s=>{if(!/\/api\/fm\//.test(s.url()))setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'m0',user:'eden',text:'hi',ts:Date.now()-3e4}],online:1,caps:{}})),40);});
+  await c.routeWebSocket(/api\.misereperdue\.com/,s=>{if(!/\/api\/fm\//.test(s.url())){socket=s;setTimeout(()=>s.send(JSON.stringify({t:'hello',you:me,messages:[{id:'m0',user:'eden',text:'hi',ts:Date.now()-3e4}],online:1,caps:{}})),40);}});
   await c.route('**/*',async r=>{
     const u=new URL(r.request().url()),H={'access-control-allow-origin':'*'};
     if(u.origin===ORIGIN){
@@ -35,8 +36,8 @@ const notices=[
     if(u.pathname==='/api/me')d={ok:true,user:me};
     else if(u.pathname==='/api/messages')d={ok:true,messages:[],badges:{}};
     else if(u.pathname==='/api/ws-ticket')d={ticket:'t'};
-    else if(u.pathname==='/api/notifications')d={ok:true,notifications:notices,unread:3};
-    else if(u.pathname==='/api/notifications/read')d={ok:true};
+    else if(u.pathname==='/api/notifications')d={ok:true,notifications:notices,unread};
+    else if(u.pathname==='/api/notifications/read'){readCalls++;unread=0;d={ok:true};}
     else if(u.pathname==='/api/forum/threads')d={ok:true,threads:[]};
     else if(u.pathname.startsWith('/api/user/'))d={ok:true,user:{username:u.pathname.split('/').pop()}};
     else if(u.pathname.startsWith('/api/avatarimg/')){const def=path.join(ROOT,'img/default-avatar.jpg');return r.fulfill({path:def,contentType:'image/jpeg'});}
@@ -45,12 +46,18 @@ const notices=[
   const p=await c.newPage();
   await p.goto(ORIGIN+'/#journal');
   await p.waitForFunction(()=>window.MPForum&&MPForum.showNotifications&&document.querySelector('.panel.on #chat-bell'),null,{timeout:20000});
+  await p.locator('#chat-bell-badge:not(.hidden)').waitFor();assert.equal(await p.locator('#chat-bell-badge').textContent(),'3');assert.equal(readCalls,0,'loading Chat must not mark notifications read');
+  await p.evaluate(()=>MPNav.show('forum'));await p.locator('#forum-bell-badge:not(.hidden)').waitFor();assert.equal(await p.locator('#forum-bell-badge').textContent(),'3');assert.equal(readCalls,0,'rendering Globe must not mark notifications read');
+  await p.evaluate(()=>MPNav.show('journal'));
+  unread=4;socket.send(JSON.stringify({t:'notif',n:{id:'live',type:'gift',from:'eden',n:1,ts:Date.now()}}));await p.waitForFunction(()=>document.querySelector('#chat-bell-badge')?.textContent==='4');
+  await p.waitForFunction(()=>!document.querySelector('.panel.on .chat-head.is-ntf'));assert.equal(readCalls,0);
   await p.locator('#chat-bell').click();
   const menu=p.locator('.panel.on .chat-head.is-ntf-bar .mp-ntf-morph');
   await menu.waitFor({timeout:8000});
   assert.equal((await menu.locator('.mp-profile-bar-head>strong').innerText()).trim(),'Notifications');
   assert.equal(await menu.locator('.mp-profile-bar-head [aria-label="Back"]').count(),1);
   await menu.locator('.mp-ntf-row').first().waitFor({timeout:8000});
+  await p.waitForFunction(()=>document.querySelector('#chat-bell-badge')?.classList.contains('hidden'));assert.equal(readCalls,1,'only opening notifications marks read');
   const chips=(await menu.locator('.mp-ntf-chip').allInnerTexts()).map(s=>s.trim());
   // Today newest-first, then Earlier: gift, gift, halo, globe-like, globe-reply, whisper / mention, follow, vip
   assert.deepEqual(chips,['Gift','Gift','Gift','Globe','Globe','Whisper','Mention','Globe','VIP']);
