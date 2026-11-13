@@ -60,7 +60,6 @@
   function badgePicker(user, options) {
     var root=section(options.grant?'Badges':'Display badge'),grid=el('div','mp-badge-grid'),status=el('p','mp-profile-edit-status'),pending=false;
     root.classList.add('mp-badge-picker');root.dataset.mode=options.grant?'grant':'active';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-    if(options.grant)root.appendChild(el('p','mp-settings-hint','Tap a badge to grant or remove it.'));
     root.appendChild(grid);root.appendChild(status);
     var labels={'100':'100',heart:'Heart',member:'VIP',kitty:'Hello Kitty',mask:'Sleep mask',verified:'Verified',robot:'Bot'};
     function paint(){grid.replaceChildren();var ids=options.grant?['member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified')&&options.allowed(user.username,id);});

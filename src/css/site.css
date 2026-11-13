@@ -12343,7 +12343,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    so it joins the shared menu-glass list and only drops the capsule rim. */
 .mp-ntf-morph:focus{outline:none}
 .mp-ntf-list.is-status .mp-loading-bubble{display:flex;justify-content:center;padding:28px 0}
-.mp-ntf-list{display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:0;width:100%;text-align:left}
+.mp-ntf-list{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:0;width:100%;text-align:left}
 .mp-ntf-list.is-status{color:var(--muted);text-align:center;padding:28px 12px;font-size:14px}
 .mp-ntf-h{display:block;width:100%;box-sizing:border-box;padding:8px 10px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left}
 .mp-ntf-h:first-child{padding-top:2px}
@@ -12624,3 +12624,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-pv-host.is-pv-playing .chat-np-eq{opacity:0}
 .mp-profile-song-art .mp-pv-disc{width:24px;height:24px}
 @media (prefers-reduced-motion:reduce){.mp-pv.is-loading .mp-pv-ring{animation:none}}
+
+/* Cart (per dc): the pack size sits right under the product title. */
+.line-mid strong+.meta{margin-top:-5px}
+/* Owner Manage sheet (per dc): no hint line, badges sit right under the Badges heading. */
+.mp-profile-bar [data-phase="manage"] .mp-badge-picker{gap:0}

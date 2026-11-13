@@ -1356,6 +1356,19 @@
   document.addEventListener("click", function () { setTimeout(deco, 80); }, !0);
 
   window.MPFM = {
+    /* Song previews (chat.js MPPreview) borrow the media session; this hands it back to FM. */
+    mediaReset: function () {
+      msKey = ""; msTrack = null;
+      try {
+        var MS = navigator.mediaSession;
+        if (MS && MS.setActionHandler) {
+          MS.setActionHandler("play", function () { listen(!0); });
+          MS.setActionHandler("pause", function () { listen(!1); });
+          msControls(!live());
+        }
+      } catch (e) {}
+      media(calc());
+    },
     yieldBar: function () { closeMorph(true); },
     open: function () { openSheet("now"); },
     mount: mount,

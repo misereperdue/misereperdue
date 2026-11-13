@@ -45,7 +45,7 @@ var MPShopify = (function () {
         optValues[o.name][o.value] = true;
         chosen[o.name] = o.value;
       });
-      if (v.id) rawVariants.push({ id: v.id, sku: v.sku || "", opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable, price: v.price ? parseFloat(v.price.amount || "0") : null });
+      if (v.id) rawVariants.push({ id: v.id, sku: v.sku || "", opts: chosen, available: v.availableForSale !== false, qty: v.quantityAvailable, price: v.price ? parseFloat(v.price.amount || "0") : null, image: (v.image && v.image.url) || "" });
     });
     var optionName = null;
     for (var oi = 0; oi < optOrder.length; oi++) {
@@ -59,7 +59,7 @@ var MPShopify = (function () {
     if (!optionName && optOrder.length) optionName = optOrder[0];
     var sizes = optionName ? Object.keys(optValues[optionName]) : [];
     var variantList = rawVariants.map(function (rv) {
-      return { id: rv.id, sku: rv.sku, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty, price: rv.price };
+      return { id: rv.id, sku: rv.sku, size: optionName ? (rv.opts[optionName] || null) : null, available: rv.available, qty: rv.qty, price: rv.price, image: rv.image };
     });
     // Subscription products (VIP): first selling plan and its recurring price.
     var plan = null, planRecurring = null;
@@ -95,6 +95,8 @@ var MPShopify = (function () {
       })(),
       sizes: sizes.length ? sizes : null,
       variantList: variantList,
+      // Variant photos uploaded in Shopify, by option value (cart shows the chosen variant's photo).
+      imageBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.image) m[vv.size] = vv.image; return m; }, {}),
       priceBySize: variantList.reduce(function (m, vv) { if (vv.size != null && vv.price != null) m[vv.size] = vv.price; return m; }, {}),
       stock: stockTracked ? stockQty : null,
       available: n.availableForSale !== false,
@@ -108,7 +110,7 @@ var MPShopify = (function () {
     var query = "{ products(first: 24) { edges { node { id title handle description descriptionHtml " +
       "availableForSale requiresSellingPlan sellingPlanGroups(first: 3) { edges { node { sellingPlans(first: 3) { edges { node { id priceAdjustments { orderCount adjustmentValue { ... on SellingPlanFixedPriceAdjustment { price { amount } } } } } } } } } } priceRange { minVariantPrice { amount currencyCode } } " +
       "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title sku availableForSale quantityAvailable price { amount currencyCode } selectedOptions { name value } } } } } } } }";
+      "variants(first: 25) { edges { node { id title sku availableForSale quantityAvailable price { amount currencyCode } image { url } selectedOptions { name value } } } } } } } }";
     return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
       method: "POST",
       headers: {
