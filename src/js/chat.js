@@ -7626,6 +7626,36 @@
     /* Layout v2 (per dc): owned powers and charms are fixed-height rows with a switch (nothing reflows);
        a power's settings live on its own page that slides in; the shop is a sideways row of cards. */
     var detail = null, slideDir = 0;
+    /* Which powers stack (per dc), measured by rendering every pair with the live CSS:
+       name effects compete (one animation, one fill colour), bubble and avatar effects mostly stack.
+       clash: id -> what happens when both are on. */
+    var COMBO = {
+      glow:   { clash: { glitch: "Glitch replaces the glow", melt: "Melt replaces the glow" } },
+      ink:    { clash: { rgb: "RGB colours your name instead" } },
+      glitch: { clash: { glow: "Glitch replaces the glow", melt: "Melt runs instead", rgb: "RGB runs instead" } },
+      melt:   { clash: { glow: "Melt replaces the glow", glitch: "Melt runs instead" }, special: { rgb: "Drips take RGB's colours" } },
+      rgb:    { clash: { ink: "RGB colours your name instead", glitch: "RGB runs instead" }, special: { melt: "Drips take RGB's colours" } },
+      halo:   { clash: { sphere: "In chat the orb covers the ring; your profile ring stays" } },
+      sphere: { clash: { halo: "In chat the orb covers the ring; your profile ring stays" } },
+      bubble: { special: { aura: "Aura can match your bubble colour" } },
+      aura:   { special: { bubble: "Can match your bubble colour" } }
+    };
+    function combos(p) {
+      var cat = (st.catalog || []).filter(function (q) { return q.id !== p.id; });
+      if (p.kind === "charm") return '<div class="pw-combo"><div class="pw-combo-h">Combines with</div><p class="pw-combo-all">Every power. Charms sit next to your name whatever else is on.</p></div>';
+      var c = COMBO[p.id] || {}, clash = c.clash || {}, special = c.special || {};
+      var good = cat.filter(function (q) { return q.kind !== "charm" && !clash[q.id]; }),
+        bad = cat.filter(function (q) { return clash[q.id]; });
+      var chip = function (q, note) {
+        var on = st.on.indexOf(q.id) >= 0, own = st.owned.indexOf(q.id) >= 0;
+        return '<span class="pw-chip' + (on ? " is-on" : own ? "" : " is-locked") + '"><i>' + x(q.icon || "\u2726") + "</i><b>" + x(q.name) + "</b>" + (note ? "<small>" + x(note) + "</small>" : "") + "</span>";
+      };
+      return '<div class="pw-combo"><div class="pw-combo-h">Combines with</div><div class="pw-chips">' +
+        good.map(function (q) { return chip(q, special[q.id] || ""); }).join("") +
+        '<span class="pw-chip is-note"><i>\ud83d\udc8e</i><b>All charms</b></span></div>' +
+        (bad.length ? '<div class="pw-combo-h">Doesn\u2019t stack with</div><div class="pw-chips is-clash">' + bad.map(function (q) { return chip(q, clash[q.id]); }).join("") + "</div>" : "") +
+        "</div>";
+    }
     b._back = function () {
       if (!detail) return !1;
       detail = null;
@@ -7649,17 +7679,18 @@
     }
     function row(p) {
       var on = st.on.indexOf(p.id) >= 0, sets = powSets(p);
-      return '<div class="pw-row' + (on ? " is-on" : "") + (sets.length ? " has-set" : "") + '" data-id="' + x(p.id) + '">' +
-        '<button type="button" class="pw-open" data-id="' + x(p.id) + '"' + (sets.length ? ' aria-label="' + x(p.name) + ' settings"' : ' tabindex="-1"') + '>' +
+      return '<div class="pw-row has-set' + (on ? " is-on" : "") + '" data-id="' + x(p.id) + '">' +
+        '<button type="button" class="pw-open" data-id="' + x(p.id) + '" aria-label="' + x(p.name) + ' details">' +
         '<span class="pw-ico">' + x(p.icon || "\u2726") + '</span><span class="pw-copy"><b>' + x(p.name) + "</b>" + summary(p, sets) + "</span>" +
-        (sets.length ? '<span class="pw-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6c0 0 6 4.4 6 6s-6 6-6 6"/></svg></span>' : "") +
+        '<span class="pw-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6c0 0 6 4.4 6 6s-6 6-6 6"/></svg></span>' +
         "</button>" + sw(p, on) + "</div>";
     }
     function page(p) {
       var on = st.on.indexOf(p.id) >= 0;
       return '<div class="pw-page" data-id="' + x(p.id) + '">' +
 '<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + x(p.icon || "\u2726") + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
-        '<div class="pow-tile pw-set-card" data-id="' + x(p.id) + '">' + setPanel({ id: p.id, name: p.name, settings: powSets(p) }) + "</div>" +
+        (powSets(p).length ? '<div class="pow-tile pw-set-card" data-id="' + x(p.id) + '">' + setPanel({ id: p.id, name: p.name, settings: powSets(p) }) + "</div>" : "") +
+        combos(p) +
         '<p class="pow-status" role="status" aria-live="polite"></p></div>';
     }
     function render(msg) {
