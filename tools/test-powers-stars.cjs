@@ -100,6 +100,8 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert.equal(await root.locator('.pw-back, .pw-page-head').count(),0,'no inline back on settings');
  assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
  assert.equal((await setPage.locator('.pw-hero-copy b').innerText()).trim(),'Ink');
+ const gap=await root.evaluate(()=>{const s=document.querySelector('.pow-sum'),pg=document.querySelector('.pow-body > .pw-page');const sr=s.getBoundingClientRect(),pr=pg.getBoundingClientRect();return pr.top-sr.bottom;});
+ assert(gap>=12 && gap<=28,'settings content sits below the stars, gap='+gap);
  assert.equal(await setPage.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'gold');assert.equal(await setPage.locator('.pow-ch[aria-pressed=true]').innerText(),'Solid');
  await setPage.locator('.pow-sw[data-v=pink]').click();await p.waitForFunction(()=>document.querySelector('.pw-page[data-id=ink] .pow-status')?.textContent==='Saved.');
  assert.equal(st.settings.ink.color,'pink');assert.equal(await setPage.locator('.pow-sw[aria-pressed=true]').getAttribute('data-v'),'pink');
@@ -129,6 +131,8 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  // Top-bar Back from a power's settings returns to the Powers list (not the profile).
  await p.locator('.mp-profile-bar-head button').first().click();await root.locator('.pw-row[data-id=ink]').waitFor();
  assert.equal(await root.locator('.pw-page[data-id=ink]').count(),0,'settings closed');
+ assert.ok(await root.locator('.pw-row[data-id=ink] .pw-sub .pw-dot').count(),'colour state stays on the row');
+ assert.ok(!(await root.locator('.pw-row[data-id=ink]').innerText()).includes('Ink power'),'no description on the powers row');
  assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Powers');
  assert.equal(await root.locator('.pw-back, .pw-page-head').count(),0);
  // Morphs inside the profile bar: no separate sheet, header names the page.

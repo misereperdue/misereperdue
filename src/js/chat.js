@@ -7577,8 +7577,8 @@
     /* Square tiles in a 2-column grid. Owned powers select like badges (tap to
        highlight, tap again to clear; several can be active); others show a price
        and buy on a second tap. */
-    /* Hugeicons Color Picker (stroke), MIT. Ink flips by swatch luminance so it stays legible. */
-    var POW_PICKER = '<svg class="pow-sw-pick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.435 7L7.15915 13.2759M7.15915 13.2759L4.82728 15.6077C3.92569 16.5093 3.47489 16.9601 3.23745 17.5334C3 18.1066 3 18.7441 3 20.0192V21H3.98082C5.25586 21 5.89338 21 6.46663 20.7626C7.03988 20.5251 7.49068 20.0743 8.39227 19.1727L14.2891 13.2759M7.15915 13.2759H14.2891M14.2891 13.2759L17 10.565"/><path d="M19.2087 8.38869L20.82 10M19.2087 8.38869L20.0705 7.52682C20.363 7.23431 20.5093 7.08805 20.611 6.94529C21.1297 6.21676 21.1297 5.23953 20.611 4.511C20.5093 4.36824 20.363 4.22198 20.0705 3.92947C19.778 3.63697 19.6318 3.4907 19.489 3.38905C18.7605 2.87032 17.7832 2.87032 17.0547 3.38905C16.912 3.4907 16.7657 3.63695 16.4732 3.92947L15.6113 4.79133M19.2087 8.38869L15.6113 4.79133M14 3.18002L15.6113 4.79133"/></svg>';
+    /* Hugeicons Pipette (stroke), MIT. Ink flips by swatch luminance so it stays legible. */
+    var POW_PICKER = '<svg class="pow-sw-pick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.586 12.463l-5.68 5.68l-.09.09a4.06 4.06 0 0 1-1.968 1.052l-.125.026l-.207.041a3.57 3.57 0 0 0-1.826.978l-.25.25a1.435 1.435 0 0 1-2.028-2.03l.249-.25a3.57 3.57 0 0 0 .977-1.826l.042-.207l.025-.124a4.06 4.06 0 0 1 1.143-2.058l5.68-5.68"/><path d="m11.168 7.8l5.021 5.021a1.522 1.522 0 1 0 2.152-2.152L13.32 5.648A1.522 1.522 0 1 0 11.168 7.8Zm2.898-1.93l2.029-2.03a2.87 2.87 0 1 1 4.058 4.058l-2.03 2.03"/></svg>';
     function powSwInk(hex) {
       if (!/^#[0-9a-f]{6}$/i.test(hex || "")) return "#fff";
       function lin(c) { c = c / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
@@ -7666,7 +7666,7 @@
     function powSets(p) { return (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); }); }
     function summary(p, sets) {
       var cur = (st.settings && st.settings[p.id]) || {}, f = sets[0];
-      if (!f) return '<span class="pw-sub">' + x(p.desc || "") + "</span>";
+      if (!f) return "";
       var v = cur[f.key] != null ? cur[f.key] : f.def, o = (f.options || []).find(function (q) { return q.v === v; });
       if (f.type === "color") {
         var col = o ? o.color : /^#[0-9a-f]{6}$/i.test(v || "") ? v : "";
