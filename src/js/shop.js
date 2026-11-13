@@ -983,6 +983,8 @@ var MPShop = (function () {
           ? '<div class="vip-3d"><div class="vip-3d-stage"></div>' + h
           : a(i)
             ? '<div class="vip-3d mask-3d"><div class="vip-3d-stage"></div>' + h
+            : sk
+              ? '<div class="vip-3d stars-3d"><div class="vip-3d-stage" data-pack="' + l(sk[0]) + '"></div>' + h
             : (function (t, e) {
                 var n = (t && t.length ? t : []).filter(Boolean);
                 if (!n.length)
@@ -1109,8 +1111,10 @@ var MPShop = (function () {
       var pe = p.querySelector(".price");
       sk && pe && (pe.textContent = cad(i.priceBySize[y]));
       function starsArt() {
-        var im = sk && p.querySelector(".carousel-track img");
+        var im = sk && p.querySelector(".carousel-track img"),
+          st = sk && p.querySelector(".stars-3d .vip-3d-stage");
         im && (im.src = starsImg(y));
+        st && st.setAttribute("data-pack", y);
       }
       starsArt();
       if (
@@ -1187,6 +1191,24 @@ var MPShop = (function () {
           }),
             window.addEventListener("pointerup", z),
             window.addEventListener("pointercancel", z));
+        }
+      }
+      if (sk) {
+        var sx = p.querySelector(".stars-3d .vip-3d-stage"),
+          sh = p.querySelector(".stars-3d .vip-3d-hint");
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=1", sx)), sh)) {
+          var sT = 0,
+            sz = function () {
+              (sT && clearTimeout(sT),
+                (sT = setTimeout(function () {
+                  sh.classList.remove("gone");
+                }, 800)));
+            };
+          (sx.addEventListener("pointerdown", function () {
+            (sT && (clearTimeout(sT), (sT = 0)), sh.classList.add("gone"));
+          }),
+            window.addEventListener("pointerup", sz),
+            window.addEventListener("pointercancel", sz));
         }
       }
 
