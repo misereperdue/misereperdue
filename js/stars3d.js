@@ -1,8 +1,8 @@
-// Stars product viewer: a different real-3D object per pack, built in three.js like vip3d.js / mask3d.js.
-//   <=100  one star coin            <=500  a fan of three coins       <=1000 a wrapped coin roll
-//   <=2500 an engraved medallion    above  a star trophy on a pedestal
-// Coins are lathe-turned (raised rim, recessed field, edge groove) with extruded enamel MPStars.
-// The stage's data-pack attribute picks the object; changing it swaps with a small pop.
+// Stars product viewer: frosted-glass casino chips with a star set inside, more of them the bigger the pack, built in three.js like vip3d.js /
+// mask3d.js. The glass is real transmission (frosted, it softly shows the chips behind it). Every chip is identical;
+// each pack size has its own composed arrangement (stacks and standing coins placed so no two coins ever touch):
+//   <=100: 1   <=500: 3   <=1000: 7   <=2500: 15   above: 31
+// The stage's data-pack attribute picks the arrangement; changing it swaps with a small pop.
 var MPStars3D = (function () {
   "use strict";
   var PACK_IMGS = [100, 500, 1000, 2400, 2500, 6500];
@@ -10,15 +10,24 @@ var MPStars3D = (function () {
     return parseInt(String(el.getAttribute("data-pack") || "").replace(/[^\d]/g, ""), 10) || 0;
   }
   function tierFor(n) {
-    return !n || n <= 100 ? "coin" : n <= 500 ? "fan" : n <= 1000 ? "roll" : n <= 2500 ? "medal" : "trophy";
+    return !n || n <= 100 ? 0 : n <= 500 ? 1 : n <= 1000 ? 2 : n <= 2500 ? 3 : 4;
   }
+  // Arrangements in chip radii. s: stacks on the floor [x, z, count], tallest at the back; u: standing chips [x, z, yaw].
+  // Stack centres are >= 2.16 apart, so chips in neighbouring stacks never touch.
+  var LAYOUTS = [
+    { s: [], u: [[0, 0, 0]], pitch: 0.1 },
+    { s: [[0, 0, 3]], u: [], pitch: 0.42 },
+    { s: [[-1.08, -0.2, 5], [1.08, 0.25, 2]], u: [], pitch: 0.42 },
+    { s: [[-1.1, -0.65, 7], [1.1, -0.65, 5], [0, 1.25, 3]], u: [], pitch: 0.44 },
+    { s: [[-1.1, -1.15, 10], [1.1, -1.15, 8], [-2.2, 0.75, 4], [0, 0.75, 6], [2.2, 0.75, 3]], u: [], pitch: 0.42 },
+  ];
   function isLight() {
     var t = document.documentElement.getAttribute("data-theme");
     return t ? t === "light" : !!(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=5";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=6";
   }
 
   return {
@@ -58,10 +67,9 @@ var MPStars3D = (function () {
         }
         renderer.setPixelRatio(still ? 1 : Math.min(window.devicePixelRatio || 1, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.05;
+        renderer.toneMappingExposure = light ? 1.0 : 1.1;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setClearColor(0x000000, 0);
         el.appendChild(renderer.domElement);
 
         var scene = new THREE.Scene();
@@ -83,70 +91,44 @@ var MPStars3D = (function () {
         }
         if (window.ResizeObserver) (ro = new ResizeObserver(resize)).observe(el);
 
-        var key = new THREE.DirectionalLight(0xffffff, light ? 1.8 : 1.7);
-        key.position.set(1.5, 4, 8);
-        key.castShadow = true;
-        key.shadow.mapSize.set(2048, 2048);
-        key.shadow.radius = 10;
-        var sc = key.shadow.camera;
-        sc.left = sc.bottom = -4;
-        sc.right = sc.top = 4;
-        sc.near = 1;
-        sc.far = 30;
-        key.shadow.bias = -3e-4;
+        var key = new THREE.DirectionalLight(0xffffff, light ? 1.6 : 1.8);
+        key.position.set(2, 4, 7);
         scene.add(key);
-        var rim = new THREE.DirectionalLight(light ? 0xd6e6ff : 0xa9d7f5, light ? 1.1 : 1.2);
+        var rim = new THREE.DirectionalLight(light ? 0xcfe2ff : 0xa9d7f5, light ? 1.6 : 2.2);
         rim.position.set(-5, 3, -4);
         scene.add(rim);
-        var spot = new THREE.PointLight(0xffffff, light ? 9 : 14, 30);
+        var spot = new THREE.PointLight(0xffffff, light ? 10 : 16, 30);
         spot.position.set(2.5, 1.5, 4);
         scene.add(spot);
 
-        // ---- materials ----
-        // Light mode: frosted pale-blue coins with navy enamel stars (contrast from colour, not from shadow).
-        // Dark mode: navy coins with pale-blue stars.
-        var M = light
-          ? {
-              coin: new THREE.MeshPhysicalMaterial({ color: 0xc9d9ea, roughness: 0.34, metalness: 0.08, clearcoat: 0.8, clearcoatRoughness: 0.22, envMapIntensity: 0.9 }),
-              star: new THREE.MeshPhysicalMaterial({ color: 0x14204a, roughness: 0.22, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 1 }),
-              accent: new THREE.MeshPhysicalMaterial({ color: 0x14204a, roughness: 0.3, metalness: 0.1, clearcoat: 0.8 }),
-              wrap: new THREE.MeshPhysicalMaterial({ color: 0x14204a, roughness: 0.62, metalness: 0, sheen: 0.5, sheenColor: 0x8fb4dd, side: THREE.DoubleSide }),
-              band: new THREE.MeshPhysicalMaterial({ color: 0xc9d9ea, roughness: 0.5, metalness: 0 }),
-            }
-          : {
-              coin: new THREE.MeshPhysicalMaterial({ color: 0x31447c, roughness: 0.32, metalness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.18, envMapIntensity: 1 }),
-              star: new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0x5b9fd0, emissiveIntensity: 0.05, envMapIntensity: 1 }),
-              accent: new THREE.MeshStandardMaterial({ color: 0xa9d7f5, emissive: 0x6fa8d6, emissiveIntensity: 0.25, roughness: 0.3 }),
-              wrap: new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.6, metalness: 0, sheen: 0.5, sheenColor: 0xffffff, side: THREE.DoubleSide }),
-              band: new THREE.MeshPhysicalMaterial({ color: 0x31447c, roughness: 0.5, metalness: 0.1 }),
-            };
-
-        // ---- shared geometry builders ----
-        var geoCache = {};
-        function coinGeo(R, T) {
-          var k = R + ":" + T;
-          if (geoCache[k]) return geoCache[k];
-          var F = T / 2 - 0.028 * (T / 0.17),
-            C = 0.06 * R,
-            prof = [new THREE.Vector2(0, F), new THREE.Vector2(0.79 * R, F), new THREE.Vector2(0.84 * R, T / 2), new THREE.Vector2(R - C, T / 2)],
-            i,
-            a;
-          for (i = 1; i <= 6; i++) {
-            a = (i / 6) * (Math.PI / 2);
-            prof.push(new THREE.Vector2(R - C + C * Math.sin(a), T / 2 - C + C * Math.cos(a)));
-          }
-          prof.push(new THREE.Vector2(R, 0.014), new THREE.Vector2(R - 0.012, 0), new THREE.Vector2(R, -0.014));
-          for (i = 0; i <= 6; i++) {
-            a = (i / 6) * (Math.PI / 2);
-            prof.push(new THREE.Vector2(R - C + C * Math.cos(a), -T / 2 + C - C * Math.sin(a)));
-          }
-          prof.push(new THREE.Vector2(0.84 * R, -T / 2), new THREE.Vector2(0.79 * R, -F), new THREE.Vector2(0, -F));
-          prof.reverse(); // bottom-to-top so the lathe's faces point outward
-          return (geoCache[k] = { geo: new THREE.LatheGeometry(prof, 128), F: F });
-        }
-        // MPStar outline (the site star) with its stroke-rounded corners. w = width.
+        // ---- materials: frosted glass body, a solid star set inside it, satin bezel ----
+        var glass = new THREE.MeshPhysicalMaterial({
+          color: light ? 0xeaf3fb : 0xb9cde6,
+          transmission: 1,
+          roughness: 0.4,
+          metalness: 0,
+          ior: 1.45,
+          thickness: 0.35,
+          attenuationColor: light ? 0x6f9fd0 : 0x6f9fd0,
+          attenuationDistance: light ? 0.9 : 0.9,
+          clearcoat: 1,
+          clearcoatRoughness: 0.12,
+          specularIntensity: 1,
+          envMapIntensity: light ? 1.1 : 0.5,
+        });
+        var inlay = new THREE.MeshPhysicalMaterial({
+          color: light ? 0x14204a : 0xd7ecfb,
+          roughness: 0.35,
+          metalness: 0,
+          clearcoat: 0.6,
+          emissive: light ? 0x000000 : 0x5b9fd0,
+          emissiveIntensity: light ? 0 : 0.12,
+        });
+        var line = new THREE.MeshStandardMaterial({ color: light ? 0x4f7fb5 : 0xcfe6f8, roughness: 0.4, emissive: light ? 0 : 0x6fa8d6, emissiveIntensity: light ? 0 : 0.1 });
+        
+        // ---- geometry ----
         var P = [[12, 3.5], [14.6, 8.8], [20.5, 9.7], [16.2, 13.8], [17.2, 19.6], [12, 16.9], [6.8, 19.6], [7.8, 13.8], [3.5, 9.7], [9.4, 8.8]];
-        function starShape(w) {
+        function starShape(w, round) {
           var K = w / 17,
             pts = P.map(function (p) {
               return new THREE.Vector2((p[0] - 12) * K, -(p[1] - 11.9) * K);
@@ -154,8 +136,9 @@ var MPStars3D = (function () {
             s = new THREE.Shape();
           for (var i = 0; i < pts.length; i++) {
             var v = pts[i],
-              p0 = v.clone().lerp(pts[(i + pts.length - 1) % pts.length], i % 2 ? 0.16 : 0.2),
-              p1 = v.clone().lerp(pts[(i + 1) % pts.length], i % 2 ? 0.16 : 0.2);
+              tt = round ? (i % 2 ? 0.16 : 0.2) : 0.04,
+              p0 = v.clone().lerp(pts[(i + pts.length - 1) % pts.length], tt),
+              p1 = v.clone().lerp(pts[(i + 1) % pts.length], tt);
             if (i === 0) s.moveTo(p0.x, p0.y);
             else s.lineTo(p0.x, p0.y);
             s.quadraticCurveTo(v.x, v.y, p1.x, p1.y);
@@ -163,166 +146,148 @@ var MPStars3D = (function () {
           s.closePath();
           return s;
         }
-        function starGeo(w, depth, bevel) {
-          var k = "s" + w + ":" + depth + ":" + bevel;
-          return (
-            geoCache[k] ||
-            (geoCache[k] = new THREE.ExtrudeGeometry(starShape(w), {
-              depth: depth,
-              bevelEnabled: true,
-              bevelThickness: bevel,
-              bevelSize: bevel * 1.3,
-              bevelSegments: 5,
-              curveSegments: 12,
-            }))
+        // a star lying in the coin's mid-plane (XZ), centred in thickness
+        function starMesh(w, depth, bevel, facet, mat) {
+          var g = new THREE.ExtrudeGeometry(starShape(w, !facet), {
+            depth: depth,
+            bevelEnabled: true,
+            bevelThickness: bevel,
+            bevelSize: facet ? bevel * 0.9 : bevel * 1.2,
+            bevelSegments: facet ? 1 : 4,
+            curveSegments: facet ? 2 : 10,
+          });
+          g.translate(0, 0, -depth / 2);
+          var m = new THREE.Mesh(g, facet ? mat.clone() : mat);
+          if (facet) m.material.flatShading = true;
+          m.rotation.x = -Math.PI / 2;
+          return m;
+        }
+        // chip body: flat faces with a shallow centre recess, near-straight edge
+        function bodyGeo(d) {
+          var R = d.R,
+            T = d.T,
+            F = T / 2 - 0.012,
+            C = 0.03,
+            prof = [[0, F], [0.6 * R, F], [0.62 * R, T / 2], [R - C, T / 2]],
+            i,
+            a;
+          for (i = 1; i <= 6; i++) {
+            a = (i / 6) * (Math.PI / 2);
+            prof.push([R - C + C * Math.sin(a), T / 2 - C + C * Math.cos(a)]);
+          }
+          for (i = 0; i <= 6; i++) {
+            a = (i / 6) * (Math.PI / 2);
+            prof.push([R - C + C * Math.cos(a), -T / 2 + C - C * Math.sin(a)]);
+          }
+          prof.push([0.62 * R, -T / 2], [0.6 * R, -F], [0, -F]);
+          prof.reverse();
+          return new THREE.LatheGeometry(
+            prof.map(function (p) {
+              return new THREE.Vector2(p[0], p[1]);
+            }),
+            160,
           );
         }
-        function mesh(g, m) {
-          var x = new THREE.Mesh(g, m);
-          x.castShadow = x.receiveShadow = true;
-          return x;
+        var D = { R: 1, T: 0.17 },
+          INSERTS = 6,
+          INS = 0.34, // angular width of an edge insert
+          coinBody = bodyGeo(D),
+          coinStar = starMesh(0.86, 0.004, 0.008, false, inlay).geometry,
+          insEdge = [],
+          insTop = [],
+          insBot = [];
+        for (var q = 0; q < INSERTS; q++) {
+          var c0 = (q / INSERTS) * Math.PI * 2;
+          insEdge.push(new THREE.CylinderGeometry(D.R + 0.003, D.R + 0.003, D.T * 0.72, 10, 1, true, c0, INS));
+          insTop.push(new THREE.RingGeometry(0.8 * D.R, D.R - 0.035, 10, 1, c0 - Math.PI / 2, INS));
+          insBot.push(new THREE.RingGeometry(0.8 * D.R, D.R - 0.035, 10, 1, Math.PI / 2 - c0 - INS, INS));
         }
-        // A coin lying flat (axis Y). o: R, T, starW, ring (force rim ring), small (count of small stars in a ring)
-        function makeCoin(o) {
-          o = o || {};
-          var R = o.R || 1,
-            T = o.T || 0.17,
-            cg = coinGeo(R, T),
-            g = new THREE.Group();
-          g.add(mesh(cg.geo, M.coin));
-          [1, -1].forEach(function (s) {
-            var st = mesh(starGeo(o.starW || 1.02 * R, 0.012 * (T / 0.17), 0.016 * (T / 0.17)), M.star);
-            st.rotation.x = (-s * Math.PI) / 2;
-            st.position.y = s * (cg.F - 0.004);
+        var ringGeo = new THREE.TorusGeometry(0.62 * D.R, 0.008, 8, 160),
+          dashGeo = new THREE.BoxGeometry(0.05, 0.004, 0.012),
+          insMat = new THREE.MeshPhysicalMaterial({ color: light ? 0x14204a : 0xeaf4fd, roughness: 0.38, clearcoat: 0.8, clearcoatRoughness: 0.2, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+        // one chip lying flat (axis Y)
+        function makeCoin() {
+          var g = new THREE.Group();
+          g.add(new THREE.Mesh(coinBody, glass));
+          // the star sits in the centre recess of each face, so it reads crisply even on top of a stack
+          [1, -1].forEach(function (sgn) {
+            var st = new THREE.Mesh(coinStar, inlay);
+            // the back star is turned to line up with the front one when seen through the glass
+            st.rotation.set((-sgn * Math.PI) / 2, 0, sgn > 0 ? 0 : Math.PI);
+            st.position.y = sgn * (D.T / 2 - 0.012 + 0.006);
             g.add(st);
-            if (!light || o.ring) {
-              var rg = new THREE.Mesh(new THREE.TorusGeometry(0.815 * R, 0.007 * R, 8, 128), M.accent);
-              rg.rotation.x = Math.PI / 2;
-              rg.position.y = s * (cg.F + 0.012);
-              g.add(rg);
-            }
-            for (var i = 0; i < (o.small || 0); i++) {
-              var a = (i / o.small) * Math.PI * 2,
-                sm = mesh(starGeo(0.15 * R, 0.008, 0.012), M.star);
-              sm.rotation.set((-s * Math.PI) / 2, 0, -a);
-              sm.position.set(Math.sin(a) * 0.66 * R, s * (cg.F - 0.002), -s * Math.cos(a) * 0.66 * R);
-              g.add(sm);
+          });
+          for (var i = 0; i < INSERTS; i++) {
+            g.add(new THREE.Mesh(insEdge[i], insMat));
+            var t = new THREE.Mesh(insTop[i], insMat);
+            t.rotation.x = -Math.PI / 2;
+            t.position.y = D.T / 2 + 0.0015;
+            g.add(t);
+            var b = new THREE.Mesh(insBot[i], insMat);
+            b.rotation.x = Math.PI / 2;
+            b.position.y = -D.T / 2 - 0.0015;
+            g.add(b);
+          }
+          [1, -1].forEach(function (sgn) {
+            var r = new THREE.Mesh(ringGeo, line);
+            r.rotation.x = Math.PI / 2;
+            r.position.y = sgn * (D.T / 2 + 0.002);
+            g.add(r);
+            // a dashed ring between the inserts, like the printed track on a chip
+            for (var k = 0; k < 36; k++) {
+              var a = (k / 36) * Math.PI * 2,
+                d = new THREE.Mesh(dashGeo, line);
+              d.position.set(Math.sin(a) * 0.71, sgn * (D.T / 2 + 0.002), Math.cos(a) * 0.71);
+              d.rotation.y = a;
+              g.add(d);
             }
           });
           return g;
         }
-        function upright(obj) {
-          var g = new THREE.Group();
-          obj.rotation.x = Math.PI / 2;
-          g.add(obj);
-          return g;
-        }
-
-        // ---- the five objects ----
-        var BUILD = {
-          coin: function () {
-            return { obj: upright(makeCoin()), floor: false, pitch: 0.12 };
-          },
-          fan: function () {
-            // three coins standing in a shingled row: parallel faces 0.24 apart (more than a coin's thickness),
-            // so they overlap from the front but never touch
-            var g = new THREE.Group();
-            [-1, 0, 1].forEach(function (k) {
-              var c = upright(makeCoin());
-              c.position.set(k * 0.62, -k * 0.1, k * 0.24);
-              g.add(c);
-            });
-            g.rotation.y = 0.28;
-            return { obj: g, floor: false, pitch: 0.1 };
-          },
-          roll: function () {
-            // a wrapped roll of 14 coins on its side; the end coins show their stars
-            var g = new THREE.Group(),
-              n = 14,
-              gap = 0.173,
-              L = (n - 1) * gap;
-            for (var i = 0; i < n; i++) {
+        function build(tier) {
+          var L = LAYOUTS[tier],
+            g = new THREE.Group(),
+            gap = D.T + 0.003;
+          L.s.forEach(function (st, si) {
+            for (var k = 0; k < st[2]; k++) {
               var c = makeCoin();
-              c.rotation.z = Math.PI / 2;
-              c.position.x = -L / 2 + i * gap;
+              c.position.set(st[0], D.T / 2 + k * gap, st[1]);
+              c.rotation.y = ((si * 7 + k * 3) % 10) * 0.63; // inserts don't line up from chip to chip, like a real stack
               g.add(c);
             }
-            var wl = L * 0.7,
-              wrap = mesh(new THREE.CylinderGeometry(1.025, 1.025, wl, 96, 1, true), M.wrap);
-            wrap.rotation.z = Math.PI / 2;
-            g.add(wrap);
-            [-1, 1].forEach(function (s) {
-              var b = mesh(new THREE.CylinderGeometry(1.03, 1.03, 0.07, 96, 1, true), M.band);
-              b.rotation.z = Math.PI / 2;
-              b.position.x = s * wl * 0.32;
-              g.add(b);
-            });
-            g.rotation.y = -0.35;
-            return { obj: g, floor: true, pitch: 0.32 };
-          },
-          medal: function () {
-            // a thick, larger coin with a ring of small stars around the big one
-            return { obj: upright(makeCoin({ R: 1.25, T: 0.3, starW: 0.82, ring: true, small: 12 })), floor: false, pitch: 0.12 };
-          },
-          trophy: function () {
-            // a pillowy enamel star standing on a turned pedestal, with a small star coin set in front
-            var g = new THREE.Group();
-            var prof = [[0, 0], [1.0, 0], [1.03, 0.04], [1.0, 0.1], [0.86, 0.14], [0.8, 0.42], [0.9, 0.47], [0.92, 0.53], [0.9, 0.56], [0, 0.56]].map(function (p) {
-              return new THREE.Vector2(p[0], p[1]);
-            });
-            g.add(mesh(new THREE.LatheGeometry(prof, 128), M.coin));
-            var ring = new THREE.Mesh(new THREE.TorusGeometry(0.905, 0.012, 8, 128), M.accent);
-            ring.rotation.x = Math.PI / 2;
-            ring.position.y = 0.5;
-            g.add(ring);
-            var sg = starGeo(2.1, 0.22, 0.14);
-            sg.computeBoundingBox();
-            var bb = sg.boundingBox,
-              star = mesh(sg, M.star);
-            star.position.set(0, 0.56 - bb.min.y - 0.02, -(bb.max.z + bb.min.z) / 2);
-            g.add(star);
-            var mini = upright(makeCoin({ R: 0.3, T: 0.07 }));
-            mini.position.set(0, 0.28, 0.86);
-            g.add(mini);
-            return { obj: g, floor: true, pitch: 0.16 };
-          },
-        };
+          });
+          L.u.forEach(function (u) {
+            var c = makeCoin();
+            c.rotation.x = Math.PI / 2; // stand it up, face to camera
+            var w = new THREE.Group();
+            w.add(c);
+            w.position.set(u[0], tier ? D.R : 0, u[1]);
+            w.rotation.y = u[2];
+            g.add(w);
+          });
+          return { obj: g, pitch: L.pitch };
+        }
 
         // ---- scene graph: turntable (yaw + pitch from drag) > content ----
         var turntable = new THREE.Group();
         scene.add(turntable);
         var content = null,
-          basePitch = 0.12,
-          pop = 0,
-          groundMat = new THREE.ShadowMaterial({ color: 0x0a1230, opacity: 0.3 }),
-          ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), groundMat);
-        ground.receiveShadow = true;
+          basePitch = 0.1,
+          pop = 0;
 
         function layout(n, animate) {
           if (content) turntable.remove(content);
-          var made = BUILD[tierFor(n)]();
+          var made = build(tierFor(n));
           content = new THREE.Group();
           content.add(made.obj);
           var box = new THREE.Box3().setFromObject(made.obj),
-            ctr = box.getCenter(new THREE.Vector3()),
             size = box.getSize(new THREE.Vector3());
-          made.obj.position.sub(ctr); // centre on the turntable
-          // light mode: no backdrop shadow, only a faint contact shadow under things that stand on a floor
-          groundMat.opacity = light ? (made.floor ? 0.08 : 0) : 0.3;
-          if (made.floor) {
-            ground.rotation.set(-Math.PI / 2, 0, 0);
-            ground.position.set(0, -size.y / 2 - 0.001, 0);
-            content.add(ground);
-          } else {
-            ground.rotation.set(0, 0, 0);
-            ground.position.set(0, 0, -1.6);
-            scene.add(ground);
-          }
-          frameR = 0.5 * Math.max(size.x, size.y, size.z * 0.8) * 1.12 + 0.12;
+          made.obj.position.sub(box.getCenter(new THREE.Vector3())); // centre on the turntable
+          frameR = 0.5 * Math.max(size.x, size.y, size.z * 0.75) * 1.1 + 0.1;
           basePitch = made.pitch;
           turntable.add(content);
           pop = animate && !reduce ? performance.now() : 0;
-          if (pop) content.scale.setScalar(0.82);
+          if (pop) content.scale.setScalar(0.85);
           resize();
         }
 
@@ -338,7 +303,7 @@ var MPStars3D = (function () {
         }
 
         // ---- drag to spin (same feel as the VIP card) ----
-        var yaw = still ? parseFloat(el.getAttribute("data-still")) || -0.45 : -0.45,
+        var yaw = still ? parseFloat(el.getAttribute("data-still")) || -0.3 : -0.3,
           pitch = basePitch,
           vYaw = 0,
           vPitch = 0,
@@ -372,7 +337,7 @@ var MPStars3D = (function () {
             dx = e.clientX - lx,
             dy = e.clientY - ly;
           yaw += 0.0085 * dx;
-          pitch = Math.max(-1.1, Math.min(1.25, pitch + 0.006 * dy));
+          pitch = Math.max(-1.1, Math.min(1.1, pitch + 0.006 * dy));
           vYaw = ((0.0085 * dx) / dt) * 16.7;
           vPitch = ((0.006 * dy) / dt) * 16.7;
           lx = e.clientX;
@@ -402,7 +367,7 @@ var MPStars3D = (function () {
           if (pop) {
             var p = Math.min(1, (now - pop) / 420),
               s = 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2); // ease-out-back
-            content.scale.setScalar(0.82 + 0.18 * s);
+            content.scale.setScalar(0.85 + 0.15 * s);
             if (p >= 1) {
               content.scale.setScalar(1);
               pop = 0;
