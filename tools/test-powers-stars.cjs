@@ -163,6 +163,9 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert(geo.icoLeft<=6,'left aligned '+geo.icoLeft);assert(Math.abs(geo.icoH-geo.digitH)<=1.5,'icon '+geo.icoH+' vs digits '+geo.digitH);assert(Math.abs(geo.icoTop-geo.digitTop)<=1.5&&Math.abs(geo.icoBottom-geo.digitBottom)<=1.5,'icon spans the digits '+JSON.stringify(geo));
  assert.equal((await ss.locator('.stars-get').innerText()).trim(),'Buy stars');
  const rows=await ss.locator('.stars-row').allInnerTexts();assert.match(rows[0],/Bought Ink[\s\S]*−100/);assert.match(rows[1],/Gift from @?friend[\s\S]*\+1/i);
+ assert.equal(await ss.locator('.stars-row').first().locator('.stars-lead .pow-ico').count(),1,'buy lead is the power icon');
+ assert.equal(await ss.locator('.stars-row').nth(1).locator('.stars-lead .chat-avatar-wrap').count(),1,'gift lead is an avatar');
+ assert.equal((await ss.locator('.stars-row').nth(1).locator('button.stars-who').innerText()).trim(),'@friend','@username is tappable');
  await p.screenshot({path:`${OUT}/${tag}-stars.png`});
  await ss.locator('.stars-get').click();await p.waitForFunction(()=>location.hash==='#shop');await p.waitForTimeout(300);assert.equal(await p.locator('.rc-back').count(),0,'no sheet');assert.equal(await p.locator('.mp-profile-bar .pow-page').count(),0,'profile closed on Get stars');
 
