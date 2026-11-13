@@ -7898,10 +7898,8 @@
     lead.setAttribute("aria-hidden", "true");
     var who = starsWho(e);
     if (who) lead.appendChild(starsAv(who));
-    else if (e.t === "buy" && e.power) {
-      if (GEM[e.power]) lead.innerHTML = mpCharm(e.power);
-      else lead.innerHTML = powIco(powMap[e.power]);
-    } else {
+    else if (e.t === "buy" && e.power) lead.innerHTML = powIco(powMap[e.power]);
+    else {
       lead.innerHTML = '<span class="stars-lead-ico"><svg ' + MP_IC + ">" + STAR_ICON + "</svg></span>";
     }
     row.appendChild(lead);
