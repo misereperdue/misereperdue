@@ -8,16 +8,17 @@ var MPStars3D = (function () {
     return parseInt(String(el.getAttribute("data-pack") || "").replace(/[^\d]/g, ""), 10) || 0;
   }
   function coinsFor(n) {
-    return !n || n <= 100 ? 1 : n <= 500 ? 3 : n <= 1000 ? 6 : n <= 2400 ? 10 : n <= 5000 ? 15 : 21;
+    return !n || n <= 100 ? 1 : n <= 500 ? 3 : n <= 1000 ? 6 : n <= 5000 ? 21 : 32;
   }
   // How each coin count splits into stacks, and where stacks stand (coin radii, x/z). Centres are >= 2.1 apart so
   // neighbouring stacks never touch. Must match tools/stars/gen.py.
-  var STACKS = { 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3] };
+  var STACKS = { 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3], 32: [7, 7, 6, 5, 4, 3] };
   var SPOTS = {
     1: [[0, 0]],
     2: [[-1.05, -0.35], [1.05, 0.35]],
     3: [[-1.1, -0.6], [1.1, -0.6], [0, 1.3]],
     4: [[-1.05, -1.05], [1.05, -1.05], [-1.05, 1.05], [1.05, 1.05]],
+    6: [[-2.1, -1.05], [0, -1.05], [2.1, -1.05], [-2.1, 1.05], [0, 1.05], [2.1, 1.05]],
   };
   function isLight() {
     var t = document.documentElement.getAttribute("data-theme");
@@ -25,7 +26,7 @@ var MPStars3D = (function () {
   }
   function fallbackSrc(el) {
     var n = packNum(el);
-    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=3";
+    return "/img/stars-" + (PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (isLight() ? "light" : "dark") + ".jpg?v=4";
   }
 
   return {
@@ -156,12 +157,12 @@ var MPStars3D = (function () {
         });
 
         var coinMat = light
-          ? new THREE.MeshPhysicalMaterial({ color: 0xf4f5f8, roughness: 0.4, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.28, envMapIntensity: 0.75 })
-          : new THREE.MeshPhysicalMaterial({ color: 0x3a4f8c, roughness: 0.32, metalness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.18, envMapIntensity: 1 });
+          ? new THREE.MeshPhysicalMaterial({ color: 0xeceef3, roughness: 0.4, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.28, envMapIntensity: 0.75 })
+          : new THREE.MeshPhysicalMaterial({ color: 0x31447c, roughness: 0.32, metalness: 0.2, clearcoat: 0.9, clearcoatRoughness: 0.18, envMapIntensity: 1 });
         var starMat = light
           ? new THREE.MeshPhysicalMaterial({ color: 0x86b4da, roughness: 0.16, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.1 })
-          : new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0x5b9fd0, emissiveIntensity: 0.18, envMapIntensity: 1 });
-        var ringMat = new THREE.MeshStandardMaterial({ color: 0xa9d7f5, emissive: 0x6fa8d6, emissiveIntensity: light ? 0 : 0.6, roughness: 0.3 });
+          : new THREE.MeshPhysicalMaterial({ color: 0xa9d7f5, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0x5b9fd0, emissiveIntensity: 0.05, envMapIntensity: 1 });
+        var ringMat = new THREE.MeshStandardMaterial({ color: 0xa9d7f5, emissive: 0x6fa8d6, emissiveIntensity: light ? 0 : 0.3, roughness: 0.3 });
         var ringGeo = light ? null : new THREE.TorusGeometry(0.815, 0.007, 8, 128);
 
         function makeCoin() {
@@ -191,7 +192,7 @@ var MPStars3D = (function () {
         var content = null,
           coins = [],
           basePitch = 0,
-          ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: 0, opacity: light ? 0.1 : 0.3 }));
+          ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: 0x0a1230, opacity: light ? 0.2 : 0.35 }));
         ground.receiveShadow = true;
 
         function seeded(k) {

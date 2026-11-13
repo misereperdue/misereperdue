@@ -92,9 +92,12 @@ var MPShop = (function () {
     i = "img/vip-card-light.jpg?v=4",
     STARS_PACK_IMGS = [100, 500, 1000, 2400, 2500, 6500];
   // Stars art: hero coin, or the stack for a pack size, in the current theme (falls back to the hero).
+  function starsIsLight() {
+    return r(); // r is shadowed inside the product view
+  }
   function starsImg(size) {
     var n = parseInt(String(size == null ? "" : size).replace(/[^\d]/g, ""), 10);
-    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=3";
+    return "img/stars-" + (STARS_PACK_IMGS.indexOf(n) > -1 ? n + "-" : "") + (r() ? "light" : "dark") + ".jpg?v=4";
   }
   function r() {
     var t = document.documentElement.getAttribute("data-theme");
@@ -984,7 +987,11 @@ var MPShop = (function () {
           : a(i)
             ? '<div class="vip-3d mask-3d"><div class="vip-3d-stage"></div>' + h
             : sk
-              ? '<div class="vip-3d stars-3d"><div class="vip-3d-stage" data-pack="' + l(sk[0]) + '"></div>' + h
+              ? '<div class="vip-3d stars-3d" style="background:' +
+                (starsIsLight()
+                  ? "radial-gradient(70% 60% at 50% 42%,#e6e7ea,#d8d9dd)"
+                  : "radial-gradient(70% 60% at 50% 42%,#18234f,#0c1230)") +
+                '"><div class="vip-3d-stage" data-pack="' + l(sk[0]) + '"></div>' + h
             : (function (t, e) {
                 var n = (t && t.length ? t : []).filter(Boolean);
                 if (!n.length)
@@ -1196,7 +1203,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=3", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=4", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),

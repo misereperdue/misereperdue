@@ -19,7 +19,7 @@ THEMES = {
     "dark": dict(
         bg="#0c1230", bg_hi="#18234f", shadow="#000000", shadow_op=0.55,
         face0="#26335f", face1="#121b3e", side0="#1c2850", side1="#080d24",
-        rim="#a9d7f5", rim_dark="#050a1e", inlay0="#cfe6f6", inlay1="#9cc9e8",
+        rim="#a9d7f5", rim_dark="#050a1e", inlay0="#c3ddef", inlay1="#93c0e0",
         inlay_edge="#6fa3c8", spec="#ffffff", ink="#f5f5f7", ink_op=0.92,
     ),
 }
@@ -59,7 +59,7 @@ def star_inlay(t, cx, cy, size, sy=1.0, dark=False):
         f'<path d="{STAR}" fill="{fill}" stroke="{fill}" stroke-width="2.4" stroke-linejoin="round" {extra} {tr(dx,dy)}/>')
     out = []
     if dark:
-        out.append(p(t["inlay1"], 'opacity="0.16" filter="url(#glow)"'))
+        out.append(p(t["inlay1"], 'opacity="0.06" filter="url(#glow)"'))
     out.append(p(t["inlay_edge"], dy=-size * 0.018))  # upper inner wall (shadowed)
     out.append(p("url(#inlay)", dy=size * 0.006))
     out.append(p(t["spec"], 'opacity="0.35" filter="url(#soft2)"', dx=-size * 0.06, dy=-size * 0.07 * sy))
@@ -105,13 +105,14 @@ def hero(name):
 
 # Coins per pack and how they split into stacks. Must match coinsFor()/STACKS in src/js/stars3d.js.
 def coins_for(n):
-    return 1 if n <= 100 else 3 if n <= 500 else 6 if n <= 1000 else 10 if n <= 2400 else 15 if n <= 5000 else 21
+    return 1 if n <= 100 else 3 if n <= 500 else 6 if n <= 1000 else 21 if n <= 5000 else 32
 
 
-STACKS = {1: [1], 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3]}
+STACKS = {1: [1], 3: [3], 6: [6], 10: [6, 4], 15: [6, 5, 4], 21: [7, 6, 5, 3], 32: [7, 7, 6, 5, 4, 3]}
 # Stack centres in coin radii (x, depth); >= 2.1 apart so neighbouring stacks never touch. Back row first.
 SPOTS = {1: [(0, 0)], 2: [(-1.05, -0.35), (1.05, 0.35)], 3: [(-1.1, -0.6), (1.1, -0.6), (0, 1.3)],
-         4: [(-1.05, -1.05), (1.05, -1.05), (-1.05, 1.05), (1.05, 1.05)]}
+         4: [(-1.05, -1.05), (1.05, -1.05), (-1.05, 1.05), (1.05, 1.05)],
+         6: [(-2.1, -1.05), (0, -1.05), (2.1, -1.05), (-2.1, 1.05), (0, 1.05), (2.1, 1.05)]}
 
 
 def pack(name, size):
@@ -120,7 +121,7 @@ def pack(name, size):
     sy = 0.42
     counts = STACKS[coins_for(size)]
     spots = SPOTS[len(counts)]
-    r = S * {1: 0.27, 2: 0.19, 3: 0.165, 4: 0.15}[len(counts)]
+    r = S * {1: 0.27, 2: 0.19, 3: 0.165, 4: 0.15, 6: 0.112}[len(counts)]
     th = r * 0.15
     ry = r * sy
     stacks = [(spots[i][0] * r, spots[i][1] * r * sy, counts[i]) for i in range(len(counts))]
