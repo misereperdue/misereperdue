@@ -4946,9 +4946,28 @@
       clearInterval(fadeT);
       cancelAnimationFrame(raf); raf = 0;
       if (audio) { try { audio.pause(); } catch (e) {} audio.removeAttribute("src"); try { audio.load(); } catch (e) {} }
-      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); }
+      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); msOff(); }
       cur = null;
       keepFm || fmResume();
+    }
+    /* iOS Control Center / lock screen (per dc): show the song and artist, not the page title and site icon.
+       On stop the session goes back to Misery FM (MPFM.mediaReset) so its own controls work again. */
+    function msOn(btn) {
+      var M = navigator.mediaSession, s = btn._song || {};
+      if (!M) return;
+      try {
+        var art = s.art ? String(s.art).replace(/\/\d+x\d+bb\./, "/600x600bb.") : "";
+        window.MediaMetadata && (M.metadata = new MediaMetadata({ title: mpMusicTitle(s.title) || s.title || "", artist: s.artist || "", album: s.album || "", artwork: art ? [{ src: art, sizes: "600x600" }] : [] }));
+        M.playbackState = "playing";
+        ["nexttrack", "previoustrack", "seekto", "seekbackward", "seekforward", "play"].forEach(function (a) { try { M.setActionHandler(a, null); } catch (e) {} });
+        M.setActionHandler("pause", function () { stop(); });
+      } catch (e) {}
+    }
+    function msOff() {
+      var M = navigator.mediaSession;
+      if (!M) return;
+      try { M.metadata = null; M.playbackState = "none"; } catch (e) {}
+      try { window.MPFM && MPFM.mediaReset && MPFM.mediaReset(); } catch (e) {}
     }
     function play(btn) {
       if (cur === btn) return stop();
@@ -4967,6 +4986,7 @@
       var host = btn.closest(".mp-pv-host");
       host && host.classList.add("is-pv-playing");
       fmPause();
+      msOn(btn);
       audio.src = btn._src;
       audio.volume = 0;
       var p = audio.play();
@@ -4986,6 +5006,7 @@
         b.className = "mp-pv";
         b._src = src;
         b._title = mpMusicTitle(song.title) + " by " + song.artist;
+        b._song = song;
         b.innerHTML = '<span class="mp-pv-disc"><svg class="mp-pv-ring" viewBox="0 0 34 34" aria-hidden="true"><circle class="mp-pv-track" cx="17" cy="17" r="15"/><circle class="mp-pv-arc" cx="17" cy="17" r="15"/></svg><span class="mp-pv-g"></span></span>';
         b._arc = b.querySelector(".mp-pv-arc");
         b._arc.style.strokeDasharray = C;

@@ -170,6 +170,15 @@ var MPShop = (function () {
           ">"
       : u(t.name);
   }
+  // Cart line art (per dc): the chosen variant's photo (the Stars stack for the pack size, else the
+  // Shopify variant image), falling back to the product photo. Mask/VIP keep their themed art.
+  function lineArt(prod, line) {
+    var sz = line.size && "one" !== line.size ? line.size : null,
+      v = prod && sz ? (starsPack(prod) ? starsImg(sz) : !a(prod) && !n(prod) && prod.imageBySize ? prod.imageBySize[sz] : null) : null;
+    return v
+      ? '<img src="' + l(d(v, 800)) + '" alt="' + l(line.name) + '" decoding="async" draggable="false">'
+      : p(prod || line, !0);
+  }
   var f = "";
   function v() {
     try {
@@ -1494,7 +1503,7 @@ var MPShop = (function () {
           var i = t.size && "one" !== t.size ? '<div class="meta">' + l(t.size) + "</div>" : "";
           return (
             '<div class="line">' +
-            p(e || t, !0) +
+            lineArt(e, t) +
             '<div class="line-mid"><strong>' +
             l(t.name) +
             "</strong>" +
