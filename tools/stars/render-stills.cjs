@@ -1,9 +1,10 @@
 // Render the flat Stars product images from the real 3D models in js/stars3d.js, so tiles and fallbacks match the viewer.
-// MP_PLAYWRIGHT=<playwright> node tools/stars/render-stills.cjs [outdir]   -> img/stars-{light,dark}.jpg + stars-<n>-<theme>.jpg
+// MP_PLAYWRIGHT=<playwright> [STARS_SIZE=2048] [STARS_PACKS=500,1100] node tools/stars/render-stills.cjs [outdir]   -> img/stars-{light,dark}.jpg + stars-<n>-<theme>.jpg
 // Each still: the model (transparent canvas) composited on the product-photo backdrop, pack amount underneath.
 const pw = require(process.env.MP_PLAYWRIGHT || 'playwright'), fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '../..'), ORIGIN = 'https://misereperdue.com', OUT = process.argv[2] || path.join(ROOT, 'img');
-const PACKS = [100, 500, 1000, 1100, 2400, 2500, 6500], S = 1254, MH = 1000;
+const PACKS = process.env.STARS_PACKS ? process.env.STARS_PACKS.split(',').map(Number) : [100, 500, 1000, 1100, 2400, 2500, 6500];
+const S = +process.env.STARS_SIZE || 1254, MH = Math.round(S * 0.8); // STARS_SIZE=2048 for Shopify uploads
 const BG = { light: ['#e6e7ea', '#d8d9dd'], dark: ['#18234f', '#0c1230'] }, INK = { light: '#0a0f29', dark: '#f5f5f7' };
 const T = { '.js': 'application/javascript', '.html': 'text/html' };
 (async () => {
@@ -20,7 +21,7 @@ const T = { '.js': 'application/javascript', '.html': 'text/html' };
     const p = await c.newPage();
     for (const pack of [0, ...PACKS]) {
       await p.goto(ORIGIN + '/still.html');
-      await p.evaluate(n => { const st = document.getElementById('st'); st.setAttribute('data-pack', String(n || 100)); st.setAttribute('data-still', n ? '-0.45' : '-0.2'); window.__d = MPStars3D.mount(st); }, pack);
+      await p.evaluate(([n, bg]) => { const st = document.getElementById('st'); st.setAttribute('data-pack', String(n || 100)); st.setAttribute('data-still', n ? '-0.45' : '-0.2'); st.setAttribute('data-bg', bg); window.__d = MPStars3D.mount(st); }, [pack, BG[theme][1]]);
       await p.waitForSelector('#st[data-ready]', { timeout: 120000 });
       const data = await p.evaluate(() => document.querySelector('#st canvas').toDataURL('image/png'));
       const model = path.join(tmp, `m-${theme}-${pack}.png`);
