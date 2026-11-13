@@ -166,7 +166,7 @@
       bar.style.width=wide+'px';
       bar.style.marginLeft='auto';
       bar.style.marginRight='auto';
-      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',width:beforeW+'px',borderRadius:beforeH<=baseHeight+1?'32px':'28px'},{height:height+'px',width:wide+'px',borderRadius:'28px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
+      if(animate&&!reduced()&&bar.animate){animation=bar.animate([{height:beforeH+'px',width:beforeW+'px',borderRadius:beforeH<=baseHeight+1?'32px':'16px'},{height:height+'px',width:wide+'px',borderRadius:'16px'}],{duration:460,easing:MP_EASE});animation.onfinish=function(){animation=null;};}
     }
     function commitRestore(){
       if(committed)return;
@@ -200,7 +200,7 @@
       root.style.pointerEvents='none';
       if(root.animate)root.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards',easing:MP_EASE});
       previous.forEach(function(s){s.el.animate&&s.el.animate([{opacity:0},{opacity:s.opacity}],{duration:260,easing:MP_EASE});});
-      bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'28px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      bar._profileExit=bar.animate([{height:closing.height+'px',width:closing.width+'px',borderRadius:'16px'},{height:baseHeight+'px',width:baseWidth+'px',borderRadius:'32px'}],{duration:360,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
       var done=function(){commitRestore();};
       bar._profileExit.onfinish=done;
       if(bar._profileExit.finished)bar._profileExit.finished.then(done,done);
