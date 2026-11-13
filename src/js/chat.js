@@ -7488,7 +7488,8 @@
     return powCat;
   }
   function powIco(p) {
-    return '<span class="pow-ico" aria-hidden="true">' + x((p && p.icon) || "✦") + "</span>";
+    var ico=(window.MPPowerIcon && p && MPPowerIcon(p.id)) || x((p && p.icon) || "✦");
+    return '<span class="pow-ico" aria-hidden="true">' + ico + "</span>";
   }
   function powName(id) {
     return (powMap[id] && powMap[id].name) || id;
@@ -7648,7 +7649,7 @@
         bad = cat.filter(function (q) { return clash[q.id]; });
       var chip = function (q, note) {
         var on = st.on.indexOf(q.id) >= 0, own = st.owned.indexOf(q.id) >= 0;
-        return '<span class="pw-chip' + (on ? " is-on" : own ? "" : " is-locked") + '"><i>' + x(q.icon || "\u2726") + "</i><b>" + x(q.name) + "</b>" + (note ? "<small>" + x(note) + "</small>" : "") + "</span>";
+        return '<span class="pw-chip' + (on ? " is-on" : own ? "" : " is-locked") + '"><i>' + ((window.MPPowerIcon && MPPowerIcon(q.id)) || x(q.icon || "\u2726")) + "</i><b>" + x(q.name) + "</b>" + (note ? "<small>" + x(note) + "</small>" : "") + "</span>";
       };
       return '<div class="pw-combo"><div class="pw-combo-h">Combines with</div><div class="pw-chips">' +
         good.map(function (q) { return chip(q, special[q.id] || ""); }).join("") +
@@ -7681,14 +7682,14 @@
       var on = st.on.indexOf(p.id) >= 0, sets = powSets(p);
       return '<div class="pw-row has-set' + (on ? " is-on" : "") + '" data-id="' + x(p.id) + '">' +
         '<button type="button" class="pw-open" data-id="' + x(p.id) + '" aria-label="' + x(p.name) + ' details">' +
-        '<span class="pw-ico">' + x(p.icon || "\u2726") + '</span><span class="pw-copy"><b>' + x(p.name) + "</b>" + summary(p, sets) + "</span>" +
+        '<span class="pw-ico">' + ((window.MPPowerIcon && MPPowerIcon(p.id)) || x(p.icon || "\u2726")) + '</span><span class="pw-copy"><b>' + x(p.name) + "</b>" + summary(p, sets) + "</span>" +
         '<span class="pw-chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6c0 0 6 4.4 6 6s-6 6-6 6"/></svg></span>' +
         "</button>" + sw(p, on) + "</div>";
     }
     function page(p) {
       var on = st.on.indexOf(p.id) >= 0;
       return '<div class="pw-page" data-id="' + x(p.id) + '">' +
-'<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + x(p.icon || "\u2726") + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
+'<div class="pw-hero"><span class="pw-ico pw-ico-lg">' + ((window.MPPowerIcon && MPPowerIcon(p.id)) || x(p.icon || "\u2726")) + '</span><div class="pw-hero-copy"><b>' + x(p.name) + '</b><span>' + x(p.desc || "") + "</span></div>" + sw(p, on) + "</div>" +
         (powSets(p).length ? '<div class="pow-tile pw-set-card" data-id="' + x(p.id) + '">' + setPanel({ id: p.id, name: p.name, settings: powSets(p) }) + "</div>" : "") +
         combos(p) +
         '<p class="pow-status" role="status" aria-live="polite"></p></div>';

@@ -9893,7 +9893,9 @@ input[type=checkbox]:not(.mp-check-cb):not(.chat-poll-cb):focus-visible{outline:
 .mp-pb-pow-pill:active{transform:scale(.98)}
 .mp-pb-pow-k{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13px}
 .mp-pb-pow-k svg{width:16px;height:16px;color:var(--accent)}
-.mp-pb-pow-k svg path{fill:currentColor}
+.mp-pb-pow-k svg:not(.mp-pow-svg) path{fill:currentColor}
+.mp-pow-svg{width:62%;height:62%;display:block;color:inherit}
+.pw-chip i{display:grid;place-items:center;width:18px;height:18px}
 .mp-pb-pow-icons .pow-ico{width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--ink) 7%,transparent);font-size:15px}
 .mp-pb-pow-chev{width:15px;height:15px;margin-left:2px;color:var(--muted);transition:transform .32s cubic-bezier(.32,.72,0,1)}
 .mp-pb-pow.is-open .mp-pb-pow-chev{transform:rotate(180deg)}
