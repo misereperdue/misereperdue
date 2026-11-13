@@ -12589,3 +12589,6 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 .chat-msg.mine .chat-mention[data-u]{color:inherit;text-decoration:none;border-color:color-mix(in srgb,currentColor 38%,transparent);background:color-mix(in srgb,currentColor 9%,transparent)}
 .chat-msg .chat-mention[data-u]:active{transform:scale(.95)}
 .chat-msg .chat-mention[data-u]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* Profile Powers box: the +N is a round bubble the same size as the power bubbles */
+.mp-pb-pow-more{flex:none;width:28px;min-width:28px;height:28px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);background:color-mix(in srgb,var(--ink) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 14%,transparent)}
