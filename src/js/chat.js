@@ -7505,7 +7505,8 @@
   function powName(id) {
     return (powMap[id] && powMap[id].name) || id;
   }
-  /* Pill under the stars/badges row: up to 5 power icons and a +N; tap to list them all. */
+  /* Pill under the stars/badges row: 3 power bubbles (switched-on first) and a round +N bubble for the
+     rest; tap to list them all (per dc). */
   function powRow(user) {
     var ids = (user && user.powers) || [];
     if (!ids.length) return null;
@@ -7513,7 +7514,7 @@
       w = document.createElement("div"),
       b = document.createElement("button"),
       list = document.createElement("div"),
-      MAX = 5;
+      MAX = 3;
     w.className = "mp-pb-pow";
     b.type = "button";
     b.className = "mp-pb-pow-pill";
@@ -7525,8 +7526,8 @@
     function paint() {
       b.innerHTML =
         '<span class="mp-pb-pow-k"><svg ' + MP_IC + ">" + POW_ICON + '</svg>Powers</span><span class="mp-pb-pow-icons">' +
-        ids.slice(0, MAX).map(function (id) { return powIco(powMap[id]); }).join("") +
-        (ids.length > MAX ? '<span class="mp-pb-pow-more">+' + (ids.length - MAX) + "</span>" : "") +
+        ids.slice().sort(function (a, c) { return (on.indexOf(c) >= 0) - (on.indexOf(a) >= 0); }).slice(0, MAX).map(function (id) { return powIco(powMap[id]); }).join("") +
+        (ids.length > MAX ? '<span class="mp-pb-pow-more" aria-label="' + (ids.length - MAX) + ' more">+' + (ids.length - MAX) + "</span>" : "") +
         '<svg class="mp-pb-pow-chev" ' + MP_IC + '><path d="M7 10c2 0 4 4 5 4s3-4 5-4"/></svg></span>';
       b.setAttribute("aria-label", ids.length + (ids.length === 1 ? " power" : " powers") + ", show all");
       list.innerHTML = ids
