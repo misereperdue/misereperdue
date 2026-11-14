@@ -1336,8 +1336,8 @@
       '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
       /* interlocking back-to-back CC: right C, then left C over it at the top, then the right C over it at the bottom */
       '<clipPath id="mp-cx-' + m[2] + '"><rect x="62" y="57" width="16" height="16"/></clipPath>' +
-      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(80.5, 57, 13, 8, 46, 314) + '"/><path d="' + ccRing(59.5, 57, 13, 8, 226, 494) + '"/>' +
-      '<path d="' + ccRing(80.5, 57, 13, 8, 46, 314) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
+      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(79.5, 57, 13.5, 8.2, 44, 316) + '"/><path d="' + ccRing(60.5, 57, 13.5, 8.2, 224, 496) + '"/>' +
+      '<path d="' + ccRing(79.5, 57, 13.5, 8.2, 44, 316) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
