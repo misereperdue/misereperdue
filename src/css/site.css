@@ -12650,3 +12650,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .pow-note.is-charm-off{margin:-2px 2px 8px;font-size:12px;opacity:.7}
 /* Preview disc sits on the visible album square at the left of the faded profile cover (per dc). */
 .mp-profile-details .mp-profile-song-art .mp-pv{right:auto;width:auto;aspect-ratio:1/1;height:100%}
+/* Profile Listening cover (per dc): the album shows as a clear square at the left with a soft right edge,
+   so the preview disc (centred on that square) reads as centred on the cover. */
+.mp-profile-details .mp-profile-song-art:not(.is-empty){-webkit-mask-image:none!important;mask-image:none!important;background:transparent!important;box-shadow:none!important}
+.mp-profile-details .mp-profile-song-art:not(.is-empty) img{width:auto!important;height:100%!important;aspect-ratio:1/1;-webkit-mask-image:linear-gradient(to right,#000 62%,transparent 100%);mask-image:linear-gradient(to right,#000 62%,transparent 100%)}
