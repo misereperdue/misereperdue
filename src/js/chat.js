@@ -7833,7 +7833,7 @@
           setPanel({ id: p.id, name: p.name, settings: sets }) + "</div>"
         );
       return (
-        '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (locked ? " is-locked" : "") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
+        '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (locked ? " is-locked" : !mine && p.requires && st.on.indexOf(p.requires) < 0 ? " is-dim" : "") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
         (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="' + (locked ? x(p.name) + ", needs the Charms power" : "Buy " + x(p.name) + " for " + x(p.price) + " stars") + '"' + (poor ? " disabled" : "")) +
         ">" + powIco(p) + '<b class="pow-tn">' + x(p.name) + "</b>" +
         (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + (locked ? '<svg class="pow-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg> Charms' : mpStar() + " " + x(p.price)) + "</span>") +
@@ -7925,7 +7925,7 @@
       body.innerHTML = dp ? page(dp) :
         (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
         (minePow.length ? '<div class="pow-h">Your powers</div><div class="pw-list">' + minePow.map(row).join("") + "</div>" : "") +
-        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charms to show your charms.</p>" : "") + '<div class="pw-list">' + mineCh.map(row).join("") + "</div>" : "") +
+        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charms to show your charms.</p>" : "") + '<div class="pw-list' + (st.on.indexOf("charm") < 0 ? " is-charm-off" : "") + '">' + mineCh.map(row).join("") + "</div>" : "") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
         (rest.length ? '<div class="pow-h">Get more</div><div class="pw-shop">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
       if (dp && msg) status(msg);

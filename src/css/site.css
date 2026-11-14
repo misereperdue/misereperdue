@@ -12659,3 +12659,6 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-profile-details .mp-profile-song-art .mp-pv.is-playing,.mp-profile-details .mp-profile-song-art .mp-pv.is-loading{background:transparent}
 .mp-profile-details .mp-profile-song-art img{transition:filter .3s ease}
 .mp-profile-details .mp-profile-song-art.is-pv-playing img{filter:brightness(.72) saturate(1.05)}
+/* Charms (per dc): your gem charms show faded until the Charms power is switched on. */
+.pow-tile.is-dim{opacity:.55;filter:saturate(.6)}
+.pw-list.is-charm-off .pw-row{opacity:.45;filter:saturate(.6);transition:opacity .25s ease,filter .25s ease}
