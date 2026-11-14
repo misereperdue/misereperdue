@@ -499,7 +499,7 @@
                   } else e.classList.add("hidden");
               }),
                 [r, a].forEach(function (e) {
-                  if(e)e.setAttribute("aria-label",o>0?"Notifications, "+o+" unread":"Notifications");
+                  if(e){if(window.MPSocial)MPSocial.updateLabel(e,o);else e.setAttribute("aria-label",o>0?"Notifications, "+o+" unread":"Notifications");}
                   if (o > 0 && e && e.animate && (T < 0 || o > T))
                     try {
                       e.animate(
