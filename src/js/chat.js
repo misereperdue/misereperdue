@@ -271,11 +271,12 @@
     var t = N(e);
     return t && !A(e.username, t) ? "" : t ? M(t) : "";
   }
-  var I = { member: "VIP", verified: "07", kitty: "<3" },
+  var I = { member: "VIP", verified: "07", kitty: "<3", every: "Everypower" },
     q = {
       member: "chat-badge-pill-vip",
       verified: "chat-badge-pill-07",
       kitty: "chat-badge-pill-kitty",
+      every: "chat-badge-pill-every",
     };
   function O(e) {
     var t = N(e),
@@ -1117,7 +1118,7 @@
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = (pill || "") + '<span class="mp-pb-pts" aria-label="' + x(n.points || 0) + ' stars">' + mpStar() + ' <b>' + x(n.points || 0) + "</b></span>";
+    st.innerHTML = (pill || "") + pbEvery(n) + '<span class="mp-pb-pts" aria-label="' + x(n.points || 0) + ' stars">' + mpStar() + ' <b>' + x(n.points || 0) + "</b></span>";
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
@@ -1213,7 +1214,7 @@
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
         mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=avw.querySelector('.mp-pb-ib')||n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)avw.insertAdjacentHTML('beforeend','<span class="mp-pb-ib mp-pb-av-badge">'+badge+'</span>');
-        st.innerHTML=(pill||'')+'<span class="mp-pb-pts" aria-label="'+x(user.points||0)+' stars">'+mpStar()+' <b>'+x(user.points||0)+'</b></span>';
+        st.innerHTML=(pill||'')+pbEvery(user)+'<span class="mp-pb-pts" aria-label="'+x(user.points||0)+' stars">'+mpStar()+' <b>'+x(user.points||0)+'</b></span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         mpPwApply(avw,user.username,mpPwFromProfile(user));if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
@@ -1226,7 +1227,9 @@
   function pbHas07(u) { return !!(u && (u.verified || (u.badges || []).indexOf("verified") >= 0)); }
   function pbVip(u) { return !!(u && (u.member || (u.badges || []).indexOf("member") >= 0)) && !pbHas07(u); }
   function pbPillBadge(u) { return pbVip(u) ? "member" : N(u); }
-  function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : pbHas07(u) && (N(u) === "member" || !N(u)) ? O(Object.assign({}, u, { activeBadge: "verified" })) : O(u); }
+  /* Everypower pill (per dc): shown next to the other pill whenever the badge is earned */
+  function pbEvery(u) { return u && (u.badges || []).indexOf("every") >= 0 && pbPill(u).indexOf("chat-badge-pill-every") < 0 ? O(Object.assign({}, u, { activeBadge: "every" })) : ""; }
+  function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : pbHas07(u) && (N(u) === "member" || N(u) === "every" || !N(u)) ? O(Object.assign({}, u, { activeBadge: "verified" })) : O(u); }
   function pbRing(u) {
     return pbVip(u) ? " is-vip" : u && ((u.badges || []).indexOf("kitty") >= 0 || N(u) === "kitty") ? " is-kitty" : N(u) === "verified" ? " is-verified" : "";
   }
