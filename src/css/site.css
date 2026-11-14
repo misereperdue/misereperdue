@@ -12810,3 +12810,14 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 }
 .chat-gp-tabs>.seg,.chat-tabs>.chat-tabs-slider{top:3px;left:3px}
 .dash-tabs>.dash-tab-ind{top:3px!important;bottom:3px!important;left:3px!important;width:calc((100% - 6px)/3)!important}
+/* One spring timing for every menu's moving selection, including legacy sliders. */
+.chat-tabs>.chat-tabs-slider,.dash-tabs>.dash-tab-ind,.mp-menu-tab-ind{
+  transition:transform .55s cubic-bezier(.34,1.36,.5,1)!important;
+}
+.mp-menu-tab-ind{position:absolute;top:3px;left:3px;z-index:0;pointer-events:none;
+  border-radius:999px;background:var(--lg-drop);box-shadow:var(--lg-drop-shadow)}
+.mp-sliding-tabs>button.is-on{background:transparent!important;box-shadow:none!important}
+.mp-menu-tab-ind:not(.is-seated),.chat-tabs>.chat-tabs-slider.no-anim{transition:none!important}
+@media(prefers-reduced-motion:reduce){
+  .chat-gp-tabs>.seg,.chat-tabs>.chat-tabs-slider,.dash-tabs>.dash-tab-ind,.mp-menu-tab-ind{transition:none!important}
+}
