@@ -2,6 +2,7 @@
 
 Either agent may take **any** task, randomly assigned by the user. No feature, folder, or subsystem belongs permanently to one agent.
 
+0. Before any visual, icon, hat, Powers or deploy work, read docs/DESIGN_PLAYBOOK.md and follow its loop: render in light and dark, inspect the screenshots, measure, test, bump pins, confirm live.
 1. Before coding, check open issues/PRs here and in the sibling repo for active work and conflicting files/contracts. Read DEVELOPMENT_HANDOFF.md.
 2. Claim the *task*, not the part of the website. Create or reference a GitHub issue; note agent, expected files, branch, status and dependencies in its description or PR.
 3. Create a unique task branch from latest main: codex/<issue>-<task> or grok/<issue>-<task>. Do not push directly to main; do not share branches between agents.
