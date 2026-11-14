@@ -4888,6 +4888,55 @@
      while it plays and picks back up after. Tap only, never auto-play. */
   var MPPreview = (function () {
     var memo = Object.create(null), audio = null, cur = null, raf = 0, fmWas = false, fadeT = 0;
+    /* Web Audio path (per dc): iOS attaches a lock-screen player to any page that played an <audio>
+       element and keeps it after the clip ends. Clips decoded and played through Web Audio don't get
+       one. Bytes come through the Worker (/api/preview) because Web Audio needs CORS; until that route
+       answers, the <audio> element below is used. */
+    var ac = null, node = null, gainN = null, t0 = 0, dur = 30, seq = 0, mode = "", bufs = Object.create(null), bufKeys = [];
+    var PROXY = e + "/api/preview?u=";
+    function probe(src) {
+      if (mode || !(window.AudioContext || window.webkitAudioContext)) { mode = mode || "el"; return; }
+      mode = "probing";
+      fetch(PROXY + encodeURIComponent(src), { method: "HEAD" }).then(function (r) { mode = r.ok ? "wa" : "el"; }, function () { mode = "el"; });
+    }
+    function getBuf(src) {
+      if (bufs[src]) return bufs[src];
+      bufKeys.push(src);
+      while (bufKeys.length > 4) delete bufs[bufKeys.shift()];
+      return (bufs[src] = fetch(PROXY + encodeURIComponent(src))
+        .then(function (r) { if (!r.ok) throw new Error("preview " + r.status); return r.arrayBuffer(); })
+        .then(function (b) { return new Promise(function (res, rej) { var q = ac.decodeAudioData(b, res, rej); q && q.then && q.then(res, rej); }); })
+        .catch(function (er) { delete bufs[src]; throw er; }));
+    }
+    function waSession(on) {
+      try { navigator.audioSession && (navigator.audioSession.type = on ? "playback" : "auto"); } catch (er) {}
+    }
+    function playWA(btn) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!ac) ac = new AC();
+      waSession(true);
+      try { ac.resume && ac.resume(); } catch (er) {}
+      /* a silent one-sample buffer inside the tap unlocks Web Audio on iOS */
+      try { var sb = ac.createBuffer(1, 1, 22050), s0 = ac.createBufferSource(); s0.buffer = sb; s0.connect(ac.destination); s0.start(0); } catch (er) {}
+      var my = ++seq;
+      getBuf(btn._src).then(function (buf) {
+        if (my !== seq || cur !== btn) return;
+        var g = ac.createGain(), n = ac.createBufferSource(), now = ac.currentTime;
+        n.buffer = buf;
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.9, now + 0.25);
+        n.connect(g); g.connect(ac.destination);
+        n.onended = function () { node === n && stop(); };
+        node = n; gainN = g; dur = buf.duration || 30; t0 = now;
+        n.start(now);
+        paint(btn, "play");
+        raf || (raf = requestAnimationFrame(tick));
+      }, function () {
+        if (my !== seq || cur !== btn) return;
+        mode = "el"; /* next tap uses the element */
+        stop();
+      });
+    }
     var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8c0 .9 1 1.4 1.7.9l9.4-6.4c.6-.4.6-1.4 0-1.8l-9.4-6.4c-.7-.5-1.7 0-1.7.9Z" fill="currentColor"/></svg>';
     var PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>';
     var C = 2 * Math.PI * 15;
@@ -4928,9 +4977,9 @@
     }
     function tick() {
       raf = 0;
-      if (!cur || !audio) return;
+      if (!cur || !(audio || node)) return;
       if (!cur.isConnected) return stop();
-      var d = audio.duration || 30, k = Math.min(1, (audio.currentTime || 0) / d);
+      var k = node ? Math.min(1, (ac.currentTime - t0) / dur) : Math.min(1, (audio.currentTime || 0) / (audio.duration || 30));
       cur._arc.style.strokeDashoffset = C * (1 - k);
       raf = requestAnimationFrame(tick);
     }
@@ -4945,6 +4994,10 @@
     function stop(keepFm) {
       clearInterval(fadeT);
       cancelAnimationFrame(raf); raf = 0;
+      seq++;
+      if (node) { var n0 = node; node = null; try { n0.onended = null; n0.stop(); } catch (er) {} try { n0.disconnect(); } catch (er) {} }
+      if (gainN) { try { gainN.disconnect(); } catch (er) {} gainN = null; }
+      if (ac && !keepFm) { try { ac.state === "running" && ac.suspend(); } catch (er) {} waSession(false); }
       /* release the element completely so iOS drops its lock-screen player */
       if (audio) { var a0 = audio; audio = null; try { a0.pause(); } catch (e) {} a0.removeAttribute("src"); try { a0.load(); } catch (e) {} }
       var was = cur;
@@ -4978,7 +5031,7 @@
     function play(btn) {
       if (cur === btn) return stop();
       stop(true);
-      if (!audio) {
+      if (mode !== "wa" && !audio) {
         audio = new Audio();
         audio.preload = "none";
         audio.setAttribute("playsinline", "");
@@ -4994,6 +5047,7 @@
       host && host.classList.add("is-pv-playing");
       fmPause();
       msOn(btn);
+      if (mode === "wa") return playWA(btn);
       audio.src = btn._src;
       audio.volume = 0;
       var p = audio.play();
@@ -5008,6 +5062,7 @@
       if (!host || host.querySelector(".mp-pv")) return;
       find(song).then(function (src) {
         if (!src || !host.isConnected || host.querySelector(".mp-pv")) return;
+        probe(src);
         var b = document.createElement("button");
         b.type = "button";
         b.className = "mp-pv";
