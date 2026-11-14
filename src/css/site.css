@@ -12689,3 +12689,6 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-pb-starsline .mp-pb-pts,.mp-pb .mp-pb-starsline .mp-pb-pts,.mp-profile-bar .mp-pb-starsline .mp-pb-pts{display:inline-flex;align-items:center;gap:4px;height:auto;padding:0;background:none;box-shadow:none;font-size:12px;line-height:1.4;color:var(--muted)}
 .mp-pb-starsline .mp-pb-pts b{color:var(--ink);font-weight:700}
 .mp-pb-stats:empty{display:none}
+/* Everypower icon: infinity (per dc); it's wide, so it gets more of the circle */
+.chat-badge-every .cbe svg{width:80%!important;height:80%!important}
+.chat-badge-pill-every .chat-badge-every .cbe svg{width:84%!important;height:84%!important}
