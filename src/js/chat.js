@@ -1245,29 +1245,49 @@
   var PW = Object.create(null),
     PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
   function pwKey(u) { return String(u || "").toLowerCase(); }
-  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "diamond", "emerald", "ruby"];
+  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "louis", "diamond", "emerald", "ruby"];
   /* Hats (per dc): drawn over the avatar. The box is 140x145 with the avatar circle at (70,95) r50, so a hat
      can rise above the head. Couture Beanie is its own power (quilted, pearl-chain cuff, gold pearl). */
   var HAT_SVG = {
-    beanie: '<g transform="translate(5.6 -13) scale(.92 1)"><path d="M26 86A44 54 0 0 1 114 86Z" fill="#26386f"/><path d="M42 80c0-20 6-36 14-44M58 80c0-24 3-40 6-46M76 34c3 6 6 22 6 46M88 36c8 8 12 24 12 44" stroke="#1b2a58" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/><rect x="21" y="74" width="98" height="19" rx="9.5" fill="#34498f"/><path d="M33 77v13M43 77v13M53 77v13M63 77v13M73 77v13M83 77v13M93 77v13M103 77v13" stroke="#26386f" stroke-width="2.6" stroke-linecap="round"/><circle cx="70" cy="28" r="11" fill="#f3f5fb"/><circle cx="66" cy="25" r="3" fill="#fff"/></g>',
-    party: '<path d="M44 64 72 4l26 60c-17 7-37 7-54 0Z" fill="#ff6fa5"/><path d="M52 47 82 28M48 57l42-26M58 64l36-22M64 20l14 6" stroke="#ffd36b" stroke-width="5" stroke-linecap="round" opacity=".95"/><path d="M44 64c17 7 37 7 54 0" stroke="#e24f88" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="72" cy="6" r="7.5" fill="#ffd36b"/><circle cx="70" cy="4.5" r="2.2" fill="#fff6d6"/>',
-    horns: '<path d="M46 62C41 46 31 31 16 20c6 15 11 28 13 44Z" fill="#cf2e45"/><path d="M94 62c5-16 15-31 30-42-6 15-11 28-13 44Z" fill="#cf2e45"/><path d="M42 58c-4-11-10-21-19-30M98 58c4-11 10-21 19-30" stroke="#ff8a98" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>',
+    /* plain black beanie with a ribbed cuff (per dc) */
+    beanie: '<g transform="translate(5.6 -13) scale(.92 1)"><path d="M26 86A44 54 0 0 1 114 86Z" fill="#1c1c21"/><path d="M42 82c0-20 5-34 12-42M57 82c0-22 2-36 5-44M78 38c3 8 5 22 5 44M90 40c7 8 10 22 10 42" stroke="#0f0f12" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/><path d="M48 44c6-6 14-9 22-9" stroke="rgba(255,255,255,.12)" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="21" y="74" width="98" height="19" rx="9.5" fill="#26262c"/><path d="M31 77v13M39 77v13M47 77v13M55 77v13M63 77v13M71 77v13M79 77v13M87 77v13M95 77v13M103 77v13M111 77v13" stroke="#16161a" stroke-width="2.4" stroke-linecap="round"/></g>',
+    /* party hat: purple cone, gold dots, white zigzag trim and a pink pompom (per dc) */
+    party: '<path d="M45 64 71 6l25 58c-16 7-35 7-51 0Z" fill="#6f4dff"/><path d="M71 6 96 64c-6 2.5-12 4-18 4.6Z" fill="#5a3be0" opacity=".55"/><circle cx="66" cy="30" r="3" fill="#ffd36b"/><circle cx="77" cy="40" r="3" fill="#ffd36b"/><circle cx="60" cy="46" r="3" fill="#ffd36b"/><circle cx="72" cy="53" r="3" fill="#ffd36b"/><circle cx="85" cy="54" r="2.6" fill="#ffd36b"/><path d="M46 60l5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M45 64c16 7 35 7 51 0" stroke="#4a2fc4" stroke-width="2.5" fill="none" stroke-linecap="round"/><g fill="#ff6fa5"><circle cx="71" cy="6" r="7"/><circle cx="64" cy="3" r="3.2"/><circle cx="78" cy="3" r="3.2"/><circle cx="71" cy="-1" r="3.2"/><circle cx="66" cy="10" r="3"/><circle cx="76" cy="10" r="3"/></g><circle cx="69" cy="4" r="1.8" fill="#ffd0e2"/>',
+    /* horns curving inward toward each other (per dc) */
+    horns: '<path d="M42 62C35 44 41 27 61 17c-6 12-8 26-4 41Z" fill="#cf2e45"/><path d="M98 62c7-18 1-35-19-45 6 12 8 26 4 41Z" fill="#cf2e45"/><path d="M45 56c-3-12 1-24 11-31M95 56c3-12-1-24-11-31" stroke="#ff8a98" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
     headphones: '<path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#1d2238" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#a9d7f5" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><rect x="9" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="110" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="14" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/><rect x="115" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/>'
   };
-  var COUTURE = { noir: ["#18181d", "#0c0c0f", "rgba(255,255,255,.16)"], ivory: ["#efe8dc", "#ddd2c1", "rgba(80,60,30,.14)"], rose: ["#e9aab9", "#d78ea1", "rgba(255,255,255,.3)"] };
+  /* Chanel Beanie (per dc, from his reference): slouchy knit, big interlocking CC, ribbed cuff with stripes. */
+  var COUTURE = { ivory: ["#efe9de", "#151517", "#e3dccf"], noir: ["#1a1a1e", "#f1ebdf", "#232328"], rose: ["#f2bccb", "#161618", "#e7aabb"] };
   function hatSvg(key) {
-    var m = /^(hat|couture):(\w+)$/.exec(key || "");
+    var m = /^(hat|couture|louis):(\w+)$/.exec(key || "");
     if (!m) return "";
     if (m[1] === "hat") return HAT_SVG[m[2]] || "";
-    var c = COUTURE[m[2]] || COUTURE.noir, q = "";
-    for (var i = -60; i < 140; i += 13) q += "M" + i + " 92L" + (i + 62) + " 26M" + (i + 62) + " 92L" + i + " 26";
-    return '<g transform="translate(5.6 -13) scale(.92 1)"><clipPath id="mp-cq-' + m[2] + '"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath>' +
-      '<path d="M26 86A44 54 0 0 1 114 86Z" fill="' + c[0] + '"/>' +
-      '<path d="' + q + '" stroke="' + c[2] + '" stroke-width="1.6" clip-path="url(#mp-cq-' + m[2] + ')"/>' +
-      '<rect x="21" y="74" width="98" height="19" rx="9.5" fill="' + c[1] + '"/>' +
-      [30, 40, 50, 60, 80, 90, 100, 110].map(function (x) { return '<circle cx="' + x + '" cy="83.5" r="3" fill="#f6f1e7" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>'; }).join("") +
-      '<circle cx="70" cy="83.5" r="5.2" fill="#e8c26a" stroke="#b8913c" stroke-width="1"/><circle cx="68.4" cy="81.8" r="1.5" fill="#fff6d8"/></g>';
+    if (m[1] === "louis") {
+      /* Louis Beanie (per dc, from his reference): black/grey checkered knit with a crystal-dot patch on the cuff */
+      var sq = "";
+      for (var y = 22; y < 74; y += 12) for (var x = 14; x < 126; x += 12) if (((x - 14) / 12 + (y - 22) / 12) % 2 === 0) sq += '<rect x="' + x + '" y="' + y + '" width="12" height="12"/>';
+      var cq = "";
+      for (var cx = 21, i = 0; cx < 119; cx += 12, i++) cq += '<rect x="' + cx + '" y="' + (i % 2 ? 74 : 83.5) + '" width="12" height="9.5"/>';
+      var dots = "";
+      for (var r = 0; r < 3; r++) for (var d = 0; d < 6; d++) dots += '<circle cx="' + (96.5 + d * 2.6) + '" cy="' + (78.5 + r * 4.2) + '" r=".75"/>';
+      return '<g transform="translate(5.6 -13) scale(.92 1)"><clipPath id="mp-lv-d"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath><clipPath id="mp-lv-c"><rect x="21" y="74" width="98" height="19" rx="9.5"/></clipPath>' +
+        '<path d="M26 86A44 54 0 0 1 114 86Z" fill="#202024"/><g fill="#4d4d55" clip-path="url(#mp-lv-d)">' + sq + "</g>" +
+        '<path d="M44 82c0-18 4-32 10-40M86 42c6 8 10 22 10 40" stroke="rgba(0,0,0,.25)" stroke-width="2" fill="none"/>' +
+        '<rect x="21" y="74" width="98" height="19" rx="9.5" fill="#202024"/><g fill="#4d4d55" clip-path="url(#mp-lv-c)">' + cq + "</g>" +
+        '<rect x="93.5" y="75.5" width="18" height="15" rx="2" fill="#0d0d10"/><g fill="#e9edf4">' + dots + "</g></g>";
+    }
+    var c = COUTURE[m[2]] || COUTURE.ivory, knit = "";
+    for (var k = 34; k <= 106; k += 8) knit += "M" + k + " 84V" + (k < 70 ? 40 + (70 - k) * 0.55 : 40 + (k - 70) * 0.55);
+    var rib = "";
+    for (var j = 27; j <= 113; j += 5) rib += "M" + j + " 79v11";
+    return '<g transform="translate(5.6 -15) scale(.92 1.02)"><clipPath id="mp-cc-' + m[2] + '"><path d="M26 86C24 52 40 26 70 24s48 28 44 62Z"/></clipPath>' +
+      '<path d="M26 86C24 52 40 26 70 24s48 28 44 62Z" fill="' + c[0] + '"/>' +
+      '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
+      '<g fill="none" stroke="' + c[1] + '" stroke-width="7"><path d="M52.8 48.3A12 12 0 1 1 52.8 63.7"/><path d="M87.2 48.3A12 12 0 1 0 87.2 63.7"/></g>' +
+      '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
+      '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
   function mpHatInto(w, key) {
     if (!w) return;
@@ -1293,7 +1313,7 @@
     });
     pw && pw.rgb ? el.setAttribute("data-rgb", pw.rgb) : el.removeAttribute("data-rgb");
     var ch = (pw && pw.charms) || [];
-    var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.hat ? "hat:" + pw.hat : "";
+    var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.louis ? "louis:1" : pw && pw.hat ? "hat:" + pw.hat : "";
     if (el.classList.contains("mp-pb-av")) mpHatInto(el, hatKey);
     pw && pw.melt && mpMeltFilter();
     if (el.classList.contains("mp-pb-name")) { mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch); mpMeltText(el.querySelector(".mp-pb-name-t")); }
@@ -1348,9 +1368,10 @@
     var out = {}, st = (u && u.powerSettings) || {};
     ((u && u.powersOn) || []).forEach(function (id) {
       var s1 = st[id] || {}, c = s1.color ? PW_COLORS[s1.color] || (/^#[0-9a-f]{6}$/i.test(s1.color) ? s1.color : null) : null;
-      out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "noir" : c || (id === "rgb" ? s1.speed || "slow" : 1);
+      out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "ivory" : c || (id === "rgb" ? s1.speed || "slow" : 1);
     });
-    out.couture && delete out.hat;
+    out.couture && (delete out.hat, delete out.louis);
+    out.louis && delete out.hat;
     out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
     var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
     u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
@@ -7909,8 +7930,9 @@
       sphere: { clash: { halo: "In chat the orb covers the ring; your profile ring stays" } },
       bubble: { special: { aura: "Aura can match your bubble colour" } },
       aura:   { special: { bubble: "Can match your bubble colour" } },
-      hat:    { clash: { couture: "Couture Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } },
-      couture:{ clash: { hat: "Worn instead of your Hat" }, special: { sphere: "Sits on top of the orb" } }
+      hat:    { clash: { couture: "Chanel Beanie is worn instead", louis: "Louis Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } },
+      couture:{ clash: { hat: "Worn instead of your Hat", louis: "Worn instead of the Louis Beanie" }, special: { sphere: "Sits on top of the orb" } },
+      louis:  { clash: { hat: "Worn instead of your Hat", couture: "Chanel Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } }
     };
     function combos(p) {
       var cat = (st.catalog || []).filter(function (q) { return q.id !== p.id; });

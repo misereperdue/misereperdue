@@ -12579,7 +12579,8 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 [data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
 [data-pw="charm"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 32%,#f6e3ff 0 8%,#b98cff 34%,#6a3fd1 68%,#2b1a5c 100%)!important}
 [data-pw="hat"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 40% 30%,#6f86d6,#2c3f86 60%,#18244f)!important}
-[data-pw="couture"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 38% 30%,#5a5a66,#1a1a20 62%,#0b0b0e)!important;box-shadow:inset 0 0 0 1px rgba(232,194,106,.55),inset 0 1px 0 rgba(255,255,255,.25)!important}
+[data-pw="couture"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 38% 30%,#fbf7ef,#e6ddcb 60%,#c9bea8)!important;color:#151517!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.6)!important}
+[data-pw="louis"]:is(.pow-ico,.pw-ico,i){background:repeating-conic-gradient(#25252a 0 25%,#4f4f57 0 50%) 50%/9px 9px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)!important}
 
 /* Notification avatars open that person's profile */
 .mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
