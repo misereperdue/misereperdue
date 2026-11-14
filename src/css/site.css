@@ -12578,6 +12578,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 [data-pw="diamond"]:is(.pow-ico,.pw-ico,i){color:#0a3560!important;background:conic-gradient(from 45deg,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff)!important}
 [data-pw="emerald"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd)!important}
 [data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
+[data-pw="charm"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 32%,#f6e3ff 0 8%,#b98cff 34%,#6a3fd1 68%,#2b1a5c 100%)!important}
 
 /* Notification avatars open that person's profile */
 .mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
@@ -12643,3 +12644,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .line-mid strong+.meta{margin-top:-5px}
 /* Owner Manage sheet (per dc): no hint line, badges sit right under the Badges heading. */
 .mp-profile-bar [data-phase="manage"] .mp-badge-picker{gap:0}
+/* Charm gate (per dc): gem charms in the shop stay locked until you own the Charm power. */
+.pow-tile.is-locked{opacity:.55}
+.pow-tile.is-locked .pow-price{white-space:nowrap}
+.pow-lock{width:12px;height:12px;flex:none;vertical-align:-1px}
+.pow-note.is-charm-off{margin:-2px 2px 8px;font-size:12px;opacity:.7}
