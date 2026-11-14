@@ -1255,12 +1255,12 @@
     /* party hat: purple cone, gold dots, white zigzag trim and a pink pompom (per dc) */
     party: '<path d="M45 64 71 6l25 58c-16 7-35 7-51 0Z" fill="#6f4dff"/><path d="M71 6 96 64c-6 2.5-12 4-18 4.6Z" fill="#5a3be0" opacity=".55"/><circle cx="66" cy="30" r="3" fill="#ffd36b"/><circle cx="77" cy="40" r="3" fill="#ffd36b"/><circle cx="60" cy="46" r="3" fill="#ffd36b"/><circle cx="72" cy="53" r="3" fill="#ffd36b"/><circle cx="85" cy="54" r="2.6" fill="#ffd36b"/><path d="M46 60l5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M45 64c16 7 35 7 51 0" stroke="#4a2fc4" stroke-width="2.5" fill="none" stroke-linecap="round"/><g fill="#ff6fa5"><circle cx="71" cy="6" r="7"/><circle cx="64" cy="3" r="3.2"/><circle cx="78" cy="3" r="3.2"/><circle cx="71" cy="-1" r="3.2"/><circle cx="66" cy="10" r="3"/><circle cx="76" cy="10" r="3"/></g><circle cx="69" cy="4" r="1.8" fill="#ffd0e2"/>',
     /* horns curving inward toward each other (per dc) */
-    /* horns (per dc): short glossy devil horns, thick at the base, sweeping up and curling inward, dark-to-bright
-       red with a highlight and ridges */
-    horns: '<linearGradient id="mp-hn-g" x1="0" y1="1" x2=".35" y2="0"><stop offset="0" stop-color="#7a0d1d"/><stop offset=".55" stop-color="#d0263b"/><stop offset="1" stop-color="#ff5a6b"/></linearGradient>' +
-      '<g id="mp-hn-l"><path d="M35 66C29 52 31 37 42 27c4-4 9-7 15-8-5 6-7 13-6 21 1 8 4 15 9 22Z" fill="url(#mp-hn-g)"/>' +
-      '<path d="M38 59c-4-10-3-21 4-29" stroke="rgba(255,190,200,.55)" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
-      '<path d="M37 55c5-1 10 0 15 3M37 47c4-1 9 0 13 2M40 39c3-1 7 0 10 1" stroke="rgba(80,0,15,.45)" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>' +
+    /* horns (per dc): realistic keratin horns, slender and sharp, charcoal-brown at the base fading to bone at the
+       tip, fine growth rings and a soft sheen; curling inward */
+    horns: '<linearGradient id="mp-hn-g" x1=".2" y1="1" x2=".7" y2="0"><stop offset="0" stop-color="#1f1612"/><stop offset=".45" stop-color="#4a362b"/><stop offset=".8" stop-color="#9c8670"/><stop offset="1" stop-color="#e4d6bd"/></linearGradient>' +
+      '<g id="mp-hn-l"><path d="M36 65C31 52 32 39 40 29c5-6 11-10 19-12-6 5-9 11-9.5 18-.5 9 2.5 18 8.5 26Z" fill="url(#mp-hn-g)"/>' +
+      '<path d="M37.0 60.0q4.2 -1.4 8.6 0.6M37.9 54.4q4.0 -1.3 7.7 0.6M38.8 48.8q3.7 -1.3 6.8 0.6M39.7 43.2q3.5 -1.2 5.9 0.6M40.6 37.6q3.2 -1.2 5.0 0.6M41.5 32.0q3.0 -1.1 4.1 0.6M42.4 26.4q2.7 -1.1 3.2 0.6M43.3 20.8q2.5 -1.0 2.3 0.6" stroke="rgba(0,0,0,.32)" stroke-width=".8" fill="none" stroke-linecap="round"/>' +
+      '<path d="M39.5 58c-3-9-2-18 3-25.5" stroke="rgba(255,240,220,.22)" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>' +
       '<use href="#mp-hn-l" transform="matrix(-1 0 0 1 140 0)"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
     headphones: hatAirMax()
@@ -1345,8 +1345,8 @@
          mark, stroke 20% of that height, openings 42 degrees either side facing outward, centres 0.73 R apart;
          left C over at the top crossing, right C over at the bottom, with a thin gap where they cross. */
       '<clipPath id="mp-cx-' + m[2] + '"><rect x="57" y="56" width="26" height="15"/></clipPath>' +
-      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width=".9" paint-order="stroke"><path d="' + ccRing(74.56, 56, 12.5, 7.5, 42, 318) + '"/><path d="' + ccRing(65.44, 56, 12.5, 7.5, 222, 498) + '"/>' +
-      '<path d="' + ccRing(74.56, 56, 12.5, 7.5, 42, 318) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
+      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width=".9" paint-order="stroke"><path d="' + ccRing(73.75, 56, 12.5, 7.5, 42, 318) + '"/><path d="' + ccRing(66.25, 56, 12.5, 7.5, 222, 498) + '"/>' +
+      '<path d="' + ccRing(73.75, 56, 12.5, 7.5, 42, 318) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
