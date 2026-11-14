@@ -1336,8 +1336,8 @@
       '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
       /* interlocking back-to-back CC: right C, then left C over it at the top, then the right C over it at the bottom */
       '<clipPath id="mp-cx-' + m[2] + '"><rect x="62" y="57" width="16" height="16"/></clipPath>' +
-      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(78.5, 57, 13.5, 8.2, 44, 316) + '"/><path d="' + ccRing(61.5, 57, 13.5, 8.2, 224, 496) + '"/>' +
-      '<path d="' + ccRing(78.5, 57, 13.5, 8.2, 44, 316) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
+      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(80.5, 57, 13, 8, 46, 314) + '"/><path d="' + ccRing(59.5, 57, 13, 8, 226, 494) + '"/>' +
+      '<path d="' + ccRing(80.5, 57, 13, 8, 46, 314) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
@@ -1422,6 +1422,14 @@
       var s1 = st[id] || {}, c = s1.color ? PW_COLORS[s1.color] || (/^#[0-9a-f]{6}$/i.test(s1.color) ? s1.color : null) : null;
       out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "ivory" : c || (id === "rgb" ? s1.speed || "slow" : 1);
     });
+    /* Hat style can pick Chanel / Louis once unlocked (same rule as the Worker) */
+    if (out.hat === "chanel" || out.hat === "louis") {
+      var want = out.hat, own = (u && u.powers) || [], hs = st.hat || {};
+      delete out.hat; delete out.couture; delete out.louis;
+      if (want === "chanel" && own.indexOf("couture") >= 0) out.couture = hs.chanel || (st.couture || {}).color || "ivory";
+      else if (want === "louis" && own.indexOf("louis") >= 0) out.louis = 1;
+      else out.hat = "beanie";
+    }
     out.couture && (delete out.hat, delete out.louis);
     out.louis && delete out.hat;
     out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
@@ -7934,7 +7942,7 @@
       return '<div class="pow-set">' + p.settings.map(function (f) {
         var val = cur[f.key] != null ? cur[f.key] : f.def;
         return '<div class="pow-set-row"><span class="pow-set-k">' + x(f.label) + '</span><div class="pow-set-opts" role="group" aria-label="' + x(p.name + " " + f.label) + '">' +
-          f.options.map(function (o) {
+          f.options.filter(function (o) { return !o.requires || st.owned.indexOf(o.requires) >= 0; }).map(function (o) {
             var on = o.v === val;
             return f.type === "color"
               ? '<button type="button" class="pow-sw' + (on ? " is-on" : "") + '" data-k="' + x(f.key) + '" data-v="' + x(o.v) + '" style="--sw:' + x(o.color) + '" aria-pressed="' + on + '" aria-label="' + x(o.label) + '"></button>'
@@ -7946,11 +7954,12 @@
           })() : "") + "</div></div>";
       }).join("") + "</div>";
     }
+    function reqName(p) { var q = (st.catalog || []).find(function (c) { return c.id === p.requires; }); return (q && q.name) || "another power"; }
     function tile(p, mine) {
       var on = mine && st.on.indexOf(p.id) >= 0,
         locked = !mine && p.requires && st.owned.indexOf(p.requires) < 0,
         poor = !mine && (locked || st.stars < p.price);
-      var sets = (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); });
+      var sets = powSets(p);
       if (on && sets.length)
         return (
           '<div class="pow-tile is-owned is-selected has-set' + (justOpened === p.id ? " is-new" : "") + '" data-id="' + x(p.id) + '">' +
@@ -7960,9 +7969,9 @@
         );
       return (
         '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (locked ? " is-locked" : !mine && p.requires && st.on.indexOf(p.requires) < 0 ? " is-dim" : "") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
-        (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="' + (locked ? x(p.name) + ", needs the Charms power" : "Buy " + x(p.name) + " for " + x(p.price) + " stars") + '"' + (poor ? " disabled" : "")) +
+        (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="' + (locked ? x(p.name) + ", needs the " + x(reqName(p)) + " power" : "Buy " + x(p.name) + " for " + x(p.price) + " stars") + '"' + (poor ? " disabled" : "")) +
         ">" + powIco(p) + '<b class="pow-tn">' + x(p.name) + "</b>" +
-        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + (locked ? '<svg class="pow-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg> Charms' : mpStar() + " " + x(p.price)) + "</span>") +
+        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + (locked ? '<svg class="pow-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg> ' + x(reqName(p)) : mpStar() + " " + x(p.price)) + "</span>") +
         "</button>"
       );
     }
@@ -8009,7 +8018,7 @@
       render();
       return !0;
     };
-    function powSets(p) { return (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); }); }
+    function powSets(p) { return (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color") && (!f.requires || st.owned.indexOf(f.requires) >= 0); }); }
     function summary(p, sets) {
       var cur = (st.settings && st.settings[p.id]) || {}, f = sets[0];
       if (!f) return "";
@@ -8049,7 +8058,8 @@
         rest = cat.filter(function (p) { return st.owned.indexOf(p.id) < 0; }),
         dp = detail && mine.find(function (p) { return p.id === detail; });
       if (!dp) detail = null;
-      var minePow = mine.filter(function (p) { return p.kind !== "charm"; }), mineCh = mine.filter(function (p) { return p.kind === "charm"; });
+      /* Chanel / Louis (kind hatstyle) are picked in Hat's settings, so they get no row or switch (per dc) */
+      var minePow = mine.filter(function (p) { return p.kind !== "charm" && p.kind !== "hatstyle"; }), mineCh = mine.filter(function (p) { return p.kind === "charm"; });
       var keepX = body.querySelector(".pw-shop") ? body.querySelector(".pw-shop").scrollLeft : 0;
       body.innerHTML = dp ? page(dp) :
         (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
@@ -8226,7 +8236,7 @@
       E("/api/powers/buy", { method: "POST", body: { id: id } })
         .then(function (j) {
           busy = !1;
-          if (!j || !j.ok) return void (b.isConnected && render(j && j.error === "not enough stars" ? "Not enough stars." : j && j.error === "buy the Charm power first" ? "Buy the Charms power first." : "Couldn't buy that power."));
+          if (!j || !j.ok) return void (b.isConnected && render(j && j.error === "not enough stars" ? "Not enough stars." : j && /^buy the .+ power first$/.test(j.error || "") ? ("B" + j.error.slice(1) + ".").replace("Charm power", "Charms power") : "Couldn't buy that power."));
           st.stars = j.stars;
           st.owned = j.owned;
           st.on = j.on;
