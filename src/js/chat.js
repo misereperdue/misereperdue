@@ -1202,7 +1202,8 @@
       if(s && s.owner)btn("Dashboard",'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',function(){dashOpen();});
     }
     ac.childNodes.length && body.appendChild(ac);
-    nm.insertBefore(tools, n1);
+    nm.appendChild(tools);
+    if(window.MPSocial)MPSocial.mountProfile({avatar:avw,root:b,username:n.username,own:me,tools:tools});
     hd.classList.add("has-tools-" + tools.childNodes.length);
     mpPBel = b;
     MPProfiles.openBar(b, body, n, {
@@ -5915,7 +5916,8 @@
                   }
                 })(e, t.user);
               });
-            } else if ("notif" === t.t && t.n) mpNotifPop(t.n);
+            } else if ("social" === t.t) document.dispatchEvent(new Event("mp-social-updated"));
+            else if ("notif" === t.t && t.n) mpNotifPop(t.n);
             else if ("pw" === t.t && t.user) mpPwSet(t.user, t.pw);
             else if ("points" === t.t && t.user) s && t.user === s.username && te(t.points || 0);
             else if ("paused" === t.t && "boolean" == typeof t.paused) st(t.paused);
