@@ -4945,9 +4945,11 @@
     function stop(keepFm) {
       clearInterval(fadeT);
       cancelAnimationFrame(raf); raf = 0;
-      if (audio) { try { audio.pause(); } catch (e) {} audio.removeAttribute("src"); try { audio.load(); } catch (e) {} }
-      if (cur) { paint(cur, "idle"); cur.closest(".mp-pv-host") && cur.closest(".mp-pv-host").classList.remove("is-pv-playing"); msOff(); }
+      /* release the element completely so iOS drops its lock-screen player */
+      if (audio) { var a0 = audio; audio = null; try { a0.pause(); } catch (e) {} a0.removeAttribute("src"); try { a0.load(); } catch (e) {} }
+      var was = cur;
       cur = null;
+      if (was) { paint(was, "idle"); was.closest(".mp-pv-host") && was.closest(".mp-pv-host").classList.remove("is-pv-playing"); keepFm || msOff(fmWas); }
       keepFm || fmResume();
     }
     /* iOS Control Center / lock screen (per dc): show the song and artist, not the page title and site icon.
@@ -4963,11 +4965,15 @@
         M.setActionHandler("pause", function () { stop(); });
       } catch (e) {}
     }
-    function msOff() {
+    /* After a preview: hand the session back to Misery FM only if it was playing; otherwise clear it
+       (no metadata, no handlers) so the lock-screen / Control Center player disappears (per dc). */
+    function msOff(toFm) {
       var M = navigator.mediaSession;
       if (!M) return;
       try { M.metadata = null; M.playbackState = "none"; } catch (e) {}
-      try { window.MPFM && MPFM.mediaReset && MPFM.mediaReset(); } catch (e) {}
+      if (toFm) { try { window.MPFM && MPFM.mediaReset && MPFM.mediaReset(); } catch (e) {} return; }
+      ["play", "pause", "nexttrack", "previoustrack", "seekto", "seekbackward", "seekforward"].forEach(function (a) { try { M.setActionHandler(a, null); } catch (e) {} });
+      try { M.setPositionState && M.setPositionState(); } catch (e) {}
     }
     function play(btn) {
       if (cur === btn) return stop();
@@ -4976,10 +4982,11 @@
         audio = new Audio();
         audio.preload = "none";
         audio.setAttribute("playsinline", "");
-        audio.addEventListener("ended", function () { stop(); });
-        audio.addEventListener("error", function () { cur && stop(); });
-        audio.addEventListener("playing", function () { cur && (paint(cur, "play"), raf || (raf = requestAnimationFrame(tick))); });
-        audio.addEventListener("waiting", function () { cur && paint(cur, "load"); });
+        /* events from an element that was already released (a new preview started) are ignored */
+        audio.addEventListener("ended", function () { this === audio && stop(); });
+        audio.addEventListener("error", function () { this === audio && cur && stop(); });
+        audio.addEventListener("playing", function () { this === audio && cur && (paint(cur, "play"), raf || (raf = requestAnimationFrame(tick))); });
+        audio.addEventListener("waiting", function () { this === audio && cur && paint(cur, "load"); });
       }
       cur = btn;
       paint(btn, "load");
