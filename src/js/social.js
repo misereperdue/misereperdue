@@ -43,7 +43,7 @@
       var label=document.createElementNS('http://www.w3.org/2000/svg','svg'),id='mp-orbit-label-'+(++labelId);
       label.setAttribute('viewBox','0 0 48 48');label.setAttribute('aria-hidden','true');label.setAttribute('data-ph','skip');label.classList.add('mp-orbit-label');
       // Mark this as lettering so the site's icon normalizer never replaces textPath SVGs.
-      label.innerHTML='<defs><path id="'+id+'" d="M6 22A18 18 0 0 0 42 22"/></defs><text><textPath href="#'+id+'" startOffset="50%" text-anchor="middle">'+name+'</textPath></text>';
+      label.innerHTML='<defs><path id="'+id+'" d="M24 6.5A17.5 17.5 0 1 1 24 41.5A17.5 17.5 0 1 1 24 6.5"/></defs><text><textPath href="#'+id+'" startOffset="0%" textLength="109" lengthAdjust="spacing">'+name.toUpperCase()+' • '+name.toUpperCase()+' •</textPath></text>';
       b.replaceChildren(el('strong','',value===undefined?'—':new Intl.NumberFormat(undefined,{notation:'compact',maximumFractionDigits:1}).format(value)),label);
       b.setAttribute('aria-label',name+', '+(value===undefined?'loading':value));
     }bubble(followers,'Followers');bubble(following,'Following');orbit.append(followers,following);var follow=null;
