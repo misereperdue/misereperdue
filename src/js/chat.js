@@ -252,6 +252,8 @@
               ? '<span class="chat-badge-kitty" title="Hello Kitty" aria-label="Hello Kitty badge"><img src="img/badge-kitty.png?v=2" alt=""></span>'
               : "mask" === e
                 ? '<span class="chat-badge-mask" title="Sleep Mask" aria-label="Sleep Mask badge"><img src="img/badge-mask.png?v=2" alt=""></span>'
+                : "every" === e
+                  ? '<span class="chat-badge chat-badge-every" title="Everypower" aria-label="Everypower badge"><i class="cbe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8c.7 4.3 2.9 6.6 7.2 7.2-4.3.7-6.5 2.9-7.2 7.2-.7-4.3-2.9-6.5-7.2-7.2 4.3-.6 6.5-2.9 7.2-7.2Z" fill="#fff"/></svg></i></span>'
                 : "verified" === e
                   ? '<span class="chat-verified" title="Verified" aria-label="Verified">' +
                     S +
@@ -1101,7 +1103,8 @@
     n1t.textContent = mpName(n.username);
     n1.appendChild(n1t);
     mpPwApply(n1, n.username, mpPwFromProfile(n));
-    bd && n1.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib">' + bd + "</span>");
+    /* badges sit on the avatar, not next to the name (per dc) */
+    bd && avw.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib mp-pb-av-badge">' + bd + "</span>");
     nm.appendChild(n1);
     var n2 = document.createElement("div");
     n2.className = "mp-pb-sub";
@@ -1209,7 +1212,7 @@
       close:function(){mpPBclose();},
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
-        mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)n1.insertAdjacentHTML('beforeend','<span class="mp-pb-ib">'+badge+'</span>');
+        mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=avw.querySelector('.mp-pb-ib')||n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)avw.insertAdjacentHTML('beforeend','<span class="mp-pb-ib mp-pb-av-badge">'+badge+'</span>');
         st.innerHTML=(pill||'')+'<span class="mp-pb-pts" aria-label="'+x(user.points||0)+' stars">'+mpStar()+' <b>'+x(user.points||0)+'</b></span>';
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         mpPwApply(avw,user.username,mpPwFromProfile(user));if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
@@ -8374,7 +8377,7 @@
     var globe = k === "reply" || k === "repost" || k === "follow" || k === "quote" || k === "like" ||
       ((k === "reaction" || k === "mention") && n.kind !== "chat");
     chip = gift ? "Gift" : globe ? "Globe" : k === "reaction" ? "Reaction" : k === "mention" ? "Mention" :
-      (k === "whisper" || n.kind === "whisper") ? "Whisper" : k === "vip" ? "VIP" : k === "milestone" ? "Milestone" :
+      (k === "whisper" || n.kind === "whisper") ? "Whisper" : k === "vip" ? "VIP" : k === "milestone" && /^(power-new|everypower)/.test(String(n.kind || "")) ? "Powers" : k === "milestone" ? "Milestone" :
       k === "purchase" ? "Purchase" : "Notification";
     return { title: t, sub: n.preview && k !== "milestone" ? String(n.preview) : "", chip: chip, site: !who };
   }
