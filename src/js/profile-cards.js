@@ -61,9 +61,9 @@
     var root=section(options.grant?'Badges':'Display badge'),grid=el('div','mp-badge-grid'),status=el('p','mp-profile-edit-status'),pending=false;
     root.classList.add('mp-badge-picker');root.dataset.mode=options.grant?'grant':'active';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
     root.appendChild(grid);root.appendChild(status);
-    var labels={'100':'100',heart:'Heart',member:'VIP',kitty:'Hello Kitty',mask:'Sleep mask',verified:'Verified',robot:'Bot'};
-    function paint(){grid.replaceChildren();var ids=options.grant?['member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified')&&options.allowed(user.username,id);});
-      if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'))ids.push(active);ids.unshift(null);}
+    var labels={'100':'100',heart:'Heart',member:'VIP',kitty:'Hello Kitty',mask:'Sleep mask',verified:'Verified',robot:'Bot',every:'Everypower'};
+    function paint(){grid.replaceChildren();var ids=options.grant?['member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified'||id==='every')&&options.allowed(user.username,id);});
+      if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'||active==='every'))ids.push(active);ids.unshift(null);}
       if(options.grant&&user.username.toLowerCase()==='grim')ids=['robot'];
       ids.forEach(function(id){var selected=options.grant?(user.badges||[]).indexOf(id)>=0:options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?'Toggle ':'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
         var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);grid.appendChild(b);});

@@ -12662,3 +12662,16 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 /* Charms (per dc): your gem charms show faded until the Charms power is switched on. */
 .pow-tile.is-dim{opacity:.55;filter:saturate(.6)}
 .pw-list.is-charm-off .pw-row{opacity:.45;filter:saturate(.6);transition:opacity .25s ease,filter .25s ease}
+/* Everypower badge (per dc): earned by owning every power; a rainbow disc with a white spark, on the avatar like other badges. */
+.chat-badge-every{display:inline-grid!important;place-items:center;line-height:1}
+.chat-badge-every .cbe{display:grid;place-items:center;width:1em;height:1em;border-radius:50%;background:conic-gradient(from 200deg,#ff5f8f,#ffb547,#5fe3b0,#5ab9ff,#b18cff,#ff5f8f);box-shadow:0 0 0 1.5px var(--bg,#fff),0 1px 3px rgba(0,0,0,.3);animation:mpEvery 9s linear infinite}
+.chat-badge-every .cbe svg{width:70%;height:70%;display:block;filter:drop-shadow(0 0 1px rgba(0,0,0,.25))}
+@keyframes mpEvery{to{filter:hue-rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.chat-badge-every .cbe{animation:none}}
+.mp-badge-mark .chat-badge-every{position:static!important;inset:auto!important;transform:none!important;font-size:20px!important;background:none!important;border:0!important;box-shadow:none!important;margin:0!important}
+/* Profile: the display badge sits at the avatar's lower right, like in chat (per dc). */
+.mp-pb-av .mp-pb-av-badge{position:absolute;right:0;bottom:0;z-index:4;display:grid;place-items:center;line-height:1;pointer-events:none}
+.mp-pb-av .mp-pb-av-badge>*{position:static!important;inset:auto!important;transform:none!important;margin:0!important}
+.mp-pb-av .mp-pb-av-badge .chat-badge,.mp-pb-av .mp-pb-av-badge .chat-badge-every{font-size:22px!important}
+.mp-pb-av .mp-pb-av-badge .chat-badge-kitty,.mp-pb-av .mp-pb-av-badge .chat-badge-mask{width:26px!important;height:26px!important}
+.mp-pb-av .mp-pb-av-badge img{width:100%;height:100%;object-fit:contain;display:block}
