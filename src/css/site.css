@@ -12727,16 +12727,18 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-pb-nm>.mp-social-status{order:6}
 .mp-social-status{display:block;color:var(--muted);font-size:10px;text-align:center;max-width:260px}
 .mp-social-status:empty{display:none}
-/* Orbit: 280 x 152px, with 48px frosted counters on a 234 x 98px rail. */
+/* Orbit: 280 x 152px, with 36px visible counters and 44px touch targets on a 234 x 98px rail. */
 .mp-profile-bar .mp-social-orbit{position:relative;isolation:isolate;width:min(280px,100%);height:152px;min-height:152px;display:grid;place-items:center;align-self:center;margin:0 auto}
 .mp-social-orbit:before{content:"";position:absolute;width:calc(100% - 46px);height:98px;border:1px solid var(--stroke);border-radius:50%;transform:rotate(23deg);z-index:-1;pointer-events:none}
 .mp-profile-bar .mp-social-orbit .mp-pb-av{margin:0!important}
-.mp-social-thought{position:absolute;width:48px;height:48px;min-height:48px;box-sizing:border-box;padding:0;border:1px solid var(--stroke);border-radius:50%;background:color-mix(in srgb,var(--bg) 15%,transparent);color:var(--ink);font:inherit;cursor:pointer;isolation:isolate;-webkit-backdrop-filter:blur(20px) saturate(130%);backdrop-filter:blur(20px) saturate(130%);box-shadow:inset 0 1px 0 var(--spec),0 3px 10px var(--wash)}
-.mp-social-thought strong{position:absolute;left:0;right:0;top:14px;font-size:17px;font-weight:650;line-height:1;text-align:center;font-variant-numeric:tabular-nums}
-.mp-social-thought .mp-orbit-label{position:absolute;inset:0;width:100%;height:100%;fill:var(--muted);font:500 7.1px system-ui;letter-spacing:.25px;pointer-events:none}
-.mp-social-thought.is-followers{left:18px;top:13px}
-.mp-social-thought.is-following{right:18px;top:91px}
-@media(prefers-reduced-transparency:reduce){.mp-social-thought{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* The frosted surface and rim lettering sit 4px inside the larger hit target. */
+.mp-social-thought{position:absolute;width:44px;height:44px;min-height:44px;box-sizing:border-box;padding:0;border:0;border-radius:50%;background:none;color:var(--ink);font:inherit;cursor:pointer;isolation:isolate}
+.mp-social-thought:before{content:"";position:absolute;inset:4px;border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:50%;background:linear-gradient(145deg,color-mix(in srgb,var(--ink) 10%,transparent),transparent 70%),color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:blur(24px) saturate(80%);backdrop-filter:blur(24px) saturate(80%);box-shadow:inset 0 1px 1px var(--spec),0 2px 8px var(--wash);pointer-events:none}
+.mp-social-thought strong{position:absolute;left:0;right:0;top:16px;font-size:12px;font-weight:650;line-height:1;text-align:center;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mp-social-thought .mp-orbit-label{position:absolute;inset:4px;width:36px;height:36px;fill:var(--muted);font:550 6.8px system-ui;pointer-events:none}
+.mp-social-thought.is-followers{left:20px;top:15px}
+.mp-social-thought.is-following{right:20px;top:93px}
+@media(prefers-reduced-transparency:reduce){.mp-social-thought:before{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
 .mp-social-follow,.mp-social-more,.mp-social-retry{padding:7px 15px;border-radius:999px;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);font:600 11px/1.3 system-ui;cursor:pointer}
 .mp-social-follow[aria-pressed=false]{background:var(--ink);color:var(--bg)}
 .mp-social-follow:disabled,.mp-social-more:disabled{opacity:.5;cursor:wait}
