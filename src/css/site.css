@@ -12742,9 +12742,9 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-social-follow[aria-pressed=false]{background:var(--ink);color:var(--bg)}
 .mp-social-follow:disabled,.mp-social-more:disabled{opacity:.5;cursor:wait}
 .mp-notice-stack{isolation:isolate;touch-action:none;background:none!important;border-color:transparent!important}
-.mp-stack-face,.mp-stack-peek{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);pointer-events:none}
-.mp-stack-face{z-index:1;background:var(--glass-bg,var(--fill));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.mp-stack-peek{z-index:0;transform:translate(-4px,-5px) rotate(-9deg);animation:mpNoticeHint 4.8s ease-in-out 2}
+.mp-stack-face,.mp-stack-peek{position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;border:1px solid var(--stroke);background:var(--bg);color:var(--ink);pointer-events:none}
+.mp-stack-face{z-index:1;box-shadow:inset 0 1px 0 var(--spec)}
+.mp-stack-peek{z-index:0;background:color-mix(in srgb,var(--bg) 94%,var(--ink));transform:translate(-4px,-5px) rotate(-9deg);animation:mpNoticeHint 4.8s ease-in-out 2}
 .mp-stack-face svg,.mp-stack-peek svg{width:18px;height:18px}
 .mp-notice-stack>.forum-bell-badge{z-index:3;pointer-events:none}
 @keyframes mpNoticeHint{0%,65%,100%{transform:translate(-4px,-5px) rotate(-9deg)}78%{transform:translate(-7px,-8px) rotate(-15deg)}88%{transform:translate(-4px,-5px) rotate(-9deg)}}
@@ -12757,7 +12757,9 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-activity-tab{flex:1;min-width:0;min-height:36px;border:0;border-radius:13px;padding:5px 4px;font:550 10px/1.3 system-ui;background:none;color:var(--muted);cursor:pointer}
 .mp-activity-tab.is-on{background:var(--bg);color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.06)}
 .mp-social-empty{padding:22px 12px;text-align:center;font-size:12px;line-height:1.6;color:var(--muted);margin:0}
-.mp-social-user{display:flex;width:100%;gap:10px;align-items:center;min-height:54px;padding:8px 4px;border:0;border-bottom:1px solid var(--stroke);background:none;color:var(--ink);text-align:left;cursor:pointer}
+.mp-social-users{display:grid;gap:8px}
+.mp-social-heading{flex:1;min-width:0;text-align:center;overflow-wrap:anywhere;line-height:1.35}
+.mp-social-user{display:flex;width:100%;gap:10px;align-items:center;min-height:54px;padding:10px 12px;border:1px solid var(--stroke);border-radius:20px;background:var(--fill);color:var(--ink);text-align:left;cursor:pointer}
 .mp-social-user strong{font-size:12px}.mp-social-row-arrow{margin-left:auto;color:var(--muted);font-size:22px}
 .mp-social-more{display:block;margin:12px auto 0}
 .mp-activity-item{display:block;width:100%;border:1px solid var(--stroke);border-radius:18px;padding:12px;margin:0 0 8px;background:var(--fill);color:var(--ink);text-align:left;cursor:pointer;animation:mpNoticePicker .22s ease both}
