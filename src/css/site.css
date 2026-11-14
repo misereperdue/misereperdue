@@ -12654,3 +12654,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-profile-details .mp-profile-song-art:not(.is-empty){-webkit-mask-image:none!important;mask-image:none!important;background:transparent!important;box-shadow:none!important}
 .mp-profile-details .mp-profile-song-art:not(.is-empty) img{width:72%!important;-webkit-mask-image:linear-gradient(to right,#000 34.7%,transparent 100%);mask-image:linear-gradient(to right,#000 34.7%,transparent 100%)}
 .mp-profile-details .mp-profile-song-art .mp-pv{right:auto;width:72%;height:100%}
+/* Profile Listening (per dc): playing doesn't lay a dark box over the faded cover; the album image itself
+   dims, so the wide fade stays intact. */
+.mp-profile-details .mp-profile-song-art .mp-pv.is-playing,.mp-profile-details .mp-profile-song-art .mp-pv.is-loading{background:transparent}
+.mp-profile-details .mp-profile-song-art img{transition:filter .3s ease}
+.mp-profile-details .mp-profile-song-art.is-pv-playing img{filter:brightness(.72) saturate(1.05)}
