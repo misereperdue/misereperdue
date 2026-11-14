@@ -7759,7 +7759,8 @@
     }
     function tile(p, mine) {
       var on = mine && st.on.indexOf(p.id) >= 0,
-        poor = !mine && st.stars < p.price;
+        locked = !mine && p.requires && st.owned.indexOf(p.requires) < 0,
+        poor = !mine && (locked || st.stars < p.price);
       var sets = (p.settings || []).filter(function (f) { return !(PW_NOCOLOR[p.id] && f.type === "color"); });
       if (on && sets.length)
         return (
@@ -7769,10 +7770,10 @@
           setPanel({ id: p.id, name: p.name, settings: sets }) + "</div>"
         );
       return (
-        '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
-        (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="Buy ' + x(p.name) + " for " + x(p.price) + ' stars"' + (poor ? " disabled" : "")) +
+        '<button type="button" class="pow-tile' + (mine ? " is-owned" : " is-shop") + (locked ? " is-locked" : "") + (on ? " is-selected" : "") + '" data-id="' + x(p.id) + '"' +
+        (mine ? ' aria-pressed="' + on + '" aria-label="' + x(p.name) + (on ? ", on" : ", off") + '"' : ' aria-label="' + (locked ? x(p.name) + ", needs the Charm power" : "Buy " + x(p.name) + " for " + x(p.price) + " stars") + '"' + (poor ? " disabled" : "")) +
         ">" + powIco(p) + '<b class="pow-tn">' + x(p.name) + "</b>" +
-        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + mpStar() + " " + x(p.price) + "</span>") +
+        (mine ? '<span class="pow-td">' + x(p.desc || "") + "</span>" : '<span class="pow-price">' + (locked ? '<svg class="pow-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg> Charm' : mpStar() + " " + x(p.price)) + "</span>") +
         "</button>"
       );
     }
@@ -7861,7 +7862,7 @@
       body.innerHTML = dp ? page(dp) :
         (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
         (minePow.length ? '<div class="pow-h">Your powers</div><div class="pw-list">' + minePow.map(row).join("") + "</div>" : "") +
-        (mineCh.length ? '<div class="pow-h">Your charms</div><div class="pw-list">' + mineCh.map(row).join("") + "</div>" : "") +
+        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charm to show your charms.</p>" : "") + '<div class="pw-list">' + mineCh.map(row).join("") + "</div>" : "") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
         (rest.length ? '<div class="pow-h">Get more</div><div class="pw-shop">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
       if (dp && msg) status(msg);
@@ -7981,7 +7982,8 @@
           })
           .catch(function (j) {
             busy = !1;
-            b.isConnected && render((j && j.error) || "Couldn't update powers.");
+            var m0 = (j && j.error) || "Couldn't update powers.";
+            b.isConnected && render(m0.charAt(0).toUpperCase() + m0.slice(1) + (/charm/i.test(m0) ? "." : ""));
           });
         return;
       }
@@ -8031,13 +8033,13 @@
       E("/api/powers/buy", { method: "POST", body: { id: id } })
         .then(function (j) {
           busy = !1;
-          if (!j || !j.ok) return void (b.isConnected && render(j && j.error === "not enough stars" ? "Not enough stars." : "Couldn't buy that power."));
+          if (!j || !j.ok) return void (b.isConnected && render(j && j.error === "not enough stars" ? "Not enough stars." : j && j.error === "buy the Charm power first" ? "Buy the Charm power first." : "Couldn't buy that power."));
           st.stars = j.stars;
           st.owned = j.owned;
           st.on = j.on;
           powStars(j.stars);
           powMe();
-          b.isConnected && render(powName(id) + " is yours. Switch it on above.");
+          b.isConnected && render(id === "charm" ? "Charm is yours. Gem charms are unlocked below." : powName(id) + " is yours. Switch it on above.");
         })
         .catch(function () {
           busy = !1;
