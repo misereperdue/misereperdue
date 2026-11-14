@@ -1245,7 +1245,45 @@
   var PW = Object.create(null),
     PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
   function pwKey(u) { return String(u || "").toLowerCase(); }
-  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "diamond", "emerald", "ruby"];
+  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "diamond", "emerald", "ruby"];
+  /* Hats (per dc): drawn over the avatar. The box is 140x145 with the avatar circle at (70,95) r50, so a hat
+     can rise above the head. Couture Beanie is its own power (quilted, pearl-chain cuff, gold pearl). */
+  var HAT_SVG = {
+    beanie: '<g transform="translate(5.6 -13) scale(.92 1)"><path d="M26 86A44 54 0 0 1 114 86Z" fill="#26386f"/><path d="M42 80c0-20 6-36 14-44M58 80c0-24 3-40 6-46M76 34c3 6 6 22 6 46M88 36c8 8 12 24 12 44" stroke="#1b2a58" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/><rect x="21" y="74" width="98" height="19" rx="9.5" fill="#34498f"/><path d="M33 77v13M43 77v13M53 77v13M63 77v13M73 77v13M83 77v13M93 77v13M103 77v13" stroke="#26386f" stroke-width="2.6" stroke-linecap="round"/><circle cx="70" cy="28" r="11" fill="#f3f5fb"/><circle cx="66" cy="25" r="3" fill="#fff"/></g>',
+    party: '<path d="M44 64 72 4l26 60c-17 7-37 7-54 0Z" fill="#ff6fa5"/><path d="M52 47 82 28M48 57l42-26M58 64l36-22M64 20l14 6" stroke="#ffd36b" stroke-width="5" stroke-linecap="round" opacity=".95"/><path d="M44 64c17 7 37 7 54 0" stroke="#e24f88" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="72" cy="6" r="7.5" fill="#ffd36b"/><circle cx="70" cy="4.5" r="2.2" fill="#fff6d6"/>',
+    horns: '<path d="M46 62C41 46 31 31 16 20c6 15 11 28 13 44Z" fill="#cf2e45"/><path d="M94 62c5-16 15-31 30-42-6 15-11 28-13 44Z" fill="#cf2e45"/><path d="M42 58c-4-11-10-21-19-30M98 58c4-11 10-21 19-30" stroke="#ff8a98" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>',
+    bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
+    headphones: '<path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#1d2238" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#a9d7f5" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><rect x="9" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="110" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="14" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/><rect x="115" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/>'
+  };
+  var COUTURE = { noir: ["#18181d", "#0c0c0f", "rgba(255,255,255,.16)"], ivory: ["#efe8dc", "#ddd2c1", "rgba(80,60,30,.14)"], rose: ["#e9aab9", "#d78ea1", "rgba(255,255,255,.3)"] };
+  function hatSvg(key) {
+    var m = /^(hat|couture):(\w+)$/.exec(key || "");
+    if (!m) return "";
+    if (m[1] === "hat") return HAT_SVG[m[2]] || "";
+    var c = COUTURE[m[2]] || COUTURE.noir, q = "";
+    for (var i = -60; i < 140; i += 13) q += "M" + i + " 92L" + (i + 62) + " 26M" + (i + 62) + " 92L" + i + " 26";
+    return '<g transform="translate(5.6 -13) scale(.92 1)"><clipPath id="mp-cq-' + m[2] + '"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath>' +
+      '<path d="M26 86A44 54 0 0 1 114 86Z" fill="' + c[0] + '"/>' +
+      '<path d="' + q + '" stroke="' + c[2] + '" stroke-width="1.6" clip-path="url(#mp-cq-' + m[2] + ')"/>' +
+      '<rect x="21" y="74" width="98" height="19" rx="9.5" fill="' + c[1] + '"/>' +
+      [30, 40, 50, 60, 80, 90, 100, 110].map(function (x) { return '<circle cx="' + x + '" cy="83.5" r="3" fill="#f6f1e7" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>'; }).join("") +
+      '<circle cx="70" cy="83.5" r="5.2" fill="#e8c26a" stroke="#b8913c" stroke-width="1"/><circle cx="68.4" cy="81.8" r="1.5" fill="#fff6d8"/></g>';
+  }
+  function mpHatInto(w, key) {
+    if (!w) return;
+    var old = w.querySelector(":scope > .mp-hat");
+    if (!key) { old && old.remove(); return; }
+    if (old && old.getAttribute("data-hat") === key) return;
+    old && old.remove();
+    var svg = hatSvg(key);
+    if (!svg) return;
+    var h = document.createElement("i");
+    h.className = "mp-hat";
+    h.setAttribute("data-hat", key);
+    h.setAttribute("aria-hidden", "true");
+    h.innerHTML = '<svg viewBox="0 0 140 145" focusable="false">' + svg + "</svg>";
+    w.appendChild(h);
+  }
   function mpPwApply(el, user, look) {
     var pw = look !== void 0 ? look : PW[pwKey(user)] || null;
     PW_KEYS.forEach(function (k) {
@@ -1255,10 +1293,12 @@
     });
     pw && pw.rgb ? el.setAttribute("data-rgb", pw.rgb) : el.removeAttribute("data-rgb");
     var ch = (pw && pw.charms) || [];
+    var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.hat ? "hat:" + pw.hat : "";
+    if (el.classList.contains("mp-pb-av")) mpHatInto(el, hatKey);
     pw && pw.melt && mpMeltFilter();
     if (el.classList.contains("mp-pb-name")) { mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch); mpMeltText(el.querySelector(".mp-pb-name-t")); }
     else if (el.classList.contains("chat-msg")) {
-      var put = function () { var h = el.querySelector(".chat-msg-head"); h && (mpCharmsInto(h, h.querySelector("strong"), ch), mpMeltText(h.querySelector("strong"))); };
+      var put = function () { var h = el.querySelector(".chat-msg-head"); h && (mpCharmsInto(h, h.querySelector("strong"), ch), mpMeltText(h.querySelector("strong"))); mpHatInto(el.querySelector(".chat-avatar-wrap"), hatKey); };
       el.querySelector(".chat-msg-head") ? put() : setTimeout(put, 0);
     }
   }
@@ -1308,8 +1348,9 @@
     var out = {}, st = (u && u.powerSettings) || {};
     ((u && u.powersOn) || []).forEach(function (id) {
       var s1 = st[id] || {}, c = s1.color ? PW_COLORS[s1.color] || (/^#[0-9a-f]{6}$/i.test(s1.color) ? s1.color : null) : null;
-      out[id] = c || (id === "rgb" ? s1.speed || "slow" : 1);
+      out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "noir" : c || (id === "rgb" ? s1.speed || "slow" : 1);
     });
+    out.couture && delete out.hat;
     out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
     var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
     u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
@@ -7867,7 +7908,9 @@
       halo:   { clash: { sphere: "In chat the orb covers the ring; your profile ring stays" } },
       sphere: { clash: { halo: "In chat the orb covers the ring; your profile ring stays" } },
       bubble: { special: { aura: "Aura can match your bubble colour" } },
-      aura:   { special: { bubble: "Can match your bubble colour" } }
+      aura:   { special: { bubble: "Can match your bubble colour" } },
+      hat:    { clash: { couture: "Couture Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } },
+      couture:{ clash: { hat: "Worn instead of your Hat" }, special: { sphere: "Sits on top of the orb" } }
     };
     function combos(p) {
       var cat = (st.catalog || []).filter(function (q) { return q.id !== p.id; });
