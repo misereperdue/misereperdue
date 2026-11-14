@@ -12692,3 +12692,10 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 /* Everypower icon: infinity (per dc); it's wide, so it gets more of the circle */
 .chat-badge-every .cbe svg{width:80%!important;height:80%!important}
 .chat-badge-pill-every .chat-badge-every .cbe svg{width:84%!important;height:84%!important}
+/* Everypower pill (per dc): no orbiting line and no sheen; the icon inside is the real Everypower badge
+   (same disc, pearl edge, glow and white ring as on the avatar). The badge itself has no sheen either. */
+.chat-badge-pill-every .pill-ring{display:none!important}
+.chat-badge-pill-every::after,.chat-badge-every .cbe::after{content:none!important;display:none!important;animation:none!important}
+.chat-badge-pill-every .chat-badge-every{width:20px!important;height:20px!important;margin-left:-3px}
+.chat-badge-pill-every .chat-badge-every .cbe{width:19px;height:19px;border-width:1.5px!important;box-shadow:0 0 0 1.5px var(--bg,#fff),0 1px 4px rgba(0,0,0,.35),0 0 8px rgba(201,184,255,.35)!important}
+.chat-badge-pill-every .chat-badge-every .cbe svg{width:80%!important;height:80%!important}
