@@ -1137,7 +1137,8 @@
       });
       br.childNodes.length && st.appendChild(br);
     }
-    body.appendChild(st);
+    /* badge pills sit right under the stars line (per dc) */
+    n3.after(st);
     var pw = powRow(n);
     pw && body.appendChild(pw);
     var bio = document.createElement("div");
@@ -1217,7 +1218,7 @@
       edit:function(show, back){mpProfileSheet(false,{show:show,back:back});},
       close:function(){mpPBclose();},
       sync:function(user){
-        var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&st.parentNode&&st.parentNode.insertBefore(npw,st.nextSibling);
+        var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&hd.parentNode&&hd.parentNode.insertBefore(npw,hd.nextSibling);
         mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=avw.querySelector('.mp-pb-ib')||n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)avw.insertAdjacentHTML('beforeend','<span class="mp-pb-ib mp-pb-av-badge">'+badge+'</span>');
         st.innerHTML=(pill||'')+pbEvery(user);var sl=body.querySelector('.mp-pb-starsline');sl&&(sl.innerHTML=mpPbStars(user));
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}

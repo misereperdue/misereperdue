@@ -12718,3 +12718,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 16'%3E%3Cpath d='M6.6 4.2c-2.2 0-3.9 1.7-3.9 3.8s1.7 3.8 3.9 3.8c3.6 0 7.2-7.6 10.8-7.6 2.2 0 3.9 1.7 3.9 3.8s-1.7 3.8-3.9 3.8c-3.6 0-7.2-7.6-10.8-7.6Z' fill='none' stroke='%23000' stroke-width='2.9' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
   filter:drop-shadow(0 0 3px rgba(210,195,255,.55))}
 .chat-badge-pill-every .chat-badge-every .cbe svg{display:none!important}
+/* pills under the stars line inside the name block */
+.mp-pb-nm>.mp-pb-stats{order:2;margin:8px 0 0;justify-content:center}
+.mp-pb-nm>.mp-pb-tools{order:3}
+.mp-pb-nm>.mp-pb-bio{order:4}
