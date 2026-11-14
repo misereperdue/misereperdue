@@ -1341,12 +1341,10 @@
       '<path d="M26 86C24 52 40 26 70 24s48 28 44 62Z" fill="' + c[0] + '"/>' +
       '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
       /* interlocking back-to-back CC: right C, then left C over it at the top, then the right C over it at the bottom */
-      /* CC from the real mark's proportions (mark 101x74): each C is a near circle the full height of the
-         mark, stroke 20% of that height, openings 42 degrees either side facing outward, centres 0.73 R apart;
-         left C over at the top crossing, right C over at the bottom, with a thin gap where they cross. */
-      '<clipPath id="mp-cx-' + m[2] + '"><rect x="57" y="56" width="26" height="15"/></clipPath>' +
-      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width=".9" paint-order="stroke"><path d="' + ccRing(73.75, 56, 12.5, 7.5, 42, 318) + '"/><path d="' + ccRing(66.25, 56, 12.5, 7.5, 222, 498) + '"/>' +
-      '<path d="' + ccRing(73.75, 56, 12.5, 7.5, 42, 318) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
+      /* CC measured from dc's reference (2000px): outer radius 551, inner 376, centres 541 apart, openings
+         29.5 degrees either side of horizontal with radial cuts, drawn as one solid silhouette (no weave). Scaled
+         to a 25-unit tall mark. */
+      '<g fill="' + c[1] + '"><path d="' + ccRing(76.14, 56, 12.5, 8.53, 29.5, 330.5) + '"/><path d="' + ccRing(63.86, 56, 12.5, 8.53, 209.5, 510.5) + '"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
@@ -7948,7 +7946,10 @@
        options (colour swatches, choices) selected like badges. */
     function setPanel(p) {
       var cur = (st.settings && st.settings[p.id]) || {};
-      return '<div class="pow-set">' + p.settings.map(function (f) {
+      return '<div class="pow-set">' + p.settings.filter(function (f) {
+        /* Chanel colours only while Chanel is the chosen hat (per dc) */
+        return !(p.id === "hat" && f.key === "chanel" && (cur.style || "beanie") !== "chanel");
+      }).map(function (f) {
         var val = cur[f.key] != null ? cur[f.key] : f.def;
         return '<div class="pow-set-row"><span class="pow-set-k">' + x(f.label) + '</span><div class="pow-set-opts" role="group" aria-label="' + x(p.name + " " + f.label) + '">' +
           f.options.filter(function (o) { return !o.requires || st.owned.indexOf(o.requires) >= 0; }).map(function (o) {
