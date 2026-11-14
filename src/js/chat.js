@@ -1255,7 +1255,13 @@
     /* party hat: purple cone, gold dots, white zigzag trim and a pink pompom (per dc) */
     party: '<path d="M45 64 71 6l25 58c-16 7-35 7-51 0Z" fill="#6f4dff"/><path d="M71 6 96 64c-6 2.5-12 4-18 4.6Z" fill="#5a3be0" opacity=".55"/><circle cx="66" cy="30" r="3" fill="#ffd36b"/><circle cx="77" cy="40" r="3" fill="#ffd36b"/><circle cx="60" cy="46" r="3" fill="#ffd36b"/><circle cx="72" cy="53" r="3" fill="#ffd36b"/><circle cx="85" cy="54" r="2.6" fill="#ffd36b"/><path d="M46 60l5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M45 64c16 7 35 7 51 0" stroke="#4a2fc4" stroke-width="2.5" fill="none" stroke-linecap="round"/><g fill="#ff6fa5"><circle cx="71" cy="6" r="7"/><circle cx="64" cy="3" r="3.2"/><circle cx="78" cy="3" r="3.2"/><circle cx="71" cy="-1" r="3.2"/><circle cx="66" cy="10" r="3"/><circle cx="76" cy="10" r="3"/></g><circle cx="69" cy="4" r="1.8" fill="#ffd0e2"/>',
     /* horns curving inward toward each other (per dc) */
-    horns: '<path d="M42 62C35 44 41 27 61 17c-6 12-8 26-4 41Z" fill="#cf2e45"/><path d="M98 62c7-18 1-35-19-45 6 12 8 26 4 41Z" fill="#cf2e45"/><path d="M45 56c-3-12 1-24 11-31M95 56c3-12-1-24-11-31" stroke="#ff8a98" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>',
+    /* horns (per dc): short glossy devil horns, thick at the base, sweeping up and curling inward, dark-to-bright
+       red with a highlight and ridges */
+    horns: '<linearGradient id="mp-hn-g" x1="0" y1="1" x2=".35" y2="0"><stop offset="0" stop-color="#7a0d1d"/><stop offset=".55" stop-color="#d0263b"/><stop offset="1" stop-color="#ff5a6b"/></linearGradient>' +
+      '<g id="mp-hn-l"><path d="M35 66C29 52 31 37 42 27c4-4 9-7 15-8-5 6-7 13-6 21 1 8 4 15 9 22Z" fill="url(#mp-hn-g)"/>' +
+      '<path d="M38 59c-4-10-3-21 4-29" stroke="rgba(255,190,200,.55)" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M37 55c5-1 10 0 15 3M37 47c4-1 9 0 13 2M40 39c3-1 7 0 10 1" stroke="rgba(80,0,15,.45)" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>' +
+      '<use href="#mp-hn-l" transform="matrix(-1 0 0 1 140 0)"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
     headphones: hatAirMax()
   };
@@ -1335,9 +1341,12 @@
       '<path d="M26 86C24 52 40 26 70 24s48 28 44 62Z" fill="' + c[0] + '"/>' +
       '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
       /* interlocking back-to-back CC: right C, then left C over it at the top, then the right C over it at the bottom */
-      '<clipPath id="mp-cx-' + m[2] + '"><rect x="62" y="57" width="16" height="16"/></clipPath>' +
-      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(79.5, 57, 13.5, 8.2, 44, 316) + '"/><path d="' + ccRing(60.5, 57, 13.5, 8.2, 224, 496) + '"/>' +
-      '<path d="' + ccRing(79.5, 57, 13.5, 8.2, 44, 316) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
+      /* CC from the real mark's proportions (mark 101x74): each C is a near circle the full height of the
+         mark, stroke 20% of that height, openings 42 degrees either side facing outward, centres 0.73 R apart;
+         left C over at the top crossing, right C over at the bottom, with a thin gap where they cross. */
+      '<clipPath id="mp-cx-' + m[2] + '"><rect x="57" y="56" width="26" height="15"/></clipPath>' +
+      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width=".9" paint-order="stroke"><path d="' + ccRing(74.56, 56, 12.5, 7.5, 42, 318) + '"/><path d="' + ccRing(65.44, 56, 12.5, 7.5, 222, 498) + '"/>' +
+      '<path d="' + ccRing(74.56, 56, 12.5, 7.5, 42, 318) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
