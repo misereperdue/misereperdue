@@ -234,6 +234,7 @@
     on = v;
     clearInterval(hbT); hbT = 0;
     if (on) {
+      msHandlers();
       if (!IOS && !actx && (window.AudioContext || window.webkitAudioContext)) {
         try { actx = new (window.AudioContext || window.webkitAudioContext)(); actx._an = actx.createAnalyser(); actx._an.fftSize = 128; actx._an.smoothingTimeConstant = 0.78; actx._an.connect(actx.destination); A.forEach(function (a) { a && graph(a); }); } catch (e) { actx = null; }
       }
@@ -284,14 +285,20 @@
     set("previoustrack", on2 ? function () { owner() && ctl({ action: "prev" }); } : null);
     ["seekto", "seekbackward", "seekforward"].forEach(function (a) { set(a, null); });
   }
-  try {
-    var MS = navigator.mediaSession;
-    if (MS && MS.setActionHandler) {
-      MS.setActionHandler("play", function () { listen(!0); });
-      MS.setActionHandler("pause", function () { listen(!1); });
-      msControls(!live());
-    }
-  } catch (e) {}
+  /* play/pause handlers for the station; also re-set when listening starts, since a song preview
+     clears them when it ends so the lock-screen player goes away (per dc). */
+  function msHandlers() {
+    try {
+      var MS = navigator.mediaSession;
+      if (MS && MS.setActionHandler) {
+        MS.setActionHandler("play", function () { listen(!0); });
+        MS.setActionHandler("pause", function () { listen(!1); });
+        msTrack = null;
+        msControls(!live());
+      }
+    } catch (e) {}
+  }
+  msHandlers();
   function wave(t) {
     if (!t || !t.wave || waves[t.id]) return;
     waves[t.id] = "loading";
@@ -1358,15 +1365,8 @@
   window.MPFM = {
     /* Song previews (chat.js MPPreview) borrow the media session; this hands it back to FM. */
     mediaReset: function () {
-      msKey = ""; msTrack = null;
-      try {
-        var MS = navigator.mediaSession;
-        if (MS && MS.setActionHandler) {
-          MS.setActionHandler("play", function () { listen(!0); });
-          MS.setActionHandler("pause", function () { listen(!1); });
-          msControls(!live());
-        }
-      } catch (e) {}
+      msKey = "";
+      msHandlers();
       media(calc());
     },
     yieldBar: function () { closeMorph(true); },
