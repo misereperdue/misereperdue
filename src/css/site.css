@@ -12684,4 +12684,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .chat-badge-pill-every .chat-badge-every{width:18px!important;height:18px!important;font-size:16px!important;line-height:18px!important}
 .chat-badge-pill-every .chat-badge-every .cbe{border-width:1px;box-shadow:0 0 6px rgba(201,184,255,.35)}
 .chat-badge-pill-every .chat-badge-every .cbe::after{display:none}
-.mp-pb-stats .chat-badge-pill+.chat-badge-pill{margin-left:6px}
+/* Profile: star count under the join date (per dc), plain text rather than a chip */
+.mp-pb-starsline{display:flex;justify-content:center;margin-top:2px}
+.mp-pb-starsline .mp-pb-pts,.mp-pb .mp-pb-starsline .mp-pb-pts,.mp-profile-bar .mp-pb-starsline .mp-pb-pts{display:inline-flex;align-items:center;gap:4px;height:auto;padding:0;background:none;box-shadow:none;font-size:12px;line-height:1.4;color:var(--muted)}
+.mp-pb-starsline .mp-pb-pts b{color:var(--ink);font-weight:700}
+.mp-pb-stats:empty{display:none}
