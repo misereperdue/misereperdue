@@ -253,7 +253,7 @@
               : "mask" === e
                 ? '<span class="chat-badge-mask" title="Sleep Mask" aria-label="Sleep Mask badge"><img src="img/badge-mask.png?v=2" alt=""></span>'
                 : "every" === e
-                  ? '<span class="chat-badge chat-badge-every" title="Everypower" aria-label="Everypower badge"><i class="cbe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8c.7 4.3 2.9 6.6 7.2 7.2-4.3.7-6.5 2.9-7.2 7.2-.7-4.3-2.9-6.5-7.2-7.2 4.3-.6 6.5-2.9 7.2-7.2Z" fill="#fff"/></svg></i></span>'
+                  ? '<span class="chat-badge chat-badge-every" title="Everypower" aria-label="Everypower badge"><i class="cbe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 17.6h15.6l1.1-9.1-4.9 3.6L12 5.2l-4 6.9-4.9-3.6 1.1 9.1Z" fill="#fff" stroke="#fff" stroke-width="1" stroke-linejoin="round"/><circle cx="12" cy="4.4" r="1.3" fill="#fff"/><circle cx="2.9" cy="7.9" r="1.1" fill="#fff"/><circle cx="21.1" cy="7.9" r="1.1" fill="#fff"/></svg></i></span>'
                 : "verified" === e
                   ? '<span class="chat-verified" title="Verified" aria-label="Verified">' +
                     S +
