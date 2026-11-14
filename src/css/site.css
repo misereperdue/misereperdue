@@ -12708,3 +12708,12 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-hat[data-hat="hat:headphones"]{transform:none}
 /* room above the profile avatar so a hat isn't cut off by the card's scroll edge */
 .mp-pb-hd:has(.mp-pb-av .mp-hat){padding-top:30px}
+/* Everypower pill (per dc): the icon is just a holographic infinity symbol, no disc. The pearl-holo gradient
+   is shown through an infinity-shaped mask. */
+.chat-badge-pill-every .chat-badge-every{width:22px!important;height:18px!important;margin-left:-2px}
+.chat-badge-pill-every .chat-badge-every .cbe{width:22px!important;height:18px!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;
+  background:linear-gradient(100deg,#f1e6ff 0%,#a9d7f5 22%,#ffe0ef 45%,#fff3c9 62%,#b9f0dd 80%,#d9c8ff 100%)!important;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 16'%3E%3Cpath d='M6.6 4.2c-2.2 0-3.9 1.7-3.9 3.8s1.7 3.8 3.9 3.8c3.6 0 7.2-7.6 10.8-7.6 2.2 0 3.9 1.7 3.9 3.8s-1.7 3.8-3.9 3.8c-3.6 0-7.2-7.6-10.8-7.6Z' fill='none' stroke='%23000' stroke-width='2.9' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 16'%3E%3Cpath d='M6.6 4.2c-2.2 0-3.9 1.7-3.9 3.8s1.7 3.8 3.9 3.8c3.6 0 7.2-7.6 10.8-7.6 2.2 0 3.9 1.7 3.9 3.8s-1.7 3.8-3.9 3.8c-3.6 0-7.2-7.6-10.8-7.6Z' fill='none' stroke='%23000' stroke-width='2.9' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  filter:drop-shadow(0 0 3px rgba(210,195,255,.55))}
+.chat-badge-pill-every .chat-badge-every .cbe svg{display:none!important}
