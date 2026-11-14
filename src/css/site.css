@@ -12237,13 +12237,12 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-pb-av.pw-halo:not(.is-owner) .mp-pb-ring{background:var(--pw-halo)!important}
 /* Sphere: avatar inside a glass orb */
 @media (prefers-reduced-motion:reduce){.pw-glitch .chat-msg-head strong,.pw-glitch .mp-pb-name-t,.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-rgb .chat-msg-head strong,.pw-rgb .mp-pb-name-t{animation:none!important}}
-/* Charms next to the name; the old badge row, inline badge and avatar badges give way to them */
+/* Gem charms next to the name; badges (07, VIP, <3, mask, bot) sit on the avatar only (per dc) */
 .mp-charms{display:inline-flex;align-items:center;flex:none}
 .mp-charm{display:inline-grid;place-items:center;line-height:1}
 .mp-charm svg,.mp-charm img{display:block}
 .mp-charm .chat-badge,.mp-charm .chat-badge-kitty,.mp-charm .chat-badge-mask,.mp-charm .chat-verified{position:static!important;inset:auto!important;transform:none!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important}
-.mp-pb-badges,.mp-pb-ib{display:none!important}
-.chat-msg .chat-avatar-wrap>.chat-badge,.chat-msg .chat-avatar-wrap>.chat-badge-kitty,.chat-msg .chat-avatar-wrap>.chat-badge-mask{display:none!important}
+.mp-pb-badges{display:none!important}
 /* Custom colour swatch in power settings */
 .pow-sw-custom{overflow:visible;background:conic-gradient(#ff5a5f,#f5bf45,#5fe3b0,#a9d7f5,#b18cff,#ff7fb8,#ff5a5f)}
 .pow-sw-custom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
@@ -12649,3 +12648,5 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .pow-tile.is-locked .pow-price{white-space:nowrap}
 .pow-lock{width:12px;height:12px;flex:none;vertical-align:-1px}
 .pow-note.is-charm-off{margin:-2px 2px 8px;font-size:12px;opacity:.7}
+/* Preview disc sits on the visible album square at the left of the faded profile cover (per dc). */
+.mp-profile-details .mp-profile-song-art .mp-pv{right:auto;width:auto;aspect-ratio:1/1;height:100%}

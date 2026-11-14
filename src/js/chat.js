@@ -1271,7 +1271,8 @@
   function mpCharmsInto(host, after, list) {
     var old = host.querySelector(":scope > .mp-charms");
     old && old.remove();
-    list && list.indexOf("verified") >= 0 && (list = list.filter(function (c) { return c !== "member"; }));
+    /* only gem charms by the name; badges stay on the avatar (per dc) */
+    list = (list || []).filter(function (c) { return !!GEM[c]; });
     if (!list || !list.length) return;
     var w = document.createElement("span");
     w.className = "mp-charms";
