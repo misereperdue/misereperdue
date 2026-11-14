@@ -1251,14 +1251,57 @@
      can rise above the head. Couture Beanie is its own power (quilted, pearl-chain cuff, gold pearl). */
   var HAT_SVG = {
     /* plain black beanie with a ribbed cuff (per dc) */
-    beanie: '<g transform="translate(5.6 -13) scale(.92 1)"><path d="M26 86A44 54 0 0 1 114 86Z" fill="#1c1c21"/><path d="M42 82c0-20 5-34 12-42M57 82c0-22 2-36 5-44M78 38c3 8 5 22 5 44M90 40c7 8 10 22 10 42" stroke="#0f0f12" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/><path d="M48 44c6-6 14-9 22-9" stroke="rgba(255,255,255,.12)" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="21" y="74" width="98" height="19" rx="9.5" fill="#26262c"/><path d="M31 77v13M39 77v13M47 77v13M55 77v13M63 77v13M71 77v13M79 77v13M87 77v13M95 77v13M103 77v13M111 77v13" stroke="#16161a" stroke-width="2.4" stroke-linecap="round"/></g>',
+    beanie: hatBeanie(),
     /* party hat: purple cone, gold dots, white zigzag trim and a pink pompom (per dc) */
     party: '<path d="M45 64 71 6l25 58c-16 7-35 7-51 0Z" fill="#6f4dff"/><path d="M71 6 96 64c-6 2.5-12 4-18 4.6Z" fill="#5a3be0" opacity=".55"/><circle cx="66" cy="30" r="3" fill="#ffd36b"/><circle cx="77" cy="40" r="3" fill="#ffd36b"/><circle cx="60" cy="46" r="3" fill="#ffd36b"/><circle cx="72" cy="53" r="3" fill="#ffd36b"/><circle cx="85" cy="54" r="2.6" fill="#ffd36b"/><path d="M46 60l5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5 5-5 5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M45 64c16 7 35 7 51 0" stroke="#4a2fc4" stroke-width="2.5" fill="none" stroke-linecap="round"/><g fill="#ff6fa5"><circle cx="71" cy="6" r="7"/><circle cx="64" cy="3" r="3.2"/><circle cx="78" cy="3" r="3.2"/><circle cx="71" cy="-1" r="3.2"/><circle cx="66" cy="10" r="3"/><circle cx="76" cy="10" r="3"/></g><circle cx="69" cy="4" r="1.8" fill="#ffd0e2"/>',
     /* horns curving inward toward each other (per dc) */
     horns: '<path d="M42 62C35 44 41 27 61 17c-6 12-8 26-4 41Z" fill="#cf2e45"/><path d="M98 62c7-18 1-35-19-45 6 12 8 26 4 41Z" fill="#cf2e45"/><path d="M45 56c-3-12 1-24 11-31M95 56c3-12-1-24-11-31" stroke="#ff8a98" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
-    headphones: '<path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#1d2238" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M22 98C22 54 43 34 70 34s48 20 48 64" stroke="#a9d7f5" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><rect x="9" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="110" y="82" width="21" height="34" rx="9" fill="#1d2238"/><rect x="14" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/><rect x="115" y="87" width="11" height="24" rx="5.5" fill="#a9d7f5"/>'
+    headphones: hatAirMax()
   };
+  /* Black beanie (per dc): shaded knit dome with ribbed columns curving to the crown, folded ribbed cuff, small woven tag. */
+  function hatBeanie() {
+    var cols = "", hi = "";
+    for (var k = 28; k <= 112; k += 6) {
+      var tx = 70 + (k - 70) * 0.16, qx = k + (70 - k) * 0.1;
+      cols += "M" + k + " 86Q" + qx + " 52 " + tx + " 34";
+      hi += "M" + (k + 2) + " 86Q" + (qx + 1.6) + " 52 " + (tx + 0.4) + " 34";
+    }
+    var rib = "";
+    for (var j = 25; j <= 115; j += 3.6) rib += "M" + j.toFixed(1) + " 76.5v15";
+    return '<g transform="translate(5.6 -13) scale(.92 1)"><radialGradient id="mp-bn-g" cx=".36" cy=".26" r=".8"><stop offset="0" stop-color="#43434c"/><stop offset=".55" stop-color="#1d1d22"/><stop offset="1" stop-color="#0c0c0f"/></radialGradient>' +
+      '<linearGradient id="mp-bn-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d2d34"/><stop offset="1" stop-color="#141418"/></linearGradient>' +
+      '<clipPath id="mp-bn-d"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath>' +
+      '<path d="M26 86A44 54 0 0 1 114 86Z" fill="url(#mp-bn-g)"/>' +
+      '<g clip-path="url(#mp-bn-d)" fill="none" stroke-linecap="round"><path d="' + cols + '" stroke="rgba(0,0,0,.42)" stroke-width="1.7"/><path d="' + hi + '" stroke="rgba(255,255,255,.06)" stroke-width="1.2"/></g>' +
+      '<ellipse cx="70" cy="35" rx="7" ry="3" fill="rgba(0,0,0,.35)"/>' +
+      '<path d="M24 75.5Q70 70 116 75.5" stroke="rgba(0,0,0,.5)" stroke-width="3" fill="none"/>' +
+      '<rect x="21" y="74" width="98" height="20" rx="7" fill="url(#mp-bn-c)"/>' +
+      '<path d="' + rib + '" stroke="rgba(0,0,0,.45)" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M24 76.2h92" stroke="rgba(255,255,255,.1)" stroke-width="1"/>' +
+      '<rect x="62" y="78.5" width="16" height="10" rx="1.4" fill="#0b0b0d" stroke="rgba(255,255,255,.16)" stroke-width=".8"/><path d="M65.5 83.5h9" stroke="rgba(255,255,255,.35)" stroke-width="1" stroke-linecap="round"/></g>';
+  }
+  /* AirPods Max style (per dc): stainless headband frame, knit-mesh canopy, telescoping arms, silver cups with cushions and the crown. */
+  function hatAirMax() {
+    return '<linearGradient id="mp-am-cup" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f5f7"/><stop offset=".5" stop-color="#d7dae0"/><stop offset="1" stop-color="#b9bdc5"/></linearGradient>' +
+      '<path d="M18 76C19 40 43 25 70 25s51 15 52 51" stroke="#b8bcc3" stroke-width="4.4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M18 76C19 40 43 25 70 25s51 15 52 51" stroke="#f3f4f6" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".9"/>' +
+      '<path d="M27 70C30 47 47 37 70 37s40 10 43 33" stroke="#e5e6e9" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+      '<path d="M27 70C30 47 47 37 70 37s40 10 43 33" stroke="#c4c6cc" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray=".9 1.8" opacity=".55"/>' +
+      '<rect x="16.6" y="66" width="2.8" height="14" rx="1.2" fill="#c3c6cc"/><rect x="120.6" y="66" width="2.8" height="14" rx="1.2" fill="#c3c6cc"/>' +
+      '<rect x="4" y="78" width="27" height="39" rx="11.5" fill="url(#mp-am-cup)" stroke="#a9adb5" stroke-width=".8"/>' +
+      '<rect x="109" y="78" width="27" height="39" rx="11.5" fill="url(#mp-am-cup)" stroke="#a9adb5" stroke-width=".8"/>' +
+      '<rect x="25" y="81" width="9" height="33" rx="4.5" fill="#d3d4d8"/><rect x="106" y="81" width="9" height="33" rx="4.5" fill="#d3d4d8"/>' +
+      '<path d="M27 83v29M108 83v29" stroke="#bfc1c6" stroke-width="1" stroke-dasharray="1 1.5"/>' +
+      '<rect x="125" y="73.5" width="5.2" height="6.5" rx="2" fill="#c8cbd1" stroke="#a9adb5" stroke-width=".6"/><rect x="113.5" y="75.5" width="7" height="2.6" rx="1.3" fill="#c8cbd1"/>' +
+      '<path d="M8 84c2-3 5-4 9-4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/><path d="M113 84c2-3 5-4 9-4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>';
+  }
+  /* ring segment for the CC: angles in degrees, clockwise on screen, a0 < a1 */
+  function ccRing(cx, cy, R, r, a0, a1) {
+    var p = function (rad, a) { a = a * Math.PI / 180; return (cx + rad * Math.cos(a)).toFixed(2) + " " + (cy + rad * Math.sin(a)).toFixed(2); };
+    var big = a1 - a0 > 180 ? 1 : 0;
+    return "M" + p(R, a0) + "A" + R + " " + R + " 0 " + big + " 1 " + p(R, a1) + "L" + p(r, a1) + "A" + r + " " + r + " 0 " + big + " 0 " + p(r, a0) + "Z";
+  }
   /* Chanel Beanie (per dc, from his reference): slouchy knit, big interlocking CC, ribbed cuff with stripes. */
   var COUTURE = { ivory: ["#efe9de", "#151517", "#e3dccf"], noir: ["#1a1a1e", "#f1ebdf", "#232328"], rose: ["#f2bccb", "#161618", "#e7aabb"] };
   function hatSvg(key) {
@@ -1266,18 +1309,23 @@
     if (!m) return "";
     if (m[1] === "hat") return HAT_SVG[m[2]] || "";
     if (m[1] === "louis") {
-      /* Louis Beanie (per dc, from his reference): black/grey checkered knit with a crystal-dot patch on the cuff */
+      /* Louis Beanie (per dc, from his reference): checkered knit in black and charcoal with stitch texture and
+         shading, ribbed checkered cuff, black patch reading MAISON / L.VUITTON / PARIS in crystal-white letters. */
       var sq = "";
-      for (var y = 22; y < 74; y += 12) for (var x = 14; x < 126; x += 12) if (((x - 14) / 12 + (y - 22) / 12) % 2 === 0) sq += '<rect x="' + x + '" y="' + y + '" width="12" height="12"/>';
+      for (var y = 22; y < 74; y += 11) for (var x = 14; x < 126; x += 11) if ((Math.round((x - 14) / 11) + Math.round((y - 22) / 11)) % 2 === 0) sq += '<rect x="' + x + '" y="' + y + '" width="11" height="11"/>';
+      var st = "";
+      for (var yy = 25; yy < 86; yy += 3.3) { st += "M14 " + yy.toFixed(1); for (var xx = 14; xx < 126; xx += 3) st += "l1.5 1.6l1.5 -1.6"; }
       var cq = "";
-      for (var cx = 21, i = 0; cx < 119; cx += 12, i++) cq += '<rect x="' + cx + '" y="' + (i % 2 ? 74 : 83.5) + '" width="12" height="9.5"/>';
-      var dots = "";
-      for (var r = 0; r < 3; r++) for (var d = 0; d < 6; d++) dots += '<circle cx="' + (96.5 + d * 2.6) + '" cy="' + (78.5 + r * 4.2) + '" r=".75"/>';
-      return '<g transform="translate(5.6 -13) scale(.92 1)"><clipPath id="mp-lv-d"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath><clipPath id="mp-lv-c"><rect x="21" y="74" width="98" height="19" rx="9.5"/></clipPath>' +
-        '<path d="M26 86A44 54 0 0 1 114 86Z" fill="#202024"/><g fill="#4d4d55" clip-path="url(#mp-lv-d)">' + sq + "</g>" +
-        '<path d="M44 82c0-18 4-32 10-40M86 42c6 8 10 22 10 40" stroke="rgba(0,0,0,.25)" stroke-width="2" fill="none"/>' +
-        '<rect x="21" y="74" width="98" height="19" rx="9.5" fill="#202024"/><g fill="#4d4d55" clip-path="url(#mp-lv-c)">' + cq + "</g>" +
-        '<rect x="93.5" y="75.5" width="18" height="15" rx="2" fill="#0d0d10"/><g fill="#e9edf4">' + dots + "</g></g>";
+      for (var cx = 21, i = 0; cx < 119; cx += 11, i++) cq += '<rect x="' + cx + '" y="' + (i % 2 ? 74 : 84) + '" width="11" height="10"/>';
+      var rb = "";
+      for (var q = 23; q < 118; q += 3) rb += "M" + q + " 75v18";
+      return '<g transform="translate(5.6 -13) scale(.92 1)"><radialGradient id="mp-lv-s" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient>' +
+        '<clipPath id="mp-lv-d"><path d="M26 86A44 54 0 0 1 114 86Z"/></clipPath><clipPath id="mp-lv-c"><rect x="21" y="74" width="98" height="20" rx="7"/></clipPath>' +
+        '<path d="M26 86A44 54 0 0 1 114 86Z" fill="#1b1b1f"/><g clip-path="url(#mp-lv-d)"><g fill="#4a4a52">' + sq + '</g><path d="' + st + '" stroke="rgba(255,255,255,.07)" stroke-width=".8" fill="none"/><path d="M26 86A44 54 0 0 1 114 86Z" fill="url(#mp-lv-s)"/></g>' +
+        '<path d="M24 75.5Q70 70 116 75.5" stroke="rgba(0,0,0,.55)" stroke-width="3" fill="none"/>' +
+        '<rect x="21" y="74" width="98" height="20" rx="7" fill="#1b1b1f"/><g clip-path="url(#mp-lv-c)"><g fill="#4a4a52">' + cq + '</g><path d="' + rb + '" stroke="rgba(0,0,0,.35)" stroke-width="1.2"/><rect x="21" y="74" width="98" height="20" fill="url(#mp-lv-s)" opacity=".6"/></g>' +
+        '<rect x="86" y="75.6" width="29" height="16.6" rx="1.6" fill="#0b0b0d" stroke="rgba(255,255,255,.18)" stroke-width=".7"/>' +
+        '<g fill="#eef1f6" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="3.9" text-anchor="middle" letter-spacing=".25"><text x="100.5" y="80.6">MAISON</text><text x="100.5" y="85.4">L.VUITTON</text><text x="100.5" y="90.2">PARIS</text></g></g>';
     }
     var c = COUTURE[m[2]] || COUTURE.ivory, knit = "";
     for (var k = 34; k <= 106; k += 8) knit += "M" + k + " 84V" + (k < 70 ? 40 + (70 - k) * 0.55 : 40 + (k - 70) * 0.55);
@@ -1286,7 +1334,10 @@
     return '<g transform="translate(5.6 -15) scale(.92 1.02)"><clipPath id="mp-cc-' + m[2] + '"><path d="M26 86C24 52 40 26 70 24s48 28 44 62Z"/></clipPath>' +
       '<path d="M26 86C24 52 40 26 70 24s48 28 44 62Z" fill="' + c[0] + '"/>' +
       '<path d="' + knit + '" stroke="' + c[2] + '" stroke-width="2.2" stroke-linecap="round" clip-path="url(#mp-cc-' + m[2] + ')"/>' +
-      '<g fill="none" stroke="' + c[1] + '" stroke-width="7"><path d="M52.8 48.3A12 12 0 1 1 52.8 63.7"/><path d="M87.2 48.3A12 12 0 1 0 87.2 63.7"/></g>' +
+      /* interlocking back-to-back CC: right C, then left C over it at the top, then the right C over it at the bottom */
+      '<clipPath id="mp-cx-' + m[2] + '"><rect x="62" y="57" width="16" height="16"/></clipPath>' +
+      '<g fill="' + c[1] + '" stroke="' + c[0] + '" stroke-width="1.3" paint-order="stroke"><path d="' + ccRing(78.5, 57, 13.5, 8.2, 44, 316) + '"/><path d="' + ccRing(61.5, 57, 13.5, 8.2, 224, 496) + '"/>' +
+      '<path d="' + ccRing(78.5, 57, 13.5, 8.2, 44, 316) + '" clip-path="url(#mp-cx-' + m[2] + ')"/></g>' +
       '<rect x="22" y="74" width="96" height="20" rx="4" fill="' + c[0] + '"/><path d="' + rib + '" stroke="' + c[2] + '" stroke-width="2" stroke-linecap="round"/>' +
       '<rect x="22" y="74" width="96" height="3.6" fill="' + c[1] + '"/><rect x="22" y="91" width="96" height="3" rx="1.5" fill="' + c[1] + '"/></g>';
   }
