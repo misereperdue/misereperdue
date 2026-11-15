@@ -12022,6 +12022,7 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .mp-pb-ib .chat-badge-mask{width:28px!important;height:14px!important}
 .mp-profile-bar .mp-pb-ib img,.mp-profile-bar .mp-pb-ib svg{width:100%;height:100%;display:block;object-fit:contain}
 .mp-badge-picker[data-mode="grant"] .mp-badge-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mp-badge-picker[data-mode="grant"] .mp-badge-grid[data-n="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}
 .mp-badge-picker[data-mode="grant"] .mp-badge-choice{padding-inline:3px}
 .mp-badge-picker[data-mode="grant"] .mp-badge-label{font-size:9.5px;letter-spacing:-.01em;min-height:22px;display:grid;place-items:center}
 .mp-profile-bar .mp-settings-content .chat-bio{margin:0;height:72px;min-height:64px}
