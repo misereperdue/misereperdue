@@ -8,6 +8,7 @@ var MPBeanie3D = (function () {
   "use strict";
   var PROFILE = [[0.4333,0.0],[0.7381,0.0149],[0.8988,0.0298],[0.9559,0.0447],[0.9752,0.0596],[0.9845,0.0745],[0.9901,0.0894],[0.9975,0.1043],[1.0,0.1192],[1.0,0.1341],[1.0,0.149],[1.0,0.1639],[1.0,0.1788],[1.0,0.1937],[1.0,0.2086],[1.0,0.2235],[1.0,0.2384],[1.0,0.2533],[1.0,0.2682],[1.0,0.2831],[1.0,0.298],[1.0,0.3128],[1.0,0.3277],[0.9994,0.3426],[0.9994,0.3575],[0.9994,0.3724],[1.0,0.3873],[1.0,0.4022],[1.0,0.4171],[1.0,0.432],[1.0,0.4469],[1.0,0.4618],[1.0,0.4767],[1.0,0.4916],[1.0,0.5065],[1.0,0.5214],[1.0,0.5363],[1.0,0.5512],[1.0,0.5661],[1.0,0.581],[1.0,0.5959],[1.0,0.6108],[1.0,0.6257],[1.0,0.6406],[1.0,0.6555],[0.9994,0.6704],[0.9957,0.6853],[0.9882,0.7002],[0.9739,0.7151],[0.9336,0.73],[0.9292,0.7449],[0.9286,0.7598],[0.9299,0.7747],[0.9292,0.7896],[0.9286,0.8045],[0.9286,0.8194],[0.9274,0.8343],[0.9261,0.8492],[0.9249,0.8641],[0.9224,0.879],[0.9205,0.8939],[0.9181,0.9088],[0.9174,0.9236],[0.9137,0.9385],[0.9112,0.9534],[0.9069,0.9683],[0.905,0.9832],[0.9032,0.9981],[0.9001,1.013],[0.897,1.0279],[0.892,1.0428],[0.8883,1.0577],[0.8839,1.0726],[0.8821,1.0875],[0.8796,1.1024],[0.8752,1.1173],[0.8715,1.1322],[0.8672,1.1471],[0.861,1.162],[0.8585,1.1769],[0.8516,1.1918],[0.8485,1.2067],[0.843,1.2216],[0.8386,1.2365],[0.8336,1.2514],[0.8281,1.2663],[0.8225,1.2812],[0.8156,1.2961],[0.8094,1.311],[0.8032,1.3259],[0.797,1.3408],[0.7896,1.3557],[0.7821,1.3706],[0.7753,1.3855],[0.7666,1.4004],[0.7585,1.4153],[0.7505,1.4302],[0.7424,1.4451],[0.7325,1.46],[0.7244,1.4749],[0.7151,1.4898],[0.7058,1.5047],[0.6946,1.5196],[0.6847,1.5345],[0.6729,1.5493],[0.6617,1.5642],[0.6493,1.5791],[0.6387,1.594],[0.6257,1.6089],[0.6127,1.6238],[0.599,1.6387],[0.5835,1.6536],[0.568,1.6685],[0.5537,1.6834],[0.5363,1.6983],[0.5189,1.7132],[0.4997,1.7281],[0.4817,1.743],[0.4575,1.7579],[0.4358,1.7728],[0.4097,1.7877],[0.383,1.8026],[0.3526,1.8175],[0.3215,1.8324],[0.2843,1.8473],[0.2452,1.8622],[0.1912,1.8771],[0.1266,1.892],[0.0,1.897]];
   var TEX = "/img/enraged-beanie-tex.jpg?v=1";
+  var TEX_IN = "/img/enraged-beanie-inner.jpg?v=1";
   return {
     mount: function (el) {
       var dead = false, raf = 0, renderer = null, ro = null;
@@ -71,27 +72,13 @@ var MPBeanie3D = (function () {
         var cols = new Float32Array(innerGeo.attributes.position.count * 3), ip = innerGeo.attributes.position;
         for (var k = 0; k < ip.count; k++) { var d = Math.min(1, ip.getY(k) / top), s1 = 1 - 0.62 * Math.pow(d, 0.8); cols[k * 3] = cols[k * 3 + 1] = cols[k * 3 + 2] = s1; }
         innerGeo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
-        // purl-side knit for the inside: the same checker layout reversed (ridges where the outside has ribs)
-        function innerKnit() {
-          var cv = document.createElement("canvas"); cv.width = 1024; cv.height = 512;
-          var x = cv.getContext("2d"), cw = 1024 / 16, rh = 512 / 7;
-          x.fillStyle = "#77777d"; x.fillRect(0, 0, 1024, 512);
-          for (var cx0 = 0; cx0 < 16; cx0++) for (var ry = 0; ry < 7; ry++) {
-            var X = cx0 * cw, Y = ry * rh, ridge = (cx0 + ry) % 2 === 0;
-            x.fillStyle = ridge ? "#727278" : "#7c7c82"; x.fillRect(X, Y, cw, rh);
-            x.strokeStyle = "rgba(40,40,46,.55)"; x.lineWidth = 1.6;
-            if (ridge) { for (var yy = Y + 3; yy < Y + rh; yy += 5) { x.beginPath(); for (var xx = X; xx < X + cw; xx += 6) { x.moveTo(xx, yy); x.quadraticCurveTo(xx + 3, yy + 2.6, xx + 6, yy); } x.stroke(); } }
-            else { for (var xx2 = X + 3; xx2 < X + cw; xx2 += 6) { x.beginPath(); for (var yy2 = Y; yy2 < Y + rh; yy2 += 5) { x.moveTo(xx2, yy2); x.lineTo(xx2 + 1.6, yy2 + 2.5); x.lineTo(xx2, yy2 + 5); } x.stroke(); } }
-          }
-          var img = x.getImageData(0, 0, 1024, 512), dd = img.data;
-          for (var q = 0; q < dd.length; q += 4) { var nz = (Math.random() - 0.5) * 14; dd[q] += nz; dd[q + 1] += nz; dd[q + 2] += nz; }
-          x.putImageData(img, 0, 0);
-          var tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = THREE.RepeatWrapping; tx.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          return tx;
-        }
-        var ik = innerKnit(), ikBump = ik.clone(); ikBump.colorSpace = THREE.NoColorSpace; ikBump.needsUpdate = true;
-        var innerMat = new THREE.MeshStandardMaterial({ map: ik, bumpMap: ikBump, bumpScale: 1.4, roughness: 1, metalness: 0, vertexColors: true, envMapIntensity: 0.45, side: THREE.BackSide });
-        var rimMat = new THREE.MeshStandardMaterial({ map: ik, roughness: 1, metalness: 0, color: 0x9a9aa0, envMapIntensity: 0.5, side: THREE.DoubleSide });
+        // inside: purl side of the knit, generated from the outside texture so every square sits
+        // exactly behind its outside square (tools/beanie/make-inner-texture.py); same UV layout
+        var ik = new THREE.TextureLoader().load(TEX_IN);
+        ik.colorSpace = THREE.SRGBColorSpace; ik.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        var ikBump = new THREE.TextureLoader().load(TEX_IN); ikBump.colorSpace = THREE.NoColorSpace;
+        var innerMat = new THREE.MeshStandardMaterial({ map: ik, bumpMap: ikBump, bumpScale: 1.2, roughness: 1, metalness: 0, vertexColors: true, envMapIntensity: 0.45, side: THREE.BackSide });
+        var rimMat = new THREE.MeshStandardMaterial({ map: ik, roughness: 1, metalness: 0, color: 0xb0b0b6, envMapIntensity: 0.5, side: THREE.DoubleSide });
         // the model turns around its middle (so tilting to look underneath doesn't swing it off screen)
         var group = new THREE.Group(), body = new THREE.Group();
         body.position.y = -0.92;
