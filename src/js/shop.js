@@ -1611,6 +1611,15 @@ var MPShop = (function () {
       drag.addEventListener("pointerup", onDragEnd, { passive: true });
       drag.addEventListener("pointercancel", onDragEnd, { passive: true });
     }
+    function swallowTouch(e) {
+      e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
+    }
+    w.addEventListener("touchmove", swallowTouch, { passive: false, capture: true });
+    if (drag) {
+      drag.addEventListener("touchstart", swallowTouch, { passive: false });
+      drag.addEventListener("touchmove", swallowTouch, { passive: false });
+    }
   }
   window.MPWhopSheet = openWhopSheet;
   function vipCheckout(i, b, provider) {
