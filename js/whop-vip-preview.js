@@ -7,7 +7,9 @@
   const cancelTest = document.getElementById('cancel-test');
   if (!button || !status || !mount) return;
   const productionHost = ['misereperdue.com', 'www.misereperdue.com'].includes(location.hostname);
-  const live = productionHost && new URLSearchParams(location.search).get('checkout') === '1';
+  // misereperdue.com is always live (the sandbox API only accepts preview origins, so sandbox there could never work;
+  // links that lost ?checkout=1 used to land on a dead sandbox page). Previews/localhost stay sandbox.
+  const live = productionHost;
   const api = live ? 'https://api.misereperdue.com' : 'https://whop-staging.misereperdue.com';
   const returnUrl = location.origin + '/whop-vip-preview' + (live ? '?checkout=1' : '');
   const tag = document.querySelector('.tag');
