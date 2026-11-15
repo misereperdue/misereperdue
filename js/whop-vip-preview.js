@@ -19,6 +19,33 @@
   function notify(kind, extra) { if (sheet) try { window.parent.postMessage(Object.assign({mpWhop:kind}, extra || {}), location.origin); } catch (_) {} }
   // The sheet sizes itself to this page (up to its max height).
   if (sheet && window.ResizeObserver) new ResizeObserver(function () { notify('height', {h: Math.ceil(document.querySelector('.wrap').getBoundingClientRect().height)}); }).observe(document.querySelector('.wrap'));
+  if (sheet) {
+    var scrim = document.createElement('div');
+    scrim.className = 'mp-overlay-scrim';
+    scrim.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(scrim);
+    var overlayOn = false;
+    function syncOverlay() {
+      var open = !!document.querySelector('dialog[data-element-overlay][open]');
+      if (open === overlayOn) return;
+      overlayOn = open;
+      scrim.classList.toggle('is-on', open);
+      notify('overlay', {open: open});
+    }
+    new MutationObserver(function () {
+      document.querySelectorAll('dialog[data-element-overlay]').forEach(function (d) {
+        if (d.__mpBound) return;
+        d.__mpBound = true;
+        d.addEventListener('close', syncOverlay);
+        d.addEventListener('cancel', syncOverlay);
+      });
+      syncOverlay();
+    }).observe(document.documentElement, {subtree: true, childList: true, attributes: true, attributeFilter: ['open']});
+    window.addEventListener('message', function (e) {
+      if (e.origin !== location.origin || !e.data || e.data.mpWhop !== 'peek') return;
+      document.documentElement.classList.toggle('mp-peek', !!e.data.on);
+    });
+  }
   const skel = document.getElementById('skel');
   const receipt = document.getElementById('receipt');
   function dark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }

@@ -59,36 +59,32 @@
     .mp-sheet .wrap { padding:4px 20px 24px; }
     .mp-sheet .brand, .mp-sheet .fine.page { display:none; }
     .mp-sheet .rc-head { padding-right:40px; }
-    /* Promo / order-details overlay lives on this page as dialog[data-element-overlay].
-       Whop's default ::backdrop is a muddy black + brightness fade (on iPhone, flat 62% black). */
+    /* Neutralize Whop's dialog ::backdrop (it dims our header but often not the nested
+       checkout iframe). We paint one .mp-overlay-scrim over the whole preview instead. */
     html.mp-sheet dialog[data-element-overlay]::backdrop {
-      background: color-mix(in srgb, var(--bg) 45%, #000) !important;
+      background: transparent !important;
       -webkit-backdrop-filter: none !important;
       backdrop-filter: none !important;
       animation: none !important;
     }
-    html.mp-sheet[data-theme="light"] dialog[data-element-overlay]::backdrop {
-      background: rgba(16, 18, 24, .32) !important;
-    }
-    html.mp-sheet[data-theme="dark"] dialog[data-element-overlay]::backdrop {
-      background: rgba(4, 8, 22, .58) !important;
-    }
     html.mp-sheet dialog[data-element-overlay][data-element-lowered] {
-      background: color-mix(in srgb, var(--bg) 45%, #000) !important;
-      box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 45%, #000) !important;
+      background: transparent !important;
+      box-shadow: none !important;
     }
-    html.mp-sheet[data-theme="light"] dialog[data-element-overlay][data-element-lowered] {
-      background: rgba(16, 18, 24, .32) !important;
-      box-shadow: 0 0 0 100vmax rgba(16, 18, 24, .32) !important;
+    .mp-overlay-scrim {
+      position: fixed; inset: 0; z-index: 20; pointer-events: none;
+      background: rgba(4, 8, 20, .55);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      opacity: 0; transition: opacity .2s ease;
     }
-    html.mp-sheet[data-theme="dark"] dialog[data-element-overlay][data-element-lowered] {
-      background: rgba(4, 8, 22, .58) !important;
-      box-shadow: 0 0 0 100vmax rgba(4, 8, 22, .58) !important;
-    }
+    html[data-theme="light"] .mp-overlay-scrim { background: rgba(16, 18, 24, .4); }
+    .mp-overlay-scrim.is-on { opacity: 1; }
+    html.mp-sheet.mp-peek .rc-note { display: none; }
     @media (prefers-reduced-motion:reduce) { .skel i::after,.done circle,.done path { animation:none;stroke-dashoffset:0; } }
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
-  <script src="/js/whop-vip-preview.js?v=15" defer></script>
+  <script src="/js/whop-vip-preview.js?v=16" defer></script>
 </head>
 <body>
   <main class="wrap">
