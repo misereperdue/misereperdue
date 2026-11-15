@@ -1,3 +1,6 @@
+// /shop, /globe and /chat open the app on that tab (per dc): the server sends the app there, and the
+// address becomes /#shop etc. before anything else runs, so the app's hash router takes over.
+try { var mpTab = /^\/(shop|globe|chat)\/?$/.exec(location.pathname); if (mpTab) history.replaceState(null, "", "/" + location.search + (location.hash && location.hash.length > 1 ? location.hash : "#" + mpTab[1])); } catch (e) {}
 // Home screen app flag (iOS also reports navigator.standalone): lets CSS hide scrollbars there.
 try { if ((window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone) document.documentElement.classList.add("mp-app"); } catch (e) {}
 
