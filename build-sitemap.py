@@ -210,10 +210,6 @@ STATIC_HEAD = """<!DOCTYPE html>
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Misère Perdue closed eyes">
-<meta property="og:image" content="https://misereperdue.com/img/og/default-square.jpg?v=1">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="Misère Perdue closed eyes">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
@@ -503,7 +499,7 @@ def main():
         og_image = images[0][0]
         og_tags = "".join(f'<meta property="og:image" content="{html.escape(u)}">\n'
                           + (f'<meta property="og:image:width" content="{w}">\n<meta property="og:image:height" content="{h}">\n' if w else "")
-                          + f'<meta property="og:image:alt" content="{html.escape(og_alt)}">\n' for u, w, h in images).rstrip("\n")
+                          + f'<meta property="og:image:alt" content="{html.escape(og_alt)}">\n' for u, w, h in images[:1]).rstrip("\n")  # wide only (iMessage collages every og:image)
         thread_images[tid] = [u for u, _, _ in images]
         jsonld = jsonld.replace('"__IMAGES__"', json.dumps(thread_images[tid]))
         page = PAGE.format(og_image=html.escape(og_image), og_tags=og_tags,
