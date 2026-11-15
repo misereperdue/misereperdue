@@ -46,8 +46,10 @@
     var followers=button('',function(){showList(username,'followers',root);},'mp-social-hit is-followers'),following=button('',function(){showList(username,'following',root);},'mp-social-hit is-following');
     function fmt(v){return v===undefined?'\u2014':new Intl.NumberFormat(undefined,{notation:'compact',maximumFractionDigits:1}).format(v);}
     var counts={};
-    function paintArc(){var w=avatar.offsetWidth||88,pad=30,box=w+pad*2,R=50*(w/2+17)/(box/2);arc.style.width=arc.style.height=box+'px';arc.style.left=arc.style.top=(-pad)+'px';
-      arc.innerHTML='<defs><path id="'+pid+'" d="M'+(50-R)+' 50A'+R+' '+R+' 0 0 0 '+(50+R)+' 50"/></defs><text><textPath href="#'+pid+'" startOffset="50%" text-anchor="middle"><tspan class="n">'+fmt(counts.followers)+'</tspan> FOLLOWERS<tspan class="dot"> \u00b7 </tspan><tspan class="n">'+fmt(counts.following)+'</tspan> FOLLOWING</textPath></text>';}
+    /* sized in real pixels: a gentle curve (radius ~1.5x the avatar) whose lowest point sits ~14px under the avatar,
+       so the line reads as a slightly curved ribbon under the photo instead of wrapping up its sides (per dc) */
+    function paintArc(){var w=avatar.offsetWidth||88,pad=40,box=w+pad*2,c=box/2,low=c+w/2+15,Rb=w*1.5,cy=low-Rb;arc.style.width=arc.style.height=box+'px';arc.style.left=arc.style.top=(-pad)+'px';arc.setAttribute('viewBox','0 0 '+box+' '+box);
+      arc.innerHTML='<defs><path id="'+pid+'" d="M'+(c-Rb)+' '+cy+'A'+Rb+' '+Rb+' 0 0 0 '+(c+Rb)+' '+cy+'"/></defs><text><textPath href="#'+pid+'" startOffset="50%" text-anchor="middle"><tspan class="n">'+fmt(counts.followers)+'</tspan> FOLLOWERS<tspan class="dot"> \u00b7 </tspan><tspan class="n">'+fmt(counts.following)+'</tspan> FOLLOWING</textPath></text>';}
     function bubble(b,name,value){counts[name.toLowerCase()]=value;b.setAttribute('aria-label',name+', '+(value===undefined?'loading':value));paintArc();}
     orbit.append(arc,followers,following);bubble(followers,'Followers');bubble(following,'Following');requestAnimationFrame(paintArc);var follow=null;
     if(!own&&me()){follow=button('Follow',function(){if(follow.disabled)return;follow.disabled=true;api('/api/social/follow',{method:'POST',body:{username:username,follow:follow.dataset.following!=='true'}}).then(function(r){paintCounts(r);document.dispatchEvent(new CustomEvent('mp-social-updated'));}).catch(function(e){status.textContent=e.message;}).finally(function(){follow.disabled=false;});},'mp-social-follow');follow.disabled=true;options.tools.prepend(follow);}
