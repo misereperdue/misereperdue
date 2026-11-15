@@ -12881,4 +12881,9 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .nav #cart-btn,.nav #post-btn.bag-mode{--cart-nudge:-2px}
 .nav #cart-btn svg,.nav #post-btn.bag-mode svg{transform:translateX(var(--cart-nudge))}
 /* the count rides with the glyph (per dc): same nudge, centred in the basket for any number of digits */
-.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{left:calc(50% + 1.75px + var(--cart-nudge))}
+/* centred in the basket's inside (per dc), measured from the glyph: inner box x 6.4-21.1, y 6.9-16.1 of 24
+   -> +1.68px, -0.48px from the 23px glyph's centre; -0.65px for the digits' right side bearing. The text box
+   is trimmed to the digits' cap height so they centre the same in any font; older browsers get a measured
+   fallback. */
+.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{left:calc(50% + 1.03px + var(--cart-nudge));top:calc(50% + .64px);line-height:1}
+@supports (text-box:trim-both cap alphabetic){.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{top:calc(50% - .48px);text-box:trim-both cap alphabetic}}
