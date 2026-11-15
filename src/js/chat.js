@@ -2706,7 +2706,7 @@
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Poll</span></button>'
                 : '<button type="button" role="menuitem" class="chat-pmenu-row is-locked" data-act="poll-locked" aria-disabled="true"><svg ' + ico + '><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Poll</span><em>VIP</em></button>'
               : '') +
-            '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" aria-label="Misery FM"><span class="chat-misery-fm-logo" role="img" aria-label="Misery FM"></span><em' + (window.MPFM && MPFM.isLive() ? ' class="chat-fm-pill">LIVE' : ">") + "</em></button>";
+            '<div class="chat-pmenu-sep" role="separator"></div><button type="button" role="menuitem" class="chat-pmenu-row chat-misery-fm" aria-label="misery fm"><span class="chat-misery-fm-logo" role="img" aria-label="misery fm"></span><em' + (window.MPFM && MPFM.isLive() ? ' class="chat-fm-pill">LIVE' : ">") + "</em></button>";
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
           m.querySelector('[data-act="music"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "music", close); });
@@ -4011,7 +4011,7 @@
 
   /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
   var mpGpCache = null, mpGpAt = 0;
-  /* dc: the chat must not scroll behind the + menu or any of its panels (Music, Misery FM, Polls,
+  /* dc: the chat must not scroll behind the + menu or any of its panels (Music, misery fm, Polls,
      Globe). iOS PWA safe: no overflow/position tricks on the page (they jump on iOS); instead touch,
      wheel and key scrolling outside the panel is cancelled, scroll chaining out of the panel's own
      scrollers is stopped at their edges, any stray page scroll is pinned back, and the position is
@@ -4095,8 +4095,8 @@
       close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200);
     };
     m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
-    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "Misery FM" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
-    // Misery FM renders its own body and the same header (Back, logo, Close) into the morphed menu
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "misery fm" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
+    // misery fm renders its own body and the same header (Back, logo, Close) into the morphed menu
     if (kind === "fm") { m.innerHTML = ""; MPFM.mount(m, { back: back, close: close }); }
     else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     if (kind !== "fm") {
@@ -5043,7 +5043,7 @@
   }
 
   /* Song previews (per dc): a play button on the cover of song cards in chat and the profile
-     "Listening" card plays Apple's 30-second preview. One preview at a time; Misery FM pauses
+     "Listening" card plays Apple's 30-second preview. One preview at a time; misery fm pauses
      while it plays and picks back up after. Tap only, never auto-play. */
   var MPPreview = (function () {
     var memo = Object.create(null), audio = null, cur = null, raf = 0, fmWas = false, fadeT = 0;
@@ -5165,7 +5165,7 @@
       keepFm || fmResume();
     }
     /* iOS Control Center / lock screen (per dc): show the song and artist, not the page title and site icon.
-       On stop the session goes back to Misery FM (MPFM.mediaReset) so its own controls work again. */
+       On stop the session goes back to misery fm (MPFM.mediaReset) so its own controls work again. */
     function msOn(btn) {
       var M = navigator.mediaSession, s = btn._song || {};
       if (!M) return;
@@ -5177,7 +5177,7 @@
         M.setActionHandler("pause", function () { stop(); });
       } catch (e) {}
     }
-    /* After a preview: hand the session back to Misery FM only if it was playing; otherwise clear it
+    /* After a preview: hand the session back to misery fm only if it was playing; otherwise clear it
        (no metadata, no handlers) so the lock-screen / Control Center player disappears (per dc). */
     function msOff(toFm) {
       var M = navigator.mediaSession;
@@ -8550,7 +8550,7 @@
     else if (k === "gift") t = who + " gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars");
     else if (k === "power") t = "You got " + (name || "a power");
     else if (k === "purchase") t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours";
-    else if (k === "fm" || k === "live" || n.kind === "fm-live") t = "Misery FM is live";
+    else if (k === "fm" || k === "live" || n.kind === "fm-live") t = "misery fm is live";
     else if (k === "badge") t = name ? "You got the " + name + " badge" : "You got a new badge";
     else t = n.text || n.preview || "New notification";
     /* Pills: every gift is "Gift"; everything from the Globe/forum is "Globe". Body text stays. */
