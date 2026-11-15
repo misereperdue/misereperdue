@@ -1417,7 +1417,7 @@
     var old = host.querySelector(":scope > .mp-charms");
     old && old.remove();
     /* only gem charms by the name; badges stay on the avatar (per dc) */
-    list = (list || []).filter(function (c) { return !!GEM[c]; });
+    list = (list || []).filter(function (c) { return !!GEM[c]; }).slice(0, 1); /* one charm at a time (per dc) */
     if (!list || !list.length) return;
     var w = document.createElement("span");
     w.className = "mp-charms";
@@ -1456,7 +1456,10 @@
     out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
     var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
     u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
-    ["diamond", "emerald", "ruby"].forEach(function (g) { out[g] && ch.push(g); });
+    /* one gem charm at a time (per dc), the same rule as the Worker's powerStyle */
+    var gem = ["diamond", "emerald", "ruby"].filter(function (g) { return out[g]; })[0];
+    ["diamond", "emerald", "ruby"].forEach(function (g) { g !== gem && delete out[g]; });
+    gem && ch.push(gem);
     ch.length && (out.charms = ch);
     return out;
   }
@@ -8105,7 +8108,7 @@
       body.innerHTML = dp ? page(dp) :
         (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
         (minePow.length ? '<div class="pow-h">Your powers</div><div class="pw-list">' + minePow.map(row).join("") + "</div>" : "") +
-        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charms to show your charms.</p>" : "") + '<div class="pw-list' + (st.on.indexOf("charm") < 0 ? " is-charm-off" : "") + '">' + mineCh.map(row).join("") + "</div>" : "") +
+        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charms to show your charms.</p>" : "") + (mineCh.length > 1 ? "<p class='pow-note'>One charm shows by your name at a time. Switching one on swaps it in.</p>" : "") + '<div class="pw-list' + (st.on.indexOf("charm") < 0 ? " is-charm-off" : "") + '">' + mineCh.map(row).join("") + "</div>" : "") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
         (rest.length ? '<div class="pow-h">Get more</div><div class="pw-shop">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
       if (dp && msg) status(msg);
