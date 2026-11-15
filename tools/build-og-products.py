@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
-"""Product-only share cards (1200x630) for /p/<handle> og:image / twitter:image, per dc:
+"""Product-only share cards (1200x630) for every store product for /p/<handle> og:image / twitter:image, per dc:
 just the product photo, centered on its own navy, no text. Source = Shopify product photo
 (navy background). Run: python3 tools/build-og-products.py  -> img/og/<handle>-p.jpg"""
 import io, os, urllib.request
 from PIL import Image, ImageChops
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H = 1200, 630
-SRC = {
-    "misery-v_v-sleeping-mask": "https://cdn.shopify.com/s/files/1/0735/1589/2838/files/IMG_1654.png?v=1792639540",
-    "membership": "https://cdn.shopify.com/s/files/1/0735/1589/2838/files/IMG-1597.png?v=1792287493",
-}
+# Every product in the store gets its card (per dc: product pages show their product image), from its
+# Shopify featured image. Runs in the seo-refresh workflow, so new products get a card automatically.
+import importlib.util
+_spec = importlib.util.spec_from_file_location("bp", os.path.join(ROOT, "tools", "build-products.py"))
+_bp = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_bp)
+# same files through the store's own domain (works where cdn.shopify.com is blocked)
+SRC = {p["handle"]: p["featuredImage"]["url"].replace("https://cdn.shopify.com/s/files/1/0735/1589/2838/", "https://shop.misereperdue.com/cdn/shop/")
+       for p in _bp.fetch() if p.get("featuredImage")}
 MAX_W, MAX_H = 760, 400       # product box: wide margins so X / iMessage crops never cut it
 for handle, url in SRC.items():
-    im = Image.open(io.BytesIO(urllib.request.urlopen(url, timeout=30).read())).convert("RGB")
+    im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "misery-build-og"}), timeout=30).read())).convert("RGB")
     bgc = im.getpixel((3, 3))
     diff = ImageChops.difference(im, Image.new("RGB", im.size, bgc)).convert("L").point(lambda v: 255 if v > 14 else 0)
     x0, y0, x1, y1 = diff.getbbox()
@@ -32,5 +36,8 @@ for handle, url in SRC.items():
     py = (0 if bleeds_top else (H - round((y1 - y0) * s)) // 2 - round((y0 - box[1]) * s))
     out.paste(crop, (px, py))
     p = os.path.join(ROOT, "img", "og", f"{handle}-p.jpg")
-    out.save(p, quality=90, optimize=True, progressive=True)
+    buf = io.BytesIO(); out.save(buf, "JPEG", quality=90, optimize=True, progressive=True)
+    if os.path.exists(p) and open(p, "rb").read() == buf.getvalue():
+        continue
+    open(p, "wb").write(buf.getvalue())
     print("wrote", os.path.relpath(p, ROOT), out.size, "bg", "#%02x%02x%02x" % bgc)

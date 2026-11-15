@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Product share cards (product photo on its own background)
+        run: pip install --quiet Pillow && python3 tools/build-og-products.py
       - name: Rebuild shop, product, Globe and thread pages + sitemap
         run: python3 tools/build-products.py
       - name: Site checks before committing
@@ -34,7 +36,7 @@ jobs:
           node tools/check.mjs
       - name: Commit and push if anything changed
         run: |
-          git add -A p t shop.html globe.html sitemap.xml
+          git add -A p t img/og shop.html globe.html sitemap.xml
           if git diff --cached --quiet; then echo "No changes."; exit 0; fi
           git -c user.name="seo-refresh[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -m "SEO pages: refresh from the store and Globe"
