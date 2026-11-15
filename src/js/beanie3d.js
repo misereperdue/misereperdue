@@ -11,7 +11,13 @@ var MPBeanie3D = (function () {
   var TEX_IN = "/img/enraged-beanie-inner.jpg?v=1";
   return {
     mount: function (el) {
-      var dead = false, raf = 0, renderer = null, ro = null;
+      var dead = false, raf = 0, renderer = null, ro = null, loop = null;
+      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function kickLoop() {
+        if (!dead && !raf && loop && !sheetOpen() && !document.hidden) raf = requestAnimationFrame(loop);
+      }
+      window.addEventListener("mp-whop-open", kickLoop);
+      document.addEventListener("visibilitychange", kickLoop);
       function fallback() {
         if (dead) return;
         var light = document.documentElement.getAttribute("data-theme") === "light";
@@ -132,9 +138,11 @@ var MPBeanie3D = (function () {
         c.addEventListener("pointerup", up);
         c.addEventListener("pointercancel", up);
         var clock = new THREE.Clock(), reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-        (function loop() {
+        (function tick() {
           if (dead) return;
-          raf = requestAnimationFrame(loop);
+          loop = tick;
+          if (sheetOpen() || document.hidden) { raf = 0; return; }
+          raf = requestAnimationFrame(tick);
           var t = clock.getElapsedTime();
           if (!dragging) {
             yaw += vy; vy *= 0.955;
@@ -149,6 +157,8 @@ var MPBeanie3D = (function () {
       }).catch(fallback);
       return function () {
         dead = true;
+        window.removeEventListener("mp-whop-open", kickLoop);
+        document.removeEventListener("visibilitychange", kickLoop);
         cancelAnimationFrame(raf);
         ro && ro.disconnect();
         if (renderer) { renderer.dispose(); renderer.domElement.remove(); }

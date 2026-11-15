@@ -1191,7 +1191,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=8", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=9", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -1209,7 +1209,7 @@ var MPShop = (function () {
       if (a(i)) {
         var x = p.querySelector(".vip-3d-stage"),
           L = p.querySelector(".vip-3d-hint");
-        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=4", x)), L)) {
+        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=5", x)), L)) {
           var T = 0,
             z = function () {
               (T && clearTimeout(T),
@@ -1228,7 +1228,7 @@ var MPShop = (function () {
         /* Enraged Beanie 3D (per dc) */
         var bx = p.querySelector(".beanie-3d .vip-3d-stage"),
           bh = p.querySelector(".beanie-3d .vip-3d-hint");
-        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=3", bx)), bh)) {
+        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=4", bx)), bh)) {
           var bT = 0,
             bz = function () { bT && clearTimeout(bT); bT = setTimeout(function () { bh.classList.remove("gone"); }, 800); };
           bx.addEventListener("pointerdown", function () { bT && (clearTimeout(bT), (bT = 0)); bh.classList.add("gone"); });
@@ -1239,7 +1239,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=13", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=14", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),
@@ -1375,21 +1375,46 @@ var MPShop = (function () {
         }
         var b = btn("Purchase VIP");
         b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
-        if (v.checkoutProvider === "whop") warmWhop("", "VIP checkout");
+        if (v.checkoutProvider === "whop") scheduleWarm("", "VIP checkout");
       });
   }
-  /* Warm the checkout iframe while the Stars/VIP product is on screen so Purchase can open instantly. */
+  /* Warm the checkout iframe after the product page is idle so it does not contend with the 3D viewer. */
   var whopWarm = { query: "", frame: null, at: 0 };
+  var warmWait = { timer: 0, idle: 0, onScroll: null };
+  function clearWarmWait() {
+    if (warmWait.timer) clearTimeout(warmWait.timer);
+    if (warmWait.idle && typeof cancelIdleCallback === "function") try { cancelIdleCallback(warmWait.idle); } catch (_) {}
+    if (warmWait.onScroll) window.removeEventListener("scroll", warmWait.onScroll);
+    warmWait = { timer: 0, idle: 0, onScroll: null };
+  }
   function dropWhopWarm() {
     if (whopWarm.frame && !whopWarm.frame.closest(".mp-whop-sheet")) {
       try { whopWarm.frame.remove(); } catch (_) {}
     }
     whopWarm = { query: "", frame: null, at: 0 };
   }
-  var warmTimer = 0;
   function scheduleWarm(query, label) {
-    clearTimeout(warmTimer);
-    warmTimer = setTimeout(function () { warmWhop(query, label); }, 350);
+    clearWarmWait();
+    function go() {
+      clearWarmWait();
+      warmWhop(query, label);
+    }
+    function idle() {
+      if (typeof requestIdleCallback === "function")
+        warmWait.idle = requestIdleCallback(function () { go(); }, { timeout: 2000 });
+      else warmWait.timer = setTimeout(go, 400);
+    }
+    warmWait.onScroll = function () {
+      if (warmWait.timer) clearTimeout(warmWait.timer);
+      warmWait.timer = setTimeout(idle, 160);
+    };
+    window.addEventListener("scroll", warmWait.onScroll, { passive: true });
+    /* If they never scroll, warm after a beat so Purchase can still open quickly. */
+    warmWait.timer = setTimeout(idle, 1000);
+  }
+  function setWhopOpen(on) {
+    document.documentElement.classList.toggle("mp-whop-open", !!on);
+    try { window.dispatchEvent(new Event("mp-whop-open")); } catch (_) {}
   }
   function warmWhop(query, label) {
     query = query || "";
@@ -1437,13 +1462,18 @@ var MPShop = (function () {
       frame.title = label || "VIP checkout";
       frame.setAttribute("allow", "payment *");
       frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
-      frame.src = "/whop-vip-preview?sheet=1" + (query || "");
       panel.appendChild(frame);
     }
     document.body.appendChild(w);
-    document.documentElement.classList.add("mp-whop-open");
+    setWhopOpen(true);
+    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
+    function reduceMotion() {
+      try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
+    }
+    var animMs = reduceMotion() ? 0 : CLOSE_MS;
+    w.classList.add("is-animating");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false;
+    setTimeout(function () { if (w.isConnected) w.classList.remove("is-animating"); }, animMs + 40);
     var bd = w.querySelector(".mp-whop-backdrop");
     function startCheckout() {
       if (startSent || closing) return;
@@ -1451,9 +1481,10 @@ var MPShop = (function () {
       try { frame && frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "start" }, location.origin); } catch (_) {}
     }
     if (adopted) startCheckout();
-    function reduceMotion() {
-      try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
-    }
+    else setTimeout(function () {
+      if (closing || !frame || frame.getAttribute("src")) return;
+      frame.src = "/whop-vip-preview?sheet=1" + (query || "");
+    }, animMs);
     function sheetH() { return panel.getBoundingClientRect().height || panel.offsetHeight || 440; }
     function peekH() { return Math.round(Math.min(220, Math.max(176, (fullH || sheetH()) * 0.32))); }
     function peekOff() { return Math.max(0, (fullH || sheetH()) - peekH()); }
@@ -1474,10 +1505,13 @@ var MPShop = (function () {
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
       /* Let CSS take over from a mid-swipe or peek position: clear inline drag styles after
          is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
+      w.classList.add("is-animating");
       w.classList.remove("is-open");
       w.classList.remove("is-peek");
       w.classList.remove("is-overlay");
-      document.documentElement.classList.remove("mp-whop-open");
+      setWhopOpen(false);
+      if (heightRaf) { cancelAnimationFrame(heightRaf); heightRaf = 0; }
+      if (dragRaf) { cancelAnimationFrame(dragRaf); dragRaf = 0; }
       panel.style.transition = "";
       if (bd) bd.style.transition = "";
       void panel.offsetWidth;
@@ -1486,14 +1520,26 @@ var MPShop = (function () {
       setTimeout(function () {
         if (!w.isConnected) return;
         w.remove();
-        if (mpTok()) warmWhop(query, label);
+        if (mpTok()) scheduleWarm(query, label);
       }, reduceMotion() ? 0 : CLOSE_MS + 40);
     }
     var dragStart = 0, dragAt = 0, dragBase = 0, dragging = false, didMove = false;
+    function applyDrag() {
+      dragRaf = 0;
+      if (!dragging) return;
+      var raw = dragBase + (dragY - dragStart);
+      if (Math.abs(dragY - dragStart) > 6) didMove = true;
+      if (raw < 0) raw = raw / 3;
+      else if (mode === "peek" && raw > dragBase) {
+        var extra = raw - dragBase;
+        raw = dragBase + (extra < 72 ? extra : 72 + (extra - 72) / 2);
+      }
+      panel.style.transform = "translateY(" + raw + "px)";
+    }
     function onDragStart(e) {
       if (closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
       dragging = true; didMove = false;
-      dragStart = e.clientY; dragAt = Date.now();
+      dragStart = e.clientY; dragY = e.clientY; dragAt = Date.now();
       if (!fullH) fullH = sheetH();
       dragBase = mode === "peek" ? peekOff() : 0;
       panel.style.transition = "none";
@@ -1502,21 +1548,17 @@ var MPShop = (function () {
     }
     function onDragMove(e) {
       if (!dragging) return;
-      var raw = dragBase + (e.clientY - dragStart);
-      if (Math.abs(e.clientY - dragStart) > 6) didMove = true;
-      if (raw < 0) raw = raw / 3;
-      else if (mode === "peek" && raw > dragBase) {
-        var extra = raw - dragBase;
-        raw = dragBase + (extra < 72 ? extra : 72 + (extra - 72) / 2);
-      }
-      panel.style.transform = "translateY(" + raw + "px)";
+      dragY = e.clientY;
+      if (!dragRaf) dragRaf = requestAnimationFrame(applyDrag);
     }
     function onDragEnd(e) {
       if (!dragging) return;
+      if (e && e.clientY != null) dragY = e.clientY;
+      if (dragRaf) { cancelAnimationFrame(dragRaf); applyDrag(); }
       dragging = false;
       panel.style.transition = "";
       if (bd) bd.style.transition = "";
-      var move = (e && e.clientY != null ? e.clientY : dragStart) - dragStart;
+      var move = dragY - dragStart;
       var vel = move / Math.max(1, Date.now() - dragAt);
       var off = peekOff();
       if (!didMove || (Math.abs(move) < 8 && Date.now() - dragAt < 350)) {
@@ -1541,9 +1583,14 @@ var MPShop = (function () {
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
         if (h > 80 && h < 4000 && mode !== "peek") {
-          panel.style.height = "calc(" + (h + 30) + "px + env(safe-area-inset-bottom, 0px))";
-          requestAnimationFrame(function () { fullH = sheetH(); });
-          w.classList.add("is-ready");
+          pendingH = h;
+          if (!heightRaf) heightRaf = requestAnimationFrame(function () {
+            heightRaf = 0;
+            if (closing || mode === "peek") return;
+            panel.style.height = "calc(" + (pendingH + 30) + "px + env(safe-area-inset-bottom, 0px))";
+            fullH = sheetH();
+            w.classList.add("is-ready");
+          });
         }
       }
     }
@@ -1554,9 +1601,9 @@ var MPShop = (function () {
     var drag = w.querySelector(".mp-whop-drag");
     if (drag) {
       drag.addEventListener("pointerdown", onDragStart);
-      drag.addEventListener("pointermove", onDragMove);
-      drag.addEventListener("pointerup", onDragEnd);
-      drag.addEventListener("pointercancel", onDragEnd);
+      drag.addEventListener("pointermove", onDragMove, { passive: true });
+      drag.addEventListener("pointerup", onDragEnd, { passive: true });
+      drag.addEventListener("pointercancel", onDragEnd, { passive: true });
     }
   }
   window.MPWhopSheet = openWhopSheet;

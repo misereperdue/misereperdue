@@ -38,7 +38,14 @@ var MPStars3D = (function () {
         ro = null,
         mo = null,
         stopIO = null,
-        renderer = null;
+        renderer = null,
+        loop = null;
+      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function kickLoop() {
+        if (!dead && !raf && loop && !sheetOpen() && !document.hidden) raf = requestAnimationFrame(loop);
+      }
+      window.addEventListener("mp-whop-open", kickLoop);
+      document.addEventListener("visibilitychange", kickLoop);
       function fallback() {
         if (!dead) el.innerHTML = '<img src="' + fallbackSrc(el) + '" alt="Stars">';
       }
@@ -383,6 +390,8 @@ var MPStars3D = (function () {
         var clock = new THREE.Clock();
         function frame() {
           if (dead) return;
+          loop = frame;
+          if (sheetOpen() || document.hidden) { raf = 0; return; }
           raf = still ? 0 : requestAnimationFrame(frame);
           var t = clock.getElapsedTime(),
             now = performance.now();
@@ -416,6 +425,8 @@ var MPStars3D = (function () {
 
       return function () {
         dead = true;
+        window.removeEventListener("mp-whop-open", kickLoop);
+        document.removeEventListener("visibilitychange", kickLoop);
         if (raf) cancelAnimationFrame(raf);
         if (ro) ro.disconnect();
         if (mo) mo.disconnect();
