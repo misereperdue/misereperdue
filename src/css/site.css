@@ -12822,3 +12822,15 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 @media(prefers-reduced-motion:reduce){
   .chat-gp-tabs>.seg,.chat-tabs>.chat-tabs-slider,.dash-tabs>.dash-tab-ind,.mp-menu-tab-ind{transition:none!important}
 }
+/* Followers / following curved along the bottom of the avatar ring (per dc, replaces the orbit bubbles) */
+.mp-profile-bar .mp-social-orbit{position:relative;isolation:auto;width:fit-content!important;height:auto!important;min-height:0!important;display:block;margin:0 auto 40px!important;padding:0}
+.mp-social-orbit:before{content:none!important}
+.mp-social-thought{display:none!important}
+.mp-social-arc{position:absolute;z-index:6;overflow:visible;pointer-events:none}
+.mp-social-arc text{font:650 6.4px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;letter-spacing:.09em;fill:var(--muted)}
+.mp-social-arc tspan.n{fill:var(--ink);font-weight:800;letter-spacing:.02em}
+.mp-social-arc tspan.dot{fill:var(--muted)}
+.mp-social-hit{position:absolute;bottom:-18px;width:56%;height:30px;padding:0;border:0;background:none;z-index:7;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mp-social-hit.is-followers{left:-12%}
+.mp-social-hit.is-following{right:-12%}
+.mp-social-hit:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:12px}
