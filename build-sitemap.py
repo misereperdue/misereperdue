@@ -96,15 +96,13 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="{page_title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://misereperdue.com/img/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="MISERY closed eyes logo">
+<meta property="og:image" content="{og_image}">
+{og_size}<meta property="og:image:alt" content="{og_alt}">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{page_title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta name="twitter:image" content="{og_image}">
 <script type="application/ld+json">{jsonld}</script>
 <style>
 body{{font-family:-apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 18px;line-height:1.65;color:#1a1a2e;background:#fff}}
@@ -352,7 +350,15 @@ def main():
         # thread question first, then the board (per dc's SEO review); keep under ~60 characters
         head_t = title if len(title) <= 45 else title[:44].rstrip() + "…"
         pt = f"{head_t} | " + ("Misère Perdue (Misery)" if "misery globe" in title.lower() else "Misery Globe")
-        page = PAGE.format(
+        # per dc: a thread shares its own thumbnail; threads without one use the white closed-eyes card
+        thumb = full.get("thumb") or t.get("thumb")
+        if thumb and re.fullmatch(r"[A-Za-z0-9_-]{6,64}", str(thumb)):
+            og_image, og_size, og_alt = f"{WORKER}/api/media/{thumb}", "", f"{title} on Misery Globe"
+        else:
+            og_image = f"{SITE}/img/og/thread-default.jpg?v=1"
+            og_size = '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+            og_alt = "Misère Perdue closed eyes"
+        page = PAGE.format(og_image=html.escape(og_image), og_size=og_size, og_alt=html.escape(og_alt),
             page_title=html.escape(pt), title=html.escape(title), desc=html.escape(desc, quote=True),
             url=f"{SITE}/t/{tid}", author=html.escape(author),
             date=date_long(full.get("createdAt")), content=content,

@@ -3,7 +3,7 @@
 live Shopify Storefront API, with schema.org Product JSON-LD (Google rich
 results: price, currency, availability, image, brand). Run: python3 tools/build-products.py
 Products no longer in the storefront are reported (their page is not touched)."""
-import json, html, os, re, subprocess, sys, urllib.request
+import hashlib, json, html, os, re, subprocess, sys, urllib.request
 SITE = "https://misereperdue.com"
 API = "https://shop.misereperdue.com/api/2026-01/graphql.json"
 TOKEN = "1ea6d8e04d03687ed4547d291ef46026"  # public Storefront token (same as js/shopify.js)
@@ -25,7 +25,6 @@ SEO = {
 SHOP_ORDER = ["enraged-beanie", "misery-v_v-sleeping-mask", "membership", "stars"]  # same as the site's shop (shopRank)
 RETURN_POLICY = {"@type": "MerchantReturnPolicy", "applicableCountry": "CA",
                  "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted", "url": SITE + "/info"}  # all sales final
-OG_V = 1  # bump when img/og/product-*.jpg change  # per dc: product page titles are the Shopify product name
 
 def meta_desc(p):
     """<=155 chars: the reviewed copy (SEO), else built from the Shopify '+' bullets."""
@@ -157,7 +156,8 @@ def main():
         url = f"{SITE}/p/{p['handle']}"
         img = p["featuredImage"]["url"] if p.get("featuredImage") else f"{SITE}/img/og-image.jpg"
         card = os.path.join(ROOT, "img", "og", f"{p['handle']}-p.jpg")  # 1200x630 product-only share card (tools/build-og-products.py)
-        share_img = f"{SITE}/img/og/{p['handle']}-p.jpg?v={OG_V}" if os.path.exists(card) else img
+        # ?v= follows the card's content, so a new product photo refreshes cached share previews
+        share_img = f"{SITE}/img/og/{p['handle']}-p.jpg?v={hashlib.md5(open(card, 'rb').read()).hexdigest()[:8]}" if os.path.exists(card) else img
         stock = "In stock" if p["availableForSale"] else "Sold out"
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
