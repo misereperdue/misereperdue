@@ -27,15 +27,23 @@ async function appPage(request, env, next) {
 
 export async function onRequest({ request, next, env }) {
   const path = new URL(request.url).pathname.replace(/\/$/, "") || "/";
-  const human = request.method === "GET" && APP_PAGES[path] && !BOTS.test(request.headers.get("user-agent") || "");
-  const res = human ? await appPage(request, env, next) : await next();
+  // home.html is the plain home page for search engines; it only exists at /, never as /home
+  if (path === "/home") return Response.redirect(new URL("/", request.url).toString(), 301);
+  const bot = BOTS.test(request.headers.get("user-agent") || "");
+  const human = request.method === "GET" && APP_PAGES[path] && !bot;
+  // per dc: Google ranked /info above the home page because the app's home HTML has ~19 words;
+  // search engines and link previewers get a real home page (same <head>), people keep the app
+  const homeForBots = request.method === "GET" && path === "/" && bot;
+  const res = human ? await appPage(request, env, next)
+    : homeForBots ? await env.ASSETS.fetch(new Request(new URL("/home", request.url), request))
+    : await next();
   const type = res.headers.get("content-type") || "";
   if (!type.includes("text/html")) return res;
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   const nonce = btoa(String.fromCharCode(...bytes));
   const headers = new Headers(res.headers);
   headers.set("X-MP-Release", "profile-cards-431");
-  if (APP_PAGES[path]) headers.set("Vary", "User-Agent");
+  if (APP_PAGES[path] || path === "/") headers.set("Vary", "User-Agent");
   headers.set("Content-Security-Policy", CSP.replace("script-src 'self'", "script-src 'self' 'nonce-" + nonce + "'"));
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }

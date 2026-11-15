@@ -36,7 +36,7 @@ jobs:
           node tools/check.mjs
       - name: Commit and push if anything changed
         run: |
-          git add -A p t img/og shop.html globe.html chat.html sitemap.xml
+          git add -A p t img/og shop.html globe.html chat.html home.html sitemap.xml
           if git diff --cached --quiet; then echo "No changes."; exit 0; fi
           git -c user.name="seo-refresh[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -m "SEO pages: refresh from the store and Globe"
