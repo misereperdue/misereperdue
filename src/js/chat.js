@@ -5264,6 +5264,7 @@
     }
     ((d.textContent = (n ? mpName(n) : "Someone") + " is listening to"), l.appendChild(d));
     function g(n) {
+      if (ref) originalEmbeds = Array.from(e.querySelectorAll(".chat-embed,.chat-embed-badge"));
       if (!n) { originalEmbeds.forEach(function (node) { node.style.display = ""; }); c.remove(); e.classList.remove("chat-np-bubble"); if (i) i.hidden = false; return; }
       originalEmbeds.forEach(function (node) { node.remove(); });
       (s(), c.classList.remove("is-loading"));
@@ -6006,7 +6007,9 @@
                 } catch (e) {}
             } else if ("embed" === t.t && t.id && t.embed) {
               var l = c.querySelector('.chat-msg[data-id="' + CSS.escape(t.id) + '"] .chat-bubble');
-              if (l && !l.querySelector(".chat-embed")) {
+              // a late link preview must not reappear under a song card, Globe card or poll that replaced it
+              var npL = l && l.querySelector(".chat-np"), npWait = npL && npL.classList.contains("is-loading");
+              if (l && !l.querySelector(".chat-embed") && !l.querySelector(".chat-ge,.chat-poll") && (!npL || npWait)) {
                 var p = je(t.embed);
                 if (p) {
                   var h = l.querySelector(".chat-text");
@@ -6016,7 +6019,10 @@
                   }
                   l.appendChild(p);
                   var f = Be(t.embed);
-                  (f && !l.querySelector(".chat-embed-badge") && l.appendChild(f), Ne(!1));
+                  f && !l.querySelector(".chat-embed-badge") && l.appendChild(f);
+                  // song card still looking up: keep the preview hidden; it is shown only if the lookup fails
+                  npWait && [p, f].forEach(function (x) { x && (x.style.display = "none"); });
+                  Ne(!1);
                 }
               }
             } else if ("online" === t.t && "number" == typeof t.count) Xe(t.count);
