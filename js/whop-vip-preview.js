@@ -49,6 +49,9 @@
     box.querySelector('h2').textContent = title || 'You\u2019re VIP';
     box.querySelector('p').textContent = text || 'Welcome to MIS\u00c8RE PERDUE.';
     notify('done');
+    // Whop can finish a payment outside the sheet (wallets, bank checks) and land here as a full page: once the
+    // purchase is confirmed, go back to the shop instead of leaving the buyer on this page.
+    if (!sheet && new URLSearchParams(location.search).get('sheet') === '1') setTimeout(function () { location.replace('/#shop'); }, 2600);
   }
   const tag = document.querySelector('.tag');
   if (tag) tag.textContent = live ? 'VIP' : 'SANDBOX PREVIEW';
@@ -119,6 +122,9 @@
     if (h1) h1.textContent = STARS_PRICES[n] ? fmt(n) + ' Stars' : 'Stars';
     if (sub) sub.textContent = 'Added to your account right after payment';
     if (pricingNote) pricingNote.textContent = 'Stars are non-refundable once added. Any tax is added to the total below before you pay.';
+    const fine = document.querySelector('.fine.page');
+    if (fine) fine.innerHTML = 'Payment is confirmed by our server before Stars are added. <a href="/#shop">Return to shop</a>';
+
     button.textContent = 'Continue to payment';
     if (!STARS_PRICES[n]) { status.textContent = 'Choose a Stars pack in the shop.'; button.hidden = true; return; }
     if (!live) { status.textContent = 'Stars checkout runs on misereperdue.com.'; button.hidden = true; return; }
@@ -127,7 +133,7 @@
       for (let attempt = 0; attempt < (paid ? 10 : 1); attempt++) {
         try {
           const s = await request('/api/whop/stars/sync', {method:'POST', body:'{}'});
-          if (s.credited > 0) { showDone('Your balance is ' + fmt(s.points) + ' stars.', fmt(n) + ' Stars added'); return; }
+          if (s.credited > 0 || s.latestPaid) { showDone('Your balance is ' + fmt(s.points) + ' stars.', fmt(n) + ' Stars added'); return; }
         } catch (_) { status.textContent = 'We couldn\u2019t check your Stars. They appear as soon as payment is confirmed.'; return; }
         if (!paid) break;
         await new Promise(function (r) { setTimeout(r, 1500); });

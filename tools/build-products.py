@@ -32,6 +32,15 @@ def meta_desc(p):
         text = text[:154].rsplit(" ", 1)[0].rstrip(",;:") + "…"
     return text
 
+def soon(p):
+    """Per dc: unreleased products read "In N days" (same day math as the shop; refreshed every 6 hours)."""
+    from datetime import datetime, timezone
+    try: ms = (datetime.fromisoformat(p["launchAt"]) - datetime.now(timezone.utc)).total_seconds()
+    except (KeyError, ValueError): return "Coming soon"
+    if ms <= 0: return "Coming soon"
+    d = int(ms // 86400)
+    return f"In {d} day{'' if d == 1 else 's'}" if d >= 1 else "At midnight"
+
 def save(path, content):
     old = open(path, encoding="utf-8").read() if os.path.exists(path) else None
     if old != content:
@@ -171,7 +180,7 @@ def main():
         share = [(f"{SITE}/img/og/{p['handle']}-p.jpg?v={ver(card)}", 1200, 630)] if os.path.exists(card) else [(img, None, None)]
         if os.path.exists(sq): share.append((f"{SITE}/img/og/{p['handle']}-sq.jpg?v={ver(sq)}", 1200, 1200))
         p["_share"] = [u for u, _, _ in share]
-        stock = "In stock" if p["availableForSale"] else ("Coming soon" if p.get("comingSoon") else "Sold out")
+        stock = "In stock" if p["availableForSale"] else (soon(p) if p.get("comingSoon") else "Sold out")
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
         alt = f"{p['title']} by Misère Perdue"

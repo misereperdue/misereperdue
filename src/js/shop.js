@@ -262,7 +262,7 @@ var MPShop = (function () {
         })(t),
       ) +
       "</span></div>" +
-      (!1 === t.available ? '<span class="tag">Coming soon</span>' : "") +
+      (!1 === t.available ? '<span class="tag">' + soonLabel() + "</span>" : "") +
       "</div>"
     );
   }
@@ -275,6 +275,13 @@ var MPShop = (function () {
    * (grid re-rendered) and removes the line once the time has passed. CSS
    * swaps instantly under prefers-reduced-motion. */
   var CD_END = Date.parse("2027-09-11T00:00:00-04:00");
+  // Per dc: products not on sale yet read "In N days" until the drop (same day math as the checkout gate).
+  function soonLabel() {
+    var ms = CD_END - Date.now();
+    if (!(ms > 0)) return "Coming soon";
+    var d = Math.floor(ms / 864e5);
+    return d >= 1 ? "In " + d + (1 === d ? " day" : " days") : "At midnight";
+  }
   var cdTimer = null;
   function cdHTML() {
     if (Date.now() >= CD_END) return "";
@@ -866,7 +873,7 @@ var MPShop = (function () {
     };
   }
   function M(t, e) {
-    if (!1 === t.available) return '<span class="pill-soon">Coming soon</span>';
+    if (!1 === t.available) return '<span class="pill-soon">' + soonLabel() + "</span>";
     var n = (function (t, e) {
       var n = t + ":" + (e || "one"),
         a = MP.readCart().find(function (t) {
