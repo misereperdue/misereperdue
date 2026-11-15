@@ -294,7 +294,10 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
           var ne = performance.getEntriesByType("navigation")[0];
           fresh = ne ? ne.type === "navigate" : performance.navigation.type === 0;
         } catch (e) {}
-        if (!fresh || current.type !== "shop") { setTimeout(revealPage, 500); return; }
+        if (!fresh) { setTimeout(revealPage, 500); return; }
+        // fresh open of Globe / signed-out Chat / anything but the Store: nothing to restore, so no 500ms
+        // wait (speed pass; same reveal, ~0.45s sooner). The Store still waits for its products below.
+        if (current.type !== "shop") { setTimeout(revealPage, 60); return; }
         var t0 = Date.now();
         (function waitShop() {
           var el = Date.now() - t0, g = document.getElementById("shop-grid");
