@@ -3930,6 +3930,12 @@ html.mp-globe-pull body {
   padding: 20px;
   font-size: 14px;
 }
+.forum-signin a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .forum-form {
   display: flex;
   flex-direction: column;
@@ -8708,8 +8714,11 @@ svg[data-hi].hi-play {
 .mp-toast.is-in{transform:translate(-50%,0);opacity:1}
 .mp-toast button{border:0;background:none;color:#0a84ff;font:inherit;cursor:pointer;padding:0}
 .mp-hid > :not(.mp-hid-ph):not(.forum-nested):not(.forum-replies){display:none!important}
-.mp-hid-ph{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;border:1px dashed var(--stroke,rgba(127,127,127,.3));border-radius:14px;background:var(--fill);color:var(--ink);opacity:.6;font:inherit;font-size:13.5px;font-style:italic;text-align:left;cursor:pointer}
+.mp-hid-ph{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;border:1px dashed var(--stroke,rgba(127,127,127,.3));border-radius:14px;background:var(--fill);color:var(--ink);opacity:.72;font:inherit;font-size:13.5px;font-style:italic;text-align:left;box-sizing:border-box}
 .mp-hid-ph svg{width:16px;height:16px;flex:none}
+.mp-hid-ph>span{flex:1;min-width:0}
+.mp-hid-unhide{margin-left:auto;flex:none;padding:5px 11px;border-radius:999px;border:var(--glass-hairline);background:var(--glass-clear-tint);color:var(--ink);font:inherit;font-size:12px;font-weight:600;font-style:normal;letter-spacing:.01em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mp-hid-unhide:active{transform:scale(.96)}
 
 /* @mentions (per dc) */
 .chat-mention-menu{min-width:220px;max-width:min(300px,calc(100% - 8px));max-height:calc(5 * 46px + 10px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:none;opacity:1;animation:chat-mn-in .2s cubic-bezier(.3,1.3,.5,1)}

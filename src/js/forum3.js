@@ -3,7 +3,7 @@
   if (window.mpHide) return;
   var KEY = "mp_hidden_v1";
   function all() { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
-  function vk() { return H.viewer || localStorage.getItem("mp_hide_viewer") || "anon"; }
+  function vk() { return H.viewer || "anon"; }
   function mpName(u) {
     return (window.mpName || function (x) { return String(x == null ? "" : x).replace(/^@+/, "").toLowerCase(); })(u);
   }
@@ -16,17 +16,17 @@
   var H = {
     viewer: null,
     list: load,
-    is: function (u) { u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
-    hide: function (u, id) { u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
-    unhide: function (u) { u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
+    is: function (u) { if (!H.viewer) return !1; u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
+    hide: function (u, id) { if (!H.viewer) return; u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
+    unhide: function (u) { if (!H.viewer) return; u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
     /* rename-safe: if a stored entry has this numeric id under an old handle, move it to the new handle */
-    seen: function (u, id) { if (!id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
+    seen: function (u, id) { if (!H.viewer || !id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
     setViewer: function (v) { v = low(v) || null; if (v === H.viewer) return; H.viewer = v; try { v && localStorage.setItem("mp_hide_viewer", v); } catch (e) {} H.emit(); },
     filt: function (r) { if (!r) return r; var o = {}, any = !1; Object.keys(r).forEach(function (k) { H.is(k) ? (any = !0) : (o[k] = r[k]); }); return any ? o : r; },
     css: function () {
       var st = document.getElementById("mp-hide-css");
       st || ((st = document.createElement("style")), (st.id = "mp-hide-css"), document.head.appendChild(st));
-      st.textContent = load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n");
+      st.textContent = H.viewer ? load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n") : "";
     },
     emit: function () { H.css(); try { window.dispatchEvent(new CustomEvent("mp-hidden-change")); } catch (e) {} },
     toast: function (msg, undo) {
@@ -92,11 +92,13 @@
     if (hid) {
       el.classList.add("mp-hid");
       if (!ph) {
-        ph = document.createElement("button"); ph.type = "button"; ph.className = "mp-hid-ph";
-        ph.innerHTML = EYE + "<span></span>"; ph.querySelector("span").textContent = label;
-        ph.addEventListener("click", function (e) {
+        ph = document.createElement("div"); ph.className = "mp-hid-ph";
+        ph.innerHTML = EYE + "<span></span><button type=\"button\" class=\"mp-hid-unhide\">Unhide</button>";
+        ph.querySelector("span").textContent = label;
+        ph.querySelector(".mp-hid-unhide").addEventListener("click", function (e) {
           e.stopPropagation(); e.preventDefault();
-          mpHide.menu(ph, [{ label: "Unhide", run: function () { mpHide.unhide(u); mpHide.toast("User is visible again"); } }]);
+          mpHide.unhide(u);
+          mpHide.toast("User is visible again");
         });
         el.insertBefore(ph, el.firstChild);
       }
@@ -3937,12 +3939,21 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
           '<div class="forum-editor" id="forum-reply-editor">' +
           re({ embed: !0, member: j(), lock: !0 }) +
           '<div class="forum-editor-mount"></div></div><button type="button" class="btn accent" id="forum-send">Reply</button></div>';
-      } else o += '<div class="forum-signin">Sign in to join the discussion.</div>';
+      } else o += '<div class="forum-signin"><a href="#chat" class="forum-signup-link">Sign up</a> &amp; join this discussion</div>';
       ((t.innerHTML = '<div class="forum-anim">' + o + "</div>"),
         stampReplyNodes(t, n),
         S(t),
         L(t),
         gateForumContent(t, b.thread),
+        (function () {
+          var a = t.querySelector(".forum-signup-link");
+          a && a.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (window.MPOpenSignUp) MPOpenSignUp();
+            else if (window.MPNav && MPNav.show) MPNav.show("journal");
+            else location.hash = "#chat";
+          });
+        })(),
         t.querySelectorAll(".forum-poll-opt").forEach(function (e) {
           e.addEventListener("click", function () {
             if (g()) {

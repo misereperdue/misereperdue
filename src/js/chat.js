@@ -3,24 +3,24 @@
   if (window.mpHide) return;
   var KEY = "mp_hidden_v1";
   function all() { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
-  function vk() { return H.viewer || localStorage.getItem("mp_hide_viewer") || "anon"; }
+  function vk() { return H.viewer || "anon"; }
   function load() { var a = all()[vk()]; return Array.isArray(a) ? a : []; }
   function save(a) { try { var o = all(); o[vk()] = a; localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
   function low(u) { return String(u || "").replace(/^@/, "").toLowerCase(); }
   var H = {
     viewer: null,
     list: load,
-    is: function (u) { u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
-    hide: function (u, id) { u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
-    unhide: function (u) { u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
+    is: function (u) { if (!H.viewer) return !1; u = low(u); return !!u && load().some(function (x) { return x.u === u; }); },
+    hide: function (u, id) { if (!H.viewer) return; u = low(u); if (!u) return; var a = load().filter(function (x) { return x.u !== u; }); a.push({ u: u, id: id || null, at: Date.now() }); save(a); H.emit(); },
+    unhide: function (u) { if (!H.viewer) return; u = low(u); save(load().filter(function (x) { return x.u !== u; })); H.emit(); },
     /* rename-safe: if a stored entry has this numeric id under an old handle, move it to the new handle */
-    seen: function (u, id) { if (!id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
+    seen: function (u, id) { if (!H.viewer || !id) return; u = low(u); var a = load(), ch = !1; a.forEach(function (x) { x.id && String(x.id) === String(id) && x.u !== u && ((x.u = u), (ch = !0)); }); ch && (save(a), H.emit()); },
     setViewer: function (v) { v = low(v) || null; if (v === H.viewer) return; H.viewer = v; try { v && localStorage.setItem("mp_hide_viewer", v); } catch (e) {} H.emit(); },
     filt: function (r) { if (!r) return r; var o = {}, any = !1; Object.keys(r).forEach(function (k) { H.is(k) ? (any = !0) : (o[k] = r[k]); }); return any ? o : r; },
     css: function () {
       var st = document.getElementById("mp-hide-css");
       st || ((st = document.createElement("style")), (st.id = "mp-hide-css"), document.head.appendChild(st));
-      st.textContent = load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n");
+      st.textContent = H.viewer ? load().map(function (x) { var q = '"' + x.u.replace(/["\\]/g, "\\$&") + '" i'; return '.chat-msg[data-user=' + q + '],.chat-typing-user[data-user=' + q + ']{display:none!important}'; }).join("\n") : "";
     },
     emit: function () { H.css(); try { window.dispatchEvent(new CustomEvent("mp-hidden-change")); } catch (e) {} },
     toast: function (msg, undo) {
@@ -886,7 +886,7 @@
               var g = document.createElement("div");
               ((g.className = "chat-bio-view"), (g.textContent = n.bio), r.appendChild(g));
             }
-            if (window.mpHide && (!s || String(n.username).toLowerCase() !== String(s.username).toLowerCase())) {
+            if (window.mpHide && s && String(n.username).toLowerCase() !== String(s.username).toLowerCase()) {
               mpHide.seen(n.username, n.numId);
               var hb = document.createElement("button");
               hb.type = "button";
@@ -1179,7 +1179,7 @@
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
     !me && s && d && btn("Gift", STAR_ICON, function () { giftOpen(b._profile || n, b); });
-    if (!me && window.mpHide) {
+    if (!me && s && window.mpHide) {
       mpHide.seen(n.username, n.numId);
       var hideK = document.createElement("button");
       hideK.type = "button";
@@ -1532,7 +1532,7 @@
   /* Typing !username mutes or unmutes that user (per dc); nothing is sent. */
   function mpBangMute(text) {
     var m = /^!([a-z0-9_]{1,16})$/i.exec(text);
-    if (!m || !window.mpHide) return !1;
+    if (!m || !window.mpHide || !s) return !1;
     var u = m[1].toLowerCase();
     if (s && u === String(s.username).toLowerCase()) return mpHide.toast("You can't mute yourself"), !0;
     mpHide.is(u) ? (mpHide.unhide(u), mpHide.toast(mpAt(u) + " is unmuted")) : mpHideUser(u);
@@ -1547,8 +1547,8 @@
   function mpAvMenu(el, u) {
     var items = [];
     mpPM.on && s && items.push({ label: "Whisper", icon: "<svg " + MP_IC + '><path d="M21.9918 12.8046C21.9851 13.0352 21.9745 13.2648 21.9598 13.4922C21.6856 17.7346 18.3536 21.1138 14.1706 21.3919C13.4574 21.4393 12.7285 21.5013 12 21.5013C10.4054 21.5013 8.95127 21.3641 7.44544 20.7906C7.44544 20.7906 5.56108 22.2592 3.69962 21.959H3.69961C3.31008 21.8962 3.11532 21.8648 3.00091 21.6347C2.8865 21.4046 3.00788 21.176 3.25063 20.7189C3.65964 19.9487 3.92248 19.174 3.80076 18.3309C3.73703 17.8895 3.50433 17.4977 3.27644 17.114L3.26529 17.0952C2.62637 16.0191 2.12462 14.7979 2.04024 13.4922C1.98659 12.662 1.98659 11.8023 2.04024 10.9721C2.31441 6.72972 5.64639 3.35048 9.8294 3.07242C11.1415 2.9852 12.5095 2.97817 13.8327 3.05179"/><path d="M16.75 5.50134V4.00134C16.75 2.89677 17.6454 2.00134 18.75 2.00134C19.8546 2.00134 20.75 2.89677 20.75 4.00134V5.50134M17.5 10.0013H20C20.9428 10.0013 21.4142 10.0013 21.7071 9.70845C22 9.41556 22 8.94415 22 8.00134V7.50134C22 6.55853 22 6.08713 21.7071 5.79424C21.4142 5.50134 20.9428 5.50134 20 5.50134H17.5C16.5572 5.50134 16.0858 5.50134 15.7929 5.79424C15.5 6.08713 15.5 6.55853 15.5 7.50134V8.00134C15.5 8.94415 15.5 9.41556 15.7929 9.70845C16.0858 10.0013 16.5572 10.0013 17.5 10.0013Z"/><path d="M8.75 15.0013H15.25M8.75 10.0013H12.25"/></svg>', run: function () { mpPMStart(u); } });
-    items.push({ label: "Hide", danger: !0, icon: "<svg " + MP_IC + '><path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/></svg>', run: function () { mpHideUser(u); } });
-    mpHide.menu(el, items);
+    s && items.push({ label: "Hide", danger: !0, icon: "<svg " + MP_IC + '><path d="M2.25 12C2.25 17.5228 6.72715 22 12.25 22C17.7728 22 22.25 17.5228 22.25 12C22.25 6.47715 17.7728 2 12.25 2C6.72715 2 2.25 6.47715 2.25 12Z"/><path d="M5.25 5L19.25 19"/></svg>', run: function () { mpHideUser(u); } });
+    items.length && mpHide.menu(el, items);
   }
   window.addEventListener("mp-hidden-change", function () {
     try { Object.keys(De).forEach(function (id) { De[id] && De[id].reactions && we(id, De[id].reactions); }); } catch (e) {}
@@ -1684,6 +1684,7 @@
   function ae() {
     (mt(),
       (s = null),
+      window.mpHide && mpHide.setViewer(null),
       mpAuthEmit(),
       (c.innerHTML =
         '<div class="chat-head glassbar"><div class="chat-title">Chat</div><div class="chat-head-right"><button type="button" class="btn chat-topbar-signin" id="chat-signin-top">Sign in</button></div></div><div class="chat-auth"><div class="chat-auth-head"><div class="chat-auth-title">Your account gets you exclusive access to everything Misery</div><div class="chat-auth-sub">Don\'t want to sign in or sign up? <a href="#" class="chat-auth-forum">Browse the forum</a> or <a href="#" class="chat-auth-shop">view our webstore</a> instead.</div></div><div class="chat-card"><div class="chat-tabs" data-active="login"><span class="chat-tabs-slider"></span><button type="button" class="on" data-tab="login">Sign in</button><button type="button" data-tab="register">Sign up</button></div><label class="chat-field"><span>Username</span><input type="text" name="username" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" readonly data-ro-unlock></label><label class="chat-field"><span>Password</span><input type="password" name="password" maxlength="72" autocomplete="off" readonly data-ro-unlock></label><div class="pwd-strength" hidden><div class="pwd-bars"><span></span><span></span><span></span><span></span></div><div class="pwd-labels"><span>Strength</span><span class="pwd-level"></span></div></div><label class="chat-field chat-secret hidden"><span>Owner secret</span><input type="password" name="secret" autocomplete="off"></label><div class="chat-err" role="alert"></div><div class="cf-turnstile-wrap" hidden><div class="cf-turnstile" data-sitekey="0x4AAAAAAFV46HnTH3nPGGRk" data-theme="auto"></div></div><button type="button" class="btn accent chat-submit">Sign in</button><button type="button" class="btn chat-xbtn"><span class="chat-xlogo">' +
@@ -1960,6 +1961,11 @@
       try {
         MPNav.refreshTitle();
       } catch (e) {}
+    if (window.__mpOpenSignup) {
+      window.__mpOpenSignup = !1;
+      var su = c.querySelector('[data-tab="register"]');
+      su && su.click();
+    }
   }
   (Y(),
     document._chatBellDelegated ||
@@ -9491,6 +9497,16 @@
       })(),
     (window.MPChat.catchUp = function () {
       return d && s ? ut() : Promise.resolve();
+    }),
+    (window.MPOpenSignUp = function () {
+      window.__mpOpenSignup = !0;
+      if (window.MPNav && MPNav.show) MPNav.show("journal");
+      else location.hash = "#chat";
+      var tab = document.querySelector('#chat [data-tab="register"]');
+      if (tab) {
+        tab.click();
+        window.__mpOpenSignup = !1;
+      }
     }),
     (window.MPChat.openUserSheet = function (u, el) { return mpPB(u, el); }),
     (window.MPChat.openFullProfile = K),
