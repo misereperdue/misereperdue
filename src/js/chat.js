@@ -1404,23 +1404,11 @@
   }
   /* Charms (per dc, replacing badges): next to the name in chat and the profile view. */
   var GEM = { diamond: ["#a8e8ff", "#5cc3ef"], emerald: ["#3fd98a", "#169b57"], ruby: ["#ff4f86", "#d0104f"] };
-  /* Charm style B "glass" (per dc, 2026-11-15): the power icons' own cuts (diamond, octagonal emerald, heart ruby)
-     as a colored outline over a see-through tint. */
-  var GEM_SHAPE = {
-    diamond: { out: "M7 4h10l4 5-9 11L3 9l4-5Z", lines: ["M3 9h18", "M9.6 4 8.2 9 12 20l3.8-11L14.4 4"] },
-    emerald: { out: "M8.5 3h7L20 7.5v9L15.5 21h-7L4 16.5v-9L8.5 3Z", inner: "M10 7h4l2 2v6l-2 2h-4l-2-2V9z", lines: [] },
-    ruby: { out: "M12 20.5 4.3 12.7a4.5 4.5 0 0 1 7.7-6.1 4.5 4.5 0 0 1 7.7 6.1L12 20.5Z", lines: ["M12 6.6v13.9", "M4.3 12.7h15.4", "M7 8.2 12 12.7l5-4.5"] }
-  };
+  /* Charms (per dc, 2026-11-15): 3D-rendered gems (brilliant diamond, step-cut emerald, heart ruby) that spin and
+     glint next to the name. Each is one 36-frame sprite strip (img/charms/*.webp) played by CSS (.mp-gem). */
   function mpCharm(id) {
     var g = GEM[id], t = { verified: "07", member: "VIP", kitty: "Hello Kitty", mask: "Sleep mask", robot: "Bot", diamond: "Diamond", emerald: "Emerald", ruby: "Ruby" }[id] || id, inner;
-    if (g) {
-      var sh = GEM_SHAPE[id];
-      inner = '<svg viewBox="2 2 20 20" aria-hidden="true"><path d="' + sh.out + '" fill="' + g[0] + '" fill-opacity=".28"/>' +
-        '<path d="' + sh.out + '" fill="none" stroke="' + g[1] + '" stroke-width="1.8" stroke-linejoin="round"/>' +
-        (sh.inner ? '<path d="' + sh.inner + '" fill="none" stroke="' + g[1] + '" stroke-width="1.3" stroke-linejoin="round"/>' : "") +
-        sh.lines.map(function (d) { return '<path d="' + d + '" fill="none" stroke="' + g[1] + '" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'; }).join("") +
-        "</svg>";
-    }
+    if (g) inner = '<i class="mp-gem" aria-hidden="true" style="background-image:url(/img/charms/' + id + '.webp?v=1)"></i>';
     else if (id === "member") inner = '<svg viewBox="2.3 2.3 19.4 18.5" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="#f5bf45" stroke="#f5bf45" stroke-width="2" stroke-linejoin="round"/></svg>';
     else inner = M(id);
     return '<span class="mp-charm mp-charm-' + x(id) + '" title="' + x(t) + '" role="img" aria-label="' + x(t) + ' charm">' + inner + "</span>";
