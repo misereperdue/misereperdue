@@ -1199,7 +1199,7 @@ var MPShop = (function () {
         /* Enraged Beanie 3D (per dc) */
         var bx = p.querySelector(".beanie-3d .vip-3d-stage"),
           bh = p.querySelector(".beanie-3d .vip-3d-hint");
-        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=1", bx)), bh)) {
+        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=2", bx)), bh)) {
           var bT = 0,
             bz = function () { bT && clearTimeout(bT); bT = setTimeout(function () { bh.classList.remove("gone"); }, 800); };
           bx.addEventListener("pointerdown", function () { bT && (clearTimeout(bT), (bT = 0)); bh.classList.add("gone"); });

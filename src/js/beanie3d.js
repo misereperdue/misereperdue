@@ -48,15 +48,56 @@ var MPBeanie3D = (function () {
         var rim = new THREE.DirectionalLight(light ? 0xe8eefc : 0xa9d7f5, light ? 0.45 : 0.7);
         rim.position.set(-3.5, 2.4, -3);
         scene.add(rim);
-        // lathe: rim tucked inward at the bottom so the cuff has a folded edge, then the traced profile up to the crown
-        var pts = [new THREE.Vector2(0.30, 0.05), new THREE.Vector2(0.38, 0.012)];
-        PROFILE.forEach(function (p) { pts.push(new THREE.Vector2(p[0], p[1])); });
-        var geo = new THREE.LatheGeometry(pts, 160, -Math.PI, Math.PI * 2);
-        // LatheGeometry's v follows point index; remap v to height so the texture rows line up with the photo rows
-        var uv = geo.attributes.uv, pos = geo.attributes.position, top = PROFILE[PROFILE.length - 1][1];
-        for (var i = 0; i < uv.count; i++) uv.setY(i, Math.max(0, Math.min(1, pos.getY(i) / top)));
-        geo.computeVertexNormals();
-        var group = new THREE.Group();
+        // Outer shell: the traced profile, with an open bottom (the photo's rounded bottom corners are dropped)
+        // ending in a soft rounded cuff edge. Inner shell: the same profile pulled in by the fabric thickness,
+        // drawn from the inside with a purl-side knit. A rounded rim joins them, so you can look underneath (per dc).
+        var T = 0.055, top = PROFILE[PROFILE.length - 1][1];
+        var prof = PROFILE.filter(function (p) { return p[0] >= 0.955 || p[1] > 0.2; });
+        var outer = [new THREE.Vector2(0.912, 0.0), new THREE.Vector2(0.945, 0.012)];
+        prof.forEach(function (p) { outer.push(new THREE.Vector2(p[0], p[1])); });
+        var inner = [new THREE.Vector2(0.858, 0.0)];
+        prof.forEach(function (p) { if (p[1] < top - T) inner.push(new THREE.Vector2(Math.max(0.001, p[0] - T * 1.05), p[1])); });
+        inner.push(new THREE.Vector2(0, top - T));
+        var rimPts = [new THREE.Vector2(0.858, 0.0), new THREE.Vector2(0.864, -0.011), new THREE.Vector2(0.885, -0.017), new THREE.Vector2(0.905, -0.01), new THREE.Vector2(0.912, 0.0)];
+        function lathe(p, n) {
+          var g = new THREE.LatheGeometry(p, n, -Math.PI, Math.PI * 2), uv = g.attributes.uv, pos = g.attributes.position;
+          // v follows height, not point index, so textures line up with the photo rows
+          for (var i = 0; i < uv.count; i++) uv.setY(i, Math.max(0, Math.min(1, pos.getY(i) / top)));
+          g.computeVertexNormals();
+          return g;
+        }
+        var geo = lathe(outer, 160), innerGeo = lathe(inner, 160), rimGeo = lathe(rimPts, 160);
+        // inside depth shading: lighter at the opening, darker towards the crown
+        var cols = new Float32Array(innerGeo.attributes.position.count * 3), ip = innerGeo.attributes.position;
+        for (var k = 0; k < ip.count; k++) { var d = Math.min(1, ip.getY(k) / top), s1 = 1 - 0.62 * Math.pow(d, 0.8); cols[k * 3] = cols[k * 3 + 1] = cols[k * 3 + 2] = s1; }
+        innerGeo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+        // purl-side knit for the inside: the same checker layout reversed (ridges where the outside has ribs)
+        function innerKnit() {
+          var cv = document.createElement("canvas"); cv.width = 1024; cv.height = 512;
+          var x = cv.getContext("2d"), cw = 1024 / 16, rh = 512 / 7;
+          x.fillStyle = "#77777d"; x.fillRect(0, 0, 1024, 512);
+          for (var cx0 = 0; cx0 < 16; cx0++) for (var ry = 0; ry < 7; ry++) {
+            var X = cx0 * cw, Y = ry * rh, ridge = (cx0 + ry) % 2 === 0;
+            x.fillStyle = ridge ? "#727278" : "#7c7c82"; x.fillRect(X, Y, cw, rh);
+            x.strokeStyle = "rgba(40,40,46,.55)"; x.lineWidth = 1.6;
+            if (ridge) { for (var yy = Y + 3; yy < Y + rh; yy += 5) { x.beginPath(); for (var xx = X; xx < X + cw; xx += 6) { x.moveTo(xx, yy); x.quadraticCurveTo(xx + 3, yy + 2.6, xx + 6, yy); } x.stroke(); } }
+            else { for (var xx2 = X + 3; xx2 < X + cw; xx2 += 6) { x.beginPath(); for (var yy2 = Y; yy2 < Y + rh; yy2 += 5) { x.moveTo(xx2, yy2); x.lineTo(xx2 + 1.6, yy2 + 2.5); x.lineTo(xx2, yy2 + 5); } x.stroke(); } }
+          }
+          var img = x.getImageData(0, 0, 1024, 512), dd = img.data;
+          for (var q = 0; q < dd.length; q += 4) { var nz = (Math.random() - 0.5) * 14; dd[q] += nz; dd[q + 1] += nz; dd[q + 2] += nz; }
+          x.putImageData(img, 0, 0);
+          var tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.wrapS = THREE.RepeatWrapping; tx.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          return tx;
+        }
+        var ik = innerKnit(), ikBump = ik.clone(); ikBump.colorSpace = THREE.NoColorSpace; ikBump.needsUpdate = true;
+        var innerMat = new THREE.MeshStandardMaterial({ map: ik, bumpMap: ikBump, bumpScale: 1.4, roughness: 1, metalness: 0, vertexColors: true, envMapIntensity: 0.45, side: THREE.BackSide });
+        var rimMat = new THREE.MeshStandardMaterial({ map: ik, roughness: 1, metalness: 0, color: 0x9a9aa0, envMapIntensity: 0.5, side: THREE.DoubleSide });
+        // the model turns around its middle (so tilting to look underneath doesn't swing it off screen)
+        var group = new THREE.Group(), body = new THREE.Group();
+        body.position.y = -0.92;
+        group.add(body);
+        body.add(new THREE.Mesh(innerGeo, innerMat));
+        body.add(new THREE.Mesh(rimGeo, rimMat));
         var loader = new THREE.TextureLoader();
         loader.load(TEX, function (tex) {
           if (dead) return;
@@ -65,16 +106,18 @@ var MPBeanie3D = (function () {
           var bump = tex.clone();
           bump.colorSpace = THREE.NoColorSpace;
           bump.needsUpdate = true;
-          var mat = new THREE.MeshStandardMaterial({ map: tex, bumpMap: bump, bumpScale: 0.7, roughness: 0.94, metalness: 0, envMapIntensity: light ? 0.85 : 0.7, side: THREE.DoubleSide });
+          var mat = new THREE.MeshStandardMaterial({ map: tex, bumpMap: bump, bumpScale: 0.7, roughness: 0.94, metalness: 0, envMapIntensity: light ? 0.85 : 0.7, side: THREE.FrontSide });
           var mesh = new THREE.Mesh(geo, mat);
           mesh.castShadow = true;
-          group.add(mesh);
+          body.add(mesh);
         }, undefined, fallback);
         scene.add(group);
         var shadow = new THREE.Mesh(new THREE.CircleGeometry(1.6, 48), new THREE.ShadowMaterial({ opacity: light ? 0.16 : 0.32 }));
         shadow.rotation.x = -Math.PI / 2;
         shadow.position.y = -0.02;
         shadow.receiveShadow = true;
+        shadow.material.depthWrite = false;
+        shadow.renderOrder = -1;
         scene.add(shadow);
         function size() {
           var w = el.clientWidth || 300, h = el.clientHeight || 300;
@@ -94,7 +137,7 @@ var MPBeanie3D = (function () {
         c.addEventListener("pointermove", function (e) {
           if (!dragging) return;
           var t = performance.now(), dt = Math.max(1, t - lt), dx = e.clientX - lx, dy = e.clientY - ly;
-          yaw += 0.0085 * dx; pitch = Math.max(-0.6, Math.min(0.7, pitch + 0.005 * dy));
+          yaw += 0.0085 * dx; pitch = Math.max(-1.35, Math.min(0.7, pitch + 0.005 * dy)); /* drag up to tilt it and look underneath */
           vy = 0.0085 * dx / dt * 16.7; vp = 0.005 * dy / dt * 16.7;
           lx = e.clientX; ly = e.clientY; lt = t; idleAt = t;
         });
@@ -112,7 +155,8 @@ var MPBeanie3D = (function () {
             if (!reduce && performance.now() - idleAt > 2600 && Math.abs(vy) < 0.002) yaw += 0.0035;
           }
           group.rotation.set(pitch, yaw, 0);
-          group.position.y = reduce ? 0 : 0.03 * Math.sin(t * 1.15);
+          group.position.y = 0.92 + (reduce ? 0 : 0.03 * Math.sin(t * 1.15));
+          shadow.material.opacity = (light ? 0.16 : 0.32) * Math.max(0, Math.cos(pitch * 1.3));
           renderer.render(scene, camera);
         })();
       }).catch(fallback);
