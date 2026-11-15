@@ -12899,7 +12899,11 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-whop-sheet.is-open .mp-whop-backdrop{opacity:1}
 .mp-whop-sheet.is-open .mp-whop-panel{transform:none}
 .mp-whop-drag{position:absolute;top:0;left:0;right:48px;height:36px;z-index:3;touch-action:none;pointer-events:auto}
-.mp-whop-grab{position:absolute;top:8px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent);z-index:2;pointer-events:none}
+.mp-whop-grab{position:absolute;top:8px;left:50%;width:36px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent);z-index:2;pointer-events:none;transform:translateX(-50%)}
+/* Promo/order-details dim: one layer over the whole panel, including the parent grabber strip the iframe cannot cover. */
+.mp-whop-panel::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(4,8,20,.55);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:4}
+html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
+.mp-whop-sheet.is-overlay .mp-whop-panel::after{opacity:1}
 .mp-whop-x{position:absolute;top:43px;right:18px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
 .mp-whop-x svg{width:14px;height:14px}
 .mp-whop-x:active{transform:scale(.92)}
@@ -12916,4 +12920,4 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-whop-warm{position:fixed;left:-9999px;top:0;width:min(480px,100vw);height:640px;opacity:0;pointer-events:none;border:0}
 html.mp-whop-open,html.mp-whop-open body{overflow:hidden}
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
-@media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop{transition:none}.mp-whop-skel i::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}

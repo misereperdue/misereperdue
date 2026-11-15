@@ -59,8 +59,8 @@
     .mp-sheet .wrap { padding:4px 20px 24px; }
     .mp-sheet .brand, .mp-sheet .fine.page { display:none; }
     .mp-sheet .rc-head { padding-right:40px; }
-    /* Neutralize Whop's dialog ::backdrop (it dims our header but often not the nested
-       checkout iframe). We paint one .mp-overlay-scrim over the whole preview instead. */
+    /* Neutralize Whop's dialog ::backdrop. The parent sheet paints the dim so the
+       grabber strip and checkout fade together. */
     html.mp-sheet dialog[data-element-overlay]::backdrop {
       background: transparent !important;
       -webkit-backdrop-filter: none !important;
@@ -71,20 +71,11 @@
       background: transparent !important;
       box-shadow: none !important;
     }
-    .mp-overlay-scrim {
-      position: fixed; inset: 0; z-index: 20; pointer-events: none;
-      background: rgba(4, 8, 20, .55);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      opacity: 0; transition: opacity .2s ease;
-    }
-    html[data-theme="light"] .mp-overlay-scrim { background: rgba(16, 18, 24, .4); }
-    .mp-overlay-scrim.is-on { opacity: 1; }
     html.mp-sheet.mp-peek .rc-note { display: none; }
     @media (prefers-reduced-motion:reduce) { .skel i::after,.done circle,.done path { animation:none;stroke-dashoffset:0; } }
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
-  <script src="/js/whop-vip-preview.js?v=17" defer></script>
+  <script src="/js/whop-vip-preview.js?v=18" defer></script>
 </head>
 <body>
   <main class="wrap">

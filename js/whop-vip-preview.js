@@ -22,16 +22,12 @@
   // The sheet sizes itself to this page (up to its max height).
   if (sheet && window.ResizeObserver) new ResizeObserver(function () { notify('height', {h: Math.ceil(document.querySelector('.wrap').getBoundingClientRect().height)}); }).observe(document.querySelector('.wrap'));
   if (sheet) {
-    var scrim = document.createElement('div');
-    scrim.className = 'mp-overlay-scrim';
-    scrim.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(scrim);
+    // The parent paints one scrim over the whole sheet (including the grabber strip this iframe cannot cover).
     var overlayOn = false;
     function syncOverlay() {
       var open = !!document.querySelector('dialog[data-element-overlay][open]');
       if (open === overlayOn) return;
       overlayOn = open;
-      scrim.classList.toggle('is-on', open);
       notify('overlay', {open: open});
     }
     new MutationObserver(function () {
