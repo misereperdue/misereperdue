@@ -17,8 +17,8 @@ BRAND = "Misère Perdue (Misery)"  # per dc: every title ends "| Misère Perdue 
 # so the copy stays right when prices change. New products fall back to "<title> | BRAND" and a sentence
 # built from the Shopify bullets.
 SEO = {
-    "enraged-beanie": ("Enraged Beanie", "Enraged Beanie", "Fleece beanie with enraged-eyes embroidery and a spray design. SS27 from Misère Perdue, Toronto. All sales are final."),
-    "misery-v_v-sleeping-mask": ("V_V Mask", "V_V Mask", "Plush silk sleeping mask with MISERY eyes embroidery and elastic straps, in a gift box. SS27 from Misère Perdue, Toronto."),
+    "enraged-beanie": ("Enraged Beanie", "Enraged Beanie", "Fleece beanie with enraged-eyes embroidery and a spray design. SS27 from Misère Perdue. All sales are final."),
+    "misery-v_v-sleeping-mask": ("V_V Mask", "V_V Mask", "Plush silk sleeping mask with MISERY eyes embroidery and elastic straps, in a gift box. SS27 from Misère Perdue."),
     "membership": ("VIP Membership", "VIP membership", "Join VIP for early access to Misère Perdue drops, a VIP badge in Misery Globe and Chat, and VIP-only boards. From {price}."),
     "stars": ("Stars", "Stars", "Star packs for Misère Perdue: buy powers and send gifts in Misery Globe and Chat. From {price}."),
 }
@@ -208,7 +208,7 @@ def main():
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
     names = [(SEO.get(p["handle"]) or (None, p["title"]))[1] for p, _ in items]
     listed = ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "".join(names)
-    desc = f"Shop Misère Perdue, the Toronto brand: {listed}. Prices in CAD with secure checkout by Shopify."
+    desc = f"Shop Misère Perdue (Misery): {listed}. Prices in CAD with secure checkout by Shopify."
     def thumb(p):
         fi = p.get("featuredImage") or {}
         return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}&width=240\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
