@@ -1,4 +1,4 @@
-/* VIP-only Whop checkout. Price, identity and fulfillment belong to the server. */
+/* Whop checkout page for VIP and Stars (?product=stars&pack=N). Price, identity and fulfillment belong to the server. */
 (function () {
   'use strict';
   const button = document.getElementById('begin');
@@ -41,11 +41,12 @@
       'whop-CheckoutPayButton':{background:d ? '#dfe5ee' : '#0a1230', color:d ? '#111a32' : '#ffffff', borderRadius:'14px', height:'52px', fontSize:'15px', fontWeight:'600'}
     }};
   }
-  function showDone(text) {
+  function showDone(text, title) {
     if (skel) skel.hidden = true; mount.hidden = true; button.hidden = true; status.textContent = '';
     if (receipt) receipt.hidden = true;
     let box = document.querySelector('.done');
-    if (!box) { box = document.createElement('div'); box.className = 'done'; box.innerHTML = '<svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="28" cy="28" r="26"/><path d="M17 29l7.5 7.5L39 21"/></svg><h2>You\u2019re VIP</h2><p></p>'; receipt.after(box); }
+    if (!box) { box = document.createElement('div'); box.className = 'done'; box.innerHTML = '<svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="28" cy="28" r="26"/><path d="M17 29l7.5 7.5L39 21"/></svg><h2></h2><p></p>'; receipt.after(box); }
+    box.querySelector('h2').textContent = title || 'You\u2019re VIP';
     box.querySelector('p').textContent = text || 'Welcome to MIS\u00c8RE PERDUE.';
     notify('done');
   }
@@ -68,6 +69,17 @@
     const body = await response.json();
     if (!response.ok || !body.ok) throw new Error(body.error || 'Checkout is unavailable. Please try again later.');
     return body;
+  }
+  // Mounts Whop's checkout for a server-made configuration, styled to the page, behind the matching placeholder.
+  function mountCheckout(configId, ret, onComplete) {
+    const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:configId,returnUrl:ret,appearance:appearance(),
+      onComplete:function(){ mount.hidden=true; onComplete(); }});
+    button.hidden=true;
+    if (skel) skel.hidden=false;
+    mount.hidden=false;
+    mount.classList.add('loading');
+    checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }}).mount('#checkout');
+    new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   }
   function testMode(state) { return !!state.ownerWhopTest && state.checkoutProvider !== 'whop'; }
   function showTestSubscription(state) {
@@ -92,6 +104,60 @@
     finally {cancelTest.disabled=false;}
   });
   const params = new URLSearchParams(location.search);
+  // Stars (per dc: "Purchase Stars" opens this sheet). Each purchase is credited by the server after it verifies
+  // the payment with Whop; the browser only names the pack and asks the server to check.
+  const STARS_PRICES = {500:4.99, 1100:9.99, 2400:19.99, 6500:49.99};
+  const starsPack = params.get('product') === 'stars' ? Number(params.get('pack')) : 0;
+  if (params.get('product') === 'stars') { runStars(starsPack); return; }
+  function runStars(n) {
+    const fmt = function (v) { return Number(v).toLocaleString('en-US'); };
+    document.title = 'Stars Checkout \u2014 MIS\u00c8RE PERDUE';
+    if (tag) tag.textContent = 'STARS';
+    const art = document.querySelector('.rc-art'), h1 = document.querySelector('h1'), sub = document.querySelector('.rc-sub');
+    function setArt() { if (art && STARS_PRICES[n]) art.src = '/img/stars-variant-' + n + '-' + (dark() ? 'dark' : 'light') + '.jpg?v=2'; }
+    setArt(); new MutationObserver(setArt).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+    if (h1) h1.textContent = STARS_PRICES[n] ? fmt(n) + ' Stars' : 'Stars';
+    if (sub) sub.textContent = 'Added to your account right after payment';
+    if (pricingNote) pricingNote.textContent = 'Stars are non-refundable once added. Any tax is added to the total below before you pay.';
+    button.textContent = 'Continue to payment';
+    if (!STARS_PRICES[n]) { status.textContent = 'Choose a Stars pack in the shop.'; button.hidden = true; return; }
+    if (!live) { status.textContent = 'Stars checkout runs on misereperdue.com.'; button.hidden = true; return; }
+    const ret = location.origin + '/whop-vip-preview?checkout=1&product=stars&pack=' + n + (sheet ? '&sheet=1' : '');
+    async function confirmStars(paid) {
+      for (let attempt = 0; attempt < (paid ? 10 : 1); attempt++) {
+        try {
+          const s = await request('/api/whop/stars/sync', {method:'POST', body:'{}'});
+          if (s.credited > 0) { showDone('Your balance is ' + fmt(s.points) + ' stars.', fmt(n) + ' Stars added'); return; }
+        } catch (_) { status.textContent = 'We couldn\u2019t check your Stars. They appear as soon as payment is confirmed.'; return; }
+        if (!paid) break;
+        await new Promise(function (r) { setTimeout(r, 1500); });
+      }
+      status.textContent = 'Payment received. Your Stars will appear shortly.';
+    }
+    if (params.has('status') || params.has('complete')) {
+      if (params.get('status') === 'failed' || params.get('status') === 'canceled') { status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try again.' : 'Checkout was canceled.'; return; }
+      button.hidden = true; status.textContent = 'Adding your Stars\u2026';
+      if (token()) confirmStars(true); else status.textContent = 'Sign in to see your Stars.';
+      return;
+    }
+    let started = false;
+    button.addEventListener('click', async function () {
+      if (started || button.disabled) return;
+      if (!token()) { status.textContent = 'Sign in to MIS\u00c8RE PERDUE before buying Stars.'; button.hidden = false; if (skel) skel.hidden = true; return; }
+      button.disabled = true; status.textContent = '';
+      try {
+        const st = await request('/api/whop/stars/status');
+        if (!st.enabled) throw new Error('Stars checkout is not available yet.');
+        if (Math.abs(Number(st.packs && st.packs[n]) - STARS_PRICES[n]) > 0.001) throw new Error('Stars pricing has changed. Checkout has not been opened.');
+        if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
+        const body = await request('/api/whop/stars/checkout', {method:'POST', body:JSON.stringify({pack:n})});
+        if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.pack !== n) throw new Error('The checkout could not be verified.');
+        mountCheckout(body.checkoutConfigurationId, ret, function () { status.textContent = 'Adding your Stars\u2026'; confirmStars(true); });
+        started = true;
+      } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; }
+    });
+    if (sheet) { button.hidden = true; if (skel) skel.hidden = false; button.click(); }
+  }
   if (params.has('status') || params.has('complete')) {
     status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try the same checkout again.' : params.get('status') === 'canceled' ? 'Checkout was canceled. You have not been upgraded.' : 'Checking your VIP membership…';
     if (token()) confirmVip(params.get('status') === 'succeeded');
@@ -135,16 +201,10 @@
       const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
       if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
       if (testMode(state) && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
-      const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:body.checkoutConfigurationId,returnUrl,appearance:appearance(),
-        // Payment finished in place: VIP still comes only from the server's verified sync.
-        onComplete:function(){ mount.hidden=true; status.textContent='Confirming your VIP\u2026'; confirmVip(true); }});
-      button.hidden=true; status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
-      if (skel) skel.hidden=false;
-      mount.hidden=false;
-      mount.classList.add('loading');
-      checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }}).mount('#checkout');
+      // Payment finished in place: VIP still comes only from the server's verified sync.
+      mountCheckout(body.checkoutConfigurationId, returnUrl, function(){ status.textContent='Confirming your VIP\u2026'; confirmVip(true); });
+      status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
       mounted=true;
-      new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
     } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;}
   });
   autoStart();

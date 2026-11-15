@@ -1250,10 +1250,39 @@ var MPShop = (function () {
         MP.PRODUCTS[o] ? w(o) : window.MPNav && MPNav.show("shop");
       });
     function B() {
+      if (sk) return void starsAction(p, i, function () { return y; });
       P(i, function () {
         return y;
       });
     }
+  }
+  /* Stars on Whop (per dc): "Purchase Stars" opens the payment sheet for the selected pack. Until the server
+     turns Whop Stars on, the existing add-to-bag flow stays. */
+  var starsWhop = null;
+  function starsWhopStatus() {
+    return starsWhop || (starsWhop = fetch("https://api.misereperdue.com/api/whop/stars/status", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
+      .catch(function () { starsWhop = null; return { enabled: false }; }));
+  }
+  function starsAction(p, i, pack) {
+    var box = p.querySelector("#bag-action");
+    if (!box) return;
+    starsWhopStatus().then(function (st) {
+      if (!box.isConnected) return;
+      if (!st || !st.enabled) return void P(i, pack);
+      if (!mpTok()) {
+        box.innerHTML = '<button class="btn accent vip-buy" type="button">Sign in to buy Stars</button>';
+        box.querySelector("button").onclick = function () { y("journal"); };
+        return;
+      }
+      box.innerHTML = '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button>';
+      box.querySelector("#stars-buy").onclick = function () {
+        var n = parseInt(String(pack()).replace(/,/g, ""), 10);
+        if (!n) return;
+        window.haptic && window.haptic(12);
+        openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout");
+      };
+    });
   }
   function starsSizes(i) {
     return i.sizes.filter(function (s) { return null != (i.priceBySize || {})[s]; }).sort(function (a, b) {
@@ -1320,13 +1349,13 @@ var MPShop = (function () {
   }
   /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
      with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
-  function openWhopSheet(onDone) {
+  function openWhopSheet(onDone, query, label) {
     var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
     var w = document.createElement("div");
-    w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "VIP checkout");
+    w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
     w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><span class="mp-whop-grab" aria-hidden="true"></span>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      '<iframe class="mp-whop-frame" title="VIP checkout" allow="payment *" src="/whop-vip-preview?sheet=1"></iframe></div>';
+      '<iframe class="mp-whop-frame" title="' + l(label || "VIP checkout") + '" allow="payment *" src="/whop-vip-preview?sheet=1' + (query || "") + '"></iframe></div>';
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
