@@ -14,7 +14,9 @@
   // Sheet mode: shown inside the site's own payment sheet (per dc). Compact, starts checkout immediately,
   // and tells the site when VIP is confirmed so it can close the sheet.
   const sheet = new URLSearchParams(location.search).get('sheet') === '1' && window.parent !== window;
+  const warmOnly = sheet && new URLSearchParams(location.search).get('warm') === '1';
   if (sheet) document.documentElement.classList.add('mp-sheet');
+  var startWanted = sheet && !warmOnly;
   const returnUrl = location.origin + '/whop-vip-preview' + (live ? '?checkout=1' : '') + (sheet ? (live ? '&' : '?') + 'sheet=1' : '');
   function notify(kind, extra) { if (sheet) try { window.parent.postMessage(Object.assign({mpWhop:kind}, extra || {}), location.origin); } catch (_) {} }
   // The sheet sizes itself to this page (up to its max height).
@@ -42,8 +44,12 @@
       syncOverlay();
     }).observe(document.documentElement, {subtree: true, childList: true, attributes: true, attributeFilter: ['open']});
     window.addEventListener('message', function (e) {
-      if (e.origin !== location.origin || !e.data || e.data.mpWhop !== 'peek') return;
-      document.documentElement.classList.toggle('mp-peek', !!e.data.on);
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.mpWhop === 'peek') document.documentElement.classList.toggle('mp-peek', !!e.data.on);
+      if (e.data.mpWhop === 'start') {
+        startWanted = true;
+        if (window.__mpWhopBegin) window.__mpWhopBegin();
+      }
     });
   }
   const skel = document.getElementById('skel');
@@ -111,15 +117,25 @@
     if (!response.ok || !body.ok) throw new Error(body.error || 'Checkout is unavailable. Please try again later.');
     return body;
   }
+  function sessKey(kind, n) { return 'mp_whop_sess_' + kind + (n ? '_' + n : ''); }
+  function readSess(kind, n) {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(sessKey(kind, n)) || 'null');
+      if (s && typeof s.id === 'string' && /^ch_[A-Za-z0-9_-]+$/.test(s.id) && Date.now() - s.at < 8 * 60 * 1000) return s.id;
+    } catch (_) {}
+    return '';
+  }
+  function writeSess(kind, n, id) { try { sessionStorage.setItem(sessKey(kind, n), JSON.stringify({ id: id, at: Date.now() })); } catch (_) {} }
+  function dropSess(kind, n) { try { sessionStorage.removeItem(sessKey(kind, n)); } catch (_) {} }
   // Mounts Whop's checkout for a server-made configuration, styled to the page, behind the matching placeholder.
-  function mountCheckout(configId, ret, onComplete) {
+  function mountCheckout(configId, ret, onComplete, onFail) {
     const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:configId,returnUrl:ret,appearance:appearance(),
       onComplete:function(){ mount.hidden=true; onComplete(); }});
     button.hidden=true;
     if (skel) skel.hidden=false;
     mount.hidden=false;
     mount.classList.add('loading');
-    checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); }}).mount('#checkout');
+    checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); if (typeof onFail === 'function') onFail(); }}).mount('#checkout');
     new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   }
   function testMode(state) { return !!state.ownerWhopTest && state.checkoutProvider !== 'whop'; }
@@ -194,13 +210,31 @@
         if (!st.enabled) throw new Error('Stars checkout is not available yet.');
         if (Math.abs(Number(st.packs && st.packs[n]) - STARS_PRICES[n]) > 0.001) throw new Error('Stars pricing has changed. Checkout has not been opened.');
         if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
-        const body = await request('/api/whop/stars/checkout', {method:'POST', body:JSON.stringify({pack:n})});
-        if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.pack !== n) throw new Error('The checkout could not be verified.');
-        mountCheckout(body.checkoutConfigurationId, ret, function () { status.textContent = 'Adding your Stars\u2026'; confirmStars(true); });
-        started = true;
+        function useId(id, fromCache) {
+          mountCheckout(id, ret, function () { dropSess('stars', n); status.textContent = 'Adding your Stars\u2026'; confirmStars(true); }, function () {
+            if (!fromCache) return;
+            dropSess('stars', n);
+            started = false; button.disabled = false;
+            button.click();
+          });
+          started = true;
+        }
+        const cached = readSess('stars', n);
+        if (cached) useId(cached, true);
+        else {
+          const body = await request('/api/whop/stars/checkout', {method:'POST', body:JSON.stringify({pack:n})});
+          if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.pack !== n) throw new Error('The checkout could not be verified.');
+          writeSess('stars', n, body.checkoutConfigurationId);
+          useId(body.checkoutConfigurationId, false);
+        }
       } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; }
     });
-    if (sheet) { button.hidden = true; if (skel) skel.hidden = false; button.click(); }
+    window.__mpWhopBegin = function () { button.click(); };
+    if (sheet) {
+      button.hidden = true; if (skel) skel.hidden = false;
+      if (warmOnly && !startWanted) notify('warm');
+      if (!warmOnly || startWanted) button.click();
+    }
   }
   if (params.has('status') || params.has('complete')) {
     status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try the same checkout again.' : params.get('status') === 'canceled' ? 'Checkout was canceled. You have not been upgraded.' : 'Checking your VIP membership…';
@@ -224,12 +258,14 @@
   function autoStart() {
     if (params.has('status') || params.has('complete')) return;
     if (sheet) { button.hidden = true; if (skel) skel.hidden = false; }
+    window.__mpWhopBegin = function () { button.click(); };
+    function kick() { if (!warmOnly || startWanted) button.click(); else notify('warm'); }
     if (live && token()) request('/api/whop/vip/sync',{method:'POST',body:'{}'}).then(function (state) {
       if (showTestSubscription(state)) return;
       if (state.vip && state.provider === 'whop' && state.checkoutProvider === 'whop') { showDone(); return; }
-      if (sheet) button.click();
-    }).catch(function () { if (sheet) button.click(); });
-    else if (sheet) button.click();
+      if (sheet) kick();
+    }).catch(function () { if (sheet) kick(); });
+    else if (sheet) kick();
   }
   button.addEventListener('click', async function () {
     if (mounted || button.disabled) return;
@@ -242,13 +278,25 @@
       if (!testMode(state) && (state.vip || state.status === 'active')) throw new Error(live ? 'You already have VIP, and this account is not set up for the private live test. Sign in with the owner account, then reload this page.' : 'You already have VIP. Manage your membership from your profile.');
       if (live && !(await request('/api/whop/vip/readiness')).ready) throw new Error('VIP pricing has changed. Checkout has not been opened.');
       if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
-      const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
-      if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
-      if (testMode(state) && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
-      // Payment finished in place: VIP still comes only from the server's verified sync.
-      mountCheckout(body.checkoutConfigurationId, returnUrl, function(){ status.textContent='Confirming your VIP\u2026'; confirmVip(true); });
+      function useId(id, fromCache, ownerTestFlag) {
+        if (testMode(state) && fromCache === false && ownerTestFlag!==true) throw new Error('The separate test checkout could not be verified.');
+        mountCheckout(id, returnUrl, function(){ dropSess('vip'); status.textContent='Confirming your VIP\u2026'; confirmVip(true); }, function () {
+          if (!fromCache) return;
+          dropSess('vip'); mounted=false; button.disabled=false;
+          button.click();
+        });
+        mounted=true;
+      }
+      const cached = !testMode(state) && readSess('vip');
+      if (cached) useId(cached, true);
+      else {
+        const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
+        if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
+        if (testMode(state) && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
+        writeSess('vip', 0, body.checkoutConfigurationId);
+        useId(body.checkoutConfigurationId, false, body.ownerTest);
+      }
       status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
-      mounted=true;
     } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;}
   });
   autoStart();
