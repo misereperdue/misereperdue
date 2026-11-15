@@ -12310,7 +12310,7 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .mp-charm svg,.mp-charm img{width:16px;height:16px;object-fit:contain}
 .mp-charm .chat-badge,.mp-charm .chat-badge-kitty,.mp-charm .chat-badge-mask,.mp-charm .chat-verified{display:grid!important;place-items:center;width:16px!important;height:16px!important;font-size:13px!important;line-height:16px!important}
 .mp-charm .chat-badge-kitty img,.mp-charm .chat-badge-mask img{width:16px!important;height:16px!important}
-.mp-pb-name .mp-charms{gap:5px;margin-left:7px}
+.mp-pb-name .mp-charms{gap:5px;margin-left:1px} /* sits close to the name (per dc); the gem art has its own side padding */
 .mp-pb-name .mp-charm,.mp-pb-name .mp-charm svg,.mp-pb-name .mp-charm img,.mp-pb-name .mp-charm .chat-badge,.mp-pb-name .mp-charm .chat-badge-kitty,.mp-pb-name .mp-charm .chat-badge-kitty img,.mp-pb-name .mp-charm .chat-badge-mask img{width:19px!important;height:19px!important}
 .mp-pb-name .mp-charm .chat-badge{font-size:15px!important;line-height:19px!important}
 /* Manage window (per dc): even, tighter rhythm; round colour chooser */
