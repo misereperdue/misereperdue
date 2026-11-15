@@ -32,11 +32,11 @@
       'whop-CheckoutDetails':{background:'transparent'}, 'whop-CheckoutSummary':{background:'transparent'},
       'whop-CheckoutSeller':{display:'none'}, 'whop-CheckoutSellerLogo':{display:'none'}, 'whop-CheckoutItem':{display:'none'}, 'whop-CheckoutItemHeadline':{display:'none'},
       'whop-CheckoutTotal':{fontSize:'34px', fontWeight:'600', letterSpacing:'-0.02em', color:ink},
-      'whop-EmailInput':input, 'whop-CardFieldGroup':{display:'flex',flexDirection:'column',gap:'12px'}, 'whop-CardField':{margin:'0'}, 'whop-CardFieldRow':{display:'flex',gap:'12px',marginTop:'12px'}, 'whop-CardFieldInput':input, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
+      'whop-EmailInput':input, 'whop-CardFieldInput':input, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
       // Whop's live total (tax included once known) is the one price figure on the sheet
       'whop-CheckoutPriceContext':{fontSize:'13px'},
       'whop-PaymentMethods':{background:'transparent'}, 'whop-PaymentMethod':{background:'transparent'}, 'whop-PaymentMethodRow':{background:'transparent'},
-      'whop-PaymentMethodDetail':{background:'transparent'}, 'whop-PaymentCardFields':{background:'transparent',display:'flex',flexDirection:'column',gap:'12px'}, 'whop-PaymentBillingBlock':{background:'transparent'},
+      'whop-PaymentMethodDetail':{background:'transparent'}, 'whop-PaymentCardFields':{background:'transparent'}, 'whop-PaymentBillingBlock':{background:'transparent'},
       'whop-PaymentMethodSeparated':{background:'transparent', borderColor:hair, borderRadius:'14px'},
       'whop-CheckoutPayButton':{background:d ? '#dfe5ee' : '#0a1230', color:d ? '#111a32' : '#ffffff', borderRadius:'14px', height:'52px', fontSize:'15px', fontWeight:'600'}
     }};

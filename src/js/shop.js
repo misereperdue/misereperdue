@@ -1386,7 +1386,7 @@ var MPShop = (function () {
     var w = document.createElement("div");
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
     var adopted = takeWhopWarm(query);
-    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><span class="mp-whop-grab" aria-hidden="true"></span>' +
+    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><div class="mp-whop-drag"><span class="mp-whop-grab" aria-hidden="true"></span></div>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
       '<div class="mp-whop-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>';
     var panel = w.querySelector(".mp-whop-panel"), frame = adopted;
@@ -1408,14 +1408,55 @@ var MPShop = (function () {
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false;
+    var finished = false, closing = false, CLOSE_MS = 320;
+    var bd = w.querySelector(".mp-whop-backdrop");
+    function reduceMotion() {
+      try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
+    }
     function close() {
+      if (closing) return;
+      closing = true;
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
-      w.classList.remove("is-open"); document.documentElement.classList.remove("mp-whop-open");
+      /* Let CSS take over from a mid-swipe position: clear inline drag styles after
+         is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
+      w.classList.remove("is-open");
+      document.documentElement.classList.remove("mp-whop-open");
+      panel.style.transition = "";
+      if (bd) bd.style.transition = "";
+      void panel.offsetWidth;
+      panel.style.transform = "";
+      if (bd) bd.style.opacity = "";
       setTimeout(function () {
+        if (!w.isConnected) return;
         w.remove();
         if (mpTok()) warmWhop(query, label);
-      }, 260);
+      }, reduceMotion() ? 0 : CLOSE_MS + 40);
+    }
+    var dragY = 0, dragStart = 0, dragAt = 0, dragging = false;
+    function onDragStart(e) {
+      if (closing || !w.classList.contains("is-open") || e.pointerType === "mouse" && e.button !== 0) return;
+      dragging = true; dragStart = e.clientY; dragY = 0; dragAt = Date.now();
+      panel.style.transition = "none";
+      if (bd) bd.style.transition = "none";
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    function onDragMove(e) {
+      if (!dragging) return;
+      dragY = Math.max(0, e.clientY - dragStart);
+      panel.style.transform = "translateY(" + dragY + "px)";
+      if (bd) bd.style.opacity = String(Math.max(0.15, 1 - dragY / 320));
+    }
+    function onDragEnd() {
+      if (!dragging) return;
+      dragging = false;
+      panel.style.transition = "";
+      if (bd) bd.style.transition = "";
+      var flick = dragY / Math.max(1, Date.now() - dragAt) > 0.55;
+      if (dragY > 88 || (dragY > 32 && flick)) close();
+      else {
+        panel.style.transform = "";
+        if (bd) bd.style.opacity = "";
+      }
     }
     function onMsg(e) {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
@@ -1433,7 +1474,14 @@ var MPShop = (function () {
     function onKey(e) { if (e.key === "Escape") close(); }
     window.addEventListener("message", onMsg); document.addEventListener("keydown", onKey);
     w.querySelector(".mp-whop-x").onclick = close;
-    w.querySelector(".mp-whop-backdrop").onclick = close;
+    bd.onclick = close;
+    var drag = w.querySelector(".mp-whop-drag");
+    if (drag) {
+      drag.addEventListener("pointerdown", onDragStart);
+      drag.addEventListener("pointermove", onDragMove);
+      drag.addEventListener("pointerup", onDragEnd);
+      drag.addEventListener("pointercancel", onDragEnd);
+    }
   }
   window.MPWhopSheet = openWhopSheet;
   function vipCheckout(i, b, provider) {
