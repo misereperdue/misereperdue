@@ -60,28 +60,6 @@ var MPShop = (function () {
   function mpTok() {
     try { return localStorage.getItem("chat_token"); } catch (e) { return null; }
   }
-  /* Cart attributes that tie a paid order to the signed-in account: a single-use
-   * link from the Worker. Falls back to the username while the Worker without
-   * /api/checkout/link is live. Resolves null when signed out. */
-  function linkAttrs() {
-    var tok = mpTok();
-    if (!tok) return Promise.resolve(null);
-    var H = { Authorization: "Bearer " + tok };
-    return fetch("https://api.misereperdue.com/api/checkout/link", { method: "POST", headers: H })
-      .then(function (r) {
-        if (401 === r.status) return null;
-        if (r.ok) return r.json().then(function (j) { return j && j.link ? [{ key: "link", value: j.link }] : null; });
-        if (404 !== r.status) throw new Error("link");
-        return fetch("https://api.misereperdue.com/api/me", { headers: H })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) { var u = j && j.user && j.user.username; return u ? [{ key: "account", value: u }] : null; });
-      });
-  }
-  function goCheckout(url) {
-    var h = new URL(url).hostname;
-    if ("shop.misereperdue.com" !== h && !h.endsWith(".myshopify.com") && "checkout.shopify.com" !== h) throw new Error("bad checkout host");
-    window.location.href = url;
-  }
   function a(t) {
     return (
       !!t &&
@@ -190,13 +168,26 @@ var MPShop = (function () {
   var f = "";
   function v() {
     try {
-      var t = localStorage.getItem("mp_products_cache_v2");
+      var t = localStorage.getItem("mp_products_cache_v3");
       if (t) {
         var e = JSON.parse(t);
         if (e && e.length) return e;
       }
     } catch (t) {}
     return null;
+  }
+  // Bags from before Shopify was retired can hold VIP/Stars (now bought from their own pages) or items not on sale.
+  function pruneCart() {
+    try {
+      var cart = MP.readCart(), keep = cart.filter(function (line) {
+        var pr = MP.PRODUCTS[line.id];
+        return pr && pr.available !== !1 && !pr.comingSoon && !n(pr) && !starsPack(pr);
+      });
+      if (keep.length !== cart.length) {
+        MP.writeCart(keep);
+        window.MPNav && MPNav.refreshPostBtn && MPNav.refreshPostBtn();
+      }
+    } catch (e) {}
   }
   function h(t) {
     return MPShopify.fetchProducts()
@@ -206,8 +197,9 @@ var MPShop = (function () {
             MP.PRODUCTS[t.id] = t;
           });
           try {
-            localStorage.setItem("mp_products_cache_v2", JSON.stringify(e));
+            localStorage.setItem("mp_products_cache_v3", JSON.stringify(e));
           } catch (t) {}
+          pruneCart();
           return e;
         }
         if (!t) return h(!0);
@@ -1289,8 +1281,7 @@ var MPShop = (function () {
       return parseFloat(String(a).replace(/,/g, "")) - parseFloat(String(b).replace(/,/g, ""));
     });
   }
-  /* VIP (#133): a Seal subscription. First order is the variant price, then the
-   * plan's recurring price each month until cancelled in the Seal portal. */
+  /* VIP: a Whop subscription (catalog: first charge, then the renewal price every 30 days until cancelled). */
   function vipTerms(i) {
     var later = null != i.planRecurring ? i.planRecurring : 3;
     function ico(d) {
@@ -1302,10 +1293,10 @@ var MPShop = (function () {
     return '<div class="vip-terms">' +
       '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(i.price) + '</span><span class="vt-when">today</span></div>' +
       '<span class="vt-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="M15 17s5-3.682 5-5-5-5-5-5"/></svg></span>' +
-      '<div class="vt-step"><span class="vt-amt">' + cad(later) + '</span><span class="vt-when">every month after</span></div></div>' +
+      '<div class="vt-step"><span class="vt-amt">' + cad(later) + '</span><span class="vt-when">every 30 days after</span></div></div>' +
       "<ul>" +
-      row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews monthly", "Charged automatically until you cancel.") +
-      row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the month you paid for.") +
+      row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews every 30 days", "Charged automatically until you cancel.") +
+      row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the period you paid for.") +
       (mpTok() ? "" : row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.")) +
       "</ul></div>";
   }
@@ -1338,8 +1329,8 @@ var MPShop = (function () {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
           box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed</p><p class="vip-status-s">' +
             (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for your contribution!") + "</p>" +
-            ("subscription" === v.source && !v.cancelled && (v.manageUrl || v.provider !== "whop")
-              ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
+            ("subscription" === v.source && !v.cancelled && v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl)
+              ? '<a class="btn vip-manage" href="' + l(v.manageUrl) + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
           return;
         }
@@ -1382,22 +1373,8 @@ var MPShop = (function () {
   window.MPWhopSheet = openWhopSheet;
   function vipCheckout(i, b, provider) {
     if (provider === "whop") { openWhopSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }); return; }
-    var er = document.getElementById("vip-err"),
-      vid = MPShopify.variantIdFor(i, null);
-    if (!vid || !i.sellingPlanId) return void (er && (er.textContent = "VIP isn't available right now."));
-    b.disabled = !0;
-    b.innerHTML = '<span class="btn-spin"></span>';
-    linkAttrs()
-      .then(function (a) {
-        if (!a) return void y("journal");
-        a.push({ key: "membership", value: "yes" });
-        return MPShopify.createCheckout([{ variantId: vid, qty: 1, sellingPlanId: i.sellingPlanId }], a).then(goCheckout);
-      })
-      .catch(function () {
-        b.disabled = !1;
-        b.textContent = "Purchase VIP";
-        er && (er.textContent = "Couldn't start checkout. Check your connection and try again.");
-      });
+    var er = document.getElementById("vip-err");
+    er && (er.textContent = "VIP checkout isn't available right now. Please try again shortly.");
   }
   async function S() {
     var t = document.getElementById("checkout-btn"),
@@ -1420,71 +1397,9 @@ var MPShop = (function () {
       } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }
       finally { if(t) t.disabled = false; }
     }
-    (e && (e.textContent = ""),
-      window.MPShopify && MPShopify.configured()
-        ? (t && ((t.disabled = !0), (t.innerHTML = '<span class="btn-spin"></span>')),
-          m()
-            .then(function () {
-              var t = [],
-                e = !1,
-                o = !1,
-                sp = !1;
-              if (
-                (MP.readCart().forEach(function (i) {
-                  var r = MP.PRODUCTS[i.id];
-                  if (r && r.shopify) {
-                    var c = MPShopify.variantIdFor(r, i.size),
-                      s = parseInt(i.qty, 10) || 0;
-                    c &&
-                      s > 0 &&
-                      (t.push({ variantId: c, qty: n(r) ? 1 : s, sellingPlanId: r.requiresSellingPlan || n(r) ? r.sellingPlanId || void 0 : void 0 }), n(r) && (e = sp = !0), a(r) && (o = !0), starsPack(r) && (o = sp = !0));
-                  }
-                }),
-                !t.length)
-              )
-                throw new Error("empty");
-              return e || o
-                ? linkAttrs().then(function (a) {
-                    if (sp && !a) throw new Error("stars-signin");
-                    a = a || [];
-                    e && a.push({ key: "membership", value: "yes" });
-                    return MPShopify.createCheckout(t, a);
-                  })
-                : MPShopify.createCheckout(t);
-            })
-            .then(function (n) {
-              try {
-                var a = new URL(n).hostname;
-                if (
-                  "shop.misereperdue.com" !== a &&
-                  !a.endsWith(".myshopify.com") &&
-                  "checkout.shopify.com" !== a
-                )
-                  throw new Error("bad checkout host");
-              } catch (n) {
-                return (
-                  t && ((t.disabled = !1), (t.textContent = "Checkout")),
-                  void (
-                    e &&
-                    (e.textContent =
-                      "Couldn't start checkout. Check your connection and try again.")
-                  )
-                );
-              }
-              try {
-                MP.writeCart([]);
-              } catch (t) {}
-              window.location.href = n;
-            })
-            .catch(function (n) {
-              (t && ((t.disabled = !1), (t.textContent = "Checkout")),
-                e &&
-                  (e.textContent =
-                    n && "stars-signin" === n.message
-                      ? "Sign in first so your Stars and VIP land on your account."
-                      : "Couldn't start checkout. Check your connection and try again."));
-            }))
-        : e && (e.textContent = "Checkout isn't available right now."));
+    // Shopify checkout is retired (per dc, 2026-11-15). VIP and Stars are bought from their own pages through the
+    // Whop sheet; clothing checkout returns with its launch.
+    e && (e.textContent = "Checkout for clothing opens at launch.");
   }
   var C = null,
     E = !1,

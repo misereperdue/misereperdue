@@ -7772,7 +7772,7 @@
           el.lastChild.textContent = f[k][1];
         });
       }
-      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl || (v.provider === "whop" ? null : "https://shop.misereperdue.com/a/subscriptions/login");
+      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl) ? v.manageUrl : null;
       if (v.vip && sub && v.cancelled) {
         btns.innerHTML = '<p class="vip-row-note">Cancelled. You won\u2019t be charged again, and VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + '.</p>';
       } else if (v.vip && sub) {

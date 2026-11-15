@@ -1,27 +1,14 @@
-/* MISERY headless Shopify — the shop page pulls its catalog from Shopify's
- * Storefront API. If the token below isn't set, the shop falls back to the
- * local placeholder instead of breaking.
- *
- * Setup (do once in Shopify Admin):
- *  1. Settings > Apps and sales channels > Develop apps > Create an app
- *     (name it "misereperdue-headless").
- *  2. Configuration > Storefront API > enable it. Scopes needed:
- *     unauthenticated_read_product_listings, unauthenticated_read_product_inventory
- *     (product info only — no checkout scopes needed for a catalog pull).
- *  3. Install the app, copy the "Storefront API access token".
- *  4. Paste it as TOKEN below via github.com (never in chat), push, done.
- *     The shop page goes live with your real products on the next deploy.
- */
+/* MISERY product catalog. Per dc (2026-11-15) Shopify is retired and payments run on Whop: the shop reads the
+ * site's own data/catalog.json (same shape the Storefront API returned, so the shop code is unchanged).
+ * The global keeps its old name (MPShopify) for the existing callers; MPCatalog is the new alias.
+ * There is no cart checkout here: VIP and Stars open the Whop payment sheet from their product pages. */
 var MPShopify = (function () {
   "use strict";
 
-  var CONFIG = {
-    domain: "shop.misereperdue.com", // your shop domain works for the Storefront API
-    token: "1ea6d8e04d03687ed4547d291ef46026" // Storefront API public token (public by design)
-  };
+  var CONFIG = { source: "/data/catalog.json?v=1" };
 
   function configured() {
-    return !!(CONFIG.domain && CONFIG.token);
+    return true;
   }
 
   function money(amount, currency) {
@@ -106,27 +93,30 @@ var MPShopify = (function () {
     };
   }
 
+  // Catalog nodes -> the Storefront edge shape normalize() reads.
+  function asEdge(n) {
+    var e = { node: Object.assign({}, n, {
+      images: { edges: ((n.images || {}).nodes || []).map(function (i) { return { node: i }; }) },
+      variants: { edges: ((n.variants || {}).nodes || []).map(function (v) { return { node: v }; }) }
+    }) };
+    return e;
+  }
+
   function fetchProducts() {
-    var query = "{ products(first: 24) { edges { node { id title handle description descriptionHtml " +
-      "availableForSale requiresSellingPlan sellingPlanGroups(first: 3) { edges { node { sellingPlans(first: 3) { edges { node { id priceAdjustments { orderCount adjustmentValue { ... on SellingPlanFixedPriceAdjustment { price { amount } } } } } } } } } } priceRange { minVariantPrice { amount currencyCode } } " +
-      "images(first: 8) { edges { node { url altText } } } " +
-      "variants(first: 25) { edges { node { id title sku availableForSale quantityAvailable price { amount currencyCode } image { url } selectedOptions { name value } } } } } } } }";
-    return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": CONFIG.token
-      },
-      body: JSON.stringify({ query: query })
-    })
+    return fetch(CONFIG.source, { cache: "no-cache" })
       .then(function (r) {
         if (!r.ok) throw new Error("http " + r.status);
         return r.json();
       })
       .then(function (d) {
-        if (d.errors && !d.data) throw new Error("api: " + ((d.errors[0] || {}).message || "unknown"));
-        var edges = (((d.data || {}).products) || {}).edges || [];
-        return edges.map(normalize);
+        return ((d && d.products) || []).map(function (n) {
+          var p = normalize(asEdge(n));
+          if (n.planRecurring != null) p.planRecurring = n.planRecurring;
+          if (n.requiresSellingPlan) p.requiresSellingPlan = true;
+          p.comingSoon = !!n.comingSoon;
+          p.whop = n.whop || null;
+          return p;
+        });
       });
   }
 
@@ -139,29 +129,11 @@ var MPShopify = (function () {
     return vs.length ? vs[0].id : null;
   }
 
-  function createCheckout(lines, attributes) {
-    var query = "mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { checkoutUrl } userErrors { field message } } }";
-    var input = { lines: lines.map(function (l) { var o = { merchandiseId: l.variantId, quantity: l.qty }; if (l.sellingPlanId) o.sellingPlanId = l.sellingPlanId; return o; }) };
-    if (attributes && attributes.length) input.attributes = attributes;
-    return fetch("https://" + CONFIG.domain + "/api/2026-01/graphql.json", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": CONFIG.token
-      },
-      body: JSON.stringify({
-        query: query,
-        variables: { input: input }
-      })
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var cc = ((d.data || {}).cartCreate) || {};
-        var errs = cc.userErrors || [];
-        if (d.errors || errs.length || !cc.cart || !cc.cart.checkoutUrl) throw new Error("checkout");
-        return cc.cart.checkoutUrl;
-      });
+  // Shopify checkout is retired: nothing in the shop is paid through a cart checkout any more.
+  function createCheckout() {
+    return Promise.reject(new Error("checkout retired"));
   }
 
   return { CONFIG: CONFIG, configured: configured, fetchProducts: fetchProducts, money: money, variantIdFor: variantIdFor, createCheckout: createCheckout };
 })();
+var MPCatalog = MPShopify;

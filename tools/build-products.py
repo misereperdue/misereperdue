@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Regenerate the static product pages (p/<handle>.html) and shop.html from the
-live Shopify Storefront API, with schema.org Product JSON-LD (Google rich
-results: price, currency, availability, image, brand). Run: python3 tools/build-products.py
-Products no longer in the storefront are reported (their page is not touched)."""
+"""Regenerate the static product pages (p/<handle>.html) and shop.html from the site's own catalog
+(data/catalog.json; per dc, Shopify retired 2026-11-15, payments on Whop), with schema.org Product
+JSON-LD (Google rich results: price, currency, availability, image, brand). Run: python3 tools/build-products.py
+Products no longer in the catalog are reported (their page is not touched)."""
 import hashlib, json, html, os, re, subprocess, sys, urllib.request
 SITE = "https://misereperdue.com"
-API = "https://shop.misereperdue.com/api/2026-01/graphql.json"
-TOKEN = "1ea6d8e04d03687ed4547d291ef46026"  # public Storefront token (same as js/shopify.js)
-Q = """{ products(first:50){ nodes{ id handle title description availableForSale
-  featuredImage{url width height} images(first:5){nodes{url}}
-  priceRange{minVariantPrice{amount currencyCode} maxVariantPrice{amount currencyCode}}
-  variants(first:20){nodes{id title availableForSale price{amount currencyCode}}} } } }"""
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRAND = "Misère Perdue (Misery)"  # per dc: every title ends "| Misère Perdue (Misery)"
 # Per dc (SEO review): search name + one-sentence description per product. {price} = live lowest price,
@@ -49,10 +43,7 @@ def crumbs(items):
         {"@type": "ListItem", "position": i + 1, "name": n, "item": u} for i, (n, u) in enumerate(items)]}
 
 def fetch():
-    req = urllib.request.Request(API, data=json.dumps({"query": Q}).encode(), headers={
-        "Content-Type": "application/json", "X-Shopify-Storefront-Access-Token": TOKEN,
-        "Origin": SITE, "User-Agent": "misery-build-products"})
-    return json.load(urllib.request.urlopen(req, timeout=30))["data"]["products"]["nodes"]
+    return json.load(open(os.path.join(ROOT, "data", "catalog.json"), encoding="utf-8"))["products"]
 
 def money(a):
     a = float(a); return ("%d" % a) if a == int(a) else ("%.2f" % a)
@@ -180,7 +171,7 @@ def main():
         share = [(f"{SITE}/img/og/{p['handle']}-p.jpg?v={ver(card)}", 1200, 630)] if os.path.exists(card) else [(img, None, None)]
         if os.path.exists(sq): share.append((f"{SITE}/img/og/{p['handle']}-sq.jpg?v={ver(sq)}", 1200, 1200))
         p["_share"] = [u for u, _, _ in share]
-        stock = "In stock" if p["availableForSale"] else "Sold out"
+        stock = "In stock" if p["availableForSale"] else ("Coming soon" if p.get("comingSoon") else "Sold out")
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
         alt = f"{p['title']} by Misère Perdue"
@@ -190,7 +181,7 @@ def main():
                 f"<article>\n<h1>{e(p['title'])}</h1>\n"
                 f"<p class=\"price\">{price_label(p)}</p>\n<p><span class=\"tag\">{stock}</span></p>\n"
                 f"<p class=\"meta\">All sales are final: no returns or exchanges. <a href=\"/info\">Terms</a></p>\n"
-                f"<p><img src=\"{e(img)}&width=720\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
+                f"<p><img src=\"{e(img)}\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
@@ -210,17 +201,17 @@ def main():
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
     names = [(SEO.get(p["handle"]) or (None, p["title"]))[1] for p, _ in items]
     listed = ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "".join(names)
-    desc = f"Shop Misère Perdue (Misery): {listed}. Prices in CAD with secure checkout by Shopify."
+    desc = f"Shop Misère Perdue (Misery): {listed}. Prices in CAD with secure checkout by Whop."
     def thumb(p):
         fi = p.get("featuredImage") or {}
-        return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}&width=240\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
+        return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
     rows = "".join(f"<div class=\"product\">{thumb(p)}<h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
     shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", DEFAULT_IMAGES, "website", ld, "Misère Perdue closed eyes") + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
         if f.endswith(".html") and f[:-5] not in live:
-            print("NOT IN STOREFRONT (stale page):", "p/" + f)
+            print("NOT IN CATALOG (stale page):", "p/" + f)
     # keep sitemap.xml (+ thread pages, /globe) in sync
     if "--no-sitemap" not in sys.argv:
         subprocess.run([sys.executable, os.path.join(ROOT, "build-sitemap.py")], check=True)

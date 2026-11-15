@@ -1,0 +1,334 @@
+{
+ "_note": "Product catalog (per dc: Shopify retired 2026-11-15, payments on Whop). Edit here; the shop page, product pages, share cards and sitemap read this file.",
+ "currency": "CAD",
+ "products": [
+  {
+   "id": "gid://shopify/Product/8161016414310",
+   "handle": "misery-v_v-sleeping-mask",
+   "title": "V_V Mask",
+   "description": "+Plush silk mask +Plush silk + elastic straps +MISERY eyes embroidery +Quality packaging/box +Site-wide profile charm SS27 MISERY | Misère PerdueNON REFUNDABLE",
+   "descriptionHtml": "<p>+Plush silk mask</p>\n<p> </p>\n<p>+Plush silk + elastic straps<br></p>\n<p> </p>\n<p>+MISERY eyes embroidery</p>\n<p> </p>\n<p>+Quality packaging/box</p>\n<p> </p>\n<p>+Site-wide profile charm</p>\n<p> </p>\n<p>SS27 MISERY | Misère Perdue<br>NON REFUNDABLE</p>",
+   "availableForSale": false,
+   "requiresSellingPlan": false,
+   "featuredImage": {
+    "url": "https://misereperdue.com/img/products/vv-mask-front.png",
+    "width": 1125,
+    "height": 1125
+   },
+   "images": {
+    "nodes": [
+     {
+      "url": "https://misereperdue.com/img/products/vv-mask-front.png",
+      "width": 1125,
+      "height": 1125
+     },
+     {
+      "url": "https://misereperdue.com/img/products/vv-mask-back.png",
+      "width": 1125,
+      "height": 1125
+     }
+    ]
+   },
+   "priceRange": {
+    "minVariantPrice": {
+     "amount": "160.0",
+     "currencyCode": "CAD"
+    },
+    "maxVariantPrice": {
+     "amount": "160.0",
+     "currencyCode": "CAD"
+    }
+   },
+   "variants": {
+    "nodes": [
+     {
+      "id": "gid://shopify/ProductVariant/46604089786470",
+      "title": "Default Title",
+      "sku": null,
+      "availableForSale": false,
+      "price": {
+       "amount": "160.0",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/vv-mask-front.png"
+      },
+      "selectedOptions": [
+       {
+        "name": "Title",
+        "value": "Default Title"
+       }
+      ]
+     }
+    ]
+   },
+   "comingSoon": true,
+   "whop": {
+    "plan": "plan_8upzEnr4v3Mz9"
+   }
+  },
+  {
+   "id": "gid://shopify/Product/15416182014054",
+   "handle": "membership",
+   "title": "VIP",
+   "description": "+Exclusive access to merchandise collections +Custom badge on Misery Globe + Chat +Access to valuable VIP only Misery Globe discussions boards ($$$, more) +Send custom polls in chat +Request a song during MISERY fm live sessions (WIP) +Higher upload limits on Misery Globe + Chat +Physical titanium card reserved for VIP ($40) - ETA Fall 2027 MISERY | Misère PerdueNON REFUNDABLE",
+   "descriptionHtml": "<p>+Exclusive access to merchandise collections</p>\n<p> </p>\n<p>+Custom badge on Misery Globe + Chat</p>\n<p> </p>\n<p>+Access to valuable VIP only Misery Globe discussions boards ($$$, more)</p>\n<p> </p>\n<p>+Send custom polls in chat</p>\n<p> </p>\n<p>+Request a song during MISERY fm live sessions (WIP)</p>\n<p> </p>\n<p>+Higher upload limits on Misery Globe + Chat</p>\n<p> </p>\n<p>+Physical titanium card reserved for VIP ($40) - ETA Fall 2027</p>\n<p> </p>\n<p>MISERY | Misère Perdue<br>NON REFUNDABLE</p>",
+   "availableForSale": true,
+   "requiresSellingPlan": true,
+   "featuredImage": {
+    "url": "https://misereperdue.com/img/products/vip.png",
+    "width": 1680,
+    "height": 1504
+   },
+   "images": {
+    "nodes": [
+     {
+      "url": "https://misereperdue.com/img/products/vip.png",
+      "width": 1680,
+      "height": 1504
+     }
+    ]
+   },
+   "priceRange": {
+    "minVariantPrice": {
+     "amount": "13.98",
+     "currencyCode": "CAD"
+    },
+    "maxVariantPrice": {
+     "amount": "13.98",
+     "currencyCode": "CAD"
+    }
+   },
+   "variants": {
+    "nodes": [
+     {
+      "id": "gid://shopify/ProductVariant/67978475831398",
+      "title": "Default Title",
+      "sku": null,
+      "availableForSale": true,
+      "price": {
+       "amount": "13.98",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/vip.png"
+      },
+      "selectedOptions": [
+       {
+        "name": "Title",
+        "value": "Default Title"
+       }
+      ]
+     }
+    ]
+   },
+   "whop": {
+    "plan": "plan_D40DCsIL1su7P",
+    "initial": 13.98,
+    "renewal": 3.99,
+    "periodDays": 30
+   },
+   "planRecurring": 3.99
+  },
+  {
+   "id": "gid://shopify/Product/15505333813350",
+   "handle": "stars",
+   "title": "Stars",
+   "description": "+Star packs used to purchase powers & send gifts on Misery Globe MISERY | Misère PerdueNON REFUNDABLE",
+   "descriptionHtml": "<p>+Star packs used to purchase powers &amp; send gifts on Misery Globe</p>\n<p> </p>\n<p>MISERY | Misère Perdue<br>NON REFUNDABLE</p>",
+   "availableForSale": true,
+   "requiresSellingPlan": false,
+   "featuredImage": {
+    "url": "https://misereperdue.com/img/products/stars.jpg",
+    "width": 2048,
+    "height": 2048
+   },
+   "images": {
+    "nodes": [
+     {
+      "url": "https://misereperdue.com/img/products/stars.jpg",
+      "width": 2048,
+      "height": 2048
+     },
+     {
+      "url": "https://misereperdue.com/img/products/stars-500.jpg",
+      "width": 2048,
+      "height": 2048
+     },
+     {
+      "url": "https://misereperdue.com/img/products/stars-1100.jpg",
+      "width": 2048,
+      "height": 2048
+     },
+     {
+      "url": "https://misereperdue.com/img/products/stars-2400.jpg",
+      "width": 2048,
+      "height": 2048
+     },
+     {
+      "url": "https://misereperdue.com/img/products/stars-6500.jpg",
+      "width": 2048,
+      "height": 2048
+     }
+    ]
+   },
+   "priceRange": {
+    "minVariantPrice": {
+     "amount": "4.99",
+     "currencyCode": "CAD"
+    },
+    "maxVariantPrice": {
+     "amount": "49.99",
+     "currencyCode": "CAD"
+    }
+   },
+   "variants": {
+    "nodes": [
+     {
+      "id": "gid://shopify/ProductVariant/68043008508006",
+      "title": "500",
+      "sku": "STARS-500",
+      "availableForSale": true,
+      "price": {
+       "amount": "4.99",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/stars-500.jpg"
+      },
+      "selectedOptions": [
+       {
+        "name": "Star Packs",
+        "value": "500"
+       }
+      ],
+      "whopPlan": "plan_Evfu3J8OOkLY6"
+     },
+     {
+      "id": "gid://shopify/ProductVariant/68043008540774",
+      "title": "1,100",
+      "sku": "STARS-1100",
+      "availableForSale": true,
+      "price": {
+       "amount": "9.99",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/stars-1100.jpg"
+      },
+      "selectedOptions": [
+       {
+        "name": "Star Packs",
+        "value": "1,100"
+       }
+      ],
+      "whopPlan": "plan_U7QcGsHTA8LSQ"
+     },
+     {
+      "id": "gid://shopify/ProductVariant/68043008573542",
+      "title": "2,400",
+      "sku": "STARS-2400",
+      "availableForSale": true,
+      "price": {
+       "amount": "19.99",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/stars-2400.jpg"
+      },
+      "selectedOptions": [
+       {
+        "name": "Star Packs",
+        "value": "2,400"
+       }
+      ],
+      "whopPlan": "plan_Wea8nIti0V5sX"
+     },
+     {
+      "id": "gid://shopify/ProductVariant/68043008606310",
+      "title": "6,500",
+      "sku": "STARS-6500",
+      "availableForSale": true,
+      "price": {
+       "amount": "49.99",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/stars-6500.jpg"
+      },
+      "selectedOptions": [
+       {
+        "name": "Star Packs",
+        "value": "6,500"
+       }
+      ],
+      "whopPlan": "plan_93LDS0qitNgvM"
+     }
+    ]
+   },
+   "whop": {
+    "product": "prod_gHyFZ4nPT6EWy"
+   }
+  },
+  {
+   "id": "gid://shopify/Product/15520235487334",
+   "handle": "enraged-beanie",
+   "title": "Enraged Beanie",
+   "description": "+Quality fleece beanie +Enraged eyes embroidery and spray design SS27 MISERY | Misère PerdueNON REFUNDABLE",
+   "descriptionHtml": "<p>+Quality fleece beanie<br><br></p>\n<p>+Enraged eyes embroidery and spray design</p>\n<p> </p>\n<p>SS27 MISERY | Misère Perdue<br>NON REFUNDABLE</p>",
+   "availableForSale": false,
+   "requiresSellingPlan": false,
+   "featuredImage": {
+    "url": "https://misereperdue.com/img/products/enraged-beanie.jpg",
+    "width": 1125,
+    "height": 1125
+   },
+   "images": {
+    "nodes": [
+     {
+      "url": "https://misereperdue.com/img/products/enraged-beanie.jpg",
+      "width": 1125,
+      "height": 1125
+     }
+    ]
+   },
+   "priceRange": {
+    "minVariantPrice": {
+     "amount": "180.0",
+     "currencyCode": "CAD"
+    },
+    "maxVariantPrice": {
+     "amount": "180.0",
+     "currencyCode": "CAD"
+    }
+   },
+   "variants": {
+    "nodes": [
+     {
+      "id": "gid://shopify/ProductVariant/68097874329702",
+      "title": "Default Title",
+      "sku": null,
+      "availableForSale": false,
+      "price": {
+       "amount": "180.0",
+       "currencyCode": "CAD"
+      },
+      "image": {
+       "url": "https://misereperdue.com/img/products/enraged-beanie.jpg"
+      },
+      "selectedOptions": [
+       {
+        "name": "Title",
+        "value": "Default Title"
+       }
+      ]
+     }
+    ]
+   },
+   "comingSoon": true,
+   "whop": {
+    "plan": "plan_kwaTGJuXskbbv"
+   }
+  }
+ ]
+}
