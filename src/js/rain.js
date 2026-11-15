@@ -470,18 +470,34 @@
   }
   function running() { return visible && !document.hidden && !(rm && rm.matches); }
   function schedule() {
+    if (!started) return;
     if (!raf && running()) raf = requestAnimationFrame(frame);
     if (!running()) last = 0;
   }
 
-  build();
-  resize();
-  if (rm && rm.matches) draw(0.6); // static frame with rain mid-fall
-  schedule();
+  // Speed pass: building the cloud and moon textures is the costliest startup work on the page, and as a
+  // deferred script it ran before DOMContentLoaded, holding back the reveal. Start once the page reveals
+  // (html loses .mp-loading); the page fades in over 0.5s, so the first frames of rain are not visible yet.
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    build();
+    resize();
+    if (rm && rm.matches) draw(0.6); // static frame with rain mid-fall
+    schedule();
+  }
+  if (root.classList.contains("mp-loading") && window.MutationObserver) {
+    var wait = new MutationObserver(function () {
+      if (!root.classList.contains("mp-loading")) { wait.disconnect(); requestAnimationFrame(start); }
+    });
+    wait.observe(root, { attributes: true, attributeFilter: ["class"] });
+    setTimeout(function () { wait.disconnect(); start(); }, 3000); // never later than 3s
+  } else start();
 
   // Preview hook (screenshots/recordings): MPRain.flash() fires a strike now.
   window.MPRain = {
-    flash: function () { if (!(rm && rm.matches)) trigger(t0); },
+    flash: function () { if (started && !(rm && rm.matches)) trigger(t0); },
     // MPRain.moonAt(date) pins the moon to that moment (null = live again) and
     // returns the numbers: zenithDeg = bright-limb angle from straight up
     // (eastward). The drawn crescent is fixed (per dc 17:40/17:44): rotDeg is its
@@ -494,12 +510,12 @@
     },
   };
 
-  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv);
-  else window.addEventListener("resize", resize);
+  if (window.ResizeObserver) new ResizeObserver(function () { if (started) resize(); }).observe(cv);
+  else window.addEventListener("resize", function () { if (started) resize(); });
   document.addEventListener("visibilitychange", schedule);
-  if (rm && rm.addEventListener) rm.addEventListener("change", function () { draw(0.6); schedule(); });
+  if (rm && rm.addEventListener) rm.addEventListener("change", function () { if (started) { draw(0.6); schedule(); } });
   if (window.IntersectionObserver)
     new IntersectionObserver(function (es) { visible = es[es.length - 1].isIntersecting; schedule(); }).observe(cv);
   if (window.MutationObserver)
-    new MutationObserver(function () { build(); draw(0); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    new MutationObserver(function () { if (started) { build(); draw(0); } }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 })();
