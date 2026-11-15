@@ -92,7 +92,7 @@ PAGE = """<!DOCTYPE html>
 <link rel="canonical" href="{url}">
 <link rel="icon" href="/favicon.ico?v=17" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=17"><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-eyes-96.png?v=17"><link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-eyes-192.png?v=17"><link rel="apple-touch-icon" href="/img/app-icon-tint-180.png?v=23">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="Mis&egrave;re Perdue">
+<meta property="og:site_name" content="Mis&egrave;re Perdue (Misery)">
 <meta property="og:title" content="{page_title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
@@ -177,7 +177,7 @@ STATIC_HEAD = """<!DOCTYPE html>
 <link rel="canonical" href="{url}">
 <link rel="icon" href="/favicon.ico?v=17" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=17"><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-eyes-96.png?v=17"><link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-eyes-192.png?v=17"><link rel="apple-touch-icon" href="/img/app-icon-tint-180.png?v=23">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Mis&egrave;re Perdue">
+<meta property="og:site_name" content="Mis&egrave;re Perdue (Misery)">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
@@ -215,9 +215,10 @@ h1{{font-size:26px;line-height:1.25}}
 
 def globe_page(threads_out):
     url = f"{SITE}/globe"
-    title = "Misère Perdue · Misery Globe"
-    desc = ("Misery Globe is the discussion board run by Misère Perdue, a Toronto "
-            "merchandise brand. Talk fashion, music and more.")
+    title = "Globe | Misère Perdue (Misery)"  # per dc
+    # per dc: the Globe's line in search (and its sitelink under the home result) leads with this sentence
+    desc = ("Discover the best the world has to offer. Misery Globe is the community board of "
+            "Misère Perdue (Misery): fashion, music and Toronto spots.")
     items = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Misery Globe", "url": url,
            "description": desc, "isPartOf": {"@id": f"{SITE}/#website"},
@@ -310,6 +311,10 @@ def main():
         content = clean_html(full.get("content") or "")
         text = clean_text(full.get("content") or "")
         desc = (text[:154].rsplit(" ", 1)[0] + "…") if len(text) > 155 else text or title
+        nrep = len(full.get("replies") or [])
+        if len(desc) < 100:  # short posts: add context so the search line isn't thin (per dc's SEO review)
+            tail = (f"{nrep} repl{'y' if nrep == 1 else 'ies'} on Misery Globe" if nrep else "On Misery Globe") + ", the Misère Perdue community board."
+            desc = (desc.rstrip(" .!?…") + ". " if desc and desc != title else "") + tail
 
         replies = full.get("replies") or []
         replies_html = ""
@@ -344,8 +349,9 @@ def main():
         }], ensure_ascii=False).replace("</", "<\\/")
         threads_out.append((tid, title, author, full.get("createdAt"), desc, len(replies)))
 
-        pt = f"Misère Perdue · {title}"
-        if len(pt) > 60: pt = pt[:59].rstrip() + "…"
+        # thread question first, then the board (per dc's SEO review); keep under ~60 characters
+        head_t = title if len(title) <= 45 else title[:44].rstrip() + "…"
+        pt = f"{head_t} | " + ("Misère Perdue (Misery)" if "misery globe" in title.lower() else "Misery Globe")
         page = PAGE.format(
             page_title=html.escape(pt), title=html.escape(title), desc=html.escape(desc, quote=True),
             url=f"{SITE}/t/{tid}", author=html.escape(author),
@@ -355,6 +361,15 @@ def main():
         write(os.path.join(tdir, f"{tid}.html"), page)
         t["_lastmod"] = iso(full.get("lastActivity") or full.get("createdAt"))
 
+    # threads that are gone or no longer public: remove their static page so search drops them.
+    # Only when the thread list loaded and has entries, so a bad API response can't wipe the board.
+    if threads and threads_out:
+        live = {t[0] for t in threads_out}
+        for fn in sorted(os.listdir(tdir)):
+            if fn.endswith(".html") and fn[:-5] not in live:
+                print(("would remove " if DRY else "removed ") + "t/" + fn, flush=True)
+                if not DRY:
+                    os.remove(os.path.join(tdir, fn))
     write(os.path.join(OUT, "globe.html"), globe_page(threads_out))
     write_sitemap(threads, threads_out)
     print(f"done: {len(seen)} thread pages", flush=True)

@@ -12,12 +12,26 @@ Q = """{ products(first:50){ nodes{ id handle title description availableForSale
   priceRange{minVariantPrice{amount currencyCode} maxVariantPrice{amount currencyCode}}
   variants(first:20){nodes{id title availableForSale price{amount currencyCode}}} } } }"""
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Page title = Shopify product name + " · Misère Perdue".
-SEO_TITLE = {}
+BRAND = "Misère Perdue (Misery)"  # per dc: every title ends "| Misère Perdue (Misery)"
+# Per dc (SEO review): search name + one-sentence description per product. {price} = live lowest price,
+# so the copy stays right when prices change. New products fall back to "<title> | BRAND" and a sentence
+# built from the Shopify bullets.
+SEO = {
+    "enraged-beanie": ("Enraged Beanie", "Enraged Beanie", "Fleece beanie with enraged-eyes embroidery and a spray design. SS27 from Misère Perdue, Toronto. All sales are final."),
+    "misery-v_v-sleeping-mask": ("V_V Mask", "V_V Mask", "Plush silk sleeping mask with MISERY eyes embroidery and elastic straps, in a gift box. SS27 from Misère Perdue, Toronto."),
+    "membership": ("VIP Membership", "VIP membership", "Join VIP for early access to Misère Perdue drops, a VIP badge in Misery Globe and Chat, and VIP-only boards. From {price}."),
+    "stars": ("Stars", "Stars", "Star packs for Misère Perdue: buy powers and send gifts in Misery Globe and Chat. From {price}."),
+}
+SHOP_ORDER = ["enraged-beanie", "misery-v_v-sleeping-mask", "membership", "stars"]  # same as the site's shop (shopRank)
+RETURN_POLICY = {"@type": "MerchantReturnPolicy", "applicableCountry": "CA",
+                 "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted", "url": SITE + "/info"}  # all sales final
 OG_V = 1  # bump when img/og/product-*.jpg change  # per dc: product page titles are the Shopify product name
 
 def meta_desc(p):
-    """<=155 chars, from the Shopify description ('+' bullet style -> commas)."""
+    """<=155 chars: the reviewed copy (SEO), else built from the Shopify '+' bullets."""
+    if p["handle"] in SEO:
+        lo = p["priceRange"]["minVariantPrice"]
+        return SEO[p["handle"]][2].replace("{price}", f"${money(lo['amount'])} {lo['currencyCode']}")
     parts = [x.strip() for x in re.split(r"\s*\+", p["description"]) if x.strip()]
     text = p["title"] + " by Misère Perdue: " + ", ".join(parts)
     text = re.sub(r"\s*MISERY \| Misère Perdue\s*$", "", text).strip()
@@ -58,6 +72,7 @@ def jsonld(p, url):
              "priceCurrency": v["price"]["currencyCode"],
              "availability": "https://schema.org/" + ("InStock" if v["availableForSale"] else "OutOfStock"),
              "itemCondition": "https://schema.org/NewCondition",
+             "hasMerchantReturnPolicy": RETURN_POLICY,
              "seller": {"@type": "Organization", "name": "Misère Perdue"}}
         if v["title"] != "Default Title": o["name"] = f'{p["title"]} {v["title"]}'
         offers.append(o)
@@ -114,7 +129,7 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <link rel="canonical" href="{url}">
 <link rel="icon" href="/favicon.ico?v=17" sizes="48x48"><link rel="icon" type="image/svg+xml" href="/favicon.svg?v=17"><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-eyes-96.png?v=17"><link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-eyes-192.png?v=17"><link rel="apple-touch-icon" href="/img/app-icon-tint-180.png?v=23">
 <meta property="og:type" content="{og_type}">
-<meta property="og:site_name" content="Mis&egrave;re Perdue">
+<meta property="og:site_name" content="Mis&egrave;re Perdue (Misery)">
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(og_desc)}">
 <meta property="og:url" content="{url}">
@@ -135,7 +150,7 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 """
 
 def main():
-    prods = fetch()
+    prods = sorted(fetch(), key=lambda p: SHOP_ORDER.index(p["handle"]) if p["handle"] in SHOP_ORDER else len(SHOP_ORDER))
     e = html.escape
     items = []
     for p in prods:
@@ -152,11 +167,12 @@ def main():
         body = (f"<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; <a href=\"/shop\">Shop</a> &rsaquo; {e(p['title'])}</nav>\n"
                 f"<article>\n<h1>{e(p['title'])}</h1>\n"
                 f"<p class=\"price\">{price_label(p)}</p>\n<p><span class=\"tag\">{stock}</span></p>\n"
+                f"<p class=\"meta\">All sales are final: no returns or exchanges. <a href=\"/info\">Terms</a></p>\n"
                 f"<p><img src=\"{e(img)}&width=720\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
-        title = SEO_TITLE.get(p["handle"]) or f"Misère Perdue · {p['title']}"
+        title = f"{(SEO.get(p['handle']) or (p['title'],))[0]} | {BRAND}"
         lo = p["priceRange"]["minVariantPrice"]
         extra = (f'<meta property="product:price:amount" content="{money(lo["amount"])}">\n'
                  f'<meta property="product:price:currency" content="{lo["currencyCode"]}">\n'
@@ -168,14 +184,18 @@ def main():
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
-    ld = json.dumps([{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Shop — Misère Perdue",
+    ld = json.dumps([{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Shop | " + BRAND,
           "url": f"{SITE}/shop", "mainEntity": {"@type": "ItemList", "itemListElement": [
               {"@type": "ListItem", "position": i + 1, "url": u, "name": p["title"]} for i, (p, u) in enumerate(items)]}},
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
-    desc = ("Shop Misère Perdue, the Toronto merchandise brand: " + ", ".join(p["title"] for p, _ in items)
-            + ". Prices in CAD, checkout by Shopify.")
-    rows = "".join(f"<div class=\"product\"><h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Misère Perdue · Shop", desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    names = [(SEO.get(p["handle"]) or (None, p["title"]))[1] for p, _ in items]
+    listed = ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "".join(names)
+    desc = f"Shop Misère Perdue, the Toronto brand: {listed}. Prices in CAD with secure checkout by Shopify."
+    def thumb(p):
+        fi = p.get("featuredImage") or {}
+        return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}&width=240\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
+    rows = "".join(f"<div class=\"product\">{thumb(p)}<h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
+    shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
