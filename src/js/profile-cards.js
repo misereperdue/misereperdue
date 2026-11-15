@@ -62,10 +62,13 @@
     root.classList.add('mp-badge-picker');root.dataset.mode=options.grant?'grant':'active';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
     root.appendChild(grid);root.appendChild(status);
     var labels={'100':'100',heart:'Heart',member:'VIP',kitty:'Hello Kitty',mask:'Sleep mask',verified:'Verified',robot:'Bot',every:'Everypower'};
-    function paint(){grid.replaceChildren();var ids=options.grant?['member','kitty','mask']:(user.badges||[]).filter(function(id){return (!user.owner||id==='verified'||id==='every')&&options.allowed(user.username,id);});
-      if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active)&&(!user.owner||active==='verified'||active==='every'))ids.push(active);ids.unshift(null);}
+    // Manage (grant): VIP / <3 / mask toggle as granted badges; Everypower appears for holders and toggles as the shown badge.
+    // Settings (active): every badge the user holds, plus "none" (per dc: all users choose their badge).
+    function paint(){grid.replaceChildren();var held=user.badges||[],ids=options.grant?['member','kitty','mask'].concat(held.indexOf('every')>=0?['every']:[]):held.filter(function(id){return options.allowed(user.username,id);});
+      if(!options.grant){var active=options.active(user);if(active&&ids.indexOf(active)<0&&options.allowed(user.username,active))ids.push(active);ids.unshift(null);}
       if(options.grant&&user.username.toLowerCase()==='grim')ids=['robot'];
-      ids.forEach(function(id){var selected=options.grant?(user.badges||[]).indexOf(id)>=0:options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?'Toggle ':'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
+      grid.dataset.n=ids.length;
+      ids.forEach(function(id){var selected=options.grant?(id==='every'?options.active(user)==='every':held.indexOf(id)>=0):options.active(user)===id,b=button('',function(){save(id);},'mp-badge-choice');b.disabled=pending||(options.grant&&id==='robot');b.dataset.badge=id||'none';b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',(options.grant?(id==='every'?'Show ':'Toggle '):'Display ')+(labels[id]||'No badge'));b.classList.toggle('is-selected',selected);
         var mark=el('span','mp-badge-mark');mark.innerHTML=id?options.art(id):svg('M6 6 18 18M18 6 6 18');mark.setAttribute('aria-hidden','true');b.appendChild(mark);grid.appendChild(b);});
     }
     async function save(id){if(pending)return;pending=true;status.textContent='Saving…';paint();try{var body=options.grant?{username:user.username,badge:id}:{badge:id};var r=await options.api('/api/badge',{method:'POST',body:body});if(!r||!r.ok||!r.user)throw Error(r&&r.error||'Could not update badge.');user=r.user;options.changed(user);status.textContent=options.grant?'Badges updated.':'Display badge updated.';}catch(e){status.textContent=e.message||'Could not update badge.';}finally{pending=false;if(root.isConnected)paint();}}
