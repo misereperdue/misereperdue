@@ -8897,7 +8897,7 @@
       e.target === b && ordClose();
     });
     ordTitle === null && (ordTitle = document.title);
-    document.title = "Misère Perdue · Orders";
+    document.title = "Orders | Misère Perdue (Misery)";
     ordLoad(b);
   }
   window.MPOpenOrders = ordOpen;

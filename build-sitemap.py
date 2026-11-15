@@ -241,6 +241,28 @@ def globe_page(threads_out):
             + f'<div class="cta"><a href="{SITE}/#globe">Open Misery Globe on misereperdue.com &rarr;</a></div>\n'
             + "</main>\n</body>\n</html>\n")
 
+def chat_page():
+    """/chat (per dc): people get the app on the Chat tab (functions/_middleware.js); search engines and
+    link previewers read this page."""
+    url = f"{SITE}/chat"
+    title = "Chat | Misère Perdue (Misery)"
+    desc = ("Misery Chat is the live chat of Misère Perdue (Misery). Share songs, show off your powers "
+            "and talk fashion and music in real time.")
+    ld = [{"@context": "https://schema.org", "@type": "WebPage", "name": "Misery Chat", "url": url,
+           "description": desc, "isPartOf": {"@id": f"{SITE}/#website"}},
+          {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+              {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
+              {"@type": "ListItem", "position": 2, "name": "Chat", "item": url}]}]
+    return (STATIC_HEAD.format(title=html.escape(title), desc=html.escape(desc), url=url,
+                               jsonld=json.dumps(ld, ensure_ascii=False).replace("</", "<\\/"))
+            + '<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Chat</nav>\n'
+            + "<h1>Misery Chat</h1>\n"
+            + "<p>Misery Chat is the live chat room of Misère Perdue (Misery). Members share what they're "
+              "listening to, send stars, use powers like hats, glow and charms, and talk fashion and music. "
+              "VIP members get a VIP badge (see <a href=\"/p/membership\">VIP</a>).</p>\n"
+            + f'<div class="cta"><a href="{SITE}/#chat">Open Misery Chat on misereperdue.com &rarr;</a></div>\n'
+            + "</main>\n</body>\n</html>\n")
+
 def write_sitemap(threads, threads_out):
     """Only canonical, indexable 200 URLs. lastmod = last git commit of the page
     (threads: last forum activity). Product images from the page's Product JSON-LD."""
@@ -268,6 +290,7 @@ def write_sitemap(threads, threads_out):
                     imgs += im if isinstance(im, list) else [im]
         add(f"{SITE}/p/{fn[:-5]}", path, imgs)
     add(f"{SITE}/globe", os.path.join(OUT, "globe.html"))
+    add(f"{SITE}/chat", os.path.join(OUT, "chat.html"))
     for t in threads:
         if t.get("_lastmod"):
             entries.append((f"{SITE}/t/{t['id']}", t["_lastmod"], []))
@@ -377,6 +400,7 @@ def main():
                 if not DRY:
                     os.remove(os.path.join(tdir, fn))
     write(os.path.join(OUT, "globe.html"), globe_page(threads_out))
+    write(os.path.join(OUT, "chat.html"), chat_page())
     write_sitemap(threads, threads_out)
     print(f"done: {len(seen)} thread pages", flush=True)
 
