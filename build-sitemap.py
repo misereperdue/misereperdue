@@ -291,6 +291,84 @@ def chat_page():
             + f'<div class="cta"><a href="{SITE}/#chat">Open Misery Chat on misereperdue.com &rarr;</a></div>\n'
             + "</main>\n</body>\n</html>\n")
 
+HOME_STYLE = """<style>
+body{font-family:-apple-system,system-ui,sans-serif;max-width:760px;margin:0 auto;padding:28px 18px 40px;line-height:1.65;color:#0a1230;background:#fff}
+a{color:#2b4eff}
+header{margin-bottom:26px;font-weight:800;letter-spacing:.14em;font-size:13px}
+header a{text-decoration:none;color:#0a1230}
+h1{font-size:30px;line-height:1.2;margin:0 0 10px}
+.lede{font-size:17px;margin:0 0 6px}
+h2{font-size:20px;margin:34px 0 12px}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.product{display:flex;flex-direction:column;gap:6px}
+.product img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#0d1230}
+.product a{text-decoration:none;color:#0a1230;font-weight:700}
+.product .price{font-weight:600}
+.product p{margin:0;color:#555b6e;font-size:13.5px;line-height:1.5}
+.thread{margin:0 0 14px}
+.thread a{font-weight:700;text-decoration:none;color:#0a1230}
+.thread p{margin:2px 0 0;color:#555b6e;font-size:14px}
+.cta{display:inline-block;margin-top:6px;font-weight:700;text-decoration:none}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid #e6e8ef;font-size:13px;color:#555b6e;display:flex;flex-wrap:wrap;gap:6px 16px}
+footer a{color:#555b6e}
+</style>"""
+
+def home_page(threads_out):
+    """What search engines and link previewers read at / (per dc): people get the app (functions/_middleware.js
+    serves this page only to bots). The <head> is copied from index.html so search tags stay identical."""
+    src = open(os.path.join(OUT, "index.html"), encoding="utf-8").read()
+    hd = src[:src.index("</head>")]
+    keep = re.findall(r'<title>[\s\S]*?</title>|<meta (?:name="(?:description|robots|theme-color|twitter:[^"]+)"|property="og:[^"]+")[^>]*>'
+                      r'|<link rel="(?:canonical|icon|apple-touch-icon)"[^>]*>|<script type="application/ld\+json">[\s\S]*?</script>', hd)
+    e = html.escape
+    prods = []
+    pdir = os.path.join(OUT, "p")
+    order = ["enraged-beanie", "misery-v_v-sleeping-mask", "membership", "stars"]
+    for fn in sorted(os.listdir(pdir), key=lambda f: order.index(f[:-5]) if f[:-5] in order else 99):
+        if not fn.endswith(".html"):
+            continue
+        ps = open(os.path.join(pdir, fn), encoding="utf-8").read()
+        for blk in re.findall(r'<script type="application/ld\+json">(.*?)</script>', ps, re.S):
+            for d in (lambda x: x if isinstance(x, list) else [x])(json.loads(blk)):
+                if d.get("@type") != "Product":
+                    continue
+                offers = d["offers"] if isinstance(d["offers"], list) else [d["offers"]]
+                lo = min(float(o["price"]) for o in offers); hi = max(float(o["price"]) for o in offers)
+                money = lambda a: ("%d" % a) if a == int(a) else ("%.2f" % a)
+                price = f"${money(lo)} CAD" if lo == hi else f"${money(lo)}–{money(hi)} CAD"
+                desc = html.unescape(re.search(r'<meta name="description" content="([^"]*)"', ps).group(1))
+                imgs = d.get("image") or []
+                # the square product card on our own domain (same look as the share image), else the store photo
+                photo = next((u for u in imgs if "-sq.jpg" in u), imgs[0] if imgs else "").replace(SITE + "/", "/")
+                prods.append((fn[:-5], d["name"], price, desc, photo))
+    cards = "".join(
+        f'<div class="product"><a href="/p/{h}"><img src="{e(img)}" alt="{e(n)} by Misère Perdue" width="240" height="240" loading="lazy" decoding="async"></a>'
+        f'<a href="/p/{h}">{e(n)}</a><span class="price">{e(pr)}</span><p>{e(ds)}</p></div>\n' for h, n, pr, ds, img in prods)
+    latest = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)[:5]
+    threads = "".join(f'<div class="thread"><a href="/t/{t[0]}">{e(t[1])}</a><p>{e(t[4])}</p></div>\n' for t in latest)
+    return ("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+            + "\n".join(keep) + "\n" + HOME_STYLE + "\n<script src=\"/js/emoji.js?v=2\" defer></script>\n</head>\n<body>\n"
+            + '<header><a href="/">MIS&Egrave;RE PERDUE</a></header>\n<main>\n'
+            + "<h1>Misère Perdue (Misery)</h1>\n"
+            + '<p class="lede">The official website of merchandise brand Misère Perdue (Misery), and Misery Globe.</p>\n'
+            + "<p>Misère Perdue is an independent clothing and merch brand from Toronto, with a community around it: "
+              '<a href="/globe">Misery Globe</a>, a discussion board for fashion, music and Toronto spots, and '
+              '<a href="/chat">Misery Chat</a>, a live chat where members share songs, send stars and use powers. '
+              "All sales are final.</p>\n"
+            + '<h2><a href="/shop" style="color:inherit;text-decoration:none">Shop</a></h2>\n<div class="products">\n' + cards + "</div>\n"
+            + '<a class="cta" href="/shop">See the shop &rarr;</a>\n'
+            + '<h2><a href="/globe" style="color:inherit;text-decoration:none">Misery Globe</a></h2>\n'
+            + "<p>Discover the best the world has to offer.</p>\n" + threads
+            + '<a class="cta" href="/globe">Open Misery Globe &rarr;</a>\n'
+            + '<h2><a href="/chat" style="color:inherit;text-decoration:none">Misery Chat</a></h2>\n'
+            + "<p>Chat live with the Misère Perdue community, share what you're listening to and show off your powers.</p>\n"
+            + '<a class="cta" href="/chat">Open Misery Chat &rarr;</a>\n'
+            + "</main>\n<footer><span>Misère Perdue (Misery) &middot; Toronto</span>"
+              '<a href="https://x.com/misereperdue" rel="me noopener">X @misereperdue</a>'
+              '<a href="https://www.instagram.com/misereperdue/" rel="me noopener">Instagram @misereperdue</a>'
+              '<a href="/info">Info &amp; Terms</a><span>&copy; 2026</span></footer>\n</body>\n</html>\n')
+
 def write_sitemap(threads, threads_out):
     """Only canonical, indexable 200 URLs. lastmod = last git commit of the page
     (threads: last forum activity). Product images from the page's Product JSON-LD."""
@@ -446,6 +524,7 @@ def main():
                     os.remove(os.path.join(SQ_DIR, fn))
     write(os.path.join(OUT, "globe.html"), globe_page(threads_out))
     write(os.path.join(OUT, "chat.html"), chat_page())
+    write(os.path.join(OUT, "home.html"), home_page(threads_out))
     write_sitemap(threads, threads_out)
     print(f"done: {len(seen)} thread pages", flush=True)
 
