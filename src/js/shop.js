@@ -1282,7 +1282,7 @@ var MPShop = (function () {
         openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout");
       };
       var n = parseInt(String(pack()).replace(/,/g, ""), 10);
-      if (n) warmWhop("&product=stars&pack=" + n, "Stars checkout");
+      if (n) scheduleWarm("&product=stars&pack=" + n, "Stars checkout");
     });
   }
   function starsSizes(i) {
@@ -1356,6 +1356,11 @@ var MPShop = (function () {
     }
     whopWarm = { query: "", frame: null, at: 0 };
   }
+  var warmTimer = 0;
+  function scheduleWarm(query, label) {
+    clearTimeout(warmTimer);
+    warmTimer = setTimeout(function () { warmWhop(query, label); }, 350);
+  }
   function warmWhop(query, label) {
     query = query || "";
     if (document.querySelector(".mp-whop-sheet")) return;
@@ -1368,7 +1373,7 @@ var MPShop = (function () {
     f.setAttribute("allow", "payment *");
     f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
     f.setAttribute("aria-hidden", "true");
-    f.src = "/whop-vip-preview?sheet=1" + query;
+    f.src = "/whop-vip-preview?sheet=1&warm=1" + query;
     document.body.appendChild(f);
     whopWarm = { query: query, frame: f, at: Date.now() };
   }
@@ -1408,8 +1413,14 @@ var MPShop = (function () {
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0;
+    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false;
     var bd = w.querySelector(".mp-whop-backdrop");
+    function startCheckout() {
+      if (startSent || closing) return;
+      startSent = true;
+      try { frame && frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "start" }, location.origin); } catch (_) {}
+    }
+    if (adopted) startCheckout();
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
     }
@@ -1493,6 +1504,7 @@ var MPShop = (function () {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
       if (e.data.mpWhop === "done" && !finished) { finished = true; onDone && onDone(); }
       else if (e.data.mpWhop === "close") close();
+      else if (e.data.mpWhop === "warm") { w.classList.add("is-ready"); startCheckout(); }
       else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
