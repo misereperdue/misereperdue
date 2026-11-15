@@ -4,6 +4,7 @@
   const button = document.getElementById('begin');
   const status = document.getElementById('message');
   const mount = document.getElementById('checkout');
+  const cancelTest = document.getElementById('cancel-test');
   if (!button || !status || !mount) return;
   const productionHost = ['misereperdue.com', 'www.misereperdue.com'].includes(location.hostname);
   const live = productionHost && new URLSearchParams(location.search).get('checkout') === '1';
@@ -29,6 +30,26 @@
     if (!response.ok || !body.ok) throw new Error(body.error || 'Checkout is unavailable. Please try again later.');
     return body;
   }
+  function showTestSubscription(state) {
+    if (state.ownerWhopTest) {
+      button.textContent='Start separate live test';
+      if (pricingNote) pricingNote.textContent='This is a separate real subscription for testing. Your existing VIP stays unchanged. Whop calculates taxes, currency conversion and buyer fees before payment.';
+    }
+    const test = state.ownerWhopTestSubscription;
+    if (!test || !['active','revoked'].includes(test.status)) return false;
+    button.hidden=true; mount.hidden=true;
+    if (cancelTest) cancelTest.hidden=test.status!=='active'||test.cancelled;
+    status.textContent=test.status==='revoked' ? 'The live test subscription has ended. Your existing VIP is unchanged.'
+      : test.cancelled ? 'Test renewal has been stopped. Your existing VIP is unchanged.'
+      : 'Live test payment confirmed. Your existing VIP is unchanged. You can stop renewal of the separate test subscription below.';
+    return true;
+  }
+  if (cancelTest) cancelTest.addEventListener('click',async function () {
+    cancelTest.disabled=true;status.textContent='Stopping test renewal…';
+    try {showTestSubscription(await request('/api/whop/vip/test/cancel',{method:'POST',body:'{}'}));}
+    catch(error){status.textContent=error.message||'Unable to stop test renewal.';}
+    finally {cancelTest.disabled=false;}
+  });
   const params = new URLSearchParams(location.search);
   if (params.has('status') || params.has('complete')) {
     status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try the same checkout again.' : params.get('status') === 'canceled' ? 'Checkout was canceled. You have not been upgraded.' : 'Checking your VIP membership…';
@@ -38,7 +59,8 @@
         for (let attempt=0;attempt<6;attempt++) {
           try {
             const state = await request('/api/vip');
-            if (state.vip && state.provider === 'whop') {status.textContent='Your VIP membership is active. Welcome to MISÈRE PERDUE.';button.hidden=true;return;}
+            if (showTestSubscription(state)) return;
+            if (state.checkoutProvider==='whop' && state.vip && state.provider === 'whop') {status.textContent='Your VIP membership is active. Welcome to MISÈRE PERDUE.';button.hidden=true;return;}
           } catch (_) {status.textContent='We couldn’t check your membership. Open your profile to check its status.';return;}
           if (params.get('status') !== 'succeeded') break;
           await new Promise(resolve=>setTimeout(resolve,1500));
@@ -47,22 +69,25 @@
       })();
     } else status.textContent='Sign in to check your VIP membership.';
   }
+  else if (live && token()) request('/api/vip').then(showTestSubscription).catch(function () {});
   button.addEventListener('click', async function () {
     if (mounted || button.disabled) return;
     if (!token()) {status.textContent=live ? 'Sign in to MISÈRE PERDUE before buying VIP.' : 'Sign in with an isolated sandbox test account before testing checkout.';return;}
     button.disabled=true; status.textContent='Preparing secure checkout…';
     try {
       const state = await request('/api/vip');
+      if (showTestSubscription(state)) return;
       if (state.checkoutEnvironment !== (live ? 'live' : 'sandbox') || !state.whopCheckoutEnabled) throw new Error('This checkout is not enabled yet.');
-      if ((state.vip && !state.ownerWhopTest) || state.status === 'active') throw new Error('You already have VIP. Manage your membership from your profile.');
+      if (!state.ownerWhopTest && (state.vip || state.status === 'active')) throw new Error('You already have VIP. Manage your membership from your profile.');
       if (live && !(await request('/api/whop/vip/readiness')).ready) throw new Error('VIP pricing has changed. Checkout has not been opened.');
       if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
       const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
       if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
+      if (state.ownerWhopTest && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
       const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:body.checkoutConfigurationId,returnUrl});
       mount.hidden=false;
       checkout.create('checkout').mount('#checkout');
-      mounted=true;button.hidden=true;status.textContent='Complete your VIP purchase securely below.';
+      mounted=true;button.hidden=true;status.textContent=state.ownerWhopTest ? 'Complete the separate live test purchase below. Your existing VIP stays unchanged.' : 'Complete your VIP purchase securely below.';
     } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;}
   });
 })();
