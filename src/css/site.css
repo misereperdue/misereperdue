@@ -12878,4 +12878,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .nav,.nav.glassbar{width:auto;max-width:calc(100vw - 32px)}  /* no !important: it would block the width animation */
 .nav button,.nav a{flex:0 0 52px!important;width:52px!important;min-width:0!important}
 /* the cart glyph's basket sits right of its box (handle on the left): nudge it so it reads centred */
-.nav #cart-btn svg,.nav #post-btn.bag-mode svg{transform:translateX(-2px)}
+.nav #cart-btn,.nav #post-btn.bag-mode{--cart-nudge:-2px}
+.nav #cart-btn svg,.nav #post-btn.bag-mode svg{transform:translateX(var(--cart-nudge))}
+/* the count rides with the glyph (per dc): same nudge, centred in the basket for any number of digits */
+.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{left:calc(50% + 1.75px + var(--cart-nudge))}
