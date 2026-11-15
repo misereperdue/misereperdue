@@ -1,6 +1,8 @@
 var MP_PRODUCTS = {};
 function mpMoney(t) {
-  return "$" + t + " CAD";
+  /* cents-safe: 49.99 + 12 + 6 printed as 67.99, not 67.99000000000001 (per dc); whole amounts stay "$12" */
+  var n = Math.round((Number(t) || 0) * 100) / 100;
+  return "$" + (n % 1 ? n.toFixed(2) : String(n)) + " CAD";
 }
 function mpReadCart() {
   try {
