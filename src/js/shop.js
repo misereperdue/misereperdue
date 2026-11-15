@@ -1535,7 +1535,7 @@ var MPShop = (function () {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
       if (e.data.mpWhop === "done" && !finished) { finished = true; onDone && onDone(); }
       else if (e.data.mpWhop === "close") close();
-      else if (e.data.mpWhop === "warm") { w.classList.add("is-ready"); startCheckout(); }
+      else if (e.data.mpWhop === "warm") { w.classList.add("is-ready"); startSent = false; startCheckout(); }
       else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
       else if (e.data.mpWhop === "overlay") w.classList.toggle("is-overlay", !!e.data.open);
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {

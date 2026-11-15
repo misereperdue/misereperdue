@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 618;
+var SW_VERSION = 619;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.svg, Twemoji, see js/emoji.js) live in
 // their own cache: filled on first use (never precached: ~4,000 files), kept
@@ -25,7 +25,7 @@ var SHELL = [
   "/js/swipe-tabs.js?v=4",
   "/js/shopify.js?v=15",
   "/js/cart.js?v=3",
-  "/js/shop.js?v=154",
+  "/js/shop.js?v=155",
   "/js/social-logos.js?v=2",
   "/js/profile-cards.js?v=47",
   "/js/power-icons.js?v=9",
@@ -112,7 +112,7 @@ self.addEventListener("fetch", function (e) {
 
   // HTML: network-first (fresh file refs on every load), cache as offline fallback.
   // Cache-first HTML served stale file versions (old JS/CSS refs) for days.
-  if (e.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")) {
+  if (e.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html") || url.pathname === "/whop-vip-preview") {
     // Opening the app with no connection shows the offline screen (per dc),
     // not a stale cached copy of the site.
     var isNav = e.request.mode === "navigate";
