@@ -363,7 +363,7 @@ def main():
         desc = (text[:154].rsplit(" ", 1)[0] + "…") if len(text) > 155 else text or title
         nrep = len(full.get("replies") or [])
         if len(desc) < 100:  # short posts: add context so the search line isn't thin (per dc's SEO review)
-            tail = (f"{nrep} repl{'y' if nrep == 1 else 'ies'} on Misery Globe" if nrep else "On Misery Globe") + ", the Misère Perdue community board."
+            tail = (f"{nrep} repl{'y' if nrep == 1 else 'ies'} on Misery Globe" if nrep else "On Misery Globe") + "."  # per dc: just "On Misery Globe."
             desc = (desc.rstrip(" .!?…") + ". " if desc and desc != title else "") + tail
 
         replies = full.get("replies") or []
