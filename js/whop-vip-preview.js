@@ -29,7 +29,7 @@
       if (!response.ok || !body.ok) throw new Error(body.error || "Checkout unavailable");
       if (!/^ch_[A-Za-z0-9]+$/.test(String(body.checkoutConfigurationId || ""))) throw new Error("Unexpected checkout response");
       if (typeof window.WhopElements !== "function") throw new Error("Whop payment form could not load");
-      const checkout = window.WhopElements().checkout.create({
+      const checkout = window.WhopElements(body.sandbox ? { environment: "sandbox" } : {}).checkout.create({
         checkoutConfiguration: body.checkoutConfigurationId,
         returnUrl: "https://misereperdue.com/whop-vip-preview.html?complete=1"
       });
