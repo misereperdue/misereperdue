@@ -1391,7 +1391,7 @@ var MPShop = (function () {
     var w = document.createElement("div");
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
     var adopted = takeWhopWarm(query);
-    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><div class="mp-whop-drag"><span class="mp-whop-grab" aria-hidden="true"></span></div>' +
+    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><div class="mp-whop-drag"></div><span class="mp-whop-grab" aria-hidden="true"></span>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
       '<div class="mp-whop-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>';
     var panel = w.querySelector(".mp-whop-panel"), frame = adopted;
@@ -1446,6 +1446,7 @@ var MPShop = (function () {
          is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
       w.classList.remove("is-open");
       w.classList.remove("is-peek");
+      w.classList.remove("is-overlay");
       document.documentElement.classList.remove("mp-whop-open");
       panel.style.transition = "";
       if (bd) bd.style.transition = "";
@@ -1506,6 +1507,7 @@ var MPShop = (function () {
       else if (e.data.mpWhop === "close") close();
       else if (e.data.mpWhop === "warm") { w.classList.add("is-ready"); startCheckout(); }
       else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
+      else if (e.data.mpWhop === "overlay") w.classList.toggle("is-overlay", !!e.data.open);
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
         if (h > 80 && h < 4000 && mode !== "peek") {
