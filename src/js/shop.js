@@ -1318,8 +1318,37 @@ var MPShop = (function () {
         b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
       });
   }
+  /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
+     with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
+  function openWhopSheet(onDone) {
+    var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
+    var w = document.createElement("div");
+    w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "VIP checkout");
+    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><span class="mp-whop-grab" aria-hidden="true"></span>' +
+      '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      '<iframe class="mp-whop-frame" title="VIP checkout" allow="payment *" src="/whop-vip-preview?sheet=1"></iframe></div>';
+    document.body.appendChild(w);
+    document.documentElement.classList.add("mp-whop-open");
+    requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
+    var finished = false;
+    function close() {
+      window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
+      w.classList.remove("is-open"); document.documentElement.classList.remove("mp-whop-open");
+      setTimeout(function () { w.remove(); }, 380);
+    }
+    function onMsg(e) {
+      if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
+      if (e.data.mpWhop === "done" && !finished) { finished = true; setTimeout(function () { close(); onDone && onDone(); }, 900); }
+      else if (e.data.mpWhop === "close") close();
+    }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    window.addEventListener("message", onMsg); document.addEventListener("keydown", onKey);
+    w.querySelector(".mp-whop-x").onclick = close;
+    w.querySelector(".mp-whop-backdrop").onclick = close;
+  }
+  window.MPWhopSheet = openWhopSheet;
   function vipCheckout(i, b, provider) {
-    if (provider === "whop") { window.location.assign("/whop-vip-preview?checkout=1"); return; }
+    if (provider === "whop") { openWhopSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }); return; }
     var er = document.getElementById("vip-err"),
       vid = MPShopify.variantIdFor(i, null);
     if (!vid || !i.sellingPlanId) return void (er && (er.textContent = "VIP isn't available right now."));
@@ -1352,7 +1381,7 @@ var MPShop = (function () {
         if (vipState.vip || vipState.status === "active") throw new Error("You already have VIP. Manage your subscription from your profile.");
         if (vipState.checkoutProvider === "whop") {
           if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
-          window.location.assign("/whop-vip-preview?checkout=1");
+          openWhopSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); });
           return;
         }
       } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }

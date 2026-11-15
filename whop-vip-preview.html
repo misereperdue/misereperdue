@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
-  <title>VIP Checkout Preview — MISÈRE PERDUE</title>
-  <meta name="description" content="Test-only VIP checkout preview for MISÈRE PERDUE.">
+  <title>VIP Checkout — MISÈRE PERDUE</title>
+  <meta name="description" content="VIP checkout for MISÈRE PERDUE.">
   <script src="/js/theme.js?v=10"></script>
   <style>
     :root { color-scheme: light; --bg:#fff; --ink:#1c1c1e; --muted:#636366; --stroke:rgba(0,0,0,.12); --button:#0a1230; --button-ink:#fff; }
@@ -28,15 +28,22 @@
     #checkout { min-height:0;margin-top:18px; }
     #message { color:var(--muted);font-size:13px;line-height:1.5;min-height:24px;margin-top:14px; }
     .fine { color:var(--muted);font-size:11px;line-height:1.65;margin-top:23px; }
+    /* sheet mode: inside the site's payment sheet, the site provides the frame, title and close button */
+    .mp-sheet body { background:transparent; }
+    .mp-sheet .wrap { padding:6px 16px 28px; }
+    .mp-sheet .top, .mp-sheet .product, .mp-sheet .fine { display:none; }
+    .mp-sheet h1 { font-size:19px;margin:4px 0 4px; }
+    .mp-sheet .sub { margin:0 0 6px; }
+    .mp-sheet .price { margin:8px 0 12px; }
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
-  <script src="/js/whop-vip-preview.js?v=8" defer></script>
+  <script src="/js/whop-vip-preview.js?v=9" defer></script>
 </head>
 <body>
   <main class="wrap">
     <div class="top">
       <span class="brand">MISÈRE PERDUE</span>
-      <span class="tag">CHECKOUT PREVIEW</span>
+      <span class="tag">VIP</span>
     </div>
     <img class="product" src="/img/og/membership-sq.jpg" alt="MISÈRE PERDUE VIP card" width="1200" height="1200">
     <h1>VIP Membership</h1>
