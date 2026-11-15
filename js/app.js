@@ -145,9 +145,25 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
         var ease = "cubic-bezier(.32,.72,0,1)";
         nav.animate([{ width: w0 + "px" }, { width: w1 + "px" }], { duration: 460, easing: ease });
         if (hasCart && !hadCart) {
-          [cartBtn, split, btn].forEach(function (el, i) {
-            if (el && getComputedStyle(el).display !== "none") el.animate([{ opacity: 0, transform: "scale(.55)" }, { opacity: 1, transform: "none" }], { duration: 420, delay: 90, easing: ease, fill: "backwards" });
-          });
+          // entrance (per dc): the divider grows from its middle, the cart springs in from the left with a
+          // small overshoot and tilt, then its count pops in
+          var tab = [cartBtn, btn].filter(function (el) { return el && getComputedStyle(el).display !== "none"; })[0];
+          if (split && getComputedStyle(split).display !== "none")
+            split.animate([{ opacity: 0, transform: "scaleY(0)" }, { opacity: .35, transform: "scaleY(1)" }], { duration: 360, delay: 80, easing: ease, fill: "backwards" });
+          if (tab) {
+            tab.animate([
+              { opacity: 0, transform: "translateX(-16px) scale(.35) rotate(-16deg)" },
+              { opacity: 1, transform: "translateX(2px) scale(1.12) rotate(5deg)", offset: .55 },
+              { transform: "translateX(-1px) scale(.97) rotate(-2deg)", offset: .78 },
+              { opacity: 1, transform: "none" }
+            ], { duration: 680, delay: 120, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+            var count = tab.querySelector(".badge:not(.hidden)");
+            if (count) count.animate([
+              { opacity: 0, transform: "translate(-50%,-50%) scale(0)" },
+              { opacity: 1, transform: "translate(-50%,-50%) scale(1.35)", offset: .6 },
+              { opacity: 1, transform: "translate(-50%,-50%) scale(1)" }
+            ], { duration: 380, delay: 520, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
+          }
         }
       }
       navSized = true;
