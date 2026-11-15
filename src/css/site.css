@@ -1248,6 +1248,20 @@ textarea {
 #shop-grid .product-meta {
   margin-top: 8px;
 }
+/* Shop grid drop pill (per dc): compact single-line glass, tiles only.
+   Product-page .pill-soon and static p/* .tag keep the existing .tag size. */
+#shop-grid .product-card .tag {
+  top: 8px;
+  left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  padding: 3px 7px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: none;
+}
 /* "Get the App" row under the Globe tile: same plain backdrop, radius and
    monospace caption as the product tiles (#0c1230 dark / #d8d9dd light). */
 #shop-grid .a2hs {

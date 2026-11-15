@@ -262,7 +262,7 @@ var MPShop = (function () {
         })(t),
       ) +
       "</span></div>" +
-      (!1 === t.available ? '<span class="tag">' + soonLabel() + "</span>" : "") +
+      (!1 === t.available ? '<span class="tag">' + gridSoonLabel() + "</span>" : "") +
       "</div>"
     );
   }
@@ -281,6 +281,35 @@ var MPShop = (function () {
     if (!(ms > 0)) return "Coming soon";
     var d = Math.floor(ms / 864e5);
     return d >= 1 ? "In " + d + (1 === d ? " day" : " days") : "At midnight";
+  }
+  // Shop grid preview only: shorter last-day copy ("2h 14m") so the compact pill stays one line.
+  function gridSoonLabel() {
+    var ms = CD_END - Date.now();
+    if (!(ms > 0)) return "Coming soon";
+    var d = Math.floor(ms / 864e5);
+    if (d >= 1) return "In " + d + (1 === d ? " day" : " days");
+    var h = Math.floor(ms / 36e5);
+    var m = Math.floor((ms % 36e5) / 6e4);
+    if (h >= 1) return h + "h " + m + "m";
+    if (m >= 1) return m + "m";
+    return "<1m";
+  }
+  var gridSoonTimer = null;
+  function mountGridSoonPills(root) {
+    if (gridSoonTimer) (clearTimeout(gridSoonTimer), (gridSoonTimer = null));
+    var pills = root ? root.querySelectorAll(".product-card[data-product] .tag") : [];
+    if (!pills.length) return;
+    var label = gridSoonLabel();
+    pills.forEach(function (el) {
+      el.textContent = label;
+    });
+    var ms = CD_END - Date.now();
+    if (!(ms > 0)) return;
+    var d = Math.floor(ms / 864e5);
+    var wait = d >= 1 ? Math.min(ms - d * 864e5 + 50, 864e5) : 3e4;
+    gridSoonTimer = setTimeout(function () {
+      mountGridSoonPills(root);
+    }, wait);
   }
   var cdTimer = null;
   function cdHTML() {
@@ -830,6 +859,7 @@ var MPShop = (function () {
             }
             mountA2HS(t.querySelector(".a2hs"));
             mountCountdown(t.querySelector(".mp-cd"));
+            mountGridSoonPills(t);
           })(t));
       } else
         t.innerHTML =
