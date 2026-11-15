@@ -9357,8 +9357,11 @@
           if (!t || !t.closest) return false;
           // Narrow: real chrome only. Do NOT skip product-card / role=button content.
           return !!t.closest(
-            "#nav, .nav-wrap, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
+            "#nav, .nav-wrap, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .mp-whop-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
           );
+        }
+        function sheetOpen() {
+          return document.documentElement.classList.contains("mp-whop-open") || !!document.querySelector(".mp-whop-sheet");
         }
         function onStart(ev) {
           if (busy) return;
@@ -9367,7 +9370,7 @@
           dist = 0;
           armed = 0;
           activeScroller = null;
-          if (onLivePage() || window.__mpPullToPost) {
+          if (sheetOpen() || (ev.target && ev.target.closest && ev.target.closest(".mp-whop-sheet")) || onLivePage() || window.__mpPullToPost) {
             startY = null;
             return;
           }
@@ -9391,7 +9394,7 @@
         }
         function onMove(ev) {
           if (busy || null === startY) return;
-          if (onLivePage() || window.__mpPullToPost) {
+          if (sheetOpen() || onLivePage() || window.__mpPullToPost) {
             startY = null;
             locked = 0;
             dist = 0;
@@ -9450,7 +9453,7 @@
             hide();
             return;
           }
-          var go = dist >= THRESH && !onLivePage() && !window.__mpPullToPost;
+          var go = dist >= THRESH && !sheetOpen() && !onLivePage() && !window.__mpPullToPost;
           startY = null;
           locked = 0;
           activeScroller = null;
