@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 624;
+var SW_VERSION = 625;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.svg, Twemoji, see js/emoji.js) live in
 // their own cache: filled on first use (never precached: ~4,000 files), kept
@@ -163,25 +163,62 @@ self.addEventListener("fetch", function (e) {
 });
 
 // ---------- Push notifications ----------
+function mpNotifSender(d) {
+  if (!d) return null;
+  if (d.subtitle) return d.subtitle;
+  if (d.title && d.title !== "Misery") return d.title;
+  var who = d.from && String(d.from).toLowerCase() !== "misery" ? d.from : "";
+  if (!who) return d.type === "milestone" ? "Milestone" : null;
+  if (d.type === "whisper" || d.kind === "whisper") return who + " - Whisper";
+  if (d.kind === "chat" || (d.type === "reaction" && !d.threadId)) return who + " - Chat";
+  if (d.type === "follow" || d.type === "gift") return who;
+  if (d.threadId || d.type === "reply" || d.type === "mention" || d.type === "like" || d.type === "repost" || d.type === "quote") return who + " - Globe";
+  return who;
+}
 function mpNotifBody(n) {
   if (!n) return "You have a new notification";
-  // Milestones have no sender — body is the milestone text itself.
+  var preview = String(n.preview || "").trim();
+  var name = n.name || "";
   if (n.type === "milestone") return n.text || n.preview || "You hit a milestone";
-  // Body = "user: content" — the user is the from, the content is the
-  // message (chat) or reply (thread). Falls back to a summary if no preview.
-  if (n.preview) return n.from + ": " + n.preview;
   if (n.type === "mention") {
-    if (n.kind === "chat") return "@" + n.from + " mentioned you in Chat";
-    return "@" + n.from + " mentioned you in \"" + (n.threadTitle || "") + "\"";
+    if (n.kind === "chat") return preview || "Mentioned you in Chat";
+    return preview || (n.threadTitle ? "Mentioned you in \"" + n.threadTitle + "\"" : "Mentioned you on the Globe");
   }
-  if (n.type === "reply") return n.from + " replied in \"" + (n.threadTitle || "") + "\"";
-  if (n.type === "vip") return "You've been upgraded to VIP";
+  if (n.type === "reply") return preview || "Replied to you";
+  if (n.type === "whisper" || n.kind === "whisper") return preview || "Whispered you";
+  if (n.type === "reaction") {
+    var emoji = n.emoji || "";
+    if (n.kind === "chat" || !n.threadId) return emoji ? "Reacted " + emoji + " to your message" : "Reacted to your message";
+    return emoji ? "Reacted " + emoji + " to your post" : "Liked your post";
+  }
+  if (n.type === "like") return "Liked your post";
+  if (n.type === "repost") return "Reposted your post";
+  if (n.type === "quote") return preview || "Quoted your post";
+  if (n.type === "follow") return "Followed you";
+  if (n.type === "gift") {
+    if (n.kind === "stars" || n.n != null) return "Gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars");
+    return "Gifted you " + (name || "a gift");
+  }
+  if (n.type === "purchase") return n.kind === "stars" ? (n.n || 0) + ((n.n === 1) ? " star added" : " stars added") : (name || "Your power") + " is yours";
+  if (n.type === "power") return "You got " + (name || "a power");
+  if (n.type === "vip") return "You're VIP now";
+  if (n.type === "fm" || n.type === "live" || n.kind === "fm-live") return "Misery FM is live";
+  if (n.type === "badge") return name ? "You got the " + name + " badge" : "You got a new badge";
+  if (n.body) return n.body;
+  if (preview) return preview;
+  if (n.text) return n.text;
   return "You have a new notification";
 }
 function mpNotifUrl(n) {
   if (!n) return "/";
-  if ((n.type === "mention" || n.type === "reply" || n.type === "milestone") && n.threadId) return "/#globe/" + n.threadId;
+  if (n.url && n.url.charAt(0) === "/" && n.url.charAt(1) !== "/") return n.url;
+  if ((n.type === "mention" || n.type === "reply" || n.type === "milestone" || n.type === "like" || n.type === "repost" || n.type === "quote" || n.type === "reaction") && n.threadId) return "/#globe/" + n.threadId;
   return "/#journal";
+}
+function mpUsefulPayload(data) {
+  if (!data || typeof data !== "object") return false;
+  var body = data.body || (data.notification && data.notification.body) || "";
+  return !!String(body).trim();
 }
 // No auth token is ever stored in the SW. Bare-push content is fetched via
 // endpoint-auth (POST /api/push/latest with the subscription endpoint).
@@ -191,85 +228,74 @@ function mpNotifUrl(n) {
 // stack grouped under the app instead of every push replacing the last
 // (the old shared tag "mp" collapsed everything to one).
 var shownPushIds = new Set();
+function mpShowFromLatest(d) {
+  try {
+    if ("setAppBadge" in navigator && d && typeof d.unread === "number") {
+      if (d.unread > 0) navigator.setAppBadge(d.unread);
+      else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
+    }
+  } catch (e) {}
+  var nts = (d && typeof d.ts === "number") ? d.ts : -1;
+  if (nts !== -1 && (!nts || Date.now() - nts > 15 * 60 * 1000)) return;
+  var nid = (d && d.id) || "";
+  if (nid) {
+    if (shownPushIds.has(nid)) return;
+    shownPushIds.add(nid);
+    if (shownPushIds.size > 200) shownPushIds.clear();
+  }
+  var body = (d && d.body) || (d && d.type ? mpNotifBody(d) : "");
+  if (!String(body).trim()) return;
+  var notifOpts = {
+    body: body,
+    icon: "/img/icon-192.png",
+    badge: "/img/icon-192.png",
+    data: { url: (d && (d.url || mpNotifUrl(d))) || "/" },
+    tag: "mp-" + (nid || ("t" + Date.now()))
+  };
+  // iOS ignores the subtitle option for web push and always shows
+  // "from <app name>" on that line. So the sender goes in the TITLE
+  // (first line) — the only line we control besides the body.
+  var sender = mpNotifSender(d);
+  return self.registration.showNotification(sender || "Misery", notifOpts);
+}
+function mpFetchLatestAndShow() {
+  return self.registration.pushManager.getSubscription().then(function (sub) {
+    var ep = (sub && sub.endpoint) || "";
+    return fetch("https://api.misereperdue.com/api/push/latest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: ep })
+    });
+  }).then(function (r) {
+    return r.json();
+  }).then(mpShowFromLatest).catch(function () {
+    // Last resort only: the latest-notification fetch failed.
+    return self.registration.showNotification("Misery", {
+      body: "You have a new notification",
+      icon: "/img/icon-192.png",
+      badge: "/img/icon-192.png",
+      data: { url: "/" },
+      tag: "mp"
+    });
+  });
+}
 self.addEventListener("push", function (e) {
-  // Bare push (no payload): fetch the latest unread notification and show
-  // it with title "Misery" + a relevant body. Title is always "Misery".
-  if (!e.data) {
-    e.waitUntil(self.registration.pushManager.getSubscription().then(function (sub) {
-      var ep = (sub && sub.endpoint) || "";
-      return fetch("https://api.misereperdue.com/api/push/latest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: ep })
-      });
-    }).then(function (r) {
-      return r.json();
-    }).then(function (d) {
-      // Home Screen app icon badge: bare pushes are the only path that runs
-      // with the app closed, and the old code never set the badge here —
-      // so mentions arrived with no number on the icon. Sync from pushLatest.
-      // Only act when the server actually sent a count: if the server is
-      // still running older code (no `unread` field), leave the badge alone
-      // instead of clearing it — clearing on a missing field wipes a badge
-      // the app itself had set.
-      try {
-        if ("setAppBadge" in navigator && d && typeof d.unread === "number") {
-          if (d.unread > 0) navigator.setAppBadge(d.unread);
-          else if ("clearAppBadge" in navigator) navigator.clearAppBadge();
-        }
-      } catch (e) {}
-      // Present/future only: a bare push can arrive long after its
-      // notification was created (APNs queue, SW restart, login burst).
-      // If the notification the server returned is older than 15 min,
-      // it's already in the tray — showing it now is a stale burst, not
-      // a live alert. Skip it silently. The server sends ts: 0 when it
-      // has nothing fresh (generic path). Backward-compatible: if the
-      // server sent no ts at all (older worker), show it (old behavior)
-      // instead of dropping everything during a deploy gap.
-      var nts = (d && typeof d.ts === "number") ? d.ts : -1;
-      if (nts !== -1 && (!nts || Date.now() - nts > 15 * 60 * 1000)) return;
-      // Dedupe: the same notification can be delivered twice (APNs
-      // redelivery, queued pushes). Show each notification id once.
-      var nid = (d && d.id) || "";
-      if (nid) {
-        if (shownPushIds.has(nid)) return;
-        shownPushIds.add(nid);
-        if (shownPushIds.size > 200) shownPushIds.clear();
-      }
-      var notifOpts = {
-        body: (d && d.body) || "You have a new notification",
-        icon: "/img/icon-192.png",
-        badge: "/img/icon-192.png",
-        data: { url: (d && d.url) || "/" },
-        tag: "mp-" + (nid || ("t" + Date.now()))
-      };
-      // iOS ignores the subtitle option for web push and always shows
-      // "from <app name>" on that line. So the sender goes in the TITLE
-      // (first line) — the only line we control besides the body.
-      // Server returns the sender as d.subtitle (new) or d.title (old).
-      var sender = (d && d.subtitle) || ((d && d.title && d.title !== "Misery") ? d.title : null);
-      return self.registration.showNotification(sender || "Misery", notifOpts);
-    }).catch(function () {
-      return self.registration.showNotification("Misery", {
-        body: "You have a new notification",
-        icon: "/img/icon-192.png",
-        badge: "/img/icon-192.png",
-        data: { url: "/" },
-        tag: "mp"
-      });
-    }));
+  // Bare or empty payload: fetch the latest notification and show it
+  // with the sender in the title. Generic copy is only used if that fetch fails.
+  var data = null;
+  if (e.data) {
+    try { data = e.data.json(); } catch (_) { data = null; }
+  }
+  if (!mpUsefulPayload(data)) {
+    e.waitUntil(mpFetchLatestAndShow());
     return;
   }
-  var data = {};
-  try { data = e.data.json(); } catch (_) {}
-  // Encrypted path: title is always "Misery"; body comes from the payload.
-  var title = "Misery";
   try {
     if ("setAppBadge" in navigator) {
       if (typeof data.badge === "number" && data.badge > 0) navigator.setAppBadge(data.badge);
       else if (typeof data.badge === "number" && data.badge === 0 && "clearAppBadge" in navigator) navigator.clearAppBadge();
     }
-  } catch (e) {}
+  } catch (err) {}
   var options = {
     body: data.body || (data.notification && data.notification.body) || "",
     icon: "/img/icon-192.png",
@@ -277,7 +303,10 @@ self.addEventListener("push", function (e) {
     data: { url: data.url || (data.notification && data.notification.navigate) || "/" },
     tag: data.tag || (data.notification && data.notification.tag) || "mp"
   };
-  e.waitUntil(self.registration.showNotification(title, options));
+  // Same title rule as the bare path: sender first, never a blank "Misery" title
+  // when the payload named the person.
+  var sender = mpNotifSender(data) || (data.notification && data.notification.title && data.notification.title !== "Misery" ? data.notification.title : null);
+  e.waitUntil(self.registration.showNotification(sender || "Misery", options));
 });
 self.addEventListener("notificationclick", function (e) {
   e.notification.close();
