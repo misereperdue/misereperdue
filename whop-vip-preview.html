@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>VIP Checkout Preview — MISÈRE PERDUE</title>
+  <meta name="description" content="Test-only VIP checkout preview for MISÈRE PERDUE.">
+  <style>
+    :root { color-scheme: dark; }
+    *,*::before,*::after { box-sizing: border-box; }
+    body { margin:0;background:#0d142e;color:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; }
+    .wrap { max-width:640px;margin:0 auto;padding:32px 20px 90px; }
+    .top { display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:40px; }
+    .brand { font-size:13px;letter-spacing:.16em;font-weight:650; }
+    .tag { border:1px solid #344263;border-radius:5px;color:#b5c4dc;padding:7px 9px;font-size:11px;letter-spacing:.07em; }
+    a { color:inherit; }
+    h1 { font-size:25px;letter-spacing:.04em;font-weight:550;margin:0 0 8px; }
+    .sub { color:#b5c4dc;font-size:13px;margin:0 0 22px;line-height:1.6; }
+    .product { width:100%;border-radius:14px;display:block;aspect-ratio:1/1;object-fit:cover;margin:0 auto 22px; }
+    .price { margin:16px 0 20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap; }
+    .price strong { font-size:21px;font-weight:600; } .price span { color:#a7b6d3;font-size:13px; }
+    button { width:100%;border:1px solid #d9dfea;background:#dfe5ee;color:#111a32;border-radius:10px;padding:15px 18px;font-size:14px;font-weight:650;cursor:pointer; }
+    button:disabled { opacity:.55;cursor:not-allowed; }
+    #checkout { min-height:0;margin-top:18px; }
+    #message { color:#b5c4dc;font-size:13px;line-height:1.5;min-height:24px;margin-top:14px; }
+    .fine { color:#8597b4;font-size:11px;line-height:1.65;margin-top:23px; }
+  </style>
+  <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
+  <script src="/js/whop-vip-preview.js?v=1" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <span class="brand">MISÈRE PERDUE</span>
+      <span class="tag">CHECKOUT PREVIEW</span>
+    </div>
+    <img class="product" src="/img/og/membership-sq.jpg" alt="MISÈRE PERDUE VIP card" width="1200" height="1200">
+    <h1>VIP Membership</h1>
+    <p class="sub">Exclusive privileges across MISÈRE PERDUE. Secure checkout is handled by Whop.</p>
+    <div class="price"><strong>CA$10 initially</strong><span>CA$3 every month afterward</span></div>
+    <button id="begin" type="button">Preview VIP checkout</button>
+    <div id="message" role="status" aria-live="polite"></div>
+    <div id="checkout" aria-label="Whop checkout" hidden></div>
+    <p class="fine">Test integration only. This page does not activate VIP based on a checkout redirect. A verified payment webhook is required. The existing Shopify checkout remains unchanged.</p>
+    <p class="fine"><a href="/#shop">Return to Shop</a></p>
+  </main>
+</body>
+</html>
