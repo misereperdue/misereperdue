@@ -88,6 +88,11 @@ var MPShop = (function () {
       ("misery-v_v-sleeping-mask" === t.handle || "gid://shopify/Product/8161016414310" === t.id)
     );
   }
+  /* Enraged Beanie light-mode photo (per dc) */
+  function beanie(t) { return !!t && ("enraged-beanie" === t.handle || "gid://shopify/Product/15520235487334" === t.id); }
+  var BEANIE_LIGHT = "img/enraged-beanie-light.jpg?v=1";
+  /* shop order (per dc): Enraged Beanie, V_V Mask, VIP, Stars, then anything else */
+  function shopRank(t) { return beanie(t) ? 0 : a(t) ? 1 : n(t) ? 2 : starsPack(t) ? 3 : 4; }
   var o = ["img/mask-front-light.jpg?v=8", "img/mask-back-light.jpg?v=4"],
     i = "img/vip-card-light.jpg?v=8",
     STARS_PACK_IMGS = [100, 500, 1000, 1100, 2400, 2500, 6500],
@@ -106,10 +111,10 @@ var MPShop = (function () {
       : !(!window.matchMedia || !matchMedia("(prefers-color-scheme: light)").matches);
   }
   function c(t) {
-    return a(t) && r() ? o : n(t) && r() ? [i] : starsPack(t) ? [starsImg()] : (t.images || []).filter(Boolean);
+    return a(t) && r() ? o : n(t) && r() ? [i] : beanie(t) && r() ? [BEANIE_LIGHT] : starsPack(t) ? [starsImg()] : (t.images || []).filter(Boolean);
   }
   function s(t) {
-    return a(t) && r() ? o[0] : n(t) && r() ? i : starsPack(t) ? starsImg() : t.image;
+    return a(t) && r() ? o[0] : n(t) && r() ? i : beanie(t) && r() ? BEANIE_LIGHT : starsPack(t) ? starsImg() : t.image;
   }
   function l(t) {
     return String(null == t ? "" : t).replace(/[&<>"']/g, function (t) {
@@ -775,6 +780,7 @@ var MPShop = (function () {
     }
     function n(e) {
       if (e && e.length) {
+        e = e.slice().sort(function (p, q) { return shopRank(p) - shopRank(q); });
         var n = e
           .map(function (t) {
             return t.id + "|" + (s(t) || "") + "|" + (t.price || "") + "|" + c(t).join(",");

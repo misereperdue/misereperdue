@@ -22,7 +22,7 @@
     if (song && song.title && song.artist) {
       var music = section('Listening'), card = el('div', 'mp-profile-song');
       var cov = el('span', 'mp-profile-song-art'), art = artUrl(song.art);
-      if (art) { var image = el('img'); image.src = art; image.alt = ''; image.loading = 'lazy'; image.onerror = function () { image.remove(); cov.classList.add('is-empty'); }; cov.appendChild(image); songTone(art, card); } else cov.classList.add('is-empty');
+      if (art) { var image = el('img'), tries = 0; image.alt = ''; image.decoding = 'async'; image.setAttribute('fetchpriority', 'high'); /* eager + one retry (per dc: covers sometimes didn't load; lazy images inside the animating sheet could stall) */ image.onerror = function () { if (tries++ < 1) { image.src = art + (art.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now(); return; } image.remove(); cov.classList.add('is-empty'); }; image.src = art; cov.appendChild(image); songTone(art, card); } else cov.classList.add('is-empty');
       cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
       card.appendChild(cov);
       window.MPPreview && MPPreview.attach(cov, song);
