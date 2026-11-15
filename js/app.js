@@ -124,6 +124,7 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (badge) {
         badge.classList.toggle("hidden", !bagMode || n === 0);
         badge.textContent = n > 99 ? "99+" : String(n);
+        badge.style.fontSize = n > 99 ? "7px" : "";
       }
       // the sectioned bag replaces the regular cart tab on product pages
       if (cartBtn) cartBtn.classList.toggle("hidden", bagMode ? true : n === 0);
@@ -133,6 +134,7 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (cartBadge) {
         cartBadge.classList.toggle("hidden", bagMode || n === 0);
         cartBadge.textContent = n > 99 ? "99+" : String(n);
+        cartBadge.style.fontSize = n > 99 ? "7px" : "";  // "99+" fits inside the basket
       }
       // the cart tab may only just have appeared (fresh load on #cart): re-seat the orb on it
       refreshSeg();
