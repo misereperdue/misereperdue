@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """Product-only share cards (1200x630) for every store product for /p/<handle> og:image / twitter:image, per dc:
-just the product photo, centered on its own navy, no text. Source = Shopify product photo
-(navy background). Run: python3 tools/build-og-products.py  -> img/og/<handle>-p.jpg"""
+just the product photo, centered on its own navy, no text. Source = the catalog's featured product photo
+(navy background, self-hosted under img/products/ since Shopify was retired). Run: python3 tools/build-og-products.py  -> img/og/<handle>-p.jpg"""
 import io, os, urllib.request
 from PIL import Image, ImageChops
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Every product in the store gets its card (per dc: product pages show their product image), from its
-# Shopify featured image. Runs in the seo-refresh workflow, so new products get a card automatically.
+# Every product in the catalog gets its card (per dc: product pages show their product image), from its
+# featured image. Runs in the seo-refresh workflow, so new products get a card automatically.
 import importlib.util
 _spec = importlib.util.spec_from_file_location("bp", os.path.join(ROOT, "tools", "build-products.py"))
 _bp = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_bp)
-# same files through the store's own domain (works where cdn.shopify.com is blocked)
-SRC = {p["handle"]: p["featuredImage"]["url"].replace("https://cdn.shopify.com/s/files/1/0735/1589/2838/", "https://shop.misereperdue.com/cdn/shop/")
-       for p in _bp.fetch() if p.get("featuredImage")}
+SRC = {p["handle"]: p["featuredImage"]["url"] for p in _bp.fetch() if p.get("featuredImage")}
+
+def load(url):
+    """Our own images are read from the checkout; anything else is downloaded."""
+    if url.startswith(_bp.SITE + "/"):
+        return open(os.path.join(ROOT, url[len(_bp.SITE) + 1:].split("?")[0]), "rb").read()
+    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "misery-build-og"}), timeout=30).read()
 # wide card (1200x630) + square card (1200x1200, per dc: a square version wherever wide isn't allowed)
 SIZES = [("p", 1200, 630, 760, 400), ("sq", 1200, 1200, 740, 740)]
 
@@ -38,7 +42,7 @@ def card(im, W, H, MAX_W, MAX_H):
     return out, bgc
 
 for handle, url in SRC.items():
-    im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "misery-build-og"}), timeout=30).read())).convert("RGB")
+    im = Image.open(io.BytesIO(load(url))).convert("RGB")
     for suffix, W, H, MAX_W, MAX_H in SIZES:
         out, bgc = card(im, W, H, MAX_W, MAX_H)
         p = os.path.join(ROOT, "img", "og", f"{handle}-{suffix}.jpg")
