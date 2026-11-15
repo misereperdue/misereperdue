@@ -5,7 +5,14 @@ var MPVip3D = (function () {
       var t = !1,
         a = 0,
         n = null,
-        r = null;
+        r = null,
+        loop = null;
+      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function kickLoop() {
+        if (!t && !a && loop && !sheetOpen() && !document.hidden) a = requestAnimationFrame(loop);
+      }
+      window.addEventListener("mp-whop-open", kickLoop);
+      document.addEventListener("visibilitychange", kickLoop);
       function o() {
         t || (e.innerHTML = '<img src="/img/vip-card-front.png" alt="VIP card">');
       }
@@ -401,8 +408,11 @@ var MPVip3D = (function () {
                     Pe.addEventListener("pointercancel", ze));
                   var Ee = new i.Clock();
                   function Ie() {
-                    if (!t) {
-                      a = requestAnimationFrame(Ie);
+                    loop = Ie;
+                    if (t) return;
+                    if (sheetOpen() || document.hidden) { a = 0; return; }
+                    a = requestAnimationFrame(Ie);
+                    if (1) {
                       var e = Ee.getElapsedTime();
                       if (!Ve)
                         ((ye += be),
@@ -445,7 +455,11 @@ var MPVip3D = (function () {
           })
           .catch(o),
         function () {
-          if (((t = !0), a && cancelAnimationFrame(a), n && n.disconnect(), r))
+          t = !0;
+          window.removeEventListener("mp-whop-open", kickLoop);
+          document.removeEventListener("visibilitychange", kickLoop);
+          if (a) cancelAnimationFrame(a);
+          if (n && n.disconnect(), r)
             try {
               r.dispose();
             } catch (e) {}

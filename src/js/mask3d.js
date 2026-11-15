@@ -5,7 +5,14 @@ var MPMask3D = (function () {
       var t = !1,
         a = 0,
         r = null,
-        n = null;
+        n = null,
+        loop = null;
+      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function kickLoop() {
+        if (!t && !a && loop && !sheetOpen() && !document.hidden) a = requestAnimationFrame(loop);
+      }
+      window.addEventListener("mp-whop-open", kickLoop);
+      document.addEventListener("visibilitychange", kickLoop);
       function o() {
         t || (e.innerHTML = '<img src="/img/mask-front-light.jpg" alt="V_V Mask">');
       }
@@ -577,8 +584,11 @@ var MPMask3D = (function () {
                     at.addEventListener("pointercancel", rt));
                   var nt = new i.Clock();
                   function ot() {
-                    if (!t) {
-                      a = requestAnimationFrame(ot);
+                    loop = ot;
+                    if (t) return;
+                    if (sheetOpen() || document.hidden) { a = 0; return; }
+                    a = requestAnimationFrame(ot);
+                    if (1) {
                       var e = nt.getElapsedTime();
                       if (!Ke)
                         ((Ne += Je),
@@ -599,7 +609,11 @@ var MPMask3D = (function () {
           })
           .catch(o),
         function () {
-          if (((t = !0), a && cancelAnimationFrame(a), r && r.disconnect(), n))
+          t = !0;
+          window.removeEventListener("mp-whop-open", kickLoop);
+          document.removeEventListener("visibilitychange", kickLoop);
+          if (a) cancelAnimationFrame(a);
+          if (r && r.disconnect(), n)
             try {
               n.dispose();
             } catch (e) {}
