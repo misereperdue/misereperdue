@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 626;
+var SW_VERSION = 627;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.svg, Twemoji, see js/emoji.js) live in
 // their own cache: filled on first use (never precached: ~4,000 files), kept
@@ -29,10 +29,10 @@ var SHELL = [
   "/js/social-logos.js?v=2",
   "/js/profile-cards.js?v=47",
   "/js/power-icons.js?v=9",
-  "/js/chat.js?v=527",
+  "/js/chat.js?v=528",
   "/js/social.js?v=10",
   "/js/menu-tabs.js?v=1",
-  "/js/misery-fm.js?v=26",
+  "/js/misery-fm.js?v=27",
   "/js/dashboard-v2.js?v=68",
   "/js/forum3.js?v=1193",
   "/js/ph-icons.js?v=8",
@@ -202,7 +202,7 @@ function mpNotifBody(n) {
   if (n.type === "purchase") return n.kind === "stars" ? (n.n || 0) + ((n.n === 1) ? " star added" : " stars added") : (name || "Your power") + " is yours";
   if (n.type === "power") return "You got " + (name || "a power");
   if (n.type === "vip") return "You're VIP now";
-  if (n.type === "fm" || n.type === "live" || n.kind === "fm-live") return "Misery FM is live";
+  if (n.type === "fm" || n.type === "live" || n.kind === "fm-live") return "misery fm is live";
   if (n.type === "badge") return name ? "You got the " + name + " badge" : "You got a new badge";
   if (n.body) return n.body;
   if (preview) return preview;
