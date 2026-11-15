@@ -179,15 +179,15 @@ STATIC_HEAD = """<!DOCTYPE html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta property="og:image" content="https://misereperdue.com/img/og/default.jpg?v=1">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
-<meta property="og:image:alt" content="MISERY closed eyes logo">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Misère Perdue closed eyes">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="https://misereperdue.com/img/og-image.jpg">
+<meta name="twitter:image" content="https://misereperdue.com/img/og/default.jpg?v=1">
 <script type="application/ld+json">{jsonld}</script>
 <style>
 body{{font-family:-apple-system,system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 18px;line-height:1.65;color:#1a1a2e;background:#fff}}
@@ -378,7 +378,7 @@ def main():
         if thumb and re.fullmatch(r"[A-Za-z0-9_-]{6,64}", str(thumb)):
             og_image, og_size, og_alt = f"{WORKER}/api/media/{thumb}", "", f"{title} on Misery Globe"
         else:
-            og_image = f"{SITE}/img/og/thread-default.jpg?v=1"
+            og_image = f"{SITE}/img/og/default.jpg?v=1"
             og_size = '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
             og_alt = "Misère Perdue closed eyes"
         page = PAGE.format(og_image=html.escape(og_image), og_size=og_size, og_alt=html.escape(og_alt),
