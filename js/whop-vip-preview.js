@@ -60,7 +60,7 @@
       (async function () {
         for (let attempt=0;attempt<6;attempt++) {
           try {
-            const state = await request('/api/vip');
+            const state = await request('/api/whop/vip/sync',{method:'POST',body:'{}'});
             if (showTestSubscription(state)) return;
             if (state.checkoutProvider==='whop' && state.vip && state.provider === 'whop') {status.textContent='Your VIP membership is active. Welcome to MISÈRE PERDUE.';button.hidden=true;return;}
           } catch (_) {status.textContent='We couldn’t check your membership. Open your profile to check its status.';return;}
@@ -71,7 +71,7 @@
       })();
     } else status.textContent='Sign in to check your VIP membership.';
   }
-  else if (live && token()) request('/api/vip').then(showTestSubscription).catch(function () {});
+  else if (live && token()) request('/api/whop/vip/sync',{method:'POST',body:'{}'}).then(showTestSubscription).catch(function () {});
   button.addEventListener('click', async function () {
     if (mounted || button.disabled) return;
     if (!token()) {status.textContent=live ? 'Sign in to MISÈRE PERDUE before buying VIP.' : 'Sign in with an isolated sandbox test account before testing checkout.';return;}
