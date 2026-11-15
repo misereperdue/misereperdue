@@ -1260,6 +1260,8 @@ textarea {
   padding: 3px 7px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  border: 0;
+  outline: none;
   box-shadow: none;
 }
 /* "Get the App" row under the Globe tile: same plain backdrop, radius and
