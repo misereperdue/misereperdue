@@ -1242,7 +1242,9 @@
     var have = (u.badges || []).slice(), out = "";
     u.verified && have.indexOf("verified") < 0 && have.push("verified");
     u.member && have.indexOf("member") < 0 && have.push("member");
-    ["verified", "member", "kitty", "every"].forEach(function (id) { have.indexOf(id) >= 0 && A(u.username, id) && (out += O(Object.assign({}, u, { activeBadge: id }))); });
+    /* no VIP pill on dc's own profile (per dc) */
+    var noVip = u.owner || String(u.username || "").toLowerCase() === "dc";
+    ["verified", "member", "kitty", "every"].forEach(function (id) { have.indexOf(id) >= 0 && !(noVip && id === "member") && A(u.username, id) && (out += O(Object.assign({}, u, { activeBadge: id }))); });
     return out;
   }
   function pbEvery(u) { return u && (u.badges || []).indexOf("every") >= 0 && pbPill(u).indexOf("chat-badge-pill-every") < 0 ? O(Object.assign({}, u, { activeBadge: "every" })) : ""; }
