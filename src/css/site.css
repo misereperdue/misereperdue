@@ -12837,3 +12837,5 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 /* chat header: the stack's peek card sits 6px from the stars pill and the stack 6px from the avatar (per dc) */
 .chat-head-right>.mp-notice-stack{margin-left:9px}
 .mp-stack-fly{z-index:2!important}
+/* while flicking, the stack rides above the stars pill and the avatar so the card never slides under them */
+.mp-notice-stack.is-flicking{position:relative;z-index:8}
