@@ -12850,3 +12850,16 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-stack-fly{z-index:2!important}
 /* while flicking, the stack rides above the stars pill and the avatar so the card never slides under them */
 .mp-notice-stack.is-flicking{position:relative;z-index:8}
+/* Manage sheet (per dc): one rhythm for every section - same title style, 8px from title to content,
+   20px between sections, everything on the same left edge. */
+.mp-profile-management{gap:20px!important}
+.mp-profile-management>.mp-profile-section,.mp-profile-management>.mp-own-pw{display:flex;flex-direction:column;gap:8px!important;margin:0!important;padding:0!important}
+.mp-profile-management>.mp-profile-section>h3,.mp-profile-management>.mp-own-pw>.pow-h{margin:0!important;padding:0!important;font-size:10px!important;font-weight:650!important;line-height:1.2!important;letter-spacing:.07em!important;text-transform:uppercase;color:var(--muted)}
+.mp-profile-management .mp-badge-grid,.mp-profile-management .mp-own-pw-list{margin:0!important}
+/* power rows are 46px with centred icons: pull the list up so the first icon sits ~8px under the title like the tiles */
+.mp-profile-management .mp-own-pw-list:has(.mp-own-row){margin-top:-9px!important}
+.mp-profile-management .mp-own-pw-list>.pow-note{margin:0;padding:0}
+.mp-profile-management .mp-own-row{padding-inline:0}
+.mp-profile-management .mp-profile-edit-status,.mp-profile-management .pow-status{margin:0}
+.mp-profile-management .pow-status:empty{display:none}
+.mp-profile-management>.mp-manage-identity{padding:4px 0 0}
