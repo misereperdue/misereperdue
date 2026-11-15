@@ -1353,7 +1353,7 @@ var MPShop = (function () {
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
     w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><span class="mp-whop-grab" aria-hidden="true"></span>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      '<iframe class="mp-whop-frame" title="' + l(label || "VIP checkout") + '" allow="payment *" src="/whop-vip-preview?sheet=1' + (query || "") + '"></iframe></div>';
+      '<iframe class="mp-whop-frame" title="' + l(label || "VIP checkout") + '" allow="payment *" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals" src="/whop-vip-preview?sheet=1' + (query || "") + '"></iframe></div>';
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
@@ -1365,7 +1365,7 @@ var MPShop = (function () {
     }
     function onMsg(e) {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
-      if (e.data.mpWhop === "done" && !finished) { finished = true; setTimeout(function () { close(); onDone && onDone(); }, 1600); }
+      if (e.data.mpWhop === "done" && !finished) { finished = true; onDone && onDone(); }
       else if (e.data.mpWhop === "close") close();
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
