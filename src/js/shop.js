@@ -1314,7 +1314,7 @@ var MPShop = (function () {
               : "") + "</div>";
           return;
         }
-        var b = btn("Become VIP");
+        var b = btn("Purchase VIP");
         b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
       });
   }
@@ -1330,7 +1330,7 @@ var MPShop = (function () {
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false;
+    var finished = false, panel = w.querySelector(".mp-whop-panel"), frame = w.querySelector(".mp-whop-frame");
     function close() {
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
       w.classList.remove("is-open"); document.documentElement.classList.remove("mp-whop-open");
@@ -1338,8 +1338,12 @@ var MPShop = (function () {
     }
     function onMsg(e) {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
-      if (e.data.mpWhop === "done" && !finished) { finished = true; setTimeout(function () { close(); onDone && onDone(); }, 900); }
+      if (e.data.mpWhop === "done" && !finished) { finished = true; setTimeout(function () { close(); onDone && onDone(); }, 1600); }
       else if (e.data.mpWhop === "close") close();
+      else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
+        var h = Math.round(Number(e.data.h) || 0);
+        if (h > 80 && h < 4000) panel.style.height = "calc(" + (h + 30) + "px + env(safe-area-inset-bottom, 0px))";
+      }
     }
     function onKey(e) { if (e.key === "Escape") close(); }
     window.addEventListener("message", onMsg); document.addEventListener("keydown", onKey);
@@ -1362,7 +1366,7 @@ var MPShop = (function () {
       })
       .catch(function () {
         b.disabled = !1;
-        b.textContent = "Become VIP";
+        b.textContent = "Purchase VIP";
         er && (er.textContent = "Couldn't start checkout. Check your connection and try again.");
       });
   }

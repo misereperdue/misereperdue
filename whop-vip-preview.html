@@ -8,54 +8,73 @@
   <meta name="description" content="VIP checkout for MISÈRE PERDUE.">
   <script src="/js/theme.js?v=10"></script>
   <style>
-    :root { color-scheme: light; --bg:#fff; --ink:#1c1c1e; --muted:#636366; --stroke:rgba(0,0,0,.12); --button:#0a1230; --button-ink:#fff; }
-    [data-theme="dark"] { color-scheme:dark; --bg:#070f29; --ink:#f5f5f7; --muted:#b7bdd0; --stroke:rgba(255,255,255,.22); --button:#dfe5ee; --button-ink:#111a32; }
-    *,*::before,*::after { box-sizing: border-box; }
-    body { margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; }
-    .wrap { max-width:640px;margin:0 auto;padding:32px 20px 90px; }
-    .top { display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:28px;flex-wrap:wrap; }
-    .brand { font-size:13px;letter-spacing:.16em;font-weight:650; }
-    .tag { border:1px solid var(--stroke);border-radius:5px;color:var(--muted);padding:7px 9px;font-size:11px;letter-spacing:.07em; }
-    a { color:inherit; }
-    h1 { font-size:25px;letter-spacing:.04em;font-weight:550;margin:0 0 8px; }
-    .sub { color:var(--muted);font-size:13px;margin:0 0 22px;line-height:1.6; }
-    .product { width:100%;max-width:280px;height:auto;border-radius:14px;display:block;aspect-ratio:1/1;object-fit:cover;margin:0 auto 22px; }
-    .price { margin:16px 0 20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap; }
-    .price strong { font-size:21px;font-weight:600; } .price span { color:var(--muted);font-size:13px; }
-    button { width:100%;border:1px solid var(--stroke);background:var(--button);color:var(--button-ink);border-radius:10px;padding:15px 18px;font-size:14px;font-weight:650;cursor:pointer; }
-    button:focus-visible,a:focus-visible { outline:2px solid var(--ink);outline-offset:4px; }
-    button:disabled { opacity:.55;cursor:not-allowed; }
-    #checkout { min-height:0;margin-top:18px; }
-    #message { color:var(--muted);font-size:13px;line-height:1.5;min-height:24px;margin-top:14px; }
-    .fine { color:var(--muted);font-size:11px;line-height:1.65;margin-top:23px; }
-    /* sheet mode: inside the site's payment sheet, the site provides the frame, title and close button */
-    .mp-sheet body { background:transparent; }
-    .mp-sheet .wrap { padding:6px 16px 28px; }
-    .mp-sheet .top, .mp-sheet .product, .mp-sheet .fine { display:none; }
-    .mp-sheet h1 { font-size:19px;margin:4px 0 4px; }
-    .mp-sheet .sub { margin:0 0 6px; }
-    .mp-sheet .price { margin:8px 0 12px; }
+    :root { color-scheme:light; --bg:#fff; --ink:#1c1c1e; --muted:#636366; --hair:rgba(0,0,0,.08); --fill:#f4f4f6; --button:#0a1230; --button-ink:#fff; --ok:#1c1c1e; }
+    [data-theme="dark"] { color-scheme:dark; --bg:#070f29; --ink:#f5f5f7; --muted:#b7bdd0; --hair:rgba(255,255,255,.14); --fill:rgba(255,255,255,.06); --button:#dfe5ee; --button-ink:#111a32; --ok:#f5f5f7; }
+    *,*::before,*::after { box-sizing:border-box; }
+    html,body { margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased; }
+    .wrap { max-width:480px;margin:0 auto;padding:40px 20px 72px; }
+    .brand { display:block;text-align:center;font-size:12px;letter-spacing:.18em;font-weight:650;color:var(--muted);margin:0 0 28px;text-decoration:none; }
+    .tag { display:none; }
+    /* receipt head */
+    .rc-head { display:flex;align-items:center;gap:14px; }
+    .rc-art { width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;background:var(--fill);box-shadow:0 0 0 1px var(--hair); }
+    .rc-title { min-width:0; }
+    h1 { font-size:17px;font-weight:600;letter-spacing:-.01em;margin:0 0 3px; }
+    .rc-sub { margin:0;color:var(--muted);font-size:13px;line-height:1.35; }
+        .rc-sub b { font-weight:600;color:var(--ink); }
+    .rc-note { color:var(--muted);font-size:12px;line-height:1.5;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--hair); }
+    /* actions & states */
+    button { width:100%;border:0;background:var(--button);color:var(--button-ink);border-radius:14px;height:52px;padding:0 18px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-top:20px;transition:transform .15s ease,opacity .2s; }
+    button:active { transform:scale(.985); }
+    button:focus-visible,a:focus-visible { outline:2px solid var(--ink);outline-offset:3px; }
+    button:disabled { opacity:.5;cursor:default; }
+    button.ghost { background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair); }
+    #checkout { margin:6px -16px 0;min-height:0;transition:opacity .35s ease; }
+    #checkout.loading { opacity:0;height:0;overflow:hidden; }
+    #message { color:var(--muted);font-size:13px;line-height:1.5;margin:14px 0 0;text-align:center; }
+    #message:empty { display:none; }
+    .skel { margin-top:18px;display:grid;gap:12px; }
+    .skel i { display:block;height:46px;border-radius:12px;background:var(--fill);position:relative;overflow:hidden; }
+    .skel i:first-child { height:40px;width:42%;margin:6px auto 10px; }
+    .skel i:nth-child(3) { height:150px; }
+    .skel i:last-child { height:52px;border-radius:14px; }
+    .skel i::after { content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 7%,transparent),transparent);animation:sk 1.3s ease-in-out infinite; }
+    @keyframes sk { to { transform:translateX(100%); } }
+    .done { text-align:center;padding:26px 0 8px; }
+    .done svg { width:64px;height:64px;color:var(--ok); }
+    .done circle { stroke-dasharray:166;stroke-dashoffset:166;animation:dr .6s cubic-bezier(.65,0,.45,1) forwards; }
+    .done path { stroke-dasharray:48;stroke-dashoffset:48;animation:dr .35s .5s cubic-bezier(.65,0,.45,1) forwards; }
+    @keyframes dr { to { stroke-dashoffset:0; } }
+    .done h2 { font-size:20px;font-weight:600;margin:14px 0 4px; }
+    .done p { color:var(--muted);font-size:13px;margin:0; }
+    .fine { color:var(--muted);font-size:11px;line-height:1.6;margin:22px 0 0;text-align:center; }
+    .fine a { color:inherit; }
+    [hidden] { display:none !important; }
+    /* sheet mode: the site draws the sheet, grab handle and close button */
+    .mp-sheet .wrap { padding:4px 20px 24px; }
+    .mp-sheet .brand, .mp-sheet .fine.page { display:none; }
+    .mp-sheet .rc-head { padding-right:40px; }
+    @media (prefers-reduced-motion:reduce) { .skel i::after,.done circle,.done path { animation:none;stroke-dashoffset:0; } }
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
-  <script src="/js/whop-vip-preview.js?v=9" defer></script>
+  <script src="/js/whop-vip-preview.js?v=10" defer></script>
 </head>
 <body>
   <main class="wrap">
-    <div class="top">
-      <span class="brand">MISÈRE PERDUE</span>
-      <span class="tag">VIP</span>
-    </div>
-    <img class="product" src="/img/og/membership-sq.jpg" alt="MISÈRE PERDUE VIP card" width="1200" height="1200">
-    <h1>VIP Membership</h1>
-    <p class="sub">Exclusive privileges across MISÈRE PERDUE. Secure checkout is handled by Whop.</p>
-    <div class="price"><strong>VIP subscription</strong><span>Pricing is confirmed before checkout.</span></div>
-    <p class="sub" id="pricing-note"></p>
-    <button id="begin" type="button">Preview VIP checkout</button>
+    <a class="brand" href="/">MISÈRE PERDUE</a><span class="tag">VIP</span>
+    <section id="receipt">
+      <div class="rc-head">
+        <img class="rc-art" src="/img/og/membership-sq.jpg" alt="" width="112" height="112">
+        <div class="rc-title"><h1>VIP Membership</h1><p class="rc-sub"><span class="renew">Then <b>—</b> every 30 days</span><span class="price" hidden><strong></strong></span></p></div>
+      </div>
+      <p class="rc-note" id="pricing-note"></p>
+    </section>
+    <div class="skel" id="skel" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div id="checkout" aria-label="Payment" hidden></div>
+    <button id="begin" type="button">Continue to payment</button>
     <div id="message" role="status" aria-live="polite"></div>
-    <button id="cancel-test" type="button" hidden>Stop test renewal</button>
-    <div id="checkout" aria-label="Whop checkout" hidden></div>
-    <p class="fine">Your payment is confirmed by the server. Clothing and other products are checked out separately.</p>
-    <p class="fine"><a href="/shop">Return to shop</a></p>
+    <button id="cancel-test" class="ghost" type="button" hidden>Stop test renewal</button>
+    <p class="fine page">Payment is confirmed by our server before VIP is added. <a href="/shop">Return to shop</a></p>
   </main>
 </body>
 </html>
