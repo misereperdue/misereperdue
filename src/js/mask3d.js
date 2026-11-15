@@ -8,8 +8,14 @@ var MPMask3D = (function () {
         n = null,
         loop = null;
       function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      var painted = false;
+      function noteReady() {
+        if (painted) return;
+        painted = true;
+        try { window.dispatchEvent(new Event("mp-3d-ready")); } catch (_) {}
+      }
       function kickLoop() {
-        if (!t && !a && loop && !sheetOpen() && !document.hidden) a = requestAnimationFrame(loop);
+        if (!t && !a && loop && !sheetOpen()) a = requestAnimationFrame(loop);
       }
       window.addEventListener("mp-whop-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
@@ -586,7 +592,7 @@ var MPMask3D = (function () {
                   function ot() {
                     loop = ot;
                     if (t) return;
-                    if (sheetOpen() || document.hidden) { a = 0; return; }
+                    if (sheetOpen()) { a = 0; return; }
                     a = requestAnimationFrame(ot);
                     if (1) {
                       var e = nt.getElapsedTime();
@@ -598,7 +604,8 @@ var MPMask3D = (function () {
                       (R.rotation.set(_e, Ne, 0),
                         (R.position.y = 0.035 * Math.sin(1.15 * e)),
                         (R.rotation.z = 0.008 * Math.sin(0.7 * e)),
-                        n.render(p, d));
+                        n.render(p, d),
+                        noteReady());
                     }
                   }
                   ot();

@@ -1191,7 +1191,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=9", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=10", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -1209,7 +1209,7 @@ var MPShop = (function () {
       if (a(i)) {
         var x = p.querySelector(".vip-3d-stage"),
           L = p.querySelector(".vip-3d-hint");
-        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=5", x)), L)) {
+        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=6", x)), L)) {
           var T = 0,
             z = function () {
               (T && clearTimeout(T),
@@ -1228,7 +1228,7 @@ var MPShop = (function () {
         /* Enraged Beanie 3D (per dc) */
         var bx = p.querySelector(".beanie-3d .vip-3d-stage"),
           bh = p.querySelector(".beanie-3d .vip-3d-hint");
-        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=4", bx)), bh)) {
+        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=5", bx)), bh)) {
           var bT = 0,
             bz = function () { bT && clearTimeout(bT); bT = setTimeout(function () { bh.classList.remove("gone"); }, 800); };
           bx.addEventListener("pointerdown", function () { bT && (clearTimeout(bT), (bT = 0)); bh.classList.add("gone"); });
@@ -1239,7 +1239,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=14", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=15", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),
@@ -1380,12 +1380,15 @@ var MPShop = (function () {
   }
   /* Warm the checkout iframe after the product page is idle so it does not contend with the 3D viewer. */
   var whopWarm = { query: "", frame: null, at: 0 };
-  var warmWait = { timer: 0, idle: 0, onScroll: null };
+  var warmWait = { timer: 0, idle: 0, onScroll: null, onReady: null };
+  var viewerReady = false;
+  window.addEventListener("mp-3d-ready", function () { viewerReady = true; });
   function clearWarmWait() {
     if (warmWait.timer) clearTimeout(warmWait.timer);
     if (warmWait.idle && typeof cancelIdleCallback === "function") try { cancelIdleCallback(warmWait.idle); } catch (_) {}
     if (warmWait.onScroll) window.removeEventListener("scroll", warmWait.onScroll);
-    warmWait = { timer: 0, idle: 0, onScroll: null };
+    if (warmWait.onReady) window.removeEventListener("mp-3d-ready", warmWait.onReady);
+    warmWait = { timer: 0, idle: 0, onScroll: null, onReady: null };
   }
   function dropWhopWarm() {
     if (whopWarm.frame && !whopWarm.frame.closest(".mp-whop-sheet")) {
@@ -1399,18 +1402,21 @@ var MPShop = (function () {
       clearWarmWait();
       warmWhop(query, label);
     }
-    function idle() {
+    /* Start the hidden checkout only after the 3D view has painted, so it does not steal the first frame. */
+    function afterViewer() {
+      if (warmWait.timer) { clearTimeout(warmWait.timer); warmWait.timer = 0; }
+      if (warmWait.onReady) { window.removeEventListener("mp-3d-ready", warmWait.onReady); warmWait.onReady = null; }
       if (typeof requestIdleCallback === "function")
-        warmWait.idle = requestIdleCallback(function () { go(); }, { timeout: 2000 });
-      else warmWait.timer = setTimeout(go, 400);
+        warmWait.idle = requestIdleCallback(function () { go(); }, { timeout: 1500 });
+      else warmWait.timer = setTimeout(go, 0);
     }
-    warmWait.onScroll = function () {
-      if (warmWait.timer) clearTimeout(warmWait.timer);
-      warmWait.timer = setTimeout(idle, 160);
-    };
-    window.addEventListener("scroll", warmWait.onScroll, { passive: true });
-    /* If they never scroll, warm after a beat so Purchase can still open quickly. */
-    warmWait.timer = setTimeout(idle, 1000);
+    if (viewerReady || !document.querySelector(".vip-3d-stage")) {
+      afterViewer();
+      return;
+    }
+    warmWait.onReady = function () { afterViewer(); };
+    window.addEventListener("mp-3d-ready", warmWait.onReady);
+    warmWait.timer = setTimeout(afterViewer, 8000);
   }
   function setWhopOpen(on) {
     document.documentElement.classList.toggle("mp-whop-open", !!on);

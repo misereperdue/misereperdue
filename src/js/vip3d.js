@@ -8,8 +8,14 @@ var MPVip3D = (function () {
         r = null,
         loop = null;
       function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      var painted = false;
+      function noteReady() {
+        if (painted) return;
+        painted = true;
+        try { window.dispatchEvent(new Event("mp-3d-ready")); } catch (_) {}
+      }
       function kickLoop() {
-        if (!t && !a && loop && !sheetOpen() && !document.hidden) a = requestAnimationFrame(loop);
+        if (!t && !a && loop && !sheetOpen()) a = requestAnimationFrame(loop);
       }
       window.addEventListener("mp-whop-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
@@ -410,7 +416,7 @@ var MPVip3D = (function () {
                   function Ie() {
                     loop = Ie;
                     if (t) return;
-                    if (sheetOpen() || document.hidden) { a = 0; return; }
+                    if (sheetOpen()) { a = 0; return; }
                     a = requestAnimationFrame(Ie);
                     if (1) {
                       var e = Ee.getElapsedTime();
@@ -443,7 +449,8 @@ var MPVip3D = (function () {
                       var s = Math.pow(Math.max(0, F.dot(U)), 1.5);
                       (q.emissive.setHSL((0.58 + 0.16 * ye) % 1, 0.75, 0.55),
                         (q.emissiveIntensity = 0.25 + 0.95 * s),
-                        r.render(l, d));
+                        r.render(l, d),
+                        noteReady());
                     }
                   }
                   Ie();
