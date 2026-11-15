@@ -48,6 +48,17 @@
     if (!box) { box = document.createElement('div'); box.className = 'done'; box.innerHTML = '<svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="28" cy="28" r="26"/><path d="M17 29l7.5 7.5L39 21"/></svg><h2></h2><p></p>'; receipt.after(box); }
     box.querySelector('h2').textContent = title || 'You\u2019re VIP';
     box.querySelector('p').textContent = text || 'Welcome to MIS\u00c8RE PERDUE.';
+    var closeBtn = box.querySelector('.done-close');
+    if (sheet) {
+      if (!closeBtn) {
+        closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'done-close';
+        closeBtn.textContent = 'Close';
+        closeBtn.addEventListener('click', function () { notify('close'); });
+        box.appendChild(closeBtn);
+      }
+    } else if (closeBtn) closeBtn.remove();
     notify('done');
     // Whop can finish a payment outside the sheet (wallets, bank checks) and land here as a full page: once the
     // purchase is confirmed, go back to the shop instead of leaving the buyer on this page.
@@ -133,7 +144,7 @@
       for (let attempt = 0; attempt < (paid ? 10 : 1); attempt++) {
         try {
           const s = await request('/api/whop/stars/sync', {method:'POST', body:'{}'});
-          if (s.credited > 0 || s.latestPaid) { showDone('Your balance is ' + fmt(s.points) + ' stars.', fmt(n) + ' Stars added'); return; }
+          if (s.credited > 0 || s.latestPaid) { showDone('Your balance is ' + fmt(s.points) + '.', fmt(n) + ' stars added to your account'); return; }
         } catch (_) { status.textContent = 'We couldn\u2019t check your Stars. They appear as soon as payment is confirmed.'; return; }
         if (!paid) break;
         await new Promise(function (r) { setTimeout(r, 1500); });
