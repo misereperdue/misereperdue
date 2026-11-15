@@ -12888,3 +12888,19 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
    fallback. */
 .nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{left:calc(50% + 1.03px + var(--cart-nudge));top:calc(50% + .64px);line-height:1}
 @supports (text-box:trim-both cap alphabetic){.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{top:calc(50% - .48px);text-box:trim-both cap alphabetic}}
+
+/* Whop VIP payment sheet (per dc): slides up over the site; the checkout page runs inside it */
+.mp-whop-sheet{position:fixed;inset:0;z-index:2147483200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.mp-whop-backdrop{position:absolute;inset:0;background:rgba(4,8,22,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .32s ease;pointer-events:auto}
+.mp-whop-panel{position:relative;width:min(560px,100%);height:min(86vh,760px);height:min(86dvh,760px);background:var(--bg);border-radius:24px 24px 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,.28);border:1px solid var(--stroke);border-bottom:0;overflow:hidden;transform:translateY(104%);
+  transition:transform .42s cubic-bezier(.32,.72,0,1);pointer-events:auto;padding-bottom:env(safe-area-inset-bottom,0px)}
+.mp-whop-sheet.is-open .mp-whop-backdrop{opacity:1}
+.mp-whop-sheet.is-open .mp-whop-panel{transform:none}
+.mp-whop-grab{position:absolute;top:8px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:color-mix(in srgb,var(--ink) 22%,transparent)}
+.mp-whop-x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.mp-whop-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mp-whop-frame{display:block;width:100%;height:100%;border:0;padding-top:26px;box-sizing:border-box;background:transparent;color-scheme:normal}
+html.mp-whop-open,html.mp-whop-open body{overflow:hidden}
+@media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:24px;border-bottom:1px solid var(--stroke);height:min(80vh,760px)}}
+@media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop{transition:none}}
