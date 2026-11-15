@@ -64,7 +64,7 @@ def price_label(p):
     return f"${money(lo['amount'])}-{money(hi['amount'])} {cur}"   # same format as the shop tiles
 
 def jsonld(p, url):
-    imgs = [i["url"] for i in p["images"]["nodes"]] or ([p["featuredImage"]["url"]] if p.get("featuredImage") else [])
+    imgs = (p.get("_share") or []) + ([i["url"] for i in p["images"]["nodes"]] or ([p["featuredImage"]["url"]] if p.get("featuredImage") else []))
     offers = []
     for v in p["variants"]["nodes"]:
         o = {"@type": "Offer", "url": url, "price": money(v["price"]["amount"]),
@@ -115,8 +115,23 @@ def share_desc(p):
         text = text[:159].rsplit(" ", 1)[0].rstrip(",;:") + "…"
     return text
 
+def og_images(images, alt):
+    """og:image tags, each followed by its own size (OG attaches size tags to the image before them)."""
+    e = html.escape; out = ""
+    for u, w, h in images:
+        out += f'<meta property="og:image" content="{e(u)}">\n'
+        if w: out += f'<meta property="og:image:width" content="{w}">\n<meta property="og:image:height" content="{h}">\n'
+        out += f'<meta property="og:image:alt" content="{e(alt)}">\n'
+    return out
+
+def ver(path):
+    return hashlib.md5(open(path, "rb").read()).hexdigest()[:8]
+
+DEFAULT_IMAGES = [(f"{SITE}/img/og/default.jpg?v=1", 1200, 630), (f"{SITE}/img/og/default-square.jpg?v=1", 1200, 1200)]
+
 def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes logo", og_desc=None, extra=""):
     e = html.escape
+    images = image if isinstance(image, list) else [(image, None, None)]
     og_desc = og_desc or desc
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -132,13 +147,12 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(og_desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{e(image)}">
-<meta property="og:image:alt" content="{e(image_alt)}">
+{og_images(images, image_alt)}
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(title)}">
 <meta name="twitter:description" content="{e(og_desc)}">
-<meta name="twitter:image" content="{e(image)}">
+<meta name="twitter:image" content="{e(images[0][0])}">
 {extra}<script type="application/ld+json">{ld}</script>
 {STYLE}
 <script src="/js/emoji.js?v=2" defer></script>
@@ -157,7 +171,10 @@ def main():
         img = p["featuredImage"]["url"] if p.get("featuredImage") else f"{SITE}/img/og-image.jpg"
         card = os.path.join(ROOT, "img", "og", f"{p['handle']}-p.jpg")  # 1200x630 product-only share card (tools/build-og-products.py)
         # ?v= follows the card's content, so a new product photo refreshes cached share previews
-        share_img = f"{SITE}/img/og/{p['handle']}-p.jpg?v={hashlib.md5(open(card, 'rb').read()).hexdigest()[:8]}" if os.path.exists(card) else img
+        sq = os.path.join(ROOT, "img", "og", f"{p['handle']}-sq.jpg")
+        share = [(f"{SITE}/img/og/{p['handle']}-p.jpg?v={ver(card)}", 1200, 630)] if os.path.exists(card) else [(img, None, None)]
+        if os.path.exists(sq): share.append((f"{SITE}/img/og/{p['handle']}-sq.jpg?v={ver(sq)}", 1200, 1200))
+        p["_share"] = [u for u, _, _ in share]
         stock = "In stock" if p["availableForSale"] else "Sold out"
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
@@ -178,14 +195,12 @@ def main():
                  f'<meta property="product:price:currency" content="{lo["currencyCode"]}">\n'
                  f'<meta name="twitter:label1" content="Price">\n'
                  f'<meta name="twitter:data1" content="{e(price_label(p))}">\n')
-        if share_img != img:
-            extra += '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
-        out = head(title, meta_desc(p), url, share_img, "product", jsonld(p, url), alt, share_desc(p), extra) + body
+        out = head(title, meta_desc(p), url, share, "product", jsonld(p, url), alt, share_desc(p), extra) + body
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
     ld = json.dumps([{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Shop | " + BRAND,
-          "url": f"{SITE}/shop", "mainEntity": {"@type": "ItemList", "itemListElement": [
+          "url": f"{SITE}/shop", "image": [u for u, _, _ in DEFAULT_IMAGES], "mainEntity": {"@type": "ItemList", "itemListElement": [
               {"@type": "ListItem", "position": i + 1, "url": u, "name": p["title"]} for i, (p, u) in enumerate(items)]}},
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
     names = [(SEO.get(p["handle"]) or (None, p["title"]))[1] for p, _ in items]
@@ -195,8 +210,7 @@ def main():
         fi = p.get("featuredImage") or {}
         return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}&width=240\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
     rows = "".join(f"<div class=\"product\">{thumb(p)}<h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", f"{SITE}/img/og/default.jpg?v=1", "website", ld, "Misère Perdue closed eyes", None,
-                '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n') + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", DEFAULT_IMAGES, "website", ld, "Misère Perdue closed eyes") + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
