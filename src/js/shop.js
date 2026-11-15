@@ -983,6 +983,8 @@ var MPShop = (function () {
           ? '<div class="vip-3d"><div class="vip-3d-stage"></div>' + h
           : a(i)
             ? '<div class="vip-3d mask-3d"><div class="vip-3d-stage"></div>' + h
+            : beanie(i)
+              ? '<div class="vip-3d beanie-3d"><div class="vip-3d-stage"></div>' + h
             : sk
               ? '<div class="vip-3d stars-3d"><div class="vip-3d-stage" data-pack="' + l(sk[0]) + '"></div>' + h
             : (function (t, e) {
@@ -1191,6 +1193,18 @@ var MPShop = (function () {
           }),
             window.addEventListener("pointerup", z),
             window.addEventListener("pointercancel", z));
+        }
+      }
+      if (beanie(i)) {
+        /* Enraged Beanie 3D (per dc) */
+        var bx = p.querySelector(".beanie-3d .vip-3d-stage"),
+          bh = p.querySelector(".beanie-3d .vip-3d-hint");
+        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=1", bx)), bh)) {
+          var bT = 0,
+            bz = function () { bT && clearTimeout(bT); bT = setTimeout(function () { bh.classList.remove("gone"); }, 800); };
+          bx.addEventListener("pointerdown", function () { bT && (clearTimeout(bT), (bT = 0)); bh.classList.add("gone"); });
+          window.addEventListener("pointerup", bz);
+          window.addEventListener("pointercancel", bz);
         }
       }
       if (sk) {
