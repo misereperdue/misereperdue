@@ -1281,6 +1281,8 @@ var MPShop = (function () {
         window.haptic && window.haptic(12);
         openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout");
       };
+      var n = parseInt(String(pack()).replace(/,/g, ""), 10);
+      if (n) warmWhop("&product=stars&pack=" + n, "Stars checkout");
     });
   }
   function starsSizes(i) {
@@ -1343,7 +1345,39 @@ var MPShop = (function () {
         }
         var b = btn("Purchase VIP");
         b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
+        if (v.checkoutProvider === "whop") warmWhop("", "VIP checkout");
       });
+  }
+  /* Warm the checkout iframe while the Stars/VIP product is on screen so Purchase can open instantly. */
+  var whopWarm = { query: "", frame: null, at: 0 };
+  function dropWhopWarm() {
+    if (whopWarm.frame && !whopWarm.frame.closest(".mp-whop-sheet")) {
+      try { whopWarm.frame.remove(); } catch (_) {}
+    }
+    whopWarm = { query: "", frame: null, at: 0 };
+  }
+  function warmWhop(query, label) {
+    query = query || "";
+    if (document.querySelector(".mp-whop-sheet")) return;
+    if (whopWarm.frame && whopWarm.query === query && whopWarm.frame.isConnected && Date.now() - whopWarm.at < 8 * 60 * 1000) return;
+    dropWhopWarm();
+    if (!mpTok()) return;
+    var f = document.createElement("iframe");
+    f.className = "mp-whop-warm";
+    f.setAttribute("title", label || "VIP checkout");
+    f.setAttribute("allow", "payment *");
+    f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
+    f.setAttribute("aria-hidden", "true");
+    f.src = "/whop-vip-preview?sheet=1" + query;
+    document.body.appendChild(f);
+    whopWarm = { query: query, frame: f, at: Date.now() };
+  }
+  function takeWhopWarm(query) {
+    var f = whopWarm.frame, ok = f && whopWarm.query === (query || "") && f.isConnected && Date.now() - whopWarm.at < 8 * 60 * 1000;
+    whopWarm = { query: "", frame: null, at: 0 };
+    if (ok) return f;
+    if (f && !f.closest(".mp-whop-sheet")) try { f.remove(); } catch (_) {}
+    return null;
   }
   /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
      with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
@@ -1351,25 +1385,49 @@ var MPShop = (function () {
     var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
     var w = document.createElement("div");
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
+    var adopted = takeWhopWarm(query);
     w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><span class="mp-whop-grab" aria-hidden="true"></span>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      '<iframe class="mp-whop-frame" title="' + l(label || "VIP checkout") + '" allow="payment *" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals" src="/whop-vip-preview?sheet=1' + (query || "") + '"></iframe></div>';
+      '<div class="mp-whop-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>';
+    var panel = w.querySelector(".mp-whop-panel"), frame = adopted;
+    if (adopted) {
+      adopted.className = "mp-whop-frame";
+      adopted.removeAttribute("aria-hidden");
+      adopted.setAttribute("title", label || "VIP checkout");
+      panel.appendChild(adopted);
+      w.classList.add("is-ready");
+    } else {
+      frame = document.createElement("iframe");
+      frame.className = "mp-whop-frame";
+      frame.title = label || "VIP checkout";
+      frame.setAttribute("allow", "payment *");
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
+      frame.src = "/whop-vip-preview?sheet=1" + (query || "");
+      panel.appendChild(frame);
+    }
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false, panel = w.querySelector(".mp-whop-panel"), frame = w.querySelector(".mp-whop-frame");
+    var finished = false;
     function close() {
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
       w.classList.remove("is-open"); document.documentElement.classList.remove("mp-whop-open");
-      setTimeout(function () { w.remove(); }, 380);
+      setTimeout(function () {
+        w.remove();
+        if (mpTok()) warmWhop(query, label);
+      }, 260);
     }
     function onMsg(e) {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
       if (e.data.mpWhop === "done" && !finished) { finished = true; onDone && onDone(); }
       else if (e.data.mpWhop === "close") close();
+      else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000) panel.style.height = "calc(" + (h + 30) + "px + env(safe-area-inset-bottom, 0px))";
+        if (h > 80 && h < 4000) {
+          panel.style.height = "calc(" + (h + 30) + "px + env(safe-area-inset-bottom, 0px))";
+          w.classList.add("is-ready");
+        }
       }
     }
     function onKey(e) { if (e.key === "Escape") close(); }
