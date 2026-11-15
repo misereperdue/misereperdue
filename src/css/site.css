@@ -12891,16 +12891,19 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 
 /* Whop VIP payment sheet (per dc): slides up over the site; the checkout page runs inside it */
 .mp-whop-sheet{position:fixed;inset:0;z-index:2147483200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-.mp-whop-backdrop{position:absolute;inset:0;background:rgba(4,8,22,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .32s ease;pointer-events:auto}
-.mp-whop-panel{position:relative;width:min(560px,100%);height:min(86vh,760px);height:min(86dvh,760px);background:var(--bg);border-radius:24px 24px 0 0;
-  box-shadow:0 -12px 40px rgba(0,0,0,.28);border:1px solid var(--stroke);border-bottom:0;overflow:hidden;transform:translateY(104%);
-  transition:transform .42s cubic-bezier(.32,.72,0,1);pointer-events:auto;padding-bottom:env(safe-area-inset-bottom,0px)}
+.mp-whop-backdrop{position:absolute;inset:0;background:rgba(4,8,22,.36);opacity:0;transition:opacity .32s ease;pointer-events:auto}
+/* minimal receipt sheet: sized to its checkout (the page inside reports its height), capped below the status bar */
+.mp-whop-panel{position:relative;width:min(480px,100%);height:440px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);background:var(--bg);border-radius:28px 28px 0 0;
+  box-shadow:0 -1px 0 var(--stroke),0 -18px 50px rgba(0,0,0,.22);overflow:hidden;transform:translateY(104%);
+  transition:transform .44s cubic-bezier(.32,.72,0,1),height .32s cubic-bezier(.32,.72,0,1);pointer-events:auto}
 .mp-whop-sheet.is-open .mp-whop-backdrop{opacity:1}
 .mp-whop-sheet.is-open .mp-whop-panel{transform:none}
-.mp-whop-grab{position:absolute;top:8px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:color-mix(in srgb,var(--ink) 22%,transparent)}
-.mp-whop-x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--stroke);background:var(--fill);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.mp-whop-grab{position:absolute;top:8px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+.mp-whop-x{position:absolute;top:43px;right:18px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
+.mp-whop-x svg{width:14px;height:14px}
+.mp-whop-x:active{transform:scale(.92)}
 .mp-whop-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mp-whop-frame{display:block;width:100%;height:100%;border:0;padding-top:26px;box-sizing:border-box;background:transparent;color-scheme:normal}
 html.mp-whop-open,html.mp-whop-open body{overflow:hidden}
-@media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:24px;border-bottom:1px solid var(--stroke);height:min(80vh,760px)}}
+@media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
 @media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop{transition:none}}

@@ -16,16 +16,48 @@
   const sheet = new URLSearchParams(location.search).get('sheet') === '1' && window.parent !== window;
   if (sheet) document.documentElement.classList.add('mp-sheet');
   const returnUrl = location.origin + '/whop-vip-preview' + (live ? '?checkout=1' : '') + (sheet ? (live ? '&' : '?') + 'sheet=1' : '');
-  function notify(kind) { if (sheet) try { window.parent.postMessage({mpWhop:kind}, location.origin); } catch (_) {} }
+  function notify(kind, extra) { if (sheet) try { window.parent.postMessage(Object.assign({mpWhop:kind}, extra || {}), location.origin); } catch (_) {} }
+  // The sheet sizes itself to this page (up to its max height).
+  if (sheet && window.ResizeObserver) new ResizeObserver(function () { notify('height', {h: Math.ceil(document.querySelector('.wrap').getBoundingClientRect().height)}); }).observe(document.querySelector('.wrap'));
+  const skel = document.getElementById('skel');
+  const receipt = document.getElementById('receipt');
+  function dark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+  // Whop's frame is styled to read as part of the page: monotone, the site's own button, no repeated seller/item lines
+  // (the receipt above names the item; Whop's live total, which includes any tax, stays visible).
+  function appearance() {
+    const d = dark(), ink = d ? '#f5f5f7' : '#1c1c1e', hair = d ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)', field = d ? 'rgba(255,255,255,.05)' : '#fff';
+    const input = {background:field, borderColor:hair, borderRadius:'12px'};
+    return {theme:{appearance:d ? 'dark' : 'light', accentColor:'gray', grayColor:'slate'}, variables:{'--radius':'12px'}, classes:{
+      'whop-Checkout':{background:'transparent'}, 'whop-CheckoutLayout':{background:'transparent'}, 'whop-CheckoutCollection':{background:'transparent'},
+      'whop-CheckoutDetails':{background:'transparent'}, 'whop-CheckoutSummary':{background:'transparent'},
+      'whop-CheckoutSeller':{display:'none'}, 'whop-CheckoutSellerLogo':{display:'none'}, 'whop-CheckoutItem':{display:'none'}, 'whop-CheckoutItemHeadline':{display:'none'},
+      'whop-CheckoutTotal':{fontSize:'34px', fontWeight:'600', letterSpacing:'-0.02em', color:ink},
+      'whop-EmailInput':input, 'whop-CardFieldInput':input, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
+      // Whop's live total (tax included once known) is the one price figure on the sheet
+      'whop-CheckoutPriceContext':{fontSize:'13px'},
+      'whop-PaymentMethods':{background:'transparent'}, 'whop-PaymentMethod':{background:'transparent'}, 'whop-PaymentMethodRow':{background:'transparent'},
+      'whop-PaymentMethodDetail':{background:'transparent'}, 'whop-PaymentCardFields':{background:'transparent'}, 'whop-PaymentBillingBlock':{background:'transparent'},
+      'whop-PaymentMethodSeparated':{background:'transparent', borderColor:hair, borderRadius:'14px'},
+      'whop-CheckoutPayButton':{background:d ? '#dfe5ee' : '#0a1230', color:d ? '#111a32' : '#ffffff', borderRadius:'14px', height:'52px', fontSize:'15px', fontWeight:'600'}
+    }};
+  }
+  function showDone(text) {
+    if (skel) skel.hidden = true; mount.hidden = true; button.hidden = true; status.textContent = '';
+    if (receipt) receipt.hidden = true;
+    let box = document.querySelector('.done');
+    if (!box) { box = document.createElement('div'); box.className = 'done'; box.innerHTML = '<svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="28" cy="28" r="26"/><path d="M17 29l7.5 7.5L39 21"/></svg><h2>You\u2019re VIP</h2><p></p>'; receipt.after(box); }
+    box.querySelector('p').textContent = text || 'Welcome to MIS\u00c8RE PERDUE.';
+    notify('done');
+  }
   const tag = document.querySelector('.tag');
   if (tag) tag.textContent = live ? 'VIP' : 'SANDBOX PREVIEW';
   const price = document.querySelector('.price strong');
-  const renewal = document.querySelector('.price span');
+  const renewal = document.querySelector('.renew b');
   const pricingNote = document.getElementById('pricing-note');
-  if (price) price.textContent = live ? 'CA$13.98 initially' : 'CA$10 initially';
-  if (renewal) renewal.textContent = live ? 'CA$3.99 every 30 days afterward' : 'CA$3 every 30 days afterward';
-  if (pricingNote) pricingNote.textContent = live ? 'Taxes, currency conversion and any buyer fees are calculated by Whop at checkout. Review the final amount before paying.' : 'Sandbox checkout uses test payments.';
-  button.textContent = live ? 'Continue to secure checkout' : 'Test sandbox checkout';
+  if (price) price.textContent = live ? 'CA$13.98' : 'CA$10';
+  if (renewal) renewal.textContent = live ? 'CA$3.99' : 'CA$3';
+  if (pricingNote) pricingNote.textContent = live ? 'Cancel anytime from your profile. Any tax is added to the total below before you pay.' : 'Sandbox checkout uses test payments.';
+  button.textContent = live ? 'Continue to payment' : 'Test sandbox checkout';
   let mounted = false;
   function token() {
     // Sandbox sessions never reuse the production account token.
@@ -46,7 +78,7 @@
     }
     const test = state.ownerWhopTestSubscription;
     if (!test || !['active','revoked'].includes(test.status) || !testMode(state)) return false;
-    button.hidden=true; mount.hidden=true;
+    button.hidden=true; mount.hidden=true; if (skel) skel.hidden=true;
     if (cancelTest) cancelTest.hidden=test.status!=='active'||test.cancelled;
     status.textContent=test.status==='revoked' ? 'The live test subscription has ended. Your existing VIP is unchanged.'
       : test.cancelled ? 'Test renewal has been stopped. Your existing VIP is unchanged.'
@@ -62,28 +94,33 @@
   const params = new URLSearchParams(location.search);
   if (params.has('status') || params.has('complete')) {
     status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try the same checkout again.' : params.get('status') === 'canceled' ? 'Checkout was canceled. You have not been upgraded.' : 'Checking your VIP membership…';
-    if (token()) {
-      // Browser status is only a hint. Access is read from the authenticated API.
-      (async function () {
-        for (let attempt=0;attempt<6;attempt++) {
+    if (token()) confirmVip(params.get('status') === 'succeeded');
+    else status.textContent='Sign in to check your VIP membership.';
+  }
+  // Browser status is only a hint. Access is read from the authenticated API.
+  async function confirmVip(paid) {
+        for (let attempt=0;attempt<(paid ? 8 : 1);attempt++) {
           try {
             const state = await request('/api/whop/vip/sync',{method:'POST',body:'{}'});
             if (showTestSubscription(state)) return;
-            if (state.checkoutProvider==='whop' && state.vip && state.provider === 'whop') {status.textContent='Your VIP membership is active. Welcome to MISÈRE PERDUE.';button.hidden=true;notify('done');return;}
+            if (state.checkoutProvider==='whop' && state.vip && state.provider === 'whop') {showDone();return;}
           } catch (_) {status.textContent='We couldn’t check your membership. Open your profile to check its status.';return;}
-          if (params.get('status') !== 'succeeded') break;
+          if (!paid) break;
           await new Promise(resolve=>setTimeout(resolve,1500));
         }
         status.textContent='Your VIP membership has not been confirmed yet. Check your profile before starting another checkout.';
-      })();
-    } else status.textContent='Sign in to check your VIP membership.';
   }
-  else if (live && token()) request('/api/whop/vip/sync',{method:'POST',body:'{}'}).then(function (state) {
-    if (showTestSubscription(state)) return;
-    if (state.vip && state.provider === 'whop' && state.checkoutProvider === 'whop') { status.textContent='Your VIP membership is active. Welcome to MISÈRE PERDUE.'; button.hidden=true; notify('done'); return; }
-    if (sheet) button.click();
-  }).catch(function () { if (sheet) button.click(); });
-  else if (sheet) button.click();
+  // Opening the page checks for an existing Whop membership first; in the sheet, checkout then starts by itself.
+  function autoStart() {
+    if (params.has('status') || params.has('complete')) return;
+    if (sheet) { button.hidden = true; if (skel) skel.hidden = false; }
+    if (live && token()) request('/api/whop/vip/sync',{method:'POST',body:'{}'}).then(function (state) {
+      if (showTestSubscription(state)) return;
+      if (state.vip && state.provider === 'whop' && state.checkoutProvider === 'whop') { showDone(); return; }
+      if (sheet) button.click();
+    }).catch(function () { if (sheet) button.click(); });
+    else if (sheet) button.click();
+  }
   button.addEventListener('click', async function () {
     if (mounted || button.disabled) return;
     if (!token()) {status.textContent=live ? 'Sign in to MISÈRE PERDUE before buying VIP.' : 'Sign in with an isolated sandbox test account before testing checkout.';return;}
@@ -98,10 +135,17 @@
       const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
       if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
       if (testMode(state) && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
-      const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:body.checkoutConfigurationId,returnUrl});
+      const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:body.checkoutConfigurationId,returnUrl,appearance:appearance(),
+        // Payment finished in place: VIP still comes only from the server's verified sync.
+        onComplete:function(){ mount.hidden=true; status.textContent='Confirming your VIP\u2026'; confirmVip(true); }});
+      button.hidden=true; status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
+      if (skel) skel.hidden=false;
       mount.hidden=false;
-      checkout.create('checkout').mount('#checkout');
-      mounted=true;button.hidden=true;status.textContent=testMode(state) ? 'Complete the separate live test purchase below. Your existing VIP stays unchanged.' : 'Complete your VIP purchase securely below.';
-    } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;}
+      mount.classList.add('loading');
+      checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); }}).mount('#checkout');
+      mounted=true;
+      new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;}
   });
+  autoStart();
 })();
