@@ -27,6 +27,11 @@ SITE = "https://misereperdue.com"
 OUT = os.path.dirname(os.path.abspath(__file__))  # repo root
 DRY = "--dry-run" in sys.argv
 
+# Per-thread search/share descriptions chosen by dc (otherwise the post's opening text is used)
+THREAD_DESC = {
+    "t29": "Misery Globe is a secure online discussion board maintained by Misère Perdue. On Globe you can find the best the world has to offer.",
+}
+
 def get(path):
     req = urllib.request.Request(WORKER + path, headers={"User-Agent": "misereperdue-sitemap/1.0"})
     with urllib.request.urlopen(req, timeout=30) as r:
@@ -439,6 +444,8 @@ def main():
         content = clean_html(full.get("content") or "")
         text = clean_text(full.get("content") or "")
         desc = (text[:154].rsplit(" ", 1)[0] + "…") if len(text) > 155 else text or title
+        if tid in THREAD_DESC:
+            desc = THREAD_DESC[tid]
         nrep = len(full.get("replies") or [])
         if len(desc) < 100:  # short posts: add context so the search line isn't thin (per dc's SEO review)
             tail = (f"{nrep} repl{'y' if nrep == 1 else 'ies'} on Misery Globe" if nrep else "On Misery Globe") + "."  # per dc: just "On Misery Globe."
