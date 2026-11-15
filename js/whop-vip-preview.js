@@ -43,6 +43,7 @@
       if (e.origin !== location.origin || !e.data) return;
       if (e.data.mpWhop === 'peek') document.documentElement.classList.toggle('mp-peek', !!e.data.on);
       if (e.data.mpWhop === 'start') {
+        if (startWanted && window.__mpWhopBegin) return;
         startWanted = true;
         if (window.__mpWhopBegin) window.__mpWhopBegin();
       }
@@ -67,7 +68,7 @@
       'whop-PaymentMethods':{background:'transparent'}, 'whop-PaymentMethod':{background:'transparent'}, 'whop-PaymentMethodRow':{background:'transparent'},
       'whop-PaymentMethodDetail':{background:'transparent'}, 'whop-PaymentCardFields':{background:'transparent'}, 'whop-PaymentBillingBlock':{background:'transparent'},
       'whop-PaymentMethodSeparated':{background:'transparent', borderColor:hair, borderRadius:'14px'},
-      'whop-CheckoutPayButton':{background:d ? '#dfe5ee' : '#0a1230', color:d ? '#111a32' : '#ffffff', borderRadius:'14px', height:'52px', fontSize:'15px', fontWeight:'600'}
+      'whop-CheckoutPayButton':{background:d ? '#dfe5ee' : '#0a1230', color:d ? '#111a32' : '#ffffff', borderRadius:'999px', height:'44px', fontSize:'15px', fontWeight:'600'}
     }};
   }
   function showDone(text, title) {
@@ -125,29 +126,55 @@
   function writeSess(kind, n, id) { try { sessionStorage.setItem(sessKey(kind, n), JSON.stringify({ id: id, at: Date.now() })); } catch (_) {} }
   function dropSess(kind, n) { try { sessionStorage.removeItem(sessKey(kind, n)); } catch (_) {} }
   // Mounts Whop's checkout for a server-made configuration, styled to the page, behind the matching placeholder.
+  // Exactly one embed: destroy any previous instance first, and ignore late callbacks from it.
+  var checkoutGen = 0, activeCheckout = null, themeObs = null;
+  function destroyCheckout() {
+    checkoutGen += 1;
+    if (themeObs) { try { themeObs.disconnect(); } catch (_) {} themeObs = null; }
+    var inst = activeCheckout;
+    activeCheckout = null;
+    if (inst) {
+      try {
+        if (typeof inst.unmount === 'function') inst.unmount();
+        else if (typeof inst.destroy === 'function') inst.destroy();
+        else if (inst.checkout && typeof inst.checkout.unmount === 'function') inst.checkout.unmount();
+      } catch (_) {}
+    }
+    mount.innerHTML = '';
+  }
   function mountCheckout(configId, ret, onComplete, onFail) {
+    destroyCheckout();
+    var gen = checkoutGen;
     const checkout=window.WhopElements(live ? {} : {environment:'sandbox'}).checkout.create({checkoutConfiguration:configId,returnUrl:ret,appearance:appearance(),
-      onComplete:function(){ mount.hidden=true; onComplete(); }});
+      onComplete:function(){ if (gen !== checkoutGen) return; mount.hidden=true; onComplete(); }});
+    activeCheckout = checkout;
     button.hidden=true;
     if (skel) skel.hidden=false;
     mount.hidden=false;
     mount.classList.add('loading');
     var settled = false;
     function finish(ok) {
-      if (settled) return;
+      if (gen !== checkoutGen || settled) return;
       settled = true;
       clearTimeout(hangTimer);
       if (skel) skel.hidden = true;
       mount.classList.remove('loading');
       notify('ready');
       if (!ok) {
+        destroyCheckout();
         mount.hidden = true;
         if (typeof onFail === 'function') onFail();
       }
     }
-    var hangTimer = setTimeout(function () { finish(false); }, 4000);
+    var hangTimer = setTimeout(function () {
+      if (gen !== checkoutGen) return;
+      // Form already painted but onReady was late: keep it, do not mount a second embed.
+      if (mount.childNodes.length) finish(true);
+      else finish(false);
+    }, 4000);
     checkout.create('checkout',{onReady:function(){ finish(true); }, onError:function(){ finish(false); }}).mount('#checkout');
-    new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    themeObs = new MutationObserver(function(){ if (gen !== checkoutGen) return; try { checkout.update({appearance:appearance()}); } catch (_) {} });
+    themeObs.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   }
   function testMode(state) { return !!state.ownerWhopTest && state.checkoutProvider !== 'whop'; }
   function showTestSubscription(state) {
