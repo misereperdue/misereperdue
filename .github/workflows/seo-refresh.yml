@@ -1,0 +1,42 @@
+# Keeps search metadata current (per dc): every 6 hours, rebuild the static pages search engines read
+# (shop, product pages, Globe, public thread pages, sitemap.xml) from the live Shopify store and the
+# public Globe threads. Commits to main only when something changed and the site checks pass;
+# Cloudflare Pages then deploys it like any other push. Run it by hand from the Actions tab too.
+name: seo-refresh
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: seo-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # sitemap lastmod comes from each page's last commit
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Rebuild shop, product, Globe and thread pages + sitemap
+        run: python3 tools/build-products.py
+      - name: Site checks before committing
+        run: |
+          npm install --no-save --no-audit --no-fund terser@5.51.2 clean-css@5.3.3
+          node tools/check.mjs
+      - name: Commit and push if anything changed
+        run: |
+          git add -A p t shop.html globe.html sitemap.xml
+          if git diff --cached --quiet; then echo "No changes."; exit 0; fi
+          git -c user.name="seo-refresh[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "SEO pages: refresh from the store and Globe"
+          git pull --rebase origin main
+          git push origin HEAD:main
