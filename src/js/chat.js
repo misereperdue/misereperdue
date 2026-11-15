@@ -1123,7 +1123,7 @@
     body.appendChild(hd);
     var st = document.createElement("div");
     st.className = "mp-pb-stats";
-    st.innerHTML = (pill || "") + pbEvery(n);
+    st.innerHTML = pbAllPills(n);
     if (n.badges && n.badges.length) {
       var br = document.createElement("span");
       br.className = "mp-pb-badges";
@@ -1221,7 +1221,7 @@
       sync:function(user){
         var opw=body.querySelector('.mp-pb-pow'),npw=powRow(user);opw&&opw.remove();npw&&hd.parentNode&&hd.parentNode.insertBefore(npw,hd.nextSibling);
         mpPwApply(n1,user.username,mpPwFromProfile(user));var ib=avw.querySelector('.mp-pb-ib')||n1.querySelector('.mp-pb-ib');if(ib)ib.remove();var pill=pbPill(user),badge=pill?'':P(user);if(badge)avw.insertAdjacentHTML('beforeend','<span class="mp-pb-ib mp-pb-av-badge">'+badge+'</span>');
-        st.innerHTML=(pill||'')+pbEvery(user);var sl=body.querySelector('.mp-pb-starsline');sl&&(sl.innerHTML=mpPbStars(user));
+        st.innerHTML=pbAllPills(user);var sl=body.querySelector('.mp-pb-starsline');sl&&(sl.innerHTML=mpPbStars(user));
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         mpPwApply(avw,user.username,mpPwFromProfile(user));if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
@@ -1236,6 +1236,15 @@
   function pbPillBadge(u) { return pbVip(u) ? "member" : N(u); }
   function mpPbStars(u) { var n = u.points || 0; return '<span class="mp-pb-pts" aria-label="' + x(n) + ' stars">' + mpStar() + ' <b>' + x(n) + "</b> " + (n === 1 ? "star" : "stars") + "</span>"; }
   /* Everypower pill (per dc): shown next to the other pill whenever the badge is earned */
+  /* all badge pills (per dc): 07, VIP, <3, then Everypower; one per badge the user has */
+  function pbAllPills(u) {
+    if (!u) return "";
+    var have = (u.badges || []).slice(), out = "";
+    u.verified && have.indexOf("verified") < 0 && have.push("verified");
+    u.member && have.indexOf("member") < 0 && have.push("member");
+    ["verified", "member", "kitty", "every"].forEach(function (id) { have.indexOf(id) >= 0 && A(u.username, id) && (out += O(Object.assign({}, u, { activeBadge: id }))); });
+    return out;
+  }
   function pbEvery(u) { return u && (u.badges || []).indexOf("every") >= 0 && pbPill(u).indexOf("chat-badge-pill-every") < 0 ? O(Object.assign({}, u, { activeBadge: "every" })) : ""; }
   function pbPill(u) { return pbVip(u) ? O(Object.assign({}, u, { activeBadge: "member" })) : pbHas07(u) && (N(u) === "member" || N(u) === "every" || !N(u)) ? O(Object.assign({}, u, { activeBadge: "verified" })) : O(u); }
   function pbRing(u) {

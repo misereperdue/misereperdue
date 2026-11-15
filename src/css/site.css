@@ -12827,10 +12827,13 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-social-orbit:before{content:none!important}
 .mp-social-thought{display:none!important}
 .mp-social-arc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;overflow:visible;pointer-events:none}
-.mp-social-arc text{font:600 8.6px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;letter-spacing:.05em;fill:var(--muted)}
+.mp-social-arc text{font:650 8.2px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;letter-spacing:.09em;fill:var(--muted)}
 .mp-social-arc tspan.n{fill:var(--ink);font-weight:800;letter-spacing:.02em}
 .mp-social-arc tspan.dot{fill:var(--muted)}
-.mp-social-hit{position:absolute;bottom:-14px;width:56%;height:26px;padding:0;border:0;background:none;z-index:7;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mp-social-hit{position:absolute;bottom:-22px;width:56%;height:32px;padding:0;border:0;background:none;z-index:7;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mp-social-hit.is-followers{left:-12%}
 .mp-social-hit.is-following{right:-12%}
 .mp-social-hit:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:12px}
+/* chat header: the stack's peek card sits 6px from the stars pill and the stack 6px from the avatar (per dc) */
+.chat-head-right>.mp-notice-stack{margin-left:9px}
+.mp-stack-fly{z-index:2!important}
