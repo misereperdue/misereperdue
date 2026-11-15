@@ -244,7 +244,7 @@ def globe_page(threads_out):
     title = "Globe | Misère Perdue (Misery)"  # per dc
     # per dc: the Globe's line in search (and its sitelink under the home result) leads with this sentence
     desc = ("Discover the best the world has to offer. Misery Globe is the community board of "
-            "Misère Perdue (Misery): fashion, music and Toronto spots.")
+            "Misère Perdue (Misery): fashion, music and local finds.")
     items = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Misery Globe", "url": url, "image": EYES,
            "description": desc, "isPartOf": {"@id": f"{SITE}/#website"},
@@ -352,8 +352,8 @@ def home_page(threads_out):
             + '<header><a href="/">MIS&Egrave;RE PERDUE</a></header>\n<main>\n'
             + "<h1>Misère Perdue (Misery)</h1>\n"
             + '<p class="lede">The official website of merchandise brand Misère Perdue (Misery), and Misery Globe.</p>\n'
-            + "<p>Misère Perdue is an independent clothing and merch brand from Toronto, with a community around it: "
-              '<a href="/globe">Misery Globe</a>, a discussion board for fashion, music and Toronto spots, and '
+            + "<p>Misère Perdue is an independent clothing and merch brand with a community around it: "
+              '<a href="/globe">Misery Globe</a>, a discussion board for fashion, music and local finds, and '
               '<a href="/chat">Misery Chat</a>, a live chat where members share songs, send stars and use powers. '
               "All sales are final.</p>\n"
             + '<h2><a href="/shop" style="color:inherit;text-decoration:none">Shop</a></h2>\n<div class="products">\n' + cards + "</div>\n"
@@ -364,7 +364,7 @@ def home_page(threads_out):
             + '<h2><a href="/chat" style="color:inherit;text-decoration:none">Misery Chat</a></h2>\n'
             + "<p>Chat live with the Misère Perdue community, share what you're listening to and show off your powers.</p>\n"
             + '<a class="cta" href="/chat">Open Misery Chat &rarr;</a>\n'
-            + "</main>\n<footer><span>Misère Perdue (Misery) &middot; Toronto</span>"
+            + "</main>\n<footer><span>Misère Perdue (Misery)</span>"
               '<a href="https://x.com/misereperdue" rel="me noopener">X @misereperdue</a>'
               '<a href="https://www.instagram.com/misereperdue/" rel="me noopener">Instagram @misereperdue</a>'
               '<a href="/info">Info &amp; Terms</a><span>&copy; 2026</span></footer>\n</body>\n</html>\n')
