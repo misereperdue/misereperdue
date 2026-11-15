@@ -1408,18 +1408,33 @@ var MPShop = (function () {
     document.body.appendChild(w);
     document.documentElement.classList.add("mp-whop-open");
     requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    var finished = false, closing = false, CLOSE_MS = 320;
+    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0;
     var bd = w.querySelector(".mp-whop-backdrop");
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
+    }
+    function sheetH() { return panel.getBoundingClientRect().height || panel.offsetHeight || 440; }
+    function peekH() { return Math.round(Math.min(220, Math.max(176, (fullH || sheetH()) * 0.32))); }
+    function peekOff() { return Math.max(0, (fullH || sheetH()) - peekH()); }
+    function setPeek(on) {
+      mode = on ? "peek" : "full";
+      w.classList.toggle("is-peek", on);
+      try { frame && frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "peek", on: !!on }, location.origin); } catch (_) {}
+    }
+    function snap(to) {
+      panel.style.transition = "";
+      if (bd) { bd.style.transition = ""; bd.style.opacity = ""; }
+      setPeek(to === "peek");
+      panel.style.transform = to === "peek" ? "translateY(" + peekOff() + "px)" : "";
     }
     function close() {
       if (closing) return;
       closing = true;
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
-      /* Let CSS take over from a mid-swipe position: clear inline drag styles after
+      /* Let CSS take over from a mid-swipe or peek position: clear inline drag styles after
          is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
       w.classList.remove("is-open");
+      w.classList.remove("is-peek");
       document.documentElement.classList.remove("mp-whop-open");
       panel.style.transition = "";
       if (bd) bd.style.transition = "";
@@ -1432,31 +1447,47 @@ var MPShop = (function () {
         if (mpTok()) warmWhop(query, label);
       }, reduceMotion() ? 0 : CLOSE_MS + 40);
     }
-    var dragY = 0, dragStart = 0, dragAt = 0, dragging = false;
+    var dragStart = 0, dragAt = 0, dragBase = 0, dragging = false, didMove = false;
     function onDragStart(e) {
-      if (closing || !w.classList.contains("is-open") || e.pointerType === "mouse" && e.button !== 0) return;
-      dragging = true; dragStart = e.clientY; dragY = 0; dragAt = Date.now();
+      if (closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
+      dragging = true; didMove = false;
+      dragStart = e.clientY; dragAt = Date.now();
+      if (!fullH) fullH = sheetH();
+      dragBase = mode === "peek" ? peekOff() : 0;
       panel.style.transition = "none";
       if (bd) bd.style.transition = "none";
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
     }
     function onDragMove(e) {
       if (!dragging) return;
-      dragY = Math.max(0, e.clientY - dragStart);
-      panel.style.transform = "translateY(" + dragY + "px)";
-      if (bd) bd.style.opacity = String(Math.max(0.15, 1 - dragY / 320));
+      var raw = dragBase + (e.clientY - dragStart);
+      if (Math.abs(e.clientY - dragStart) > 6) didMove = true;
+      if (raw < 0) raw = raw / 3;
+      else if (mode === "peek" && raw > dragBase) {
+        var extra = raw - dragBase;
+        raw = dragBase + (extra < 72 ? extra : 72 + (extra - 72) / 2);
+      }
+      panel.style.transform = "translateY(" + raw + "px)";
     }
-    function onDragEnd() {
+    function onDragEnd(e) {
       if (!dragging) return;
       dragging = false;
       panel.style.transition = "";
       if (bd) bd.style.transition = "";
-      var flick = dragY / Math.max(1, Date.now() - dragAt) > 0.55;
-      if (dragY > 88 || (dragY > 32 && flick)) close();
-      else {
-        panel.style.transform = "";
-        if (bd) bd.style.opacity = "";
+      var move = (e && e.clientY != null ? e.clientY : dragStart) - dragStart;
+      var vel = move / Math.max(1, Date.now() - dragAt);
+      var off = peekOff();
+      if (!didMove || (Math.abs(move) < 8 && Date.now() - dragAt < 350)) {
+        snap(mode === "peek" ? "full" : "peek");
+        return;
       }
+      if (mode === "peek") {
+        if (move < -36 || vel < -0.45) snap("full");
+        else if (move > 88 || (move > 32 && vel > 0.55)) close();
+        else snap("peek");
+      } else if (move > off + 88 || (move > off + 24 && vel > 0.85)) close();
+      else if (move > off * 0.4 || vel > 0.5) snap("peek");
+      else snap("full");
     }
     function onMsg(e) {
       if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
@@ -1465,8 +1496,9 @@ var MPShop = (function () {
       else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000) {
+        if (h > 80 && h < 4000 && mode !== "peek") {
           panel.style.height = "calc(" + (h + 30) + "px + env(safe-area-inset-bottom, 0px))";
+          requestAnimationFrame(function () { fullH = sheetH(); });
           w.classList.add("is-ready");
         }
       }
