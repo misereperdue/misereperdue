@@ -106,7 +106,10 @@ nav.crumbs a{color:#666}
 </style>"""
 
 def share_desc(p):
-    """Link-preview text (X, iMessage, Slack...): price first, then the Shopify bullets."""
+    """Link-preview text (X, iMessage, Slack...): price first, then the reviewed description (per dc's SEO
+    review); products without reviewed copy fall back to the Shopify bullets."""
+    if p["handle"] in SEO:
+        return meta_desc(p) if "{price}" in SEO[p["handle"]][2] else price_label(p) + " · " + meta_desc(p)
     parts = [x.strip() for x in re.split(r"\s*\+", p["description"]) if x.strip()]
     text = ", ".join(parts)
     text = re.sub(r"\s*(SS\d+\s*)?MISERY \| Misère Perdue\s*$", "", text).strip()
