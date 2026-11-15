@@ -48,7 +48,7 @@
     try {
       const state = await request('/api/vip');
       if (state.checkoutEnvironment !== (live ? 'live' : 'sandbox') || !state.whopCheckoutEnabled) throw new Error('This checkout is not enabled yet.');
-      if (state.vip || state.status === 'active') throw new Error('You already have VIP. Manage your membership from your profile.');
+      if ((state.vip && !state.ownerWhopTest) || state.status === 'active') throw new Error('You already have VIP. Manage your membership from your profile.');
       if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
       const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
       if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
