@@ -12823,7 +12823,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
   .chat-gp-tabs>.seg,.chat-tabs>.chat-tabs-slider,.dash-tabs>.dash-tab-ind,.mp-menu-tab-ind{transition:none!important}
 }
 /* Followers / following curved along the bottom of the avatar ring (per dc, replaces the orbit bubbles) */
-.mp-profile-bar .mp-social-orbit{position:relative;isolation:auto;width:fit-content!important;height:auto!important;min-height:0!important;display:block;margin:0 auto 40px!important;padding:0}
+.mp-profile-bar .mp-social-orbit{position:relative;isolation:auto;width:fit-content!important;height:auto!important;min-height:0!important;display:block;margin:14px auto 34px!important;padding:0}
 .mp-social-orbit:before{content:none!important}
 .mp-social-thought{display:none!important}
 .mp-social-arc{position:absolute;z-index:6;overflow:visible;pointer-events:none}

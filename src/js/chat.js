@@ -7854,7 +7854,8 @@
   /* Pill under the stars/badges row: 3 power bubbles (switched-on first) and a round +N bubble for the
      rest; tap to list them all (per dc). */
   function powRow(user) {
-    var ids = (user && user.powers) || [];
+    /* Chanel / Louis are Hat styles, not powers of their own (per dc) */
+    var ids = ((user && user.powers) || []).filter(function (id) { return id !== "couture" && id !== "louis"; });
     if (!ids.length) return null;
     var on = user.powersOn || [],
       w = document.createElement("div"),
@@ -8003,7 +8004,7 @@
       sphere: { clash: { halo: "In chat the orb covers the ring; your profile ring stays" } },
       bubble: { special: { aura: "Aura can match your bubble colour" } },
       aura:   { special: { bubble: "Can match your bubble colour" } },
-      hat:    { clash: { couture: "Chanel Beanie is worn instead", louis: "Louis Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } },
+      hat:    { special: { sphere: "Sits on top of the orb" } },
       couture:{ clash: { hat: "Worn instead of your Hat", louis: "Worn instead of the Louis Beanie" }, special: { sphere: "Sits on top of the orb" } },
       louis:  { clash: { hat: "Worn instead of your Hat", couture: "Chanel Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } }
     };
@@ -8011,6 +8012,8 @@
       var cat = (st.catalog || []).filter(function (q) { return q.id !== p.id; });
       var c = COMBO[p.id] || {}, clash = c.clash || {}, special = c.special || {};
       /* charms combine with every power (and need Charms on); powers combine with every charm */
+      /* Hat styles (Chanel / Louis) aren't powers you stack, so they never appear as chips */
+      cat = cat.filter(function (q) { return q.kind !== "hatstyle"; });
       var good = cat.filter(function (q) { return q.kind !== "charm" && !clash[q.id]; }),
         bad = cat.filter(function (q) { return clash[q.id]; });
       var chip = function (q, note) {
