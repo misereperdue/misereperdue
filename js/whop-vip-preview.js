@@ -10,7 +10,13 @@
   const api = live ? 'https://api.misereperdue.com' : 'https://whop-staging.misereperdue.com';
   const returnUrl = location.origin + '/whop-vip-preview' + (live ? '?checkout=1' : '');
   const tag = document.querySelector('.tag');
-  if (tag) tag.textContent = live ? 'VIP MEMBERSHIP' : 'SANDBOX PREVIEW';
+  if (tag) tag.textContent = live ? 'PRIVATE LIVE TEST' : 'SANDBOX PREVIEW';
+  const price = document.querySelector('.price strong');
+  const renewal = document.querySelector('.price span');
+  const pricingNote = document.getElementById('pricing-note');
+  if (price) price.textContent = live ? 'CA$13.98 initially' : 'CA$10 initially';
+  if (renewal) renewal.textContent = live ? 'CA$3.99 every 30 days afterward' : 'CA$3 every 30 days afterward';
+  if (pricingNote) pricingNote.textContent = live ? 'Taxes, currency conversion and any buyer fees are calculated by Whop at checkout. Review the final amount before paying.' : 'Sandbox checkout uses test payments.';
   button.textContent = live ? 'Continue to secure checkout' : 'Test sandbox checkout';
   let mounted = false;
   function token() {
@@ -49,6 +55,7 @@
       const state = await request('/api/vip');
       if (state.checkoutEnvironment !== (live ? 'live' : 'sandbox') || !state.whopCheckoutEnabled) throw new Error('This checkout is not enabled yet.');
       if ((state.vip && !state.ownerWhopTest) || state.status === 'active') throw new Error('You already have VIP. Manage your membership from your profile.');
+      if (live && !(await request('/api/whop/vip/readiness')).ready) throw new Error('VIP pricing has changed. Checkout has not been opened.');
       if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
       const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
       if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
