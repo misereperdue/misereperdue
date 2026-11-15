@@ -71,6 +71,7 @@
     }};
   }
   function showDone(text, title) {
+    if (starsPack) dropSess('stars', starsPack); else dropSess('vip');
     if (skel) skel.hidden = true; mount.hidden = true; button.hidden = true; status.textContent = '';
     if (receipt) receipt.hidden = true;
     let box = document.querySelector('.done');
@@ -131,7 +132,21 @@
     if (skel) skel.hidden=false;
     mount.hidden=false;
     mount.classList.add('loading');
-    checkout.create('checkout',{onReady:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); }, onError:function(){ if (skel) skel.hidden=true; mount.classList.remove('loading'); notify('ready'); if (typeof onFail === 'function') onFail(); }}).mount('#checkout');
+    var settled = false;
+    function finish(ok) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(hangTimer);
+      if (skel) skel.hidden = true;
+      mount.classList.remove('loading');
+      notify('ready');
+      if (!ok) {
+        mount.hidden = true;
+        if (typeof onFail === 'function') onFail();
+      }
+    }
+    var hangTimer = setTimeout(function () { finish(false); }, 4000);
+    checkout.create('checkout',{onReady:function(){ finish(true); }, onError:function(){ finish(false); }}).mount('#checkout');
     new MutationObserver(function(){ try { checkout.update({appearance:appearance()}); } catch (_) {} }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   }
   function testMode(state) { return !!state.ownerWhopTest && state.checkoutProvider !== 'whop'; }
@@ -208,10 +223,15 @@
         if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
         function useId(id, fromCache) {
           mountCheckout(id, ret, function () { dropSess('stars', n); status.textContent = 'Adding your Stars\u2026'; confirmStars(true); }, function () {
-            if (!fromCache) return;
             dropSess('stars', n);
-            started = false; button.disabled = false;
-            button.click();
+            if (fromCache) {
+              started = false; button.disabled = false;
+              button.click();
+              return;
+            }
+            started = false; button.disabled = false; button.hidden = false;
+            if (skel) skel.hidden = true;
+            status.textContent = 'Checkout couldn\u2019t load. Please try again.';
           });
           started = true;
         }
@@ -223,7 +243,7 @@
           writeSess('stars', n, body.checkoutConfigurationId);
           useId(body.checkoutConfigurationId, false);
         }
-      } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; }
+      } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; notify('ready'); }
     });
     window.__mpWhopBegin = function () { button.click(); };
     if (sheet) {
@@ -277,9 +297,15 @@
       function useId(id, fromCache, ownerTestFlag) {
         if (testMode(state) && fromCache === false && ownerTestFlag!==true) throw new Error('The separate test checkout could not be verified.');
         mountCheckout(id, returnUrl, function(){ dropSess('vip'); status.textContent='Confirming your VIP\u2026'; confirmVip(true); }, function () {
-          if (!fromCache) return;
-          dropSess('vip'); mounted=false; button.disabled=false;
-          button.click();
+          dropSess('vip');
+          if (fromCache) {
+            mounted=false; button.disabled=false;
+            button.click();
+            return;
+          }
+          mounted=false; button.disabled=false; button.hidden=false;
+          if (skel) skel.hidden=true;
+          status.textContent='Checkout couldn\u2019t load. Please try again.';
         });
         mounted=true;
       }
@@ -293,7 +319,7 @@
         useId(body.checkoutConfigurationId, false, body.ownerTest);
       }
       status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
-    } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;}
+    } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;notify('ready');}
   });
   autoStart();
 })();
