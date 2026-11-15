@@ -12940,11 +12940,11 @@ html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:non
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
 @media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}
 
-/* Spinning 3D charms (per dc, 2026-11-15): one 36-frame strip per gem, stepped across by transform. The three gems
+/* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */
 .mp-charm-diamond,.mp-charm-emerald,.mp-charm-ruby{position:relative;overflow:hidden}
-.mp-gem{position:absolute;top:0;left:0;width:3600%;height:100%;background-size:100% 100%;background-repeat:no-repeat;animation:mp-gem-spin 4.2s steps(36) infinite;will-change:transform}
-.mp-charm-emerald .mp-gem{animation-delay:-1.4s}
-.mp-charm-ruby .mp-gem{animation-delay:-2.8s}
+.mp-gem{position:absolute;top:0;left:0;width:12000%;height:100%;background-size:100% 100%;background-repeat:no-repeat;animation:mp-gem-spin 5s steps(120) infinite;will-change:transform}
+.mp-charm-emerald .mp-gem{animation-delay:-1.67s}
+.mp-charm-ruby .mp-gem{animation-delay:-3.33s}
 @keyframes mp-gem-spin{to{transform:translateX(-100%)}}
 @media (prefers-reduced-motion:reduce){.mp-gem{animation:none}}
