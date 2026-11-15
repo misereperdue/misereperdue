@@ -111,6 +111,9 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (!btn || !window.MP) return;
       var onProduct = current.type === "product";
       var n = MP.cartCount();
+      // fluid bar (per dc): the bar is as wide as its tabs; when the cart tab appears or leaves, the
+      // width animates between the old and new size and the cart + divider scale in
+      var w0 = nav.getBoundingClientRect().width, hadCart = cartBtn && !cartBtn.classList.contains("hidden") || btn.style.display === "grid";
       // the bag always lives in the sectioned area; on product pages the sectioned slot becomes the bag
       var bagMode = onProduct && n > 0;
       var showSplit = bagMode || n > 0;
@@ -133,7 +136,21 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       }
       // the cart tab may only just have appeared (fresh load on #cart): re-seat the orb on it
       refreshSeg();
+      var hasCart = cartBtn && !cartBtn.classList.contains("hidden") || btn.style.display === "grid";
+      var w1 = nav.getBoundingClientRect().width;
+      var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (navSized && !still && nav.animate && Math.abs(w1 - w0) > 1) {
+        var ease = "cubic-bezier(.32,.72,0,1)";
+        nav.animate([{ width: w0 + "px" }, { width: w1 + "px" }], { duration: 460, easing: ease });
+        if (hasCart && !hadCart) {
+          [cartBtn, split, btn].forEach(function (el, i) {
+            if (el && getComputedStyle(el).display !== "none") el.animate([{ opacity: 0, transform: "scale(.55)" }, { opacity: 1, transform: "none" }], { duration: 420, delay: 90, easing: ease, fill: "backwards" });
+          });
+        }
+      }
+      navSized = true;
     }
+    var navSized = false;
     var viewScroll = {};
     var pinState = { until: 0, enteredAt: 0, lastTouchAt: 0, running: false, observer: null };
     ["touchstart", "touchmove", "wheel"].forEach(function (ev) {
