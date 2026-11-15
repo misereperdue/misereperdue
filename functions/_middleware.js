@@ -5,6 +5,9 @@
 // adds it to the scripts it injects. Keep CSP in sync with _headers (fallback).
 const CSP = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.mzstatic.com https://itunes.apple.com https://musicbrainz.org https://api.misereperdue.com wss://api.misereperdue.com https://shop.misereperdue.com https://cloudflareinsights.com https://ipapi.co; frame-src https://challenges.cloudflare.com https://www.youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://w.soundcloud.com https://player.vimeo.com https://embed.music.apple.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
+// Isolated VIP checkout only. Keep in sync with its _headers fallback.
+const WHOP_CSP = "default-src 'self'; script-src 'self' https://cdn.whop.com https://t.whop.tw https://pay.google.com https://applepay.cdn-apple.com https://js.braintreegateway.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://c.paypal.com https://cdn.plaid.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.misereperdue.com https://whop-staging.misereperdue.com https://api.whop.com https://sandbox-api.whop.com https://t.whop.tw https://pay.google.com https://google.com https://account.google.com https://www.google.com https://api.basistheory.com https://payments.braintree-api.com https://payments.sandbox.braintree-api.com https://api.braintreegateway.com https://api.sandbox.braintreegateway.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.paypal.com https://www.sandbox.paypal.com https://production.plaid.com https://sandbox.plaid.com; frame-src https://cdn.whop.com https://checkout.paypal.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://cdn.plaid.com; media-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests";
+
 // /shop, /globe and /chat (per dc): people get the app on that tab; search engines and link previewers
 // get the plain page built for them (same title, description and share tags either way).
 const APP_PAGES = { "/shop": 1, "/globe": 1, "/chat": 1 };
@@ -44,6 +47,8 @@ export async function onRequest({ request, next, env }) {
   const headers = new Headers(res.headers);
   headers.set("X-MP-Release", "profile-cards-431");
   if (APP_PAGES[path] || path === "/") headers.set("Vary", "User-Agent");
-  headers.set("Content-Security-Policy", CSP.replace("script-src 'self'", "script-src 'self' 'nonce-" + nonce + "'"));
+  const vipCheckout = path === "/whop-vip-preview" || path === "/whop-vip-preview.html";
+  if (vipCheckout) headers.set("Cache-Control", "no-store");
+  headers.set("Content-Security-Policy", (vipCheckout ? WHOP_CSP : CSP).replace("script-src 'self'", "script-src 'self' 'nonce-" + nonce + "'"));
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }

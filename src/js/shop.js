@@ -1298,28 +1298,28 @@ var MPShop = (function () {
       .then(function (r) {
         if (r.ok) return r.json();
         if (401 === r.status) return { signedOut: !0 };
-        return fetch("https://api.misereperdue.com/api/me", { headers: H })
-          .then(function (r) { return r.ok ? r.json() : { signedOut: 401 === r.status }; })
-          .then(function (j) { return j.user ? { vip: !!j.user.member, source: j.user.member ? "manual" : null } : j; });
+        throw new Error("VIP status unavailable");
       })
-      .catch(function () { return {}; })
+      .catch(function () { return { unavailable: true }; })
       .then(function (v) {
         if (!box.isConnected) return;
+        if (v.unavailable) { var retry = btn("Check VIP status again"); retry.onclick = function () { vipAction(p, i); }; return; }
         if (v.signedOut) return void (btn("Sign in to upgrade").onclick = function () { y("journal"); });
         if (v.vip) {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
           box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed</p><p class="vip-status-s">' +
             (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for your contribution!") + "</p>" +
-            ("subscription" === v.source && !v.cancelled
+            ("subscription" === v.source && !v.cancelled && (v.manageUrl || v.provider !== "whop")
               ? '<a class="btn vip-manage" href="' + l(v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login") + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
           return;
         }
         var b = btn("Become VIP");
-        b.onclick = function () { vipCheckout(i, b); };
+        b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
       });
   }
-  function vipCheckout(i, b) {
+  function vipCheckout(i, b, provider) {
+    if (provider === "whop") { window.location.assign("/whop-vip-preview?checkout=1"); return; }
     var er = document.getElementById("vip-err"),
       vid = MPShopify.variantIdFor(i, null);
     if (!vid || !i.sellingPlanId) return void (er && (er.textContent = "VIP isn't available right now."));
@@ -1337,10 +1337,27 @@ var MPShop = (function () {
         er && (er.textContent = "Couldn't start checkout. Check your connection and try again.");
       });
   }
-  function S() {
+  async function S() {
     var t = document.getElementById("checkout-btn"),
       e = document.getElementById("checkout-err");
     if (checkoutLocked()) return void checkoutGate();
+    var vipCart = MP.readCart().filter(function (entry) { return n(MP.PRODUCTS[entry.id]); });
+    if (vipCart.length) {
+      if (t && t.disabled) return;
+      if (t) t.disabled = true;
+      try {
+        var vipResponse = await fetch("https://api.misereperdue.com/api/vip", {headers:{Authorization:"Bearer "+mpTok()}, signal:AbortSignal.timeout(10000)});
+        if (!vipResponse.ok) throw new Error("Sign in and check your connection before buying VIP.");
+        var vipState = await vipResponse.json();
+        if (vipState.vip || vipState.status === "active") throw new Error("You already have VIP. Manage your subscription from your profile.");
+        if (vipState.checkoutProvider === "whop") {
+          if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
+          window.location.assign("/whop-vip-preview?checkout=1");
+          return;
+        }
+      } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }
+      finally { if(t) t.disabled = false; }
+    }
     (e && (e.textContent = ""),
       window.MPShopify && MPShopify.configured()
         ? (t && ((t.disabled = !0), (t.innerHTML = '<span class="btn-spin"></span>')),

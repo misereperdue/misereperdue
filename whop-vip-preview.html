@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>VIP Checkout Preview — MISÈRE PERDUE</title>
+  <meta name="description" content="Test-only VIP checkout preview for MISÈRE PERDUE.">
+  <script src="/js/theme.js?v=10"></script>
+  <style>
+    :root { color-scheme: light; --bg:#fff; --ink:#1c1c1e; --muted:#636366; --stroke:rgba(0,0,0,.12); --button:#0a1230; --button-ink:#fff; }
+    [data-theme="dark"] { color-scheme:dark; --bg:#070f29; --ink:#f5f5f7; --muted:#b7bdd0; --stroke:rgba(255,255,255,.22); --button:#dfe5ee; --button-ink:#111a32; }
+    *,*::before,*::after { box-sizing: border-box; }
+    body { margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; }
+    .wrap { max-width:640px;margin:0 auto;padding:32px 20px 90px; }
+    .top { display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:28px;flex-wrap:wrap; }
+    .brand { font-size:13px;letter-spacing:.16em;font-weight:650; }
+    .tag { border:1px solid var(--stroke);border-radius:5px;color:var(--muted);padding:7px 9px;font-size:11px;letter-spacing:.07em; }
+    a { color:inherit; }
+    h1 { font-size:25px;letter-spacing:.04em;font-weight:550;margin:0 0 8px; }
+    .sub { color:var(--muted);font-size:13px;margin:0 0 22px;line-height:1.6; }
+    .product { width:100%;max-width:280px;height:auto;border-radius:14px;display:block;aspect-ratio:1/1;object-fit:cover;margin:0 auto 22px; }
+    .price { margin:16px 0 20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap; }
+    .price strong { font-size:21px;font-weight:600; } .price span { color:var(--muted);font-size:13px; }
+    button { width:100%;border:1px solid var(--stroke);background:var(--button);color:var(--button-ink);border-radius:10px;padding:15px 18px;font-size:14px;font-weight:650;cursor:pointer; }
+    button:focus-visible,a:focus-visible { outline:2px solid var(--ink);outline-offset:4px; }
+    button:disabled { opacity:.55;cursor:not-allowed; }
+    #checkout { min-height:0;margin-top:18px; }
+    #message { color:var(--muted);font-size:13px;line-height:1.5;min-height:24px;margin-top:14px; }
+    .fine { color:var(--muted);font-size:11px;line-height:1.65;margin-top:23px; }
+  </style>
+  <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
+  <script src="/js/whop-vip-preview.js?v=4" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <span class="brand">MISÈRE PERDUE</span>
+      <span class="tag">CHECKOUT PREVIEW</span>
+    </div>
+    <img class="product" src="/img/og/membership-sq.jpg" alt="MISÈRE PERDUE VIP card" width="1200" height="1200">
+    <h1>VIP Membership</h1>
+    <p class="sub">Exclusive privileges across MISÈRE PERDUE. Secure checkout is handled by Whop.</p>
+    <div class="price"><strong>VIP subscription</strong><span>Pricing is confirmed before checkout.</span></div>
+    <p class="sub" id="pricing-note"></p>
+    <button id="begin" type="button">Preview VIP checkout</button>
+    <div id="message" role="status" aria-live="polite"></div>
+    <div id="checkout" aria-label="Whop checkout" hidden></div>
+    <p class="fine">Your membership appears on your profile after your payment is confirmed. Clothing and other products are checked out separately.</p>
+    <p class="fine"><a href="/shop">Return to shop</a></p>
+  </main>
+</body>
+</html>

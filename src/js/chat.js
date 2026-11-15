@@ -7772,13 +7772,14 @@
           el.lastChild.textContent = f[k][1];
         });
       }
-      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl || "https://shop.misereperdue.com/a/subscriptions/login";
+      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl || (v.provider === "whop" ? null : "https://shop.misereperdue.com/a/subscriptions/login");
       if (v.vip && sub && v.cancelled) {
         btns.innerHTML = '<p class="vip-row-note">Cancelled. You won\u2019t be charged again, and VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + '.</p>';
       } else if (v.vip && sub) {
         var until = v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for";
         btns.innerHTML = '<a class="btn chat-xlink vip-row-manage" target="_blank" rel="noopener">Manage</a><button type="button" class="btn chat-xlink vip-row-cancel">Cancel VIP</button><p class="vip-row-note" hidden>Cancel your VIP? You won\u2019t be charged again and VIP stays on until ' + until + '.</p>';
-        btns.querySelector(".vip-row-manage").href = url;
+        if (url) btns.querySelector(".vip-row-manage").href = url;
+        else btns.querySelector(".vip-row-manage").remove();
         var cb = btns.querySelector(".vip-row-cancel"), note = btns.querySelector(".vip-row-note"), portal = !1;
         cb.addEventListener("click", function () {
           if (portal) return void window.open(url, "_blank", "noopener");
@@ -7794,7 +7795,7 @@
             .then(function (x) {
               if (x.r.ok && x.j.ok) return void paint(x.j);
               /* Not set up in the Worker yet (503) or not found in Seal: finish in the Seal portal. */
-              if (503 === x.r.status || 404 === x.r.status) {
+              if (url && v.provider !== "whop" && (503 === x.r.status || 404 === x.r.status)) {
                 note.textContent = "Finish in the subscription portal: enter your checkout email to get a sign-in link, then choose Cancel.";
                 cb.disabled = !1;
                 cb.textContent = "Open subscription portal";
