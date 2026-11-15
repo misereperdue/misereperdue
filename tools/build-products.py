@@ -121,7 +121,9 @@ def share_desc(p):
 def og_images(images, alt):
     """og:image tags, each followed by its own size (OG attaches size tags to the image before them)."""
     e = html.escape; out = ""
-    for u, w, h in images:
+    # only the wide image: iMessage shows every og:image side by side as a collage (per dc's screenshot);
+    # the square version stays in the structured data, where search layouts pick it up
+    for u, w, h in images[:1]:
         out += f'<meta property="og:image" content="{e(u)}">\n'
         if w: out += f'<meta property="og:image:width" content="{w}">\n<meta property="og:image:height" content="{h}">\n'
         out += f'<meta property="og:image:alt" content="{e(alt)}">\n'
