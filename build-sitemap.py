@@ -70,6 +70,29 @@ def clean_html(h):
         h = h.replace(WORKER + '/api/media/' + gif, SITE + still)
     return h
 
+SQ_DIR = os.path.join(OUT, "img", "og", "t")
+
+def square_thumb(tid, src):
+    """1200x1200 centre crop of a thread thumbnail -> img/og/t/<id>-sq.jpg; returns its URL (None if it fails).
+    Rewritten only when the pixels change; ?v= follows the content."""
+    try:
+        import io, hashlib
+        from PIL import Image
+        req = urllib.request.Request(src, headers={"User-Agent": "misereperdue-sitemap/1.0"})
+        im = Image.open(io.BytesIO(urllib.request.urlopen(req, timeout=30).read())).convert("RGB")
+        side = min(im.size); l, t = (im.width - side) // 2, (im.height - side) // 2
+        im = im.crop((l, t, l + side, t + side)).resize((1200, 1200), Image.LANCZOS)
+        buf = io.BytesIO(); im.save(buf, "JPEG", quality=86, optimize=True, progressive=True); data = buf.getvalue()
+        os.makedirs(SQ_DIR, exist_ok=True)
+        path = os.path.join(SQ_DIR, f"{tid}-sq.jpg")
+        if not (os.path.exists(path) and open(path, "rb").read() == data):
+            print(("would write " if DRY else "wrote ") + os.path.relpath(path, OUT), flush=True)
+            if not DRY: open(path, "wb").write(data)
+        return f"{SITE}/img/og/t/{tid}-sq.jpg?v={hashlib.md5(data).hexdigest()[:8]}"
+    except Exception as e:
+        print(f"square thumb {tid}: {e}", flush=True)
+        return None
+
 def iso(ts):
     try:
         return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
@@ -96,8 +119,7 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:title" content="{page_title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{og_image}">
-{og_size}<meta property="og:image:alt" content="{og_alt}">
+{og_tags}
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{page_title}">
@@ -183,6 +205,10 @@ STATIC_HEAD = """<!DOCTYPE html>
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Misère Perdue closed eyes">
+<meta property="og:image" content="https://misereperdue.com/img/og/default-square.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="1200">
+<meta property="og:image:alt" content="Misère Perdue closed eyes">
 <meta name="twitter:site" content="@misereperdue">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
@@ -211,6 +237,8 @@ h1{{font-size:26px;line-height:1.25}}
 <main>
 """
 
+EYES = [f"{SITE}/img/og/default.jpg?v=1", f"{SITE}/img/og/default-square.jpg?v=1"]  # wide + square eyes cards
+
 def globe_page(threads_out):
     url = f"{SITE}/globe"
     title = "Globe | Misère Perdue (Misery)"  # per dc
@@ -218,7 +246,7 @@ def globe_page(threads_out):
     desc = ("Discover the best the world has to offer. Misery Globe is the community board of "
             "Misère Perdue (Misery): fashion, music and Toronto spots.")
     items = sorted(threads_out, key=lambda t: t[3] or 0, reverse=True)
-    ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Misery Globe", "url": url,
+    ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Misery Globe", "url": url, "image": EYES,
            "description": desc, "isPartOf": {"@id": f"{SITE}/#website"},
            "mainEntity": {"@type": "ItemList", "itemListElement": [
                {"@type": "ListItem", "position": i + 1, "url": f"{SITE}/t/{t[0]}", "name": t[1]} for i, t in enumerate(items)]}},
@@ -248,7 +276,7 @@ def chat_page():
     title = "Chat | Misère Perdue (Misery)"
     desc = ("Misery Chat is the live chat of Misère Perdue (Misery). Share songs, show off your powers "
             "and talk fashion and music in real time.")
-    ld = [{"@context": "https://schema.org", "@type": "WebPage", "name": "Misery Chat", "url": url,
+    ld = [{"@context": "https://schema.org", "@type": "WebPage", "name": "Misery Chat", "url": url, "image": EYES,
            "description": desc, "isPartOf": {"@id": f"{SITE}/#website"}},
           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
               {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
@@ -317,6 +345,7 @@ def main():
 
     seen = set()
     threads_out = []
+    thread_images = {}
     for t in threads:
         tid = t["id"]
         if tid in seen:
@@ -365,6 +394,7 @@ def main():
             "url": f"{SITE}/t/{tid}",
             "author": {"@type": "Person", "name": author},
             "datePublished": iso(full.get("createdAt")),
+            "image": "__IMAGES__",
             "articleBody": text[:2000],
             "comment": comments[:20],
         }], ensure_ascii=False).replace("</", "<\\/")
@@ -374,14 +404,24 @@ def main():
         head_t = title if len(title) <= 45 else title[:44].rstrip() + "…"
         pt = f"{head_t} | " + ("Misère Perdue (Misery)" if "misery globe" in title.lower() else "Misery Globe")
         # per dc: a thread shares its own thumbnail; threads without one use the white closed-eyes card
+        # ...plus a square version wherever wide previews aren't allowed (per dc): a centred crop of the
+        # thread's thumbnail, or the square eyes card
         thumb = full.get("thumb") or t.get("thumb")
+        images = None
         if thumb and re.fullmatch(r"[A-Za-z0-9_-]{6,64}", str(thumb)):
-            og_image, og_size, og_alt = f"{WORKER}/api/media/{thumb}", "", f"{title} on Misery Globe"
-        else:
-            og_image = f"{SITE}/img/og/default.jpg?v=1"
-            og_size = '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+            sq = square_thumb(tid, f"{WORKER}/api/media/{thumb}")
+            images = [(f"{WORKER}/api/media/{thumb}", None, None)] + ([(sq, 1200, 1200)] if sq else [])
+            og_alt = f"{title} on Misery Globe"
+        if not images:
+            images = [(f"{SITE}/img/og/default.jpg?v=1", 1200, 630), (f"{SITE}/img/og/default-square.jpg?v=1", 1200, 1200)]
             og_alt = "Misère Perdue closed eyes"
-        page = PAGE.format(og_image=html.escape(og_image), og_size=og_size, og_alt=html.escape(og_alt),
+        og_image = images[0][0]
+        og_tags = "".join(f'<meta property="og:image" content="{html.escape(u)}">\n'
+                          + (f'<meta property="og:image:width" content="{w}">\n<meta property="og:image:height" content="{h}">\n' if w else "")
+                          + f'<meta property="og:image:alt" content="{html.escape(og_alt)}">\n' for u, w, h in images).rstrip("\n")
+        thread_images[tid] = [u for u, _, _ in images]
+        jsonld = jsonld.replace('"__IMAGES__"', json.dumps(thread_images[tid]))
+        page = PAGE.format(og_image=html.escape(og_image), og_tags=og_tags,
             page_title=html.escape(pt), title=html.escape(title), desc=html.escape(desc, quote=True),
             url=f"{SITE}/t/{tid}", author=html.escape(author),
             date=date_long(full.get("createdAt")), content=content,
@@ -399,6 +439,11 @@ def main():
                 print(("would remove " if DRY else "removed ") + "t/" + fn, flush=True)
                 if not DRY:
                     os.remove(os.path.join(tdir, fn))
+        for fn in sorted(os.listdir(SQ_DIR)) if os.path.isdir(SQ_DIR) else []:
+            if fn.endswith("-sq.jpg") and fn[:-7] not in {t for t in live if thread_images.get(t, [""])[-1].startswith(f"{SITE}/img/og/t/")}:
+                print(("would remove " if DRY else "removed ") + "img/og/t/" + fn, flush=True)
+                if not DRY:
+                    os.remove(os.path.join(SQ_DIR, fn))
     write(os.path.join(OUT, "globe.html"), globe_page(threads_out))
     write(os.path.join(OUT, "chat.html"), chat_page())
     write_sitemap(threads, threads_out)

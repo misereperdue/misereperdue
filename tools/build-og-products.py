@@ -5,7 +5,6 @@ just the product photo, centered on its own navy, no text. Source = Shopify prod
 import io, os, urllib.request
 from PIL import Image, ImageChops
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-W, H = 1200, 630
 # Every product in the store gets its card (per dc: product pages show their product image), from its
 # Shopify featured image. Runs in the seo-refresh workflow, so new products get a card automatically.
 import importlib.util
@@ -14,9 +13,10 @@ _bp = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_bp)
 # same files through the store's own domain (works where cdn.shopify.com is blocked)
 SRC = {p["handle"]: p["featuredImage"]["url"].replace("https://cdn.shopify.com/s/files/1/0735/1589/2838/", "https://shop.misereperdue.com/cdn/shop/")
        for p in _bp.fetch() if p.get("featuredImage")}
-MAX_W, MAX_H = 760, 400       # product box: wide margins so X / iMessage crops never cut it
-for handle, url in SRC.items():
-    im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "misery-build-og"}), timeout=30).read())).convert("RGB")
+# wide card (1200x630) + square card (1200x1200, per dc: a square version wherever wide isn't allowed)
+SIZES = [("p", 1200, 630, 760, 400), ("sq", 1200, 1200, 740, 740)]
+
+def card(im, W, H, MAX_W, MAX_H):
     bgc = im.getpixel((3, 3))
     diff = ImageChops.difference(im, Image.new("RGB", im.size, bgc)).convert("L").point(lambda v: 255 if v > 14 else 0)
     x0, y0, x1, y1 = diff.getbbox()
@@ -27,7 +27,7 @@ for handle, url in SRC.items():
         if w > MAX_W: s = MAX_W / (x1 - x0)
     else:
         s = min(MAX_W / (x1 - x0), MAX_H / (y1 - y0))
-    pad = 40 / s              # keep the photo's own navy around the product so there's no seam
+    pad = 40 / s              # keep the photo's own background around the product so there's no seam
     box = (max(0, x0 - pad), max(0, y0 - pad), min(im.width, x1 + pad), min(im.height, y1 + pad))
     crop = im.crop(tuple(int(v) for v in box))
     crop = crop.resize((round(crop.width * s), round(crop.height * s)), Image.LANCZOS)
@@ -35,9 +35,15 @@ for handle, url in SRC.items():
     px = (W - round((x1 - x0) * s)) // 2 - round((x0 - box[0]) * s)
     py = (0 if bleeds_top else (H - round((y1 - y0) * s)) // 2 - round((y0 - box[1]) * s))
     out.paste(crop, (px, py))
-    p = os.path.join(ROOT, "img", "og", f"{handle}-p.jpg")
-    buf = io.BytesIO(); out.save(buf, "JPEG", quality=90, optimize=True, progressive=True)
-    if os.path.exists(p) and open(p, "rb").read() == buf.getvalue():
-        continue
-    open(p, "wb").write(buf.getvalue())
-    print("wrote", os.path.relpath(p, ROOT), out.size, "bg", "#%02x%02x%02x" % bgc)
+    return out, bgc
+
+for handle, url in SRC.items():
+    im = Image.open(io.BytesIO(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "misery-build-og"}), timeout=30).read())).convert("RGB")
+    for suffix, W, H, MAX_W, MAX_H in SIZES:
+        out, bgc = card(im, W, H, MAX_W, MAX_H)
+        p = os.path.join(ROOT, "img", "og", f"{handle}-{suffix}.jpg")
+        buf = io.BytesIO(); out.save(buf, "JPEG", quality=90, optimize=True, progressive=True)
+        if os.path.exists(p) and open(p, "rb").read() == buf.getvalue():
+            continue
+        open(p, "wb").write(buf.getvalue())
+        print("wrote", os.path.relpath(p, ROOT), out.size, "bg", "#%02x%02x%02x" % bgc)
