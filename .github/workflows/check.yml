@@ -23,5 +23,7 @@ jobs:
         run: node tools/check.mjs
       - name: Minified files match src/ (npm run verify)
         run: node tools/build.mjs --verify
+      - name: VIP checkout CSP stays scoped through Pages middleware
+        run: node --test tools/whop-csp.test.mjs
       - name: Python syntax (build-sitemap.py)
         run: python3 -m py_compile build-sitemap.py
