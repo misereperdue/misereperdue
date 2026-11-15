@@ -8543,9 +8543,15 @@
     else if (k === "whisper" || n.kind === "whisper") t = who + " whispered you";
     else if (k === "vip") t = "You're VIP now";
     else if (k === "milestone") t = n.text || "You hit a milestone";
+    else if (k === "follow") t = who + " followed you";
+    else if (k === "like") t = who + " liked your post";
+    else if (k === "repost") t = who + " reposted your post";
+    else if (k === "quote") t = who + " quoted your post";
     else if (k === "gift") t = who + " gifted you " + (n.n || 0) + (n.n === 1 ? " star" : " stars");
     else if (k === "power") t = "You got " + (name || "a power");
     else if (k === "purchase") t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours";
+    else if (k === "fm" || k === "live" || n.kind === "fm-live") t = "Misery FM is live";
+    else if (k === "badge") t = name ? "You got the " + name + " badge" : "You got a new badge";
     else t = n.text || n.preview || "New notification";
     /* Pills: every gift is "Gift"; everything from the Globe/forum is "Globe". Body text stays. */
     var gift = k === "gift" || k === "power" || /gift/i.test(String(k || "")) || /gift/i.test(String(n.kind || ""));
@@ -8553,7 +8559,7 @@
       ((k === "reaction" || k === "mention") && n.kind !== "chat");
     chip = gift ? "Gift" : globe ? "Globe" : k === "reaction" ? "Reaction" : k === "mention" ? "Mention" :
       (k === "whisper" || n.kind === "whisper") ? "Whisper" : k === "vip" ? "VIP" : k === "milestone" && /^(power-new|everypower)/.test(String(n.kind || "")) ? "Powers" : k === "milestone" ? "Milestone" :
-      k === "purchase" ? "Purchase" : "Notification";
+      k === "purchase" ? "Purchase" : k === "fm" || n.kind === "fm-live" ? "FM" : k === "badge" ? "Badge" : "Notification";
     return { title: t, sub: n.preview && k !== "milestone" ? String(n.preview) : "", chip: chip, site: !who };
   }
   function mpNotifPop(n) {
