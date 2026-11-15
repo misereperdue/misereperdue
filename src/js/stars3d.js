@@ -41,8 +41,14 @@ var MPStars3D = (function () {
         renderer = null,
         loop = null;
       function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      var painted = false;
+      function noteReady() {
+        if (painted) return;
+        painted = true;
+        try { window.dispatchEvent(new Event("mp-3d-ready")); } catch (_) {}
+      }
       function kickLoop() {
-        if (!dead && !raf && loop && !sheetOpen() && !document.hidden) raf = requestAnimationFrame(loop);
+        if (!dead && !raf && loop && !sheetOpen()) raf = requestAnimationFrame(loop);
       }
       window.addEventListener("mp-whop-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
@@ -391,7 +397,7 @@ var MPStars3D = (function () {
         function frame() {
           if (dead) return;
           loop = frame;
-          if (sheetOpen() || document.hidden) { raf = 0; return; }
+          if (sheetOpen()) { raf = 0; return; }
           raf = still ? 0 : requestAnimationFrame(frame);
           var t = clock.getElapsedTime(),
             now = performance.now();
@@ -415,7 +421,10 @@ var MPStars3D = (function () {
             }
           }
           spot.position.x = 3 * Math.sin(yaw) + 1.2;
-          if (onScreen && !document.hidden) renderer.render(scene, camera);
+          if (!painted || (onScreen && !document.hidden)) {
+            renderer.render(scene, camera);
+            noteReady();
+          }
           if (still) el.setAttribute("data-ready", "1");
         }
         // compile every shader up front (off the main thread where supported) so the first frames don't stutter

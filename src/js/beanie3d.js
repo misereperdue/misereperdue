@@ -13,8 +13,14 @@ var MPBeanie3D = (function () {
     mount: function (el) {
       var dead = false, raf = 0, renderer = null, ro = null, loop = null;
       function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      var painted = false;
+      function noteReady() {
+        if (painted) return;
+        painted = true;
+        try { window.dispatchEvent(new Event("mp-3d-ready")); } catch (_) {}
+      }
       function kickLoop() {
-        if (!dead && !raf && loop && !sheetOpen() && !document.hidden) raf = requestAnimationFrame(loop);
+        if (!dead && !raf && loop && !sheetOpen()) raf = requestAnimationFrame(loop);
       }
       window.addEventListener("mp-whop-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
@@ -141,7 +147,7 @@ var MPBeanie3D = (function () {
         (function tick() {
           if (dead) return;
           loop = tick;
-          if (sheetOpen() || document.hidden) { raf = 0; return; }
+          if (sheetOpen()) { raf = 0; return; }
           raf = requestAnimationFrame(tick);
           var t = clock.getElapsedTime();
           if (!dragging) {
@@ -153,6 +159,7 @@ var MPBeanie3D = (function () {
           group.position.y = 0.92 + (reduce ? 0 : 0.03 * Math.sin(t * 1.15));
           shadow.material.opacity = (light ? 0.16 : 0.32) * Math.max(0, Math.cos(pitch * 1.3));
           renderer.render(scene, camera);
+          noteReady();
         })();
       }).catch(fallback);
       return function () {
