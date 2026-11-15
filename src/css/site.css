@@ -12834,8 +12834,9 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-social-hit.is-followers{left:-12%}
 .mp-social-hit.is-following{right:-12%}
 .mp-social-hit:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:12px}
-/* chat header: the stack's peek card sits 6px from the stars pill and the stack 6px from the avatar (per dc) */
-.chat-head-right>.mp-notice-stack{margin-left:9px}
+/* chat header: equal visible gaps (per dc) - the round peek card (shifted 4px left) sits 7px from the
+   stars pill, and the front card 7px from the avatar. Measured on the circles, not the rotated box. */
+.chat-head-right>.mp-notice-stack{margin-left:4px}
 .mp-stack-fly{z-index:2!important}
 /* while flicking, the stack rides above the stars pill and the avatar so the card never slides under them */
 .mp-notice-stack.is-flicking{position:relative;z-index:8}
