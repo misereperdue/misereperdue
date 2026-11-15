@@ -17,12 +17,33 @@
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function section(title) { var box = el('section', 'mp-profile-section'); box.appendChild(el('h3', '', title)); return box; }
   // Profile details contain listening only; pinned photos are retired.
+  /* Album art (per dc: covers sometimes didn't load). Eager, up to 3 tries with a stall watchdog, then a
+     smaller size; a cover that loaded once is reused on every re-render (the card re-renders when song
+     details arrive, which used to restart the download). 'is-loaded' fades it in and forces a repaint. */
+  var ART_OK = Object.create(null);
+  function mountArt(cov, art) {
+    var img = el('img'), sep = art.indexOf('?') < 0 ? '?' : '&', small = art.replace(/\/\d+x\d+bb\./, '/300x300bb.'), timer = 0;
+    var queue = ART_OK[art] ? [ART_OK[art], art] : [art];
+    queue.push(art + sep + 'r=' + Date.now()); if (small !== art) queue.push(small);
+    img.alt = ''; img.decoding = 'async'; img.setAttribute('fetchpriority', 'high'); img.referrerPolicy = 'no-referrer';
+    function next() {
+      clearTimeout(timer);
+      if (!img.isConnected && img.src) return;
+      var u = queue.shift();
+      if (!u) { img.remove(); cov.classList.add('is-empty'); return; }
+      img.src = u;
+      timer = setTimeout(function () { if (img.isConnected && !(img.complete && img.naturalWidth)) next(); }, 6000);
+    }
+    img.onload = function () { if (!img.naturalWidth) return next(); clearTimeout(timer); ART_OK[art] = img.src; cov.classList.add('is-loaded'); };
+    img.onerror = function () { setTimeout(next, 400); };
+    cov.appendChild(img); next();
+  }
   function details(user, options) {
     var out = el('div', 'mp-profile-details'), song = user.listening;
     if (song && song.title && song.artist) {
       var music = section('Listening'), card = el('div', 'mp-profile-song');
       var cov = el('span', 'mp-profile-song-art'), art = artUrl(song.art);
-      if (art) { var image = el('img'), tries = 0; image.alt = ''; image.decoding = 'async'; image.setAttribute('fetchpriority', 'high'); /* eager + one retry (per dc: covers sometimes didn't load; lazy images inside the animating sheet could stall) */ image.onerror = function () { if (tries++ < 1) { image.src = art + (art.indexOf('?') < 0 ? '?' : '&') + 'r=' + Date.now(); return; } image.remove(); cov.classList.add('is-empty'); }; image.src = art; cov.appendChild(image); songTone(art, card); } else cov.classList.add('is-empty');
+      if (art) { mountArt(cov, art); songTone(art, card); } else cov.classList.add('is-empty');
       cov.appendChild(el('span', 'mp-profile-song-note', '\u266B'));
       card.appendChild(cov);
       window.MPPreview && MPPreview.attach(cov, song);

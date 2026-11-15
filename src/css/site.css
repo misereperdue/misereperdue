@@ -12863,3 +12863,11 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-profile-management .mp-profile-edit-status,.mp-profile-management .pow-status{margin:0}
 .mp-profile-management .pow-status:empty{display:none}
 .mp-profile-management>.mp-manage-identity{padding:4px 0 0}
+
+/* Profile cover (per dc: covers sometimes didn't show). No negative z-index under the clipped, masked card
+   (WebKit could leave a loaded cover unpainted): cover on layer 0, text above it; fade in on load. */
+.mp-profile-details .mp-profile-song-art{z-index:0!important}
+.mp-profile-details .mp-profile-song-copy{position:relative;z-index:1}
+.mp-profile-details .mp-profile-song>.mp-profile-eq{z-index:2}
+.mp-profile-details .mp-profile-song-art img{opacity:0;transition:opacity .25s ease,filter .3s ease}
+.mp-profile-details .mp-profile-song-art.is-loaded img{opacity:1}
