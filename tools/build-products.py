@@ -195,7 +195,8 @@ def main():
         fi = p.get("featuredImage") or {}
         return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}&width=240\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
     rows = "".join(f"<div class=\"product\">{thumb(p)}<h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
-    shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", f"{SITE}/img/og-image.jpg", "website", ld) + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
+    shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", f"{SITE}/img/og/default.jpg?v=1", "website", ld, "Misère Perdue closed eyes", None,
+                '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n') + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
