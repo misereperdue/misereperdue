@@ -168,7 +168,7 @@ var MPShop = (function () {
   var f = "";
   function v() {
     try {
-      var t = localStorage.getItem("mp_products_cache_v3");
+      var t = localStorage.getItem("mp_products_cache_v4");
       if (t) {
         var e = JSON.parse(t);
         if (e && e.length) return e;
@@ -197,7 +197,7 @@ var MPShop = (function () {
             MP.PRODUCTS[t.id] = t;
           });
           try {
-            localStorage.setItem("mp_products_cache_v3", JSON.stringify(e));
+            localStorage.setItem("mp_products_cache_v4", JSON.stringify(e));
           } catch (t) {}
           pruneCart();
           return e;
@@ -262,7 +262,7 @@ var MPShop = (function () {
         })(t),
       ) +
       "</span></div>" +
-      (!1 === t.available ? '<span class="tag">' + gridSoonLabel() + "</span>" : "") +
+      (t.preorder ? '<span class="tag tag-pre">Preorder</span>' : !1 === t.available ? '<span class="tag">' + gridSoonLabel() + "</span>" : "") +
       "</div>"
     );
   }
@@ -297,7 +297,7 @@ var MPShop = (function () {
   var gridSoonTimer = null;
   function mountGridSoonPills(root) {
     if (gridSoonTimer) (clearTimeout(gridSoonTimer), (gridSoonTimer = null));
-    var pills = root ? root.querySelectorAll(".product-card[data-product] .tag") : [];
+    var pills = root ? root.querySelectorAll(".product-card[data-product] .tag:not(.tag-pre)") : [];
     if (!pills.length) return;
     var label = gridSoonLabel();
     pills.forEach(function (el) {
@@ -902,7 +902,16 @@ var MPShop = (function () {
       txt.textContent = open ? "Tap Share, then \u201cAdd to Home Screen\u201d" : "Get the App";
     };
   }
+  /* Preorders (per dc): beanie and mask are bought now on Whop's checkout (it asks for the shipping address) and
+     ship at launch. They stay out of the bag. */
+  function shipsLabel(t) {
+    var d = t.shipsAt ? new Date(t.shipsAt + "T12:00:00") : null;
+    return d && !isNaN(d) ? d.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "at launch";
+  }
   function M(t, e) {
+    if (t.preorder && t.whop && /^plan_[A-Za-z0-9]+$/.test(t.whop.plan || ""))
+      return '<a class="btn accent" id="preorder-btn" href="https://whop.com/checkout/' + t.whop.plan + '" target="_blank" rel="noopener"><span class="lbl">Preorder</span></a>' +
+        '<p class="preorder-note">Ships ' + shipsLabel(t) + '. Secure checkout by Whop.</p>';
     if (!1 === t.available) return '<span class="pill-soon">' + soonLabel() + "</span>";
     var n = (function (t, e) {
       var n = t + ":" + (e || "one"),
