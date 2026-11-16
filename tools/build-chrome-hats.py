@@ -25,6 +25,29 @@ def flower(d, cx, cy, r, fill):
         d.line([P(cx + math.cos(t) * r * .35, cy + math.sin(t) * r * .35), P(cx + math.cos(t) * r * .78, cy + math.sin(t) * r * .78)], fill=fill, width=max(1, int(r * .16 * K)))
     d.ellipse([*P(cx - r * .22, cy - r * .22), *P(cx + r * .22, cy + r * .22)], fill=fill)
 
+def cross_fleury(d, cx, cy, r, fill, rot=0):
+    # traditional heraldic cross fleury: slim arms, each ending in three lobes (a pointed centre petal and two
+    # side petals splaying outward), drawn from heraldic convention
+    def tr(x, y, a):
+        ca, sa = math.cos(a), math.sin(a)
+        return P(cx + x * ca - y * sa, cy + x * sa + y * ca)
+    def leaf(a, bx, by, ang, ln, wd):
+        pts = []
+        for t in np.linspace(0, 1, 16):
+            w = wd * math.sin(math.pi * min(1, t * 1.15)) ** .7 * (1 - t) ** .35
+            pts.append((t * ln, w))
+        pts += [(x, -y) for x, y in reversed(pts)]
+        ca, sa = math.cos(ang), math.sin(ang)
+        return [tr(bx + x * ca - y * sa, by + x * sa + y * ca, a) for x, y in pts]
+    for k in range(4):
+        a = rot + k * math.pi / 2
+        d.polygon([tr(x, y, a) for x, y in [(0, -r * .1), (r * .55, -r * .13), (r * .55, r * .13), (0, r * .1)]], fill=fill)
+        d.polygon(leaf(a, r * .5, 0, 0, r * .5, r * .17), fill=fill)
+        for sgn in (-1, 1):
+            d.polygon(leaf(a, r * .52, sgn * r * .06, sgn * .95, r * .4, r * .12), fill=fill)
+        d.polygon([tr(x, y, a) for x, y in [(r * .44, -r * .22), (r * .52, -r * .22), (r * .52, r * .22), (r * .44, r * .22)]], fill=fill)
+    d.ellipse([*P(cx - r * .17, cy - r * .17), *P(cx + r * .17, cy + r * .17)], fill=fill)
+
 def text(d, cx, cy, s, size, fill, spacing=0, font=None):
     f = ImageFont.truetype(font or GOTHIC, int(size * K))
     w = d.textlength(s, font=f) + spacing * K * (len(s) - 1)
@@ -89,7 +112,7 @@ def blue():
     crown, cm = rib_dome(crown_pts, base, 38, 24, 19, 66, 47, light=16)
     peak = layer(); ImageDraw.Draw(peak).line([P(*p) for p in bez((64, 20), (67, 26), (69, 30), (70, 34))], fill=(70, 85, 125, 120), width=int(1.2 * K))
     motif = Image.new("L", (W, H), 0); md = ImageDraw.Draw(motif)
-    for x in (23, 39, 101, 117): flower(md, x, 73.5, 7, 255)
+    for x in (23, 39, 101, 117): cross_fleury(md, x, 73.6, 9, 255)
     text(md, 61, 73.4, "C", 22, 255, 0, SWASH); text(md, 79, 73.4, "H", 22, 255, 0, SWASH)
     motif = motif.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(.5 * K)).point(lambda v: 255 if v > 80 else 0)  # stitch takes the colour where the letter covers enough of it
     cuff, km, outline = rib_cuff(20, 120, 61, 87, base, motif, (246, 244, 236))
@@ -157,7 +180,7 @@ def cap():
     text(pd, 70, 41, "CHROME HEARTS", 5, red, .15)
     text(pd, 70, 50.8, "CH", 15, red, .8, SWASH); text(pd, 70.25, 50.8, "CH", 15, red, .8, SWASH)
     text(pd, 70, 61, "PARIS", 5.2, red, .4)
-    flower(pd, 51, 51.2, 4.8, red); flower(pd, 89, 51.2, 4.8, red)
+    cross_fleury(pd, 51.2, 51, 6.2, red); cross_fleury(pd, 88.8, 51, 6.2, red)
     pm = mask_of(lambda d: d.rectangle([*P(px0, py0), *P(px1, py1)], fill=255))
     redm = Image.fromarray(((np.array(pl)[..., 0] > 140) & (np.array(pl)[..., 1] < 80)).astype(np.uint8) * 255)
     hatch = layer(); hd = ImageDraw.Draw(hatch)
@@ -176,32 +199,46 @@ def cap():
         for i in range(0, len(pts) - 1, 2): std.line([P(*pts[i]), P(*pts[i + 1])], fill=(70, 70, 76, 200), width=max(1, int(.3 * K)))
     under = layer(); ImageDraw.Draw(under).line([P(*p) for p in bez((19, 76), (40, 69.5), (100, 69.5), (121, 76))], fill=(0, 0, 0, 200), width=int(1.4 * K))
     bill = comp(bill, clip(st, bm), clip(blur(under, .6), bm))
-    btn = button(70, 15.4, 4.6)
+    btn = button(70, 14.6, 7)
     return comp(drop(mm, 80), mesh, drop(fm, 90, 1.4, 1.2), foam, patch, drop(bm, 140, 1.4, 1.6), bill, blur(btn, .1))
 
+def fblur(a, sig):
+    # separable gaussian on a float array (PIL cannot blur float images)
+    rad = max(1, int(sig * 3)); x = np.arange(-rad, rad + 1); k = np.exp(-x * x / (2 * sig * sig)); k /= k.sum()
+    a = np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 1, a)
+    return np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 0, a)
+
 def button(cx, cy, r):
-    # polished silver dome: radial metal shading, bright rim, raised four-petal ornament lit from the upper left
+    # silver rivet rendered from a height map: domed bezel, recessed field, raised cross fleury with rounded
+    # edges; normals -> diffuse + sharp specular + studio reflection bands + ambient occlusion
     yy, xx = np.mgrid[0:H, 0:W] / K
-    dx, dy = (xx - cx) / r, (yy - cy) / (r * .86)
-    rr = np.sqrt(dx * dx + dy * dy)
-    inside = rr <= 1
-    nz = np.sqrt(np.clip(1 - rr * rr, 0, 1))
-    lam = np.clip(-.45 * dx - .55 * dy + .7 * nz, 0, 1)
-    spec = np.clip(lam, 0, 1) ** 18
-    band = .5 + .5 * np.cos(dy * 3.4 + .6)  # environment reflection band
-    g = 95 + 120 * lam + 40 * band + 200 * spec
-    a = np.where(inside, 255, 0)
-    metal = Image.fromarray(np.dstack([g, g, g * 1.02, a]).clip(0, 255).astype(np.uint8), "RGBA")
-    mm = metal.getchannel("A")
-    orn = Image.new("L", (W, H), 0); od = ImageDraw.Draw(orn); flower(od, cx, cy, r * .78, 255)
-    hi = clip(Image.new("RGBA", (W, H), (255, 255, 255, 230)), orn).transform((W, H), Image.AFFINE, (1, 0, .25 * K, 0, 1, .25 * K))
-    lo = clip(Image.new("RGBA", (W, H), (40, 40, 46, 230)), orn).transform((W, H), Image.AFFINE, (1, 0, -.3 * K, 0, 1, -.3 * K))
-    face = clip(Image.new("RGBA", (W, H), (190, 192, 198, 255)), orn)
-    rim = layer(); rd = ImageDraw.Draw(rim)
-    rd.ellipse([*P(cx - r, cy - r * .86), *P(cx + r, cy + r * .86)], outline=(60, 60, 66, 255), width=int(.45 * K))
-    rd.ellipse([*P(cx - r * .9, cy - r * .78), *P(cx + r * .9, cy + r * .78)], outline=(240, 240, 244, 200), width=int(.3 * K))
-    shadow = blur(clip(Image.new("RGBA", (W, H), (0, 0, 0, 170)), mm), .6).transform((W, H), Image.AFFINE, (1, 0, 0, 0, 1, -.9 * K))
-    return comp(shadow, metal, clip(blur(lo, .15), mm), clip(blur(hi, .15), mm), clip(face, mm), rim)
+    ex, ey = (xx - cx) / r, (yy - cy) / (r * .9)
+    rr = np.sqrt(ex * ex + ey * ey)
+    inside = rr <= 1.0
+    h = .55 * np.sqrt(np.clip(1 - rr ** 2, 0, 1))                       # dome
+    h += .22 * np.exp(-((rr - .88) / .07) ** 2)                          # bezel lip
+    orn = Image.new("L", (W, H), 0); cross_fleury(ImageDraw.Draw(orn), cx, cy, r * .8, 255)
+    ob = np.array(orn, dtype=float) / 255.0; om = fblur(ob, .22 * K)
+    h += .32 * om
+    hs = fblur(h, .1 * K)
+    gy, gx = np.gradient(hs * r * K * .55)
+    n = np.dstack([-gx, -gy, np.ones_like(gx)]); n /= np.linalg.norm(n, axis=2, keepdims=True)
+    L = np.array([-.45, -.6, .66]); L /= np.linalg.norm(L)
+    V = np.array([0, 0, 1.0]); Hh = (L + V) / np.linalg.norm(L + V)
+    diff = np.clip((n * L).sum(2), 0, 1)
+    spec = np.clip((n * Hh).sum(2), 0, 1) ** 60
+    refl_y = n[..., 1] * 2.2 + n[..., 0] * .6                           # studio strip reflections on the normal
+    env = .55 + .3 * np.cos(refl_y * 3.1) + .25 * np.exp(-((refl_y + .55) / .18) ** 2)
+    ao = 1 - .35 * (fblur(ob, .45 * K) - om).clip(0, 1) * 2
+    edge = np.clip((1 - rr) * 9, 0, 1)
+    g = (70 + 95 * diff + 95 * env + 230 * spec) * ao * (.6 + .4 * edge)
+    tint = np.dstack([g * .98, g, g * 1.04])
+    a = np.where(inside, 255, 0).astype(np.uint8)
+    metal = Image.fromarray(np.dstack([tint.clip(0, 255), a]).astype(np.uint8), "RGBA")
+    mm = metal.getchannel("A").filter(ImageFilter.GaussianBlur(.12 * K))
+    metal.putalpha(mm)
+    shadow = blur(clip(Image.new("RGBA", (W, H), (0, 0, 0, 180)), mm), .7).transform((W, H), Image.AFFINE, (1, 0, -.2 * K, 0, 1, -1.1 * K))
+    return comp(shadow, metal)
 
 def reshape(im, sx, sy, ax=70, ay=92, dy=0):
     return im.transform((W, H), Image.AFFINE, (1 / sx, 0, ax * K * (1 - 1 / sx), 0, 1 / sy, ay * K * (1 - 1 / sy) - dy * K / sy), resample=Image.BICUBIC)
