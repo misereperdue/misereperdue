@@ -1276,7 +1276,7 @@
       '<use href="#mp-hn-l" transform="matrix(-1 0 0 1 140 0)"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
     /* over-ear headphones (per dc): rendered image; steel frame, knit canopy on the head, aluminium cups, knit cushions */
-    headphones: '<image href="/img/hats/headphones.webp?v=2" width="140" height="145"/>'
+    headphones: '<image href="/img/hats/headphones.webp?v=3" width="140" height="145"/>'
   };
   /* Black beanie (per dc): shaded knit dome with ribbed columns curving to the crown, folded ribbed cuff, small woven tag. */
   function hatBeanie() {
