@@ -12611,7 +12611,8 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 
 /* Preorders (per dc): Preorder button opens Whop checkout; short ship note under it */
 #preorder-btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
-.preorder-note{margin:8px 0 0;font-size:12.5px;line-height:1.4;color:var(--muted,#8e8e93);text-align:left}
+.preorder-chip{display:inline-flex;align-items:center;gap:6px;margin:12px 0 0;padding:6px 11px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink,#1c1c1e) 7%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink,#1c1c1e) 10%,transparent);font-size:12.5px;font-weight:600;line-height:1;color:var(--ink,#1c1c1e);letter-spacing:-.005em}.preorder-chip svg{width:14px;height:14px;flex:none;opacity:.75}.preorder-chip span{opacity:.6;font-weight:500}
+#bag-action:has(.preorder-chip){display:flex;flex-direction:column;align-items:flex-start}
 /* Notification avatars open that person's profile */
 .mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
 .mp-ntf-row-av.is-tap:active{transform:scale(.92)}
@@ -12925,7 +12926,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-whop-panel::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(4,8,20,.55);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:4}
 html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
 .mp-whop-sheet.is-overlay .mp-whop-panel::after{opacity:1}
-.mp-whop-x{position:absolute;top:43px;right:18px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
+.mp-whop-x{position:absolute;top:9px;right:14px;z-index:4;width:28px;height:28px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
 .mp-whop-x svg{width:14px;height:14px}
 .mp-whop-x:active{transform:scale(.92)}
 .mp-whop-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -12937,7 +12938,7 @@ html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
 .mp-whop-skel i::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 7%,transparent),transparent);animation:mp-whop-skel 1.3s ease-in-out infinite}
 @keyframes mp-whop-skel{to{transform:translateX(100%)}}
 .mp-whop-sheet.is-ready .mp-whop-skel{opacity:0}
-.mp-whop-frame{display:block;position:relative;z-index:1;width:100%;height:100%;border:0;padding-top:26px;box-sizing:border-box;background:transparent;color-scheme:normal}
+.mp-whop-frame{display:block;position:relative;z-index:1;width:100%;height:100%;border:0;padding-top:40px;box-sizing:border-box;background:transparent;color-scheme:normal}
 .mp-whop-warm{position:fixed;left:-9999px;top:0;width:min(480px,100vw);height:640px;opacity:0;pointer-events:none;border:0}
 html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:none}
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}

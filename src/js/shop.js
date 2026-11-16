@@ -913,7 +913,7 @@ var MPShop = (function () {
     return d && !isNaN(d) ? d.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "at launch";
   }
   function M(t, e) {
-    var note = t.preorder ? '<p class="preorder-note">Preorder \u00b7 ships ' + shipsLabel(t) + "</p>" : "";
+    var note = t.preorder ? '<p class="preorder-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Preorder <span>\u00b7 Ships ' + shipsLabel(t) + "</span></p>" : "";
     if (!1 === t.available && !t.preorder) return '<span class="pill-soon">' + soonLabel() + "</span>";
     var n = (function (t, e) {
       var n = t + ":" + (e || "one"),

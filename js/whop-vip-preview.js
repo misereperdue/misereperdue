@@ -62,7 +62,7 @@
       'whop-CheckoutDetails':{background:'transparent'}, 'whop-CheckoutSummary':{background:'transparent'},
       'whop-CheckoutSeller':{display:'none'}, 'whop-CheckoutSellerLogo':{display:'none'}, 'whop-CheckoutItem':{display:'none'}, 'whop-CheckoutItemHeadline':{display:'none'},
       'whop-CheckoutTotal':{fontSize:'34px', fontWeight:'600', letterSpacing:'-0.02em', color:ink},
-      'whop-EmailInput':input, 'whop-CardFieldInput':input, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
+      'whop-EmailInput':input, 'whop-CardFieldInput':{background:field, borderColor:hair}, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
       // Whop's live total (tax included once known) is the one price figure on the sheet
       'whop-CheckoutPriceContext':{fontSize:'13px'},
       'whop-PaymentMethods':{background:'transparent'}, 'whop-PaymentMethod':{background:'transparent'}, 'whop-PaymentMethodRow':{background:'transparent'},
@@ -227,22 +227,25 @@
     receipt.appendChild(list);
     fetch('/data/catalog.json?v=2', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
       const by = {}; (d.products || []).forEach(function (p) { by[p.id] = p; });
-      let total = 0, count = 0, ships = '';
+      let total = 0, count = 0;
       list.innerHTML = '';
       lines.forEach(function (l) {
         const p = by[l.id]; if (!p) return;
         const unit = Number(p.priceRange && p.priceRange.minVariantPrice.amount || 0);
         total += unit * l.qty; count += l.qty;
-        if (p.shipsAt && !ships) { const dt = new Date(p.shipsAt + 'T12:00:00'); ships = dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
         const li = document.createElement('li');
-        li.innerHTML = '<span></span><b></b>';
-        li.firstChild.textContent = p.title + (l.qty > 1 ? ' × ' + l.qty : '');
-        li.lastChild.textContent = money(unit * l.qty);
+        li.innerHTML = '<img alt=""><span></span><b></b>';
+        if (p.featuredImage) li.firstChild.src = p.featuredImage.url; else li.firstChild.remove();
+        li.querySelector('span').textContent = p.title + (l.qty > 1 ? ' × ' + l.qty : '');
+        li.querySelector('b').textContent = money(unit * l.qty);
         list.appendChild(li);
-        if (art && p.featuredImage && !art.dataset.set) { art.src = p.featuredImage.url; art.dataset.set = '1'; }
+        if (art && art.isConnected && p.featuredImage && !art.dataset.set) { art.src = p.featuredImage.url; art.dataset.set = '1'; }
       });
       if (sub) sub.textContent = count + (count === 1 ? ' item' : ' items') + ' · ' + money(total);
-      if (pricingNote) pricingNote.textContent = (ships ? 'Preorder: ships ' + ships + '. ' : '') + 'Any tax is added to the total below before you pay.';
+      if (pricingNote) pricingNote.textContent = 'Any tax is added to the total below before you pay.';
+      // header art: the bag's photos fanned out (up to three)
+      const pics = []; lines.forEach(function (l) { const p = by[l.id]; if (p && p.featuredImage && pics.indexOf(p.featuredImage.url) < 0) pics.push(p.featuredImage.url); });
+      if (art && pics.length > 1) { const stack = document.createElement('div'); stack.className = 'rc-stack n' + Math.min(3, pics.length); pics.slice(0, 3).forEach(function (u) { const im = document.createElement('img'); im.src = u; im.alt = ''; stack.appendChild(im); }); art.replaceWith(stack); }
     }).catch(function () {});
     // Shipping address
     const form = document.createElement('form'); form.className = 'ship'; form.noValidate = true;
