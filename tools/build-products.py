@@ -41,6 +41,38 @@ def soon(p):
     d = int(ms // 86400)
     return f"In {d} day{'' if d == 1 else 's'}" if d >= 1 else "At midnight"
 
+def ships_label(p):
+    from datetime import date
+    try: return date.fromisoformat(p["shipsAt"]).strftime("%B %Y")
+    except (KeyError, ValueError): return "at launch"
+
+def preorder_url(p):
+    plan = (p.get("whop") or {}).get("plan")
+    return f"https://whop.com/checkout/{plan}" if p.get("preorder") and plan else None
+
+def merchant_feed(prods):
+    """Google Merchant Center product feed (per dc): physical products people can buy now (in stock or preorder).
+    VIP and Stars are digital, so they are left out. Shipping and returns are set in Merchant Center itself."""
+    from xml.sax.saxutils import escape as x
+    items = []
+    for p in prods:
+        if p.get("whop", {}).get("plan") is None or not (p.get("preorder") or p["availableForSale"]): continue
+        if p["handle"] in ("membership", "stars"): continue
+        lo = p["priceRange"]["minVariantPrice"]
+        imgs = [i["url"] for i in p["images"]["nodes"]] or ([p["featuredImage"]["url"]] if p.get("featuredImage") else [])
+        avail = "preorder" if p.get("preorder") else "in_stock"
+        f = [f"<g:id>{x(p['handle'])}</g:id>", f"<g:title>{x(p['title'])} | MISERY</g:title>",
+             f"<g:description>{x(p['description'][:4900])}</g:description>", f"<g:link>{SITE}/p/{x(p['handle'])}</g:link>",
+             f"<g:image_link>{x(imgs[0])}</g:image_link>" if imgs else ""] + [f"<g:additional_image_link>{x(u)}</g:additional_image_link>" for u in imgs[1:10]] + [
+             f"<g:availability>{avail}</g:availability>",
+             f"<g:availability_date>{p['shipsAt']}T00:00-04:00</g:availability_date>" if avail == "preorder" and p.get("shipsAt") else "",
+             f"<g:price>{float(lo['amount']):.2f} {lo['currencyCode']}</g:price>", "<g:brand>MISERY</g:brand>", "<g:condition>new</g:condition>",
+             "<g:identifier_exists>no</g:identifier_exists>", "<g:adult>no</g:adult>"]
+        items.append("<item>" + "".join(v for v in f if v) + "</item>")
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>'
+            f"<title>Misère Perdue</title><link>{SITE}/</link><description>Misère Perdue (MISERY) products</description>"
+            + "\n".join(items) + "</channel></rss>\n")
+
 def save(path, content):
     old = open(path, encoding="utf-8").read() if os.path.exists(path) else None
     if old != content:
@@ -69,11 +101,12 @@ def jsonld(p, url):
     for v in p["variants"]["nodes"]:
         o = {"@type": "Offer", "url": url, "price": money(v["price"]["amount"]),
              "priceCurrency": v["price"]["currencyCode"],
-             "availability": "https://schema.org/" + ("InStock" if v["availableForSale"] else "OutOfStock"),
+             "availability": "https://schema.org/" + ("PreOrder" if p.get("preorder") else "InStock" if v["availableForSale"] else "OutOfStock"),
              "itemCondition": "https://schema.org/NewCondition",
              "hasMerchantReturnPolicy": RETURN_POLICY,
              "seller": {"@type": "Organization", "name": "Misère Perdue"}}
         if v["title"] != "Default Title": o["name"] = f'{p["title"]} {v["title"]}'
+        if p.get("preorder") and p.get("shipsAt"): o["availabilityStarts"] = p["shipsAt"]  # preorder ships on this date
         offers.append(o)
     d = {"@context": "https://schema.org", "@type": "Product", "name": p["title"],
          "description": p["description"], "url": url, "image": imgs,
@@ -180,7 +213,7 @@ def main():
         share = [(f"{SITE}/img/og/{p['handle']}-p.jpg?v={ver(card)}", 1200, 630)] if os.path.exists(card) else [(img, None, None)]
         if os.path.exists(sq): share.append((f"{SITE}/img/og/{p['handle']}-sq.jpg?v={ver(sq)}", 1200, 1200))
         p["_share"] = [u for u, _, _ in share]
-        stock = "In stock" if p["availableForSale"] else (soon(p) if p.get("comingSoon") else "Sold out")
+        stock = ("Preorder · ships " + ships_label(p)) if p.get("preorder") else "In stock" if p["availableForSale"] else (soon(p) if p.get("comingSoon") else "Sold out")
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
         alt = f"{p['title']} by Misère Perdue"
@@ -193,6 +226,7 @@ def main():
                 f"<p><img src=\"{e(img)}\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
+                + (f"<div class=\"cta\"><a href=\"{preorder_url(p)}\" rel=\"noopener\">Preorder for {price_label(p)} &rarr;</a><br><span class=\"meta\">Secure checkout by Whop. Ships {ships_label(p)}.</span></div>\n" if preorder_url(p) else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
         title = f"{(SEO.get(p['handle']) or (p['title'],))[0]} | {BRAND}"
         lo = p["priceRange"]["minVariantPrice"]
@@ -217,6 +251,7 @@ def main():
     rows = "".join(f"<div class=\"product\">{thumb(p)}<h2><a href=\"/p/{p['handle']}\">{e(p['title'])}</a></h2><div class=\"price\">{price_label(p)}</div><div class=\"meta\">{e(p['description'][:140] + ('…' if len(p['description']) > 140 else ''))}</div></div>\n" for p, _ in items)
     shop = head("Shop | " + BRAND, desc, f"{SITE}/shop", DEFAULT_IMAGES, "website", ld, "Misère Perdue closed eyes") + "<nav class=\"crumbs\" aria-label=\"Breadcrumb\"><a href=\"/\">Home</a> &rsaquo; Shop</nav>\n<h1>Shop</h1>\n" + rows + f"<div class=\"cta\"><a href=\"{SITE}/#shop\">Shop on misereperdue.com &rarr;</a></div>\n</main>\n</body>\n</html>\n"
     save(os.path.join(ROOT, "shop.html"), shop)
+    save(os.path.join(ROOT, "merchant-feed.xml"), merchant_feed(prods))
     live = {p["handle"] for p in prods}
     for f in sorted(os.listdir(os.path.join(ROOT, "p"))):
         if f.endswith(".html") and f[:-5] not in live:

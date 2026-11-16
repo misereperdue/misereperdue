@@ -66,7 +66,9 @@
    "whop": {
     "plan": "plan_8upzEnr4v3Mz9"
    },
-   "launchAt": "2027-09-11T00:00:00-04:00"
+   "launchAt": "2027-09-11T00:00:00-04:00",
+   "preorder": true,
+   "shipsAt": "2027-09-11"
   },
   {
    "id": "gid://shopify/Product/15416182014054",
@@ -330,7 +332,9 @@
    "whop": {
     "plan": "plan_kwaTGJuXskbbv"
    },
-   "launchAt": "2027-09-11T00:00:00-04:00"
+   "launchAt": "2027-09-11T00:00:00-04:00",
+   "preorder": true,
+   "shipsAt": "2027-09-11"
   }
  ]
 }

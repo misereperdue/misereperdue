@@ -5,7 +5,7 @@
 var MPShopify = (function () {
   "use strict";
 
-  var CONFIG = { source: "/data/catalog.json?v=1" };
+  var CONFIG = { source: "/data/catalog.json?v=2" };
 
   function configured() {
     return true;
@@ -114,6 +114,8 @@ var MPShopify = (function () {
           if (n.planRecurring != null) p.planRecurring = n.planRecurring;
           if (n.requiresSellingPlan) p.requiresSellingPlan = true;
           p.comingSoon = !!n.comingSoon;
+          p.preorder = !!n.preorder;
+          p.shipsAt = n.shipsAt || null;
           p.whop = n.whop || null;
           return p;
         });
