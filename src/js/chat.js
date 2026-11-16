@@ -1275,7 +1275,8 @@
       '<path d="M39.5 58c-3-9-2-18 3-25.5" stroke="rgba(255,240,220,.22)" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>' +
       '<use href="#mp-hn-l" transform="matrix(-1 0 0 1 140 0)"/>',
     bunny: '<g transform="rotate(-13 52 54)"><ellipse cx="52" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="52" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g><g transform="rotate(13 88 54)"><ellipse cx="88" cy="24" rx="11" ry="30" fill="#f7f3f8" stroke="#dcd2df" stroke-width="2"/><ellipse cx="88" cy="27" rx="5.5" ry="21" fill="#ffb5cb"/></g>',
-    headphones: hatAirMax()
+    /* over-ear headphones (per dc): rendered image; steel frame, knit canopy on the head, aluminium cups, knit cushions */
+    headphones: '<image href="/img/hats/headphones.webp?v=1" width="140" height="145"/>'
   };
   /* Black beanie (per dc): shaded knit dome with ribbed columns curving to the crown, folded ribbed cuff, small woven tag. */
   function hatBeanie() {
@@ -1299,21 +1300,7 @@
       '<path d="M24 76.2h92" stroke="rgba(255,255,255,.1)" stroke-width="1"/>' +
       '<rect x="62" y="78.5" width="16" height="10" rx="1.4" fill="#0b0b0d" stroke="rgba(255,255,255,.16)" stroke-width=".8"/><path d="M65.5 83.5h9" stroke="rgba(255,255,255,.35)" stroke-width="1" stroke-linecap="round"/></g>';
   }
-  /* AirPods Max style (per dc): stainless headband frame, knit-mesh canopy, telescoping arms, silver cups with cushions and the crown. */
-  function hatAirMax() {
-    return '<linearGradient id="mp-am-cup" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f5f7"/><stop offset=".5" stop-color="#d7dae0"/><stop offset="1" stop-color="#b9bdc5"/></linearGradient>' +
-      '<path d="M18 76C19 40 43 25 70 25s51 15 52 51" stroke="#b8bcc3" stroke-width="4.4" fill="none" stroke-linecap="round"/>' +
-      '<path d="M18 76C19 40 43 25 70 25s51 15 52 51" stroke="#f3f4f6" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".9"/>' +
-      '<path d="M27 70C30 47 47 37 70 37s40 10 43 33" stroke="#e5e6e9" stroke-width="9" fill="none" stroke-linecap="round"/>' +
-      '<path d="M27 70C30 47 47 37 70 37s40 10 43 33" stroke="#c4c6cc" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray=".9 1.8" opacity=".55"/>' +
-      '<rect x="16.6" y="66" width="2.8" height="14" rx="1.2" fill="#c3c6cc"/><rect x="120.6" y="66" width="2.8" height="14" rx="1.2" fill="#c3c6cc"/>' +
-      '<rect x="4" y="78" width="27" height="39" rx="11.5" fill="url(#mp-am-cup)" stroke="#a9adb5" stroke-width=".8"/>' +
-      '<rect x="109" y="78" width="27" height="39" rx="11.5" fill="url(#mp-am-cup)" stroke="#a9adb5" stroke-width=".8"/>' +
-      '<rect x="25" y="81" width="9" height="33" rx="4.5" fill="#d3d4d8"/><rect x="106" y="81" width="9" height="33" rx="4.5" fill="#d3d4d8"/>' +
-      '<path d="M27 83v29M108 83v29" stroke="#bfc1c6" stroke-width="1" stroke-dasharray="1 1.5"/>' +
-      '<rect x="125" y="73.5" width="5.2" height="6.5" rx="2" fill="#c8cbd1" stroke="#a9adb5" stroke-width=".6"/><rect x="113.5" y="75.5" width="7" height="2.6" rx="1.3" fill="#c8cbd1"/>' +
-      '<path d="M8 84c2-3 5-4 9-4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/><path d="M113 84c2-3 5-4 9-4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>';
-  }
+
   /* ring segment for the CC: angles in degrees, clockwise on screen, a0 < a1 */
   function ccRing(cx, cy, R, r, a0, a1) {
     var p = function (rad, a) { a = a * Math.PI / 180; return (cx + rad * Math.cos(a)).toFixed(2) + " " + (cy + rad * Math.sin(a)).toFixed(2); };
@@ -8157,6 +8144,8 @@
           if (!j || !j.ok) throw j;
           st.settings = st.settings || {};
           st.settings[id] = j.settings;
+          /* picking a plain Hat style switches the Chanel/Louis beanies off on the server (per dc) */
+          if (Array.isArray(j.powersOn)) st.on = j.powersOn.slice();
           powMe();
           justOpened = null;
           b.isConnected && render("Saved.");
