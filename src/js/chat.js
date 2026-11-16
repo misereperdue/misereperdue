@@ -1320,102 +1320,100 @@
     var big = a1 - a0 > 180 ? 1 : 0;
     return "M" + p(R, a0) + "A" + R + " " + R + " 0 " + big + " 1 " + p(R, a1) + "L" + p(r, a1) + "A" + r + " " + r + " 0 " + big + " 0 " + p(r, a0) + "Z";
   }
-  /* interlocking CC centred at (cx, cy), outer radius R (proportions from the original Couture mark) */
-  function ccMark(cx, cy, R, fill, extra) {
-    var r = R * 0.6824, d = R * 0.491;
-    return '<g fill="' + fill + '"' + (extra || "") + '><path d="' + ccRing(cx + d, cy, R, r, 29.5, 330.5) + '"/><path d="' + ccRing(cx - d, cy, R, r, 209.5, 510.5) + '"/></g>';
+  /* CC drawn as two padded tubes (centre-line arcs with round ends), left C over the right at the top and the
+     right over the left at the bottom, as on the knit badges. */
+  function ccTubes(cx, cy, R, w, ink, hi) {
+    var d = R * 0.56, gap = 31;
+    var arc = function (x, a0, a1) {
+      var p = function (a) { a = a * Math.PI / 180; return (x + R * Math.cos(a)).toFixed(2) + " " + (cy + R * Math.sin(a)).toFixed(2); };
+      return "M" + p(a0) + "A" + R + " " + R + " 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + p(a1);
+    };
+    var rC = arc(cx + d, gap, 360 - gap), lC = arc(cx - d, 180 + gap, 540 - gap), rBot = arc(cx + d, 120, 175);
+    var t = function (p, top) {
+      return '<path d="' + p + '" stroke="' + ink + '" stroke-width="' + w + '" fill="none" stroke-linecap="round"/>' +
+        (hi ? '<path d="' + p + '" stroke="' + hi + '" stroke-width="' + (w * 0.32).toFixed(2) + '" fill="none" stroke-linecap="round" transform="translate(-' + (w * 0.16).toFixed(2) + ' -' + (w * 0.22).toFixed(2) + ')"/>' : "");
+    };
+    return t(rC) + t(lC) + t(rBot);
   }
-  /* Chanel Tweed (per dc, from his reference): soft grey ribbed crown, a deep fuzzy tweed cuff in cream and
-     black with frayed fibres, and a big black CC on the cuff. */
+  /* Chanel Tweed (per dc, from his reference): fuzzy grey mohair crown worn slouched to one side, a deep tweed cuff
+     fading grey to bright white with black slubs under loose white hairs, and a big padded black CC on the cuff. */
   function hatTweed() {
-    var rib = "", hi = "";
-    for (var k = 27; k <= 113; k += 4.2) {
-      var tx = 70 + (k - 70) * 0.22;
-      rib += "M" + k.toFixed(1) + " 66Q" + (k + (70 - k) * 0.08).toFixed(1) + " 44 " + tx.toFixed(1) + " 29";
-      hi += "M" + (k + 1.5).toFixed(1) + " 66Q" + (k + 1.5 + (70 - k) * 0.08).toFixed(1) + " 44 " + (tx + 0.3).toFixed(1) + " 29";
-    }
-    /* tweed: soft black slubs with grey halos on a cream weave, white cross threads and loose fibres */
-    var blk = "", halo = "", gry = "", fib = "", s = 11;
-    var rnd = function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-    for (var y = 66, row = 0; y < 100; y += 5.2, row++) for (var x = 19 + (row % 2) * 3.5; x < 121; x += 7) {
-      var bx = x + rnd() * 1.5, by = y + rnd() * 1.6, w = 1.2 + rnd() * 2.6;
-      halo += "M" + bx.toFixed(1) + " " + by.toFixed(1) + "h" + w.toFixed(1);
-      rnd() > 0.2 && (blk += "M" + bx.toFixed(1) + " " + by.toFixed(1) + "h" + w.toFixed(1));
-      rnd() > 0.5 && (gry += "M" + (x + 4 + rnd()).toFixed(1) + " " + (y + 2.6 + rnd()).toFixed(1) + "h" + (1.2 + rnd() * 1.6).toFixed(1));
-    }
-    for (var i = 0; i < 150; i++) {
-      var fx = 17 + rnd() * 106, fy = 63 + rnd() * 38, a = (rnd() - 0.5) * 3.2, l = 1.4 + rnd() * 3;
-      fib += "M" + fx.toFixed(1) + " " + fy.toFixed(1) + "q" + (Math.cos(a) * l * 0.5 + (rnd() - 0.5)).toFixed(1) + " " + (Math.sin(a) * l * 0.5 + (rnd() - 0.5)).toFixed(1) + " " + (Math.cos(a) * l).toFixed(1) + " " + (Math.sin(a) * l).toFixed(1);
-    }
-    var vt = "", ht = "";
-    for (var v = 21; v < 122; v += 7) vt += "M" + (v + 1.5).toFixed(1) + " 63v38";
-    for (var h = 68.6; h < 100; h += 5.2) ht += "M17 " + h.toFixed(1) + "h106";
-    var edge = "";
-    for (var e = 0; e < 40; e++) {
-      var side = e % 4, ex = side < 2 ? 18 + rnd() * 104 : side === 2 ? 17 : 123, ey = side === 0 ? 63 : side === 1 ? 101 : 64 + rnd() * 36;
-      var ea = side === 0 ? -Math.PI / 2 : side === 1 ? Math.PI / 2 : side === 2 ? Math.PI : 0;
-      ea += (rnd() - 0.5) * 1.2;
-      var el = 0.8 + rnd() * 1.6;
-      edge += "M" + ex.toFixed(1) + " " + ey.toFixed(1) + "l" + (Math.cos(ea) * el).toFixed(1) + " " + (Math.sin(ea) * el).toFixed(1);
-    }
-    return '<g transform="translate(5.6 -13) scale(.92 1)"><radialGradient id="mp-tw-g" cx=".36" cy=".24" r=".85"><stop offset="0" stop-color="#b4b4b9"/><stop offset=".6" stop-color="#909096"/><stop offset="1" stop-color="#727278"/></radialGradient>' +
-      '<linearGradient id="mp-tw-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfcdc8"/><stop offset=".35" stop-color="#e9e7e2"/><stop offset="1" stop-color="#fbfaf8"/></linearGradient>' +
-      '<radialGradient id="mp-tw-s" cx=".5" cy=".35" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></radialGradient>' +
-      '<filter id="mp-tw-b" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter>' +
-      '<clipPath id="mp-tw-d"><path d="M25 68C23 42 42 26 70 25s48 17 45 43Z"/></clipPath><clipPath id="mp-tw-k"><rect x="17" y="63" width="106" height="38" rx="10"/></clipPath>' +
-      /* crown: soft matte rib knit */
-      '<path d="M25 68C23 42 42 26 70 25s48 17 45 43Z" fill="url(#mp-tw-g)"/>' +
-      '<g clip-path="url(#mp-tw-d)" fill="none" stroke-linecap="round"><path d="' + rib + '" stroke="rgba(50,50,56,.3)" stroke-width="1.6"/><path d="' + hi + '" stroke="rgba(255,255,255,.16)" stroke-width="1"/></g>' +
-      '<path d="M22 63Q70 57 118 63" stroke="#77777d" stroke-width="5" fill="none" stroke-linecap="round" opacity=".55" filter="url(#mp-tw-b)"/>' +
-      /* tweed cuff */
-      '<rect x="17" y="63" width="106" height="38" rx="10" fill="url(#mp-tw-c)"/>' +
-      '<g clip-path="url(#mp-tw-k)" fill="none" stroke-linecap="round">' +
-      '<path d="' + halo + '" stroke="#77767a" stroke-width="4" opacity=".55" filter="url(#mp-tw-b)"/>' +
-      '<path d="' + vt + '" stroke="rgba(255,255,255,.85)" stroke-width="1.5"/><path d="' + ht + '" stroke="rgba(255,255,255,.55)" stroke-width="1"/>' +
-      '<path d="' + blk + '" stroke="#1a1a1e" stroke-width="2.9" opacity=".92"/><path d="' + gry + '" stroke="#97958f" stroke-width="1.6"/>' +
-      '<path d="' + fib + '" stroke="#fff" stroke-width=".6" opacity=".85"/><rect x="17" y="63" width="106" height="38" fill="url(#mp-tw-s)"/></g>' +
-      '<path d="' + edge + '" stroke="#f4f3ef" stroke-width=".8" stroke-linecap="round" fill="none"/>' +
-      /* raised black CC on the cuff */
-      ccMark(52, 81, 13, "rgba(0,0,0,.4)", ' transform="translate(.7 1.4)" filter="url(#mp-tw-b)"') +
-      ccMark(52, 81, 13, "#121214") +
-      '<path d="M41.5 73a11.4 11.4 0 0 1 6.6-4.8M63 73a11.4 11.4 0 0 0-6.6-4.8" stroke="rgba(255,255,255,.2)" stroke-width="1" fill="none" stroke-linecap="round"/></g>';
-  }
-  /* Chanel Trapper (per dc, from his reference): chunky black rib knit, rounded ear flaps with a knitted white CC
-     on each, braided ties ending in big black pompoms. */
-  function hatTrapper() {
+    var s = 11, rnd = function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
     var rib = "";
-    for (var k = 27; k <= 113; k += 5.4) rib += "M" + k.toFixed(1) + " 82Q" + (k + (70 - k) * 0.1).toFixed(1) + " 50 " + (70 + (k - 70) * 0.18).toFixed(1) + " 30";
+    for (var k = 0; k < 26; k++) { var x0 = 26 + k * 3.7; rib += "M" + x0.toFixed(1) + " 62C" + (x0 + 4).toFixed(1) + " 48 " + (x0 + 10).toFixed(1) + " 36 " + (x0 + 19).toFixed(1) + " 26"; }
+    var slub = "", halo = "", hz = "", vt = "", hair = "";
+    for (var y = 64, row = 0; y < 102; y += 6.2, row++) {
+      hz += "M14 " + (y + 3.4 + rnd()).toFixed(1) + "q57 " + ((rnd() - 0.5) * 2).toFixed(1) + " 114 0";
+      for (var x = 16 + (row % 2) * 3; x < 126; x += 6.6) {
+        var bx = x + rnd() * 2.2, by = y + 0.6 + rnd() * 2, w = 2.6 + rnd() * 3.4, keep = rnd() < 0.55 + (y - 60) / 50;
+        halo += "M" + bx.toFixed(1) + " " + by.toFixed(1) + "h" + w.toFixed(1);
+        keep && (slub += "M" + bx.toFixed(1) + " " + by.toFixed(1) + "h" + w.toFixed(1));
+      }
+    }
+    for (var v = 18; v < 126; v += 6.6) vt += "M" + (v + 5.6 + rnd() * 1.4).toFixed(1) + " 58l" + ((rnd() - 0.5) * 2).toFixed(1) + " 46";
+    for (var i = 0; i < 260; i++) {
+      var hx = 16 + rnd() * 108, hy = 59 + rnd() * 42, a = -1.4 + rnd() * 2.8, l = 1.2 + rnd() * 2.6;
+      hair += "M" + hx.toFixed(1) + " " + hy.toFixed(1) + "q" + (Math.cos(a) * l * 0.5 + (rnd() - 0.5) * 0.6).toFixed(1) + " " + (Math.sin(a) * l * 0.5 + (rnd() - 0.5) * 0.6).toFixed(1) + " " + (Math.cos(a) * l).toFixed(1) + " " + (Math.sin(a) * l).toFixed(1);
+    }
+    var cuff = "M17 62C40 56 100 55 123 60L125 96C100 104 42 105 15 99Z";
+    return '<g transform="translate(5.6 -12) scale(.92 1) rotate(-5 70 70)">' +
+      '<linearGradient id="mp-tw2-g" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#b3b3b8"/><stop offset=".55" stop-color="#97979d"/><stop offset="1" stop-color="#76767c"/></linearGradient>' +
+      '<linearGradient id="mp-tw2-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86868b"/><stop offset=".18" stop-color="#a6a6aa"/><stop offset=".45" stop-color="#d6d6d8"/><stop offset=".7" stop-color="#f1f1f1"/><stop offset="1" stop-color="#ffffff"/></linearGradient>' +
+      '<filter id="mp-tw2-f" x="-8%" y="-15%" width="116%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="1.8"/></filter>' +
+      '<filter id="mp-tw2-m" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.8 .5" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.62"/><feComposite in2="SourceGraphic" operator="in"/></filter>' +
+      '<filter id="mp-tw2-b" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation=".8"/></filter>' +
+      '<clipPath id="mp-tw2-d"><path d="M22 64C20 40 40 22 68 21c22-1 42 8 50 26l3 15Z"/></clipPath><clipPath id="mp-tw2-k"><path d="' + cuff + '"/></clipPath>' +
+      /* mohair crown */
+      '<g filter="url(#mp-tw2-f)"><path d="M22 64C20 40 40 22 68 21c22-1 42 8 50 26l3 15Z" fill="url(#mp-tw2-g)"/>' +
+      '<g clip-path="url(#mp-tw2-d)"><path d="' + rib + '" stroke="rgba(60,60,66,.2)" stroke-width="1.1" fill="none"/><path d="' + rib + '" stroke="rgba(255,255,255,.12)" stroke-width=".8" fill="none" transform="translate(1.3 0)"/>' +
+      '<rect x="18" y="18" width="106" height="48" fill="#888" filter="url(#mp-tw2-m)" opacity=".22"/></g></g>' +
+      /* tweed cuff */
+      '<g filter="url(#mp-tw2-f)"><path d="' + cuff + '" fill="url(#mp-tw2-c)"/>' +
+      '<g clip-path="url(#mp-tw2-k)" fill="none" stroke-linecap="round">' +
+      '<path d="' + halo + '" stroke="#5c5c60" stroke-width="4.2" opacity=".45" filter="url(#mp-tw2-b)"/>' +
+      '<path d="' + slub + '" stroke="#17171a" stroke-width="2.6" filter="url(#mp-tw2-f)"/>' +
+      '<path d="' + vt + '" stroke="rgba(255,255,255,.8)" stroke-width="2" filter="url(#mp-tw2-b)"/><path d="' + hz + '" stroke="rgba(255,255,255,.85)" stroke-width="1.8" filter="url(#mp-tw2-b)"/>' +
+      '<path d="' + vt + '" stroke="#fff" stroke-width=".6" opacity=".8"/>' +
+      '<path d="M15 61h112" stroke="#7d7d82" stroke-width="9" opacity=".55" filter="url(#mp-tw2-b)"/></g></g>' +
+      '<path d="' + hair + '" stroke="#fff" stroke-width=".5" fill="none" stroke-linecap="round" opacity=".75" clip-path="url(#mp-tw2-k)"/>' +
+      /* padded black CC */
+      '<g transform="translate(.8 1.6)" opacity=".35" filter="url(#mp-tw2-b)">' + ccTubes(48, 80, 12.2, 5.2, "#000") + "</g>" +
+      ccTubes(48, 80, 12.2, 5.2, "#111113", "rgba(255,255,255,.14)") + "</g>";
+  }
+  /* Chanel Trapper (per dc, from his reference): chunky black rib knit, wide round ear flaps with a knitted white
+     CC on each, long braided ties ending in fluffy black pompoms. */
+  function hatTrapper() {
+    var s = 5, rnd = function () { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    var rib = "";
+    for (var k = 0; k < 17; k++) { var x0 = 28 + k * 5.25, tx = 70 + (x0 - 70) * 0.25; rib += "M" + x0.toFixed(1) + " 84Q" + (x0 + (70 - x0) * 0.06).toFixed(1) + " 44 " + tx.toFixed(1) + " 21"; }
     var braid = function (x0, y0, y1) {
       var p = "";
-      for (var y = y0; y < y1; y += 4) p += "M" + (x0 - 1.6) + " " + y + "q1.6 2 3.2 4M" + (x0 + 1.6) + " " + y + "q-1.6 2 -3.2 4";
-      return '<path d="M' + x0 + " " + y0 + "V" + y1 + '" stroke="#18181b" stroke-width="4.2" stroke-linecap="round"/><path d="' + p + '" stroke="#36363c" stroke-width="1.1" fill="none" stroke-linecap="round"/>';
+      for (var y = y0; y < y1; y += 3.4) p += "M" + (x0 - 1.8) + " " + y.toFixed(1) + "q2 1.8 3.6 3.4";
+      return '<path d="M' + x0 + " " + y0 + "V" + y1 + '" stroke="#141416" stroke-width="4" stroke-linecap="round"/><path d="' + p + '" stroke="#3a3a40" stroke-width="1" fill="none" stroke-linecap="round"/>';
     };
     var pom = function (cx, cy) {
-      var f = "", q = 3;
-      var rnd = function () { q = (q * 9301 + 49297) % 233280; return q / 233280; };
-      for (var n = 0; n < 140; n++) {
-        var t = rnd() * Math.PI * 2, r0 = 2 + rnd() * 7, l = 0.9 + rnd() * 1.4;
-        f += "M" + (cx + Math.cos(t) * r0).toFixed(1) + " " + (cy + Math.sin(t) * r0).toFixed(1) + "l" + (Math.cos(t + (rnd() - 0.5)) * l).toFixed(1) + " " + (Math.sin(t + (rnd() - 0.5)) * l).toFixed(1);
-      }
-      return '<circle cx="' + cx + '" cy="' + cy + '" r="9.6" fill="url(#mp-tp-p)"/><path d="' + f + '" stroke="#2b2b31" stroke-width="1.1" stroke-linecap="round"/>' +
-        '<circle cx="' + (cx - 3) + '" cy="' + (cy - 3.4) + '" r="3.6" fill="rgba(255,255,255,.07)"/>';
+      var f = "";
+      for (var n = 0; n < 110; n++) { var t = rnd() * Math.PI * 2, r0 = rnd() * 9.6, l = 0.6 + rnd() * 0.9; f += "M" + (cx + Math.cos(t) * r0).toFixed(1) + " " + (cy + Math.sin(t) * r0).toFixed(1) + "l" + (Math.cos(t) * l).toFixed(1) + " " + (Math.sin(t) * l).toFixed(1); }
+      return '<g filter="url(#mp-tp2-f)"><ellipse cx="' + cx + '" cy="' + cy + '" rx="12" ry="11" fill="url(#mp-tp2-p)"/><path d="' + f + '" stroke="#24242a" stroke-width=".8" stroke-linecap="round" opacity=".8"/></g>';
     };
-    var flap = function (cx) {
-      var d = "M" + (cx - 15) + " 79V98a15 15 0 0 0 30 0V79Z";
-      return '<path d="' + d + '" fill="url(#mp-tp-f)"/><path d="' + d + '" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1"/>' +
-        '<path d="M' + (cx - 12) + " 82V98a12 12 0 0 0 24 0V82" + '" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.2"/>' +
-        ccMark(cx, 97, 7, "#f3f1ec") + ccMark(cx, 97, 7, "none", ' stroke="rgba(0,0,0,.25)" stroke-width=".4" stroke-dasharray=".8 .8"');
+    var flap = function (cx, dir) {
+      return '<g transform="rotate(' + (dir * -12) + " " + cx + ' 76)"><g filter="url(#mp-tp2-f)"><ellipse cx="' + cx + '" cy="76" rx="16.5" ry="11.5" fill="url(#mp-tp2-e)"/>' +
+        '<ellipse cx="' + cx + '" cy="76" rx="14" ry="9.2" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="1.1"/><ellipse cx="' + cx + '" cy="75" rx="16" ry="11" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".8"/></g>' +
+        '<g filter="url(#mp-tp2-k)">' + ccTubes(cx, 76, 5.4, 2.7, "#f4f2ee") + "</g></g>";
     };
-    return '<g transform="translate(5.6 -10) scale(.92 .94)"><radialGradient id="mp-tp-g" cx=".36" cy=".26" r=".85"><stop offset="0" stop-color="#3e3e45"/><stop offset=".55" stop-color="#1f1f24"/><stop offset="1" stop-color="#0e0e11"/></radialGradient>' +
-      '<linearGradient id="mp-tp-f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2a30"/><stop offset="1" stop-color="#0f0f12"/></linearGradient>' +
-      '<radialGradient id="mp-tp-p" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#3a3a41"/><stop offset="1" stop-color="#0d0d10"/></radialGradient>' +
-      '<clipPath id="mp-tp-d"><path d="M24 84C22 50 41 27 70 26s49 24 46 58Z"/></clipPath>' +
-      braid(26, 110, 135) + braid(114, 110, 135) + flap(26) + flap(114) +
-      '<path d="M24 84C22 50 41 27 70 26s49 24 46 58Z" fill="url(#mp-tp-g)"/>' +
-      '<g clip-path="url(#mp-tp-d)" fill="none" stroke-linecap="round"><path d="' + rib + '" stroke="rgba(0,0,0,.6)" stroke-width="2.4"/><path d="' + rib + '" stroke="rgba(255,255,255,.08)" stroke-width=".9" transform="translate(1.6 0)"/></g>' +
-      '<path d="M32 54C38 40 51 32 64 31" stroke="rgba(255,255,255,.13)" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-      '<path d="M23 81Q70 75 117 81" stroke="#09090b" stroke-width="5" fill="none" stroke-linecap="round"/>' +
-      pom(26, 137) + pom(114, 137) + "</g>";
+    var crown = "M24 84C20 52 38 22 70 20s52 30 46 64C104 78 90 75 70 75S36 78 24 84Z";
+    return '<g transform="translate(5.6 -9) scale(.92 .94)">' +
+      '<radialGradient id="mp-tp2-g" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#3a3a40"/><stop offset=".55" stop-color="#1c1c20"/><stop offset="1" stop-color="#0b0b0d"/></radialGradient>' +
+      '<radialGradient id="mp-tp2-e" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#26262b"/><stop offset="1" stop-color="#0a0a0c"/></radialGradient>' +
+      '<radialGradient id="mp-tp2-p" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#34343a"/><stop offset="1" stop-color="#0c0c0e"/></radialGradient>' +
+      '<filter id="mp-tp2-f" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="9"/><feDisplacementMap in="SourceGraphic" scale="1.5"/></filter>' +
+      '<filter id="mp-tp2-k" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="1.2"/></filter>' +
+      '<clipPath id="mp-tp2-d"><path d="' + crown + '"/></clipPath>' +
+      braid(17, 84, 126) + braid(123, 84, 126) +
+      '<g filter="url(#mp-tp2-f)"><path d="' + crown + '" fill="url(#mp-tp2-g)"/>' +
+      '<g clip-path="url(#mp-tp2-d)" fill="none" stroke-linecap="round"><path d="' + rib + '" stroke="rgba(0,0,0,.65)" stroke-width="2.6"/><path d="' + rib + '" stroke="rgba(255,255,255,.1)" stroke-width="1.1" transform="translate(1.9 0)"/></g>' +
+      '<path d="M26 82C38 76 54 74 70 74s32 2 44 8" stroke="#0a0a0c" stroke-width="3.6" fill="none" stroke-linecap="round"/></g>' +
+      flap(24, 1) + flap(116, -1) + pom(17, 132) + pom(123, 132) + "</g>";
   }
   /* Chanel Beanie (per dc, from his reference): slouchy knit, big interlocking CC, ribbed cuff with stripes. */
   var COUTURE = { ivory: ["#efe9de", "#151517", "#e3dccf"], noir: ["#1a1a1e", "#f1ebdf", "#232328"], rose: ["#f2bccb", "#161618", "#e7aabb"] };
