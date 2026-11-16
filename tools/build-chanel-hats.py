@@ -181,32 +181,38 @@ def trapper():
 # ---------------------------------------------------------------- Tweed
 def tweed():
     rnd = random.Random(11)
-    x0, x1, R = 16.0, 124.0, 54.0
+    x0, x1, R = 15.0, 125.0, 55.0
     cxh = (x0 + x1) / 2
-    top_y = lambda x: 59 + 3.5 * (1 - ((x - cxh) / R) ** 2)
-    bot_y = lambda x: 95 + 7 * (1 - ((x - cxh) / R) ** 2)
+    top_y = lambda x: 54 + 3 * (1 - ((x - cxh) / R) ** 2)
+    bot_y = lambda x: 96 + 7 * (1 - ((x - cxh) / R) ** 2)
     # crown: soft grey mohair, slightly slouched to the right
-    crown_pts = [(19 + 0, 63)] + [(cxh + (R - 2) * math.cos(a) * (1 + .04 * math.sin(a)), 61 - 41 * math.sin(a) ** .95 - (3 * math.cos(a) if a < math.pi / 2 else 0)) for a in np.linspace(math.pi, 0, 70)] + [(121, 63)]
+    def bez(p0, p1, p2, p3, n=24):
+        return [((1-t)**3*p0[0]+3*(1-t)**2*t*p1[0]+3*(1-t)*t*t*p2[0]+t**3*p3[0], (1-t)**3*p0[1]+3*(1-t)**2*t*p1[1]+3*(1-t)*t*t*p2[1]+t**3*p3[1]) for t in np.linspace(0, 1, n)]
+    # crown: a touch narrower than the cuff, straight-ish sides, broad slouched top that sits higher at the back (right)
+    crown_pts = bez((16, 62), (15, 47), (23, 37), (40, 32)) + bez((40, 32), (58, 27), (84, 24), (101, 26)) + bez((101, 26), (117, 28), (126, 40), (124, 62))
     cm = mask_of(lambda d: d.polygon([P(*p) for p in crown_pts], fill=255))
     cr = layer(); d = ImageDraw.Draw(cr)
     yy, xx = np.mgrid[0:H, 0:W] / K
     nx = np.clip((xx - cxh) / R, -1, 1); ny = np.clip((yy - 40) / 30, -1, 1)
-    dist = np.sqrt(((xx - 52) / 62) ** 2 + ((yy - 30) / 40) ** 2); lum = 178 - 62 * dist
+    dist = np.sqrt(((xx - 50) / 64) ** 2 + ((yy - 30) / 42) ** 2); lum = 176 - 58 * dist - 14 * np.clip((yy - 50) / 14, 0, 1)
     g = np.clip(lum, 90, 205).astype(np.uint8)
     cr = Image.fromarray(np.dstack([g, g, (g.astype(int) + 3).clip(0, 255).astype(np.uint8), np.full_like(g, 255)]), "RGBA")
     ribs = layer(); d = ImageDraw.Draw(ribs)
     for i in range(48):
         u = -1 + 2 * (i + .5) / 48
         xb = cxh + R * math.sin(u * 1.45) * .99
-        d.line([P(xb, 66), P(cxh + (xb - cxh) * .78, 36), P(cxh + (xb - cxh) * .5, 27)], fill=(60, 60, 66, 70), width=int(.9 * K))
-        d.line([P(xb + .9, 66), P(cxh + (xb - cxh) * .78 + .8, 36)], fill=(230, 230, 235, 40), width=int(.6 * K))
+        d.line([P(xb, 62), P(cxh + (xb - cxh) * .9 + 2, 42), P(cxh + (xb - cxh) * .66 + 6, 27)], fill=(60, 60, 66, 70), width=int(.9 * K))
+        d.line([P(xb + .9, 62), P(cxh + (xb - cxh) * .9 + 2.8, 42)], fill=(230, 230, 235, 40), width=int(.6 * K))
+    crease = layer(); cd = ImageDraw.Draw(crease)
+    cd.line([P(*p) for p in bez((42, 35), (62, 31), (86, 29), (106, 32))], fill=(70, 70, 76, 120), width=int(1.6 * K))
+    cd.line([P(*p) for p in bez((42, 36.6), (62, 32.6), (86, 30.6), (106, 33.6))], fill=(215, 215, 220, 80), width=int(1 * K))
     mo = hairs(5000, lambda r: (r.uniform(16, 124), r.uniform(18, 66)), lambda r: (r.randint(150, 230),) * 3, lw=.25, lmin=1, lmax=3.2, alpha=(30, 110), seed=5)
-    crown = clip(comp(cr, blur(ribs, .35), mo), cm)
-    crown_halo = hairs(1600, lambda r: (cxh + (R - 2) * math.cos(t := r.uniform(math.pi * 1.02, math.tau * .99)), 61 - 41 * abs(math.sin(t)) ** .95 * r.uniform(.98, 1.02)),
+    crown = clip(comp(cr, blur(ribs, .35), blur(crease, 1.1), mo), cm)
+    crown_halo = hairs(1600, lambda r: (lambda p: (p[0] + r.uniform(-.6, .6), p[1] + r.uniform(-.6, .6)))(crown_pts[int(r.random() * (len(crown_pts) - 6)) + 3]),
                        lambda r: (r.randint(150, 210),) * 3, lw=.25, lmin=.4, lmax=1.3, alpha=(50, 140), seed=6)
 
     # cuff texture in flat (arc, v) space, then wrapped round the head
-    TW, TH = int(math.pi * R * K), int(48 * K)
+    TW, TH = int(math.pi * R * K), int(52 * K)
     tex = Image.new("RGBA", (TW, TH), (0, 0, 0, 255))
     ta = np.zeros((TH, TW, 3), float)
     v = np.linspace(0, 1, TH)[:, None]
@@ -269,6 +275,22 @@ def tweed():
     samp[..., :3] *= light[..., None]
     out[inside] = samp[inside]
     cuff = Image.fromarray(out.clip(0, 255).astype(np.uint8), "RGBA")
+    # round the rolled ends: inset mask with soft corners, sides bulging slightly at mid height
+    def cuff_outline():
+        pts = [(x, top_y(x)) for x in np.linspace(x0 + 6, x1 - 6, 30)]
+        pts += bez((x1 - 6, top_y(x1 - 6)), (x1 + 1, top_y(x1)), (x1 + 2, 72), (x1 + 1.5, 78)) + bez((x1 + 1.5, 78), (x1 + 1, 92), (x1 - 1, bot_y(x1) - 1), (x1 - 8, bot_y(x1 - 8)))
+        pts += [(x, bot_y(x)) for x in np.linspace(x1 - 8, x0 + 8, 30)]
+        pts += bez((x0 + 8, bot_y(x0 + 8)), (x0 + 1, bot_y(x0) - 1), (x0 - 1, 92), (x0 - 1.5, 78)) + bez((x0 - 1.5, 78), (x0 - 2, 72), (x0 - 1, top_y(x0)), (x0 + 6, top_y(x0 + 6)))
+        return pts
+    om = mask_of(lambda d: d.polygon([P(*p) for p in cuff_outline()], fill=255))
+    full = np.array(cuff); src = full.copy()
+    # stretch the texture out to the bulge where the outline goes past the wrapped band
+    for k in range(1, 3 * K):
+        src[:, k:][src[:, k:, 3] == 0] = full[:, :-k][src[:, k:, 3] == 0]
+        src[:, :-k][src[:, :-k, 3] == 0] = full[:, k:][src[:, :-k, 3] == 0]
+    cuff = Image.fromarray(src, "RGBA"); cuff.putalpha(om)
+    edge_dark = blur(clip(Image.new("RGBA", (W, H), (60, 60, 64, 255)), ImageChops.subtract(om, om.filter(ImageFilter.MinFilter(11)))), .8)
+    cuff = comp(cuff, Image.blend(layer(), edge_dark, .35))
     cuffm = cuff.getchannel("A")
     # soft fuzzy edges: blur the mask edge, add white hairs radiating out
     cuff.putalpha(cuffm.filter(ImageFilter.GaussianBlur(.5 * K)))
@@ -287,7 +309,7 @@ def tweed():
     # padded black CC
     def ccl(fill, w, off=(0, 0)):
         l = layer(); dd = ImageDraw.Draw(l)
-        for p in cc_paths(52, 79.5, 11.8): stroke(dd, [(a + off[0], b + off[1]) for a, b in p], w, fill)
+        for p in cc_paths(52, 78, 12.6): stroke(dd, [(a + off[0], b + off[1]) for a, b in p], w, fill)
         return l
     shadow = blur(ccl((0, 0, 0, 150), 5.6, (.6, 1.6)), .9)
     body = ccl((16, 16, 18, 255), 5.4)
