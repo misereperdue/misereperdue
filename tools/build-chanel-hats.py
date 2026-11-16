@@ -189,7 +189,8 @@ def tweed():
     def bez(p0, p1, p2, p3, n=24):
         return [((1-t)**3*p0[0]+3*(1-t)**2*t*p1[0]+3*(1-t)*t*t*p2[0]+t**3*p3[0], (1-t)**3*p0[1]+3*(1-t)**2*t*p1[1]+3*(1-t)*t*t*p2[1]+t**3*p3[1]) for t in np.linspace(0, 1, n)]
     # crown: a touch narrower than the cuff, straight-ish sides, broad slouched top that sits higher at the back (right)
-    crown_pts = bez((16, 62), (15, 47), (23, 37), (40, 32)) + bez((40, 32), (58, 27), (84, 24), (101, 26)) + bez((101, 26), (117, 28), (126, 40), (124, 62))
+    cs = lambda p: (p[0], p[1] if p[1] >= 58 else 58 - (58 - p[1]) * 1.2)  # taller crown, cuff unchanged
+    crown_pts = [cs(p) for p in bez((16, 62), (15, 47), (23, 37), (40, 32)) + bez((40, 32), (58, 27), (84, 24), (101, 26)) + bez((101, 26), (117, 28), (126, 40), (124, 62))]
     cm = mask_of(lambda d: d.polygon([P(*p) for p in crown_pts], fill=255))
     cr = layer(); d = ImageDraw.Draw(cr)
     yy, xx = np.mgrid[0:H, 0:W] / K
@@ -201,11 +202,11 @@ def tweed():
     for i in range(48):
         u = -1 + 2 * (i + .5) / 48
         xb = cxh + R * math.sin(u * 1.45) * .99
-        d.line([P(xb, 62), P(cxh + (xb - cxh) * .9 + 2, 42), P(cxh + (xb - cxh) * .66 + 6, 27)], fill=(60, 60, 66, 70), width=int(.9 * K))
+        d.line([P(xb, 62), P(cxh + (xb - cxh) * .9 + 2, 39), P(cxh + (xb - cxh) * .66 + 6, 19)], fill=(60, 60, 66, 70), width=int(.9 * K))
         d.line([P(xb + .9, 62), P(cxh + (xb - cxh) * .9 + 2.8, 42)], fill=(230, 230, 235, 40), width=int(.6 * K))
     crease = layer(); cd = ImageDraw.Draw(crease)
-    cd.line([P(*p) for p in bez((42, 35), (62, 31), (86, 29), (106, 32))], fill=(70, 70, 76, 120), width=int(1.6 * K))
-    cd.line([P(*p) for p in bez((42, 36.6), (62, 32.6), (86, 30.6), (106, 33.6))], fill=(215, 215, 220, 80), width=int(1 * K))
+    cd.line([P(*p) for p in [cs(p) for p in bez((42, 35), (62, 31), (86, 29), (106, 32))]], fill=(70, 70, 76, 120), width=int(1.6 * K))
+    cd.line([P(*p) for p in [cs(p) for p in bez((42, 36.6), (62, 32.6), (86, 30.6), (106, 33.6))]], fill=(215, 215, 220, 80), width=int(1 * K))
     mo = hairs(5000, lambda r: (r.uniform(16, 124), r.uniform(18, 66)), lambda r: (r.randint(150, 230),) * 3, lw=.25, lmin=1, lmax=3.2, alpha=(30, 110), seed=5)
     crown = clip(comp(cr, blur(ribs, .35), blur(crease, 1.1), mo), cm)
     crown_halo = hairs(1600, lambda r: (lambda p: (p[0] + r.uniform(-.6, .6), p[1] + r.uniform(-.6, .6)))(crown_pts[int(r.random() * (len(crown_pts) - 6)) + 3]),
@@ -321,4 +322,4 @@ def tweed():
 def reshape(im, sx, sy, ax=70, ay=104):
     # narrower and taller about the bottom-centre of the cuff (inverse affine for PIL)
     return im.transform((W, H), Image.AFFINE, (1 / sx, 0, ax * K * (1 - 1 / sx), 0, 1 / sy, ay * K * (1 - 1 / sy)), resample=Image.BICUBIC)
-reshape(tweed(), .9, 1.08).save(OUT + "/tweed.png"); trapper().save(OUT + "/trapper.png")
+reshape(tweed(), .9, 1.0).save(OUT + "/tweed.png"); trapper().save(OUT + "/trapper.png")
