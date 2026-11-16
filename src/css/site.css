@@ -12611,7 +12611,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 
 /* Preorders (per dc): Preorder button opens Whop checkout; short ship note under it */
 #preorder-btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
-.preorder-note{margin:8px 0 0;font-size:12.5px;line-height:1.4;color:var(--muted,#8e8e93);text-align:center}
+.preorder-note{margin:8px 0 0;font-size:12.5px;line-height:1.4;color:var(--muted,#8e8e93);text-align:left}
 /* Notification avatars open that person's profile */
 .mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
 .mp-ntf-row-av.is-tap:active{transform:scale(.92)}

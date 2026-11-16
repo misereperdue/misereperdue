@@ -72,10 +72,21 @@
       box-shadow: none !important;
     }
     html.mp-sheet.mp-peek .rc-note { display: none; }
+    /* clothing bag (per dc): item lines and the shipping address form */
+    .cart-lines { list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px; }
+    .cart-lines li { display:flex;justify-content:space-between;gap:12px;font-size:14px; }
+    .cart-lines b { font-weight:600; }
+    .ship { margin:18px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .ship-h { grid-column:1/-1;margin:0 0 2px;font-size:13px;font-weight:600;color:var(--muted); }
+    .ship-f { display:grid;gap:4px;grid-column:1/-1; }
+    .ship-city,.ship-region,.ship-postal,.ship-country { grid-column:auto; }
+    .ship-f span { font-size:12px;color:var(--muted); }
+    .ship-f input { font:inherit;font-size:16px;height:44px;padding:0 12px;border-radius:12px;border:0;background:var(--fill);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair);width:100%; }
+    .ship-f input:focus { outline:2px solid var(--ink);outline-offset:1px; }
     @media (prefers-reduced-motion:reduce) { .skel i::after,.done circle,.done path { animation:none;stroke-dashoffset:0; } }
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
-  <script src="/js/whop-vip-preview.js?v=20" defer></script>
+  <script src="/js/whop-vip-preview.js?v=21" defer></script>
 </head>
 <body>
   <main class="wrap">
