@@ -117,7 +117,7 @@ def blue():
     motif = motif.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(.5 * K)).point(lambda v: 255 if v > 80 else 0)  # stitch takes the colour where the letter covers enough of it
     cuff, km, outline = rib_cuff(20, 120, 61, 87, base, motif, (246, 244, 236))
     fz = fuzz_edge(crown_pts, (150, 170, 220), 700, 5) 
-    return comp(drop(cm, 60), crown, clip(blur(peak, .5), cm), fz, drop(km, 120, 1, 1.4), cuff, fuzz_edge(outline, (150, 170, 220), 500, 6))
+    return comp(drop(cm, 60), crown, clip(blur(peak, .5), cm), fz, drop(km, 120, 1, 1.4), cuff, fuzz_edge(outline, (150, 170, 220), 500, 6), button(70, 21.6, 5.2))
 
 # ------------------------------------------------------------ star beanie
 def star_pts(cx, cy, R, r, rot=0):
@@ -199,7 +199,7 @@ def cap():
         for i in range(0, len(pts) - 1, 2): std.line([P(*pts[i]), P(*pts[i + 1])], fill=(70, 70, 76, 200), width=max(1, int(.3 * K)))
     under = layer(); ImageDraw.Draw(under).line([P(*p) for p in bez((19, 76), (40, 69.5), (100, 69.5), (121, 76))], fill=(0, 0, 0, 200), width=int(1.4 * K))
     bill = comp(bill, clip(st, bm), clip(blur(under, .6), bm))
-    btn = button(70, 14.6, 7)
+    btn = button(70, 16.9, 5.2)
     return comp(drop(mm, 80), mesh, drop(fm, 90, 1.4, 1.2), foam, patch, drop(bm, 140, 1.4, 1.6), bill, blur(btn, .1))
 
 def fblur(a, sig):
@@ -208,18 +208,19 @@ def fblur(a, sig):
     a = np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 1, a)
     return np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 0, a)
 
-def button(cx, cy, r):
+def button(cx, cy, r, squash=.58):
     # silver rivet rendered from a height map: domed bezel, recessed field, raised cross fleury with rounded
     # edges; normals -> diffuse + sharp specular + studio reflection bands + ambient occlusion
     yy, xx = np.mgrid[0:H, 0:W] / K
-    ex, ey = (xx - cx) / r, (yy - cy) / (r * .9)
+    ex, ey = (xx - cx) / r, (yy - cy) / (r * squash)  # seen from slightly above: flattened ellipse on the crown
     rr = np.sqrt(ex * ex + ey * ey)
     inside = rr <= 1.0
     h = .55 * np.sqrt(np.clip(1 - rr ** 2, 0, 1))                       # dome
     h += .22 * np.exp(-((rr - .88) / .07) ** 2)                          # bezel lip
     orn = Image.new("L", (W, H), 0); cross_fleury(ImageDraw.Draw(orn), cx, cy, r * .8, 255)
+    orn = orn.transform((W, H), Image.AFFINE, (1, 0, 0, 0, 1 / squash, cy * K * (1 - 1 / squash)), resample=Image.BICUBIC)
     ob = np.array(orn, dtype=float) / 255.0; om = fblur(ob, .22 * K)
-    h += .32 * om
+    h += .45 * om
     hs = fblur(h, .1 * K)
     gy, gx = np.gradient(hs * r * K * .55)
     n = np.dstack([-gx, -gy, np.ones_like(gx)]); n /= np.linalg.norm(n, axis=2, keepdims=True)
@@ -231,7 +232,7 @@ def button(cx, cy, r):
     env = .55 + .3 * np.cos(refl_y * 3.1) + .25 * np.exp(-((refl_y + .55) / .18) ** 2)
     ao = 1 - .35 * (fblur(ob, .45 * K) - om).clip(0, 1) * 2
     edge = np.clip((1 - rr) * 9, 0, 1)
-    g = (70 + 95 * diff + 95 * env + 230 * spec) * ao * (.6 + .4 * edge)
+    g = (60 + 130 * diff + 55 * env + 170 * spec) * ao * (.6 + .4 * edge)
     tint = np.dstack([g * .98, g, g * 1.04])
     a = np.where(inside, 255, 0).astype(np.uint8)
     metal = Image.fromarray(np.dstack([tint.clip(0, 255), a]).astype(np.uint8), "RGBA")
