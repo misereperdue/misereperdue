@@ -1258,7 +1258,7 @@
   var PW = Object.create(null),
     PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
   function pwKey(u) { return String(u || "").toLowerCase(); }
-  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "louis", "chrome", "diamond", "emerald", "ruby"];
+  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "louis", "diamond", "emerald", "ruby"];
   /* Hats (per dc): drawn over the avatar. The box is 140x145 with the avatar circle at (70,95) r50, so a hat
      can rise above the head. Couture Beanie is its own power (quilted, pearl-chain cuff, gold pearl). */
   var HAT_SVG = {
@@ -1327,11 +1327,8 @@
   /* Chanel Beanie (per dc, from his reference): slouchy knit, big interlocking CC, ribbed cuff with stripes. */
   var COUTURE = { ivory: ["#efe9de", "#151517", "#e3dccf"], noir: ["#1a1a1e", "#f1ebdf", "#232328"], rose: ["#f2bccb", "#161618", "#e7aabb"] };
   function hatSvg(key) {
-    var m = /^(hat|couture|louis|chrome):(\w+)$/.exec(key || "");
+    var m = /^(hat|couture|louis):(\w+)$/.exec(key || "");
     if (!m) return "";
-    /* Chrome Hearts (per dc, from his reference photos): trucker cap (default), blue beanie, star beanie. Rendered
-       images; source tools/build-chrome-hats.py */
-    if (m[1] === "chrome") return '<image href="/img/hats/chrome-' + ({ cap: "cap", beanie: "beanie", stars: "stars" }[m[2]] || "cap") + '.webp?v=5" width="140" height="145"/>';
     if (m[1] === "hat") return HAT_SVG[m[2]] || "";
     if (m[1] === "louis") {
       /* Louis Beanie (per dc, from his reference): checkered knit in black and charcoal with stitch texture and
@@ -1393,7 +1390,7 @@
     });
     pw && pw.rgb ? el.setAttribute("data-rgb", pw.rgb) : el.removeAttribute("data-rgb");
     var ch = (pw && pw.charms) || [];
-    var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.louis ? "louis:1" : pw && pw.chrome ? "chrome:" + pw.chrome : pw && pw.hat ? "hat:" + pw.hat : "";
+    var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.louis ? "louis:1" : pw && pw.hat ? "hat:" + pw.hat : "";
     if (el.classList.contains("mp-pb-av")) mpHatInto(el, hatKey);
     pw && pw.melt && mpMeltFilter();
     if (el.classList.contains("mp-pb-name")) { mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch); mpMeltText(el.querySelector(".mp-pb-name-t")); }
@@ -1450,20 +1447,18 @@
     var out = {}, st = (u && u.powerSettings) || {};
     ((u && u.powersOn) || []).forEach(function (id) {
       var s1 = st[id] || {}, c = s1.color ? PW_COLORS[s1.color] || (/^#[0-9a-f]{6}$/i.test(s1.color) ? s1.color : null) : null;
-      out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "ivory" : id === "chrome" ? s1.style || "cap" : c || (id === "rgb" ? s1.speed || "slow" : 1);
+      out[id] = id === "hat" ? s1.style || "beanie" : id === "couture" ? s1.color || "ivory" : c || (id === "rgb" ? s1.speed || "slow" : 1);
     });
     /* Hat style can pick Chanel / Louis once unlocked (same rule as the Worker) */
-    if (out.hat === "chanel" || out.hat === "louis" || out.hat === "chrome") {
+    if (out.hat === "chanel" || out.hat === "louis") {
       var want = out.hat, own = (u && u.powers) || [], hs = st.hat || {};
-      delete out.hat; delete out.couture; delete out.louis; delete out.chrome;
+      delete out.hat; delete out.couture; delete out.louis;
       if (want === "chanel" && own.indexOf("couture") >= 0) out.couture = hs.chanel || (st.couture || {}).color || "ivory";
       else if (want === "louis" && own.indexOf("louis") >= 0) out.louis = 1;
-      else if (want === "chrome" && own.indexOf("chrome") >= 0) out.chrome = hs.chrome || (st.chrome || {}).style || "cap";
       else out.hat = "beanie";
     }
-    out.couture && (delete out.hat, delete out.louis, delete out.chrome);
-    out.louis && (delete out.hat, delete out.chrome);
-    out.chrome && delete out.hat;
+    out.couture && (delete out.hat, delete out.louis);
+    out.louis && delete out.hat;
     out.aura && st.aura && st.aura.match === "bubble" && out.bubble && (out.aura = out.bubble);
     var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
     u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
@@ -7895,7 +7890,7 @@
      rest; tap to list them all (per dc). */
   function powRow(user) {
     /* Chanel / Louis are Hat styles, not powers of their own (per dc) */
-    var ids = ((user && user.powers) || []).filter(function (id) { return id !== "couture" && id !== "louis" && id !== "chrome"; });
+    var ids = ((user && user.powers) || []).filter(function (id) { return id !== "couture" && id !== "louis"; });
     if (!ids.length) return null;
     var on = user.powersOn || [],
       w = document.createElement("div"),
@@ -8045,9 +8040,8 @@
       bubble: { special: { aura: "Aura can match your bubble colour" } },
       aura:   { special: { bubble: "Can match your bubble colour" } },
       hat:    { special: { sphere: "Sits on top of the orb" } },
-      couture:{ clash: { hat: "Worn instead of your Hat", louis: "Worn instead of the Louis Beanie", chrome: "Worn instead of Chrome Hearts" }, special: { sphere: "Sits on top of the orb" } },
-      louis:  { clash: { hat: "Worn instead of your Hat", couture: "Chanel Beanie is worn instead", chrome: "Worn instead of Chrome Hearts" }, special: { sphere: "Sits on top of the orb" } },
-      chrome: { clash: { hat: "Worn instead of your Hat", couture: "Chanel Beanie is worn instead", louis: "Louis Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } }
+      couture:{ clash: { hat: "Worn instead of your Hat", louis: "Worn instead of the Louis Beanie" }, special: { sphere: "Sits on top of the orb" } },
+      louis:  { clash: { hat: "Worn instead of your Hat", couture: "Chanel Beanie is worn instead" }, special: { sphere: "Sits on top of the orb" } }
     };
     function combos(p) {
       var cat = (st.catalog || []).filter(function (q) { return q.id !== p.id; });
