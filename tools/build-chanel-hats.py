@@ -66,8 +66,8 @@ def knit_stitch(dr, x, y, w, h, shade, base=(14, 14, 16), hi=None):
 def trapper():
     rnd = random.Random(3)
     top, base_c, hw = 20.0, 80.0, 46.0
-    def bottom(x):  # crown hem dips at the sides into the flaps
-        d = (x - 70) / hw; return base_c - 6 * (1 - d * d) + 4
+    def bottom(x):  # crown hem arches up between the ear lobes
+        d = (x - 70) / hw; return base_c - 8 * (1 - d * d) + 5
     def crown_poly():
         pts = []
         for i in range(61):
@@ -106,25 +106,48 @@ def trapper():
         l = layer(); d = ImageDraw.Draw(l)
         m = Image.new("L", (W, H), 0); md = ImageDraw.Draw(m)
         ell = lambda rx, ry: [P(cx + math.cos(t) * rx * math.cos(rot) - math.sin(t) * ry * math.sin(rot), cy + math.cos(t) * rx * math.sin(rot) + math.sin(t) * ry * math.cos(rot)) for t in np.linspace(0, math.tau, 80)]
-        md.polygon(ell(16.5, 11.8), fill=255)
-        d.polygon(ell(16.5, 11.8), fill=(8, 8, 10, 255))
-        ccm = mask_of(lambda dd: [stroke(dd, [(cx + (px - cx) * math.cos(rot) - (py - cy) * math.sin(rot), cy + (px - cx) * math.sin(rot) + (py - cy) * math.cos(rot)) for px, py in p], 2.8, 255) for p in cc_paths(cx, cy, 6.3)])
+        md.polygon(ell(16.5, 10.4), fill=255)
+        d.polygon(ell(16.5, 10.4), fill=(8, 8, 10, 255))
+        ccm = mask_of(lambda dd: [stroke(dd, [(cx + (px - cx) * math.cos(rot) - (py - cy) * math.sin(rot), cy + (px - cx) * math.sin(rot) + (py - cy) * math.cos(rot)) for px, py in p], 2.6, 255) for p in cc_paths(cx, cy, 5.9)])
         cca = np.array(ccm)
         sw, sh = 1.2, 1.1
         for j in range(-12, 13):
             for i in range(-15, 16):
                 lx, ly = i * sw, j * sh
                 x = cx + lx * math.cos(rot) - ly * math.sin(rot); y = cy + lx * math.sin(rot) + ly * math.cos(rot)
-                q = (lx / 16.5) ** 2 + (ly / 11.8) ** 2
+                q = (lx / 16.5) ** 2 + (ly / 10.4) ** 2
                 if q > 0.86: continue
                 inside = cca[min(H - 1, int(y * K)), min(W - 1, int(x * K))] > 100
-                sh_ = max(0, 0.42 - 0.4 * q - 0.2 * ly / 11.8 - 0.1 * lx / 16.5)
+                sh_ = max(0, 0.42 - 0.4 * q - 0.2 * ly / 10.2 - 0.1 * lx / 14.5)
                 knit_stitch(d, x, y, sw * 1.02, sh * 1.05, sh_, hi=(238 - int(30 * q), 234 - int(30 * q), 226 - int(30 * q)) if inside else None)
-        rim = layer(); ImageDraw.Draw(rim).line(ell(15.2, 10.6) + [ell(15.2, 10.6)[0]], fill=(0, 0, 0, 170), width=int(1.6 * K))
+        rim = layer(); rd = ImageDraw.Draw(rim); rd.line(ell(15.5, 9.5) + [ell(15.5, 9.5)[0]], fill=(0, 0, 0, 230), width=int(1.3 * K)); rd.line(ell(16.2, 10) + [ell(16.2, 10)[0]], fill=(60, 60, 66, 120), width=int(.5 * K))
         l = comp(blur(l, 0.1), blur(rim, .4)); l = clip(l, m)
-        fz = hairs(500, lambda r: (cx + 16.5 * math.cos(t := r.uniform(0, math.tau)) * math.cos(rot) - 11.8 * math.sin(t) * math.sin(rot), cy + 16.5 * math.cos(t) * math.sin(rot) + 11.8 * math.sin(t) * math.cos(rot)),
+        fz = hairs(260, lambda r: (cx + 16.5 * math.cos(t := r.uniform(0, math.tau)) * math.cos(rot) - 10.4 * math.sin(t) * math.sin(rot), cy + 16.5 * math.cos(t) * math.sin(rot) + 10.4 * math.sin(t) * math.cos(rot)),
                    lambda r: (r.randint(28, 55),) * 3, lw=.3, lmin=.5, lmax=1.5, seed=int(cx))
         sh = blur(clip(Image.new("RGBA", (W, H), (0, 0, 0, 150)), m), 1.2).transform((W, H), Image.AFFINE, (1, 0, 0, 0, 1, -1.2 * K))
+        return comp(sh, l, fz)
+
+
+    def lobe(sgn):
+        # rounded ear lobe: starts at the side of the crown, bulges outward and hangs below the hem
+        base = [(25, 62), (13, 70), (8, 83), (10, 96), (18, 105), (29, 104), (37, 96), (41, 86), (42, 76)]
+        pts = [((x if sgn < 0 else 140 - x), y) for x, y in base]
+        m = mask_of(lambda d: d.polygon([P(*p) for p in pts], fill=255))
+        m = m.filter(ImageFilter.GaussianBlur(1.6 * K)).point(lambda v: 255 if v > 128 else 0)
+        l = layer(); d = ImageDraw.Draw(l)
+        cx = 25 if sgn < 0 else 115
+        d.rectangle([0, 0, W, H], fill=(9, 9, 11, 255))
+        for j in range(-2, 22):
+            for i in range(-9, 10):
+                x = cx + i * 1.95 + (j % 2) * 0; y = 62 + j * 2.25
+                # ribs curve round the lobe: rows bow downward toward the bottom
+                y += 1.6 * (1 - (i / 9) ** 2) * (j / 20)
+                rx = (x - cx) / 14; ry = (y - 86) / 18
+                shade = max(0, 0.32 - 0.3 * (rx * -sgn * .6 + ry * .5) - 0.25 * (rx * rx + ry * ry))
+                knit_stitch(d, x, y, 1.9, 2.4, shade)
+        l = clip(blur(l, .1), m)
+        sh = blur(clip(Image.new("RGBA", (W, H), (0, 0, 0, 120)), m), 1.4)
+        fz = hairs(300, lambda r: ((p := pts[int(r.random() * len(pts))])[0] + r.uniform(-1, 1), p[1] + r.uniform(-1, 1)), lambda r: (r.randint(25, 50),) * 3, lw=.3, lmin=.5, lmax=1.4, seed=40 + sgn)
         return comp(sh, l, fz)
 
     def braid(x0, y0, y1):
@@ -142,18 +165,18 @@ def trapper():
 
     def pom(cx, cy, r):
         l = layer(); d = ImageDraw.Draw(l)
-        d.ellipse([*P(cx - r * .92, cy - r * .88), *P(cx + r * .92, cy + r * .9)], fill=(9, 9, 11, 255))
+        d.ellipse([*P(cx - r, cy - r * .95), *P(cx + r, cy + r * .97)], fill=(8, 8, 10, 255))
         prnd = random.Random(int(cx * 7))
         for _ in range(7000):
-            a = prnd.uniform(0, math.tau); rr = r * math.sqrt(prnd.random()) * 1.02
+            a = prnd.uniform(0, math.tau); rr = r * math.sqrt(prnd.random()) * .94
             x, y = cx + math.cos(a) * rr, cy + math.sin(a) * rr * .96
-            ln = prnd.uniform(.5, 1.8) * (0.5 + rr / r)
+            ln = prnd.uniform(.4, 1.2) * (0.5 + rr / r)
             lit = max(0, -0.6 * math.cos(a) * rr / r - 0.7 * math.sin(a) * rr / r + 0.2)
             g = int(6 + 24 * lit * prnd.uniform(.5, 1))
             d.line([P(x, y), P(x + math.cos(a) * ln, y + math.sin(a) * ln)], fill=(g, g, g + 2, prnd.randint(170, 255)), width=max(1, int(.3 * K)))
         return blur(l, .08)
 
-    return comp(braid(17, 84, 126), braid(123, 84, 126), crown, crown_fz, flap(24, 76, math.radians(-12)), flap(116, 76, math.radians(12)), pom(17, 132, 11), pom(123, 132, 11))
+    return comp(braid(20, 101, 127), braid(120, 101, 127), lobe(-1), lobe(1), crown, crown_fz, flap(30, 70, math.radians(-15)), flap(110, 70, math.radians(15)), pom(20, 133, 11), pom(120, 133, 11))
 
 # ---------------------------------------------------------------- Tweed
 def tweed():

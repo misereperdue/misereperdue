@@ -1323,7 +1323,7 @@
   /* Chanel Tweed and Trapper (per dc, from his reference photos): rendered images so the mohair, tweed weave,
      rib knit, knitted CCs and pompoms read like the real material. Source: tools/build-chanel-hats.py. */
   function hatTweed() { return '<image href="/img/hats/tweed.webp?v=1" width="140" height="145"/>'; }
-  function hatTrapper() { return '<image href="/img/hats/trapper.webp?v=1" width="140" height="145"/>'; }
+  function hatTrapper() { return '<image href="/img/hats/trapper.webp?v=2" width="140" height="145"/>'; }
   /* Chanel Beanie (per dc, from his reference): slouchy knit, big interlocking CC, ribbed cuff with stripes. */
   var COUTURE = { ivory: ["#efe9de", "#151517", "#e3dccf"], noir: ["#1a1a1e", "#f1ebdf", "#232328"], rose: ["#f2bccb", "#161618", "#e7aabb"] };
   function hatSvg(key) {
