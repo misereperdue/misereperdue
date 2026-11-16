@@ -12611,8 +12611,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 
 /* Preorders (per dc): Preorder button opens Whop checkout; short ship note under it */
 #preorder-btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
-.preorder-chip{display:inline-flex;align-items:center;gap:6px;margin:12px 0 0;padding:6px 11px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink,#1c1c1e) 7%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink,#1c1c1e) 10%,transparent);font-size:12.5px;font-weight:600;line-height:1;color:var(--ink,#1c1c1e);letter-spacing:-.005em}.preorder-chip svg{width:14px;height:14px;flex:none;opacity:.75}.preorder-chip span{opacity:.6;font-weight:500}
-#bag-action:has(.preorder-chip){display:flex;flex-direction:column;align-items:flex-start}
+.preorder-chip{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:6px 11px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink,#1c1c1e) 7%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink,#1c1c1e) 10%,transparent);font-size:12.5px;font-weight:600;line-height:1;color:var(--ink,#1c1c1e);letter-spacing:-.005em}.preorder-chip svg{width:14px;height:14px;flex:none;opacity:.75}.preorder-chip span{opacity:.6;font-weight:500}
 /* Notification avatars open that person's profile */
 .mp-ntf-row-av.is-tap{cursor:pointer;transition:transform .18s ease}
 .mp-ntf-row-av.is-tap:active{transform:scale(.92)}

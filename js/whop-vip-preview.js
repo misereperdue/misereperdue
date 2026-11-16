@@ -62,7 +62,7 @@
       'whop-CheckoutDetails':{background:'transparent'}, 'whop-CheckoutSummary':{background:'transparent'},
       'whop-CheckoutSeller':{display:'none'}, 'whop-CheckoutSellerLogo':{display:'none'}, 'whop-CheckoutItem':{display:'none'}, 'whop-CheckoutItemHeadline':{display:'none'},
       'whop-CheckoutTotal':{fontSize:'34px', fontWeight:'600', letterSpacing:'-0.02em', color:ink},
-      'whop-EmailInput':input, 'whop-CardFieldInput':{background:field, borderColor:hair}, 'whop-AddressGroup':input, 'whop-AddressFieldInput':{background:'transparent'},
+      // fields use Whop's own styling (overrides misplaced the card brand and address search icons)
       // Whop's live total (tax included once known) is the one price figure on the sheet
       'whop-CheckoutPriceContext':{fontSize:'13px'},
       'whop-PaymentMethods':{background:'transparent'}, 'whop-PaymentMethod':{background:'transparent'}, 'whop-PaymentMethodRow':{background:'transparent'},
@@ -247,20 +247,11 @@
       const pics = []; lines.forEach(function (l) { const p = by[l.id]; if (p && p.featuredImage && pics.indexOf(p.featuredImage.url) < 0) pics.push(p.featuredImage.url); });
       if (art && pics.length > 1) { const stack = document.createElement('div'); stack.className = 'rc-stack n' + Math.min(3, pics.length); pics.slice(0, 3).forEach(function (u) { const im = document.createElement('img'); im.src = u; im.alt = ''; stack.appendChild(im); }); art.replaceWith(stack); }
     }).catch(function () {});
-    // Shipping address
-    const form = document.createElement('form'); form.className = 'ship'; form.noValidate = true;
-    const F = [['name','Full name','name'],['line1','Street address','address-line1'],['line2','Apt, suite (optional)','address-line2'],['city','City','address-level2'],['region','Province / state','address-level1'],['postal','Postal / ZIP code','postal-code'],['country','Country','country-name']];
-    let saved = {}; try { saved = JSON.parse(localStorage.getItem('mp_ship') || '{}') || {}; } catch (_) {}
-    form.innerHTML = '<p class="ship-h">Shipping address</p>' + F.map(function (f) {
-      return '<label class="ship-f ship-' + f[0] + '"><span>' + f[1] + '</span><input name="' + f[0] + '" autocomplete="shipping ' + f[2] + '" maxlength="' + (f[0] === 'postal' ? 20 : 120) + '"></label>';
-    }).join('');
-    F.forEach(function (f) { form.elements[f[0]].value = saved[f[0]] || (f[0] === 'country' ? 'Canada' : ''); });
-    receipt.after(form);
+    // Whop's payment form asks for the shipping address (per dc: no second address form here).
     notify('ready');
-    form.addEventListener('submit', function (e) { e.preventDefault(); button.click(); });
     const ret = location.origin + '/whop-vip-preview?checkout=1&product=cart' + (sheet ? '&sheet=1' : '');
     if (params.has('status') || params.has('complete')) {
-      form.hidden = true; button.hidden = true;
+      button.hidden = true;
       if (params.get('status') === 'failed' || params.get('status') === 'canceled') { status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try again from your bag.' : 'Checkout was canceled.'; return; }
       showDone('We emailed your receipt. We’ll email again when it ships.', 'Order placed');
       return;
@@ -268,28 +259,23 @@
     let started = false;
     button.addEventListener('click', async function () {
       if (started || button.disabled) return;
-      const ship = {}; let missing = '';
-      F.forEach(function (f) { ship[f[0]] = form.elements[f[0]].value.trim(); if (!ship[f[0]] && f[0] !== 'line2' && !missing) missing = f[1]; });
-      if (missing) { status.textContent = 'Add your ' + missing.toLowerCase() + '.'; form.elements[F.find(function (f) { return f[1] === missing; })[0]].focus(); return; }
-      try { localStorage.setItem('mp_ship', JSON.stringify(ship)); } catch (_) {}
       button.disabled = true; status.textContent = '';
       try {
         if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
-        const body = await request('/api/whop/cart/checkout', { method: 'POST', body: JSON.stringify({ lines: lines, ship: ship }) });
+        const body = await request('/api/whop/cart/checkout', { method: 'POST', body: JSON.stringify({ lines: lines }) });
         if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '')) throw new Error('The checkout could not be verified.');
-        form.hidden = true;
-        if (pricingNote) pricingNote.textContent = 'Shipping to ' + [ship.name, ship.line1, ship.city, ship.country].filter(Boolean).join(', ') + '. Any tax is added below.';
         started = true;
         mountCheckout(body.checkoutConfigurationId, ret, function () {
           showDone('We emailed your receipt. We’ll email again when it ships.', 'Order placed');
         }, function () {
-          started = false; button.disabled = false; button.hidden = false; form.hidden = false;
+          started = false; button.disabled = false; button.hidden = false;
           if (skel) skel.hidden = true;
           status.textContent = 'Checkout couldn’t load. Please try again.';
         });
       } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; notify('ready'); }
     });
-    window.__mpWhopBegin = function () {};
+    window.__mpWhopBegin = function () { button.click(); };
+    if (sheet) { button.hidden = true; if (skel) skel.hidden = false; button.click(); }
   }
   function runStars(n) {
     const fmt = function (v) { return Number(v).toLocaleString('en-US'); };

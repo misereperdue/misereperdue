@@ -912,8 +912,12 @@ var MPShop = (function () {
     var d = t.shipsAt ? new Date(t.shipsAt + "T12:00:00") : null;
     return d && !isNaN(d) ? d.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "at launch";
   }
+  // Preorder chip (per dc): sits above the product title
+  function preorderChip(t) {
+    return '<p class="preorder-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Preorder <span>\u00b7 Ships ' + shipsLabel(t) + "</span></p>";
+  }
   function M(t, e) {
-    var note = t.preorder ? '<p class="preorder-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Preorder <span>\u00b7 Ships ' + shipsLabel(t) + "</span></p>" : "";
+    var note = "";
     if (!1 === t.available && !t.preorder) return '<span class="pill-soon">' + soonLabel() + "</span>";
     var n = (function (t, e) {
       var n = t + ":" + (e || "one"),
@@ -1086,6 +1090,7 @@ var MPShop = (function () {
         '<div class="forum-head shop-product-head"><button type="button" class="forum-back forum-glass-pill" id="shop-back"><svg class="mp-gl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg>Back</button></div>' +
         '<article class="article-card">' +
         g +
+        (i.preorder ? preorderChip(i) : "") +
         "<h1>" +
         l(i.name) +
         "</h1>" +
