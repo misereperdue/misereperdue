@@ -319,7 +319,8 @@ def tweed():
     cc = comp(shadow, body, rim, hi)
     return comp(crown, crown_halo, cuff, topfz, halo, cc)
 
-def reshape(im, sx, sy, ax=70, ay=104):
+def reshape(im, sx, sy, ax=70, ay=104, dy=0):
     # narrower and taller about the bottom-centre of the cuff (inverse affine for PIL)
-    return im.transform((W, H), Image.AFFINE, (1 / sx, 0, ax * K * (1 - 1 / sx), 0, 1 / sy, ay * K * (1 - 1 / sy)), resample=Image.BICUBIC)
-reshape(tweed(), .9, 1.0).save(OUT + "/tweed.png"); trapper().save(OUT + "/trapper.png")
+    return im.transform((W, H), Image.AFFINE, (1 / sx, 0, ax * K * (1 - 1 / sx), 0, 1 / sy, ay * K * (1 - 1 / sy) - dy * K / sy), resample=Image.BICUBIC)
+# smaller and higher so it sits on the head like the other hats
+reshape(tweed(), .83, .86, dy=-20).save(OUT + "/tweed.png"); trapper().save(OUT + "/trapper.png")
