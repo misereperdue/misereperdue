@@ -177,10 +177,10 @@ def cap():
     pd.rectangle([*P(px0, py0), *P(px1, py1)], fill=(246, 245, 241, 255))
     pd.rectangle([*P(px0, py0), *P(px1, py1)], outline=red, width=int(1.5 * K))
     pd.rectangle([*P(px0 + 2.2, py0 + 2.2), *P(px1 - 2.2, py1 - 2.2)], outline=red, width=int(.6 * K))
-    text(pd, 70, 41, "CHROME HEARTS", 5, red, .15)
+    [text(pd, 70 + o, 41.2, "CHROME HEARTS", 4.2, red, -.05, SWASH) for o in (0, .1)]
     text(pd, 70, 50.8, "CH", 15, red, .8, SWASH); text(pd, 70.25, 50.8, "CH", 15, red, .8, SWASH)
-    text(pd, 70, 61, "PARIS", 5.2, red, .4)
-    cross_fleury(pd, 51.2, 51, 6.2, red); cross_fleury(pd, 88.8, 51, 6.2, red)
+    [text(pd, 70 + o, 61.2, "PARIS", 5, red, .3, SWASH) for o in (0, .1)]
+    cross_fleury(pd, 52, 51.4, 5.2, red); cross_fleury(pd, 88, 51.4, 5.2, red)
     pm = mask_of(lambda d: d.rectangle([*P(px0, py0), *P(px1, py1)], fill=255))
     redm = Image.fromarray(((np.array(pl)[..., 0] > 140) & (np.array(pl)[..., 1] < 80)).astype(np.uint8) * 255)
     hatch = layer(); hd = ImageDraw.Draw(hatch)
