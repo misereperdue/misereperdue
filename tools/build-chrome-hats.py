@@ -1,4 +1,4 @@
-# Usage: python3 tools/build-chrome-hats.py <outdir>  (needs tools/hat-render-common.py beside it)
+# Usage: python3 tools/build-chrome-hats.py <outdir>  (needs tools/hat-render-common.py and tools/fonts/ beside it; fonts are SIL OFL)
 # Chrome Hearts hat power renders (cap, blue beanie, star beanie) as 4x overlays for the 140x145 hat box.
 # Ornaments and lettering are original (simple four-petal flower, plain serif type); garment shapes, colours and
 # materials follow dc's reference photos.
@@ -7,6 +7,8 @@ sys.argv = sys.argv[:1] + [sys.argv[1] if len(sys.argv) > 1 else "."]
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "hat-render-common.py")).read())
 from PIL import ImageFont
 SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+FD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")  # OFL blackletter faces
+GOTHIC = os.path.join(FD, "UnifrakturCook-Bold.ttf"); SWASH = os.path.join(FD, "UnifrakturMaguntia-Book.ttf"); BLOCK = os.path.join(FD, "PirataOne-Regular.ttf")
 
 def bez(p0, p1, p2, p3, n=24):
     return [((1-t)**3*p0[0]+3*(1-t)**2*t*p1[0]+3*(1-t)*t*t*p2[0]+t**3*p3[0], (1-t)**3*p0[1]+3*(1-t)**2*t*p1[1]+3*(1-t)*t*t*p2[1]+t**3*p3[1]) for t in np.linspace(0, 1, n)]
@@ -23,8 +25,8 @@ def flower(d, cx, cy, r, fill):
         d.line([P(cx + math.cos(t) * r * .35, cy + math.sin(t) * r * .35), P(cx + math.cos(t) * r * .78, cy + math.sin(t) * r * .78)], fill=fill, width=max(1, int(r * .16 * K)))
     d.ellipse([*P(cx - r * .22, cy - r * .22), *P(cx + r * .22, cy + r * .22)], fill=fill)
 
-def text(d, cx, cy, s, size, fill, spacing=0):
-    f = ImageFont.truetype(SERIF, int(size * K))
+def text(d, cx, cy, s, size, fill, spacing=0, font=None):
+    f = ImageFont.truetype(font or GOTHIC, int(size * K))
     w = d.textlength(s, font=f) + spacing * K * (len(s) - 1)
     x = cx * K - w / 2
     for ch in s:
@@ -58,7 +60,7 @@ def rib_cuff(x0, x1, y0, y1, base, motif=None, motif_col=None):
     m = m.filter(ImageFilter.GaussianBlur(1.2 * K)).point(lambda v: 255 if v > 128 else 0)
     d.rectangle([0, 0, W, H], fill=tuple(int(c * .5) for c in base) + (255,))
     ma = np.array(motif) if motif is not None else None
-    ncol, nrow = 72, 17
+    ncol, nrow = 96, 22
     for c in range(ncol):
         u = -1.45 + 2.9 * (c + .5) / ncol
         x = cxh + R * math.sin(u) * 1.01
@@ -88,8 +90,8 @@ def blue():
     peak = layer(); ImageDraw.Draw(peak).line([P(*p) for p in bez((64, 20), (67, 26), (69, 30), (70, 34))], fill=(70, 85, 125, 120), width=int(1.2 * K))
     motif = Image.new("L", (W, H), 0); md = ImageDraw.Draw(motif)
     for x in (23, 39, 101, 117): flower(md, x, 73.5, 7, 255)
-    text(md, 61, 73, "C", 17, 255); text(md, 79, 73, "H", 17, 255)
-    motif = motif.filter(ImageFilter.MaxFilter(5))  # thicken strokes so they survive the stitch grid
+    text(md, 61, 73.4, "C", 22, 255, 0, SWASH); text(md, 79, 73.4, "H", 22, 255, 0, SWASH)
+    motif = motif.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(.5 * K)).point(lambda v: 255 if v > 80 else 0)  # stitch takes the colour where the letter covers enough of it
     cuff, km, outline = rib_cuff(20, 120, 61, 87, base, motif, (246, 244, 236))
     fz = fuzz_edge(crown_pts, (150, 170, 220), 700, 5) 
     return comp(drop(cm, 60), crown, clip(blur(peak, .5), cm), fz, drop(km, 120, 1, 1.4), cuff, fuzz_edge(outline, (150, 170, 220), 500, 6))
@@ -152,9 +154,9 @@ def cap():
     pd.rectangle([*P(px0, py0), *P(px1, py1)], fill=(246, 245, 241, 255))
     pd.rectangle([*P(px0, py0), *P(px1, py1)], outline=red, width=int(1.5 * K))
     pd.rectangle([*P(px0 + 2.2, py0 + 2.2), *P(px1 - 2.2, py1 - 2.2)], outline=red, width=int(.6 * K))
-    text(pd, 70, 41.2, "CHROME HEARTS", 4.1, red, .25)
-    text(pd, 70, 51.2, "CH", 11, red, .8)
-    text(pd, 70, 61, "PARIS", 4.2, red, .5)
+    text(pd, 70, 41, "CHROME HEARTS", 5, red, .15)
+    text(pd, 70, 50.8, "CH", 15, red, .8, SWASH); text(pd, 70.25, 50.8, "CH", 15, red, .8, SWASH)
+    text(pd, 70, 61, "PARIS", 5.2, red, .4)
     flower(pd, 51, 51.2, 4.8, red); flower(pd, 89, 51.2, 4.8, red)
     pm = mask_of(lambda d: d.rectangle([*P(px0, py0), *P(px1, py1)], fill=255))
     redm = Image.fromarray(((np.array(pl)[..., 0] > 140) & (np.array(pl)[..., 1] < 80)).astype(np.uint8) * 255)
@@ -174,9 +176,32 @@ def cap():
         for i in range(0, len(pts) - 1, 2): std.line([P(*pts[i]), P(*pts[i + 1])], fill=(70, 70, 76, 200), width=max(1, int(.3 * K)))
     under = layer(); ImageDraw.Draw(under).line([P(*p) for p in bez((19, 76), (40, 69.5), (100, 69.5), (121, 76))], fill=(0, 0, 0, 200), width=int(1.4 * K))
     bill = comp(bill, clip(st, bm), clip(blur(under, .6), bm))
-    btn = layer(); bd_ = ImageDraw.Draw(btn)
-    bd_.ellipse([*P(66.6, 12.6), *P(73.4, 18.6)], fill=(120, 122, 128, 255)); bd_.ellipse([*P(67.6, 13.2), *P(71.6, 16.4)], fill=(222, 224, 230, 255)); bd_.ellipse([*P(68.2, 13.6), *P(69.6, 14.8)], fill=(255, 255, 255, 255))
+    btn = button(70, 15.4, 4.6)
     return comp(drop(mm, 80), mesh, drop(fm, 90, 1.4, 1.2), foam, patch, drop(bm, 140, 1.4, 1.6), bill, blur(btn, .1))
+
+def button(cx, cy, r):
+    # polished silver dome: radial metal shading, bright rim, raised four-petal ornament lit from the upper left
+    yy, xx = np.mgrid[0:H, 0:W] / K
+    dx, dy = (xx - cx) / r, (yy - cy) / (r * .86)
+    rr = np.sqrt(dx * dx + dy * dy)
+    inside = rr <= 1
+    nz = np.sqrt(np.clip(1 - rr * rr, 0, 1))
+    lam = np.clip(-.45 * dx - .55 * dy + .7 * nz, 0, 1)
+    spec = np.clip(lam, 0, 1) ** 18
+    band = .5 + .5 * np.cos(dy * 3.4 + .6)  # environment reflection band
+    g = 95 + 120 * lam + 40 * band + 200 * spec
+    a = np.where(inside, 255, 0)
+    metal = Image.fromarray(np.dstack([g, g, g * 1.02, a]).clip(0, 255).astype(np.uint8), "RGBA")
+    mm = metal.getchannel("A")
+    orn = Image.new("L", (W, H), 0); od = ImageDraw.Draw(orn); flower(od, cx, cy, r * .78, 255)
+    hi = clip(Image.new("RGBA", (W, H), (255, 255, 255, 230)), orn).transform((W, H), Image.AFFINE, (1, 0, .25 * K, 0, 1, .25 * K))
+    lo = clip(Image.new("RGBA", (W, H), (40, 40, 46, 230)), orn).transform((W, H), Image.AFFINE, (1, 0, -.3 * K, 0, 1, -.3 * K))
+    face = clip(Image.new("RGBA", (W, H), (190, 192, 198, 255)), orn)
+    rim = layer(); rd = ImageDraw.Draw(rim)
+    rd.ellipse([*P(cx - r, cy - r * .86), *P(cx + r, cy + r * .86)], outline=(60, 60, 66, 255), width=int(.45 * K))
+    rd.ellipse([*P(cx - r * .9, cy - r * .78), *P(cx + r * .9, cy + r * .78)], outline=(240, 240, 244, 200), width=int(.3 * K))
+    shadow = blur(clip(Image.new("RGBA", (W, H), (0, 0, 0, 170)), mm), .6).transform((W, H), Image.AFFINE, (1, 0, 0, 0, 1, -.9 * K))
+    return comp(shadow, metal, clip(blur(lo, .15), mm), clip(blur(hi, .15), mm), clip(face, mm), rim)
 
 def reshape(im, sx, sy, ax=70, ay=92, dy=0):
     return im.transform((W, H), Image.AFFINE, (1 / sx, 0, ax * K * (1 - 1 / sx), 0, 1 / sy, ay * K * (1 - 1 / sy) - dy * K / sy), resample=Image.BICUBIC)
