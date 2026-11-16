@@ -181,7 +181,7 @@ var MPShop = (function () {
     try {
       var cart = MP.readCart(), keep = cart.filter(function (line) {
         var pr = MP.PRODUCTS[line.id];
-        return pr && pr.available !== !1 && !pr.comingSoon && !n(pr) && !starsPack(pr);
+        return pr && (pr.preorder || (pr.available !== !1 && !pr.comingSoon)) && !n(pr) && !starsPack(pr);
       });
       if (keep.length !== cart.length) {
         MP.writeCart(keep);
@@ -338,8 +338,12 @@ var MPShop = (function () {
       return product && (n(product) || starsPack(product)) && Number(line.qty) > 0;
     });
   }
+  function preorderCart() {
+    var cart = MP.readCart();
+    return cart.length > 0 && cart.every(function (line) { var pr = MP.PRODUCTS[line.id]; return pr && pr.preorder && Number(line.qty) > 0; });
+  }
   function checkoutLocked() {
-    return Date.now() < CD_END && !vipOnlyCart();
+    return Date.now() < CD_END && !vipOnlyCart() && !preorderCart();
   }
   function checkoutGate() {
     if (coTimer) (clearTimeout(coTimer), (coTimer = null));
@@ -351,7 +355,7 @@ var MPShop = (function () {
         b.classList.remove("is-soon");
         b.disabled = !1;
         b.removeAttribute("aria-disabled");
-        b.textContent = "Checkout";
+        b.textContent = "Purchase";
       }
       return;
     }
@@ -909,10 +913,8 @@ var MPShop = (function () {
     return d && !isNaN(d) ? d.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "at launch";
   }
   function M(t, e) {
-    if (t.preorder && t.whop && /^plan_[A-Za-z0-9]+$/.test(t.whop.plan || ""))
-      return '<a class="btn accent" id="preorder-btn" href="https://whop.com/checkout/' + t.whop.plan + '" target="_blank" rel="noopener"><span class="lbl">Preorder</span></a>' +
-        '<p class="preorder-note">Ships ' + shipsLabel(t) + '. Secure checkout by Whop.</p>';
-    if (!1 === t.available) return '<span class="pill-soon">' + soonLabel() + "</span>";
+    var note = t.preorder ? '<p class="preorder-note">Preorder \u00b7 ships ' + shipsLabel(t) + "</p>" : "";
+    if (!1 === t.available && !t.preorder) return '<span class="pill-soon">' + soonLabel() + "</span>";
     var n = (function (t, e) {
       var n = t + ":" + (e || "one"),
         a = MP.readCart().find(function (t) {
@@ -923,8 +925,8 @@ var MPShop = (function () {
     return n
       ? '<div class="in-bag"><span class="in-bag-label">In your bag</span><div class="bag-stepper"><button type="button" data-step="-1" aria-label="Remove one">−</button><span>' +
           n +
-          '</span><button type="button" data-step="1" aria-label="Add one">+</button></div></div>'
-      : '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg></button>';
+          '</span><button type="button" data-step="1" aria-label="Add one">+</button></div></div>' + note
+      : '<button class="btn accent morph-btn" id="add-bag" type="button"><span class="lbl">Add to bag</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14L8.5 17.5L19 6.5"/></svg></button>' + note;
   }
   function P(t, e) {
     var n = document.getElementById("bag-action");
@@ -1657,9 +1659,15 @@ var MPShop = (function () {
       } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }
       finally { if(t) t.disabled = false; }
     }
-    // Shopify checkout is retired (per dc, 2026-11-15). VIP and Stars are bought from their own pages through the
-    // Whop sheet; clothing checkout returns with its launch.
-    e && (e.textContent = "Checkout for clothing opens at launch.");
+    // Clothing (per dc): the bag is checked out in the payment sheet, like VIP and Stars. The sheet asks for the
+    // shipping address; the server prices the bag and confirms the payment.
+    var lines = MP.readCart().map(function (l) { return { id: l.id, qty: parseInt(l.qty, 10) || 0 }; }).filter(function (l) { var pr = MP.PRODUCTS[l.id]; return l.qty > 0 && pr && pr.preorder; });
+    if (lines.length && lines.length === MP.readCart().length) {
+      e && (e.textContent = "");
+      openWhopSheet(function () { MP.writeCart([]); window.MPNav && MPNav.refreshPostBtn && MPNav.refreshPostBtn(); q(); }, "&product=cart&lines=" + encodeURIComponent(JSON.stringify(lines)), "Checkout");
+      return;
+    }
+    e && (e.textContent = lines.length ? "Check out VIP and Stars from their own pages. Your clothing will stay in your bag." : "Checkout for clothing opens at launch.");
   }
   var C = null,
     E = !1,

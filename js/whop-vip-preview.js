@@ -1,4 +1,4 @@
-/* Whop checkout page for VIP and Stars (?product=stars&pack=N). Price, identity and fulfillment belong to the server. */
+/* Whop checkout page for VIP, Stars (?product=stars&pack=N) and the clothing bag (?product=cart&lines=[...]). Price, identity and fulfillment belong to the server. */
 (function () {
   'use strict';
   const button = document.getElementById('begin');
@@ -204,6 +204,90 @@
   const STARS_PRICES = {500:4.99, 1100:9.99, 2400:19.99, 6500:49.99};
   const starsPack = params.get('product') === 'stars' ? Number(params.get('pack')) : 0;
   if (params.get('product') === 'stars') { runStars(starsPack); return; }
+  if (params.get('product') === 'cart') { runCart(); return; }
+  // Clothing bag (per dc): the cart page's Purchase opens this sheet. It shows the bag, asks for the shipping address,
+  // then the server prices the bag and makes the payment. The address is remembered on this device only.
+  function runCart() {
+    document.title = 'Checkout — MISÈRE PERDUE';
+    if (tag) tag.textContent = 'ORDER';
+    const art = document.querySelector('.rc-art'), h1 = document.querySelector('h1'), sub = document.querySelector('.rc-sub');
+    const fine = document.querySelector('.fine.page');
+    if (fine) fine.innerHTML = 'Payment is confirmed by our server before your order is placed. <a href="/#shop">Return to shop</a>';
+    let lines = [];
+    try { lines = JSON.parse(params.get('lines') || '[]').filter(function (l) { return l && typeof l.id === 'string' && l.qty > 0; }).slice(0, 10); } catch (_) {}
+    if (h1) h1.textContent = 'Your order';
+    if (sub) sub.textContent = '';
+    button.textContent = 'Continue to payment';
+    if (skel) skel.hidden = true;
+    if (!lines.length) { status.textContent = 'Your bag is empty.'; button.hidden = true; notify('ready'); return; }
+    if (!live) { status.textContent = 'Checkout runs on misereperdue.com.'; button.hidden = true; notify('ready'); return; }
+    const money = function (v) { return 'CA$' + (Math.round(v * 100) / 100).toFixed(2).replace(/\.00$/, ''); };
+    // Bag summary from the catalog (display only: the server sets the price)
+    const list = document.createElement('ul'); list.className = 'cart-lines';
+    receipt.appendChild(list);
+    fetch('/data/catalog.json?v=2', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
+      const by = {}; (d.products || []).forEach(function (p) { by[p.id] = p; });
+      let total = 0, count = 0, ships = '';
+      list.innerHTML = '';
+      lines.forEach(function (l) {
+        const p = by[l.id]; if (!p) return;
+        const unit = Number(p.priceRange && p.priceRange.minVariantPrice.amount || 0);
+        total += unit * l.qty; count += l.qty;
+        if (p.shipsAt && !ships) { const dt = new Date(p.shipsAt + 'T12:00:00'); ships = dt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
+        const li = document.createElement('li');
+        li.innerHTML = '<span></span><b></b>';
+        li.firstChild.textContent = p.title + (l.qty > 1 ? ' × ' + l.qty : '');
+        li.lastChild.textContent = money(unit * l.qty);
+        list.appendChild(li);
+        if (art && p.featuredImage && !art.dataset.set) { art.src = p.featuredImage.url; art.dataset.set = '1'; }
+      });
+      if (sub) sub.textContent = count + (count === 1 ? ' item' : ' items') + ' · ' + money(total);
+      if (pricingNote) pricingNote.textContent = (ships ? 'Preorder: ships ' + ships + '. ' : '') + 'Any tax is added to the total below before you pay.';
+    }).catch(function () {});
+    // Shipping address
+    const form = document.createElement('form'); form.className = 'ship'; form.noValidate = true;
+    const F = [['name','Full name','name'],['line1','Street address','address-line1'],['line2','Apt, suite (optional)','address-line2'],['city','City','address-level2'],['region','Province / state','address-level1'],['postal','Postal / ZIP code','postal-code'],['country','Country','country-name']];
+    let saved = {}; try { saved = JSON.parse(localStorage.getItem('mp_ship') || '{}') || {}; } catch (_) {}
+    form.innerHTML = '<p class="ship-h">Shipping address</p>' + F.map(function (f) {
+      return '<label class="ship-f ship-' + f[0] + '"><span>' + f[1] + '</span><input name="' + f[0] + '" autocomplete="shipping ' + f[2] + '" maxlength="' + (f[0] === 'postal' ? 20 : 120) + '"></label>';
+    }).join('');
+    F.forEach(function (f) { form.elements[f[0]].value = saved[f[0]] || (f[0] === 'country' ? 'Canada' : ''); });
+    receipt.after(form);
+    notify('ready');
+    form.addEventListener('submit', function (e) { e.preventDefault(); button.click(); });
+    const ret = location.origin + '/whop-vip-preview?checkout=1&product=cart' + (sheet ? '&sheet=1' : '');
+    if (params.has('status') || params.has('complete')) {
+      form.hidden = true; button.hidden = true;
+      if (params.get('status') === 'failed' || params.get('status') === 'canceled') { status.textContent = params.get('status') === 'failed' ? 'Payment was unsuccessful. You can try again from your bag.' : 'Checkout was canceled.'; return; }
+      showDone('We emailed your receipt. We’ll email again when it ships.', 'Order placed');
+      return;
+    }
+    let started = false;
+    button.addEventListener('click', async function () {
+      if (started || button.disabled) return;
+      const ship = {}; let missing = '';
+      F.forEach(function (f) { ship[f[0]] = form.elements[f[0]].value.trim(); if (!ship[f[0]] && f[0] !== 'line2' && !missing) missing = f[1]; });
+      if (missing) { status.textContent = 'Add your ' + missing.toLowerCase() + '.'; form.elements[F.find(function (f) { return f[1] === missing; })[0]].focus(); return; }
+      try { localStorage.setItem('mp_ship', JSON.stringify(ship)); } catch (_) {}
+      button.disabled = true; status.textContent = '';
+      try {
+        if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
+        const body = await request('/api/whop/cart/checkout', { method: 'POST', body: JSON.stringify({ lines: lines, ship: ship }) });
+        if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '')) throw new Error('The checkout could not be verified.');
+        form.hidden = true;
+        if (pricingNote) pricingNote.textContent = 'Shipping to ' + [ship.name, ship.line1, ship.city, ship.country].filter(Boolean).join(', ') + '. Any tax is added below.';
+        started = true;
+        mountCheckout(body.checkoutConfigurationId, ret, function () {
+          showDone('We emailed your receipt. We’ll email again when it ships.', 'Order placed');
+        }, function () {
+          started = false; button.disabled = false; button.hidden = false; form.hidden = false;
+          if (skel) skel.hidden = true;
+          status.textContent = 'Checkout couldn’t load. Please try again.';
+        });
+      } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; notify('ready'); }
+    });
+    window.__mpWhopBegin = function () {};
+  }
   function runStars(n) {
     const fmt = function (v) { return Number(v).toLocaleString('en-US'); };
     document.title = 'Stars Checkout \u2014 MIS\u00c8RE PERDUE';
