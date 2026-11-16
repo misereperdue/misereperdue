@@ -1331,7 +1331,7 @@
     if (!m) return "";
     /* Chrome Hearts (per dc, from his reference photos): trucker cap (default), blue beanie, star beanie. Rendered
        images; source tools/build-chrome-hats.py */
-    if (m[1] === "chrome") return '<image href="/img/hats/chrome-' + ({ cap: "cap", beanie: "beanie", stars: "stars" }[m[2]] || "cap") + '.webp?v=1" width="140" height="145"/>';
+    if (m[1] === "chrome") return '<image href="/img/hats/chrome-' + ({ cap: "cap", beanie: "beanie", stars: "stars" }[m[2]] || "cap") + '.webp?v=2" width="140" height="145"/>';
     if (m[1] === "hat") return HAT_SVG[m[2]] || "";
     if (m[1] === "louis") {
       /* Louis Beanie (per dc, from his reference): checkered knit in black and charcoal with stitch texture and
