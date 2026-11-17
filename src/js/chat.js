@@ -1401,7 +1401,7 @@
      glint next to the name. Each is one 120-frame sprite strip (img/charms/*.webp) played by CSS (.mp-gem). */
   function mpCharm(id) {
     var g = GEM[id], t = { verified: "07", member: "VIP", kitty: "Hello Kitty", mask: "Sleep mask", robot: "Bot", diamond: "Diamond", emerald: "Emerald", ruby: "Ruby", heart: "Sacred heart" }[id] || id, inner;
-    if (g) inner = '<i class="mp-gem" aria-hidden="true" style="background-image:url(/img/charms/' + id + '.webp?v=' + (id === "heart" ? 4 : 2) + ')"></i>';
+    if (g) inner = '<i class="mp-gem" aria-hidden="true" style="background-image:url(/img/charms/' + id + '.webp?v=' + (id === "heart" ? 5 : 2) + ')"></i>';
     else if (id === "member") inner = '<svg viewBox="2.3 2.3 19.4 18.5" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="#f5bf45" stroke="#f5bf45" stroke-width="2" stroke-linejoin="round"/></svg>';
     else inner = M(id);
     return '<span class="mp-charm mp-charm-' + x(id) + '" title="' + x(t) + '" role="img" aria-label="' + x(t) + ' charm">' + inner + "</span>";
