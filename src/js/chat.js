@@ -1258,7 +1258,7 @@
   var PW = Object.create(null),
     PW_COLORS = { ice: "#a9d7f5", pink: "#ff7fb8", gold: "#f5bf45", mint: "#5fe3b0", violet: "#b18cff", red: "#ff5a5f" };
   function pwKey(u) { return String(u || "").toLowerCase(); }
-  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "louis", "diamond", "emerald", "ruby"];
+  var PW_KEYS = ["glow", "ink", "bubble", "echo", "glitch", "melt", "aura", "halo", "rgb", "sphere", "hat", "couture", "louis", "diamond", "emerald", "ruby", "heart"];
   /* Hats (per dc): drawn over the avatar. The box is 140x145 with the avatar circle at (70,95) r50, so a hat
      can rise above the head. Couture Beanie is its own power (quilted, pearl-chain cuff, gold pearl). */
   var HAT_SVG = {
@@ -1396,11 +1396,11 @@
     document.body.appendChild(d.firstChild);
   }
   /* Charms (per dc, replacing badges): next to the name in chat and the profile view. */
-  var GEM = { diamond: ["#a8e8ff", "#5cc3ef"], emerald: ["#3fd98a", "#169b57"], ruby: ["#ff4f86", "#d0104f"] };
-  /* Charms (per dc, 2026-11-15): 3D-rendered gems (brilliant diamond, step-cut emerald, heart ruby) that spin and
+  var GEM = { diamond: ["#a8e8ff", "#5cc3ef"], emerald: ["#3fd98a", "#169b57"], ruby: ["#ff4f86", "#d0104f"], heart: ["#ff5a6e", "#a70b27"] };
+  /* Charms (per dc, 2026-11-15): 3D-rendered gems (brilliant diamond, step-cut emerald, heart ruby; per dc 2026-11-17 a silver-and-enamel sacred heart) that spin and
      glint next to the name. Each is one 120-frame sprite strip (img/charms/*.webp) played by CSS (.mp-gem). */
   function mpCharm(id) {
-    var g = GEM[id], t = { verified: "07", member: "VIP", kitty: "Hello Kitty", mask: "Sleep mask", robot: "Bot", diamond: "Diamond", emerald: "Emerald", ruby: "Ruby" }[id] || id, inner;
+    var g = GEM[id], t = { verified: "07", member: "VIP", kitty: "Hello Kitty", mask: "Sleep mask", robot: "Bot", diamond: "Diamond", emerald: "Emerald", ruby: "Ruby", heart: "Sacred heart" }[id] || id, inner;
     if (g) inner = '<i class="mp-gem" aria-hidden="true" style="background-image:url(/img/charms/' + id + '.webp?v=2)"></i>';
     else if (id === "member") inner = '<svg viewBox="2.3 2.3 19.4 18.5" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" fill="#f5bf45" stroke="#f5bf45" stroke-width="2" stroke-linejoin="round"/></svg>';
     else inner = M(id);
@@ -1450,8 +1450,8 @@
     var ch = ((u && u.badges) || []).filter(function (b) { return ["verified", "member", "kitty", "mask", "robot"].indexOf(b) >= 0; });
     u && u.verified && ch.indexOf("verified") < 0 && ch.unshift("verified");
     /* one gem charm at a time (per dc), the same rule as the Worker's powerStyle */
-    var gem = ["diamond", "emerald", "ruby"].filter(function (g) { return out[g]; })[0];
-    ["diamond", "emerald", "ruby"].forEach(function (g) { g !== gem && delete out[g]; });
+    var gem = ["diamond", "emerald", "ruby", "heart"].filter(function (g) { return out[g]; })[0];
+    ["diamond", "emerald", "ruby", "heart"].forEach(function (g) { g !== gem && delete out[g]; });
     gem && ch.push(gem);
     ch.length && (out.charms = ch);
     return out;
