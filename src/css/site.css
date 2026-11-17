@@ -12602,7 +12602,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 /* Gem charms: faceted cuts */
 [data-pw="diamond"]:is(.pow-ico,.pw-ico,i){color:#0a3560!important;background:conic-gradient(from 45deg,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff)!important}
 [data-pw="emerald"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd)!important}
-[data-pw="heart"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 58%,#e2384f 0 30%,#8f0a22 46%,#d8dbe2 47%,#9aa0ab 72%,#f4f5f8 100%)!important;color:#fff!important}
+[data-pw="heart"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 40% 30%,#fbf6ea,#e7dcc2 60%,#c4b391)!important;color:#7a0d22!important}
 [data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
 [data-pw="charm"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 32%,#f6e3ff 0 8%,#b98cff 34%,#6a3fd1 68%,#2b1a5c 100%)!important}
 [data-pw="hat"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 40% 30%,#6f86d6,#2c3f86 60%,#18244f)!important}
