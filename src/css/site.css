@@ -12602,6 +12602,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 /* Gem charms: faceted cuts */
 [data-pw="diamond"]:is(.pow-ico,.pw-ico,i){color:#0a3560!important;background:conic-gradient(from 45deg,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff,#a9d8fb,#eef8ff,#7cb9ea,#f1f9ff)!important}
 [data-pw="emerald"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd,#1fa463,#79e6ac,#0d6b3e,#8ff3bd)!important}
+[data-pw="heart"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 58%,#e2384f 0 30%,#8f0a22 46%,#d8dbe2 47%,#9aa0ab 72%,#f4f5f8 100%)!important;color:#fff!important}
 [data-pw="ruby"]:is(.pow-ico,.pw-ico,i){background:conic-gradient(from 45deg,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae,#d91a44,#ff8098,#8a0b26,#ff9aae)!important}
 [data-pw="charm"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 50% 32%,#f6e3ff 0 8%,#b98cff 34%,#6a3fd1 68%,#2b1a5c 100%)!important}
 [data-pw="hat"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 40% 30%,#6f86d6,#2c3f86 60%,#18244f)!important}
@@ -12945,9 +12946,10 @@ html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:non
 
 /* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */
-.mp-charm-diamond,.mp-charm-emerald,.mp-charm-ruby{position:relative;overflow:hidden}
+.mp-charm-diamond,.mp-charm-emerald,.mp-charm-ruby,.mp-charm-heart{position:relative;overflow:hidden}
 .mp-gem{position:absolute;top:0;left:0;width:12000%;height:100%;background-size:100% 100%;background-repeat:no-repeat;animation:mp-gem-spin 5s steps(120) infinite;will-change:transform}
 .mp-charm-emerald .mp-gem{animation-delay:-1.67s}
 .mp-charm-ruby .mp-gem{animation-delay:-3.33s}
+.mp-charm-heart .mp-gem{animation-delay:-2.5s}
 @keyframes mp-gem-spin{to{transform:translateX(-100%)}}
 @media (prefers-reduced-motion:reduce){.mp-gem{animation:none}}
