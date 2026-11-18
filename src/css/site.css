@@ -12953,3 +12953,26 @@ html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:non
 .mp-charm-heart .mp-gem{animation-delay:-2.5s}
 @keyframes mp-gem-spin{to{transform:translateX(-100%)}}
 @media (prefers-reduced-motion:reduce){.mp-gem{animation:none}}
+
+/* App feel (per dc, 2026-11-18): fuller bubbles, grouped runs from one person, springy entrances, press feedback
+   and a fuller input bar. Grouping classes come from mpGroupMsgs in chat.js. */
+.chat-msgs .chat-msg .chat-bubble:where(:not(.chat-photo-only):not(.chat-poll-bubble):not(.chat-bubble-media)){padding:11px 16px!important;border-radius:22px!important;font-size:16.5px!important;line-height:1.34!important}
+.chat-msgs .chat-msg.is-cont{margin-top:-10px!important}
+.chat-msgs .chat-msg.is-cont .chat-msg-head{display:none!important}
+.chat-msgs .chat-msg.has-next>.chat-avatar-wrap{visibility:hidden}
+.chat-msgs .chat-msg:not(.mine).has-next .chat-bubble{border-bottom-left-radius:8px!important}
+.chat-msgs .chat-msg:not(.mine).is-cont .chat-bubble{border-top-left-radius:8px!important}
+.chat-msgs .chat-msg.mine.has-next .chat-bubble{border-bottom-right-radius:8px!important}
+.chat-msgs .chat-msg.mine.is-cont .chat-bubble{border-top-right-radius:8px!important}
+.chat-msg-in{animation:mp-msg-pop .44s cubic-bezier(.2,.85,.25,1.12) both!important;transform-origin:left bottom}
+.chat-msg.mine.chat-msg-in{transform-origin:right bottom}
+@keyframes mp-msg-pop{from{opacity:0;transform:translateY(14px) scale(.94)}55%{opacity:1}to{opacity:1;transform:none}}
+.chat-msgs .chat-bubble{transition:transform .2s cubic-bezier(.3,.7,.4,1.35)}
+.chat-msgs .chat-bubble:active{transform:scale(.965)}
+.chat-inputrow .chat-inputbar{min-height:54px;border-radius:27px}
+.chat-inputrow .chat-inputbar input{font-size:17px!important}
+.chat-inputrow .chat-send{width:42px;height:42px}
+.chat-inputrow .chat-plus{width:52px;height:52px}
+.chat-inputrow .chat-send,.chat-inputrow .chat-plus{transition:transform .2s cubic-bezier(.3,.7,.4,1.35)}
+.chat-inputrow .chat-send:active,.chat-inputrow .chat-plus:active{transform:scale(.9)}
+@media (prefers-reduced-motion:reduce){.chat-msg-in{animation:none!important}.chat-msgs .chat-bubble:active{transform:none}}

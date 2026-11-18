@@ -1417,6 +1417,31 @@
     w.innerHTML = list.map(mpCharm).join("");
     after && after.nextSibling ? host.insertBefore(w, after.nextSibling) : host.appendChild(w);
   }
+  /* App feel (per dc, 2026-11-18): a run of messages from the same person within 5 minutes is grouped: later ones
+     hide the repeated name and time, and only the last one in the run shows the avatar (iMessage style). */
+  function mpGroupMsgs(list) {
+    var ms = [].filter.call(list.children, function (n) { return n.classList && n.classList.contains("chat-msg") && !n.classList.contains("chat-typing-msg"); });
+    var same = function (a, b) {
+      return !!(a && b && a.getAttribute("data-user") && a.getAttribute("data-user") === b.getAttribute("data-user") &&
+        Math.abs((+b.getAttribute("data-ts") || 0) - (+a.getAttribute("data-ts") || 0)) < 3e5);
+    };
+    for (var i = 0; i < ms.length; i++) {
+      ms[i].classList.toggle("is-cont", same(ms[i - 1], ms[i]));
+      ms[i].classList.toggle("has-next", same(ms[i], ms[i + 1]));
+    }
+  }
+  (function () {
+    var watched = null, obs = null, raf = 0;
+    setInterval(function hook() {
+      var l = document.querySelector(".chat-msgs");
+      if (!l || l === watched) return;
+      obs && obs.disconnect();
+      watched = l;
+      obs = new MutationObserver(function () { if (!raf) raf = requestAnimationFrame(function () { raf = 0; watched && mpGroupMsgs(watched); }); });
+      obs.observe(l, { childList: true });
+      mpGroupMsgs(l);
+    }, 700);
+  })();
   function mpPwRefresh(user) {
     document.querySelectorAll(".chat-msg[data-user]").forEach(function (m) {
       var u = m.getAttribute("data-user");
