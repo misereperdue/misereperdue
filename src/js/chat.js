@@ -1430,14 +1430,16 @@
       ms[i].classList.toggle("has-next", same(ms[i], ms[i + 1]));
     }
   }
+  function mpGroupNow(el) { var l = el && el.parentNode; l && l.classList && l.classList.contains("chat-msgs") && mpGroupMsgs(l); }
   (function () {
-    var watched = null, obs = null, raf = 0;
+    var watched = null, obs = null;
     setInterval(function hook() {
       var l = document.querySelector(".chat-msgs");
       if (!l || l === watched) return;
       obs && obs.disconnect();
       watched = l;
-      obs = new MutationObserver(function () { if (!raf) raf = requestAnimationFrame(function () { raf = 0; watched && mpGroupMsgs(watched); }); });
+      /* MutationObserver callbacks run before the next paint, so grouping never shows a frame of ungrouped messages */
+      obs = new MutationObserver(function () { watched && mpGroupMsgs(watched); });
       obs.observe(l, { childList: true });
       mpGroupMsgs(l);
     }, 700);
@@ -2443,9 +2445,23 @@
                   (We[n] = { tempId: r, ts: o.ts }),
                   Fe(o),
                   Ne(!0),
-                  setTimeout(function () {
-                    We[n] && (delete We[n], Ze(r));
-                  }, 1e4));
+                  (function arm() {
+                    setTimeout(function () {
+                      if (!We[n]) return;
+                      /* not confirmed yet (per dc: chat glitches): keep it and offer a retry instead of deleting it */
+                      var el = c.querySelector('.chat-msg[data-id="' + CSS.escape(r) + '"]');
+                      if (!el) return void delete We[n];
+                      el.classList.add("is-failed");
+                      var main = el.querySelector(".chat-msg-main") || el, note = el.querySelector(".chat-failed");
+                      if (!note) { note = document.createElement("button"); note.type = "button"; note.className = "chat-failed"; note.textContent = "Not sent \u00b7 Tap to retry"; main.appendChild(note); }
+                      note.onclick = function () {
+                        if (!(p && 1 === p.readyState)) { note.textContent = "No connection \u00b7 Tap to retry"; return; }
+                        el.classList.remove("is-failed"); note.remove();
+                        try { p.send(JSON.stringify(a)); } catch (_) {}
+                        arm();
+                      };
+                    }, 1e4);
+                  })());
               }
               try {
                 p.send(JSON.stringify(a));
@@ -2786,18 +2802,7 @@
           e && e.badges && (T = Object.assign(Object.create(null), e.badges));
           e && e.pw && mpPwMerge(e.pw, !0);
           var list = (e && e.messages) || [];
-          if (window.__chatFromCache) {
-            window.__chatFromCache = !1;
-            var bx = Le(), cached = bx ? bx.querySelectorAll('.chat-msg[data-cached="1"]') : [], cOld = Infinity, ids = {};
-            cached.forEach(function (n) { var ts = +n.getAttribute("data-ts") || 0; ts && ts < cOld && (cOld = ts); });
-            list.forEach(function (mm) { mm && mm.id && (ids[mm.id] = 1); });
-            /* drop cached messages the server no longer has (deleted meanwhile) */
-            cached.forEach(function (n) { var id = n.getAttribute("data-id"); if (!ids[id]) { n.remove(); delete u[id]; delete De[id]; } n.removeAttribute("data-cached"); });
-            /* older history goes to the lazy "scroll up for more" queue; only newer messages render now */
-            Ue = list.filter(function (mm) { return mm && mm.ts && mm.ts < cOld; });
-            mpIngestHistory(list.filter(function (mm) { return !(mm && mm.ts && mm.ts < cOld); }));
-          } else mpIngestHistory(list);
-          mpChatSkeletonOff();
+          mpIngestFull(list);
           mpChatCacheSave(list, e && e.pw);
         })
         .catch(function () {
@@ -2878,13 +2883,32 @@
     b.appendChild(d);
   }
   function mpChatSkeletonOff() { var b = Le(), k = b && b.querySelector(".chat-skel"); k && k.remove(); }
+  /* A full history list (the socket's hello or the history request): when the screen was filled from the device
+     cache, drop cached messages the server no longer has (deleted meanwhile). */
+  function mpIngestFull(list) {
+    list = list || [];
+    if (window.__chatFromCache) {
+      window.__chatFromCache = !1;
+      var bx = Le(), ids = {};
+      list.forEach(function (mm) { mm && mm.id && (ids[mm.id] = 1); });
+      bx && bx.querySelectorAll('.chat-msg[data-cached="1"]').forEach(function (n) { var id = n.getAttribute("data-id"); if (!ids[id]) { n.remove(); delete u[id]; delete De[id]; } n.removeAttribute("data-cached"); });
+    }
+    mpIngestHistory(list);
+    mpChatSkeletonOff();
+  }
   function mpIngestHistory(list) {
     list = list || [];
     if (window.__chatMsgsLoaded) {
+      var bx0 = Le(), oldest = Infinity;
+      bx0 && bx0.querySelectorAll(".chat-msg[data-ts]").forEach(function (n) { var ts = +n.getAttribute("data-ts") || 0; ts && ts < oldest && (oldest = ts); });
+      var older = [];
       for (var i = 0; i < list.length; i++) {
         var m = list[i];
-        if (m && m.id && !u[m.id] && !De[m.id]) Fe(m);
+        if (!(m && m.id) || u[m.id] || De[m.id]) continue;
+        if (m.ts && m.ts < oldest) { older.push(m); De[m.id] = m; continue; }
+        Fe(m);
       }
+      if (older.length) { var have = {}; Ue.forEach(function (q) { q && q.id && (have[q.id] = 1); }); Ue = Ue.concat(older.filter(function (q) { return !have[q.id]; })).sort(function (x, y) { return (x.ts || 0) - (y.ts || 0); }); }
       return;
     }
     window.__chatMsgsLoaded = !0;
@@ -2912,6 +2936,7 @@
         mpClampMsg(n);
       });
       mpPhotoStack(box);
+      mpGroupMsgs(box);
     }
     Ae(!0);
     window.__chatBatchLoading = !1;
@@ -2932,6 +2957,8 @@
     } finally {
       window.__chatBatchLoading = !1;
     }
+    /* group the older messages before measuring, so the scroll keeps its place in one step (no jump) */
+    var gb = Le(); gb && mpGroupMsgs(gb);
     var r = document.documentElement.scrollHeight;
     window.scrollTo(0, window.scrollY + (r - t));
     qe();
@@ -5996,7 +6023,7 @@
                 t.pw && mpPwMerge(t.pw, !0),
                 t.you && te((s = rcKeep(t.you)).points || 0),
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
-                mpIngestHistory(t.messages),
+                mpIngestFull(t.messages),
                 followHello && Ne(!0),
                 window.MPFM && MPFM.setMe(s));
             } else if ("badge" === t.t && t.user) {
@@ -6156,6 +6183,8 @@
                   (delete We[e.cid],
                   a.setAttribute("data-id", e.id),
                   e.ts && a.setAttribute("data-ts", String(e.ts)),
+                  a.classList.remove("is-failed"),
+                  mpGroupNow(a),
                   "pw" in e && mpPwSet(e.user, e.pw),
                   De[n] && ((De[e.id] = e), delete De[n]),
                   u[n] && ((u[e.id] = !0), delete u[n]),
