@@ -2769,15 +2769,39 @@
           },
           { passive: !0 },
         )),
+      (function () {
+        if (window.__chatMsgsLoaded) return;
+        var c = mpChatCacheLoad();
+        if (!c) return mpChatSkeleton();
+        c.pw && mpPwMerge(c.pw, !0);
+        mpIngestHistory(c.messages);
+        window.__chatFromCache = !0;
+        var b = Le();
+        b && b.querySelectorAll(".chat-msg").forEach(function (n) { n.setAttribute("data-cached", "1"); });
+      })(),
       (bootTake("msgs") || E("/api/messages?limit=200&_=" + Date.now()))
         .then(function (e) {
           e && e.caps && e.caps.private && mpPMEnable();
           e && e.caps && e.caps.poll && (window.mpPollOn = !0);
           e && e.badges && (T = Object.assign(Object.create(null), e.badges));
           e && e.pw && mpPwMerge(e.pw, !0);
-          mpIngestHistory(e && e.messages);
+          var list = (e && e.messages) || [];
+          if (window.__chatFromCache) {
+            window.__chatFromCache = !1;
+            var bx = Le(), cached = bx ? bx.querySelectorAll('.chat-msg[data-cached="1"]') : [], cOld = Infinity, ids = {};
+            cached.forEach(function (n) { var ts = +n.getAttribute("data-ts") || 0; ts && ts < cOld && (cOld = ts); });
+            list.forEach(function (mm) { mm && mm.id && (ids[mm.id] = 1); });
+            /* drop cached messages the server no longer has (deleted meanwhile) */
+            cached.forEach(function (n) { var id = n.getAttribute("data-id"); if (!ids[id]) { n.remove(); delete u[id]; delete De[id]; } n.removeAttribute("data-cached"); });
+            /* older history goes to the lazy "scroll up for more" queue; only newer messages render now */
+            Ue = list.filter(function (mm) { return mm && mm.ts && mm.ts < cOld; });
+            mpIngestHistory(list.filter(function (mm) { return !(mm && mm.ts && mm.ts < cOld); }));
+          } else mpIngestHistory(list);
+          mpChatSkeletonOff();
+          mpChatCacheSave(list, e && e.pw);
         })
         .catch(function () {
+          mpChatSkeletonOff();
           if (window.__chatMsgsLoaded) return;
           var e = Le();
           if (e && !e.querySelector(".chat-load-err")) {
@@ -2821,6 +2845,39 @@
       qe());
   }
 
+  /* Instant chat (per dc, 2026-11-18): the last 40 messages are kept on this device, keyed to the signed-in session,
+     and shown the moment chat opens. The server's list then adds anything new and removes anything deleted since.
+     With nothing cached yet, shimmering placeholder bubbles show instead of a blank screen. */
+  function mpChatCacheKey() {
+    var t = ""; try { t = localStorage.getItem("chat_token") || ""; } catch (_) {}
+    if (!t) return null;
+    for (var h = 0, i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+    return "mp_chat_cache_v1:" + (h >>> 0).toString(36);
+  }
+  function mpChatCacheSave(list, pw) {
+    var k = mpChatCacheKey();
+    if (!k || !list || !list.length) return;
+    try {
+      for (var i = localStorage.length - 1; i >= 0; i--) { var kk = localStorage.key(i); kk && kk.indexOf("mp_chat_cache_v1:") === 0 && kk !== k && localStorage.removeItem(kk); }
+      var keep = list.filter(function (m) { return m && m.id && String(m.id).indexOf("opt-") !== 0; }).slice(-40);
+      localStorage.setItem(k, JSON.stringify({ at: Date.now(), messages: keep, pw: pw || null }));
+    } catch (_) {}
+  }
+  function mpChatCacheLoad() {
+    var k = mpChatCacheKey();
+    if (!k) return null;
+    try { var c = JSON.parse(localStorage.getItem(k) || "null"); if (c && Array.isArray(c.messages) && c.messages.length && Date.now() - (c.at || 0) < 14 * 864e5) return c; } catch (_) {}
+    return null;
+  }
+  function mpChatSkeleton() {
+    var b = Le();
+    if (!b || b.querySelector(".chat-msg,.chat-skel")) return;
+    var d = document.createElement("div");
+    d.className = "chat-skel"; d.setAttribute("aria-hidden", "true");
+    d.innerHTML = [["l", 62], ["l", 40], ["r", 48], ["l", 70], ["r", 34], ["r", 56], ["l", 44]].map(function (x) { return '<div class="chat-skel-row is-' + x[0] + '"><i class="chat-skel-av"></i><i class="chat-skel-b" style="width:' + x[1] + '%"></i></div>'; }).join("");
+    b.appendChild(d);
+  }
+  function mpChatSkeletonOff() { var b = Le(), k = b && b.querySelector(".chat-skel"); k && k.remove(); }
   function mpIngestHistory(list) {
     list = list || [];
     if (window.__chatMsgsLoaded) {
@@ -2832,6 +2889,7 @@
     }
     window.__chatMsgsLoaded = !0;
     window.__chatBatchLoading = !0;
+    mpChatSkeletonOff();
     var box = Le(),
       vis = list.slice(-20),
       frag = box && !box.querySelector(".chat-msg") ? document.createDocumentFragment() : null;
