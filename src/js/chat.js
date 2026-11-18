@@ -2943,15 +2943,22 @@
     qe();
     requestAnimationFrame(mpFillOlder);
   }
+  /* Older history (per dc: faster and smoother): drawn about two screens before you reach the top, 30 at a time, and
+     only while the scroll is resting, so the position fix never cuts off a flick. Right at the top it loads at once. */
+  var mpLastScroll = 0;
+  window.addEventListener("scroll", function () { mpLastScroll = Date.now(); }, { passive: !0 });
   function mpFillOlder() {
     if (ze || !Ue.length || window.__chatBatchLoading) return;
     var e = document.getElementById("journal");
     if (!e || !e.classList.contains("on")) return;
-    if (window.scrollY > 200) return;
+    var ahead = Math.max(1200, window.innerHeight * 2);
+    if (window.scrollY > ahead) return;
+    var idle = Date.now() - mpLastScroll;
+    if (window.scrollY > 80 && idle < 140) { clearTimeout(mpFillOlder.t); mpFillOlder.t = setTimeout(mpFillOlder, 150 - idle); return; }
     ze = !0;
     window.__chatBatchLoading = !0;
     var t = document.documentElement.scrollHeight,
-      n = Ue.splice(Math.max(0, Ue.length - 20), 20);
+      n = Ue.splice(Math.max(0, Ue.length - 30), 30);
     try {
       for (var a = n.length - 1; a >= 0; a--) Fe(n[a], !0);
     } finally {
@@ -2963,7 +2970,7 @@
     window.scrollTo(0, window.scrollY + (r - t));
     qe();
     ze = !1;
-    if (Ue.length && window.scrollY <= 200) requestAnimationFrame(mpFillOlder);
+    if (Ue.length && window.scrollY <= ahead) requestAnimationFrame(mpFillOlder);
   }
   function Le() {
     return c.querySelector(".chat-msgs");
