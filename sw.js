@@ -4,7 +4,7 @@
 // Cache-first for static assets, network-first for HTML (so updates land fast).
 
 /* P-H1: CACHE derives from a single version constant matching the sw.js ?v= in index.html */
-var SW_VERSION = 666;
+var SW_VERSION = 667;
 var CACHE = "mp-shell-v" + SW_VERSION;
 // Emoji images (/emoji/<set>/<key>.svg, Twemoji, see js/emoji.js) live in
 // their own cache: filled on first use (never precached: ~4,000 files), kept
@@ -15,26 +15,27 @@ var EMOJI_MAX = 800;
 var SHELL = [
   "/",
   "/webapp.json?v=23",
-  "/css/site.css?v=980",
+  "/css/site.css?v=981",
   "/js/theme.js?v=10",
   "/js/rain.js?v=25",
   "/js/emoji.js?v=2",
   "/js/boot-head.js?v=4",
   "/js/beacon.js?v=1",
   "/js/app.js?v=21",
-  "/js/swipe-tabs.js?v=4",
+  "/js/dock.js?v=1",
+  "/js/swipe-tabs.js?v=5",
   "/js/shopify.js?v=16",
   "/js/cart.js?v=3",
-  "/js/shop.js?v=162",
+  "/js/shop.js?v=163",
   "/js/social-logos.js?v=2",
-  "/js/profile-cards.js?v=47",
+  "/js/profile-cards.js?v=48",
   "/js/power-icons.js?v=13",
-  "/js/chat.js?v=559",
-  "/js/social.js?v=10",
+  "/js/chat.js?v=560",
+  "/js/social.js?v=11",
   "/js/menu-tabs.js?v=1",
-  "/js/misery-fm.js?v=27",
+  "/js/misery-fm.js?v=28",
   "/js/dashboard-v2.js?v=68",
-  "/js/forum3.js?v=1193",
+  "/js/forum3.js?v=1194",
   "/js/ph-icons.js?v=8",
   "/js/forum-mount-patch.js?v=1081",
   "/img/icon-192.png",

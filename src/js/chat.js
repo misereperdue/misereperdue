@@ -3018,6 +3018,14 @@
       t = c.querySelector(".chat-inputrow"),
       n = e ? e.getBoundingClientRect().bottom : 120,
       a = t ? t.getBoundingClientRect().top : window.innerHeight - 90,
+      dk = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    /* Bottom dock: messages fade under the slim sky band at the top and just before the dock above the box. */
+    if (dk) {
+      var hb = document.querySelector(".hero"), dr = dk.getBoundingClientRect();
+      n = hb ? Math.max(0, hb.getBoundingClientRect().bottom - 18) : 40;
+      if (dr.height && !dk.classList.contains("mpd-away") && !dk.classList.contains("is-profile-bar") && dr.top < a) a = dr.top;
+    }
+    var
       r = c.querySelectorAll(".chat-msg"),
       d = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200,
       boxes = new Array(r.length),
@@ -5801,6 +5809,7 @@
     t && (t.textContent = e);
     var n = document.querySelector(".dashboard-online-badge");
     n && (n.hidden = !(e > 0));
+    if (window.MPDock && MPDock.online) MPDock.online(s ? Math.max(1, e) : 0);
     var a = c.querySelector(".chat-online");
     if (a) {
       var r = e;
@@ -5823,6 +5832,7 @@
   })();
   var Qe = null;
   function $e() {
+    if (Qe && Qe._sheet) { var sh = Qe._sheet; Qe = null; sh.close(); return; }
     (Qe && Qe.parentNode && Qe.parentNode.removeChild(Qe),
       (Qe = null),
       document.removeEventListener("click", Ke));
@@ -5837,8 +5847,19 @@
   function et() {
     if ((ht(), Qe)) $e();
     else {
-      var e = c.querySelector(".chat-online");
-      if (e) {
+      var e = c.querySelector(".chat-online"),
+        dock = document.documentElement.classList.contains("mp-bnav") && window.MPProfiles && MPProfiles.openSheet && document.getElementById("mp-dock");
+      if (dock) {
+        /* Bottom dock: the online list grows out of the dock like the other menus. */
+        var sheet = MPProfiles.openSheet({ title: "Online now", owner: "online", bodyClass: "mp-online-list", onClose: function () { if (Qe && Qe._sheet === sheet) Qe = null; } });
+        if (!sheet) return;
+        Qe = sheet.body;
+        Qe._sheet = sheet;
+        var r = document.createElement("div");
+        ((r.style.cssText = "font-size:13px;opacity:.6;text-align:center;padding:16px;"), (r.textContent = "Loading…"), Qe.appendChild(r));
+        var o = Qe;
+      }
+      if (!dock && e) {
         (Qe = document.createElement("div")).className = "chat-me-menu online-dropdown";
         var t = c.querySelector(".chat-head"),
           n = e.getBoundingClientRect(),
@@ -5861,6 +5882,8 @@
             document.addEventListener("click", Ke);
           }, 10));
         var o = Qe;
+      }
+      if (o) {
         E("/api/online")
           .then(function (e) {
             if (o === Qe)
@@ -5906,7 +5929,10 @@
                     (u.textContent = t),
                     n.appendChild(u),
                     n.addEventListener("click", function () {
-                      ($e(), window.MPChat && MPChat.openUserSheet && MPChat.openUserSheet(t));
+                      // from the dock's online menu the profile grows out of the same shape (morph hand-off)
+                      if (o._sheet) { Qe = null; window.MPProfiles && MPProfiles.morphFrom && MPProfiles.morphFrom({}); }
+                      else $e();
+                      window.MPChat && MPChat.openUserSheet && MPChat.openUserSheet(t);
                     }),
                     n.addEventListener("mouseenter", function () {
                       n.style.background = "rgba(255,255,255,.06)";
@@ -5929,7 +5955,8 @@
             ((e.style.cssText = "font-size:13px;opacity:.6;text-align:center;padding:16px;"),
               (e.textContent = (window.MPOnlineCount || 0) + " user(s) online"),
               o.appendChild(e));
-          });
+          })
+          .then(function () { o._sheet && o._sheet.resize(); });
       }
     }
   }
@@ -8691,6 +8718,8 @@
     if (!n) return void (ntfBusy = !1);
     var bar, heads = document.querySelectorAll(".panel.on .chat-head"), i;
     for (i = 0; i < heads.length; i++) if (heads[i].getClientRects().length) { bar = heads[i]; break; }
+    if (!bar && window.MPProfiles && MPProfiles.chatHead) bar = MPProfiles.chatHead(); // bottom dock
+    if (bar && bar.classList.contains("mpd-away")) bar = null;
     if (!bar || bar.classList.contains("is-profile-bar") || document.hidden) { ntfQ.length = 0; return void (ntfBusy = !1); }
     ntfBusy = !0;
     var info = mpNotifInfo(n), lay = document.createElement("button"), av;
@@ -8725,6 +8754,7 @@
     }
   }
   window.MPNotifInfo = mpNotifInfo;
+  window.MPOnlineList = function () { et(); };
   window.MPNotifPop = mpNotifPop;
   document.addEventListener("click", function (e) {
     var pill = e.target.closest && e.target.closest(".chat-points");
@@ -9482,7 +9512,7 @@
           if (!t || !t.closest) return false;
           // Narrow: real chrome only. Do NOT skip product-card / role=button content.
           return !!t.closest(
-            "#nav, .nav-wrap, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .mp-whop-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
+            "#nav, .nav-wrap, #mp-dock, #mpd-scrim, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .mp-whop-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
           );
         }
         function sheetOpen() {

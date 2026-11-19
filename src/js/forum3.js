@@ -479,14 +479,17 @@
                 r = document.getElementById("forum-bell"),
                 n = document.getElementById("chat-bell-badge"),
                 a = document.getElementById("chat-bell"),
+                db = document.getElementById("mp-dock-bell-badge"),
+                dl = document.getElementById("mp-dock-bell"),
                 o = Math.max(0, Number(count) || 0);
+              try { document.dispatchEvent(new CustomEvent("mp-unread", { detail: { count: o } })); } catch (e) {}
               try {
                 "setAppBadge" in navigator &&
                   (o > 0
                     ? navigator.setAppBadge(o)
                     : "clearAppBadge" in navigator && navigator.clearAppBadge());
               } catch (e) {}
-              ([t, n].forEach(function (e) {
+              ([t, n, db].forEach(function (e) {
                 if (e)
                   if (o > 0) {
                     var t = o > 99 ? "99+" : String(o);
@@ -500,7 +503,7 @@
                     e.classList.remove("hidden");
                   } else e.classList.add("hidden");
               }),
-                [r, a].forEach(function (e) {
+                [r, a, dl].forEach(function (e) {
                   if(e){if(window.MPSocial)MPSocial.updateLabel(e,o);else e.setAttribute("aria-label",o>0?"Notifications, "+o+" unread":"Notifications");}
                   if (o > 0 && e && e.animate && (T < 0 || o > T))
                     try {

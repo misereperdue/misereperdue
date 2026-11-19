@@ -12,8 +12,10 @@
     return [].filter.call(nav.querySelectorAll("button[data-view]"), function (b) {
       // Bag joins the swipe order only when it holds something (per dc)
       if (b.id === "post-btn") return false;
-      if (b.getAttribute("data-view") === "cart") return !!(window.MP && MP.cartCount && MP.cartCount() > 0) && !!b.offsetWidth;
-      return !!b.offsetWidth;
+      // the bottom dock (html.mp-bnav) hides this bar but keeps its buttons as the navigation path
+      var dock = document.documentElement.classList.contains("mp-bnav");
+      if (b.getAttribute("data-view") === "cart") return !!(window.MP && MP.cartCount && MP.cartCount() > 0) && (dock || !!b.offsetWidth);
+      return dock || !!b.offsetWidth;
     });
   }
   function hScroll(el) {

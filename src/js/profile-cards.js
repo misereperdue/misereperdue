@@ -117,14 +117,27 @@
     });
     var photo=sheet.querySelector('.chat-sheet-big');if(photo){photo.classList.add('mp-settings-photo');var copy=el('span');copy.appendChild(el('strong','','Profile photo'));copy.appendChild(el('small','','Tap your avatar to change it'));photo.appendChild(copy);}
   }
+  /* Bottom dock (dock.js): when it is on, every top-bar menu grows out of it instead (upward). */
+  function dock() {
+    var d=document.documentElement.classList.contains('mp-bnav')&&document.getElementById('mp-dock');
+    return d && d.getClientRects().length ? d : null;
+  }
   function topBar() {
+    var d=dock();if(d)return d;
     var bar=document.querySelector('.panel.on .chat-head');
     return bar && bar.getClientRects().length ? bar : document.querySelector('.nav');
   }
 
   function chatHead() {
+    var d=dock();if(d)return d;
     var bar=document.querySelector('.panel.on .chat-head');
     return bar && bar.getClientRects().length ? bar : null;
+  }
+  /* Room a menu may grow into: down to the keyboard for a top bar, up to the status bar for the dock. */
+  function room(bar) {
+    var r=bar.getBoundingClientRect(),vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight;
+    if(bar.id==='mp-dock'){var top=(window.MPDock&&MPDock.topInset?MPDock.topInset():0)+12;return Math.max(100,r.bottom-top);}
+    return Math.max(100,bottom-r.top-16);
   }
   function commitPendingExit(bar) {
     if(bar&&bar._mpCommitExit)bar._mpCommitExit();
@@ -133,7 +146,7 @@
   function closeBar(fast) {
     var root=document.querySelector('.mp-profile-bar');
     if(root&&root._close)root._close(!!fast);
-    commitPendingExit(document.querySelector('.panel.on .chat-head')||document.querySelector('.nav'));
+    commitPendingExit(dock()||document.querySelector('.panel.on .chat-head')||document.querySelector('.nav'));
   }
   /* Generic top-bar morph sheet (per dc): same machinery as the profile bar — the status bar
      keeps its glass (no transparent flash), height eases open, Back closes with a reverse morph.
@@ -182,7 +195,7 @@
       if(closed||committed)return;
       var before=bar.getBoundingClientRect(), beforeH=pendingFrom||before.height, beforeW=before.width;pendingFrom=0;
       if(animation){animation.cancel();animation=null;}
-      var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
+      var available=room(bar);
       var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll&&scroll.firstElementChild,cs=scroll?getComputedStyle(scroll):null,ms=content?getComputedStyle(content):null,head=root.querySelector('.mp-profile-bar-head');
       /* Natural height = the sheet's own padding + header + the real header-to-list gap + the list. */
       var rs=getComputedStyle(root),rootPad=(parseFloat(rs.paddingTop)||0)+(parseFloat(rs.paddingBottom)||0);
@@ -281,7 +294,7 @@
     function size(animate){
       if(closed)return;
       var before=pendingFrom||bar.getBoundingClientRect().height;pendingFrom=0;if(animation){animation.cancel();animation=null;}
-      var vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,available=Math.max(100,bottom-bar.getBoundingClientRect().top-16);
+      var available=room(bar);
       var natural=baseHeight;if(phase!=='compact'){var scroll=root.querySelector('.mp-profile-bar-scroll'),content=scroll.firstElementChild,cs=getComputedStyle(scroll),ms=content?getComputedStyle(content):null;if(content)contentSize={w:content.offsetWidth,h:content.offsetHeight};natural=root.querySelector('.mp-profile-bar-head').offsetHeight+(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0)+(content?content.offsetHeight+(parseFloat(ms.marginTop)||0)+(parseFloat(ms.marginBottom)||0):0);}
       var height=phase==='compact'?baseHeight:Math.min(available,phase==='edit'||phase==='page'?640:560,natural);
       bar.style.height=height+'px';
