@@ -394,10 +394,10 @@ body.crop-hero-auth {
 body.crop-hero-shop {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
 }
-/* Shop cards begin 16px below the 54px navigation pill. The sky remains
-   the same height as Chat, behind the cards rather than covering them. */
+/* Shop cards start just below the full sky header (per dc: the header now runs the same height as Chat/Globe),
+   matching the cart; scrolling, the cards slide under it like the other pages. */
 body.home:has(#shop.on) {
-  padding-top: calc(102px + env(safe-area-inset-top, 0px));
+  padding-top: calc(152px + env(safe-area-inset-top, 0px));
 }
 body.home:has(#cart.on) {
   padding-top: calc(152px + env(safe-area-inset-top, 0px));
@@ -11060,8 +11060,7 @@ html[data-gcards="g3"] .forum-thread-more {
 @media(prefers-reduced-motion:reduce){ .chat-music-idle-wave i { animation:none;will-change:auto; } }
 
 /* Retail content may overlap the decorative sky, never the navigation. */
-/* Shop grid scrolls under the sky and fades like Chat/Globe (per dc); product pages keep their own layering. */
-body.home:has(#shop.on) .hero{-webkit-mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px));mask-image:linear-gradient(to bottom,#000 calc(env(safe-area-inset-top,0px) + 70px),transparent calc(env(safe-area-inset-top,0px) + 92px))}
+/* Shop: the sky header runs the same full height as Chat/Globe (per dc, 2026-11-19: it used to be cut off at ~90px). */
 /* Product pages scroll under the sky like Chat/Globe; only Back sits above the sky
    (below the nav) at rest and fades as it rises into the header band (shop.js). */
 #product .shop-product-head { position:relative;z-index:28; }

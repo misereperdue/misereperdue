@@ -330,6 +330,7 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       // Save scroll before leaving. Don't overwrite shop's saved Y while on a product.
       if (current.type && current.type !== "product") viewScroll[current.type] = window.scrollY;
+      var prevType = current.type;
       current = { type: view, id: id || "" };
       var reading = view === "product";
       refreshTitle();
@@ -367,7 +368,8 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
           window.scrollTo(0, document.documentElement.scrollHeight);
         }
       } else {
-        var y = viewScroll[view] || 0;
+        // Shop opens at the top (per dc); Back from a product returns to where you were in the grid.
+        var y = view === "shop" && prevType !== "product" ? 0 : viewScroll[view] || 0;
         window.scrollTo(0, y);
       }
       // Switching back to chat: catch up any messages missed while on
@@ -451,6 +453,12 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       };
     });
 
+    // Opening a #shop link made the browser jump to the #shop element (~92px down) after load; put the shop back at
+    // the top once loading settles, unless you have already started scrolling.
+    window.addEventListener("load", function () {
+      var y0 = window.scrollY;
+      [0, 120].forEach(function (d) { setTimeout(function () { if (current.type === "shop" && window.scrollY === y0 && y0 > 0) window.scrollTo(0, 0); }, d); });
+    });
     function routeFromHash() {
       var h = location.hash || "#";
       var m;
