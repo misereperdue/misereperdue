@@ -175,6 +175,115 @@
   }
 
   /* ---------- People ---------- */
+  /* Member controls, shared by the dashboard People bubble and the profile Manage view (per dc, t636u).
+     o: { cats (owner-only categories; fetched when omitted), noOpen, changed(), renamed(v), removed() } */
+  function userActions(u, o) {
+    o = o || {};
+    var p = el("div", "dz-acts"), st = el("p", "pow-status");
+    st.setAttribute("role", "status");
+    var name = function () { return encodeURIComponent(nm(u.username)); };
+    /* Stars */
+    var sr = el("div", "dz-line");
+    sr.appendChild(el("span", "dz-line-l", "Stars"));
+    var amt = el("input", "dz-in dz-in-num");
+    amt.type = "number"; amt.inputMode = "numeric"; amt.min = "1"; amt.max = "1000"; amt.value = "10"; amt.setAttribute("aria-label", "Stars amount");
+    function stars(sign) {
+      return function (e) {
+        var n = Math.max(1, Math.min(1e3, Math.round(Number(amt.value) || 0)));
+        run(e.currentTarget, st, function () { return api("/api/user/stars", { method: "POST", body: { username: u.username, delta: sign * n } }); },
+          function (j) { return at(u.username) + " now has \u2605 " + num(j.points) + "."; }, function (j) { u.points = j.points; o.changed && o.changed(); });
+      };
+    }
+    sr.append(amt, btn("Remove", "", stars(-1)), btn("Add", "is-primary", stars(1)));
+    p.appendChild(sr);
+    /* Rename */
+    var rr = el("div", "dz-line");
+    rr.appendChild(el("span", "dz-line-l", "Name"));
+    var rn = el("input", "dz-in");
+    rn.value = nm(u.username); rn.autocapitalize = "none"; rn.autocomplete = "off"; rn.spellcheck = !1; rn.setAttribute("aria-label", "New username");
+    rn.addEventListener("input", function () { var v = rn.value.toLowerCase(); v !== rn.value && (rn.value = v); });
+    rr.append(rn, btn("Rename", "", function (e) {
+      var v = nm(rn.value.trim());
+      if (!v || v === nm(u.username)) return;
+      run(e.currentTarget, st, function () { return api("/api/user/" + name() + "/rename", { method: "POST", body: { newUsername: v } }); },
+        "Renamed to @" + v + ".", function () { u.username = v; o.renamed && o.renamed(v); });
+    }));
+    p.appendChild(rr);
+    /* Main actions */
+    var g = el("div", "dz-grid"), dg = el("div", "dz-grid dz-danger");
+    o.noOpen || g.appendChild(btn("Open profile", "", function (e) { M().openUserSheet && M().openUserSheet({ username: u.username }, e.currentTarget); }));
+    g.appendChild(btn(u.member ? "Remove VIP" : "Make VIP", "", function (e) {
+      var b = e.currentTarget, mk = !u.member;
+      twoTap(b, mk ? "Tap again to give VIP" : "Tap again to remove VIP", function () {
+        run(b, st, function () { return api("/api/user/" + name() + "/member", { method: "POST", body: { member: mk, amount: null } }); },
+          mk ? "VIP on." : "VIP removed.", function (j) { u.member = !!j.member; o.changed && o.changed(); });
+      });
+    }));
+    dg.appendChild(btn(u.banned ? "Unban" : "Ban", u.banned ? "" : "is-danger", function (e) {
+      var b = e.currentTarget, ban = !u.banned;
+      twoTap(b, ban ? "Tap again to ban" : "Tap again to unban", function () {
+        run(b, st, function () { return api("/api/ban", { method: "POST", body: { username: u.username, banned: ban } }); },
+          ban ? "Banned." : "Unbanned.", function () { u.banned = ban; o.changed && o.changed(); });
+      });
+    }));
+    dg.appendChild(btn("Clear messages", "is-danger", function (e) {
+      var b = e.currentTarget;
+      twoTap(b, "Tap again to clear", function () {
+        run(b, st, function () { return api("/api/user/" + name() + "/clear-messages", { method: "POST", body: {} }); },
+          function (j) { return "Removed " + num(j.removed) + " messages."; });
+      });
+    }));
+    dg.appendChild(btn("Clear Globe posts", "is-danger", function (e) {
+      var b = e.currentTarget;
+      twoTap(b, "Tap again to clear", function () {
+        run(b, st, function () { return api("/api/user/" + name() + "/clear-forum", { method: "POST", body: {} }); },
+          function (j) { return "Removed " + num(j.threadsRemoved) + " posts and " + num(j.repliesRemoved) + " replies."; });
+      });
+    }));
+    dg.appendChild(btn("Delete account", "is-danger", function (e) {
+      var b = e.currentTarget;
+      twoTap(b, "Tap again to delete", function () {
+        run(b, st, function () { return api("/api/user/" + name(), { method: "DELETE" }); },
+          "Deleted.", function () { o.removed && o.removed(); });
+      });
+    }));
+    p.appendChild(g);
+    /* Private categories */
+    function access(cats) {
+      if (!cats.length) return;
+      var ca = el("div", "dz-line dz-wrap");
+      ca.appendChild(el("span", "dz-line-l", "Access"));
+      cats.forEach(function (c) {
+        var has = (u.catAccess || []).indexOf(c.id) >= 0;
+        var b = btn(c.name, "dz-chip" + (has ? " is-sel" : ""), function () {
+          var give = (u.catAccess || []).indexOf(c.id) < 0;
+          run(b, st, function () { return api("/api/forum/category-access", { method: "POST", body: { username: u.username, categoryId: c.id, access: give } }); },
+            function (j) { return (j.access ? "Can now see " : "Can no longer see ") + c.name; },
+            function (j) {
+              u.catAccess = (u.catAccess || []).filter(function (x) { return x !== c.id; });
+              j.access && u.catAccess.push(c.id);
+              b.classList.toggle("is-sel", !!j.access); b.setAttribute("aria-pressed", String(!!j.access));
+            });
+        });
+        b.setAttribute("aria-pressed", String(has));
+        ca.appendChild(b);
+      });
+      dg.before(ca);
+    }
+    p.appendChild(dg);
+    p.appendChild(st);
+    if (o.cats) access(o.cats);
+    else {
+      /* profile Manage view: categories (and this member's access, when the profile lacks it) come from the dashboard endpoints */
+      Promise.all([api("/api/forum/categories"), u.catAccess ? null : api("/api/users").catch(function () { return null; })]).then(function (r) {
+        var me = r[1] && (r[1].users || []).filter(function (x) { return nm(x.username) === nm(u.username); })[0];
+        me && (u.catAccess = me.catAccess || []);
+        access(((r[0] && r[0].categories) || []).filter(function (c) { return c.ownerOnly; }));
+      }).catch(function () {});
+    }
+    return p;
+  }
+
   function people(pane, ctx) {
     var bar = el("div", "dz-search");
     var q = el("input", "dz-in");
@@ -264,99 +373,12 @@
       box && morph(box, !1, function () { box.remove(); });
     }
     function actions(u) {
-      var p = el("div", "dz-acts"), st = el("p", "pow-status");
-      st.setAttribute("role", "status");
-      var name = function () { return encodeURIComponent(nm(u.username)); };
-      /* Stars */
-      var sr = el("div", "dz-line");
-      sr.appendChild(el("span", "dz-line-l", "Stars"));
-      var amt = el("input", "dz-in dz-in-num");
-      amt.type = "number"; amt.inputMode = "numeric"; amt.min = "1"; amt.max = "1000"; amt.value = "10"; amt.setAttribute("aria-label", "Stars amount");
-      function stars(sign) {
-        return function (e) {
-          var n = Math.max(1, Math.min(1e3, Math.round(Number(amt.value) || 0)));
-          run(e.currentTarget, st, function () { return api("/api/user/stars", { method: "POST", body: { username: u.username, delta: sign * n } }); },
-            function (j) { return at(u.username) + " now has \u2605 " + num(j.points) + "."; }, function (j) { u.points = j.points; });
-        };
-      }
-      sr.append(amt, btn("Remove", "", stars(-1)), btn("Add", "is-primary", stars(1)));
-      p.appendChild(sr);
-      /* Rename */
-      var rr = el("div", "dz-line");
-      rr.appendChild(el("span", "dz-line-l", "Name"));
-      var rn = el("input", "dz-in");
-      rn.value = nm(u.username); rn.autocapitalize = "none"; rn.autocomplete = "off"; rn.spellcheck = !1; rn.setAttribute("aria-label", "New username");
-      rn.addEventListener("input", function () { var v = rn.value.toLowerCase(); v !== rn.value && (rn.value = v); });
-      rr.append(rn, btn("Rename", "", function (e) {
-        var v = nm(rn.value.trim());
-        if (!v || v === nm(u.username)) return;
-        run(e.currentTarget, st, function () { return api("/api/user/" + name() + "/rename", { method: "POST", body: { newUsername: v } }); },
-          "Renamed to @" + v + ".", function () { u.username = v; open = v; setTimeout(draw, 900); });
-      }));
-      p.appendChild(rr);
-      /* Main actions */
-      var g = el("div", "dz-grid"), dg = el("div", "dz-grid dz-danger");
-      g.appendChild(btn("Open profile", "", function (e) { M().openUserSheet && M().openUserSheet({ username: u.username }, e.currentTarget); }));
-      g.appendChild(btn(u.member ? "Remove VIP" : "Make VIP", "", function (e) {
-        var b = e.currentTarget, mk = !u.member;
-        twoTap(b, mk ? "Tap again to give VIP" : "Tap again to remove VIP", function () {
-          run(b, st, function () { return api("/api/user/" + name() + "/member", { method: "POST", body: { member: mk, amount: null } }); },
-            mk ? "VIP on." : "VIP removed.", function (j) { u.member = !!j.member; setTimeout(draw, 700); });
-        });
-      }));
-      dg.appendChild(btn(u.banned ? "Unban" : "Ban", u.banned ? "" : "is-danger", function (e) {
-        var b = e.currentTarget, ban = !u.banned;
-        twoTap(b, ban ? "Tap again to ban" : "Tap again to unban", function () {
-          run(b, st, function () { return api("/api/ban", { method: "POST", body: { username: u.username, banned: ban } }); },
-            ban ? "Banned." : "Unbanned.", function () { u.banned = ban; setTimeout(draw, 700); });
-        });
-      }));
-      dg.appendChild(btn("Clear messages", "is-danger", function (e) {
-        var b = e.currentTarget;
-        twoTap(b, "Tap again to clear", function () {
-          run(b, st, function () { return api("/api/user/" + name() + "/clear-messages", { method: "POST", body: {} }); },
-            function (j) { return "Removed " + num(j.removed) + " messages."; });
-        });
-      }));
-      dg.appendChild(btn("Clear Globe posts", "is-danger", function (e) {
-        var b = e.currentTarget;
-        twoTap(b, "Tap again to clear", function () {
-          run(b, st, function () { return api("/api/user/" + name() + "/clear-forum", { method: "POST", body: {} }); },
-            function (j) { return "Removed " + num(j.threadsRemoved) + " posts and " + num(j.repliesRemoved) + " replies."; });
-        });
-      }));
-      dg.appendChild(btn("Delete account", "is-danger", function (e) {
-        var b = e.currentTarget;
-        twoTap(b, "Tap again to delete", function () {
-          run(b, st, function () { return api("/api/user/" + name(), { method: "DELETE" }); },
-            "Deleted.", function () { users = users.filter(function (x) { return x !== u; }); open = null; setTimeout(draw, 700); });
-        });
-      }));
-      p.appendChild(g);
-      /* Private categories */
-      if (cats.length) {
-        var ca = el("div", "dz-line dz-wrap");
-        ca.appendChild(el("span", "dz-line-l", "Access"));
-        cats.forEach(function (c) {
-          var has = (u.catAccess || []).indexOf(c.id) >= 0;
-          var b = btn(c.name, "dz-chip" + (has ? " is-sel" : ""), function () {
-            var give = (u.catAccess || []).indexOf(c.id) < 0;
-            run(b, st, function () { return api("/api/forum/category-access", { method: "POST", body: { username: u.username, categoryId: c.id, access: give } }); },
-              function (j) { return (j.access ? "Can now see " : "Can no longer see ") + c.name; },
-              function (j) {
-                u.catAccess = (u.catAccess || []).filter(function (x) { return x !== c.id; });
-                j.access && u.catAccess.push(c.id);
-                b.classList.toggle("is-sel", !!j.access); b.setAttribute("aria-pressed", String(!!j.access));
-              });
-          });
-          b.setAttribute("aria-pressed", String(has));
-          ca.appendChild(b);
-        });
-        p.appendChild(ca);
-      }
-      p.appendChild(dg);
-      p.appendChild(st);
-      return p;
+      return userActions(u, {
+        cats: cats,
+        changed: function () { setTimeout(draw, 700); },
+        renamed: function (v) { open = v; setTimeout(draw, 900); },
+        removed: function () { users = users.filter(function (x) { return x !== u; }); open = null; setTimeout(draw, 700); }
+      });
     }
     q.addEventListener("input", draw);
     ctx.focusUser = function (u) { q.value = ""; open = nm(u); users.length && draw(); };
@@ -534,13 +556,10 @@
   }
 
   /* ---------- Shell ---------- */
-  /* Restored tab bar (per dc), now four tabs with icons that match each page (original drawings, Hugeicons-style stroke). */
-  var TABS = [
-    ["overview", "Overview", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><rect x=\"3\" y=\"3\" width=\"7.5\" height=\"9\" rx=\"2\"/><rect x=\"13.5\" y=\"3\" width=\"7.5\" height=\"5.5\" rx=\"2\"/><rect x=\"13.5\" y=\"11.5\" width=\"7.5\" height=\"9.5\" rx=\"2\"/><rect x=\"3\" y=\"15\" width=\"7.5\" height=\"6\" rx=\"2\"/></svg>"],
-    ["forum", "Categories", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><path d=\"M12 3.5L20.5 7.8L12 12.1L3.5 7.8Z\"/><path d=\"M3.5 12L12 16.3L20.5 12\"/><path d=\"M3.5 16.2L12 20.5L20.5 16.2\"/></svg>"],
-    ["people", "People", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"/><path d=\"M2.5 20C3.3 16.6 5.9 14.5 9 14.5C12.1 14.5 14.7 16.6 15.5 20\"/><path d=\"M15.5 4.7C17 5.1 18 6.4 18 8C18 9.6 17 10.9 15.5 11.3\"/><path d=\"M17.8 14.8C19.8 15.5 21 17.3 21.5 20\"/></svg>"],
-    ["tools", "Tools", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><path d=\"M3.5 7H12.5\"/><path d=\"M17.5 7H20.5\"/><circle cx=\"15\" cy=\"7\" r=\"2.5\"/><path d=\"M3.5 17H6.5\"/><path d=\"M11.5 17H20.5\"/><circle cx=\"9\" cy=\"17\" r=\"2.5\"/></svg>"],
-  ];
+  /* Restored tab bar (per dc); icons are real Hugeicons (per dc, t635u) from js/ph-icons.js:
+     DashboardSquare01, Layers01, UserMultiple, Wrench01 (Hugeicons Free, stroke rounded, MIT). */
+  var TABS = [["overview", "Overview", "dashboard"], ["forum", "Categories", "layers"], ["people", "People", "users"], ["tools", "Tools", "wrench"]];
+  function tabIcon(k) { var h = window.PHIcon ? window.PHIcon(k, "dz-tab-ico") : ""; return h.replace("<svg ", '<svg width="18" height="18" style="display:block" '); }
 
   function build(stats) {
     var h = host();
@@ -558,7 +577,7 @@
     var panes = {}, made = {};
     TABS.forEach(function (t) {
       var b = el("button");
-      b.type = "button"; b.innerHTML = t[2]; b.setAttribute("aria-label", t[1]); b.setAttribute("role", "tab"); b.dataset.tab = t[0];
+      b.type = "button"; b.innerHTML = tabIcon(t[2]); b.setAttribute("aria-label", t[1]); b.setAttribute("role", "tab"); b.dataset.tab = t[0];
       b.style.cssText = "position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px;border:none;border-radius:999px;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
       b.onclick = function () { ctx.go(t[0]); };
       seg.appendChild(b);
@@ -614,6 +633,7 @@
     root._ctx = ctx;
     return root;
   }
+  window.MPDash = { userActions: userActions };
   window.openAnalytics = function () {
     var cached = null;
     try { cached = JSON.parse(localStorage.getItem("mp-analytics-cache") || "null"); } catch (e) {}

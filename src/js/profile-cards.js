@@ -100,7 +100,9 @@
     var changed=options.changed;root.appendChild(badgePicker(user,Object.assign({},options,{grant:true,changed:function(u){Object.assign(user,u);changed(user);}})));
     var access=section('Chat access'),status=el('p','mp-profile-edit-status'),ban=button('',async function(){ban.disabled=true;status.textContent='Updating…';try{var r=await options.api('/api/ban',{method:'POST',body:{username:user.username,banned:!user.banned}});if(!r||!r.ok||typeof r.banned!=='boolean')throw Error(r&&r.error||'Could not update access.');user.banned=r.banned;changed(user);status.textContent=user.banned?'User is banned from chat.':'Chat access restored.';}catch(e){status.textContent=e.message||'Could not update access.';}finally{ban.disabled=false;paint();}},'mp-manage-ban');
     function paint(){ban.textContent=user.banned?'Restore chat access':'Ban from chat';ban.classList.toggle('is-danger',!user.banned);ban.setAttribute('aria-pressed',String(!!user.banned));}
-    status.setAttribute('role','status');access.appendChild(ban);access.appendChild(status);root.appendChild(access);paint();return root;
+    status.setAttribute('role','status');access.appendChild(ban);access.appendChild(status);
+    // per dc (t636u): the dashboard's member controls (shared MPDash.userActions) replace the lone ban toggle when available
+    var extra=options.extra&&options.extra(user);if(extra){var ms=section('Member');ms.classList.add('mp-manage-dz');ms.appendChild(extra);root.appendChild(ms);}else root.appendChild(access);paint();return root;
   }
   // Group existing controls without recreating them or losing their save handlers.
   function settings(sheet) {
@@ -318,7 +320,7 @@
         var expand=button('',function(){render('full');},'mp-profile-summary-open');expand.setAttribute('aria-label','Expand '+u.username.toLowerCase()+"'s profile");expand.setAttribute('aria-expanded','false');
         expand.appendChild(avatar);
         var tx=el('span','mp-profile-summary-copy'),title=el('span','mp-profile-summary-title');
-        title.appendChild(el('strong','',u.username.toLowerCase()));var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' stars');score.innerHTML=window.MPStar();score.title=(u.points||0)+' stars';score.appendChild(el('span','',new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(u.points||0)));tx.appendChild(title);
+        title.appendChild(el('strong','',u.username.toLowerCase()));var fol=el('span','mp-profile-summary-fol');fol.dataset.user=u.username;fol.hidden=true;fol.setAttribute('role','img');fol.innerHTML=(window.PHIcon?PHIcon('users','mp-fol-ico'):'');fol.appendChild(el('span','mp-fol-n',''));title.appendChild(fol);if(window.MPSocial&&MPSocial.paintFollowers)MPSocial.paintFollowers(fol);var score=el('span','mp-profile-summary-score');score.setAttribute('aria-label',(u.points||0)+' stars');score.innerHTML=window.MPStar();score.title=(u.points||0)+' stars';score.appendChild(el('span','',new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(u.points||0)));tx.appendChild(title);
         if(u.bio){var bioText=u.bio.replace(/\s+/g,' ').trim(),letters=Array.from(bioText);tx.appendChild(el('small','mp-profile-summary-bio',letters.slice(0,60).join('')+(letters.length>60?'…':'')));}
         var info=[];if(u.listening&&u.listening.title){var playing=el('small','mp-profile-summary-info is-listening'),mark=el('span','mp-profile-summary-synth');mark.innerHTML=synth();mark.setAttribute('aria-hidden','true');playing.appendChild(mark);playing.appendChild(el('strong','',u.listening.title));if(u.listening.artist)playing.appendChild(el('span','',' · '+u.listening.artist));tx.appendChild(playing);}
         else {if(u.member)info.push('VIP');if(u.numId)info.push('#'+u.numId);if(u.createdAt)info.push('joined '+new Date(u.createdAt).toLocaleDateString(undefined,{month:'short',year:'numeric'}).toLowerCase());}

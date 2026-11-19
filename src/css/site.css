@@ -13138,7 +13138,9 @@ html.mp-bnav main.page .forum-head:not(:has(>:not(.forum-back))){display:none!im
 .dz-acts{display:flex;flex-direction:column;gap:10px;margin:2px -4px 8px;padding:12px;border-radius:16px;background:color-mix(in srgb,var(--ink) 4%,transparent);border:var(--glass-hairline)}
 .dz-acts .dz-line{min-height:36px}
 .dz-acts .dz-line>.dz-in{height:36px;border-radius:999px;padding:0 14px}
-.dz-acts .dz-line>.dz-in-num{flex:1;width:auto;min-width:48px;padding:0 8px}
+.dz-acts .dz-line>.dz-in-num{flex:1;width:auto;min-width:52px;padding:0 6px;-moz-appearance:textfield;appearance:textfield}
+/* per dc: no spinner arrows, so "10" isn't clipped at 360px */
+.dz-in-num::-webkit-inner-spin-button,.dz-in-num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .dz-acts .dz-line>.dz-btn{flex:none;padding:0 14px}
 .dz-acts .dz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .dz-acts .dz-grid .dz-btn{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px}
@@ -13211,3 +13213,16 @@ html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
 .mp-activity-by{-webkit-line-clamp:1;font-size:13px;color:var(--muted)}
 .mp-activity-by b{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.mp-stack-peek,.mp-notice-picker,.mp-activity-item{animation:none}.mp-ntf-row{transition:none}}
+/* per dc (t636u): follower count beside the name in the nav pill profile view */
+.mp-profile-summary-fol{display:inline-flex;align-items:center;gap:3px;flex:none;margin:0;font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;vertical-align:middle}
+.mp-profile-summary-fol[hidden]{display:none}
+.mp-profile-summary-fol .mp-fol-ico{width:15px;height:15px;flex:none}
+/* per dc (t636u): profile Manage view hosts the dashboard's member controls */
+.mp-manage-dz{--dz-danger:#d92d20}
+[data-theme="dark"] .mp-manage-dz{--dz-danger:#ff6b61}
+.mp-manage-dz .dz-acts{margin:4px 0 0}
+.mp-manage-dz .dz-grid>.dz-btn:only-child{grid-column:1/-1}
+/* per dc: the Stars row fits a 360px screen (it overflowed by 26px) */
+.dz-acts .dz-line{gap:5px}
+.dz-acts .dz-line>.dz-btn{padding:0 10px}
+.dz-acts .dz-line:not(.dz-wrap)>.dz-line-l{width:40px}
