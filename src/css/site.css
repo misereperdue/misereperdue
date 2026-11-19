@@ -13219,13 +13219,31 @@ html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
 .mp-profile-summary-fol[hidden]{display:none}
 .mp-profile-summary-fol .mp-fol-ico{width:10px;height:10px;flex:none;stroke-width:2.1}
 /* per dc (t636u): profile Manage view hosts the dashboard's member controls */
-.mp-manage-dz{--dz-danger:#d92d20}
-[data-theme="dark"] .mp-manage-dz{--dz-danger:#ff6b61}
+.mp-manage-dz{--dz-danger:#d92d20;}
+[data-theme=dark] .mp-manage-dz{--dz-danger:#ff6b61;}
 .mp-manage-dz .dz-acts{margin:4px 0 0}
-.mp-manage-dz .dz-grid>.dz-btn:only-child{grid-column:1/-1}
+.mp-manage-dz .dz-grid>.dz-btn:only-child{grid-column:span 2}
 /* per dc: the Stars row fits a 360px screen (it overflowed by 26px) */
 .dz-acts .dz-line{gap:5px}
 .dz-acts .dz-line>.dz-btn{padding:0 10px}
 .dz-acts .dz-line:not(.dz-wrap)>.dz-line-l{width:40px}
 /* per dc (t639u): the follower pill sits 4px from the username (title gap is 8px) */
 .mp-profile-summary-title>.mp-profile-summary-fol{margin-left:-4px}
+/* per dc (t640u): nav pill profile view ~11% smaller; close keeps a 32px tap target, score/chevron sit inside the 40px expand button */
+.mp-profile-summary>button.mp-profile-control{width:32px!important;height:32px!important;min-width:32px;padding:8px!important}
+.mp-profile-summary>.mp-profile-control svg{width:16px!important;height:16px!important}
+.mp-profile-summary-open{gap:8px}
+.mp-profile-summary-open>.chat-avatar-wrap{width:32px!important;height:32px!important;min-width:32px}
+.mp-profile-summary-open>.chat-avatar-wrap>img,.mp-profile-summary-open>.chat-avatar-wrap>.chat-avatar{width:32px!important;height:32px!important}
+.mp-profile-summary-title{gap:7px}
+.mp-profile-summary-title strong{font-size:11.5px;line-height:14px}
+.mp-profile-summary-title>.mp-profile-summary-fol{margin-left:-3px;height:14px;padding:0 5px 0 3.5px;font-size:9px}
+.mp-profile-summary-fol .mp-fol-ico{width:9px;height:9px}
+.mp-profile-summary-copy small{font-size:9.5px;line-height:11.5px}
+.mp-profile-summary-copy .mp-profile-summary-info,.mp-profile-summary-info.is-listening strong{font-size:9px;line-height:11px}
+.mp-profile-summary-synth,.mp-profile-summary-synth svg{width:11px;height:11px}
+.mp-profile-summary-score,.mp-profile-summary-chevron{width:27px;height:27px;min-width:27px;min-height:27px}
+.mp-profile-summary-score{font-size:7.5px;line-height:9px}
+.mp-profile-summary-score>span{line-height:9px;max-width:25px}
+.mp-profile-summary-score svg{width:9px;height:9px}
+.mp-profile-summary-chevron svg{width:15px;height:15px}
