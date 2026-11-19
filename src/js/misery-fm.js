@@ -307,6 +307,9 @@
 
   /* ---------- top bar: dotted ring + "misery fm IS LIVE" crossfade, tap to morph ---------- */
   function topBar() {
+    // bottom dock (dock.js) is the bar when it is on
+    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    if (d && d.getClientRects().length) return d;
     var p = q(".panel.on"), h = p && p.querySelector(".chat-head");
     if (h && h.getClientRects().length) return h;
     var n = q(".nav");
@@ -327,6 +330,8 @@
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "misery fm is live. Tap the bar for now playing.");
       bar.addEventListener("click", barTap, !0);
+      // the dock changes width (pill / tabs / menus): keep the dotted ring on its real shape
+      if (window.ResizeObserver && !bar._fmRO) { bar._fmRO = new ResizeObserver(function () { bar._fm && ring(bar); }); bar._fmRO.observe(bar); }
       o.querySelector(".fm-hb-np").addEventListener("click", npTap);
       hb = bar;
     }
@@ -371,12 +376,14 @@
     o && o.remove();
     if (bar._fmPos) { bar.style.position = ""; bar._fmPos = 0; }
     bar.removeEventListener("click", barTap, !0);
+    if (bar._fmRO) { bar._fmRO.disconnect(); bar._fmRO = null; }
     if (hb === bar) { hb = null; clearInterval(phT); phT = 0; }
   }
   function barTap(e) {
     if (!live() || (e.currentTarget.classList.contains("is-profile-bar"))) return;
     var bar = e.currentTarget;
-    if (e.target.closest(".chat-me")) return; // avatar taps always reach the profile bar
+    if (e.target.closest(".chat-me, .mpd-me, .mpd-live, .mpd-back")) return; // avatar taps always reach the profile bar
+    if (bar.id === "mp-dock" && bar.getAttribute("data-state") === "tabs") return; // tabs are open: they own every tap
     if (bar.classList.contains("is-np")) return; // the now-playing layer handles its own buttons
     var hit = e.target.closest("button, a, input, select, textarea, [role=button], [role=tab], label");
     if (bar.classList.contains("is-fm") || !hit) {
@@ -409,7 +416,8 @@
     np.setAttribute("aria-label", "misery fm now playing");
     morph = bar;
     // lock the bar's box so nothing about its shape, size or position can move while morphed
-    bar.style.width = bar.offsetWidth + "px"; bar.style.height = bar.offsetHeight + "px";
+    // (the dock sizes itself: it widens to full for now playing, see dock.js menuOpen)
+    if (bar.id !== "mp-dock") { bar.style.width = bar.offsetWidth + "px"; bar.style.height = bar.offsetHeight + "px"; }
     bar.classList.remove("is-fm");
     bar.classList.add("is-np");
     setTimeout(function () { document.addEventListener("pointerdown", outside, !0); }, 0);
@@ -433,7 +441,7 @@
     document.removeEventListener("pointerdown", outside, !0);
     window.removeEventListener("resize", closeMorphNow);
     bar.classList.remove("is-np");
-    var np = bar.querySelector(":scope > .fm-hb > .fm-hb-np"), fin = function () { if (!bar.classList.contains("is-np")) { np && (np.innerHTML = ""); bar.style.width = ""; bar.style.height = ""; } };
+    var np = bar.querySelector(":scope > .fm-hb > .fm-hb-np"), fin = function () { if (!bar.classList.contains("is-np")) { np && (np.innerHTML = ""); if (bar.id !== "mp-dock") { bar.style.width = ""; bar.style.height = ""; } } };
     if (instant) fin(); else setTimeout(fin, 380);
     deco();
   }

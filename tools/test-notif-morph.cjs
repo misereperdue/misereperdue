@@ -1,4 +1,4 @@
-// Notification tray morphs from the Chat/Globe top bar (never the shop nav). Mocked data. Chromium.
+// Notification tray morphs out of the bottom dock (#mp-dock, html.mp-bnav) on every page and grows upward. Mocked data. Chromium.
 // MP_PLAYWRIGHT=<playwright> MP_CHROMIUM_PATH=<chrome> node tools/test-notif-morph.cjs
 const pw=require(process.env.MP_PLAYWRIGHT||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..'),ORIGIN='https://misereperdue.com',OUT=process.env.MP_TEST_ARTIFACTS||'/tmp/mp-notif-morph';
@@ -45,14 +45,16 @@ const notices=[
   });
   const p=await c.newPage();
   await p.goto(ORIGIN+'/#journal');
-  await p.waitForFunction(()=>window.MPForum&&MPForum.showNotifications&&document.querySelector('.panel.on #chat-bell'),null,{timeout:20000});
-  await p.locator('#chat-bell-badge:not(.hidden)').waitFor();assert.equal(await p.locator('#chat-bell-badge').textContent(),'3');assert.equal(readCalls,0,'loading Chat must not mark notifications read');
-  await p.evaluate(()=>MPNav.show('forum'));await p.locator('#forum-bell-badge:not(.hidden)').waitFor();assert.equal(await p.locator('#forum-bell-badge').textContent(),'3');assert.equal(readCalls,0,'rendering Globe must not mark notifications read');
+  await p.waitForFunction(()=>window.MPForum&&MPForum.showNotifications&&document.querySelector('#journal #chat-bell')&&document.querySelector('#mp-dock.is-signed-in'),null,{timeout:20000});
+  await p.locator('#chat-bell-badge:not(.hidden)').waitFor({state:'attached'});await p.locator('#mp-dock .mpd-unread:not([hidden])').waitFor();assert.equal(await p.locator('#chat-bell-badge').textContent(),'3');assert.equal(readCalls,0,'loading Chat must not mark notifications read');
+  await p.evaluate(()=>MPNav.show('forum'));await p.locator('#forum-bell-badge:not(.hidden)').waitFor({state:'attached'});assert.equal(await p.locator('#forum-bell-badge').textContent(),'3');assert.equal(readCalls,0,'rendering Globe must not mark notifications read');
   await p.evaluate(()=>MPNav.show('journal'));
   unread=4;socket.send(JSON.stringify({t:'notif',n:{id:'live',type:'gift',from:'eden',n:1,ts:Date.now()}}));await p.waitForFunction(()=>document.querySelector('#chat-bell-badge')?.textContent==='4');
-  await p.waitForFunction(()=>!document.querySelector('.panel.on .chat-head.is-ntf'));assert.equal(readCalls,0);
-  await p.locator('#chat-bell').click();
-  const menu=p.locator('.panel.on .chat-head.is-ntf-bar .mp-ntf-morph');
+  await p.waitForFunction(()=>!document.querySelector('#mp-dock.is-ntf'));assert.equal(readCalls,0);
+  assert.equal(await p.locator('#mp-dock-bell-badge').textContent(),'4','dock bell mirrors the unread count');
+  await p.locator('#mp-dock .mpd-open').click();await p.locator('#mp-dock[data-state=tabs]').waitFor();await p.waitForTimeout(450);
+  await p.locator('#mp-dock-bell').click();
+  const menu=p.locator('#mp-dock.is-ntf-bar .mp-ntf-morph');
   await menu.waitFor({timeout:8000});
   assert.equal((await menu.locator('.mp-profile-bar-head>strong').innerText()).trim(),'Notifications');
   assert.equal(await menu.locator('.mp-profile-bar-head [aria-label="Back"]').count(),1);
@@ -75,23 +77,28 @@ const notices=[
   assert.ok(Math.abs(parseFloat(fit.radius)-28)<=1,'top-bar menu corner radius ('+fit.radius+')');
   assert.ok(fit.capped||fit.clip<=1,'list fits when under the cap (clipped '+fit.clip+'px)');
   assert.equal(fit.backFocused,false,'no focus ring on Back when opened by tap');
-    await p.waitForFunction(()=>{const b=document.querySelector('.panel.on .chat-head.is-ntf-bar');return b&&b.getBoundingClientRect().height>120;},null,{timeout:5000});
-  const barBox=await p.locator('.panel.on .chat-head.is-ntf-bar').boundingBox();
+    await p.waitForFunction(()=>{const b=document.querySelector('#mp-dock.is-ntf-bar');return b&&b.getBoundingClientRect().height>120;},null,{timeout:5000});
+  const barBox=await p.locator('#mp-dock.is-ntf-bar').boundingBox();
   const view=p.viewportSize();
   assert.ok(barBox.height<=520,'sheet stays at the #187-sized cap, not full screen ('+barBox.height+')');
   assert.ok(barBox.height<view.height-120,'sheet is not near full screen');
-  const headW=await p.evaluate(()=>{const b=document.querySelector('.panel.on .chat-head');return b.getBoundingClientRect().width;});
+  // grows UP out of the dock: its bottom edge stays above the message box, its top well below the status bar
+  const inputTop=await p.evaluate(()=>document.querySelector('#journal .chat-inputrow').getBoundingClientRect().top);
+  assert.ok(barBox.y+barBox.height<=inputTop-4,'sheet sits above the message box ('+(barBox.y+barBox.height)+' vs '+inputTop+')');
   assert.ok(barBox.width>=view.width-40,'sheet keeps the top bar width like the other top-bar menus ('+barBox.width+')');
   await p.waitForTimeout(300);
   await p.screenshot({path:process.env.MP_SHOT||`${OUT}/notif-morph-v3-dark.png`,fullPage:false});
-  // shop: opening should not morph the nav
+  // Shop: there is no top bar any more, the same sheet grows out of the dock at the bottom edge
   await p.locator('.mp-profile-bar-head [aria-label="Back"]').click();
   await p.waitForFunction(()=>!document.querySelector('.is-ntf-bar'),null,{timeout:5000});
-  await p.evaluate(()=>document.querySelector('.nav [data-view=shop]')?.click()||(location.hash='#shop'));
-  await p.waitForFunction(()=>{const h=document.querySelector('.panel.on .chat-head');return !h||!h.getClientRects().length;},null,{timeout:8000});
+  await p.evaluate(()=>document.querySelector('.nav [data-view=shop]').click());
+  await p.locator('#shop.on').waitFor();await p.waitForTimeout(500);
   await p.evaluate(()=>window.MPForum&&MPForum.showNotifications());
-  await p.waitForTimeout(400);
-  assert.equal(await p.locator('.nav.is-ntf-bar, .nav .mp-ntf-morph, .is-ntf-bar').count(),0,'shop nav stays a nav');
+  await p.locator('#mp-dock.is-ntf-bar .mp-ntf-morph').waitFor({timeout:5000});
+  await p.waitForFunction(()=>{const b=document.querySelector('.is-ntf-bar');return b&&!b.getAnimations().some(a=>a.playState==='running');},null,{timeout:5000});
+  const shopBox=await p.locator('#mp-dock.is-ntf-bar').boundingBox();
+  assert.ok(view.height-(shopBox.y+shopBox.height)<60,'on Shop the sheet is anchored at the bottom ('+(shopBox.y+shopBox.height)+')');
+  assert.equal(await p.locator('.nav.is-ntf-bar, .nav .mp-ntf-morph').count(),0,'the hidden old nav never morphs');
   await c.close();await browser.close();
   console.log('ok notif morph');
 })().catch(e=>{console.error(e);process.exit(1);});

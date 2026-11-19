@@ -771,6 +771,8 @@ var MPShop = (function () {
     if (!gpSignedIn()) return y("journal");
     /* Avatar (per dc): go to the Globe, then open your profile view there. */
     if ("profile" === act) {
+      /* Bottom dock: the profile grows out of the dock right here, no trip to the Globe. */
+      if (document.documentElement.classList.contains("mp-bnav") && window.MPOpenMyProfileView && MPOpenMyProfileView()) return;
       y("forum");
       var tries = 0;
       /* Start after the route's hashchange has fired: profiles close on navigation. */
