@@ -177,9 +177,17 @@
   /* ---------- input ---------- */
   var swipe = null;
   open.addEventListener("pointerdown", function (e) { swipe = { x: e.clientX, y: e.clientY, id: e.pointerId, t: Date.now() }; });
+  // swipe up morphs the pill open as the finger moves (not on release), like pulling a sheet
+  open.addEventListener("pointermove", function (e) {
+    if (!swipe || swipe.id !== e.pointerId || swipe.done) return;
+    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    if (dy < -14 && Math.abs(dy) > Math.abs(dx) * 1.2) { swipe.done = true; window.haptic && haptic(8); expand(); }
+  });
+  open.addEventListener("pointercancel", function () { swipe = null; });
   open.addEventListener("pointerup", function (e) {
     if (!swipe || swipe.id !== e.pointerId) return;
-    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y; swipe.done = false;
+    if (swipe.done) return; // already opened by the upward drag; the click that follows is swallowed
+    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
     if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy) * 1.4 && Date.now() - swipe.t < 700) {
       // swipe the pill sideways to step between pages
       var i = ORDER.indexOf(dotView(panelView())), j = i + (dx < 0 ? 1 : -1);
