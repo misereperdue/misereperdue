@@ -19,11 +19,12 @@ await context.addInitScript(()=>{
   return {ok:true,users:[]};
  }};
 });
-await context.route('**/*',async route=>{const url=new URL(route.request().url());if(url.pathname==='/test'){await route.fulfill({contentType:'text/html; charset=utf-8',body:`<!doctype html><html data-theme="${theme}"><head><link rel="stylesheet" href="/css/site.css"></head><body><script src="/js/dashboard-v2.js"></script></body></html>`});return;}const file=path.join(ROOT,url.pathname);if(url.hostname==='misereperdue.com'&&fs.existsSync(file)){await route.fulfill({path:file,contentType:file.endsWith('.js')?'application/javascript; charset=utf-8':'text/css; charset=utf-8'});return;}await route.fulfill({body:''});});
+await context.route('**/*',async route=>{const url=new URL(route.request().url());if(url.pathname==='/test'){await route.fulfill({contentType:'text/html; charset=utf-8',body:`<!doctype html><html data-theme="${theme}"><head><link rel="stylesheet" href="/css/site.css"></head><body><script src="/js/ph-icons.js"></script><script src="/js/dashboard-v2.js"></script></body></html>`});return;}const file=path.join(ROOT,url.pathname);if(url.hostname==='misereperdue.com'&&fs.existsSync(file)){await route.fulfill({path:file,contentType:file.endsWith('.js')?'application/javascript; charset=utf-8':'text/css; charset=utf-8'});return;}await route.fulfill({body:''});});
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('https://misereperdue.com/test');
 await page.evaluate(()=>openAnalytics());
 assert.equal(await page.title(),'Misère Perdue · Dashboard');
 await page.locator('.dz-stat').first().waitFor();
+assert.equal(await page.locator('.dash-tabs svg.dz-tab-ico').count(),4,'Hugeicons tab icons');assert.equal(await page.evaluate(()=>typeof MPDash.userActions),'function','shared member controls');
 assert.equal(await page.locator('.dz-card:has-text("Orders")').isHidden(),true,'orders hidden until the Worker endpoint is live');
 await page.getByRole('tab',{name:'Categories'}).click();await page.locator('[data-cat-id="c"]').waitFor();
 const ids=()=>page.locator('[data-cat-id]').evaluateAll(rows=>rows.map(row=>row.dataset.catId));
@@ -54,5 +55,5 @@ const del=page.getByRole('button',{name:'Delete account',exact:true});await del.
 assert.equal(await del.textContent(),'Delete account','arm resets after 3s');assert.equal(await page.evaluate(()=>calls.some(c=>c==='/api/user/ana')),false);
 // Dividers use the shared fading divider.
 assert.match(await page.locator('.dz-danger').first().evaluate(e=>getComputedStyle(e).borderImageSource),/linear-gradient/);
-assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'title, hidden orders, reorder + rollback, refresh keeps editor, people filter + actions, two-tap confirms, fading dividers'}));await context.close();}
+assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'title, hidden orders, reorder + rollback, refresh keeps editor, people filter + actions, two-tap confirms, fading dividers, Hugeicons tabs'}));await context.close();}
 await browser.close();})().catch(e=>{console.error(e);process.exit(1)});

@@ -1237,7 +1237,7 @@
         if(user.badges&&user.badges.length){var badges=document.createElement('span');badges.className='mp-pb-badges';user.badges.forEach(function(id){if(A(user.username,id)&&!((badge||pill)&&id===pbPillBadge(user))){var mark=document.createElement('span');mark.className='mp-pb-badge'+(user.activeBadge===id?' on':'');mark.innerHTML=M(id);badges.appendChild(mark);}});if(badges.childElementCount)st.appendChild(badges);}
         mpPwApply(avw,user.username,mpPwFromProfile(user));if(!avw.classList.contains('is-owner')){var ring=pbRing(user);['is-vip','is-kitty','is-verified'].forEach(function(c){avw.classList.toggle(c,ring===' '+c);});}
       },
-      manage:!me && s && s.owner ? function(){return mpOwnerPowers(b, MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);}}));} : null
+      manage:!me && s && s.owner ? function(){return mpOwnerPowers(b, MPProfiles.management(b._profile,{api:E,art:M,allowed:A,active:N,avatar:function(user){return J(user.username,user.avatar,'sm',user.hasAvatarImg?user.avatarV:void 0);},changed:function(user){mpPBput(user);b._profile=user;T[user.username]=N(user);},extra:window.MPDash&&MPDash.userActions?function(user){return MPDash.userActions(user,{noOpen:!0,changed:function(){mpPBput(user);b._profile=user;},renamed:function(){mpPBput(user);b._profile=user;},removed:function(){setTimeout(function(){mpPBclose(true);},700);}});}:null}));} : null
     });
   }
   /* Profile view rings and pill (per dc): VIP keeps its gold ring and VIP pill whatever badge is
