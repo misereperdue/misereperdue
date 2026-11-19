@@ -13026,6 +13026,7 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 [data-theme="light"] .mpd-live{background:rgba(22,163,74,.12)!important;color:#15803d!important}
 .mpd-bag{flex:none;position:relative;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 11px 0 9px!important;border-radius:18px;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important;font-size:13px!important;font-weight:700!important}
 #mp-dock .mpd-bag .mpd-ic{width:19px;height:19px}
+.mpd-live b{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
 .mpd-live i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7);animation:onlineDotPulse 1.6s ease-in-out infinite}
 .mpd-me{position:absolute!important;right:8px;top:8px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2}
 .mpd-av{width:40px;height:40px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--orb-fill);box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))}
@@ -13068,7 +13069,12 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
 @media (prefers-reduced-motion:reduce){html.mp-bnav #mp-dock,.mpd-pillrow,.mpd-tabs,.mpd-bell,.mpd-ind,.mpd-dots i{transition:none!important}.mpd-live i{animation:none}}
 
 /* ---- the page around it: a slim sky band at the top, room at the bottom ---- */
-html.mp-bnav body.home,html.mp-bnav body.home.crop-hero-shop,html.mp-bnav body.home.crop-hero-auth,html.mp-bnav body.home:has(#shop.on),html.mp-bnav body.home:has(#cart.on),html.mp-bnav body.home:has(#product.on){padding-top:calc(env(safe-area-inset-top,0px) + 58px)!important;padding-bottom:calc(var(--mpd-clear) + 8px)}
+/* The sky is a backdrop, not a header (per dc): it sits behind the page (positioned z 0, painted before
+   main), content scrolls over it, and every page starts at the same line just under the status bar. */
+html.mp-bnav{--mpd-top:calc(env(safe-area-inset-top,0px) + 14px)}
+html.mp-bnav body.home .hero{z-index:0!important}
+html.mp-bnav body.home main.page,html.mp-bnav body.home .mp-end{position:relative}
+html.mp-bnav body.home,html.mp-bnav body.home.crop-hero-shop,html.mp-bnav body.home.crop-hero-auth,html.mp-bnav body.home:has(#shop.on),html.mp-bnav body.home:has(#cart.on),html.mp-bnav body.home:has(#product.on){padding-top:var(--mpd-top)!important;padding-bottom:calc(var(--mpd-clear) + 8px)}
 html.mp-bnav body.home .hero{height:calc(env(safe-area-inset-top,0px) + 50px)!important}
 html.mp-bnav[data-theme="light"] body.home .hero,[data-theme="light"] html.mp-bnav body.home .hero{height:calc(env(safe-area-inset-top,0px) + 30px)!important}
 html.mp-bnav[data-theme="light"] body.home .hero-rain,[data-theme="light"] html.mp-bnav body.home .hero-rain{height:calc(env(safe-area-inset-top,0px) + 74px)!important;-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 30px),rgba(0,0,0,.6) calc(env(safe-area-inset-top,0px) + 46px),rgba(0,0,0,.2) calc(env(safe-area-inset-top,0px) + 60px),transparent calc(env(safe-area-inset-top,0px) + 74px))!important;mask-image:linear-gradient(to bottom,#000 0,#000 calc(env(safe-area-inset-top,0px) + 30px),rgba(0,0,0,.6) calc(env(safe-area-inset-top,0px) + 46px),rgba(0,0,0,.2) calc(env(safe-area-inset-top,0px) + 60px),transparent calc(env(safe-area-inset-top,0px) + 74px))!important}
@@ -13077,8 +13083,14 @@ html.mp-bnav main.page .forum-head>.forum-back{display:none!important}
 html.mp-bnav main.page .forum-head.shop-product-head{display:none!important}
 /* Chat: the shape floats above the message box; the list keeps clear of both */
 html.mp-bnav body.home:has(#journal.on){padding-bottom:0!important}
-html.mp-bnav .chat-msgs{min-height:calc(100vh - 58px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,70px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
+html.mp-bnav .chat-msgs{min-height:calc(100vh - 14px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,70px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
 /* typing: the dock steps aside and its room under the messages eases away with the keyboard (no jump, no gap above the box) */
 html.mp-bnav.mpd-typing{--mpd-chat:0px}
 html.mp-bnav .mp-toast{bottom:calc(var(--mpd-clear) + 6px)}
 html.mp-bnav .mp-offline-banner{bottom:calc(var(--mpd-clear) + 6px)}
+/* one start line on every page (the first card/row/text sits at --mpd-top) */
+html.mp-bnav #shop-grid{margin-top:0!important}
+html.mp-bnav #forum-root.forum{padding-top:0!important}
+html.mp-bnav #cart-lines{margin-top:0!important}
+html.mp-bnav #cart-lines>.empty:first-child{margin-top:0!important}
+html.mp-bnav main.page .forum-head:not(:has(>:not(.forum-back))){display:none!important}
