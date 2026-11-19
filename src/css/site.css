@@ -12992,11 +12992,11 @@ html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:non
    menu (profile, notifications, online, Powers, Stars, misery fm, live notices) grows UP out of it.
    Scoped to html.mp-bnav so the old bars come back by dropping that one class. */
 #mp-dock,#mpd-scrim,#mpd-probe{display:none}
-html.mp-bnav{--mpd-h:60px;--mpd-clear:calc(env(safe-area-inset-bottom,0px) + 84px);--mpd-e:cubic-bezier(.32,.72,0,1)}
+html.mp-bnav{--mpd-h:52px;--mpd-clear:calc(env(safe-area-inset-bottom,0px) + 84px);--mpd-e:cubic-bezier(.32,.72,0,1)}
 html.mp-bnav #mpd-probe{display:block;position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
-html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 14px));width:248px;height:var(--mpd-h);box-sizing:border-box;margin:0;padding:0;border-radius:30px;transform:translateX(-50%);isolation:isolate;color:var(--ink);transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .45s var(--mpd-e),opacity .3s ease,border-radius .42s var(--mpd-e)}
+html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 14px));width:248px;height:var(--mpd-h);box-sizing:border-box;margin:0;padding:0;border-radius:26px;transform:translateX(-50%);isolation:isolate;color:var(--ink);transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .45s var(--mpd-e),opacity .3s ease,border-radius .42s var(--mpd-e)}
 html.mp-bnav #mp-dock:not(.is-ready){transition:none}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none;transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .3s var(--mpd-e),opacity .14s ease}
 .mpd-in{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
@@ -13012,7 +13012,7 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 #mp-dock[data-state="pill"] .mpd-tabs{transform:scale(.94)}
 #mp-dock[data-state="pill"] .mpd-bell{transform:scale(.6)}
 #mp-dock[data-state="tabs"] .mpd-pillrow{transform:scale(.96)}
-.mpd-pillrow{position:absolute;inset:0;display:flex;align-items:center;gap:4px;padding:0 58px 0 8px;box-sizing:border-box}
+.mpd-pillrow{position:absolute;inset:0;display:flex;align-items:center;gap:4px;padding:0 52px 0 4px;box-sizing:border-box}
 .mpd-back{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important}
 .mpd-back[hidden],.mpd-live[hidden],.mpd-bag[hidden],.mpd-bell[hidden],.mpd-unread[hidden],.mpd-tabs button[hidden]{display:none!important}
 .mpd-open{flex:1 1 auto;min-width:0;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -13028,14 +13028,14 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 #mp-dock .mpd-bag .mpd-ic{width:19px;height:19px}
 .mpd-live b{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
 .mpd-live i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7);animation:onlineDotPulse 1.6s ease-in-out infinite}
-.mpd-me{position:absolute!important;right:8px;top:8px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2}
+.mpd-me{position:absolute!important;right:4px;top:4px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2}
 .mpd-av{width:40px;height:40px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--orb-fill);box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))}
 .mpd-av>svg{width:22px;height:22px}
 .mpd-av .chat-avatar-wrap{transform:scale(1.25);transform-origin:center}
 .mpd-av .chat-avatar-img,.mpd-av img.chat-avatar-img{width:32px!important;height:32px!important}
 .mpd-unread{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#f43f5e;border:2px solid var(--bg);box-sizing:border-box}
 #mp-dock[data-state="tabs"] .mpd-unread{transform:scale(0);transition:transform .2s ease}
-.mpd-tabs{position:absolute;left:8px;top:8px;height:44px;width:var(--mpd-tw,300px);display:flex;gap:4px;transform-origin:left center}
+.mpd-tabs{position:absolute;left:4px;top:4px;height:44px;width:var(--mpd-tw,300px);display:flex;gap:4px;transform-origin:left center}
 .mpd-tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px!important;font-weight:650!important;color:var(--lg-icon)!important;transition:color .3s ease}
 .mpd-tabs button.on{color:var(--lg-icon-on)!important}
 .mpd-tabs button>span:not(.mpd-icw){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -13043,7 +13043,7 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .mpd-ind{position:absolute;left:0;top:0;height:44px;width:80px;border-radius:22px;background:var(--orb-fill);box-shadow:var(--orb-shadow);transition:transform .55s cubic-bezier(.34,1.36,.5,1),width .45s var(--mpd-e),opacity .2s;pointer-events:none}
 .mpd-icw{position:relative;display:block;flex:none}
 .mpd-badge{position:absolute;top:-6px;left:12px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#f43f5e;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;font-style:normal}
-#mp-dock .mpd-bell{position:absolute;right:58px;top:8px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2;background:none;border:0}
+#mp-dock .mpd-bell{position:absolute;right:52px;top:4px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2;background:none;border:0}
 #mp-dock .mpd-bell .forum-bell-badge{top:-2px;right:-2px}
 #mp-dock .mpd-bell .mp-stack-face svg,#mp-dock .mpd-bell .mp-stack-peek svg{width:20px;height:20px}
 @media (max-width:360px){.mpd-tabs button:not(.on)>span:not(.mpd-icw){display:none}}
@@ -13083,7 +13083,7 @@ html.mp-bnav main.page .forum-head>.forum-back{display:none!important}
 html.mp-bnav main.page .forum-head.shop-product-head{display:none!important}
 /* Chat: the shape floats above the message box; the list keeps clear of both */
 html.mp-bnav body.home:has(#journal.on){padding-bottom:0!important}
-html.mp-bnav .chat-msgs{min-height:calc(100vh - 14px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,70px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
+html.mp-bnav .chat-msgs{min-height:calc(100vh - 14px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,62px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
 /* typing: the dock steps aside and its room under the messages eases away with the keyboard (no jump, no gap above the box) */
 html.mp-bnav.mpd-typing{--mpd-chat:0px}
 html.mp-bnav .mp-toast{bottom:calc(var(--mpd-clear) + 6px)}
