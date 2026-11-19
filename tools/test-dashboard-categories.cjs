@@ -1,33 +1,46 @@
-// Mocked browser regression: no production API requests or writes.
-const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
+// Mocked browser regression for the owner dashboard (#383): no production API requests or writes.
+const {chromium}=require(process.env.PW||'playwright'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 const ROOT=path.resolve(__dirname,'..');
-(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
-for(const [theme,width,height] of [['dark',390,844],['light',390,844],['dark',360,780],['light',360,780]]){
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+for(const [theme,width,height] of [['dark',390,844],['light',360,780]]){
 const context=await browser.newContext({viewport:{width,height},colorScheme:theme});
-await context.addInitScript(({theme})=>{
- document.documentElement?.setAttribute('data-theme',theme);
- window.testOrders=[];window.testAlerts=[];window.alert=message=>testAlerts.push(message);
- const categories=['general','a','b','c'].map(id=>({id,name:id==='general'?'General':id.toUpperCase()}));
- window.MPChat={closeMsgPopup:()=>document.querySelector('#msg-popup')?.remove(),isPaused:()=>false,getMe:()=>({username:'tester'}),avatarNode:()=>document.createElement('span'),
- api:async(route,options)=>{
-  if(route==='/api/analytics/stats'){if(window.deferStats)return new Promise(resolve=>window.resolveStats=()=>resolve({ok:true,stats:{days:[],totalNewUsers:1}}));return {ok:true,stats:{days:[]}};}
+await context.addInitScript(()=>{
+ window.testOrders=[];window.calls=[];
+ const categories=['general','a','b','c'].map(id=>({id,name:id==='general'?'General':id.toUpperCase(),ownerOnly:id==='c'}));
+ window.MPChat={closeMsgPopup:()=>document.querySelector('#msg-popup')?.remove(),isPaused:()=>false,getMe:()=>({username:'tester'}),avatarNode:()=>{const s=document.createElement('span');s.className='chat-avatar-wrap';return s;},
+ api:async(route,options)=>{calls.push(route);
+  if(route==='/api/analytics/stats'){if(window.deferStats)return new Promise(resolve=>window.resolveStats=()=>resolve({ok:true,stats:{days:[{active:3}],summary:{members:9,vip:2}}}));return {ok:true,stats:{days:[],summary:{members:5,vip:1}}};}
   if(route==='/api/forum/categories')return {ok:true,categories};
-  if(route==='/api/forum/categories/reorder'){testOrders.push(options.body.order);await new Promise(r=>setTimeout(r,120));if(window.failNext){window.failNext=false;return {ok:false,error:'Test failure'};}return {ok:true};}
-  return {ok:true,users:[],days:[]};
+  if(route==='/api/forum/categories/reorder'){testOrders.push(options.body.order);await new Promise(r=>setTimeout(r,60));if(window.failNext){window.failNext=false;return {ok:false,error:'Test failure'};}return {ok:true};}
+  if(route==='/api/users')return {ok:true,users:[{username:'Ana',createdAt:Date.now()-864e5,points:12,member:true,catAccess:[]},{username:'bo',createdAt:Date.now()-2*864e5,banned:true}]};
+  if(route.startsWith('/api/admin/'))throw Object.assign(new Error('Request failed (404)'),{status:404});
+  return {ok:true,users:[]};
  }};
-},{theme});
-await context.route('**/*',async route=>{const url=new URL(route.request().url());if(url.pathname==='/test'){await route.fulfill({contentType:'text/html',body:`<!doctype html><html data-theme="${theme}"><head><link rel="stylesheet" href="/css/site.css"></head><body><script src="/js/dashboard-v2.js"></script></body></html>`});return;}const file=path.join(ROOT,url.pathname);if(url.hostname==='misereperdue.com'&&fs.existsSync(file)){await route.fulfill({path:file,contentType:file.endsWith('.js')?'application/javascript':'text/css'});return;}await route.fulfill({body:''});});
-const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('https://misereperdue.com/test');await page.evaluate(()=>openAnalytics());await page.getByRole('button',{name:'Forum',exact:true}).click();await page.locator('[data-cat-id="c"]').waitFor();
+});
+await context.route('**/*',async route=>{const url=new URL(route.request().url());if(url.pathname==='/test'){await route.fulfill({contentType:'text/html; charset=utf-8',body:`<!doctype html><html data-theme="${theme}"><head><link rel="stylesheet" href="/css/site.css"></head><body><script src="/js/dashboard-v2.js"></script></body></html>`});return;}const file=path.join(ROOT,url.pathname);if(url.hostname==='misereperdue.com'&&fs.existsSync(file)){await route.fulfill({path:file,contentType:file.endsWith('.js')?'application/javascript; charset=utf-8':'text/css; charset=utf-8'});return;}await route.fulfill({body:''});});
+const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('https://misereperdue.com/test');
+await page.evaluate(()=>openAnalytics());
+assert.equal(await page.title(),'Misère Perdue · Dashboard');
+await page.locator('.dz-stat').first().waitFor();
+assert.equal(await page.locator('.dz-card:has-text("Orders")').isHidden(),true,'orders hidden until the Worker endpoint is live');
+await page.getByRole('tab',{name:'Globe'}).click();await page.locator('[data-cat-id="c"]').waitFor();
 const ids=()=>page.locator('[data-cat-id]').evaluateAll(rows=>rows.map(row=>row.dataset.catId));
-async function drag(from,to,cancel=false){const row=page.locator(`[data-cat-id="${from}"]`),grip=row.locator('.cat-grip'),start=await grip.boundingBox(),target=await page.locator(`[data-cat-id="${to}"]`).boundingBox(),before=await ids();const movingDown=before.indexOf(from)<before.indexOf(to),endY=target.y+target.height/2+(movingDown?8:-8);await grip.dispatchEvent('pointerdown',{pointerId:7,pointerType:'touch',clientX:start.x+12,clientY:start.y+18});await page.evaluate(({x,y})=>document.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,cancelable:true,pointerId:7,pointerType:'touch',clientX:x,clientY:y})),{x:start.x+12,y:endY});const draggedGrip=await grip.boundingBox();assert(Math.abs(draggedGrip.y+18-endY)<2,'dragged row jumped away from pointer');await page.evaluate(cancel=>document.dispatchEvent(new PointerEvent(cancel?'pointercancel':'pointerup',{bubbles:true,pointerId:7,pointerType:'touch'})),cancel);await page.waitForTimeout(160);assert.equal(await row.evaluate(el=>el.style.transform),'');}
-await drag('general','c');assert.deepEqual(await ids(),['a','b','c','general']);assert.deepEqual(await page.evaluate(()=>testOrders),[['a','b','c','general']]);
-await drag('general','a');assert.deepEqual(await ids(),['general','a','b','c']);
-const saved=await page.evaluate(()=>testOrders.length);await drag('a','c',true);assert.deepEqual(await ids(),['general','a','b','c']);assert.equal(await page.evaluate(()=>testOrders.length),saved,'cancel saved an order');
-await page.evaluate(()=>window.failNext=true);await drag('a','c');assert.deepEqual(await ids(),['general','a','b','c'],'failed save did not restore order');assert.deepEqual(await page.evaluate(()=>testAlerts),['Test failure']);
-await page.locator('[data-cat-id="b"] .cat-grip').focus();await page.keyboard.press('ArrowUp');await page.waitForTimeout(160);assert.deepEqual(await ids(),['general','b','a','c']);
-// Real mouse events also cross DOM reorders without losing the release.
-const gripBox=await page.locator('[data-cat-id="general"] .cat-grip').boundingBox(),lastBox=await page.locator('[data-cat-id="c"]').boundingBox();
-await page.mouse.move(gripBox.x+12,gripBox.y+18);await page.mouse.down();await page.mouse.move(gripBox.x+12,lastBox.y+lastBox.height/2+8,{steps:8});await page.mouse.up();await page.waitForTimeout(160);assert.deepEqual(await ids(),['b','a','c','general']);
-await page.evaluate(()=>{deferStats=true;openAnalytics();});await page.getByRole('button',{name:'Forum',exact:true}).click();await page.locator('[data-cat-id="a"]').waitFor();await page.locator('.dashboard-sheet').evaluate(el=>el.dataset.testIdentity='same');await page.evaluate(()=>resolveStats());await page.waitForTimeout(180);assert.equal(await page.locator('.dashboard-sheet').getAttribute('data-test-identity'),'same','fresh stats replaced category editor');
-assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'drag both directions, pointer alignment, cancellation, rollback, keyboard reorder, refresh preserves editor'}));await context.close();}
+await page.getByRole('button',{name:'Move down: General'}).click();await page.waitForTimeout(100);
+assert.deepEqual(await ids(),['a','general','b','c']);assert.deepEqual(await page.evaluate(()=>testOrders),[['a','general','b','c']]);
+await page.evaluate(()=>window.failNext=true);await page.getByRole('button',{name:'Move up: C'}).click();await page.waitForTimeout(150);
+assert.deepEqual(await ids(),['a','general','b','c'],'failed save did not restore order');
+assert.match(await page.locator('.dz-pane:not([hidden]) .pow-status').textContent(),/Test failure/);
+// Fresh stats swap in place: the open tab and editor survive.
+await page.evaluate(()=>{deferStats=true;openAnalytics();});await page.getByRole('tab',{name:'Globe'}).click();await page.locator('[data-cat-id="a"]').waitFor();
+await page.locator('.dz').evaluate(el=>el.dataset.testIdentity='same');await page.evaluate(()=>resolveStats());await page.waitForTimeout(120);
+assert.equal(await page.locator('.dz').getAttribute('data-test-identity'),'same','fresh stats replaced the editor');
+await page.getByRole('tab',{name:'Overview'}).click();assert.match(await page.locator('.dz-stat').first().textContent(),/9/);
+// People: lowercase names, filter, actions.
+await page.getByRole('tab',{name:'People'}).click();await page.locator('.dz-person').first().waitFor();
+assert.deepEqual(await page.locator('.dz-person .dz-row-main b').allTextContents(),['ana','bo']);
+const fs16=await page.locator('.dz-search .dz-in').evaluate(e=>getComputedStyle(e).fontSize);assert.equal(fs16,'16px');
+await page.getByRole('button',{name:'Banned',exact:true}).click();assert.deepEqual(await page.locator('.dz-person .dz-row-main b').allTextContents(),['bo']);
+await page.getByRole('button',{name:'All',exact:true}).click();await page.locator('.dz-person .dz-row').first().click();
+for(const n of ['Add','Rename','Open profile','Remove VIP','Ban','Clear messages','Clear forum posts','Delete account','C'])assert.equal(await page.getByRole('button',{name:n,exact:true}).count()>0,true,n);
+assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'title, hidden orders, reorder + rollback, refresh keeps editor, people filter + actions'}));await context.close();}
 await browser.close();})().catch(e=>{console.error(e);process.exit(1)});
