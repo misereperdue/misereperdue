@@ -12782,13 +12782,6 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-social-user{display:flex;width:100%;gap:10px;align-items:center;min-height:54px;padding:10px 12px;border:1px solid var(--stroke);border-radius:20px;background:var(--fill);color:var(--ink);text-align:left;cursor:pointer}
 .mp-social-user strong{font-size:12px}.mp-social-row-arrow{margin-left:auto;color:var(--muted);font-size:22px}
 .mp-social-more{display:block;margin:12px auto 0}
-.mp-activity-item{display:block;width:100%;border:1px solid var(--stroke);border-radius:18px;padding:12px;margin:0 0 8px;background:var(--fill);color:var(--ink);text-align:left;cursor:pointer;animation:mpNoticePicker .22s ease both}
-.mp-activity-by{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
-.mp-activity-by>.chat-avatar-wrap{width:28px;height:28px;flex:none}
-.mp-activity-kind{margin-left:auto;font-size:9px;color:var(--muted)}
-.mp-activity-title{display:block;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
-.mp-activity-preview{font-size:11px;line-height:1.5;color:var(--muted);margin:5px 0 8px;overflow-wrap:anywhere}
-.mp-activity-time{font-size:9px;color:var(--muted)}
 @media(prefers-reduced-motion:reduce){.mp-stack-peek,.mp-notice-picker,.mp-activity-item{animation:none}}
 
 /* Menu tabs share the Globe picker capsule: 38px track, 32px pill, 18px icons.
@@ -13189,3 +13182,32 @@ html.mp-bnav main.page .forum-head:not(:has(>:not(.forum-back))){display:none!im
 .dz-mv.dz-del.is-confirm{width:auto;height:24px;padding:0 10px;border-radius:999px;color:var(--dz-danger);font:inherit;font-size:12.5px;font-weight:650;white-space:nowrap}
 /* while a category delete is armed, its "Tap again to delete" takes the access chip's place */
 .dz-cat:has(.dz-del.is-confirm)>.dz-chip{display:none}
+/* per dc (t634u): the dock sits at the bottom now, so the profile view's expand chevron points up */
+html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
+/* ===== Notifications / Activity stack polish (per dc, t634u) =====
+   Bell: a glass face over one quieter card, offset 4px up-left at -12deg so it stays inside the dock.
+   Rows (Notifications and Activity share them): 16px radius, 10/12 padding, avatar 38, ink line, one muted line,
+   time on the right; unread = soft accent wash + a 6px accent dot; read rows split by the shared fading divider. */
+.mp-stack-face{background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:var(--glass-clear);backdrop-filter:var(--glass-clear);border:var(--glass-hairline);box-shadow:var(--glass-spec),0 2px 8px rgba(0,0,0,.08)}
+.mp-stack-peek{inset:3px;background:color-mix(in srgb,var(--ink) 10%,var(--glass-clear-tint));border:var(--glass-hairline);color:var(--muted);transform:translate(-4px,-4px) rotate(-12deg);animation:mpNoticeHint2 1.2s cubic-bezier(.32,.72,0,1) .6s 1}
+.mp-stack-peek svg{opacity:.55}
+@keyframes mpNoticeHint2{0%,100%{transform:translate(-4px,-4px) rotate(-12deg)}45%{transform:translate(-5px,-5px) rotate(-17deg)}}
+.mp-notice-picker{background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);border:var(--glass-hairline);box-shadow:var(--glass-spec),0 12px 32px rgba(0,0,0,.16)}
+.mp-notice-picker.is-up{animation-name:mpNoticePickerUp}
+@keyframes mpNoticePickerUp{from{opacity:0;transform:translateY(4px) scale(.97)}to{opacity:1;transform:none}}
+.mp-ntf-row{position:relative;border-radius:16px;padding:10px 12px;gap:12px;transition:background .2s ease,transform .2s cubic-bezier(.32,.72,0,1)}
+.mp-ntf-morph .mp-ntf-row{padding:10px 10px}
+.mp-ntf-row.is-unread{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.mp-ntf-row:not(.is-unread)+.mp-ntf-row:not(.is-unread)::before{content:"";position:absolute;left:62px;right:12px;top:-3px;height:1px;background:var(--mp-div);pointer-events:none}
+.mp-ntf-row-meta{align-self:stretch;justify-content:space-between;padding:2px 0}
+.mp-ntf-row-when{display:inline-flex;align-items:center;gap:5px}
+.mp-ntf-row.is-unread .mp-ntf-row-when::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.mp-ntf-row .mp-ntf-chip{padding:2px 8px;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--muted);font-size:10.5px;font-weight:600}
+.mp-ntf-row-tx small{display:block}
+.mp-activity-item .mp-ntf-row-meta{justify-content:flex-end}
+.mp-activity-feed{display:flex;flex-direction:column;gap:6px}
+.mp-activity-item{animation:mpNoticePicker .24s cubic-bezier(.32,.72,0,1) both}
+.mp-activity-title{display:block;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-activity-by{-webkit-line-clamp:1;font-size:13px;color:var(--muted)}
+.mp-activity-by b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.mp-stack-peek,.mp-notice-picker,.mp-activity-item{animation:none}.mp-ntf-row{transition:none}}
