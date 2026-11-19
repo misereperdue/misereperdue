@@ -1,6 +1,6 @@
 /* Owner dashboard (redesign #383, per dc): only the numbers that matter, every admin action in one place.
    Tabs: Overview (status + key stats + recent signups, orders, activity), People (search + per-user
-   actions), Forum (categories), Tools (notifications, misery fm, chat, media).
+   actions), Forum (categories), Tools (Yell, FM, chat, media); tab bar: Chat / Forum / Manage.
    Every request goes through MPChat.api with the owner's session; the Worker checks owner on each
    endpoint, and this file only runs for the owner (the Dashboard pill/hash are owner-only).
    Sections whose endpoint isn't live yet (/api/admin/orders, /api/admin/log) stay hidden. */
@@ -105,7 +105,7 @@
     var top = el("div", "dz-status");
     var live = el("span", "dz-live");
     var chatB = btn("Chat \u2026", "dz-chip");
-    var fmB = btn("misery fm \u2026", "dz-chip");
+    var fmB = btn("FM \u2026", "dz-chip");
     top.append(live, chatB, fmB);
     pane.appendChild(top);
     var stats = el("div", "dz-stats");
@@ -125,9 +125,9 @@
     /* misery fm status: tap jumps to Tools */
     api("/api/fm/state").then(function (j) {
       var f = j && j.fm;
-      fmB.textContent = !f ? "misery fm off" : f.live ? (f.paused ? "misery fm paused" : "misery fm live \u00b7 " + num(f.listeners)) : "misery fm off";
+      fmB.textContent = !f ? "FM off" : f.live ? (f.paused ? "FM paused" : "FM live \u00b7 " + num(f.listeners)) : "FM off";
       fmB.classList.toggle("is-on", !!(f && f.live && !f.paused));
-    }).catch(function () { fmB.textContent = "misery fm"; });
+    }).catch(function () { fmB.textContent = "FM"; });
     fmB.addEventListener("click", function () { ctx.go("tools"); });
 
     var recent = section("New members", '<button type="button" class="dz-link">All</button>');
@@ -206,7 +206,7 @@
     bar.appendChild(filt);
     pane.appendChild(bar);
     var count = el("div", "dz-count");
-    var list = el("div", "dz-card dz-list dz-people", '<p class="pow-note">Loading\u2026</p>');
+    var list = el("div", "dz-people", '<p class="pow-note">Loading\u2026</p>');
     pane.append(count, list);
     var users = [], cats = [], open = null;
     function load() {
@@ -324,7 +324,7 @@
           var b = btn(c.name, "dz-chip" + (has ? " is-sel" : ""), function () {
             var give = (u.catAccess || []).indexOf(c.id) < 0;
             run(b, st, function () { return api("/api/forum/category-access", { method: "POST", body: { username: u.username, categoryId: c.id, access: give } }); },
-              function (j) { return (j.access ? "Can now see " : "Can no longer see ") + c.name + "."; },
+              function (j) { return (j.access ? "Can now see " : "Can no longer see ") + c.name; },
               function (j) {
                 u.catAccess = (u.catAccess || []).filter(function (x) { return x !== c.id; });
                 j.access && u.catAccess.push(c.id);
@@ -347,7 +347,7 @@
   /* ---------- Forum categories ---------- */
   var ACCESS = [["public", "Public"], ["members", "VIP only"], ["private", "Private"]];
   function forum(pane) {
-    var card = section("Globe categories");
+    var card = section("Categories");
     var list = el("div", "dz-list dz-cats", '<p class="pow-note">Loading\u2026</p>');
     var st = el("p", "pow-status"); st.setAttribute("role", "status");
     var add = el("div", "dz-line");
@@ -436,7 +436,7 @@
   /* ---------- Tools ---------- */
   function tools(pane) {
     /* Notification to everyone or one member */
-    var nc = section("Send a notification");
+    var nc = section("Yell");
     var tt = el("input", "dz-in"); tt.placeholder = "Title"; tt.maxLength = 100; tt.setAttribute("aria-label", "Notification title");
     var bd = el("textarea", "dz-in dz-ta"); bd.placeholder = "Message"; bd.maxLength = 200; bd.rows = 2; bd.setAttribute("aria-label", "Notification message");
     var to = el("input", "dz-in"); to.placeholder = "To: everyone, or a username"; to.autocapitalize = "none"; to.autocomplete = "off"; to.spellcheck = !1; to.setAttribute("aria-label", "Recipient");
@@ -454,7 +454,7 @@
     pane.appendChild(nc);
 
     /* misery fm */
-    var fc = section("misery fm");
+    var fc = section("FM");
     var fs = el("p", "dz-fm-now", "Loading\u2026");
     var fg = el("div", "dz-grid");
     var fst = el("p", "pow-status"); fst.setAttribute("role", "status");
@@ -462,7 +462,7 @@
     pane.appendChild(fc);
     function fmPaint(f) {
       fg.replaceChildren();
-      if (!f) return void (fs.textContent = "Couldn\u2019t load misery fm.");
+      if (!f) return void (fs.textContent = "Couldn\u2019t load FM.");
       var cur = f.live && f.list && f.list[f.idx];
       fs.innerHTML = f.live ? "<b>" + esc(f.paused ? "Paused" : "Live") + "</b> \u00b7 " + esc(cur ? cur.title + (cur.artist ? " \u2014 " + cur.artist : "") : "") + " \u00b7 " + num(f.listeners) + " listening"
         : "<b>Off air</b> \u00b7 " + num((f.list || []).length) + " songs ready";
@@ -477,7 +477,7 @@
         act("Skip", "skip");
         act("Stop", "stop", "is-danger");
       }
-      window.MPFM && MPFM.open && fg.appendChild(btn("Open misery fm", "", function () { MPFM.open(); }));
+      window.MPFM && MPFM.open && fg.appendChild(btn("Open FM", "", function () { MPFM.open(); }));
     }
     api("/api/fm/state").then(function (j) { fmPaint(j && j.fm); }).catch(function () { fmPaint(null); });
 
@@ -507,21 +507,31 @@
   }
 
   /* ---------- Shell ---------- */
-  var TABS = [["overview", "Overview"], ["people", "People"], ["forum", "Globe"], ["tools", "Tools"]];
+  /* Tab bar restored from before #387 (per dc): the three icon tabs (.dash-tabs + .dash-tab-ind, shared menu-tab CSS).
+     Chat = overview, Forum = categories, Manage = people + tools. */
+  var TABS = [
+    ["overview", "Chat", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="rotate"><path d="M12 21.5C17.2467 21.5 21.5 17.2467 21.5 12C21.5 6.75329 17.2467 2.5 12 2.5C6.75329 2.5 2.5 6.75329 2.5 12C2.5 13.3377 2.66372 14.5604 3.1189 15.6954C3.81756 17.4374 3.68195 18.9241 2.5 20.5C3.86146 21.1644 5.86811 21.1419 7 20.0725C8.45323 20.9748 10.1636 21.5 12 21.5Z" stroke-linecap="square"/><path d="M12.2 12.0002H12M7.69961 11.9999H7.49961M16.6996 11.9999H16.4996M12.4 12.0002C12.4 12.2212 12.2209 12.4002 12 12.4002C11.7791 12.4002 11.6 12.2212 11.6 12.0002C11.6 11.7793 11.7791 11.6002 12 11.6002C12.2209 11.6002 12.4 11.7793 12.4 12.0002ZM7.89961 11.9999C7.89961 12.2208 7.72052 12.3999 7.49961 12.3999C7.2787 12.3999 7.09961 12.2208 7.09961 11.9999C7.09961 11.7789 7.2787 11.5999 7.49961 11.5999C7.72052 11.5999 7.89961 11.7789 7.89961 11.9999ZM16.8996 11.9999C16.8996 12.2208 16.7205 12.3999 16.4996 12.3999C16.2787 12.3999 16.0996 12.2208 16.0996 11.9999C16.0996 11.7789 16.2787 11.5999 16.4996 11.5999C16.7205 11.5999 16.8996 11.7789 16.8996 11.9999Z"/></svg>'],
+    ["forum", "Forum", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="scale"><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg>'],
+    ["people", "Manage", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="rotate"><path d="M3.95631 10.5829L3.03254 9.07084C2.74505 8.60024 2.7389 8.00978 3.01652 7.5333L3.63533 6.47124C3.90953 6.00064 4.41721 5.71571 4.96162 5.7269L6.69131 5.76245C6.92616 5.76728 7.15379 5.68727 7.34333 5.54846C7.79531 5.21745 8.28334 4.93276 8.80042 4.70139C9.01191 4.60675 9.19222 4.45165 9.30469 4.24903L10.1203 2.77965C10.3847 2.30328 10.8865 2.00781 11.4312 2.00781H12.6937C13.2384 2.00781 13.7403 2.30329 14.0047 2.77966L14.8202 4.24902C14.9327 4.45165 15.113 4.60675 15.3245 4.70139C15.8416 4.93274 16.3296 5.2174 16.7815 5.54838C16.9711 5.68718 17.1987 5.76718 17.4336 5.76235L19.1634 5.72676C19.7078 5.71557 20.2155 6.00049 20.4897 6.47111L21.1085 7.53314C21.3862 8.00963 21.38 8.60009 21.0925 9.07068L20.1687 10.5828C20.0481 10.7803 20.002 11.0134 20.0235 11.2439C20.0707 11.7486 20.0707 12.267 20.0235 12.7717C20.002 13.0022 20.0481 13.2353 20.1687 13.4329L21.0924 14.9448C21.3799 15.4154 21.3861 16.0058 21.1084 16.4823L20.4896 17.5444C20.2154 18.015 19.7077 18.2999 19.1633 18.2887L17.4338 18.2531C17.1989 18.2483 16.9713 18.3283 16.7817 18.4671C16.3297 18.7982 15.8416 19.0829 15.3245 19.3142C15.113 19.4089 14.9327 19.564 14.8202 19.7666L14.0047 21.236C13.7403 21.7123 13.2384 22.0078 12.6937 22.0078H11.4312C10.8866 22.0078 10.3847 21.7123 10.1203 21.236L9.30468 19.7665C9.19222 19.5639 9.01191 19.4088 8.80042 19.3142C8.28329 19.0828 7.79519 18.798 7.34316 18.467C7.15362 18.3282 6.92597 18.2482 6.69111 18.253L4.96175 18.2886C4.41733 18.2998 3.90963 18.0148 3.63543 17.5442L3.01663 16.4822C2.739 16.0057 2.74515 15.4152 3.03264 14.9446L3.95631 13.4327C4.07699 13.2351 4.12309 13.002 4.10154 12.7715C4.05437 12.267 4.05438 11.7486 4.10154 11.244C4.12308 11.0135 4.07699 10.7805 3.95631 10.5829Z"/><circle cx="12.0625" cy="12.0078" r="3.5"/></svg>'],
+  ];
   function build(stats) {
     var h = host();
     if (h === !1) return null;
     var root = el("div", "dz");
     root.setAttribute("data-dz", "1");
     var ctx = { stats: stats, paint: null };
-    var seg = el("div", "dz-seg");
+    var seg = el("div", "dash-tabs");
     seg.setAttribute("role", "tablist");
-    var ind = el("span", "dz-seg-ind");
+    seg.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:var(--glass-hairline);";
+    var ind = el("span", "dash-tab-ind");
+    ind.style.cssText = "position:absolute;top:3px;bottom:3px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);pointer-events:none;left:3px;width:calc(33.333% - 3px);";
+    setTimeout(function () { ind.style.transition = "transform 0.35s cubic-bezier(0.32,0.72,0,1)"; }, 100);
     seg.appendChild(ind);
     var panes = {}, made = {};
-    TABS.forEach(function (t, i) {
-      var b = el("button", "dz-seg-b");
-      b.type = "button"; b.textContent = t[1]; b.setAttribute("role", "tab"); b.dataset.tab = t[0];
+    TABS.forEach(function (t) {
+      var b = el("button");
+      b.type = "button"; b.innerHTML = t[2]; b.setAttribute("aria-label", t[1]); b.setAttribute("role", "tab"); b.dataset.tab = t[0];
+      b.style.cssText = "position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px;border:none;border-radius:999px;cursor:pointer;background:transparent;color:var(--muted);transition:color .25s ease;";
       b.onclick = function () { ctx.go(t[0]); };
       seg.appendChild(b);
       var p = el("div", "dz-pane");
@@ -531,18 +541,31 @@
     root.appendChild(seg);
     TABS.forEach(function (t) { root.appendChild(panes[t[0]]); });
     ctx.go = function (id, user) {
+      var toTools = id === "tools";
+      toTools && (id = "people");
       TABS.forEach(function (t, i) {
         var on = t[0] === id, b = seg.querySelector('[data-tab="' + t[0] + '"]');
-        b.setAttribute("aria-selected", String(on)); b.classList.toggle("is-sel", on);
+        b.setAttribute("aria-selected", String(on));
+        b.style.color = on ? "var(--ink)" : "var(--muted)";
         panes[t[0]].hidden = !on;
         on && (ind.style.transform = "translateX(" + i * 100 + "%)");
       });
       root.dataset.tab = id;
       if (!made[id]) {
         made[id] = !0;
-        ({ overview: overview, people: people, forum: forum, tools: tools })[id](panes[id], ctx);
+        if (id === "people") {
+          var pp = el("div", "dz-pane-sub"), tp = el("div", "dz-pane-sub dz-tools");
+          panes[id].append(pp, tp);
+          people(pp, ctx);
+          tools(tp);
+        } else ({ overview: overview, forum: forum })[id](panes[id], ctx);
       }
       user && ctx.focusUser && ctx.focusUser(user);
+      if (toTools) {
+        var tt = panes.people.querySelector(".dz-tools");
+        tt && setTimeout(function () { tt.scrollIntoView({ block: "start", behavior: "smooth" }); }, 50);
+        return;
+      }
       var sc = root.closest(".pow-page, .mp-pb-scroll, .msg-popup-inner");
       sc && sc.scrollTop > 0 && root.getBoundingClientRect().top < 0 && root.scrollIntoView({ block: "start" });
     };

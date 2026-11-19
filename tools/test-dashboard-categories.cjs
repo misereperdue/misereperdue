@@ -23,7 +23,7 @@ await page.evaluate(()=>openAnalytics());
 assert.equal(await page.title(),'Misère Perdue · Dashboard');
 await page.locator('.dz-stat').first().waitFor();
 assert.equal(await page.locator('.dz-card:has-text("Orders")').isHidden(),true,'orders hidden until the Worker endpoint is live');
-await page.getByRole('tab',{name:'Globe'}).click();await page.locator('[data-cat-id="c"]').waitFor();
+await page.getByRole('tab',{name:'Forum'}).click();await page.locator('[data-cat-id="c"]').waitFor();
 const ids=()=>page.locator('[data-cat-id]').evaluateAll(rows=>rows.map(row=>row.dataset.catId));
 await page.getByRole('button',{name:'Move down: General'}).click();await page.waitForTimeout(100);
 assert.deepEqual(await ids(),['a','general','b','c']);assert.deepEqual(await page.evaluate(()=>testOrders),[['a','general','b','c']]);
@@ -31,12 +31,12 @@ await page.evaluate(()=>window.failNext=true);await page.getByRole('button',{nam
 assert.deepEqual(await ids(),['a','general','b','c'],'failed save did not restore order');
 assert.match(await page.locator('.dz-pane:not([hidden]) .pow-status').textContent(),/Test failure/);
 // Fresh stats swap in place: the open tab and editor survive.
-await page.evaluate(()=>{deferStats=true;openAnalytics();});await page.getByRole('tab',{name:'Globe'}).click();await page.locator('[data-cat-id="a"]').waitFor();
+await page.evaluate(()=>{deferStats=true;openAnalytics();});await page.getByRole('tab',{name:'Forum'}).click();await page.locator('[data-cat-id="a"]').waitFor();
 await page.locator('.dz').evaluate(el=>el.dataset.testIdentity='same');await page.evaluate(()=>resolveStats());await page.waitForTimeout(120);
 assert.equal(await page.locator('.dz').getAttribute('data-test-identity'),'same','fresh stats replaced the editor');
-await page.getByRole('tab',{name:'Overview'}).click();assert.match(await page.locator('.dz-stat').first().textContent(),/9/);
+await page.getByRole('tab',{name:'Chat'}).click();assert.match(await page.locator('.dz-stat').first().textContent(),/9/);
 // People: lowercase names, filter, actions.
-await page.getByRole('tab',{name:'People'}).click();await page.locator('.dz-person').first().waitFor();
+await page.getByRole('tab',{name:'Manage'}).click();await page.locator('.dz-person').first().waitFor();
 assert.deepEqual(await page.locator('.dz-person .dz-row-main b').allTextContents(),['ana','bo']);
 const fs16=await page.locator('.dz-search .dz-in').evaluate(e=>getComputedStyle(e).fontSize);assert.equal(fs16,'16px');
 await page.getByRole('button',{name:'Banned',exact:true}).click();assert.deepEqual(await page.locator('.dz-person .dz-row-main b').allTextContents(),['bo']);
