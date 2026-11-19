@@ -13227,3 +13227,5 @@ html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
 .dz-acts .dz-line{gap:5px}
 .dz-acts .dz-line>.dz-btn{padding:0 10px}
 .dz-acts .dz-line:not(.dz-wrap)>.dz-line-l{width:40px}
+/* per dc (t639u): the follower pill sits 4px from the username (title gap is 8px) */
+.mp-profile-summary-title>.mp-profile-summary-fol{margin-left:-4px}
