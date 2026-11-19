@@ -1,3 +1,17 @@
+/* mpTwoTap: the Sign out pattern (per dc), shared with the dashboard. First tap arms the button
+   ("Tap again to …", .is-confirm), a second tap within 3s runs go(); otherwise it resets. */
+(function () {
+  if (window.mpTwoTap) return;
+  window.mpTwoTap = function (k, armed, go) {
+    var t = k.querySelector("span") || k;
+    if (!k.classList.contains("is-confirm")) {
+      k._mpIdle = t.innerHTML; k.classList.add("is-confirm"); t.textContent = armed; clearTimeout(k._t);
+      k._t = setTimeout(function () { k.classList.remove("is-confirm"); t.innerHTML = k._mpIdle; }, 3000);
+      return;
+    }
+    clearTimeout(k._t); k.classList.remove("is-confirm"); t.innerHTML = k._mpIdle; go();
+  };
+})();
 /* mpHide: per-viewer hidden users (localStorage; no Worker prefs endpoint exists) */
 (function () {
   if (window.mpHide) return;
@@ -1210,9 +1224,7 @@
       origin:e, me:me, anchor:anchor, resolve:mpProfileMusicResolve,
       /* Sign out under the Listening box (per dc): first tap asks, second signs out. */
       signout: me ? function(k){
-        var t=k.querySelector("span")||k;
-        if(!k.classList.contains("is-confirm")){k.classList.add("is-confirm");t.textContent="Tap again to sign out";clearTimeout(k._t);k._t=setTimeout(function(){k.classList.remove("is-confirm");t.textContent="Sign out";},3000);return;}
-        clearTimeout(k._t);mpPBclose(true);ft();
+        mpTwoTap(k,"Tap again to sign out",function(){mpPBclose(true);ft();});
       } : null,
       avatar:function(user,size){return J(user.username,user.avatar,size||"sm",user.hasAvatarImg ? user.avatarV : void 0);},
       current:function(){return me && s ? s : b._profile;},
