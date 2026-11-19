@@ -13005,47 +13005,47 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 :where(#mp-dock .mpd-in) button:focus-visible{outline:2px solid var(--accent,#9cc7ff);outline-offset:2px}
 /* the pill owns its drags (swipe up opens, sideways changes page) instead of the page scrolling */
 #mp-dock .mpd-pillrow,#mp-dock .mpd-open{touch-action:none}
-#mp-dock .mpd-ic{width:22px;height:22px;flex:none;display:block}
+#mp-dock .mpd-ic{width:20px;height:20px;flex:none;display:block}
 /* layers: pill row / tabs / bell fade + settle; the avatar stays put at the right end and rides the edge */
 .mpd-pillrow,.mpd-tabs,.mpd-bell{transition:opacity .26s ease .08s,transform .5s var(--mpd-e),visibility 0s linear 0s}
 #mp-dock[data-state="pill"] .mpd-tabs,#mp-dock[data-state="pill"] .mpd-bell,#mp-dock[data-state="tabs"] .mpd-pillrow{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .5s var(--mpd-e),visibility 0s linear .5s}
 #mp-dock[data-state="pill"] .mpd-tabs{transform:scale(.94)}
 #mp-dock[data-state="pill"] .mpd-bell{transform:scale(.6)}
 #mp-dock[data-state="tabs"] .mpd-pillrow{transform:scale(.96)}
-.mpd-pillrow{position:absolute;inset:0;display:flex;align-items:center;gap:4px;padding:0 52px 0 4px;box-sizing:border-box}
-.mpd-back{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important}
+.mpd-pillrow{position:absolute;inset:0;display:flex;align-items:center;gap:4px;padding:0 52px 0 6px;box-sizing:border-box}
+.mpd-back{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important}
 .mpd-back[hidden],.mpd-live[hidden],.mpd-bag[hidden],.mpd-bell[hidden],.mpd-unread[hidden],.mpd-tabs button[hidden]{display:none!important}
-.mpd-open{flex:1 1 auto;min-width:0;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mpd-open{flex:1 1 auto;min-width:0;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .mpd-open-in{display:inline-flex;align-items:center;gap:13px;width:max-content;padding:0 10px 0 12px}
 .mpd-title{display:block;overflow:hidden}
-.mpd-t{display:block;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
+.mpd-t{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
 .mpd-dots{display:inline-flex;align-items:center;gap:5px}
 .mpd-dots i{display:block;width:6px;height:6px;border-radius:3px;background:currentColor;opacity:.3;transition:width .45s var(--mpd-e),opacity .3s ease}
 .mpd-dots i.on{width:16px;opacity:.95}
-.mpd-live{flex:none;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px!important;border-radius:14px;background:rgba(74,222,128,.14)!important;color:#7be8a4!important;font-size:13px!important;font-weight:700!important}
+.mpd-live{flex:none;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px!important;border-radius:14px;background:rgba(74,222,128,.14)!important;color:#7be8a4!important;font-size:13px!important;font-weight:700!important}
 [data-theme="light"] .mpd-live{background:rgba(22,163,74,.12)!important;color:#15803d!important}
-.mpd-bag{flex:none;position:relative;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 11px 0 9px!important;border-radius:18px;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important;font-size:13px!important;font-weight:700!important}
-#mp-dock .mpd-bag .mpd-ic{width:19px;height:19px}
+.mpd-bag{flex:none;position:relative;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 8px!important;border-radius:16px;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important;font-size:13px!important;font-weight:700!important}
+#mp-dock .mpd-bag .mpd-ic{width:17px;height:17px}
 .mpd-live b{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
 .mpd-live i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7);animation:onlineDotPulse 1.6s ease-in-out infinite}
-.mpd-me{position:absolute!important;right:4px;top:4px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2}
-.mpd-av{width:40px;height:40px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--orb-fill);box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))}
-.mpd-av>svg{width:22px;height:22px}
+.mpd-me{position:absolute!important;right:6px;top:6px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;z-index:2}
+.mpd-av{width:36px;height:36px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--orb-fill);box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))}
+.mpd-av>svg{width:20px;height:20px}
 .mpd-av .chat-avatar-wrap{transform:scale(1.25);transform-origin:center}
-.mpd-av .chat-avatar-img,.mpd-av img.chat-avatar-img{width:32px!important;height:32px!important}
-.mpd-unread{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#f43f5e;border:2px solid var(--bg);box-sizing:border-box}
+.mpd-av .chat-avatar-img,.mpd-av img.chat-avatar-img{width:29px!important;height:29px!important}
+.mpd-unread{position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#f43f5e;border:2px solid var(--bg);box-sizing:border-box}
 #mp-dock[data-state="tabs"] .mpd-unread{transform:scale(0);transition:transform .2s ease}
-.mpd-tabs{position:absolute;left:4px;top:4px;height:44px;width:var(--mpd-tw,300px);display:flex;gap:4px;transform-origin:left center}
-.mpd-tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px!important;font-weight:650!important;color:var(--lg-icon)!important;transition:color .3s ease}
+.mpd-tabs{position:absolute;left:6px;top:6px;height:40px;width:var(--mpd-tw,300px);display:flex;gap:4px;transform-origin:left center}
+.mpd-tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px!important;font-weight:650!important;color:var(--lg-icon)!important;transition:color .3s ease}
 .mpd-tabs button.on{color:var(--lg-icon-on)!important}
 .mpd-tabs button>span:not(.mpd-icw){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mpd-tabs button .mpd-ic{width:21px;height:21px}
-.mpd-ind{position:absolute;left:0;top:0;height:44px;width:80px;border-radius:22px;background:var(--orb-fill);box-shadow:var(--orb-shadow);transition:transform .55s cubic-bezier(.34,1.36,.5,1),width .45s var(--mpd-e),opacity .2s;pointer-events:none}
+.mpd-tabs button .mpd-ic{width:19px;height:19px}
+.mpd-ind{position:absolute;left:0;top:0;height:40px;width:80px;border-radius:20px;background:var(--orb-fill);box-shadow:var(--orb-shadow);transition:transform .55s cubic-bezier(.34,1.36,.5,1),width .45s var(--mpd-e),opacity .2s;pointer-events:none}
 .mpd-icw{position:relative;display:block;flex:none}
 .mpd-badge{position:absolute;top:-6px;left:12px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#f43f5e;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;font-style:normal}
-#mp-dock .mpd-bell{position:absolute;right:52px;top:4px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:2;background:none;border:0}
+#mp-dock .mpd-bell{position:absolute;right:52px;top:6px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;z-index:2;background:none;border:0}
 #mp-dock .mpd-bell .forum-bell-badge{top:-2px;right:-2px}
-#mp-dock .mpd-bell .mp-stack-face svg,#mp-dock .mpd-bell .mp-stack-peek svg{width:20px;height:20px}
+#mp-dock .mpd-bell .mp-stack-face svg,#mp-dock .mpd-bell .mp-stack-peek svg{width:18px;height:18px}
 @media (max-width:360px){.mpd-tabs button:not(.on)>span:not(.mpd-icw){display:none}}
 .mpd-tabs.is-crowded button{transition:color .3s ease,flex-grow .45s var(--mpd-e)}
 .mpd-tabs.is-crowded button:not(.on)>span:not(.mpd-icw){display:none}
