@@ -13214,9 +13214,10 @@ html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
 .mp-activity-by b{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.mp-stack-peek,.mp-notice-picker,.mp-activity-item{animation:none}.mp-ntf-row{transition:none}}
 /* per dc (t636u): follower count beside the name in the nav pill profile view */
-.mp-profile-summary-fol{display:inline-flex;align-items:center;gap:3px;flex:none;margin:0;font-size:12.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;vertical-align:middle}
+/* per dc (t637u): a small glass pill, UserGroup icon, 11px count, 19px tall */
+.mp-profile-summary-fol{display:inline-flex;align-items:center;gap:3px;flex:none;box-sizing:border-box;height:19px;margin:0;padding:0 7px 0 5px;border-radius:999px;background:var(--glass-clear-tint);-webkit-backdrop-filter:var(--glass-clear);backdrop-filter:var(--glass-clear);box-shadow:var(--glass-spec),0 0 0 .5px color-mix(in srgb,var(--ink) 8%,transparent);font-size:11px;line-height:1;font-weight:650;color:var(--muted);font-variant-numeric:tabular-nums;vertical-align:middle}
 .mp-profile-summary-fol[hidden]{display:none}
-.mp-profile-summary-fol .mp-fol-ico{width:15px;height:15px;flex:none}
+.mp-profile-summary-fol .mp-fol-ico{width:12px;height:12px;flex:none;stroke-width:2}
 /* per dc (t636u): profile Manage view hosts the dashboard's member controls */
 .mp-manage-dz{--dz-danger:#d92d20}
 [data-theme="dark"] .mp-manage-dz{--dz-danger:#ff6b61}
