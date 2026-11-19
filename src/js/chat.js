@@ -3021,10 +3021,11 @@
       dk = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
     /* Bottom dock: messages fade under the slim sky band at the top and just before the dock above the box. */
     if (dk) {
-      // the sky is a backdrop now: messages only fade as they reach the status bar
+      // per dc: the top fade starts a little below the status bar
       var dr = dk.getBoundingClientRect();
-      n = window.MPDock && MPDock.topInset ? MPDock.topInset() : 0;
-      if (dr.height && !dk.classList.contains("mpd-away") && !dk.classList.contains("is-profile-bar") && dr.top < a) a = dr.top;
+      n = (window.MPDock && MPDock.topInset ? MPDock.topInset() : 0) + 12;
+      // per dc: bubbles start fading once they are halfway past the nav pill (its measured middle), gone 48px later
+      if (dr.height && !dk.classList.contains("mpd-away") && !dk.classList.contains("is-profile-bar") && dr.top < a) a = dr.top + dr.height / 2 + 48;
     }
     var
       r = c.querySelectorAll(".chat-msg"),
@@ -3657,15 +3658,22 @@
   function mpNPOut(e, t) {
     return { title: t || e.trackName, artist: e.artistName, art: String(e.artworkUrl100 || "").replace(/\/\d+x\d+bb\./, "/300x300bb."), url: t ? e.artistViewUrl || "" : e.trackViewUrl || "", preview: t ? "" : e.previewUrl || "" };
   }
+  /* "+song" catalog search: the Worker's /api/music/search first (server-side, same results as the + Music picker),
+     then iTunes from the browser if the Worker is unreachable or finds nothing. */
+  function mpNPFind(q) {
+    return E("/api/music/search?q=" + encodeURIComponent(q))
+      .then(function (j) { var t = j && j.ok && Array.isArray(j.tracks) ? j.tracks : []; if (!t.length) throw new Error("empty"); return t; })
+      .catch(function () { return mpNPSearch(q); });
+  }
   function mpNPLookup(e) {
     if (mpNP[e]) return mpNP[e];
     var t = "mp-np4:" + e.toLowerCase();
     try {
       var n = JSON.parse(localStorage.getItem(t) || "null");
-      if (n) return ((mpNPv[e] = n.r || null), (mpNP[e] = Promise.resolve(n.r || null)));
+      /* a miss is only trusted for a day (it used to stick forever, so one failed lookup kept that "+song" plain) */
+      if (n && (n.r || (n.at && Date.now() - n.at < 864e5))) return ((mpNPv[e] = n.r || null), (mpNP[e] = Promise.resolve(n.r || null)));
     } catch (e) {}
-    var a = e.split(/\s+/);
-    return (mpNP[e] = mpNPSearch(e)
+    return (mpNP[e] = mpNPFind(e)
       .then(function (t) {
         var n = mpNPPick(t, e);
         if (n.r && n.s >= 5) return mpNPOut(n.r);
@@ -3702,7 +3710,7 @@
       .then(function (n) {
         mpNPv[e] = n;
         try {
-          localStorage.setItem(t, JSON.stringify({ r: n }));
+          localStorage.setItem(t, JSON.stringify({ r: n, at: Date.now() }));
         } catch (e) {}
         return n;
       })
@@ -5370,11 +5378,22 @@
   })();
   window.MPPreview = MPPreview;
 
+  /* "+artist song" lines (per dc: make + reliable): iOS/paste can bring a full-width or heavy plus, a zero-width
+     or no-break space, or several spaces; normalise those first. "+1 ..." (numbers/phones) and anything where
+     + isn't the first character stay plain text. */
+  function mpPlusQuery(t) {
+    var v = String(t == null ? "" : t).replace(/[\u200b-\u200d\u2060\ufeff]/g, "").replace(/[\u00a0\u2000-\u200a\u202f\u205f\u3000]/g, " ").replace(/&amp;/g, "&").trim();
+    v = v.replace(/^[\uff0b\ufe62\u2795]/, "+");
+    var r = /^\+(?!\d)[ \t]*([^\s+][^\n]{0,159})$/.exec(v);
+    if (!r) return null;
+    var q = r[1].replace(/\s+/g, " ").trim();
+    return q.length >= 2 ? q : null;
+  }
   function mpNowListening(e, t, n, a) {
-    var ref = mpMusicRef(t), r = /^\+\s*(\S.{1,120})$/.exec(String(t || "").trim());
-    if (!ref && (!r || /^\+\d/.test(String(t).trim()))) return;
+    var ref = mpMusicRef(t), pq = ref ? null : mpPlusQuery(t), r = pq ? [null, pq] : null;
+    if (!ref && !r) return;
     if (e.querySelector(".chat-np")) return;
-    var o = ref ? ref.key : r[1].replace(/&amp;/g, "&").trim(),
+    var o = ref ? ref.key : r[1],
       i = e.querySelector(".chat-text"),
       c = document.createElement("div");
     ((c.className = "chat-np is-loading"),
@@ -5419,8 +5438,6 @@
       ((r.alt = ""), (r.draggable = !1), (r.onerror = nx), (r.onload = function () { mpNPGrad(r.src, function (gr) { sg(gr || "linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"); }); }), a.appendChild(r), nx());
       var d = c.querySelectorAll(".chat-np-line");
       ((d[0].textContent = mpMusicTitle(n.title)), (d[1].textContent = "by " + n.artist));
-      var u = document.createElement("span");
-      ((u.className = "chat-np-eq"), (u.innerHTML = "<i></i><i></i><i></i>"), (u.setAttribute("aria-hidden", "true"), a.appendChild(u)));
       mpAmWire(c);
       MPPreview.attach(a, n);
       if (n.url && /^https:\/\/(music|itunes)\.apple\.com\//.test(n.url)) {
@@ -6370,9 +6387,9 @@
   /* A song link, or a "+song name" line (the + prefix embed), shared publicly updates Listening. */
   function mpListenFromText(text){
     if(window.MPProfiles&&MPProfiles.songUrl&&MPProfiles.songUrl(text))return mpListenFromSong(text);
-    var r=/^\+\s*(\S.{1,120})$/.exec(text);
-    if(!r||/^\+\d/.test(text))return;
-    mpNPLookup(r[1].trim()).then(function(n){/* only a real track link (not the search fallback) */n&&n.url&&/^https:\/\/(music|itunes)\.apple\.com\/.*([?&]i=\d+|\/song\/)/.test(n.url)&&mpListenFromSong(n.url);}).catch(function(){});
+    var pq=mpPlusQuery(text);
+    if(!pq)return;
+    mpNPLookup(pq).then(function(n){/* only a real track link (not the search fallback) */n&&n.url&&/^https:\/\/(music|itunes)\.apple\.com\/.*([?&]i=\d+|\/song\/)/.test(n.url)&&mpListenFromSong(n.url);}).catch(function(){});
   }
   function mpListenFromSong(url){
     if(!s||!d||!url)return;
