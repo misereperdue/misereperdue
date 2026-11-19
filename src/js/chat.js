@@ -2826,7 +2826,7 @@
           "load",
           function (e) {
             var t = e.target;
-            if (Date.now() <= Me && t && ("IMG" === t.tagName || "VIDEO" === t.tagName)) {
+            if (Date.now() <= Me && t && ("IMG" === t.tagName || "VIDEO" === t.tagName) && !(t.closest && t.closest("#mp-dock, .mp-profile-bar, .chat-head"))) {
               if (!Te()) return;
               window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
             }

@@ -131,7 +131,8 @@
     me.setAttribute("aria-label", signedIn ? "Your profile" : "Sign in");
     if (signedIn) {
       var face = src.querySelector(".chat-avatar-wrap") || src.firstElementChild;
-      var key = face ? face.outerHTML : "";
+      // stable key (image + letters + decorations), so re-renders of the header don't re-clone (and re-load) it
+      var key = face ? [].map.call(face.querySelectorAll("img"), function (i) { return i.getAttribute("src"); }).join("|") + "#" + face.textContent + "#" + face.className + "#" + face.querySelectorAll("*").length : "";
       if (key && meAv._key !== key) {
         meAv._key = key;
         var c = face.cloneNode(true);
@@ -222,6 +223,12 @@
     clearTimeout(awayT);
     if (on === away) return;
     away = on;
+    // Chat: drop the dock's room under the messages in the same frame (before the keyboard resizes the view);
+    // when typing ends and you were at the latest message, stay pinned to it as the room comes back
+    var inChat = panelView() === "journal", pinned = inChat && document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 140;
+    html.classList.toggle("mpd-typing", on && inChat);
+    // (a plain scroll: MPChat.scrollToLatest would re-open chat's 5 s "pin on image load" window and yank later reads)
+    if (!on && pinned) [40, 300].forEach(function (d) { setTimeout(function () { if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 220) window.scrollTo(0, document.documentElement.scrollHeight); }, d); });
     dock.classList.toggle("mpd-away", on);
     dock.inert = on && !menuOpen();
     if (on) collapse();
