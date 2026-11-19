@@ -42,7 +42,7 @@
 
   /* ---------- size: the shape's width is explicit so every change animates (CSS transition) ---------- */
   function pillW() {
-    var w = 8 + openIn.offsetWidth + 58;
+    var w = 4 + openIn.offsetWidth + 52;
     if (!back.hidden) w += 48;
     if (!live.hidden) w += live.offsetWidth + 4;
     if (!bag.hidden) w += bag.offsetWidth + 4;
@@ -51,7 +51,7 @@
   function size() {
     var full = fullW(), w = menuOpen() || state === "tabs" ? full : pillW();
     html.style.setProperty("--mpd-full", full + "px");
-    html.style.setProperty("--mpd-tw", Math.max(160, full - 16 - 50 - (signedIn ? 50 : 0)) + "px");
+    html.style.setProperty("--mpd-tw", Math.max(160, full - 8 - 48 - (signedIn ? 48 : 0)) + "px");
     if (w !== lastW || dock.style.width !== w + "px") { dock.style.width = w + "px"; lastW = w; }
     seat();
   }
