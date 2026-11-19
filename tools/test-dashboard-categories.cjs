@@ -4,6 +4,7 @@ const ROOT=path.resolve(__dirname,'..');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 for(const [theme,width,height] of [['dark',390,844],['light',360,780]]){
 const context=await browser.newContext({viewport:{width,height},colorScheme:theme});
+const src=fs.readFileSync(path.join(ROOT,'src/js/chat.js'),'utf8');await context.addInitScript(src.slice(0,src.indexOf('/* mpHide')));
 await context.addInitScript(()=>{
  window.testOrders=[];window.calls=[];
  const categories=['general','a','b','c'].map(id=>({id,name:id==='general'?'General':id.toUpperCase(),ownerOnly:id==='c'}));
@@ -13,6 +14,7 @@ await context.addInitScript(()=>{
   if(route==='/api/forum/categories')return {ok:true,categories};
   if(route==='/api/forum/categories/reorder'){testOrders.push(options.body.order);await new Promise(r=>setTimeout(r,60));if(window.failNext){window.failNext=false;return {ok:false,error:'Test failure'};}return {ok:true};}
   if(route==='/api/users')return {ok:true,users:[{username:'Ana',createdAt:Date.now()-864e5,points:12,member:true,catAccess:[]},{username:'bo',createdAt:Date.now()-2*864e5,banned:true}]};
+  if(/\/member$/.test(route))return {ok:true,member:false};
   if(route.startsWith('/api/admin/'))throw Object.assign(new Error('Request failed (404)'),{status:404});
   return {ok:true,users:[]};
  }};
@@ -42,5 +44,15 @@ const fs16=await page.locator('.dz-search .dz-in').evaluate(e=>getComputedStyle(
 await page.getByRole('button',{name:'Banned',exact:true}).click();assert.deepEqual(await page.locator('.dz-person .dz-row-main b').allTextContents(),['bo']);
 await page.getByRole('button',{name:'All',exact:true}).click();await page.locator('.dz-person .dz-row').first().click();
 for(const n of ['Add','Rename','Open profile','Remove VIP','Ban','Clear messages','Clear Globe posts','Delete account','C'])assert.equal(await page.getByRole('button',{name:n,exact:true}).count()>0,true,n);
-assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'title, hidden orders, reorder + rollback, refresh keeps editor, people filter + actions'}));await context.close();}
+// Two taps instead of a popup (Sign out's pattern): first arms, second runs, 3s timeout resets.
+const vip=page.getByRole('button',{name:'Remove VIP',exact:true});await vip.click();
+assert.equal(await page.locator('.mp-dialog').count(),0,'no popup');
+const armed=page.getByRole('button',{name:'Tap again to remove VIP',exact:true});assert.equal(await armed.count(),1);
+assert.equal(await page.evaluate(()=>calls.some(c=>c.endsWith('/member'))),false,'first tap must not run');
+await armed.click();await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>calls.some(c=>c.endsWith('/member'))),true,'second tap runs');
+const del=page.getByRole('button',{name:'Delete account',exact:true});await del.click();await page.waitForTimeout(3200);
+assert.equal(await del.textContent(),'Delete account','arm resets after 3s');assert.equal(await page.evaluate(()=>calls.some(c=>c==='/api/user/ana')),false);
+// Dividers use the shared fading divider.
+assert.match(await page.locator('.dz-danger').first().evaluate(e=>getComputedStyle(e).borderImageSource),/linear-gradient/);
+assert.deepEqual(errors,[]);console.log(JSON.stringify({theme,width,passed:'title, hidden orders, reorder + rollback, refresh keeps editor, people filter + actions, two-tap confirms, fading dividers'}));await context.close();}
 await browser.close();})().catch(e=>{console.error(e);process.exit(1)});

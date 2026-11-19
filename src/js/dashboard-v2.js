@@ -22,20 +22,8 @@
     try { return new Intl.NumberFormat(void 0, { style: "currency", currency: (cur || "CAD").toUpperCase(), currencyDisplay: "narrowSymbol", maximumFractionDigits: v >= 1e3 ? 0 : 2 }).format(v || 0); }
     catch (e) { return "$" + Math.round(v || 0); }
   }
-  function confirmBox(title, msg, ok, danger) {
-    return new Promise(function (res) {
-      var b = el("div", "mp-dialog-back"), d = el("div", "mp-dialog");
-      d.setAttribute("role", "dialog");
-      d.innerHTML = '<div class="mp-dialog-title">' + esc(title) + "</div>" + (msg ? '<div class="dz-dlg-msg">' + esc(msg) + "</div>" : "") + '<div class="mp-dialog-actions"></div>';
-      var a = d.querySelector(".mp-dialog-actions");
-      function done(v) { b.remove(); res(v); }
-      var c = el("button", "mp-dialog-cancel"); c.type = "button"; c.textContent = "Cancel"; c.onclick = function () { done(!1); };
-      var g = el("button", "mp-dialog-grant" + (danger ? " mp-dialog-danger" : "")); g.type = "button"; g.textContent = ok; g.onclick = function () { done(!0); };
-      a.appendChild(c); a.appendChild(g); b.appendChild(d);
-      b.addEventListener("click", function (e) { e.target === b && done(!1); });
-      document.body.appendChild(b);
-    });
-  }
+  /* Sign out's two-tap confirm (window.mpTwoTap in chat.js), per dc: no popups. */
+  function twoTap(b, armed, go) { window.mpTwoTap && window.mpTwoTap(b, armed, go); } /* never runs an action without its confirm tap */
   /* Runs an action on a button: spinner text, then the result in the shared status line. */
   function run(b, status, req, okMsg, after) {
     if (b.disabled) return;
@@ -311,36 +299,36 @@
       g.appendChild(btn("Open profile", "", function (e) { M().openUserSheet && M().openUserSheet({ username: u.username }, e.currentTarget); }));
       g.appendChild(btn(u.member ? "Remove VIP" : "Make VIP", "", function (e) {
         var b = e.currentTarget, mk = !u.member;
-        confirmBox(mk ? "Give " + at(u.username) + " VIP?" : "Remove VIP from " + at(u.username) + "?", "", mk ? "Give VIP" : "Remove", !mk).then(function (ok) {
-          ok && run(b, st, function () { return api("/api/user/" + name() + "/member", { method: "POST", body: { member: mk, amount: null } }); },
+        twoTap(b, mk ? "Tap again to give VIP" : "Tap again to remove VIP", function () {
+          run(b, st, function () { return api("/api/user/" + name() + "/member", { method: "POST", body: { member: mk, amount: null } }); },
             mk ? "VIP on." : "VIP removed.", function (j) { u.member = !!j.member; setTimeout(draw, 700); });
         });
       }));
       dg.appendChild(btn(u.banned ? "Unban" : "Ban", u.banned ? "" : "is-danger", function (e) {
         var b = e.currentTarget, ban = !u.banned;
-        confirmBox(ban ? "Ban " + at(u.username) + "?" : "Unban " + at(u.username) + "?", ban ? "They can't post or sign in until you unban them." : "", ban ? "Ban" : "Unban", ban).then(function (ok) {
-          ok && run(b, st, function () { return api("/api/ban", { method: "POST", body: { username: u.username, banned: ban } }); },
+        twoTap(b, ban ? "Tap again to ban" : "Tap again to unban", function () {
+          run(b, st, function () { return api("/api/ban", { method: "POST", body: { username: u.username, banned: ban } }); },
             ban ? "Banned." : "Unbanned.", function () { u.banned = ban; setTimeout(draw, 700); });
         });
       }));
       dg.appendChild(btn("Clear messages", "is-danger", function (e) {
         var b = e.currentTarget;
-        confirmBox("Delete " + at(u.username) + "'s chat messages?", "This can't be undone.", "Delete", !0).then(function (ok) {
-          ok && run(b, st, function () { return api("/api/user/" + name() + "/clear-messages", { method: "POST", body: {} }); },
+        twoTap(b, "Tap again to clear", function () {
+          run(b, st, function () { return api("/api/user/" + name() + "/clear-messages", { method: "POST", body: {} }); },
             function (j) { return "Removed " + num(j.removed) + " messages."; });
         });
       }));
       dg.appendChild(btn("Clear Globe posts", "is-danger", function (e) {
         var b = e.currentTarget;
-        confirmBox("Delete " + at(u.username) + "'s Globe posts and replies?", "This can't be undone.", "Delete", !0).then(function (ok) {
-          ok && run(b, st, function () { return api("/api/user/" + name() + "/clear-forum", { method: "POST", body: {} }); },
+        twoTap(b, "Tap again to clear", function () {
+          run(b, st, function () { return api("/api/user/" + name() + "/clear-forum", { method: "POST", body: {} }); },
             function (j) { return "Removed " + num(j.threadsRemoved) + " posts and " + num(j.repliesRemoved) + " replies."; });
         });
       }));
       dg.appendChild(btn("Delete account", "is-danger", function (e) {
         var b = e.currentTarget;
-        confirmBox("Delete " + at(u.username) + "?", "Their account is removed for good.", "Delete", !0).then(function (ok) {
-          ok && run(b, st, function () { return api("/api/user/" + name(), { method: "DELETE" }); },
+        twoTap(b, "Tap again to delete", function () {
+          run(b, st, function () { return api("/api/user/" + name(), { method: "DELETE" }); },
             "Deleted.", function () { users = users.filter(function (x) { return x !== u; }); open = null; setTimeout(draw, 700); });
         });
       }));
@@ -447,8 +435,8 @@
           var del = el("button", "dz-mv dz-del", '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>');
           del.type = "button"; del.setAttribute("aria-label", "Delete " + c.name);
           del.onclick = function () {
-            confirmBox("Delete " + c.name + "?", "Its posts move to General.", "Delete", !0).then(function (ok) {
-              ok && run(del, st, function () { return api("/api/forum/categories/" + encodeURIComponent(c.id), { method: "DELETE" }); }, "Deleted " + c.name + ".", load);
+            twoTap(del, "Tap again to delete", function () {
+              run(del, st, function () { return api("/api/forum/categories/" + encodeURIComponent(c.id), { method: "DELETE" }); }, "Deleted " + c.name + ".", load);
             });
           };
           r.appendChild(del);
@@ -476,8 +464,8 @@
     var send = btn("Send", "is-primary dz-wide", function () {
       var title = tt.value.trim(), body = bd.value.trim(), who = nm(to.value.trim());
       if (!title || !body) return void (nst.textContent = "Add a title and a message.");
-      confirmBox(who ? "Send to @" + who + "?" : "Send to everyone?", title + ": " + body, "Send").then(function (ok) {
-        ok && run(send, nst, function () { return api("/api/push/send", { method: "POST", body: { to: who || "all", title: title, body: body } }); },
+      twoTap(send, who ? "Tap again to send to @" + who : "Tap again to send to everyone", function () {
+        run(send, nst, function () { return api("/api/push/send", { method: "POST", body: { to: who || "all", title: title, body: body } }); },
           function (j) { return "Sent" + (j.sent != null ? " to " + num(j.sent) + " devices" : "") + "."; }, function () { tt.value = bd.value = ""; });
       });
     });
@@ -500,7 +488,8 @@
         : "<b>Off air</b> \u00b7 " + num((f.list || []).length) + " songs ready";
       function act(label, a, cls) {
         fg.appendChild(btn(label, cls, function (e) {
-          run(e.currentTarget, fst, function () { return api("/api/fm/control", { method: "POST", body: { action: a } }); }, "Done.", function (j) { fmPaint(j.fm); });
+          var b = e.currentTarget, go = function () { run(b, fst, function () { return api("/api/fm/control", { method: "POST", body: { action: a } }); }, "Done.", function (j) { fmPaint(j.fm); }); };
+          a === "stop" ? twoTap(b, "Tap again to stop", go) : go();
         }));
       }
       if (!f.live) act("Go live", "live", "is-primary");
@@ -517,20 +506,26 @@
     var cc = section("Chat & storage");
     var cg = el("div", "dz-grid");
     var cst = el("p", "pow-status"); cst.setAttribute("role", "status");
+    var purge = null;
     var scan = btn("Find unused media", "", function () {
       run(scan, cst, function () { return api("/api/media/cleanup", { method: "POST", body: { confirm: !1 } }); }, function (j) {
         var n = (j.candidates || []).length;
+        purge && purge.remove(); purge = null;
         if (n) {
-          confirmBox("Delete " + num(n) + " unused files?", "Uploads no message, post or profile uses anymore.", "Delete", !0).then(function (ok) {
-            ok && run(scan, cst, function () { return api("/api/media/cleanup", { method: "POST", body: { confirm: !0 } }); }, function (k) { return "Deleted " + num(k.deleted) + " files."; });
+          /* per dc: two taps instead of a popup */
+          purge = btn("Delete " + num(n) + " unused files", "is-danger", function () {
+            twoTap(purge, "Tap again to delete", function () {
+              run(purge, cst, function () { return api("/api/media/cleanup", { method: "POST", body: { confirm: !0 } }); }, function (k) { purge && purge.remove(); purge = null; return "Deleted " + num(k.deleted) + " files."; });
+            });
           });
+          scan.after(purge);
         }
         return n ? num(n) + " unused files found." : "Nothing to clean up.";
       });
     });
     var clear = btn("Clear all chat", "is-danger", function () {
-      confirmBox("Clear all chat messages?", "Everyone's messages are deleted. This can't be undone.", "Clear", !0).then(function (ok) {
-        ok && run(clear, cst, function () { return api("/api/clear", { method: "POST", body: {} }); }, "Chat cleared.");
+      twoTap(clear, "Tap again to clear all chat", function () {
+        run(clear, cst, function () { return api("/api/clear", { method: "POST", body: {} }); }, "Chat cleared.");
       });
     });
     cg.append(scan, clear);
