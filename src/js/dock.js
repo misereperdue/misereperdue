@@ -70,11 +70,15 @@
     var b = null, v = panelView();
     if (kbLift) b = kbLift;
     else if (v === "journal") {
+      // from the box's resting layout (its stylesheet bottom + height), never its live rect: chat lifts it over the
+      // keyboard with an inline bottom and animates it in; following those made the pill jump/slide back down
       var ir = document.querySelector("#journal .chat-inputrow");
-      var r = ir && ir.getClientRects().length ? ir.getBoundingClientRect() : null;
-      if (r && r.height) b = Math.round(window.innerHeight - r.top + 10);
+      if (ir && ir.style.bottom) return; // keyboard up (dock is away): keep the resting spot
+      if (ir && ir.offsetHeight) b = Math.round((parseFloat(getComputedStyle(ir).bottom) || 0) + ir.offsetHeight + 10);
     }
-    if (b) html.style.setProperty("--mpd-b", b + "px"); else html.style.removeProperty("--mpd-b");
+    var cur = parseFloat(html.style.getPropertyValue("--mpd-b")) || 0;
+    if (b) { if (Math.abs(b - cur) > 1) html.style.setProperty("--mpd-b", b + "px"); }
+    else if (cur) html.style.removeProperty("--mpd-b");
     var dr = dock.getBoundingClientRect();
     // room the page keeps clear under its content (toasts, last cards, banners); stable while menus are open
     if (!menuOpen() && !away && dr.height) html.style.setProperty("--mpd-clear", Math.round(window.innerHeight - dr.top + 8) + "px");
@@ -230,6 +234,7 @@
   function setAway(on) {
     clearTimeout(awayT);
     if (on === away) return;
+    if (!on) place(); // settle the spot before it fades back in, so it never slides on return
     away = on;
     // Chat: drop the dock's room under the messages in the same frame (before the keyboard resizes the view);
     // when typing ends and you were at the latest message, stay pinned to it as the room comes back
@@ -241,7 +246,13 @@
     dock.inert = on && !menuOpen();
     if (on) collapse();
   }
-  document.addEventListener("focusin", function (e) { if (isField(e.target) && !dock.contains(e.target) && !e.target.closest(".mp-whop-sheet")) setAway(true); });
+  document.addEventListener("focusin", function (e) {
+    if (!isField(e.target) || dock.contains(e.target) || e.target.closest(".mp-whop-sheet")) return;
+    clearTimeout(awayT);
+    if (away) return;
+    var t = e.target;
+    awayT = setTimeout(function () { if (document.activeElement === t) setAway(true); }, 90);
+  });
   document.addEventListener("focusout", function (e) {
     if (!isField(e.target)) return;
     awayT = setTimeout(function () { if (!isField(document.activeElement) || dock.contains(document.activeElement)) setAway(false); place(); }, 120);

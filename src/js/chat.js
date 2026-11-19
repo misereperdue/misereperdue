@@ -3021,8 +3021,9 @@
       dk = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
     /* Bottom dock: messages fade under the slim sky band at the top and just before the dock above the box. */
     if (dk) {
-      var hb = document.querySelector(".hero"), dr = dk.getBoundingClientRect();
-      n = hb ? Math.max(0, hb.getBoundingClientRect().bottom - 18) : 40;
+      // the sky is a backdrop now: messages only fade as they reach the status bar
+      var dr = dk.getBoundingClientRect();
+      n = window.MPDock && MPDock.topInset ? MPDock.topInset() : 0;
       if (dr.height && !dk.classList.contains("mpd-away") && !dk.classList.contains("is-profile-bar") && dr.top < a) a = dr.top;
     }
     var
