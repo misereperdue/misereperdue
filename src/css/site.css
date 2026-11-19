@@ -13152,10 +13152,21 @@ html.mp-bnav main.page .forum-head:not(:has(>:not(.forum-back))){display:none!im
 .dz-people>.pow-note{margin:6px 4px}
 .dz-person{padding:4px 14px;border-radius:20px;background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);border:var(--glass-hairline);box-shadow:var(--glass-spec)}
 .dz-person.is-open{padding-bottom:6px}
-.dz-acts{display:flex;flex-direction:column;gap:10px;padding:2px 0 12px}
+.dz-acts{display:flex;flex-direction:column;gap:10px;margin:2px -4px 8px;padding:12px;border-radius:16px;background:color-mix(in srgb,var(--ink) 4%,transparent);border:var(--glass-hairline)}
+.dz-acts .dz-line{min-height:36px}
+.dz-acts .dz-line>.dz-in{height:36px;border-radius:999px;padding:0 14px}
+.dz-acts .dz-line>.dz-in-num{flex:1;width:auto;min-width:48px;padding:0 8px}
+.dz-acts .dz-line>.dz-btn{flex:none;padding:0 14px}
+.dz-acts .dz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dz-acts .dz-grid .dz-btn{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.dz-acts .dz-wrap{gap:6px}
+.dz-danger{padding-top:10px;border-top:.5px solid var(--stroke)}
+.dz-acts>.pow-status:empty{display:none}
+.dz-acts-box{will-change:height}
+.dz .dash-tabs>.dash-tab-ind{width:calc((100% - 6px)/4)!important}
 .dz-line{display:flex;align-items:center;gap:8px}
 .dz-line.dz-wrap{flex-wrap:wrap}
-.dz-line-l{flex:none;width:58px;font-size:12px;font-weight:650;color:var(--muted)}
+.dz-line-l{flex:none;width:44px;font-size:12px;font-weight:650;color:var(--muted)}
 .dz-wrap .dz-line-l{width:100%}
 .dz-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dz-grid .dz-btn{width:100%;padding:0 10px}

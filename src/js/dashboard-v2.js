@@ -1,6 +1,6 @@
 /* Owner dashboard (redesign #383, per dc): only the numbers that matter, every admin action in one place.
    Tabs: Overview (status + key stats + recent signups, orders, activity), People (search + per-user
-   actions), Forum (categories), Tools (Yell, FM, chat, media); tab bar: Chat / Forum / Manage.
+   actions), Forum (categories), Tools (Yell, FM, chat, media); tab bar: Overview / Categories / People / Tools.
    Every request goes through MPChat.api with the owner's session; the Worker checks owner on each
    endpoint, and this file only runs for the owner (the Dashboard pill/hash are owner-only).
    Sections whose endpoint isn't live yet (/api/admin/orders, /api/admin/log) stay hidden. */
@@ -128,7 +128,7 @@
       fmB.textContent = !f ? "FM off" : f.live ? (f.paused ? "FM paused" : "FM live \u00b7 " + num(f.listeners)) : "FM off";
       fmB.classList.toggle("is-on", !!(f && f.live && !f.paused));
     }).catch(function () { fmB.textContent = "FM"; });
-    fmB.addEventListener("click", function () { ctx.go("tools"); });
+    fmB.addEventListener("click", function () { ctx.go("fm"); });
 
     var recent = section("New members", '<button type="button" class="dz-link">All</button>');
     recent.querySelector(".dz-link").onclick = function () { ctx.go("people"); };
@@ -238,12 +238,42 @@
       u.member && tags.appendChild(el("span", "dz-tag", "VIP"));
       u.banned && tags.appendChild(el("span", "dz-tag is-warn", "Banned"));
       head.appendChild(tags);
-      function toggle() { open = open === nm(u.username) ? null : nm(u.username); draw(); }
+      function toggle() {
+        var me = nm(u.username), was = open === me;
+        list.querySelectorAll(".dz-person.is-open").forEach(collapse);
+        open = was ? null : me;
+        if (!was) {
+          wrap.classList.add("is-open"); head.setAttribute("aria-expanded", "true");
+          var box = el("div", "dz-acts-box");
+          box.appendChild(actions(u));
+          wrap.appendChild(box);
+          morph(box, !0);
+        }
+      }
       head.addEventListener("click", toggle);
       head.addEventListener("keydown", function (e) { (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle()); });
       wrap.appendChild(head);
-      open === nm(u.username) && wrap.appendChild(actions(u));
+      if (open === nm(u.username)) { var box = el("div", "dz-acts-box"); box.appendChild(actions(u)); wrap.appendChild(box); }
       return wrap;
+    }
+    /* Bubble dropdown morph (per dc): height 0 <-> content with a fade; instant under reduced motion. */
+    var EASE = "cubic-bezier(.32,.72,0,1)";
+    function still() { return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
+    function morph(box, opening, done) {
+      if (still() || !box.animate) return void (done && done());
+      var h = box.scrollHeight;
+      box.style.overflow = "hidden";
+      var a = box.animate(opening ? [{ height: "0px", opacity: 0 }, { height: h + "px", opacity: 1 }] : [{ height: h + "px", opacity: 1 }, { height: "0px", opacity: 0 }],
+        { duration: opening ? 280 : 220, easing: EASE });
+      var inner = box.firstChild;
+      opening && inner && inner.animate && inner.animate([{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], { duration: 280, delay: 60, easing: "ease-out", fill: "backwards" });
+      a.onfinish = a.oncancel = function () { box.style.overflow = ""; done && done(); };
+    }
+    function collapse(w) {
+      w.classList.remove("is-open");
+      var hd = w.querySelector(".dz-row"); hd && hd.setAttribute("aria-expanded", "false");
+      var box = w.querySelector(".dz-acts-box");
+      box && morph(box, !1, function () { box.remove(); });
     }
     function actions(u) {
       var p = el("div", "dz-acts"), st = el("p", "pow-status");
@@ -277,7 +307,7 @@
       }));
       p.appendChild(rr);
       /* Main actions */
-      var g = el("div", "dz-grid");
+      var g = el("div", "dz-grid"), dg = el("div", "dz-grid dz-danger");
       g.appendChild(btn("Open profile", "", function (e) { M().openUserSheet && M().openUserSheet({ username: u.username }, e.currentTarget); }));
       g.appendChild(btn(u.member ? "Remove VIP" : "Make VIP", "", function (e) {
         var b = e.currentTarget, mk = !u.member;
@@ -286,28 +316,28 @@
             mk ? "VIP on." : "VIP removed.", function (j) { u.member = !!j.member; setTimeout(draw, 700); });
         });
       }));
-      g.appendChild(btn(u.banned ? "Unban" : "Ban", u.banned ? "" : "is-danger", function (e) {
+      dg.appendChild(btn(u.banned ? "Unban" : "Ban", u.banned ? "" : "is-danger", function (e) {
         var b = e.currentTarget, ban = !u.banned;
         confirmBox(ban ? "Ban " + at(u.username) + "?" : "Unban " + at(u.username) + "?", ban ? "They can't post or sign in until you unban them." : "", ban ? "Ban" : "Unban", ban).then(function (ok) {
           ok && run(b, st, function () { return api("/api/ban", { method: "POST", body: { username: u.username, banned: ban } }); },
             ban ? "Banned." : "Unbanned.", function () { u.banned = ban; setTimeout(draw, 700); });
         });
       }));
-      g.appendChild(btn("Clear messages", "", function (e) {
+      dg.appendChild(btn("Clear messages", "is-danger", function (e) {
         var b = e.currentTarget;
         confirmBox("Delete " + at(u.username) + "'s chat messages?", "This can't be undone.", "Delete", !0).then(function (ok) {
           ok && run(b, st, function () { return api("/api/user/" + name() + "/clear-messages", { method: "POST", body: {} }); },
             function (j) { return "Removed " + num(j.removed) + " messages."; });
         });
       }));
-      g.appendChild(btn("Clear forum posts", "", function (e) {
+      dg.appendChild(btn("Clear Globe posts", "is-danger", function (e) {
         var b = e.currentTarget;
         confirmBox("Delete " + at(u.username) + "'s Globe posts and replies?", "This can't be undone.", "Delete", !0).then(function (ok) {
           ok && run(b, st, function () { return api("/api/user/" + name() + "/clear-forum", { method: "POST", body: {} }); },
             function (j) { return "Removed " + num(j.threadsRemoved) + " posts and " + num(j.repliesRemoved) + " replies."; });
         });
       }));
-      g.appendChild(btn("Delete account", "is-danger", function (e) {
+      dg.appendChild(btn("Delete account", "is-danger", function (e) {
         var b = e.currentTarget;
         confirmBox("Delete " + at(u.username) + "?", "Their account is removed for good.", "Delete", !0).then(function (ok) {
           ok && run(b, st, function () { return api("/api/user/" + name(), { method: "DELETE" }); },
@@ -318,7 +348,7 @@
       /* Private categories */
       if (cats.length) {
         var ca = el("div", "dz-line dz-wrap");
-        ca.appendChild(el("span", "dz-line-l", "Private access"));
+        ca.appendChild(el("span", "dz-line-l", "Access"));
         cats.forEach(function (c) {
           var has = (u.catAccess || []).indexOf(c.id) >= 0;
           var b = btn(c.name, "dz-chip" + (has ? " is-sel" : ""), function () {
@@ -336,6 +366,7 @@
         });
         p.appendChild(ca);
       }
+      p.appendChild(dg);
       p.appendChild(st);
       return p;
     }
@@ -455,6 +486,7 @@
 
     /* misery fm */
     var fc = section("FM");
+    fc.classList.add("dz-fm");
     var fs = el("p", "dz-fm-now", "Loading\u2026");
     var fg = el("div", "dz-grid");
     var fst = el("p", "pow-status"); fst.setAttribute("role", "status");
@@ -507,13 +539,14 @@
   }
 
   /* ---------- Shell ---------- */
-  /* Tab bar restored from before #387 (per dc): the three icon tabs (.dash-tabs + .dash-tab-ind, shared menu-tab CSS).
-     Chat = overview, Forum = categories, Manage = people + tools. */
+  /* Restored tab bar (per dc), now four tabs with icons that match each page (original drawings, Hugeicons-style stroke). */
   var TABS = [
-    ["overview", "Chat", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="rotate"><path d="M12 21.5C17.2467 21.5 21.5 17.2467 21.5 12C21.5 6.75329 17.2467 2.5 12 2.5C6.75329 2.5 2.5 6.75329 2.5 12C2.5 13.3377 2.66372 14.5604 3.1189 15.6954C3.81756 17.4374 3.68195 18.9241 2.5 20.5C3.86146 21.1644 5.86811 21.1419 7 20.0725C8.45323 20.9748 10.1636 21.5 12 21.5Z" stroke-linecap="square"/><path d="M12.2 12.0002H12M7.69961 11.9999H7.49961M16.6996 11.9999H16.4996M12.4 12.0002C12.4 12.2212 12.2209 12.4002 12 12.4002C11.7791 12.4002 11.6 12.2212 11.6 12.0002C11.6 11.7793 11.7791 11.6002 12 11.6002C12.2209 11.6002 12.4 11.7793 12.4 12.0002ZM7.89961 11.9999C7.89961 12.2208 7.72052 12.3999 7.49961 12.3999C7.2787 12.3999 7.09961 12.2208 7.09961 11.9999C7.09961 11.7789 7.2787 11.5999 7.49961 11.5999C7.72052 11.5999 7.89961 11.7789 7.89961 11.9999ZM16.8996 11.9999C16.8996 12.2208 16.7205 12.3999 16.4996 12.3999C16.2787 12.3999 16.0996 12.2208 16.0996 11.9999C16.0996 11.7789 16.2787 11.5999 16.4996 11.5999C16.7205 11.5999 16.8996 11.7789 16.8996 11.9999Z"/></svg>'],
-    ["forum", "Forum", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="scale"><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg>'],
-    ["people", "Manage", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block" width="18" height="18" data-hi="rotate"><path d="M3.95631 10.5829L3.03254 9.07084C2.74505 8.60024 2.7389 8.00978 3.01652 7.5333L3.63533 6.47124C3.90953 6.00064 4.41721 5.71571 4.96162 5.7269L6.69131 5.76245C6.92616 5.76728 7.15379 5.68727 7.34333 5.54846C7.79531 5.21745 8.28334 4.93276 8.80042 4.70139C9.01191 4.60675 9.19222 4.45165 9.30469 4.24903L10.1203 2.77965C10.3847 2.30328 10.8865 2.00781 11.4312 2.00781H12.6937C13.2384 2.00781 13.7403 2.30329 14.0047 2.77966L14.8202 4.24902C14.9327 4.45165 15.113 4.60675 15.3245 4.70139C15.8416 4.93274 16.3296 5.2174 16.7815 5.54838C16.9711 5.68718 17.1987 5.76718 17.4336 5.76235L19.1634 5.72676C19.7078 5.71557 20.2155 6.00049 20.4897 6.47111L21.1085 7.53314C21.3862 8.00963 21.38 8.60009 21.0925 9.07068L20.1687 10.5828C20.0481 10.7803 20.002 11.0134 20.0235 11.2439C20.0707 11.7486 20.0707 12.267 20.0235 12.7717C20.002 13.0022 20.0481 13.2353 20.1687 13.4329L21.0924 14.9448C21.3799 15.4154 21.3861 16.0058 21.1084 16.4823L20.4896 17.5444C20.2154 18.015 19.7077 18.2999 19.1633 18.2887L17.4338 18.2531C17.1989 18.2483 16.9713 18.3283 16.7817 18.4671C16.3297 18.7982 15.8416 19.0829 15.3245 19.3142C15.113 19.4089 14.9327 19.564 14.8202 19.7666L14.0047 21.236C13.7403 21.7123 13.2384 22.0078 12.6937 22.0078H11.4312C10.8866 22.0078 10.3847 21.7123 10.1203 21.236L9.30468 19.7665C9.19222 19.5639 9.01191 19.4088 8.80042 19.3142C8.28329 19.0828 7.79519 18.798 7.34316 18.467C7.15362 18.3282 6.92597 18.2482 6.69111 18.253L4.96175 18.2886C4.41733 18.2998 3.90963 18.0148 3.63543 17.5442L3.01663 16.4822C2.739 16.0057 2.74515 15.4152 3.03264 14.9446L3.95631 13.4327C4.07699 13.2351 4.12309 13.002 4.10154 12.7715C4.05437 12.267 4.05438 11.7486 4.10154 11.244C4.12308 11.0135 4.07699 10.7805 3.95631 10.5829Z"/><circle cx="12.0625" cy="12.0078" r="3.5"/></svg>'],
+    ["overview", "Overview", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><rect x=\"3\" y=\"3\" width=\"7.5\" height=\"9\" rx=\"2\"/><rect x=\"13.5\" y=\"3\" width=\"7.5\" height=\"5.5\" rx=\"2\"/><rect x=\"13.5\" y=\"11.5\" width=\"7.5\" height=\"9.5\" rx=\"2\"/><rect x=\"3\" y=\"15\" width=\"7.5\" height=\"6\" rx=\"2\"/></svg>"],
+    ["forum", "Categories", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><path d=\"M12 3.5L20.5 7.8L12 12.1L3.5 7.8Z\"/><path d=\"M3.5 12L12 16.3L20.5 12\"/><path d=\"M3.5 16.2L12 20.5L20.5 16.2\"/></svg>"],
+    ["people", "People", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"/><path d=\"M2.5 20C3.3 16.6 5.9 14.5 9 14.5C12.1 14.5 14.7 16.6 15.5 20\"/><path d=\"M15.5 4.7C17 5.1 18 6.4 18 8C18 9.6 17 10.9 15.5 11.3\"/><path d=\"M17.8 14.8C19.8 15.5 21 17.3 21.5 20\"/></svg>"],
+    ["tools", "Tools", "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:block\" width=\"18\" height=\"18\"><path d=\"M3.5 7H12.5\"/><path d=\"M17.5 7H20.5\"/><circle cx=\"15\" cy=\"7\" r=\"2.5\"/><path d=\"M3.5 17H6.5\"/><path d=\"M11.5 17H20.5\"/><circle cx=\"9\" cy=\"17\" r=\"2.5\"/></svg>"],
   ];
+
   function build(stats) {
     var h = host();
     if (h === !1) return null;
@@ -524,7 +557,7 @@
     seg.setAttribute("role", "tablist");
     seg.style.cssText = "position:relative;display:flex;gap:4px;background:rgba(120,120,128,0.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-radius:999px;padding:4px;border:var(--glass-hairline);";
     var ind = el("span", "dash-tab-ind");
-    ind.style.cssText = "position:absolute;top:3px;bottom:3px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);pointer-events:none;left:3px;width:calc(33.333% - 3px);";
+    ind.style.cssText = "position:absolute;top:3px;bottom:3px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 2px 8px rgba(0,0,0,0.25);pointer-events:none;left:3px;width:calc(25% - 3px);";
     setTimeout(function () { ind.style.transition = "transform 0.35s cubic-bezier(0.32,0.72,0,1)"; }, 100);
     seg.appendChild(ind);
     var panes = {}, made = {};
@@ -541,8 +574,8 @@
     root.appendChild(seg);
     TABS.forEach(function (t) { root.appendChild(panes[t[0]]); });
     ctx.go = function (id, user) {
-      var toTools = id === "tools";
-      toTools && (id = "people");
+      var toFm = id === "fm";
+      toFm && (id = "tools");
       TABS.forEach(function (t, i) {
         var on = t[0] === id, b = seg.querySelector('[data-tab="' + t[0] + '"]');
         b.setAttribute("aria-selected", String(on));
@@ -553,16 +586,11 @@
       root.dataset.tab = id;
       if (!made[id]) {
         made[id] = !0;
-        if (id === "people") {
-          var pp = el("div", "dz-pane-sub"), tp = el("div", "dz-pane-sub dz-tools");
-          panes[id].append(pp, tp);
-          people(pp, ctx);
-          tools(tp);
-        } else ({ overview: overview, forum: forum })[id](panes[id], ctx);
+        ({ overview: overview, forum: forum, people: people, tools: tools })[id](panes[id], ctx);
       }
       user && ctx.focusUser && ctx.focusUser(user);
-      if (toTools) {
-        var tt = panes.people.querySelector(".dz-tools");
+      if (toFm) {
+        var tt = panes.tools.querySelector(".dz-fm");
         tt && setTimeout(function () { tt.scrollIntoView({ block: "start", behavior: "smooth" }); }, 50);
         return;
       }
