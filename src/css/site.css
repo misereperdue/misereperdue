@@ -12998,7 +12998,7 @@ html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
 html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 14px));width:248px;height:var(--mpd-h);box-sizing:border-box;margin:0;padding:0;border-radius:30px;transform:translateX(-50%);isolation:isolate;color:var(--ink);transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .45s var(--mpd-e),opacity .3s ease,border-radius .42s var(--mpd-e)}
 html.mp-bnav #mp-dock:not(.is-ready){transition:none}
-html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,calc(100% + var(--mpd-b,24px) + 12px));opacity:0;pointer-events:none}
+html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none;transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .3s var(--mpd-e),opacity .14s ease}
 .mpd-in{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
 #mp-dock button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #mp-dock button:focus-visible{outline:2px solid var(--accent,#9cc7ff);outline-offset:2px}
@@ -13073,6 +13073,9 @@ html.mp-bnav[data-theme="light"] body.home .hero-rain,[data-theme="light"] html.
 html.mp-bnav main.page .forum-head>.forum-back{display:none!important}
 html.mp-bnav main.page .forum-head.shop-product-head{display:none!important}
 /* Chat: the shape floats above the message box; the list keeps clear of both */
-html.mp-bnav .chat-msgs{min-height:calc(100vh - 58px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + 70px + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
+html.mp-bnav body.home:has(#journal.on){padding-bottom:0!important}
+html.mp-bnav .chat-msgs{min-height:calc(100vh - 58px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,70px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
+/* typing: the dock steps aside and its room under the messages eases away with the keyboard (no jump, no gap above the box) */
+html.mp-bnav.mpd-typing{--mpd-chat:0px}
 html.mp-bnav .mp-toast{bottom:calc(var(--mpd-clear) + 6px)}
 html.mp-bnav .mp-offline-banner{bottom:calc(var(--mpd-clear) + 6px)}
