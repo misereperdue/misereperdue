@@ -3171,11 +3171,41 @@
     return (
       (t.className = "chat-photo-card" + (vid ? " is-video" : "")),
       t.setAttribute("role", "button"),
-      t.setAttribute("aria-label", vid ? "Open video" : "Open photo"),
+      t.setAttribute("aria-label", vid ? "Play video" : "Open photo"),
       (e.draggable = !1),
       t.appendChild(e),
       t
     );
+  }
+  /* per dc (t649u): first tap plays a chat video inline in its card (sound if iOS allows, else muted),
+     a tap while playing opens the viewer. One inline video at a time; it pauses offscreen. */
+  var mpVidCur = null, mpVidIO = null;
+  function mpVidStop(c) {
+    if (!c) return;
+    var v = c.querySelector("video.chat-media");
+    c.classList.remove("is-playing");
+    v && !v.paused && v.pause();
+    mpVidIO && mpVidIO.unobserve(c);
+    mpVidCur === c && (mpVidCur = null);
+  }
+  function mpVidTap(c) {
+    if (!c.classList.contains("is-video")) return !1;
+    var v = c.querySelector("video.chat-media");
+    if (!v) return !1;
+    if (!v.paused && mpVidCur === c) { mpVidStop(c); return !1; }
+    mpVidCur && mpVidCur !== c && mpVidStop(mpVidCur);
+    mpVidCur = c;
+    c.classList.add("is-playing");
+    v.playsInline = !0;
+    v.muted = !1;
+    v.onended = v.onpause = function () { mpVidCur === c && v.paused && mpVidStop(c); };
+    var pr = v.play();
+    pr && pr.catch && pr.catch(function () { v.muted = !0; var q = v.play(); q && q.catch && q.catch(function () { mpVidStop(c); }); });
+    if (window.IntersectionObserver) {
+      mpVidIO = mpVidIO || new IntersectionObserver(function (es) { es.forEach(function (x) { x.isIntersecting || mpVidStop(x.target); }); }, { threshold: 0.2 });
+      mpVidIO.observe(c);
+    }
+    return !0;
   }
   var mpStackCur = Object.create(null);
   function mpStackGroup(e) {
@@ -3231,7 +3261,7 @@
     Ve();
     var n = e.map(function (e) {
         var t = e.querySelector(".chat-photo-card .chat-media");
-        return t ? { src: String(t.getAttribute("src") || "").split("#")[0], v: "VIDEO" === t.tagName, gif: t.classList.contains("chat-gif") } : { src: "" };
+        return t ? { src: String(t.getAttribute("src") || "").split("#")[0], v: "VIDEO" === t.tagName, gif: t.classList.contains("chat-gif"), at: "VIDEO" === t.tagName && t.currentTime > 0.3 ? t.currentTime : 0 } : { src: "" };
       }),
       a = t,
       r = document.createElement("div");
@@ -3247,7 +3277,7 @@
         e.v
           ? ((n.playsInline = !0), n.setAttribute("playsinline", ""), (n.autoplay = !0), e.gif ? ((n.muted = n.loop = !0), n.setAttribute("muted", "")) : (n.controls = !0), (n.preload = "auto"))
           : (n.alt = "");
-        ((n.src = e.src), (n.draggable = !1), t.appendChild(n), i.appendChild(t));
+        ((n.src = e.src + (e.at ? "#t=" + e.at.toFixed(2) : "")), (n.draggable = !1), t.appendChild(n), i.appendChild(t));
       }));
     var c = document.createElement("div");
     c.className = "chat-pv-top";
@@ -3461,6 +3491,7 @@
       var t = e.target.closest && e.target.closest("#chat .chat-photo-card");
       if (t) {
         if ((e.preventDefault(), Date.now() - mpSuppressClick < 500 || document.querySelector(".chat-react-picker"))) return;
+        if (mpVidTap(t)) return;
         var n = t.closest(".chat-msg"),
           a = mpStackGroup(n),
           r = a.indexOf(n);
