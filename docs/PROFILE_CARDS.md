@@ -51,8 +51,8 @@ served bytes, not just Cloudflare's deployment status.
 
 Task #87 refinements: compact text is centered; equal star/expand circles sit
 beside it. VIP/07 chips match points chips. Badge boxes show artwork with a highlight-only selection state, retaining
-accessible labels. Sign out is a filled capsule. Orders
-shares the shop bag paths; Dashboard uses a rounded four-tile glyph.
+accessible labels. Sign out is a filled capsule. Dashboard uses a rounded four-tile glyph.
+The Orders menu was removed (dc t652u).
 
 Task #89: Whisper from a profile switches to Chat before focusing the private
 composer, preserving the recipient and feature/authorization gates.

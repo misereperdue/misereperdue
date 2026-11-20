@@ -69,11 +69,11 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await p.locator('.is-ntf .mp-ntf .mp-ntf-av.is-site').waitFor({timeout:3000});assert.equal((await p.locator('.mp-ntf b').innerText()).trim(),'100 stars added');
  await p.waitForFunction(()=>!document.querySelector('.mp-ntf'),null,{timeout:4000});
 
- // Own profile: Powers, Stars, Orders (+ Dashboard for owner only); stars label.
+ // Own profile: Powers, Stars (+ Dashboard for owner only); stars label.
  const expand=async u=>{await p.evaluate(u=>MPChat.openUserSheet(u),u);const o=p.locator('.mp-profile-summary-open');await o.waitFor({timeout:8000});await p.waitForTimeout(350);await o.click();await p.waitForTimeout(500);};
  await expand('tester');const acts=p.locator('.mp-pb-acts');await acts.waitFor({timeout:8000});await p.waitForTimeout(500);
  const labels=await acts.locator('.mp-pb-act span').allTextContents();
- assert.deepEqual(labels,owner?['Powers','Stars','Orders','Dashboard']:['Powers','Stars','Orders'],tag+' action pills');
+ assert.deepEqual(labels,owner?['Powers','Stars','Dashboard']:['Powers','Stars'],tag+' action pills');
  assert.match(await p.locator('.mp-pb-stats .mp-pb-pts').innerText(),/^\s*180\s*$/);
  assert.equal(await p.locator('.mp-pb-pow').count(),0,'no powers pill when none owned');
  // Batch 1 layout: bio under the meta line in the header; no 'stars' label in the pill.
@@ -184,7 +184,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  assert(await p.locator('.mp-pb-pow-list').isHidden());await pill.click();
  assert.equal(await p.locator('.mp-pb-pow-list .mp-pb-pow-item').count(),7);assert.equal(await pill.getAttribute('aria-expanded'),'true');
  assert.match(await p.locator('.mp-pb-pow-item.on').innerText(),/Ink$/);
- assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Powers|Stars|Orders|Dashboard)$/}).count(),0,'own-only pills hidden on others');
+ assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Powers|Stars|Dashboard)$/}).count(),0,'own-only pills hidden on others');
  // Hide is a circular icon next to the username (not a pill).
  assert.equal(await p.locator('.mp-pb-name .mp-pb-hide').count(),1,'hide icon by name');assert.equal(await p.locator('.mp-pb-act',{hasText:/^(Hide|Unhide)$/}).count(),0,'no Hide pill');
  const hb2=await p.locator('.mp-pb-hide').boundingBox();assert(Math.abs(hb2.width-hb2.height)<1,'circular');

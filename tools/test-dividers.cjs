@@ -9,7 +9,6 @@ const T=[
  ['Shop product actions','<div class="actions">Add to cart</div>','.actions','top'],
  ['Product comment','<div class="comment">Nice hoodie</div>','.comment','top'],
  ['Cart grand total','<div id="cart-total"><div class="trow grand">Total $40</div></div>','#cart-total .trow.grand','top'],
- ['Orders footer','<div class="ord-foot">Order #12</div>','.ord-foot','top'],
  ['Dashboard rows','<div class="dash-box"><div class="dash-urow">Row A</div><div class="dash-urow">Row B</div></div>','.dash-urow + .dash-urow','top'],
  ['Music picker footer','<div class="chat-music-footer">Powered by Deezer</div>','.chat-music-footer','top'],
  ['Music branding','<div class="chat-music-branding">Deezer</div>','.chat-music-branding','top'],

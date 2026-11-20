@@ -726,10 +726,7 @@ var MPShop = (function () {
     if (e.getAttribute("data-auth") === (on ? "in" : "out")) return;
     e.setAttribute("data-auth", on ? "in" : "out");
     var l = e.querySelector(".gp-line"),
-      a = e.querySelector(".gp-acct:not(.gp-sec)");
-    e.querySelectorAll(".gp-sec").forEach(function (b) {
-      b.hidden = !on;
-    });
+      a = e.querySelector(".gp-acct");
     l &&
       (l.innerHTML = on
         ? "You\u2019re already signed up" + GP_CHECK
@@ -763,8 +760,7 @@ var MPShop = (function () {
     m.innerHTML = "";
     m.appendChild(w);
   }
-  // Signed in: the avatar (Profile) / Orders open the same sheets as the profile menu
-  // (chat.js exposes them). Post goes to the Globe and presses its "New thread"
+  // Signed in: the avatar opens your profile. Post goes to the Globe and presses its "New thread"
   // button once it has rendered, pressing again if the Globe's own first render
   // replaced it, until the composer is up (gives up after ~6 s).
   function gpAct(act) {
@@ -782,7 +778,6 @@ var MPShop = (function () {
         ++tries < 40 ? setTimeout(open, 100) : window.MPOpenProfile && window.MPOpenProfile();
       }, 160);
     }
-    if ("orders" === act) return window.MPOpenOrders && window.MPOpenOrders();
     y("forum");
     var n = 0;
     (function tap() {
@@ -823,7 +818,7 @@ var MPShop = (function () {
         (n === b && t.querySelector("[data-product]")) ||
           ((b = n),
           (t.innerHTML =
-            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals &amp; content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="shake"><path d="M18.5 12L4.99997 12"/><path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"/></svg></span><span class="gp-acct gp-sec" data-act="orders" role="button" tabindex="0" hidden>Orders</span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
+            '<div class="product-card globe-promo" role="button" tabindex="0" aria-label="Misery Globe. Sign up to get access to exclusive deals &amp; content"><div class="tile-wrap gp-photo"><canvas class="gp-canvas" aria-hidden="true"></canvas><div class="gp-text"><strong class="gp-title">Misery Globe</strong><span class="gp-line">Sign up to get access to exclusive deals &amp; content</span><div class="gp-acts"><span class="gp-acct" role="button" tabindex="0">Sign up<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="shake"><path d="M18.5 12L4.99997 12"/><path d="M13 18C13 18 19 13.5811 19 12C19 10.4188 13 6 13 6"/></svg></span></div></div><span class="gp-me" data-act="profile" role="button" tabindex="0" aria-label="Your profile" hidden></span></div></div>' +
             '<button type="button" class="a2hs" hidden><span class="a2hs-ico" aria-hidden="true"><img src="/img/app-icon-tint-180.png?v=22" alt="" width="26" height="26" decoding="async"></span><span class="a2hs-t">Get the App</span></button>' +
             cdHTML() +
             e.map(g).join("") +
