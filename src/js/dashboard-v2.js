@@ -211,9 +211,11 @@
     p.appendChild(rr);
     /* Main actions */
     var g = el("div", "dz-grid"), dg = el("div", "dz-grid dz-danger");
-    o.noOpen || g.appendChild(btn("Open profile", "", function (e) { M().openUserSheet && M().openUserSheet({ username: u.username }, e.currentTarget); }));
+    /* per dc (t648u): Open profile closes the dashboard and opens the nav pill profile view */
+    o.noOpen || g.appendChild(btn("Open profile", "", function () { M().closeMsgPopup && M().closeMsgPopup(); M().openUserSheet && M().openUserSheet(u.username, null); }));
     g.appendChild(btn(u.member ? "Remove VIP" : "Make VIP", "", function (e) {
       var b = e.currentTarget, mk = !u.member;
+      b.classList.toggle("is-gold", mk); /* per dc (t648u): Make VIP arms gold, not red */
       twoTap(b, mk ? "Tap again to give VIP" : "Tap again to remove VIP", function () {
         run(b, st, function () { return api("/api/user/" + name() + "/member", { method: "POST", body: { member: mk, amount: null } }); },
           mk ? "VIP on." : "VIP removed.", function (j) { u.member = !!j.member; o.changed && o.changed(); });
@@ -546,7 +548,7 @@
       });
     });
     var clear = btn("Clear all chat", "is-danger", function () {
-      twoTap(clear, "Tap again to clear all chat", function () {
+      twoTap(clear, "Tap again to clear", function () {
         run(clear, cst, function () { return api("/api/clear", { method: "POST", body: {} }); }, "Chat cleared.");
       });
     });

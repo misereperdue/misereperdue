@@ -1,6 +1,8 @@
 /* mpTwoTap: the Sign out pattern (per dc), shared with the dashboard. First tap arms the button
    ("Tap again to …", .is-confirm), a second tap within 3s runs go(); otherwise it resets. */
 (function () {
+  /* per dc (t648u): a sent GIF is a bare KLIPY media link; text-only places (notifications, activity) say "GIF" */
+  window.mpMediaText = function (t) { return String(t == null ? "" : t).replace(/https:\/\/static\d?\.klipy\.com\/[^\s]+/g, "GIF"); };
   if (window.mpTwoTap) return;
   window.mpTwoTap = function (k, armed, go) {
     var t = k.querySelector("span") || k;
@@ -1055,6 +1057,8 @@
     return c && Date.now() - c.t < 18e4 ? c.u : null;
   }
   function mpPBshow(n, anchor, rq, fromCache, key) {
+    /* the tapped row can leave the page while the profile loads (follower lists, the dashboard): fall back to the nav pill */
+    if ((!anchor || !anchor.isConnected) && window.MPProfiles && MPProfiles.topBar) anchor = MPProfiles.topBar();
     if (rq !== mpPBreq || !n || !anchor || !anchor.isConnected) return;
     key = key || n.username;
     if (mpPBel && mpPBel._u === key && mpPBel._a === anchor) {
@@ -1554,7 +1558,7 @@
     if (cached) mpPBshow(cached, anchor, rq, !0, u);
     E("/api/user/" + encodeURIComponent(u))
       .then(function (t) {
-        if (rq !== mpPBreq || route !== location.hash || !(t && t.ok && t.user) || !anchor.isConnected) return;
+        if (rq !== mpPBreq || route !== location.hash || !(t && t.ok && t.user)) return;
         mpPBput(t.user);
         mpPBshow(t.user, anchor, rq, !1, u);
       })
@@ -8884,7 +8888,7 @@
     else if (k === "purchase") t = n.kind === "stars" ? (n.n || 0) + " stars added" : (name || "Your power") + " is yours";
     else if (k === "fm" || k === "live" || n.kind === "fm-live") t = "misery fm is live";
     else if (k === "badge") t = name ? "You got the " + name + " badge" : "You got a new badge";
-    else t = n.text || n.preview || "New notification";
+    else t = mpMediaText(n.text || n.preview) || "New notification";
     /* Pills: every gift is "Gift"; everything from the Globe/forum is "Globe". Body text stays. */
     var gift = k === "gift" || k === "power" || /gift/i.test(String(k || "")) || /gift/i.test(String(n.kind || ""));
     var globe = k === "reply" || k === "repost" || k === "follow" || k === "quote" || k === "like" ||
@@ -8892,7 +8896,7 @@
     chip = gift ? "Gift" : globe ? "Globe" : k === "reaction" ? "Reaction" : k === "mention" ? "Mention" :
       (k === "whisper" || n.kind === "whisper") ? "Whisper" : k === "vip" ? "VIP" : k === "milestone" && /^(power-new|everypower)/.test(String(n.kind || "")) ? "Powers" : k === "milestone" ? "Milestone" :
       k === "purchase" ? "Purchase" : k === "fm" || n.kind === "fm-live" ? "FM" : k === "badge" ? "Badge" : "Notification";
-    return { title: t, sub: n.preview && k !== "milestone" ? String(n.preview) : "", chip: chip, site: !who };
+    return { title: t, sub: n.preview && k !== "milestone" ? mpMediaText(n.preview) : "", chip: chip, site: !who };
   }
   function mpNotifPop(n) {
     try { window.MPForum && MPForum.refreshNotifs && MPForum.refreshNotifs(); } catch (_) {}
