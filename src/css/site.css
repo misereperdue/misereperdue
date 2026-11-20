@@ -13290,3 +13290,13 @@ html.mp-bnav main.page .forum-head:has(>.forum-title-end)>.forum-back{display:in
 .chat-gif-item img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .chat-gif-by{flex:none;margin:0;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;opacity:.75}
 @media (prefers-reduced-motion:reduce){.chat-gif-item{transition:none}}
+
+/* per dc (t647u/t648u): dashboard two-tap buttons arm like Sign out (red tint + red text, now with a ring so danger buttons visibly change too); Make VIP arms gold; armed labels wrap instead of clipping */
+.dz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dz-grid .dz-btn{min-width:0}
+.dz-btn{transition:background .2s,border-color .2s,color .2s,box-shadow .2s,opacity .2s}
+.dz-btn.dz-btn.is-confirm,.dz-mv.dz-del.is-confirm{color:var(--dz-danger,#ff5a5f);background:color-mix(in srgb,var(--dz-danger,#ff5a5f) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dz-danger,#ff5a5f) 45%,transparent)}
+.dz-btn.dz-btn.is-confirm.is-gold{color:#9a6a00;background:color-mix(in srgb,#f5c542 26%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,#f5c542 60%,transparent)}
+[data-theme="dark"] .dz-btn.dz-btn.is-confirm.is-gold{color:#f5c542}
+.dz-btn.is-confirm{white-space:normal;text-overflow:clip;text-align:center;line-height:1.15}
+.dz-grid .dz-btn.is-confirm{font-size:12px;padding:3px 8px}
