@@ -13261,3 +13261,32 @@ html.mp-bnav main.page .forum-head:has(>.forum-title-end)>.forum-back{display:in
 .forum-discuss svg{width:17px;height:17px;flex:none;color:var(--accent)}
 .forum-discuss:active{transform:scale(.96)}
 @media (prefers-reduced-motion:reduce){.forum-discuss{transition:none}}
+
+/* per dc (t646u): chat videos sit like photos (muted first frame, play badge, tap opens the viewer) */
+.chat-photo-card{position:relative}
+.chat-photo-card video.chat-media:not(.chat-gif){width:min(200px,56vw);height:auto}
+.chat-photo-card.is-video::after{content:"";position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(0,0,0,.36) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M8 5.6v12.8c0 .8.9 1.3 1.6.9l10.2-6.4c.6-.4.6-1.4 0-1.8L9.6 4.7C8.9 4.3 8 4.8 8 5.6z'/%3E%3C/svg%3E") 55% 50%/17px no-repeat;-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.3);pointer-events:none}
+.chat-photo-card .chat-media.chat-gif{width:min(200px,56vw);height:auto;max-height:260px;object-fit:cover}
+.chat-photo-viewer .chat-pv-slide video{width:100%;height:auto;max-height:100%;object-fit:contain;display:block;transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+/* per dc (t646u): music art placeholder is the Apple Music-style note */
+.chat-np-art>.chat-music-note{width:20px;height:20px}
+.chat-music-art>.chat-music-note{width:21px;height:21px}
+/* per dc (t646u): GIF picker in the + menu (KLIPY) */
+.chat-plus-menu.chat-pbig-gif{height:min(480px,64dvh);max-height:calc(100dvh - 120px);gap:10px;padding:16px 13px 11px;border-radius:20px}
+.chat-pbig-gif .chat-pbig-hd b{margin:0 auto 0 5px;font-size:17px}
+.chat-gif-search{display:flex;align-items:center;gap:8px;flex:none;min-height:44px;padding:0 14px;box-sizing:border-box;border-radius:13px;border:1px solid color-mix(in srgb,var(--ink) 9%,transparent);background:color-mix(in srgb,var(--ink) 4%,transparent);transition:border-color .18s,box-shadow .18s}
+.chat-gif-search:focus-within{border-color:color-mix(in srgb,var(--accent) 45%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent)}
+.chat-gif-search>svg{flex:none;width:17px;height:17px;color:var(--muted)}
+.chat-gif-q{width:100%;min-width:0;padding:10px 0;border:0;background:none;color:inherit;font:inherit;font-size:16px;line-height:22px;outline:0;-webkit-appearance:none;appearance:none}
+.chat-gif-q::placeholder{color:var(--muted);opacity:.8}
+.chat-gif-status{margin:2px 0 0;flex:none;font-size:13px;color:var(--muted);text-align:center}
+.chat-gif-status[hidden]{display:none}
+.chat-gif-grid{flex:1 1 auto;min-height:0;display:flex;align-items:flex-start;gap:6px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:12px;scrollbar-width:none}
+.chat-gif-grid::-webkit-scrollbar{display:none}
+.chat-gif-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:6px}
+.chat-gif-item{display:block;width:100%;padding:0;border:0;border-radius:11px;overflow:hidden;background:color-mix(in srgb,var(--ink) 7%,transparent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,opacity .2s}
+.chat-gif-item:active{transform:scale(.96)}
+.chat-gif-item.is-sending{opacity:.45}
+.chat-gif-item img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.chat-gif-by{flex:none;margin:0;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;opacity:.75}
+@media (prefers-reduced-motion:reduce){.chat-gif-item{transition:none}}
