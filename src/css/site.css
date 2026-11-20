@@ -13300,3 +13300,13 @@ html.mp-bnav main.page .forum-head:has(>.forum-title-end)>.forum-back{display:in
 [data-theme="dark"] .dz-btn.dz-btn.is-confirm.is-gold{color:#f5c542}
 .dz-btn.is-confirm{white-space:normal;text-overflow:clip;text-align:center;line-height:1.15}
 .dz-grid .dz-btn.is-confirm{font-size:12px;padding:3px 8px}
+/* per dc (t649u): a chat video plays inline in its card; the frosted play button steps aside while it plays */
+.chat-photo-card.is-video::after{transition:opacity .18s ease,transform .18s ease}
+.chat-photo-card.is-video.is-playing::after{opacity:0;transform:scale(.8)}
+/* per dc (t649u): the sky vanished mid-drag on iPhone. WebKit's scrolling thread can leave a CSS mask on a fixed
+   layer out of step with it, masking the whole sky away. The fixed sky carries no mask now; the same fades are
+   painted by .hero-fade as overlays of the page colour (body.home is a solid var(--bg)), so it looks identical. */
+html.mp-bnav body.home .hero{-webkit-mask-image:none!important;mask-image:none!important}
+html.mp-bnav body.home .hero-fade{background:linear-gradient(to bottom,transparent 0,transparent calc(100% - 56px),rgba(7,15,41,.45) calc(100% - 28px),var(--bg) 100%),linear-gradient(to bottom,transparent 0,transparent 58%,var(--bg) 100%)}
+html.mp-bnav[data-theme="light"] body.home .hero-rain,[data-theme="light"] html.mp-bnav body.home .hero-rain{-webkit-mask-image:none!important;mask-image:none!important}
+html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.mp-bnav body.home .hero-fade{inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 130px);background:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 86px),rgba(255,255,255,.4) calc(env(safe-area-inset-top,0px) + 102px),rgba(255,255,255,.8) calc(env(safe-area-inset-top,0px) + 116px),var(--bg) calc(env(safe-area-inset-top,0px) + 130px))}
