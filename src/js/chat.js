@@ -8277,7 +8277,7 @@
       body.innerHTML = dp ? page(dp) :
         (mine.length ? "" : "<p class='pow-note'>You don't have any powers yet.</p>") +
         (minePow.length ? '<div class="pow-h">Your powers</div><div class="pw-list">' + minePow.map(row).join("") + "</div>" : "") +
-        (mineCh.length ? '<div class="pow-h">Your charms</div>' + (st.on.indexOf("charm") < 0 ? "<p class='pow-note is-charm-off'>Switch on Charms to show your charms.</p>" : "") + (mineCh.length > 1 ? "<p class='pow-note'>One charm shows by your name at a time. Switching one on swaps it in.</p>" : "") + '<div class="pw-list' + (st.on.indexOf("charm") < 0 ? " is-charm-off" : "") + '">' + mineCh.map(row).join("") + "</div>" : "") +
+        (mineCh.length ? (mineCh.length > 1 ? "<p class='pow-note'>One charm shows by your name at a time. Switching one on swaps it in.</p>" : "") + '<div class="pw-list' + (st.on.indexOf("charm") < 0 ? " is-charm-off" : "") + '">' + mineCh.map(row).join("") + "</div>" : "") +
         '<p class="pow-status" role="status" aria-live="polite">' + x(msg || "") + "</p>" +
         (rest.length ? '<div class="pow-h">Get more</div><div class="pw-shop">' + rest.map(function (p) { return tile(p, !1); }).join("") + "</div>" : "");
       if (dp && msg) status(msg);
