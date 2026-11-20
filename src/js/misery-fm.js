@@ -262,7 +262,7 @@
         if (k !== msKey && window.MediaMetadata) {
           msKey = k;
           m.metadata = new MediaMetadata({ title: c.tr.title || "misery fm", artist: live() ? "LIVE \u00b7 " + (c.tr.artist || "misery fm") : c.tr.artist || "misery fm", album: live() ? "misery fm" : c.tr.album || "misery fm \u00b7 Live",
-            artwork: c.tr.art ? [{ src: artUrl(c.tr), sizes: "600x600", type: "image/jpeg" }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }, { src: "/img/icon-512.png", sizes: "512x512", type: "image/png" }] });
+            artwork: c.tr.art ? [{ src: artUrl(c.tr), sizes: "600x600", type: "image/jpeg" }] : [{ src: "/img/app-icon-tint-180.png", sizes: "180x180", type: "image/png" }, { src: "/img/icon-512.png", sizes: "512x512", type: "image/png" }] });
         }
         m.playbackState = c.paused ? "paused" : "playing";
         msControls(!live());
