@@ -4366,7 +4366,7 @@
   }
   function mpGifForm() {
     return '<label class="chat-gif-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-gif-q" type="search" maxlength="80" placeholder="Search GIFs" aria-label="Search GIFs" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' +
-      '<p class="chat-gif-status" role="status" aria-live="polite" hidden></p><div class="chat-gif-grid" aria-label="GIFs"></div><p class="chat-gif-by">Powered by KLIPY</p>';
+      '<p class="chat-gif-status" role="status" aria-live="polite" hidden></p><div class="chat-gif-grid" aria-label="GIFs"></div>';
   }
   function mpGifWire(m, close) {
     var q = m.querySelector(".chat-gif-q"), st = m.querySelector(".chat-gif-status"), grid = m.querySelector(".chat-gif-grid");
