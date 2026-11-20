@@ -13021,3 +13021,7 @@ html.mp-bnav[data-theme="light"] body.home .hero-rain,[data-theme="light"] html.
 html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.mp-bnav body.home .hero-fade{inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 130px);background:linear-gradient(to bottom,transparent 0,transparent calc(env(safe-area-inset-top,0px) + 86px),rgba(255,255,255,.4) calc(env(safe-area-inset-top,0px) + 102px),rgba(255,255,255,.8) calc(env(safe-area-inset-top,0px) + 116px),var(--bg) calc(env(safe-area-inset-top,0px) + 130px))}
 /* per dc (t651u): GIF gets its own lettermark and a teal circle, apart from the black, navy, purple and red rows */
 .chat-plus-menu .chat-pmenu-row[data-act="gif"]>svg{background:linear-gradient(145deg,#3fd2c0,#0f9a8c);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+/* per dc (t654u): a replaced element's content is clipped to its inner radius (18px radius - 8px padding = a 20px
+   circle), which cut off Hugeicons that reach the corners of their 24-unit box. Music and GIF draw edge to edge with
+   no padding; their viewBox carries the inset instead, so the glyph stays 20px and the clip is the whole 36px circle. */
+.chat-plus-menu .chat-pmenu-row[data-act="music"]>svg,.chat-plus-menu .chat-pmenu-row[data-act="gif"]>svg{padding:0}
