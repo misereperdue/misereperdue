@@ -13255,3 +13255,9 @@ html.mp-bnav main.page .forum-head:has(>.forum-title-end)>.forum-back{display:in
 .forum-form .chat-field input:focus{border:var(--glass-hairline)}
 /* per dc (t641u): thread and reply cards are frosted glass, not see-through */
 .forum-thread-row.forum-thread-row:not(.is-misery-globe),.forum-post.forum-post{background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular)}
+
+/* per dc (t645u): Discuss pill on a Globe thread's main post: frosted glass, accent bubble icon, a faint accent ring */
+.forum-discuss{display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;height:32px;padding:0 14px 0 10px;border-radius:999px;border:var(--glass-hairline);background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);box-shadow:var(--glass-spec),0 0 0 1px color-mix(in srgb,var(--accent) 24%,transparent),0 2px 10px color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.01em;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,box-shadow .2s ease}
+.forum-discuss svg{width:17px;height:17px;flex:none;color:var(--accent)}
+.forum-discuss:active{transform:scale(.96)}
+@media (prefers-reduced-motion:reduce){.forum-discuss{transition:none}}

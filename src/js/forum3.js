@@ -3892,6 +3892,7 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         W(n, !1) +
         '<div class="forum-admin forum-admin-thread">' +
         (g() ? A(n, null) : "") +
+        '<button type="button" class="forum-discuss" id="forum-discuss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5C17.2467 21.5 21.5 17.2467 21.5 12C21.5 6.75329 17.2467 2.5 12 2.5C6.75329 2.5 2.5 6.75329 2.5 12C2.5 13.3377 2.66372 14.5604 3.1189 15.6954C3.81756 17.4374 3.68195 18.9241 2.5 20.5C3.86146 21.1644 5.86811 21.1419 7 20.0725C8.45323 20.9748 10.1636 21.5 12 21.5Z"/><path d="M7.5 12H7.51M12 12H12.01M16.5 12H16.51" stroke-width="2.6"/></svg>Discuss</button>' +
         (g()
           ? '<button type="button" class="forum-admin-btn" id="forum-reply-op">Reply</button>'
           : "") +
@@ -4024,6 +4025,12 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
               url: "https://misereperdue.com/t/" + encodeURIComponent(n.id),
             })
             .catch(function () {});
+        });
+      var dz = t.querySelector("#forum-discuss");
+      dz &&
+        dz.addEventListener("click", function () {
+          window.haptic && window.haptic(10);
+          window.MPChat && MPChat.discussThread && MPChat.discussThread({ id: n.id, title: n.title || "", author: n.author || "", authorAvatar: n.authorAvatar, hasAvatarImg: n.hasAvatarImg, avatarV: n.avatarV, thumb: n.thumb || "", createdAt: n.createdAt || 0, excerpt: n.excerpt || "" });
         });
       var u = t.querySelector("#forum-reply-op");
       u &&

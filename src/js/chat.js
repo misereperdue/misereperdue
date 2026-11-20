@@ -4151,6 +4151,26 @@
   try {
     window.MPChat = window.MPChat || {};
     window.MPChat.clearGlobePreview = function () { mpGpClearPreview({ instant: !0 }); };
+    /* per dc (t645u): Globe thread "Discuss" pill: open Chat with that thread attached to the composer (sends as /t/<id>, which chat renders as a Globe embed) */
+    window.MPChat.discussThread = function (t) {
+      if (!t || !t.id) return;
+      if (!window.MPAuthUser && !(window.MPChat.getMe && window.MPChat.getMe())) {
+        if (window.MPOpenSignUp) MPOpenSignUp();
+        else if (window.MPNav && MPNav.show) MPNav.show("journal");
+        else location.hash = "#chat";
+        return;
+      }
+      if (!document.querySelector("#journal.on")) {
+        if (window.MPNav && MPNav.show) MPNav.show("journal");
+        else location.hash = "#chat";
+      }
+      var n = 0;
+      (function tryIt() {
+        var m = document.querySelector("#journal.on") && mpGpMeasure();
+        if (m && m.barR.width && !mpGpBusy) return mpGpShowPreview(t, null);
+        if (++n < 40) setTimeout(tryIt, 100);
+      })();
+    };
   } catch (_) {}
 
   /* + menu morph (per dc): the small glass menu grows into a Globe post picker or a poll composer. */
