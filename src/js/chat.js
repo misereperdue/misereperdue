@@ -2752,6 +2752,7 @@
           m.innerHTML = '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="media"><svg ' + ico + '><path d="M3 16L7.46967 11.5303C7.80923 11.1908 8.26978 11 8.75 11C9.23022 11 9.69077 11.1908 10.0303 11.5303L14 15.5M15.5 17L14 15.5M21 16L18.5303 13.5303C18.1908 13.1908 17.7302 13 17.25 13C16.7698 13 16.3092 13.1908 15.9697 13.5303L14 15.5"/><path d="M12 2.5C7.77027 2.5 5.6554 2.5 4.25276 3.69797C4.05358 3.86808 3.86808 4.05358 3.69797 4.25276C2.5 5.6554 2.5 7.77027 2.5 12C2.5 16.2297 2.5 18.3446 3.69797 19.7472C3.86808 19.9464 4.05358 20.1319 4.25276 20.302C5.6554 21.5 7.77027 21.5 12 21.5C16.2297 21.5 18.3446 21.5 19.7472 20.302C19.9464 20.1319 20.1319 19.9464 20.302 19.7472C21.5 18.3446 21.5 16.2297 21.5 12"/><path d="M21.5 6H18M18 6H14.5M18 6V2.5M18 6V9.5"/></svg><span>Add media</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="globe"><svg ' + ico + '><circle cx="12" cy="12" r="10"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z"/><path d="M21 15H3"/><path d="M21 9H3"/></svg><span>Globe</span></button>' +
             '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="music">' + mpMusicMenuIcon() + '<span>Music</span></button>' +
+            '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="gif"><svg ' + ico + '><path d="M19 11C19 10.1825 19 9.4306 18.8478 9.06306C18.6955 8.69552 18.4065 8.40649 17.8284 7.82843L13.0919 3.09188C12.593 2.593 12.3436 2.34355 12.0345 2.19575C11.9702 2.165 11.9044 2.13772 11.8372 2.11401C11.5141 2 11.1614 2 10.4558 2C7.21082 2 5.58831 2 4.48933 2.88607C4.26731 3.06508 4.06508 3.26731 3.88607 3.48933C3 4.58831 3 6.21082 3 9.45584V14C3 17.7712 3 19.6569 4.17157 20.8284C5.34315 22 7.22876 22 11 22H19M12 2.5V3C12 5.82843 12 7.24264 12.8787 8.12132C13.7574 9 15.1716 9 18 9H18.5"/><path d="M21 14H19.5C18.9477 14 18.5 14.4477 18.5 15V16.5M18.5 16.5V19M18.5 16.5H20.5M13 14H14.5M14.5 14H16M14.5 14V19M13 19H14.5M14.5 19H16M10.5 15C10.5 14.4477 10.0523 14 9.5 14H8C7.44772 14 7 14.4477 7 15V18C7 18.5523 7.44772 19 8 19H9.5C10.0523 19 10.5 18.5523 10.5 18V17H9.5"/></svg><span>GIFs</span></button>' +
             (window.mpPollOn
               ? mpIsVip()
                 ? '<button type="button" role="menuitem" class="chat-pmenu-row" data-act="poll"><svg ' + ico + '><path d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"/><path d="M13 10L13 21"/><path d="M18 13L18 21"/><path d="M8 13L8 20"/><path d="M21 7.98693C19.16 7.98693 17.1922 8.24252 15.8771 6.49346C14.3798 4.50218 11.6202 4.50218 10.1229 6.49346C8.80782 8.24252 6.84003 7.98693 5 7.98693H3"/></svg><span>Poll</span></button>'
@@ -2761,6 +2762,8 @@
           m.querySelector('[data-act="media"]').addEventListener("click", function () { close(); f.setAttribute("accept", "image/*,video/*"); f.click(); });
           m.querySelector('[data-act="globe"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "globe", close); });
           m.querySelector('[data-act="music"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "music", close); });
+          m.querySelector('[data-act="gif"]').addEventListener("click", function (e) { e.stopPropagation(); mpMorph(m, "gif", close); });
+          m.querySelector('[data-act="gif"]').addEventListener("pointerdown", function () { mpGifKey(); }, { passive: !0 });
           m.querySelector('.chat-misery-fm').addEventListener('click', function (event) { event.stopPropagation(); if (window.MPFM && MPFM.mount) mpMorph(m, "fm", close); else { close(); window.MPFM && MPFM.open(); } });
           var pq = m.querySelector('[data-act="poll"]');
           pq && pq.addEventListener("click", function (e) { e.stopPropagation(); if (!mpIsVip()) return mpToast("Polls are a VIP perk"); mpMorph(m, "poll", close); });
@@ -3159,12 +3162,12 @@
      (within 2 min) fan into an iMessage-style stack you can flick through in
      place; tap opens the viewer, long-press reacts like any bubble. */
   function mpPhotoCard(e) {
-    if (!e || "IMG" !== e.tagName) return null;
-    var t = document.createElement("div");
+    if (!e || ("IMG" !== e.tagName && "VIDEO" !== e.tagName)) return null;
+    var t = document.createElement("div"), vid = "VIDEO" === e.tagName && !e.classList.contains("chat-gif");
     return (
-      (t.className = "chat-photo-card"),
+      (t.className = "chat-photo-card" + (vid ? " is-video" : "")),
       t.setAttribute("role", "button"),
-      t.setAttribute("aria-label", "Open photo"),
+      t.setAttribute("aria-label", vid ? "Open video" : "Open photo"),
       (e.draggable = !1),
       t.appendChild(e),
       t
@@ -3223,8 +3226,8 @@
   function mpPhotoViewer(e, t) {
     Ve();
     var n = e.map(function (e) {
-        var t = e.querySelector(".chat-photo-card img");
-        return t ? t.src : "";
+        var t = e.querySelector(".chat-photo-card .chat-media");
+        return t ? { src: String(t.getAttribute("src") || "").split("#")[0], v: "VIDEO" === t.tagName, gif: t.classList.contains("chat-gif") } : { src: "" };
       }),
       a = t,
       r = document.createElement("div");
@@ -3236,8 +3239,11 @@
       n.forEach(function (e) {
         var t = document.createElement("div");
         t.className = "chat-pv-slide";
-        var n = document.createElement("img");
-        ((n.src = e), (n.alt = ""), (n.draggable = !1), t.appendChild(n), i.appendChild(t));
+        var n = document.createElement(e.v ? "video" : "img");
+        e.v
+          ? ((n.playsInline = !0), n.setAttribute("playsinline", ""), (n.autoplay = !0), e.gif ? ((n.muted = n.loop = !0), n.setAttribute("muted", "")) : (n.controls = !0), (n.preload = "auto"))
+          : (n.alt = "");
+        ((n.src = e.src), (n.draggable = !1), t.appendChild(n), i.appendChild(t));
       }));
     var c = document.createElement("div");
     c.className = "chat-pv-top";
@@ -3263,15 +3269,17 @@
         (m.textContent = a + 1 + " / " + n.length));
     }
     function f() {
-      var t = e[a] && e[a].querySelector(".chat-photo-card img"),
-        n = i.children[a] && i.children[a].querySelector("img");
-      if (!t || !n || !n.naturalWidth) return null;
+      var t = e[a] && e[a].querySelector(".chat-photo-card .chat-media"),
+        n = i.children[a] && i.children[a].querySelector("img,video"),
+        nw = n && (n.naturalWidth || n.videoWidth),
+        nh = n && (n.naturalHeight || n.videoHeight);
+      if (!t || !n || !nw || !nh) return null;
       var r = t.getBoundingClientRect(),
         o = window.innerWidth,
         c = window.innerHeight,
-        l = Math.min(o / n.naturalWidth, c / n.naturalHeight),
-        d = n.naturalWidth * l,
-        s = n.naturalHeight * l,
+        l = Math.min(o / nw, c / nh),
+        d = nw * l,
+        s = nh * l,
         u = Math.max(r.width / d, r.height / s);
       return { n: n, t: "translate(" + (r.left + r.width / 2 - o / 2) + "px," + (r.top + r.height / 2 - c / 2) + "px) scale(" + u + ")" };
     }
@@ -3310,7 +3318,7 @@
     /* zoom: pinch, double-tap; pan while zoomed; swipe down to dismiss */
     var v = 1, b = 0, x = 0, w = null, k = 0;
     function C() {
-      return i.children[a] && i.children[a].querySelector("img");
+      return i.children[a] && i.children[a].querySelector("img,video");
     }
     function E() {
       var e = C();
@@ -3375,7 +3383,7 @@
           }
           ((k = t),
             setTimeout(function () {
-              k === t && 1 === v && !e.target.closest("img") && h();
+              k === t && 1 === v && !e.target.closest("img,video") && h();
             }, 300));
         }
       }));
@@ -3484,7 +3492,8 @@
     return '<svg class="chat-music-menu-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.4 2.8 8.3 4.9a1.4 1.4 0 0 0-1.1 1.4v10.1c-.7-.2-1.5-.2-2.3.1-1.8.5-2.9 1.9-2.5 3.2.4 1.2 2.2 1.8 4 1.3 1.7-.5 2.9-1.7 2.9-3.1V9.4l8.3-1.7v6.6c-.7-.2-1.5-.2-2.3.1-1.8.5-2.9 1.9-2.5 3.2.4 1.2 2.2 1.8 4 1.3 1.7-.5 2.9-1.7 2.9-3.1V4.1c0-.9-.6-1.5-1.3-1.3Z"/></svg>';
   }
   function mpMusicIcon() {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>';
+    /* per dc (t646u): loading/no-art placeholder uses the same Apple Music-style note as the + menu */
+    return mpMusicMenuIcon().replace('class="chat-music-menu-icon"', 'class="chat-music-note"');
   }
   // Shared URLs carry the song ID, never a fuzzy artist/title match.
   function mpMusicRef(text) {
@@ -4244,7 +4253,7 @@
       if (typeof m._rebuildPlus === "function") {
         if (m._dispose) { try { m._dispose(); } catch (e) {} m._dispose = null; }
         var rBig = m.getBoundingClientRect();
-        m.classList.remove("chat-pbig", "chat-pbig-poll", "chat-pbig-music", "chat-pbig-fm", "chat-pbig-globe");
+        m.classList.remove("chat-pbig", "chat-pbig-poll", "chat-pbig-music", "chat-pbig-fm", "chat-pbig-globe", "chat-pbig-gif");
         m.style.height = ""; m.style.width = ""; m.style.maxHeight = ""; m.style.bottom = ""; m.style.transformOrigin = "";
         m.setAttribute("role", "menu"); m.removeAttribute("aria-label");
         m._rebuildPlus();
@@ -4258,11 +4267,11 @@
       }
       close(); setTimeout(function () { var g = row.querySelector(".chat-plus"); g && g.click(); }, 200);
     };
-    m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : "chat-pbig-globe");
-    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "fm" ? "misery fm" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
+    m.classList.add("chat-pbig", kind === "poll" ? "chat-pbig-poll" : kind === "music" ? "chat-pbig-music" : kind === "fm" ? "chat-pbig-fm" : kind === "gif" ? "chat-pbig-gif" : "chat-pbig-globe");
+    var hd = '<div class="chat-pbig-hd"><button type="button" class="chat-pbig-btn" data-x="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg></button><b>' + (kind === "poll" ? "New poll" : kind === "gif" ? "GIFs" : kind === "fm" ? "misery fm" : kind === "music" ? '<span class="chat-music-heading">Music</span>' : "Globe") + '</b><button type="button" class="chat-pbig-btn" data-x="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.9991 19L5 5.00098"/><path d="M19 5L5.00092 18.999"/></svg></button></div>';
     // misery fm renders its own body and the same header (Back, logo, Close) into the morphed menu
     if (kind === "fm") { m.innerHTML = ""; MPFM.mount(m, { back: back, close: close }); }
-    else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
+    else m.innerHTML = hd + (kind === "poll" ? mpPollForm() : kind === "gif" ? mpGifForm() : kind === "music" ? mpMusicForm() : '<input class="chat-gp-q" type="search" placeholder="Search Globe posts" enterkeyhint="search" autocomplete="off"><div class="chat-gp-tabs glassbar" role="tablist" aria-label="Sort Globe posts"><span class="seg" aria-hidden="true"></span><button type="button" role="tab" data-s="active" class="is-on" aria-label="Active" title="Active" aria-selected="true"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="scale"><path d="M18.9658 10.8353C18.7328 14.4081 15.9006 17.2541 12.345 17.4883C11.7388 17.5282 11.1193 17.5805 10.5 17.5805C9.14461 17.5805 7.90858 17.4648 6.62862 16.9818C6.62862 16.9818 5.02692 18.2187 3.44468 17.9659C3.11357 17.913 2.94802 17.8866 2.85077 17.6928C2.75353 17.499 2.8567 17.3065 3.06304 16.9215C3.41069 16.2728 3.63411 15.6204 3.53064 14.9104C3.47647 14.5386 3.27868 14.2087 3.08497 13.8855L3.07549 13.8697C2.53241 12.9634 2.10593 11.9349 2.0342 10.8353C1.9886 10.1361 1.9886 9.41202 2.0342 8.71284C2.26725 5.13999 5.09943 2.29404 8.65499 2.05986C9.86553 1.98013 11.132 1.97997 12.345 2.05986C15.9006 2.29404 18.7328 5.13999 18.9658 8.71284C19.0114 9.41202 19.0114 10.1361 18.9658 10.8353Z"/><path d="M10.5306 20.5635C11.3773 21.1464 12.3875 21.5132 13.4806 21.5842C13.9798 21.6166 14.49 21.6591 15 21.6591C16.1162 21.6591 17.1341 21.5652 18.1882 21.1727C18.1882 21.1727 19.5072 22.1777 20.8103 21.9723C21.0829 21.9293 21.2193 21.9078 21.2994 21.7503C21.3794 21.5929 21.2945 21.4365 21.1246 21.1237C20.8383 20.5966 20.6543 20.0666 20.7395 19.4897C20.7841 19.1876 20.947 18.9195 21.1065 18.6569L21.1143 18.6441C21.5615 17.9077 21.9128 17.0721 21.9718 16.1786C22.0094 15.6105 22.0094 15.0222 21.9718 14.4542C21.9365 13.9192 21.8284 13.4042 21.6573 12.9189"/><path d="M7.7373 12.1062H13.2623M7.7373 7.89527H10.7123"/></svg></button><button type="button" role="tab" data-s="new" aria-label="Recent" title="Recent" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="rotate"><circle cx="12" cy="12" r="10"/><path d="M12 8V12L14 14"/></svg></button><button type="button" role="tab" data-s="pop" aria-label="Popular" title="Popular" aria-selected="false"><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-hi="float"><path d="M20 13V8H15"/><path d="M20 8L15 13C14.1174 13.8826 13.6762 14.3238 13.1346 14.3726C13.045 14.3807 12.955 14.3807 12.8654 14.3726C12.3238 14.3238 11.8826 13.8826 11 13C10.1174 12.1174 9.67615 11.6762 9.13457 11.6274C9.04504 11.6193 8.95496 11.6193 8.86543 11.6274C8.32385 11.6762 7.88256 12.1174 7 13L4 16"/></svg></button></div><div class="chat-gp-list" role="listbox"><div class="chat-gp-empty">Loading…</div></div>');
     if (kind !== "fm") {
       m.querySelector('[data-x="back"]').addEventListener("click", function (e) { e.stopPropagation(); back(); });
       m.querySelector('[data-x="close"]').addEventListener("click", function (e) { e.stopPropagation(); close(); });
@@ -4276,7 +4285,129 @@
     }
     function afterOpen(fn) { red ? fn() : setTimeout(fn, 40); }
     if (kind === "music") { m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Share music"); afterOpen(function () { if (m.isConnected && m.classList.contains("chat-pbig-music")) mpMusicWire(m, close); }); }
-    else if (kind !== "fm") afterOpen(function () { if (!m.isConnected || !m.classList.contains("chat-pbig")) return; kind === "poll" ? mpPollWire(m, close) : mpGpWire(m, close); });
+    else if (kind !== "fm") afterOpen(function () { if (!m.isConnected || !m.classList.contains("chat-pbig")) return; kind === "poll" ? mpPollWire(m, close) : kind === "gif" ? mpGifWire(m, close) : mpGpWire(m, close); });
+  }
+  /* per dc (t646u): GIFs from KLIPY (Tenor's API shut down Jun 30 2026; GIPHY production keys cost money).
+     KLIPY's app key is a client key by design and its terms want searches and media to go browser -> KLIPY, so the
+     Worker only hands the key out (GET /api/gif/config, secret KLIPY_API_KEY). Chat renders only static*.klipy.com media. */
+  var MP_GIF_RE = /^https:\/\/static\d?\.klipy\.com\/[A-Za-z0-9_\-\/.]+\.(mp4|webp|gif)(?:#w=(\d{1,4})&h=(\d{1,4}))?$/;
+  var mpGifKeyP = null;
+  function mpGifKey() {
+    if (!mpGifKeyP)
+      mpGifKeyP = E("/api/gif/config")
+        .then(function (r) { return r && typeof r.key === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(r.key) ? r.key : null; }, function () { return null; })
+        .then(function (k) { if (!k) mpGifKeyP = null; return k; });
+    return mpGifKeyP;
+  }
+  function mpGifCid() {
+    try { var c = localStorage.getItem("mp-gif-cid"); if (!c) { c = "u" + Math.random().toString(36).slice(2, 12); localStorage.setItem("mp-gif-cid", c); } return c; } catch (e) { return "u0"; }
+  }
+  function mpGifPick(f, sizes, types) {
+    for (var i = 0; i < sizes.length; i++) for (var j = 0; j < types.length; j++) {
+      var v = f && f[sizes[i]] && f[sizes[i]][types[j]];
+      if (v && typeof v.url === "string" && MP_GIF_RE.test(v.url)) return v;
+    }
+    return null;
+  }
+  function mpGifEl(text) {
+    var m = MP_GIF_RE.exec(String(text || "").trim());
+    if (!m) return null;
+    var el, url = m[0].split("#")[0];
+    if (m[1] === "mp4") {
+      el = document.createElement("video");
+      el.muted = el.loop = el.autoplay = el.playsInline = !0;
+      ["muted", "loop", "autoplay", "playsinline"].forEach(function (a) { el.setAttribute(a, ""); });
+      el.disablePictureInPicture = !0;
+      el.preload = "auto";
+    } else {
+      el = document.createElement("img");
+      el.loading = "lazy";
+      el.alt = "GIF";
+    }
+    el.src = url;
+    el.className = "chat-media chat-gif";
+    if (m[2] && m[3] && +m[2] > 0 && +m[3] > 0) el.style.aspectRatio = +m[2] + " / " + +m[3];
+    return el;
+  }
+  function mpGifForm() {
+    return '<label class="chat-gif-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-gif-q" type="search" maxlength="80" placeholder="Search GIFs" aria-label="Search GIFs" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' +
+      '<p class="chat-gif-status" role="status" aria-live="polite" hidden></p><div class="chat-gif-grid" aria-label="GIFs"></div><p class="chat-gif-by">Powered by KLIPY</p>';
+  }
+  function mpGifWire(m, close) {
+    var q = m.querySelector(".chat-gif-q"), st = m.querySelector(".chat-gif-status"), grid = m.querySelector(".chat-gif-grid");
+    if (!q || !grid) return;
+    var cols = [0, 1].map(function () { var c = document.createElement("div"); c.className = "chat-gif-col"; grid.appendChild(c); return c; });
+    var hts = [0, 0], term = "", page = 1, more = !0, busy = !1, epoch = 0, timer = 0, sending = !1, ac = null;
+    function status(t) { st.textContent = t || ""; st.hidden = !t; }
+    function reset() {
+      epoch++; page = 1; more = !0; busy = !1; hts = [0, 0];
+      cols.forEach(function (c) { c.innerHTML = ""; });
+      grid.scrollTop = 0;
+      if (ac) { try { ac.abort(); } catch (e) {} ac = null; }
+    }
+    function add(it) {
+      if (!it || it.type === "ad" || !it.file) return;
+      var pv = mpGifPick(it.file, ["sm", "xs", "md"], ["webp", "gif"]), sv = mpGifPick(it.file, ["md", "sm", "hd"], ["mp4", "webp", "gif"]);
+      if (!pv || !sv) return;
+      var w = +pv.width || 1, h = +pv.height || 1, ci = hts[0] <= hts[1] ? 0 : 1;
+      hts[ci] += h / w;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "chat-gif-item";
+      b.style.aspectRatio = w + " / " + h;
+      b.setAttribute("aria-label", "Send GIF" + (it.title ? ": " + String(it.title).slice(0, 60) : ""));
+      var im = document.createElement("img");
+      im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.draggable = !1; im.src = pv.url;
+      b.appendChild(im);
+      b.addEventListener("click", function (e) { e.stopPropagation(); send(sv, b); });
+      cols[ci].appendChild(b);
+    }
+    function load() {
+      if (busy || !more) return;
+      busy = !0;
+      var my = epoch;
+      if (page === 1) status("Loading\u2026");
+      mpGifKey().then(function (key) {
+        if (my !== epoch) return;
+        if (!key) { busy = !1; more = !1; status("GIFs are almost ready. Check back soon."); return; }
+        ac = window.AbortController ? new AbortController() : null;
+        var u = "https://api.klipy.com/api/v1/" + encodeURIComponent(key) + "/gifs/" + (term ? "search" : "trending") + "?page=" + page + "&per_page=24&customer_id=" + encodeURIComponent(mpGifCid()) + "&content_filter=medium" + (term ? "&q=" + encodeURIComponent(term) : "");
+        return fetch(u, ac ? { signal: ac.signal } : {}).then(function (r) { if (!r.ok) throw new Error("gif " + r.status); return r.json(); }).then(function (j) {
+          if (my !== epoch) return;
+          var d = (j && j.data) || {}, list = Array.isArray(d.data) ? d.data : [];
+          more = !!d.has_next && list.length > 0; page++;
+          list.forEach(add);
+          busy = !1;
+          status(grid.querySelector(".chat-gif-item") ? "" : term ? "No GIFs found" : "No GIFs right now");
+        });
+      }).catch(function (e) {
+        if (my !== epoch) return;
+        busy = !1;
+        if (!e || e.name !== "AbortError") status(grid.querySelector(".chat-gif-item") ? "" : "Couldn\u2019t load GIFs. Try again.");
+      });
+    }
+    function send(v, b) {
+      if (sending) return;
+      sending = !0; b.classList.add("is-sending");
+      window.haptic && window.haptic(12);
+      var text = v.url + (+v.width > 0 && +v.height > 0 ? "#w=" + Math.round(v.width) + "&h=" + Math.round(v.height) : "");
+      var cid = "gif-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+      E("/api/send", { method: "POST", body: { text: text, cid: cid, to: mpPM.to || void 0 } }).then(function (r) {
+        if (!r || !r.ok) throw new Error((r && r.error) || "Couldn\u2019t send. Try again.");
+        if (r.message) Fe(r.message);
+        if (typeof r.points === "number") te(r.points);
+        Ne(!0);
+        close();
+      }).catch(function (e) { sending = !1; b.classList.remove("is-sending"); mpToast((e && e.message) || "Couldn\u2019t send. Try again."); });
+    }
+    q.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { var t = q.value.trim(); if (t === term) return; term = t; reset(); load(); }, 320);
+    });
+    q.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); q.blur(); } });
+    grid.addEventListener("scroll", function () { if (grid.scrollTop + grid.clientHeight > grid.scrollHeight - 400) load(); }, { passive: !0 });
+    m._dispose = function () { epoch++; clearTimeout(timer); if (ac) { try { ac.abort(); } catch (e) {} } };
+    load();
   }
   function mpMusicForm() {
     return '<label class="chat-music-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 17L21 21"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z"/></svg><input class="chat-music-q" type="search" maxlength="120" placeholder="Songs, artists, or albums" aria-label="Search Apple Music" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false"></label>' +
@@ -5456,7 +5587,7 @@
       var aL = (n.arts || [n.art]).filter(Boolean),
         gl = c.querySelector(".chat-np-glow");
       function ph() {
-        (r.remove(), c.classList.add("no-art"), (a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path d="M10 18.5L10 7C10 6.07655 10 5.61483 10.2635 5.32794C10.5269 5.04106 11.0175 4.9992 11.9986 4.91549C16.022 4.57222 18.909 3.26005 20.3553 2.40978C20.6508 2.236 20.7986 2.14912 20.8993 2.20672C21 2.26432 21 2.4315 21 2.76587V16"/><path d="M10 10C15.8667 10 19.7778 7.66667 21 7"/></svg>'), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""), sg("linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"));
+        (r.remove(), c.classList.add("no-art"), (a.innerHTML = mpMusicIcon()), (gl.style.backgroundImage = ""), (c.querySelector(".chat-np-halo").style.backgroundImage = ""), sg("linear-gradient(135deg,#3a4a6b,#5b4a7a 55%,#2f5d6e)"));
       }
       function sg(gr) {
         gr && (c.style.setProperty("--np-g", gr), requestAnimationFrame(function () { c.classList.add("has-grad"); }));
@@ -5489,9 +5620,12 @@
   function He(t) {
     return t && t.id && /^[A-Za-z0-9]+$/.test(t.id)
       ? "video" === t.kind
-        ? (((n = document.createElement("video")).src = e + "/api/media/" + t.id),
-          (n.controls = !0),
+        ? (((n = document.createElement("video")).src = e + "/api/media/" + t.id + "#t=0.1"),
+          (n.muted = !0),
+          n.setAttribute("muted", ""),
           (n.playsInline = !0),
+          n.setAttribute("playsinline", ""),
+          (n.disablePictureInPicture = !0),
           (n.preload = "metadata"),
           (n.className = "chat-media"),
           n)
@@ -5630,18 +5764,19 @@
           o.classList.contains("mine"))
         ) {
           var i = document.createElement("div");
-          var l = e.embed ? Oe(e.text) : e.text;
+          var gC = !e.media && mpGifEl(e.text);
+          var l = gC ? "" : e.embed ? Oe(e.text) : e.text;
           i.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
-          var c = He(e.media),
+          var c = gC || He(e.media),
             cP = mpPhotoCard(c);
           cP && !l ? ((i.className = "chat-bubble chat-photo-only"), i.appendChild(cP)) : !cP && c && i.appendChild(c);
           if (l) {
             var d = document.createElement("div");
             ((d.className = "chat-text"), (d.innerHTML = _e(l)), i.appendChild(d));
           }
-          var p = je(e.embed);
+          var p = gC ? null : je(e.embed);
           p && i.appendChild(p);
-          var h = Be(e.embed);
+          var h = gC ? null : Be(e.embed);
           if ((h && i.appendChild(h), F(e.user) && Z(i), V(e.user) && W(i), e.reactions)) {
             var v = ye(e.id, e.reactions);
             v && i.appendChild(v);
@@ -5681,9 +5816,10 @@
             C.appendChild(E),
             w.appendChild(C));
           var k = document.createElement("div");
-          var S = e.embed ? Oe(e.text) : e.text;
+          var gL = !e.media && mpGifEl(e.text);
+          var S = gL ? "" : e.embed ? Oe(e.text) : e.text;
           k.className = "chat-bubble" + (e.media ? " chat-bubble-media" : "");
-          var L = He(e.media),
+          var L = gL || He(e.media),
             LP = mpPhotoCard(L);
           LP && !S ? ((k.className = "chat-bubble chat-photo-only"), k.appendChild(LP)) : !LP && L && k.appendChild(L);
           LP && S && ((k.className = "chat-bubble"), o.classList.add("chat-photo-text"), w.appendChild(LP));
@@ -5691,9 +5827,9 @@
             var M = document.createElement("div");
             ((M.className = "chat-text"), (M.innerHTML = _e(S)), k.appendChild(M));
           }
-          var T = je(e.embed);
+          var T = gL ? null : je(e.embed);
           T && k.appendChild(T);
-          var A = Be(e.embed);
+          var A = gL ? null : Be(e.embed);
           if ((A && k.appendChild(A), F(e.user) && Z(k), V(e.user) && W(k), e.reactions)) {
             var N = ye(e.id, e.reactions);
             N && k.appendChild(N);

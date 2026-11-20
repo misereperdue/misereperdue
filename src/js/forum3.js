@@ -3896,7 +3896,6 @@ Array.prototype.slice.call(r.attributes).forEach(function (e) {
         (g()
           ? '<button type="button" class="forum-admin-btn" id="forum-reply-op">Reply</button>'
           : "") +
-        '<button type="button" class="forum-admin-btn" id="forum-copy-link" title="Copy link">🔗</button>' +
         (O &&
         (Ne || O.username.toLowerCase() === String(n.author).toLowerCase()) &&
         b.threads.length &&
