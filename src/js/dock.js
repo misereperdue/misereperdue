@@ -33,6 +33,8 @@
     var list = p.querySelectorAll(".forum-head > .forum-back");
     for (var i = list.length - 1; i >= 0; i--) {
       // (the in-page Back pills are hidden by the dock's CSS, so judge by the view they belong to)
+      // a Back pill the page shows itself (New thread) stays the only Back
+      if (getComputedStyle(list[i]).display !== "none") continue;
       var head = list[i].parentNode, host = head.parentElement;
       if (host && host.getClientRects().length && !head.closest("[hidden],[aria-hidden=true]")) return list[i];
     }

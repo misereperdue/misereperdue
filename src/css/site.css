@@ -13247,3 +13247,11 @@ html.mp-bnav #mp-dock .mp-profile-summary-chevron svg{transform:rotate(180deg)}
 .mp-profile-summary-score>span{line-height:9px;max-width:25px}
 .mp-profile-summary-score svg{width:9px;height:9px}
 .mp-profile-summary-chevron svg{width:15px;height:15px}
+
+/* per dc (t641u): New thread shows its own Back (the title autofocuses, so the dock steps aside and its Back with it) */
+html.mp-bnav main.page .forum-head:has(>.forum-title-end)>.forum-back{display:inline-flex!important;align-items:center;min-height:32px;box-sizing:border-box}
+/* per dc (t641u): the Title box matches the Category select */
+.forum-form .chat-field input{box-sizing:border-box;height:40px;padding:0 12px;border-radius:12px;border:var(--glass-hairline);background:var(--glass-clear-tint);-webkit-backdrop-filter:none;backdrop-filter:none;font-size:16px}
+.forum-form .chat-field input:focus{border:var(--glass-hairline)}
+/* per dc (t641u): thread and reply cards are frosted glass, not see-through */
+.forum-thread-row.forum-thread-row:not(.is-misery-globe),.forum-post.forum-post{background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular)}
