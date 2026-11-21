@@ -1448,7 +1448,7 @@ var MPShop = (function () {
   }
   function warmWhop(query, label) {
     query = query || "";
-    if (document.querySelector(".mp-whop-sheet")) return;
+    if (whopDockOpen || document.querySelector(".mp-whop-sheet")) return;
     if (whopWarm.frame && whopWarm.query === query && whopWarm.frame.isConnected && Date.now() - whopWarm.at < 8 * 60 * 1000) return;
     dropWhopWarm();
     if (!mpTok()) return;
@@ -1458,7 +1458,8 @@ var MPShop = (function () {
     f.setAttribute("allow", "payment *");
     f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
     f.setAttribute("aria-hidden", "true");
-    f.src = "/whop-vip-preview?sheet=1&warm=1" + query;
+    var dk = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    f.src = "/whop-vip-preview?sheet=1&warm=1" + (dk && dk.getClientRects().length ? "&dock=1" : "") + query;
     document.body.appendChild(f);
     whopWarm = { query: query, frame: f, at: Date.now() };
   }
@@ -1471,8 +1472,82 @@ var MPShop = (function () {
   }
   /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
      with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
+  /* Checkout in the nav pill (dc t661u): with the bottom dock on, the checkout is hosted in the same top-bar
+     sheet as the profile sheet and the other dock menus (MPProfiles.openSheet), so it is literally the same
+     morph, glass, sizing, header, close and dismiss. The page iframe hugs its content up to the room the sheet
+     has (status bar inset included) and scrolls inside past that. */
+  var whopDockOpen = false;
+  function openWhopInDock(onDone, query, label) {
+    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    if (!d || !d.getClientRects().length || !window.MPProfiles || !MPProfiles.openSheet) return false;
+    var frame = null, finished = false, done = false, startSent = false, raf = 0, lastH = 0, wantH = 0;
+    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-whop-dock", maxHeight: 4000, onClose: cleanup });
+    if (!sheet) return false;
+    whopDockOpen = true;
+    var adopted = takeWhopWarm(query), skel = document.createElement("div");
+    skel.className = "mp-whop-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
+    if (adopted) { frame = adopted; frame.removeAttribute("aria-hidden"); }
+    else {
+      frame = document.createElement("iframe");
+      frame.setAttribute("allow", "payment *");
+      frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
+    }
+    frame.className = "mp-whop-dock-frame";
+    frame.title = label || "Checkout";
+    sheet.body.appendChild(skel); sheet.body.appendChild(frame);
+    setWhopOpen(true);
+    function room() {
+      var root = sheet.root, head = root.querySelector(".mp-profile-bar-head"), scroll = root.querySelector(".mp-profile-bar-scroll");
+      var rs = getComputedStyle(root), ss = getComputedStyle(scroll), r = sheet.bar.getBoundingClientRect();
+      var top = (window.MPDock && MPDock.topInset ? MPDock.topInset() : 0) + 12;
+      var chrome = (parseFloat(rs.paddingTop) || 0) + (parseFloat(rs.paddingBottom) || 0) + (head ? head.offsetHeight : 0) +
+        Math.max(0, scroll.getBoundingClientRect().top - (head ? head.getBoundingClientRect().bottom : 0)) +
+        (parseFloat(ss.paddingTop) || 0) + (parseFloat(ss.paddingBottom) || 0) + 2;
+      return Math.max(200, Math.floor(r.bottom - top - chrome));
+    }
+    function fit() {
+      raf = 0;
+      if (done || !wantH) return;
+      var h = Math.min(wantH, room());
+      if (Math.abs(h - lastH) < 2) return;
+      lastH = h;
+      frame.style.height = h + "px";
+      sheet.body.classList.add("is-ready");
+      sheet.resize();
+    }
+    function startCheckout() {
+      if (startSent || done) return;
+      startSent = true;
+      try { frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "start" }, location.origin); } catch (_) {}
+    }
+    function onMsg(e) {
+      if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string" || e.source !== frame.contentWindow) return;
+      var k = e.data.mpWhop;
+      if (k === "done" && !finished) { finished = true; onDone && onDone(); }
+      else if (k === "close") sheet.close();
+      else if (k === "warm") { startSent = false; startCheckout(); }
+      else if (k === "height") {
+        var h = Math.round(Number(e.data.h) || 0);
+        if (h > 80 && h < 4000) { wantH = h; if (!raf) raf = requestAnimationFrame(fit); }
+      }
+    }
+    function onResize() { lastH = 0; if (!raf) raf = requestAnimationFrame(fit); }
+    function cleanup() {
+      if (done) return;
+      done = true; whopDockOpen = false;
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("message", onMsg); window.removeEventListener("resize", onResize);
+      setWhopOpen(false);
+      if (mpTok()) scheduleWarm(query, label);
+    }
+    window.addEventListener("message", onMsg); window.addEventListener("resize", onResize);
+    if (adopted) startCheckout();
+    else setTimeout(function () { if (!done && !frame.getAttribute("src")) frame.src = "/whop-vip-preview?sheet=1&dock=1" + (query || ""); }, 380);
+    return true;
+  }
   function openWhopSheet(onDone, query, label) {
     elementsStatus();
+    if (openWhopInDock(onDone, query, label)) return;
     var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
     var w = document.createElement("div");
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
@@ -1495,66 +1570,9 @@ var MPShop = (function () {
       frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
       panel.appendChild(frame);
     }
-    var dock = elementsOn && document.getElementById("mp-dock"), pill = dock && dock.getBoundingClientRect();
-    var morph = !!(pill && pill.width > 0 && pill.height > 0 && panel.animate && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
-    /* Native checkout (dc t659u): a glass card that sits above the nav pill, never under the status bar (the X is
-       always reachable; the checkout scrolls inside). It grows out of the pill like the + menu morph: an empty glass
-       shell animates from the pill's exact rect and radius to the card's, bottom-anchored, while the checkout fades
-       in on top; closing runs it back into the pill. The pill hides only while the shell stands in for it. */
-    var shell = null, morphDone = false, cardMax = 0, cardBottom = 0, cardPendingH = 0, EASE = window.MP_EASE || "cubic-bezier(.32,.72,0,1)";
-    function safeTop() {
-      var t = document.createElement("div"); t.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden";
-      document.body.appendChild(t); var v = t.offsetHeight || 0; t.remove(); return v;
-    }
-    function pillBox() {
-      var r = dock.getBoundingClientRect(), rad = parseFloat(getComputedStyle(dock).borderTopLeftRadius) || r.height / 2;
-      return { width: r.width + "px", height: r.height + "px", bottom: (window.innerHeight - r.bottom) + "px", borderRadius: rad + "px" };
-    }
-    if (morph) {
-      w.classList.add("mp-whop-morph");
-      cardBottom = Math.round(window.innerHeight - pill.top + 10);
-      cardMax = Math.max(260, Math.round(pill.top - 10 - (safeTop() + 16)));
-      w.style.paddingBottom = cardBottom + "px";
-      panel.style.height = cardMax + "px";
-      shell = document.createElement("div");
-      shell.className = "mp-whop-shell";
-      shell.setAttribute("aria-hidden", "true");
-      w.insertBefore(shell, panel);
-    }
     document.body.appendChild(w);
     setWhopOpen(true);
-    function cardBox() {
-      var r = panel.getBoundingClientRect();
-      return { width: r.width + "px", height: r.height + "px", bottom: cardBottom + "px", borderRadius: "30px" };
-    }
-    function setCardH(h) {
-      var px = Math.min(cardMax, Math.max(220, Math.round(h))) + "px";
-      panel.style.height = px;
-      if (shell) shell.style.height = px;
-    }
-    if (morph) {
-      var to = cardBox(), from = pillBox();
-      Object.keys(to).forEach(function (k) { shell.style[k] = to[k]; });
-      document.documentElement.classList.add("mp-whop-morphing");
-      var grow = shell.animate([from, to], { duration: 460, easing: EASE });
-      panel.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 260, delay: 200, easing: EASE, fill: "backwards" });
-      grow.onfinish = function () {
-        if (closing) return;
-        morphDone = true;
-        document.documentElement.classList.remove("mp-whop-morphing");
-        shell.classList.add("is-settled");
-        if (cardPendingH) setCardH(cardPendingH);
-      };
-    }
-    function morphClose() {
-      document.documentElement.classList.add("mp-whop-morphing");
-      shell.classList.remove("is-settled");
-      var cur = cardBox();
-      Object.keys(cur).forEach(function (k) { shell.style[k] = cur[k]; });
-      panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: "ease-out", fill: "forwards" });
-      shell.animate([cur, pillBox()], { duration: 420, easing: EASE, fill: "forwards" });
-    }
-    var finished = false, closing = false, CLOSE_MS = morph ? 420 : 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
+    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
     }
@@ -1605,11 +1623,9 @@ var MPShop = (function () {
       void panel.offsetWidth;
       panel.style.transform = "";
       if (bd) bd.style.opacity = "";
-      if (morph) morphClose();
       setTimeout(function () {
         if (!w.isConnected) return;
         w.remove();
-        document.documentElement.classList.remove("mp-whop-morphing");
         if (mpTok()) scheduleWarm(query, label);
       }, reduceMotion() ? 0 : CLOSE_MS + 40);
     }
@@ -1627,7 +1643,7 @@ var MPShop = (function () {
       panel.style.transform = "translateY(" + raw + "px)";
     }
     function onDragStart(e) {
-      if (morph || closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
+      if (closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
       dragging = true; didMove = false;
       dragStart = e.clientY; dragY = e.clientY; dragAt = Date.now();
       if (!fullH) fullH = sheetH();
@@ -1672,12 +1688,7 @@ var MPShop = (function () {
       else if (e.data.mpWhop === "overlay") w.classList.toggle("is-overlay", !!e.data.open);
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000 && morph) {
-          // the card hugs short content (e.g. the done screen) but never grows past its cap
-          cardPendingH = h + 58;
-          if (morphDone && !closing) setCardH(cardPendingH);
-          w.classList.add("is-ready");
-        } else if (h > 80 && h < 4000 && mode !== "peek") {
+        if (h > 80 && h < 4000 && mode !== "peek") {
           pendingH = h;
           if (!heightRaf) heightRaf = requestAnimationFrame(function () {
             heightRaf = 0;
