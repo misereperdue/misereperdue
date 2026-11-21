@@ -1301,7 +1301,17 @@ var MPShop = (function () {
   /* Stars on Whop (per dc): "Purchase Stars" opens the payment sheet for the selected pack. Until the server
      turns Whop Stars on, the existing add-to-bag flow stays. */
   var starsWhop = null;
+  /* Native checkout (Whop Payment Elements, per dc t658u): when the Worker turns it on, the checkout sheet grows out of
+     the bottom nav pill and the page inside renders our own payment step. Until then nothing changes. */
+  var elementsCfg = null, elementsOn = false;
+  function elementsStatus() {
+    return elementsCfg || (elementsCfg = fetch("https://api.misereperdue.com/api/whop/elements/config", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
+      .then(function (d) { elementsOn = !!(d && d.enabled === true); return elementsOn; })
+      .catch(function () { elementsCfg = null; return false; }));
+  }
   function starsWhopStatus() {
+    elementsStatus();
     return starsWhop || (starsWhop = fetch("https://api.misereperdue.com/api/whop/stars/status", { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
       .catch(function () { starsWhop = null; return { enabled: false }; }));
@@ -1411,6 +1421,7 @@ var MPShop = (function () {
   }
   function scheduleWarm(query, label) {
     clearWarmWait();
+    elementsStatus();
     function go() {
       clearWarmWait();
       warmWhop(query, label);
@@ -1461,6 +1472,7 @@ var MPShop = (function () {
   /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
      with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
   function openWhopSheet(onDone, query, label) {
+    elementsStatus();
     var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
     var w = document.createElement("div");
     w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
@@ -1483,9 +1495,30 @@ var MPShop = (function () {
       frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
       panel.appendChild(frame);
     }
+    var dock = elementsOn && document.getElementById("mp-dock"), pill = dock && dock.getBoundingClientRect();
+    var morph = !!(pill && pill.width > 0 && pill.height > 0 && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
+    if (morph) w.classList.add("mp-whop-morph");
     document.body.appendChild(w);
     setWhopOpen(true);
-    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
+    /* The pill becomes the sheet: clip the (unscaled) panel from the pill's rect to its own, so the secure iframe keeps
+       its real layout and tap geometry; the pill hides while the sheet stands in for it. */
+    function pillClip() {
+      var a = dock.getBoundingClientRect(), r = panel.getBoundingClientRect();
+      if (!a.width || !r.width) return "inset(40% 30% 0 30% round 26px)";
+      var px = function (n) { return Math.max(0, Math.round(n)) + "px"; };
+      return "inset(" + px(a.top - r.top) + " " + px(r.right - a.right) + " " + px(r.bottom - a.bottom) + " " + px(a.left - r.left) + " round " + Math.round(a.height / 2) + "px)";
+    }
+    function morphTo(open) {
+      if (!morph || !panel.animate) return;
+      var from = open ? pillClip() : "inset(0 0 0 0 round 30px)", to = open ? "inset(0 0 0 0 round 30px)" : pillClip();
+      document.documentElement.classList.add("mp-whop-morphing");
+      try {
+        var an = panel.animate([{ clipPath: from }, { clipPath: to }], { duration: open ? 560 : 420, easing: "cubic-bezier(.32,.72,0,1)", fill: open ? "none" : "forwards" });
+        if (open) an.onfinish = function () { w.classList.add("is-morphed"); };
+      } catch (_) { w.classList.add("is-morphed"); }
+    }
+    if (morph) { void panel.offsetWidth; morphTo(true); }
+    var finished = false, closing = false, CLOSE_MS = morph ? 420 : 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
     }
@@ -1536,9 +1569,11 @@ var MPShop = (function () {
       void panel.offsetWidth;
       panel.style.transform = "";
       if (bd) bd.style.opacity = "";
+      if (morph) { w.classList.remove("is-morphed"); morphTo(false); }
       setTimeout(function () {
         if (!w.isConnected) return;
         w.remove();
+        document.documentElement.classList.remove("mp-whop-morphing");
         if (mpTok()) scheduleWarm(query, label);
       }, reduceMotion() ? 0 : CLOSE_MS + 40);
     }
@@ -1687,6 +1722,7 @@ var MPShop = (function () {
     );
   }
   function z(t) {
+    if (t) elementsStatus();
     var e = document.getElementById("cart-total");
     if (e)
       if (((L = t), t)) {

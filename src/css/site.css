@@ -12634,6 +12634,12 @@ html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
 html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:none}
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
 @media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}
+/* Native checkout (dc t658u): the sheet grows out of the bottom nav pill as a floating glass card; the pill hides meanwhile. */
+.mp-whop-sheet.mp-whop-morph{padding:0 10px calc(env(safe-area-inset-bottom,0px) + 10px);box-sizing:border-box}
+.mp-whop-morph .mp-whop-panel{transform:none;transition:transform .32s cubic-bezier(.32,.72,0,1);border-radius:30px;background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);box-shadow:var(--glass-spec),0 0 0 .5px var(--stroke),0 24px 60px rgba(0,0,0,.28)}
+.mp-whop-morph .mp-whop-frame,.mp-whop-morph .mp-whop-skel,.mp-whop-morph .mp-whop-x,.mp-whop-morph .mp-whop-grab{opacity:0;transition:opacity .2s ease}
+.mp-whop-morph.is-open .mp-whop-frame,.mp-whop-morph.is-open .mp-whop-x,.mp-whop-morph.is-open .mp-whop-grab,.mp-whop-morph.is-open:not(.is-ready) .mp-whop-skel{opacity:1;transition-delay:.16s}
+html.mp-whop-morphing #mp-dock{opacity:0;pointer-events:none;transition:opacity .12s ease}
 
 /* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */
