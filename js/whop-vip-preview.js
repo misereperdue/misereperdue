@@ -123,7 +123,35 @@
     } catch (_) {}
     return '';
   }
-  function writeSess(kind, n, id) { try { sessionStorage.setItem(sessKey(kind, n), JSON.stringify({ id: id, at: Date.now() })); } catch (_) {} }
+  function writeSess(kind, n, id, info) { try { sessionStorage.setItem(sessKey(kind, n), JSON.stringify({ id: id, at: Date.now(), info: info || null })); } catch (_) {} }
+  function readInfo(kind, n) { try { const s = JSON.parse(sessionStorage.getItem(sessKey(kind, n)) || 'null'); return s && s.info || null; } catch (_) { return null; } }
+  // Native checkout (dc t658u): the server's checkout answer says whether our own payment step (Whop Payment
+  // Elements) is on, and names the public account and plan ids it mounts with. Price and charge stay server-side.
+  function nativeInfo(body, product, displayTotal, payLabel) {
+    if (!body || body.elements !== true || !/^biz_[A-Za-z0-9]{8,}$/.test(body.accountId || '') || !/^plan_[A-Za-z0-9]+$/.test(body.planId || '')) return null;
+    return {elements:true, accountId:body.accountId, planId:body.planId, product:product, displayTotal:displayTotal, payLabel:payLabel};
+  }
+  function nativeAppearance() {
+    const d = dark();
+    return {theme:{appearance:d ? 'dark' : 'light', accentColor:'gray', grayColor:'slate', successColor:'green'}, variables:{'--radius':'14px'}};
+  }
+  function mountAny(info, configId, ret, onComplete, onFail) {
+    if (info && info.elements === true && live && window.MPNativeCheckout && typeof window.WhopElements === 'function') {
+      destroyCheckout();
+      const gen = checkoutGen;
+      button.hidden = true; if (skel) skel.hidden = false; mount.hidden = false; mount.classList.remove('loading');
+      document.documentElement.classList.add('mp-native');
+      try {
+        activeCheckout = window.MPNativeCheckout.mount({el:mount, whop:window.WhopElements({}), product:info.product, checkoutId:configId, accountId:info.accountId, planId:info.planId,
+          displayTotal:info.displayTotal, payLabel:info.payLabel, canSave:!!token() && info.product !== 'cart', signedIn:!!token(), returnUrl:ret, appearance:nativeAppearance, request:request,
+          onReady:function () { if (gen !== checkoutGen) return; if (skel) skel.hidden = true; notify('ready'); },
+          onPaid:function (st) { if (gen !== checkoutGen) return; mount.hidden = true; onComplete(st); },
+          fallback:function () { if (gen !== checkoutGen) return; document.documentElement.classList.remove('mp-native'); activeCheckout = null; mountCheckout(configId, ret, onComplete, onFail); }});
+        return;
+      } catch (_) { document.documentElement.classList.remove('mp-native'); activeCheckout = null; }
+    }
+    mountCheckout(configId, ret, onComplete, onFail);
+  }
   function dropSess(kind, n) { try { sessionStorage.removeItem(sessKey(kind, n)); } catch (_) {} }
   // Mounts Whop's checkout for a server-made configuration, styled to the page, behind the matching placeholder.
   // Exactly one embed: destroy any previous instance first, and ignore late callbacks from it.
@@ -265,7 +293,7 @@
         const body = await request('/api/whop/cart/checkout', { method: 'POST', body: JSON.stringify({ lines: lines }) });
         if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '')) throw new Error('The checkout could not be verified.');
         started = true;
-        mountCheckout(body.checkoutConfigurationId, ret, function () {
+        mountAny(nativeInfo(body, 'cart', Number(body.total) || 0, 'Place order'), body.checkoutConfigurationId, ret, function () {
           showDone('We emailed your receipt. We’ll email again when it ships.', 'Order placed');
         }, function () {
           started = false; button.disabled = false; button.hidden = false;
@@ -321,8 +349,8 @@
         if (!st.enabled) throw new Error('Stars checkout is not available yet.');
         if (Math.abs(Number(st.packs && st.packs[n]) - STARS_PRICES[n]) > 0.001) throw new Error('Stars pricing has changed. Checkout has not been opened.');
         if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
-        function useId(id, fromCache) {
-          mountCheckout(id, ret, function () { dropSess('stars', n); status.textContent = 'Adding your Stars\u2026'; confirmStars(true); }, function () {
+        function useId(id, fromCache, info) {
+          mountAny(info, id, ret, function () { dropSess('stars', n); status.textContent = 'Adding your Stars\u2026'; confirmStars(true); }, function () {
             dropSess('stars', n);
             if (fromCache) {
               started = false; button.disabled = false;
@@ -336,12 +364,13 @@
           started = true;
         }
         const cached = readSess('stars', n);
-        if (cached) useId(cached, true);
+        if (cached) useId(cached, true, readInfo('stars', n));
         else {
           const body = await request('/api/whop/stars/checkout', {method:'POST', body:JSON.stringify({pack:n})});
           if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.pack !== n) throw new Error('The checkout could not be verified.');
-          writeSess('stars', n, body.checkoutConfigurationId);
-          useId(body.checkoutConfigurationId, false);
+          const info = nativeInfo(body, 'stars', STARS_PRICES[n], 'Buy Stars');
+          writeSess('stars', n, body.checkoutConfigurationId, info);
+          useId(body.checkoutConfigurationId, false, info);
         }
       } catch (error) { status.textContent = error.message || 'Unable to load checkout.'; button.disabled = false; button.hidden = false; if (skel) skel.hidden = true; notify('ready'); }
     });
@@ -394,9 +423,9 @@
       if (!testMode(state) && (state.vip || state.status === 'active')) throw new Error(live ? 'You already have VIP, and this account is not set up for the private live test. Sign in with the owner account, then reload this page.' : 'You already have VIP. Manage your membership from your profile.');
       if (live && !(await request('/api/whop/vip/readiness')).ready) throw new Error('VIP pricing has changed. Checkout has not been opened.');
       if (typeof window.WhopElements !== 'function') throw new Error('The payment form could not load. Please reload this page.');
-      function useId(id, fromCache, ownerTestFlag) {
+      function useId(id, fromCache, ownerTestFlag, info) {
         if (testMode(state) && fromCache === false && ownerTestFlag!==true) throw new Error('The separate test checkout could not be verified.');
-        mountCheckout(id, returnUrl, function(){ dropSess('vip'); status.textContent='Confirming your VIP\u2026'; confirmVip(true); }, function () {
+        mountAny(testMode(state) ? null : info, id, returnUrl, function(){ dropSess('vip'); status.textContent='Confirming your VIP\u2026'; confirmVip(true); }, function () {
           dropSess('vip');
           if (fromCache) {
             mounted=false; button.disabled=false;
@@ -410,13 +439,14 @@
         mounted=true;
       }
       const cached = !testMode(state) && readSess('vip');
-      if (cached) useId(cached, true);
+      if (cached) useId(cached, true, undefined, readInfo('vip'));
       else {
         const body = await request('/api/whop/vip/checkout',{method:'POST',body:JSON.stringify({product:'vip'})});
+        const info = nativeInfo(body, 'vip', live ? 13.98 : 10, 'Subscribe');
         if (!/^ch_[A-Za-z0-9_-]+$/.test(body.checkoutConfigurationId || '') || body.sandbox !== !live) throw new Error('The checkout environment could not be verified.');
         if (testMode(state) && body.ownerTest!==true) throw new Error('The separate test checkout could not be verified.');
-        writeSess('vip', 0, body.checkoutConfigurationId);
-        useId(body.checkoutConfigurationId, false, body.ownerTest);
+        writeSess('vip', 0, body.checkoutConfigurationId, info);
+        useId(body.checkoutConfigurationId, false, body.ownerTest, info);
       }
       status.textContent=testMode(state) ? 'This is a separate live test. Your existing VIP stays unchanged.' : '';
     } catch(error) {status.textContent=error.message || 'Unable to load checkout.';button.disabled=false;button.hidden=false;if (skel) skel.hidden=true;notify('ready');}
