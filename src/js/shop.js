@@ -1318,11 +1318,11 @@ var MPShop = (function () {
         return;
       }
       box.innerHTML = '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button>';
-      box.querySelector("#stars-buy").onclick = function () {
+      box.querySelector("#stars-buy").onclick = function (event) {
         var n = parseInt(String(pack()).replace(/,/g, ""), 10);
         if (!n) return;
         window.haptic && window.haptic(12);
-        openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout");
+        openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout", event.currentTarget);
       };
       var n = parseInt(String(pack()).replace(/,/g, ""), 10);
       if (n) scheduleWarm("&product=stars&pack=" + n, "Stars checkout");
@@ -1460,13 +1460,21 @@ var MPShop = (function () {
   }
   /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
      with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
-  function openWhopSheet(onDone, query, label) {
-    var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
+  function openWhopSheet(onDone, query, label, trigger) {
+    var stars = /(?:^|&)product=stars(?:&|$)/.test(query || "");
+    var old = document.querySelector(".mp-whop-sheet");
+    if (old && stars) return; // Do not replace a live or closing checkout on a repeated tap.
+    if (old) old.remove();
+    var dock = stars && document.getElementById("mp-dock");
+    var pill = dock && dock.getBoundingClientRect();
+    var docked = !!(pill && pill.width > 0 && pill.height > 0);
+    var previousFocus = docked && (trigger || document.activeElement);
     var w = document.createElement("div");
-    w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
+    w.className = "mp-whop-sheet" + (docked ? " mp-whop-stars-docked" : ""); w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
     var adopted = takeWhopWarm(query);
     w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><div class="mp-whop-drag"></div><span class="mp-whop-grab" aria-hidden="true"></span>' +
       '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      (docked ? '<span class="mp-whop-stars-title" aria-hidden="true">Stars checkout</span>' : '') +
       '<div class="mp-whop-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>';
     var panel = w.querySelector(".mp-whop-panel"), frame = adopted;
     if (adopted) {
@@ -1484,14 +1492,34 @@ var MPShop = (function () {
       panel.appendChild(frame);
     }
     document.body.appendChild(w);
+    function syncDockAnchor() {
+      if (!docked) return;
+      var anchor = dock.getBoundingClientRect(), rect = panel.getBoundingClientRect();
+      if (!anchor.width || !anchor.height || !rect.width) return;
+      var px = function (n) { return Math.max(0, Math.round(n)) + "px"; };
+      panel.style.setProperty("--mp-stars-dock-left", px(anchor.left - rect.left));
+      panel.style.setProperty("--mp-stars-dock-right", px(rect.right - anchor.right));
+      panel.style.setProperty("--mp-stars-dock-height", px(anchor.height));
+      w.style.setProperty("--mp-stars-dock-bottom", px(window.innerHeight - anchor.bottom));
+    }
+    if (docked) {
+      syncDockAnchor();
+      window.addEventListener("resize", syncDockAnchor);
+    }
     setWhopOpen(true);
-    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
+    var finished = false, closing = false, CLOSE_MS = docked ? 460 : 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
     }
     var animMs = reduceMotion() ? 0 : CLOSE_MS;
+    // Commit the anchor geometry before arming the transition, so the collapsed width is the dock's, not the fallback.
+    if (docked) void window.getComputedStyle(panel).clipPath;
     w.classList.add("is-animating");
-    requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      if (closing) return;
+      w.classList.add("is-open");
+      if (docked) try { w.querySelector(".mp-whop-x").focus({ preventScroll: true }); } catch (_) {}
+    }); });
     setTimeout(function () { if (w.isConnected) w.classList.remove("is-animating"); }, animMs + 40);
     var bd = w.querySelector(".mp-whop-backdrop");
     function startCheckout() {
@@ -1522,6 +1550,10 @@ var MPShop = (function () {
       if (closing) return;
       closing = true;
       window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
+      if (docked) {
+        syncDockAnchor();
+        window.removeEventListener("resize", syncDockAnchor);
+      }
       /* Let CSS take over from a mid-swipe or peek position: clear inline drag styles after
          is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
       w.classList.add("is-animating");
@@ -1539,6 +1571,9 @@ var MPShop = (function () {
       setTimeout(function () {
         if (!w.isConnected) return;
         w.remove();
+        if (previousFocus && previousFocus.isConnected && previousFocus !== document.body) {
+          try { previousFocus.focus({ preventScroll: true }); } catch (_) {}
+        }
         if (mpTok()) scheduleWarm(query, label);
       }, reduceMotion() ? 0 : CLOSE_MS + 40);
     }
@@ -1606,7 +1641,7 @@ var MPShop = (function () {
           if (!heightRaf) heightRaf = requestAnimationFrame(function () {
             heightRaf = 0;
             if (closing || mode === "peek") return;
-            panel.style.height = "calc(" + (pendingH + 30) + "px + env(safe-area-inset-bottom, 0px))";
+            panel.style.height = "calc(" + (pendingH + (docked ? 37 : 30)) + "px + env(safe-area-inset-bottom, 0px))";
             fullH = sheetH();
             w.classList.add("is-ready");
           });
