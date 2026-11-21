@@ -12635,32 +12635,6 @@ html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:non
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
 @media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}
 
-/* Stars only: the checkout shell grows from the measured bottom nav pill.
-   Clip the shell instead of scaling: the secure iframe keeps its normal layout and tap geometry. */
-.mp-whop-stars-docked{--mp-stars-dock-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);padding-bottom:var(--mp-stars-dock-bottom);box-sizing:border-box;align-items:flex-end}
-.mp-whop-stars-docked .mp-whop-backdrop{transition-duration:.46s}
-.mp-whop-stars-docked .mp-whop-panel{
-  width:min(460px,calc(100% - 24px));max-height:calc(100vh - var(--mp-stars-dock-bottom) - max(16px,env(safe-area-inset-top,0px)));
-  max-height:calc(100dvh - var(--mp-stars-dock-bottom) - max(16px,env(safe-area-inset-top,0px)));
-  border-radius:26px;background-color:var(--lg-tint,var(--bg));background-image:var(--lg-sheen);
-  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:inset 0 0 0 1px var(--stroke);
-  clip-path:inset(calc(100% - var(--mp-stars-dock-height,52px)) var(--mp-stars-dock-right,0px) 0 var(--mp-stars-dock-left,0px) round 26px);
-  transform:none;transition:transform .32s cubic-bezier(.32,.72,0,1)}
-.mp-whop-stars-docked.is-animating .mp-whop-panel{will-change:clip-path,transform;transition:clip-path .46s cubic-bezier(.32,.72,0,1),transform .32s cubic-bezier(.32,.72,0,1)}
-.mp-whop-stars-docked.is-open .mp-whop-panel{clip-path:inset(0 0 0 0 round 26px)}
-.mp-whop-stars-docked .mp-whop-panel::before{content:"";position:absolute;inset:0 0 auto;height:51px;border-radius:inherit;pointer-events:none;background:linear-gradient(var(--fill),transparent)}
-.mp-whop-stars-title{position:absolute;z-index:2;top:22px;left:60px;right:60px;text-align:center;color:var(--ink);font:650 13px/18px -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:-.01em;pointer-events:none;opacity:0;transition:opacity .18s ease}
-.mp-whop-stars-docked .mp-whop-frame{padding-top:47px}
-.mp-whop-stars-docked .mp-whop-x{top:4px;right:7px;width:44px;height:44px;background:none}
-.mp-whop-stars-docked .mp-whop-x::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--orb-fill,var(--fill))}
-.mp-whop-stars-docked .mp-whop-x svg{position:relative}
-.mp-whop-stars-docked .mp-whop-frame,.mp-whop-stars-docked .mp-whop-skel,.mp-whop-stars-docked .mp-whop-x,.mp-whop-stars-docked .mp-whop-grab{opacity:0;transition:opacity .18s ease}
-.mp-whop-stars-docked.is-open :is(.mp-whop-frame,.mp-whop-x,.mp-whop-grab,.mp-whop-stars-title),.mp-whop-stars-docked.is-open:not(.is-ready) .mp-whop-skel{opacity:1;transition-delay:.13s}
-@media (prefers-reduced-motion:reduce){
-  .mp-whop-stars-docked .mp-whop-panel,.mp-whop-stars-docked .mp-whop-backdrop,
-  .mp-whop-stars-docked .mp-whop-panel *{transition:none!important}
-}
-
 /* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */
 .mp-charm-diamond,.mp-charm-emerald,.mp-charm-ruby,.mp-charm-heart{position:relative;overflow:hidden}
