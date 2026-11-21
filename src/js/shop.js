@@ -1496,28 +1496,64 @@ var MPShop = (function () {
       panel.appendChild(frame);
     }
     var dock = elementsOn && document.getElementById("mp-dock"), pill = dock && dock.getBoundingClientRect();
-    var morph = !!(pill && pill.width > 0 && pill.height > 0 && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
-    if (morph) w.classList.add("mp-whop-morph");
+    var morph = !!(pill && pill.width > 0 && pill.height > 0 && panel.animate && !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
+    /* Native checkout (dc t659u): a glass card that sits above the nav pill, never under the status bar (the X is
+       always reachable; the checkout scrolls inside). It grows out of the pill like the + menu morph: an empty glass
+       shell animates from the pill's exact rect and radius to the card's, bottom-anchored, while the checkout fades
+       in on top; closing runs it back into the pill. The pill hides only while the shell stands in for it. */
+    var shell = null, morphDone = false, cardMax = 0, cardBottom = 0, cardPendingH = 0, EASE = window.MP_EASE || "cubic-bezier(.32,.72,0,1)";
+    function safeTop() {
+      var t = document.createElement("div"); t.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden";
+      document.body.appendChild(t); var v = t.offsetHeight || 0; t.remove(); return v;
+    }
+    function pillBox() {
+      var r = dock.getBoundingClientRect(), rad = parseFloat(getComputedStyle(dock).borderTopLeftRadius) || r.height / 2;
+      return { width: r.width + "px", height: r.height + "px", bottom: (window.innerHeight - r.bottom) + "px", borderRadius: rad + "px" };
+    }
+    if (morph) {
+      w.classList.add("mp-whop-morph");
+      cardBottom = Math.round(window.innerHeight - pill.top + 10);
+      cardMax = Math.max(260, Math.round(pill.top - 10 - (safeTop() + 16)));
+      w.style.paddingBottom = cardBottom + "px";
+      panel.style.height = cardMax + "px";
+      shell = document.createElement("div");
+      shell.className = "mp-whop-shell";
+      shell.setAttribute("aria-hidden", "true");
+      w.insertBefore(shell, panel);
+    }
     document.body.appendChild(w);
     setWhopOpen(true);
-    /* The pill becomes the sheet: clip the (unscaled) panel from the pill's rect to its own, so the secure iframe keeps
-       its real layout and tap geometry; the pill hides while the sheet stands in for it. */
-    function pillClip() {
-      var a = dock.getBoundingClientRect(), r = panel.getBoundingClientRect();
-      if (!a.width || !r.width) return "inset(40% 30% 0 30% round 26px)";
-      var px = function (n) { return Math.max(0, Math.round(n)) + "px"; };
-      return "inset(" + px(a.top - r.top) + " " + px(r.right - a.right) + " " + px(r.bottom - a.bottom) + " " + px(a.left - r.left) + " round " + Math.round(a.height / 2) + "px)";
+    function cardBox() {
+      var r = panel.getBoundingClientRect();
+      return { width: r.width + "px", height: r.height + "px", bottom: cardBottom + "px", borderRadius: "30px" };
     }
-    function morphTo(open) {
-      if (!morph || !panel.animate) return;
-      var from = open ? pillClip() : "inset(0 0 0 0 round 30px)", to = open ? "inset(0 0 0 0 round 30px)" : pillClip();
+    function setCardH(h) {
+      var px = Math.min(cardMax, Math.max(220, Math.round(h))) + "px";
+      panel.style.height = px;
+      if (shell) shell.style.height = px;
+    }
+    if (morph) {
+      var to = cardBox(), from = pillBox();
+      Object.keys(to).forEach(function (k) { shell.style[k] = to[k]; });
       document.documentElement.classList.add("mp-whop-morphing");
-      try {
-        var an = panel.animate([{ clipPath: from }, { clipPath: to }], { duration: open ? 560 : 420, easing: "cubic-bezier(.32,.72,0,1)", fill: open ? "none" : "forwards" });
-        if (open) an.onfinish = function () { w.classList.add("is-morphed"); };
-      } catch (_) { w.classList.add("is-morphed"); }
+      var grow = shell.animate([from, to], { duration: 460, easing: EASE });
+      panel.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 260, delay: 200, easing: EASE, fill: "backwards" });
+      grow.onfinish = function () {
+        if (closing) return;
+        morphDone = true;
+        document.documentElement.classList.remove("mp-whop-morphing");
+        shell.classList.add("is-settled");
+        if (cardPendingH) setCardH(cardPendingH);
+      };
     }
-    if (morph) { void panel.offsetWidth; morphTo(true); }
+    function morphClose() {
+      document.documentElement.classList.add("mp-whop-morphing");
+      shell.classList.remove("is-settled");
+      var cur = cardBox();
+      Object.keys(cur).forEach(function (k) { shell.style[k] = cur[k]; });
+      panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: "ease-out", fill: "forwards" });
+      shell.animate([cur, pillBox()], { duration: 420, easing: EASE, fill: "forwards" });
+    }
     var finished = false, closing = false, CLOSE_MS = morph ? 420 : 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
     function reduceMotion() {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
@@ -1569,7 +1605,7 @@ var MPShop = (function () {
       void panel.offsetWidth;
       panel.style.transform = "";
       if (bd) bd.style.opacity = "";
-      if (morph) { w.classList.remove("is-morphed"); morphTo(false); }
+      if (morph) morphClose();
       setTimeout(function () {
         if (!w.isConnected) return;
         w.remove();
@@ -1591,7 +1627,7 @@ var MPShop = (function () {
       panel.style.transform = "translateY(" + raw + "px)";
     }
     function onDragStart(e) {
-      if (closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
+      if (morph || closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
       dragging = true; didMove = false;
       dragStart = e.clientY; dragY = e.clientY; dragAt = Date.now();
       if (!fullH) fullH = sheetH();
@@ -1636,7 +1672,12 @@ var MPShop = (function () {
       else if (e.data.mpWhop === "overlay") w.classList.toggle("is-overlay", !!e.data.open);
       else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
         var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000 && mode !== "peek") {
+        if (h > 80 && h < 4000 && morph) {
+          // the card hugs short content (e.g. the done screen) but never grows past its cap
+          cardPendingH = h + 58;
+          if (morphDone && !closing) setCardH(cardPendingH);
+          w.classList.add("is-ready");
+        } else if (h > 80 && h < 4000 && mode !== "peek") {
           pendingH = h;
           if (!heightRaf) heightRaf = requestAnimationFrame(function () {
             heightRaf = 0;
