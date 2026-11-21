@@ -16,6 +16,7 @@
   const sheet = new URLSearchParams(location.search).get('sheet') === '1' && window.parent !== window;
   const warmOnly = sheet && new URLSearchParams(location.search).get('warm') === '1';
   if (sheet) document.documentElement.classList.add('mp-sheet');
+  if (sheet && /[?&]dock=1/.test(location.search)) document.documentElement.classList.add('mp-dock');
   var startWanted = sheet && !warmOnly;
   const returnUrl = location.origin + '/whop-vip-preview' + (live ? '?checkout=1' : '') + (sheet ? (live ? '&' : '?') + 'sheet=1' : '');
   function notify(kind, extra) { if (sheet) try { window.parent.postMessage(Object.assign({mpWhop:kind}, extra || {}), location.origin); } catch (_) {} }

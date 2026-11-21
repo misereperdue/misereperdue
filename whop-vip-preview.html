@@ -58,6 +58,10 @@
     [hidden] { display:none !important; }
     /* sheet mode: the site draws the sheet, grab handle and close button */
     .mp-sheet .wrap { padding:4px 20px 24px; }
+    /* dc t661u: never scroll sideways in the sheet (fields, coupon particles, ticket). */
+    html.mp-sheet,html.mp-sheet body { overflow-x:hidden;max-width:100%;touch-action:pan-y; }
+    html.mp-sheet .wrap { overflow-x:hidden;max-width:100%; }
+    html.mp-dock .wrap { padding:0 10px 14px; }
     .mp-sheet .brand, .mp-sheet .fine.page { display:none; }
     .mp-sheet .rc-head { padding-right:0; }
     /* Neutralize Whop's dialog ::backdrop. The parent sheet paints the dim so the
@@ -153,7 +157,9 @@
     .nc-m[aria-checked="true"] .nc-mk { background:var(--ink);color:var(--bg);box-shadow:none; }
     .nc-new { display:grid;gap:10px; }
     .nc-new[hidden] { display:none !important; }
-    .nc-2 { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .nc-2 { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px; }
+    .nc,.nc-card,.nc-pay,.nc-new,.nc-mount { min-width:0;max-width:100%; }
+    .nc-mount iframe,.nc-mount > * { max-width:100% !important; }
     .nc-mount:empty { min-height:44px;border-radius:14px;background:var(--fill); }
     .nc-savecard { display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted); }
     .nc-savecard input { width:18px;height:18px;margin:0;accent-color:var(--ink); }
@@ -161,7 +167,8 @@
     .nc-brand:empty { display:none; }
     .nc-err { margin:0;color:#ff453a;font-size:13px;text-align:center; }
     .nc-err:empty { display:none; }
-    .nc-bar { position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:12px;margin:4px -6px 0;padding:10px 10px 10px 12px;border-radius:999px;background:var(--glass-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-spec),0 0 0 .5px var(--glass-line),0 10px 30px rgba(0,0,0,.12); }
+    /* dc t661u: the total + Buy bar is the sheet's footer, in flow after the fields (never floating over them). */
+    .nc-bar { position:static;display:flex;align-items:center;gap:12px;margin:2px 0 0;padding:14px 0 2px;border-top:.5px solid var(--glass-line); }
     .nc-thumb { width:0;height:34px;border-radius:10px;display:grid;place-items:center;overflow:hidden;opacity:0;transform:scale(.5);color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent);transition:width .4s cubic-bezier(.32,.72,0,1),opacity .3s ease,transform .45s cubic-bezier(.34,1.56,.64,1);flex:none; }
     .nc-thumb svg { width:18px;height:18px; }
     .has-coupon .nc-thumb { width:34px;opacity:1;transform:none; }
@@ -181,7 +188,7 @@
   </style>
   <script src="https://cdn.whop.com/elements/amber/elements.js" data-whop-elements defer></script>
   <script src="/js/native-checkout.js?v=1" defer></script>
-  <script src="/js/whop-vip-preview.js?v=24" defer></script>
+  <script src="/js/whop-vip-preview.js?v=25" defer></script>
 </head>
 <body>
   <main class="wrap">

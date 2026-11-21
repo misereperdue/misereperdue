@@ -12634,20 +12634,14 @@ html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
 html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:none}
 @media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
 @media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}
-/* Native checkout (dc t659u): a floating glass card above the nav pill, capped below the status bar so the X is always
-   reachable; the checkout scrolls inside. An empty glass shell grows out of the pill (+ menu style) behind the card. */
-.mp-whop-sheet.mp-whop-morph{box-sizing:border-box;align-items:flex-end}
-.mp-whop-morph .mp-whop-panel{width:min(460px,calc(100% - 20px));max-height:none;transform:none;transition:height .3s cubic-bezier(.32,.72,0,1);border-radius:30px;background:transparent;box-shadow:none}
-.mp-whop-morph.is-open .mp-whop-panel{transform:none}
-.mp-whop-shell{position:fixed;left:50%;transform:translateX(-50%);box-sizing:border-box;pointer-events:none;border-radius:30px;background:var(--glass-regular-tint);-webkit-backdrop-filter:var(--glass-regular);backdrop-filter:var(--glass-regular);box-shadow:var(--glass-spec),0 0 0 .5px var(--stroke),0 24px 60px rgba(0,0,0,.28);will-change:width,height,bottom}
-.mp-whop-shell.is-settled{will-change:auto;transition:height .3s cubic-bezier(.32,.72,0,1)}
-.mp-whop-morph .mp-whop-drag,.mp-whop-morph .mp-whop-grab{display:none}
-.mp-whop-morph .mp-whop-frame{padding-top:50px}
-.mp-whop-morph .mp-whop-skel{padding-top:64px}
-.mp-whop-morph .mp-whop-x{top:3px;right:5px;width:44px;height:44px;background:none;color:var(--ink)}
-.mp-whop-morph .mp-whop-x::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--fill)}
-.mp-whop-morph .mp-whop-x svg{position:relative}
-html.mp-whop-morphing #mp-dock,html.mp-whop-morphing.mp-bnav #mp-dock{opacity:0;pointer-events:none;transition:none}
+/* Checkout in the nav pill (dc t661u): hosted in the profile sheet's own top-bar morph (MPProfiles.openSheet).
+   The page iframe hugs its content up to the sheet's room and scrolls inside past that; nothing scrolls sideways. */
+.mp-whop-dock{position:relative;min-width:0;max-width:100%;overflow:hidden}
+.mp-whop-dock-frame{display:block;width:100%;max-width:100%;height:0;border:0;background:transparent;color-scheme:normal;opacity:0;transition:opacity .26s ease}
+.mp-whop-dock.is-ready .mp-whop-dock-frame{opacity:1}
+.mp-whop-dock-skel{display:grid;gap:10px;padding:6px 10px 12px}
+.mp-whop-dock-skel i{display:block;height:46px;border-radius:14px;background:var(--fill)}
+.mp-whop-dock.is-ready .mp-whop-dock-skel{display:none}
 
 /* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */
