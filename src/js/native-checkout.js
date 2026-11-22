@@ -69,38 +69,89 @@
     })(i);
   }
 
+  // Hugeicons (free, MIT): ArrowDown01
+  var I_DOWN = '<svg ' + SVG + ' aria-hidden="true"><path d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9"/></svg>';
+  var COUNTRIES = ["CA", "US", "GB", "AU", "NZ", "IE", "FR", "DE", "ES", "IT", "NL", "BE", "CH", "AT", "SE", "NO", "DK", "FI", "PT", "PL", "CZ", "GR", "JP", "KR", "SG", "HK", "TW", "MX", "BR", "AR", "CL", "CO", "ZA", "AE", "IL", "IN", "PH", "TH", "MY"];
+  function countryName(c) { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(c) || c; } catch (_) { return c; } }
+  function countryOptions(sel) { return COUNTRIES.map(function (c) { return '<option value="' + c + '"' + (c === sel ? " selected" : "") + ">" + esc(countryName(c)) + "</option>"; }).join(""); }
+  function readLocal(k) { try { return JSON.parse(localStorage.getItem(k) || "null") || {}; } catch (_) { return {}; } }
+  function writeLocal(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+  function emailOk(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s); }
+  function row(label, inner, cls) { return '<label class="nc-li' + (cls ? " " + cls : "") + '"><span class="nc-lb">' + label + "</span>" + inner + "</label>"; }
+  function input(id, attrs) { return '<input class="nc-in" id="' + id + '" ' + attrs + ">"; }
+  function select(id, sel) { return '<span class="nc-sel"><select class="nc-in" id="' + id + '" autocomplete="country">' + countryOptions(sel) + "</select>" + I_DOWN + "</span>"; }
+
+  /* Look A (dc t667u/t668u): iOS-style grouped glass lists. Ours: the order summary, coupon, contact (email, name),
+     country/postal or the full shipping address, saved cards and the Buy stack. Whop's: only the PCI card number,
+     expiry and CVC frames (styled bare into our rows) and its required branding line. Our email, name and address
+     go to Whop in the confirmation token (billingDetails); the bag's address also goes to the server as `ship`. */
   function mount(o) {
-    var root = o.el, product = o.product;
+    var root = o.el, product = o.product, cart = product === "cart";
     var state = { quote: null, base: null, promo: "", pendingPromo: "", method: "new", cardDone: false, busy: false, saved: [], wallet: null };
+    var contact = readLocal("mp_pay_contact"), ship0 = readLocal("mp_pay_ship");
+    var h1 = document.querySelector("h1"), sub = document.querySelector(".rc-sub"), art = document.querySelector(".rc-art");
+    var title = (h1 && h1.textContent.trim()) || "Order", subText = (sub && sub.textContent.trim()) || "";
+    var country0 = /^[A-Z]{2}$/.test(contact.country || "") ? contact.country : "CA";
     root.innerHTML =
-      '<div class="nc">' +
-      '<section class="nc-card nc-sum" aria-label="Order summary">' +
-      '<div class="nc-row"><span>Subtotal</span><span class="nc-subv">\u2014</span></div>' +
-      '<div class="nc-cl" aria-live="polite"><div class="nc-row nc-cline"><span>' + I_TICKET + 'Coupon \u00b7 <b class="nc-code"></b></span><span class="nc-disc"></span></div></div>' +
-      '<div class="nc-row nc-muted"><span>Tax</span><span class="nc-taxv">Added at payment if due</span></div>' +
-      '<button type="button" class="nc-add">' + I_TICKET + '<span>Add coupon</span>' + I_NEXT + "</button>" +
-      '<div class="nc-cbox" hidden><input class="nc-cin" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="Coupon code" aria-label="Coupon code"><button type="button" class="nc-chk">Check</button></div>' +
-      '<div class="nc-ticket" hidden><div class="nc-tk-l"><small>Coupon</small><b class="nc-tk-code"></b></div><div class="nc-tk-r"><b class="nc-tk-off"></b><button type="button" class="nc-tk-apply">Apply to order</button></div></div>' +
+      '<div class="nc nc-a">' +
+      '<div class="nc-grp nc-sum" aria-label="Order summary">' +
+      '<div class="nc-li nc-item">' + (art && art.getAttribute("src") ? '<img class="nc-art" alt="" src="' + esc(art.getAttribute("src")) + '">' : "") +
+      '<span class="nc-it"><b>' + esc(title) + "</b>" + (subText && !cart ? "" : subText ? "<small>" + esc(subText) + "</small>" : "") + '</span><span class="nc-v nc-subv">\u2014</span></div>' +
+      '<button type="button" class="nc-li nc-add">' + I_TICKET + '<span class="nc-lt">Coupon</span><span class="nc-v">Add' + I_NEXT + "</span></button>" +
+      '<div class="nc-li nc-cbox" hidden><input class="nc-cin" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" placeholder="Coupon code" aria-label="Coupon code"><button type="button" class="nc-chk">Check</button></div>' +
+      '<div class="nc-li nc-tkrow" hidden><div class="nc-ticket"><div class="nc-tk-l"><small>Coupon</small><b class="nc-tk-code"></b></div><div class="nc-tk-r"><b class="nc-tk-off"></b><button type="button" class="nc-tk-apply">Apply</button></div></div></div>' +
+      '<div class="nc-cl" aria-live="polite"><button type="button" class="nc-li nc-cline" aria-label="Remove coupon">' + I_TICKET + '<span class="nc-lt">Coupon \u00b7 <b class="nc-code"></b></span><span class="nc-v nc-disc"></span></button></div>' +
+      '<div class="nc-li nc-totrow"><span class="nc-thumb" aria-hidden="true">' + I_TICKET + '</span><span class="nc-lt"><b>Total</b><small class="nc-saved">You save <span></span></small></span><span class="nc-tot"><s class="nc-old"></s><b class="nc-now"></b></span></div>' +
+      "</div>" +
       '<p class="nc-cmsg" role="status"></p>' +
-      "</section>" +
-      '<section class="nc-card nc-pay" aria-label="Payment">' +
-      '<div class="nc-wallet" hidden></div>' +
-      '<div class="nc-methods"></div>' +
-      '<div class="nc-new">' +
-      '<div class="nc-mount" id="nc-email"></div>' +
-      '<div class="nc-mount nc-f" id="nc-number"></div>' +
-      '<div class="nc-2"><div class="nc-mount nc-f" id="nc-exp"></div><div class="nc-mount nc-f" id="nc-cvc"></div></div>' +
-      '<div class="nc-mount" id="nc-addr"></div>' +
-      (o.canSave ? '<label class="nc-savecard"><input type="checkbox" class="nc-savebox"><span>Save this card for next time</span></label>' : "") +
-      "</div></section>" +
-      '<div class="nc-mount nc-brand" id="nc-branding"></div>' +
+      '<div class="nc-cap">Contact</div><div class="nc-grp">' +
+      row("Email", input("nc-email", 'type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="120" placeholder="you@example.com"')) +
+      row("Name", input("nc-name", 'type="text" autocomplete="name" maxlength="80" placeholder="Name on card"')) +
+      "</div>" +
+      (cart ? '<div class="nc-cap">Shipping</div><div class="nc-grp">' +
+        row("Address", input("nc-line1", 'type="text" autocomplete="address-line1" maxlength="120" placeholder="Street address"')) +
+        row("Apt", input("nc-line2", 'type="text" autocomplete="address-line2" maxlength="120" placeholder="Optional"')) +
+        row("City", input("nc-city", 'type="text" autocomplete="address-level2" maxlength="80" placeholder="City"')) +
+        row("Province", input("nc-state", 'type="text" autocomplete="address-level1" maxlength="80" placeholder="Province or state"')) +
+        row("Postal", input("nc-postal", 'type="text" autocomplete="postal-code" autocapitalize="characters" maxlength="20" placeholder="Postal code"')) +
+        row("Country", select("nc-country", /^[A-Z]{2}$/.test(ship0.country || "") ? ship0.country : country0)) +
+        "</div>" : "") +
+      '<div class="nc-cap">Card</div><div class="nc-grp nc-cardgrp"><div class="nc-methods"></div><div class="nc-new">' +
+      '<div class="nc-li nc-wrow"><span class="nc-lb">Number</span><div class="nc-mount nc-f" id="nc-number"></div></div>' +
+      '<div class="nc-sp2"><div class="nc-li nc-wrow"><span class="nc-lb">Expiry</span><div class="nc-mount nc-f" id="nc-exp"></div></div><div class="nc-li nc-wrow"><span class="nc-lb nc-lb-s">CVC</span><div class="nc-mount nc-f" id="nc-cvc"></div></div></div>' +
+      (cart ? "" : row("Country", select("nc-country", country0)) +
+        row("Postal", input("nc-postal", 'type="text" autocomplete="postal-code" autocapitalize="characters" maxlength="20" placeholder="Postal code"'))) +
+      (o.canSave ? '<label class="nc-li nc-savecard"><span class="nc-lt">Save card for next time</span><input type="checkbox" class="nc-savebox"></label>' : "") +
+      "</div></div>" +
       '<p class="nc-err" role="alert"></p>' +
-      '<div class="nc-bar"><span class="nc-thumb" aria-hidden="true">' + I_TICKET + '</span><div class="nc-tot"><s class="nc-old"></s><b class="nc-now"></b><small class="nc-saved">You save <span></span></small></div>' +
-      '<button type="button" class="nc-go" disabled>' + esc(o.payLabel || "Pay") + "</button></div>" +
+      '<div class="nc-foot"><div class="nc-wallet" hidden></div><button type="button" class="nc-go" disabled>' + esc(o.payLabel || "Pay") + "</button></div>" +
+      '<div class="nc-mount nc-brand" id="nc-branding"></div>' +
       "</div>";
     var $ = function (s) { return root.querySelector(s); };
     var err = $(".nc-err"), go = $(".nc-go"), now = $(".nc-now");
+    var f = { email: $("#nc-email"), name: $("#nc-name"), country: $("#nc-country"), postal: $("#nc-postal"), line1: $("#nc-line1"), line2: $("#nc-line2"), city: $("#nc-city"), state: $("#nc-state") };
+    f.email.value = contact.email || ""; f.name.value = contact.name || "";
+    if (cart) { f.line1.value = ship0.line1 || ""; f.line2.value = ship0.line2 || ""; f.city.value = ship0.city || ""; f.state.value = ship0.state || ""; f.postal.value = ship0.postal_code || ""; }
+    else f.postal.value = contact.postal || "";
     function setErr(t) { err.textContent = t || ""; }
+    function val(k) { return f[k] ? String(f[k].value || "").trim() : ""; }
+    function details() {
+      var d = { email: val("email"), name: val("name"), country: val("country"), postal_code: val("postal").toUpperCase() };
+      if (cart) { d.line1 = val("line1"); d.line2 = val("line2"); d.city = val("city"); d.state = val("state"); }
+      return d;
+    }
+    function missing() {
+      var d = details();
+      if (state.method === "new") {
+        if (!emailOk(d.email)) return "email";
+        if (!d.name) return "name";
+      }
+      if (cart && (!d.line1 || !d.city || !d.state)) return "address";
+      if ((state.method === "new" || cart) && (!d.country || !d.postal_code)) return "postal";
+      return "";
+    }
+    function money0() { var q = state.quote || state.base; return q ? money(num(q.total), q.total.currency) : ""; }
+    function label() { var m = money0(); return (o.payLabel || "Pay") + (m ? " \u00b7 " + m : ""); }
     function totals() {
       var q = state.quote || state.base;
       if (!q) return;
@@ -115,14 +166,16 @@
         $(".nc-old").textContent = money(sub, cur);
         $(".nc-saved span").textContent = money(disc, cur);
       }
+      if (!state.busy) go.textContent = label();
       if (state.wallet) try { state.wallet.update({ amount: Math.round(tot * 100) }); } catch (_) {}
     }
-    function ready() { go.disabled = state.busy || !(state.method !== "new" || state.cardDone); }
+    function ready() { go.disabled = state.busy || !!missing() || !(state.method !== "new" || state.cardDone); }
+    Object.keys(f).forEach(function (k) { if (f[k]) { f[k].addEventListener("input", ready); f[k].addEventListener("change", ready); } });
     function quote(promo) {
       return o.request("/api/whop/elements/quote", { method: "POST", body: JSON.stringify({ checkoutConfigurationId: o.checkoutId, promo: promo || "" }) });
     }
     // Coupon: check the code with the server (Whop promo codes), show it as a ticket, then apply it to the order.
-    var add = $(".nc-add"), cbox = $(".nc-cbox"), cin = $(".nc-cin"), ticket = $(".nc-ticket"), cmsg = $(".nc-cmsg");
+    var add = $(".nc-add"), cbox = $(".nc-cbox"), cin = $(".nc-cin"), tkrow = $(".nc-tkrow"), ticket = $(".nc-ticket"), cmsg = $(".nc-cmsg");
     add.onclick = function () { add.hidden = true; cbox.hidden = false; try { cin.focus({ preventScroll: true }); } catch (_) {} };
     function check() {
       var code = cin.value.trim();
@@ -135,7 +188,7 @@
         state.pendingQuote = q; state.pendingPromo = q.promo || code;
         $(".nc-tk-code").textContent = state.pendingPromo.toUpperCase();
         $(".nc-tk-off").textContent = "\u2212" + money(disc, q.total.currency);
-        cbox.hidden = true; ticket.hidden = false;
+        cbox.hidden = true; tkrow.hidden = false;
       }).catch(function (e) { cmsg.textContent = e.message || "That code can\u2019t be used"; })
         .then(function () { $(".nc-chk").disabled = false; });
     }
@@ -145,10 +198,11 @@
       var q = state.pendingQuote;
       if (!q) return;
       window.parent !== window && o.haptic && o.haptic();
-      burst(ticket, $(".nc-thumb"), function () {});
+      root.classList.add("is-applying");
+      burst(ticket, $(".nc-now"), function () { root.classList.remove("is-applying"); });
       ticket.classList.add("is-gone");
       setTimeout(function () {
-        ticket.hidden = true; ticket.classList.remove("is-gone");
+        tkrow.hidden = true; ticket.classList.remove("is-gone");
         state.quote = q; state.promo = state.pendingPromo;
         totals();
         add.hidden = true;
@@ -159,8 +213,8 @@
       state.promo = ""; state.quote = state.base; totals();
       add.hidden = false; cin.value = "";
     });
-    // Whop Payment Elements
-    var W = o.whop, payments, cardFields, addr;
+    // Whop Payment Elements: only the card frames and the branding line.
+    var W = o.whop, payments, cardFields;
     payments = W.payments.create({
       accountId: o.accountId, plan: o.planId, appearance: o.appearance(),
       onLoadingChange: function (loading) { if (!loading) loaded(); }
@@ -181,27 +235,24 @@
     }
     try {
       payments.create("branding").mount("#nc-branding");
-      payments.create("email").mount("#nc-email");
       cardFields = payments.create("cardFields", { onChange: function (ev) { state.cardDone = !!(ev && ev.complete); ready(); } });
       cardFields.create("cardNumber").mount("#nc-number");
       cardFields.create("cardExpiry").mount("#nc-exp");
       cardFields.create("cardCvc").mount("#nc-cvc");
-      addr = payments.create("address", { mode: product === "cart" ? "shipping" : "billing", name: "combined" });
-      addr.mount("#nc-addr");
     } catch (e) { fail("mount"); return { destroy: function () {} }; }
     var themeObs = new MutationObserver(function () { try { payments.update({ appearance: o.appearance() }); } catch (_) {} });
     themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     var save = $(".nc-savebox");
     if (save) save.onchange = function () { try { payments.update({ setupFutureUsage: save.checked ? "on_session" : undefined }); } catch (_) {} };
-    // Saved cards (from this account's earlier native payments) and the "new card" row.
+    // Saved cards (from this account's earlier native payments) as rows, plus a "New card" row.
     var methods = $(".nc-methods"), newBox = $(".nc-new");
     function drawMethods() {
       if (!state.saved.length) { methods.innerHTML = ""; newBox.hidden = false; return; }
       methods.innerHTML = state.saved.map(function (m) {
         var name = (m.brand ? m.brand.charAt(0).toUpperCase() + m.brand.slice(1) : "Card") + (m.last4 ? " \u2022\u2022\u2022\u2022 " + m.last4 : "");
-        return '<button type="button" class="nc-m" role="radio" data-id="' + esc(m.id) + '" aria-checked="' + (state.method === m.id) + '"><span class="nc-mi">' + I_CARD + '</span><span class="nc-mt"><b>' + esc(name) + "</b>" +
+        return '<button type="button" class="nc-li nc-m" role="radio" data-id="' + esc(m.id) + '" aria-checked="' + (state.method === m.id) + '"><span class="nc-mi">' + I_CARD + '</span><span class="nc-mt"><b>' + esc(name) + "</b>" +
           (m.exp ? "<small>Expires " + esc(m.exp) + "</small>" : "") + '</span><span class="nc-mk">' + I_TICK + "</span></button>";
-      }).join("") + '<button type="button" class="nc-m" role="radio" data-id="new" aria-checked="' + (state.method === "new") + '"><span class="nc-mi">' + I_CARD + '</span><span class="nc-mt"><b>New card</b></span><span class="nc-mk">' + I_TICK + "</span></button>";
+      }).join("") + '<button type="button" class="nc-li nc-m" role="radio" data-id="new" aria-checked="' + (state.method === "new") + '"><span class="nc-mi">' + I_CARD + '</span><span class="nc-mt"><b>New card</b></span><span class="nc-mk">' + I_TICK + "</span></button>";
       newBox.hidden = state.method !== "new";
       methods.querySelectorAll(".nc-m").forEach(function (b) {
         b.onclick = function () { state.method = b.dataset.id; drawMethods(); ready(); };
@@ -214,25 +265,24 @@
     }).catch(function () {});
     // Prices from the server (Whop quote); the display price is only a placeholder until it answers.
     if (o.displayTotal) state.base = { subtotal: { amount: String(o.displayTotal), currency: "cad" }, total: { amount: String(o.displayTotal), currency: "cad" }, discount: { amount: "0", currency: "cad" } };
-    totals();
+    totals(); ready();
     quote("").then(function (q) { state.base = q; if (!state.promo) state.quote = q; totals(); setupWallet(); }).catch(function () { setupWallet(); });
-    // Apple Pay / Google Pay behind our own button (needs Apple Pay ready on misereperdue.com in Whop).
+    // Apple Pay / Google Pay behind our own button, stacked above Buy (needs Apple Pay ready on misereperdue.com in Whop).
     function setupWallet() {
       var q = state.quote || state.base;
       if (!q || !W.payments.paymentRequest) return;
       try {
-        var pr = W.payments.paymentRequest.create({ accountId: o.accountId, currency: q.total.currency, amount: Math.round(num(q.total) * 100), requestPayerEmail: true, requestShipping: product === "cart" });
+        var pr = W.payments.paymentRequest.create({ accountId: o.accountId, currency: q.total.currency, amount: Math.round(num(q.total) * 100), requestPayerEmail: true, requestShipping: cart });
         pr.canMakePayment().then(function (av) {
           if (!av) return;
           var type = av.applePay ? "apple_pay" : av.googlePay ? "google_pay" : null;
           if (!type) return;
           state.wallet = pr;
           var box = $(".nc-wallet");
-          var art = av.wallets && av.wallets[type] && av.wallets[type].button, dk = document.documentElement.getAttribute("data-theme") === "dark";
-          var img = art && (dk ? art.dark : art.light), label = type === "apple_pay" ? "Apple Pay" : "Google Pay";
-          box.innerHTML = '<button type="button" class="nc-wbtn" aria-label="Pay with ' + label + '">' +
-            (img && /^https:\/\//.test(img.image || "") ? '<img alt="" src="' + esc(img.image) + '">' : (type === "apple_pay" ? '<span class="nc-apl" aria-hidden="true">\uf8ff</span>Pay' : label)) +
-            "</button>" + '<div class="nc-or"><span>or pay with card</span></div>';
+          var wart = av.wallets && av.wallets[type] && av.wallets[type].button, dk = document.documentElement.getAttribute("data-theme") === "dark";
+          var img = wart && (dk ? wart.dark : wart.light), lbl = type === "apple_pay" ? "Apple Pay" : "Google Pay";
+          box.innerHTML = '<button type="button" class="nc-wbtn" aria-label="Pay with ' + lbl + '">' +
+            (img && /^https:\/\//.test(img.image || "") ? '<img alt="" src="' + esc(img.image) + '">' : (type === "apple_pay" ? '<span class="nc-apl" aria-hidden="true">\uf8ff</span>Pay' : lbl)) + "</button>";
           box.hidden = false;
           box.querySelector(".nc-wbtn").onclick = function () {
             if (state.busy) return;
@@ -244,7 +294,7 @@
         }).catch(function () {});
       } catch (_) {}
     }
-    function busy(on) { state.busy = on; root.classList.toggle("is-busy", on); go.textContent = on ? "Processing\u2026" : o.payLabel || "Pay"; ready(); }
+    function busy(on) { state.busy = on; root.classList.toggle("is-busy", on); go.textContent = on ? "Processing\u2026" : label(); ready(); }
     function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     function submit(extra) {
       busy(true);
@@ -267,17 +317,27 @@
         return wait(1500).then(function () { return poll(id, n + 1); });
       });
     }
+    var HINT = { email: "Add your email for the receipt", name: "Add the name on your card", address: "Add your shipping address", postal: "Add your country and postal code" };
     go.onclick = function () {
       if (state.busy) return;
       setErr("");
-      if (state.method !== "new") { submit({ savedMethodId: state.method }); return; }
+      var miss = missing();
+      if (miss) { setErr(HINT[miss]); return; }
+      var d = details();
+      // Remember contact and address on this device only (never sent anywhere but the payment).
+      writeLocal("mp_pay_contact", { email: d.email, name: d.name, country: cart ? contact.country || "" : d.country, postal: cart ? contact.postal || "" : d.postal_code });
+      var ship = null;
+      if (cart) {
+        ship = { name: d.name, line1: d.line1, line2: d.line2, city: d.city, state: d.state, postal_code: d.postal_code, country: d.country };
+        writeLocal("mp_pay_ship", ship);
+      }
+      if (state.method !== "new") { submit({ savedMethodId: state.method, ship: ship }); return; }
+      var address = cart ? { country: d.country, line1: d.line1, city: d.city, postal_code: d.postal_code, state: d.state } : { country: d.country, postal_code: d.postal_code };
+      if (cart && d.line2) address.line2 = d.line2;
       busy(true);
-      var shipP = product === "cart" && addr && addr.getValues ? addr.getValues().then(function (v) { return v && v.address; }).catch(function () { return null; }) : Promise.resolve(null);
-      shipP.then(function (ship) {
-        return payments.createConfirmationToken({}).then(function (t) {
-          busy(false);
-          return submit({ confirmationToken: t.confirmationToken, ship: ship });
-        });
+      payments.createConfirmationToken({ billingDetails: { email: d.email, name: d.name, address: address } }).then(function (t) {
+        busy(false);
+        return submit({ confirmationToken: t.confirmationToken, ship: ship });
       }).catch(function (e) { busy(false); if (!e || e.code !== "payment_request_cancelled") setErr((e && e.message) || "Check your card details"); });
     };
     return { destroy: function () { themeObs.disconnect(); clearTimeout(hang); try { payments.destroy(); } catch (_) {} root.innerHTML = ""; } };
