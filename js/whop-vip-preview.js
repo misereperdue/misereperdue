@@ -134,7 +134,19 @@
   }
   function nativeAppearance() {
     const d = dark();
-    return {theme:{appearance:d ? 'dark' : 'light', accentColor:'gray', grayColor:'slate', successColor:'green'}, variables:{'--radius':'14px'}};
+    // Look A (dc t668u): Whop's card frames sit bare inside our glass rows: no box, our ink and placeholder colours,
+    // the site's system font. The text inside the PCI input itself is Whop's (16px, its own placeholders).
+    const ink = d ? '#f5f5f7' : '#1c1c1e', muted = d ? 'rgba(235,235,245,0.42)' : 'rgba(60,60,67,0.42)', bad = d ? '#ff6961' : '#d70015';
+    const font = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+    return {theme:{appearance:d ? 'dark' : 'light', accentColor:'gray', grayColor:'slate', successColor:'green', dangerColor:'red'},
+      variables:{'--radius':'0px', '--gray-12':ink, '--gray-a10':muted, '--color-background':'transparent', '--color-panel-solid':'transparent'},
+      classes:{
+        'whop-CardField':{margin:'0', padding:'0', backgroundColor:'transparent', fontFamily:font},
+        'whop-CardFieldInput':{backgroundColor:'transparent', border:'0', borderRadius:'0', boxShadow:'none', outline:'0', color:ink, fontFamily:font},
+        'whop-CardFieldInputFocused':{backgroundColor:'transparent', border:'0', boxShadow:'none', outline:'0'},
+        'whop-CardFieldInputInvalid':{backgroundColor:'transparent', border:'0', boxShadow:'none', color:bad},
+        'whop-CardFieldError':{color:bad, fontSize:'12px', fontFamily:font, padding:'0 12px 8px', margin:'0'}
+      }};
   }
   function mountAny(info, configId, ret, onComplete, onFail) {
     if (info && info.elements === true && live && window.MPNativeCheckout && typeof window.WhopElements === 'function') {
