@@ -1,0 +1,55 @@
+<!doctype html><html><body style="margin:0;background:#000">
+<canvas id="c" width="256" height="256"></canvas>
+<script>
+const P=new URLSearchParams(location.search);
+const cv=document.getElementById('c');const S=+(P.get('s')||256);cv.width=cv.height=S;
+const gl=cv.getContext('webgl2',{preserveDrawingBuffer:true,premultipliedAlpha:false});
+const vs=`#version 300 es
+in vec2 p;out vec2 uv;void main(){uv=p;gl_Position=vec4(p,0,1);}`;
+const fs=`#version 300 es
+precision highp float;in vec2 uv;out vec4 o;uniform float T;uniform vec4 K;
+// hash / value noise 3D
+float h(vec3 p){p=fract(p*0.3183099+.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*n3(p);p=p*2.02+vec3(1.7,9.2,3.1);a*=.5;}return s;}
+mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
+mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
+void main(){
+ vec2 p=uv; float r=length(p);
+ float tw=6.2831853*T; vec3 loop=vec3(cos(tw),sin(tw),0.)*1.1;   // closed path in noise space: seamless loop
+ mat3 R=rotY(.35*sin(tw))*rotX(.25*cos(tw));                        // the inside sways slowly
+ float z0=sqrt(max(0.,1.-r*r));
+ vec3 ro=vec3(p,z0); vec3 rd=normalize(vec3(-p*.42,-1.));        // refracted into the thick glass
+ float tEnd=-dot(ro,rd)*2.; // exit of unit sphere (approx)
+ { float b=dot(ro,rd), c=dot(ro,ro)-1.; float d=b*b-c; tEnd=-b+sqrt(max(d,0.)); }
+ float acc=0., hot=0.; const int N=40; float dt=tEnd/float(N);
+ for(int i=0;i<N;i++){
+   vec3 q=R*(ro+rd*(float(i)+.5)*dt); float l=length(q); vec3 dir=q/max(l,1e-3);
+   // light filaments: noise on the direction (beams radiate from the core), slowly morphing along the loop
+   float f=fbm(dir*K.x+loop+vec3(0,0,l*1.2));
+   float beam=pow(clamp((f-K.y)*5.,0.,1.),2.)*smoothstep(.08,.35,l)*(1.-smoothstep(.8,1.,l));
+   float fb=fbm(dir*1.5+loop*.8+vec3(5.,1.,l*.6));
+   float pool=smoothstep(.61,.71,fb)*smoothstep(.35,.6,l)*(1.-smoothstep(.85,.98,l))*2.2;   // big soft pools of light
+   float core=exp(-l*l/.012)*1.4;
+   float dust=n3(q*30.+loop*3.); float spark=smoothstep(.85,.96,dust)*(exp(-l*l/.08)*2.4+.1);
+   float e=beam*0.6+pool+core+spark;
+   acc+=e*dt; hot+=(beam*beam*.6+pool*pool*.5+core*.9+spark*1.5)*dt;
+ }
+ float fres=pow(1.-z0,3.);
+ float ang=atan(p.y,p.x); float sweep=pow(.5+.5*cos(ang-.6-tw),4.);
+ float rim=exp(-pow((r-.968)/.026,2.))*(.8+.6*sweep); float band=exp(-pow((r-.88)/.05,2.));
+ float light=.16+ (1.-exp(-K.z*acc))*.95 + fres*.32 + rim*.8 - band*.08;
+ float hh=(1.-exp(-K.w*hot))*.85 + rim*(.3+.7*sweep)*.95;
+ float edge=clamp((1.-r)*float(${S})/2.5+1.,0.,1.)*step(r,1.);
+ o=vec4(clamp(light,0.,1.)*edge, clamp(hh,0.,1.)*edge, 0.,1.);
+}`;
+function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(x);return x;}
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
+const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const uT=gl.getUniformLocation(pr,'T'),uK=gl.getUniformLocation(pr,'K');
+window.render=(t,k)=>{gl.uniform1f(uT,t);gl.uniform4fv(uK,k);gl.viewport(0,0,S,S);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);return cv.toDataURL('image/png');};
+window.ready=true;
+</script></body></html>
