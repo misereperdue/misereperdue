@@ -21,27 +21,73 @@ void main(){
  float tw=6.2831853*T; vec3 loop=vec3(cos(tw),sin(tw),0.)*1.1;   // closed path in noise space: seamless loop
  mat3 R=rotY(.35*sin(tw))*rotX(.25*cos(tw));                        // the inside sways slowly
  float z0=sqrt(max(0.,1.-r*r));
- vec3 ro=vec3(p,z0); vec3 rd=normalize(vec3(-p*.42,-1.));        // refracted into the thick glass
- float tEnd=-dot(ro,rd)*2.; // exit of unit sphere (approx)
- { float b=dot(ro,rd), c=dot(ro,ro)-1.; float d=b*b-c; tEnd=-b+sqrt(max(d,0.)); }
- float acc=0., hot=0.; const int N=40; float dt=tEnd/float(N);
+ vec3 nrm=vec3(p,z0); vec3 v=vec3(0,0,-1);
+ // real refraction into a glass ball (IOR 1.45): the inside squeezes and smears toward the rim
+ vec3 rd=refract(v,nrm,1./1.45); vec3 ro=nrm;
+ float b=dot(ro,rd), c=dot(ro,ro)-1., tEnd=-b+sqrt(max(b*b-c,0.));
+ float acc=0., hot=0.; const int N=44; float dt=tEnd/float(N);
  for(int i=0;i<N;i++){
    vec3 q=R*(ro+rd*(float(i)+.5)*dt); float l=length(q); vec3 dir=q/max(l,1e-3);
-   // light filaments: noise on the direction (beams radiate from the core), slowly morphing along the loop
    float f=fbm(dir*K.x+loop+vec3(0,0,l*1.2));
    float beam=pow(clamp((f-K.y)*5.,0.,1.),2.)*smoothstep(.08,.35,l)*(1.-smoothstep(.8,1.,l));
-   float fb=fbm(dir*1.5+loop*.8+vec3(5.,1.,l*.6));
-   float pool=smoothstep(.61,.71,fb)*smoothstep(.35,.6,l)*(1.-smoothstep(.85,.98,l))*2.2;   // big soft pools of light
-   float core=exp(-l*l/.012)*1.4;
-   float dust=n3(q*30.+loop*3.); float spark=smoothstep(.85,.96,dust)*(exp(-l*l/.08)*2.4+.1);
-   float e=beam*0.6+pool+core+spark;
-   acc+=e*dt; hot+=(beam*beam*.6+pool*pool*.5+core*.9+spark*1.5)*dt;
+   float fb=fbm(dir*2.1+loop*.8+vec3(5.,1.,l*.45));
+   float pool=smoothstep(.645,.72,fb)*smoothstep(.3,.55,l)*(1.-smoothstep(.85,.98,l))*2.2;
+   float core=exp(-l*l/.006)*.9;
+   float dust=n3(q*30.+loop*3.); float spark=smoothstep(.83,.95,dust)*(exp(-l*l/.05)*3.2+.025);
+   float e=beam*0.12+core*.8;
+   acc+=e*dt; hot+=(core*.8)*dt;
  }
- float fres=pow(1.-z0,3.);
- float ang=atan(p.y,p.x); float sweep=pow(.5+.5*cos(ang-.6-tw),4.);
- float rim=exp(-pow((r-.968)/.026,2.))*(.8+.6*sweep); float band=exp(-pow((r-.88)/.05,2.));
- float light=.16+ (1.-exp(-K.z*acc))*.95 + fres*.32 + rim*.8 - band*.08;
- float hh=(1.-exp(-K.w*hot))*.85 + rim*(.3+.7*sweep)*.95;
+ // surface: fresnel reflection of a studio (a soft key light top-left, a rim light that slowly circles)
+ vec3 rf=reflect(v,nrm);
+ float F=.04+.96*pow(1.-z0,5.);
+ vec3 L1=normalize(vec3(-.55,.65,.55));
+ vec3 L2=normalize(vec3(cos(tw-.4)*.8,sin(tw-.4)*.8,-.6));
+ vec3 L3=normalize(vec3(cos(tw+2.4)*.8,sin(tw+2.4)*.8,-.6));
+ float env=pow(max(dot(rf,L1),0.),40.)*2.2+pow(max(dot(rf,L1),0.),6.)*.25
+          +pow(max(dot(rf,L2),0.),5.)*2.6+pow(max(dot(rf,L3),0.),8.)*1.2+.08;
+ float refl=F*env*1.6 + pow(max(dot(rf,L1),0.),300.)*1.5*(1.-F);   // + a sharp glint on the front
+ float ang=atan(p.y,p.x);
+ float dots=0.;
+ for(int g=0;g<46;g++){ float fg=float(g); vec3 hh3=fract(sin(vec3(fg*12.9898,fg*78.233,fg*37.719))*43758.5453);
+   float rr=g<30? pow(hh3.x,1.6)*.38 : .3+hh3.x*.55; float aa=hh3.y*6.2831853+.15*sin(tw+fg);
+   vec2 dp=vec2(cos(aa),sin(aa))*rr*(1.+.04*sin(tw*2.+fg)); float tws=pow(.5+.5*sin(tw*2.+hh3.z*6.2831853),3.);
+   float sz=g<30?.00045:.00028; dots+=exp(-dot(p-dp,p-dp)/sz)*tws*(g<30?1.5:.9); }
+ // curved highlight streaks riding the glass wall (follow the rim, drift round)
+ float arcs=0.; for(int g=0;g<4;g++){ float a0=float(g)*1.7+.6+.5*sin(tw+float(g)*2.1); float da=atan(sin(ang-a0),cos(ang-a0));
+   arcs+=exp(-da*da/.05)*exp(-pow((r-.935)/.018,2.))*(g==0?1.2:.7); }
+ // small capsule glints inside (bright short streaks), drifting slowly
+ float caps=0.; for(int g=0;g<4;g++){ float a0=float(g)*1.9+1.+.4*sin(tw*1.+float(g)); float rr=.35+.18*float(g%2);
+   vec2 cpos=vec2(cos(a0),sin(a0))*rr; vec2 d2=p-cpos; vec2 tng=vec2(-sin(a0),cos(a0)); float u=dot(d2,tng), w=dot(d2,vec2(cos(a0),sin(a0)));
+   caps+=exp(-u*u/.0022-w*w/.00025)*.9; }
+ refl+=arcs+caps;
+ // flares: soft, radially stretched glows in the outer half that orbit slowly and breathe
+ float fl=0., flh=0.;
+ for(int g=0;g<4;g++){ float fg=float(g);
+   float a0=fg*1.57+.5+.35*sin(tw+fg*1.7)+tw*.25*(g%2==0?1.:-1.);
+   float rr=.56+.1*sin(tw*1.+fg*2.3); vec2 dirg=vec2(cos(a0),sin(a0)); vec2 d2=p*(1.+.25*r*r)-dirg*rr;
+   float u=dot(d2,dirg), w=dot(d2,vec2(-dirg.y,dirg.x));
+   float k=exp(-u*u/(.07+.03*fg*.3)-w*w/.024)*(.55+.45*sin(tw*1.+fg*1.9))*(g==0?1.3:1.);
+   fl+=k; flh+=k*k; }
+ // thick glass: the bulk dims toward the edge, then the rim lights up (total internal reflection band)
+ float absorb=mix(1.,.55,smoothstep(.55,.95,r));
+ float tir=smoothstep(.86,.985,r)*(1.-smoothstep(.985,1.,r));
+ // the back lights seen THROUGH the ball's edge: thick bright crescents just inside the rim, sliding round
+ vec2 pd=p/max(r,1e-3);
+ float c2=pow(max(dot(pd,normalize(L2.xy)),0.),2.), c3=pow(max(dot(pd,normalize(L3.xy)),0.),2.5);
+ float band=smoothstep(.74,.955,r)*(1.-smoothstep(.975,1.,r));
+ float cres=band*(c2*1.1+c3*.55);
+ float line=exp(-pow((r-.982)/.013,2.));                // the glass edge itself: one crisp bright line
+ float inner=exp(-pow((r-.86)/.06,2.));                 // a darker ring just inside, so the edge reads as thick glass
+ // crisp liquid light lines: iso-lines of a slowly morphing field seen through the refraction
+ vec3 rq=R*rd; float cl=fbm(rq*2.6+loop*.9+vec3(2.,7.,1.));
+ float lines=(1.-smoothstep(.0,.022,abs(cl-.56)))*smoothstep(.15,.5,r)*(1.-smoothstep(.9,.98,r));
+ float lit=dot(p,normalize(vec2(.55,.65)));                      // the ball is lit from the top right
+ float wall=smoothstep(.865,.9,r)*(1.-smoothstep(.985,1.,r));       // thick lighter glass wall
+ float wallEdge=exp(-pow((r-.872)/.011,2.));                        // thin dark line on its inner side
+ float flute=.5+.5*cos(7.*ang+1.2*sin(tw)+3.*fbm(vec3(p*2.,1.)+loop*.3));
+
+ float light=.24+(1.-exp(-K.z*acc))*.8*absorb+fl*1.5+dots*.6+cres*1.5+line*.8+lit*.14+F*.35+flute*.07*smoothstep(.2,.7,r)*(1.-smoothstep(.85,.95,r));
+ float hh=(1.-exp(-K.w*hot))*.8*absorb+refl+cres*cres*1.1+line*(.3+.6*c2)+F*.3+flh*1.9+dots;
  float edge=clamp((1.-r)*float(${S})/2.5+1.,0.,1.)*step(r,1.);
  o=vec4(clamp(light,0.,1.)*edge, clamp(hh,0.,1.)*edge, 0.,1.);
 }`;

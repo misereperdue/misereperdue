@@ -12175,15 +12175,14 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    ::before  the light: --sph painted through sphere-light.webp (screen)
    ::after   the hot spots: a pale tint of --sph through sphere-hot.webp
    Colour: --pw-sphere (power setting) else ice. Reduced motion: a still frame. */
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{--sph:var(--pw-sphere,#9fd3ff);border-radius:50%;isolation:isolate;overflow:visible;background:color-mix(in srgb,var(--sph) 26%,#04081a);box-shadow:0 0 0 .5px color-mix(in srgb,var(--sph) 40%,transparent),0 0 10px 1px color-mix(in srgb,var(--sph) 65%,transparent),0 0 22px 2px color-mix(in srgb,var(--sph) 32%,transparent),0 7px 14px -6px rgba(0,0,0,.55);animation:mpSphFloat 5s ease-in-out infinite}
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){border-radius:50%;transform:scale(1.04);opacity:.18;filter:saturate(.5) blur(.4px);border-color:transparent!important;box-shadow:none!important}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{--sph:var(--pw-sphere,#9fd3ff);border-radius:50%;isolation:isolate;overflow:visible;background:color-mix(in srgb,var(--sph) 16%,#14171f);box-shadow:0 0 0 .5px color-mix(in srgb,var(--sph) 40%,transparent),0 0 10px 1px color-mix(in srgb,var(--sph) 65%,transparent),0 0 22px 2px color-mix(in srgb,var(--sph) 32%,transparent),0 7px 14px -6px rgba(0,0,0,.55);animation:mpSphFloat 5s ease-in-out infinite}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){border-radius:50%;transform:scale(1.04);opacity:.07;filter:saturate(.5) blur(.6px);border-color:transparent!important;box-shadow:none!important}
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:2;padding:0;
-  background:radial-gradient(circle,color-mix(in srgb,var(--sph) 70%,#fff) 0,color-mix(in srgb,var(--sph) 92%,#fff) 32%,var(--sph) 68%,color-mix(in srgb,var(--sph) 75%,#fff) 100%);
-  filter:brightness(1.12) saturate(1.15);
+  background:radial-gradient(circle,color-mix(in srgb,var(--sph) 85%,#fff) 0,var(--sph) 30%,var(--sph) 70%,color-mix(in srgb,var(--sph) 80%,#fff) 100%);
   -webkit-mask:url(../img/powers/sphere-light.webp) 0 0/6000% 100% no-repeat;mask:url(../img/powers/sphere-light.webp) 0 0/6000% 100% no-repeat;
   mix-blend-mode:screen;animation:mpSphOrb 5s steps(60,jump-none) infinite}
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;
-  background:color-mix(in srgb,var(--sph) 38%,#fff);
+  background:color-mix(in srgb,var(--sph) 62%,#fff);
   -webkit-mask:url(../img/powers/sphere-hot.webp) 0 0/6000% 100% no-repeat;mask:url(../img/powers/sphere-hot.webp) 0 0/6000% 100% no-repeat;
   animation:mpSphOrb 5s steps(60,jump-none) infinite}
 @keyframes mpSphOrb{from{-webkit-mask-position:0 0;mask-position:0 0}to{-webkit-mask-position:100% 0;mask-position:100% 0}}
