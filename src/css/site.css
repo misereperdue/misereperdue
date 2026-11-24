@@ -12177,12 +12177,12 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap{--sph-lift:grayscale(1) contrast(2.4) brightness(.6);border-radius:50%;isolation:isolate;overflow:visible;box-shadow:none;border:0;outline:0;animation:none}
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){display:block;border:0!important;border-radius:50%;filter:contrast(1.05);box-shadow:none!important;transform:none}
 /* Floating avatar: owner only (dc), never from a power; not in the nav pill */
-:is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:mpOwnFloat 5s ease-in-out infinite}
+.chat-msg.owner-msg .chat-avatar-wrap,.mp-pb-av.is-owner{animation:mpOwnFloat 5s ease-in-out infinite}
 @keyframes mpOwnFloat{0%,100%{transform:translateY(1px)}50%{transform:translateY(-1.5px)}}
-@media (prefers-reduced-motion:reduce){:is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:none!important}}
-:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-9%;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-glass.webp) center/100% 100% no-repeat}
+@media (prefers-reduced-motion:reduce){.chat-msg.owner-msg .chat-avatar-wrap,.mp-pb-av.is-owner{animation:none!important}}
+:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-glass.webp) center/100% 100% no-repeat}
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::after{content:none}
-.chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:-9%;width:118%;height:118%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease}
+.chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease}
 .chat-avatar-wrap>canvas.mp-sph-cv.is-live{opacity:1}
 /* the live glass replaces the still one (both are see-through now, so they must not stack) */
 .pw-sphere .chat-avatar-wrap:has(>canvas.mp-sph-cv.is-live)::before{opacity:0;transition:opacity .35s ease}
@@ -13051,5 +13051,4 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 .mpd-me .mp-hat{z-index:6!important}
 #mp-dock.is-signed-in .mpd-av{box-shadow:none;background:none}
 
-/* The Sphere bubble covers the whole avatar (per dc): the orb is a little larger than the picture, so even
-   the owner's floating avatar stays inside the glass. */
+/* The Sphere orb is clipped to the avatar (per dc): same circle as the picture. */

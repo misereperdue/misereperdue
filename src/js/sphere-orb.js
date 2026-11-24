@@ -88,7 +88,7 @@
     }
     if (c._sized) return; // already set up (scans are cheap: no layout reads for known orbs)
     c._sized = true;
-    var px = Math.min(256, Math.max(48, Math.round((wrap.offsetWidth || 36) * 1.18 * Math.min(3, window.devicePixelRatio || 1))));
+    var px = Math.min(256, Math.max(48, Math.round((wrap.offsetWidth || 36) * Math.min(3, window.devicePixelRatio || 1))));
     c.width = c.height = px;
     if (io) io.observe(c); else { visible.add(c); update(); }
   }
