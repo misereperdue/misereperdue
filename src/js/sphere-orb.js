@@ -41,7 +41,7 @@
       if (hv.s < 0.14) f = "saturate(.12) brightness(" + (0.85 + hv.v * 0.3).toFixed(2) + ")";
       else { var d = ((hv.h - ORB_HUE + 540) % 360) - 180; if (Math.abs(d) > 14) f = "hue-rotate(" + Math.round(d) + "deg)"; }
     }
-    if (wrap._sphF !== f) { wrap._sphF = f; wrap.style.setProperty("--sph-filter", f || "none"); }
+    if (wrap._sphF !== f) { wrap._sphF = f; wrap.style.setProperty("--sph-filter", f || "hue-rotate(0deg)"); }
   }
 
   function draw() {
