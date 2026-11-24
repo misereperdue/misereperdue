@@ -13,6 +13,6 @@ python3 - <<'PY'
 from PIL import Image; import numpy as np
 f=np.array(Image.open('loop/0120.png').convert('RGB').resize((256,256),Image.LANCZOS))
 y,x=np.mgrid[0:256,0:256]; a=(np.clip(143.2*256/290-np.hypot(x-127.5,y-127.5),0,1)*255).astype(np.uint8)
-Image.fromarray(np.dstack([f,a]),'RGBA').save('sphere-orb-still.webp','WEBP',quality=86,alpha_quality=90)
+Image.fromarray(np.dstack([f,a]),'RGBA').save('sphere-glass.webp','WEBP',quality=86,alpha_quality=90)
 PY
-echo "copy sphere-orb.mp4 sphere-orb.webm sphere-orb-still.webp to img/powers/ and bump ?v= in js/sphere-orb.js"
+echo "copy sphere-orb.mp4 sphere-orb.webm sphere-glass.webp to img/powers/ and bump ?v= in js/sphere-orb.js"

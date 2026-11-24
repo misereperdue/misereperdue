@@ -12180,10 +12180,14 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 :is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:mpOwnFloat 5s ease-in-out infinite}
 @keyframes mpOwnFloat{0%,100%{transform:translateY(1px)}50%{transform:translateY(-1.5px)}}
 @media (prefers-reduced-motion:reduce){:is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:none!important}}
-:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-9%;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-orb-still.webp) center/100% 100% no-repeat;filter:var(--sph-lift);mix-blend-mode:screen;opacity:.85}
+:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-9%;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-glass.webp) center/100% 100% no-repeat}
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::after{content:none}
-.chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:-9%;width:118%;height:118%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease;filter:var(--sph-lift);mix-blend-mode:screen}
-.chat-avatar-wrap>canvas.mp-sph-cv.is-live{opacity:.85}
+.chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:-9%;width:118%;height:118%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease}
+.chat-avatar-wrap>canvas.mp-sph-cv.is-live{opacity:1}
+/* the live glass replaces the still one (both are see-through now, so they must not stack) */
+.pw-sphere .chat-avatar-wrap:has(>canvas.mp-sph-cv.is-live)::before{opacity:0;transition:opacity .35s ease}
+/* light mode: white glass on a light page gets a faint shade so its edge still reads */
+[data-theme="light"] :is(.pw-sphere .chat-avatar-wrap::before,.chat-avatar-wrap>canvas.mp-sph-cv){filter:drop-shadow(0 0 1px rgba(20,30,50,.35)) drop-shadow(0 1px 3px rgba(20,30,50,.18))}
 :is(.chat-msg,.mp-pb-av,.mpd-me):not(.pw-sphere) .chat-avatar-wrap>canvas.mp-sph-cv{display:none}
 .mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important}
 @media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap>*,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
