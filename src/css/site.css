@@ -12175,9 +12175,12 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
    canvas    js/sphere-orb.js paints the live orb (one shared video) over it once frames arrive
    A clear orb (greyscale glass, no colour options per dc). */
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap{--sph-lift:grayscale(1) contrast(2.4) brightness(.6);border-radius:50%;isolation:isolate;overflow:visible;box-shadow:none;border:0;outline:0;animation:none}
-:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){display:block;border:0!important;border-radius:50%;filter:contrast(1.05);box-shadow:none!important;transform:scale(1.06);animation:mpSphFloat 5s ease-in-out infinite}
-/* the nav pill's avatar does not float */
-.mpd-me.pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){animation:none}
+:is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){display:block;border:0!important;border-radius:50%;filter:contrast(1.05);box-shadow:none!important;transform:scale(1.06)}
+/* Floating avatar: owner only (dc), never from a power; not in the nav pill */
+:is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:mpOwnFloat 5s ease-in-out infinite}
+:is(.chat-msg.owner-msg,.mp-pb-av.is-owner).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){animation-name:mpSphFloat}
+@keyframes mpOwnFloat{0%,100%{transform:translateY(1px)}50%{transform:translateY(-1.5px)}}
+@media (prefers-reduced-motion:reduce){:is(.chat-msg.owner-msg,.mp-pb-av.is-owner) .chat-avatar-wrap>:is(img,.chat-avatar){animation:none!important}}
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-orb-still.webp) center/100% 100% no-repeat;filter:var(--sph-lift);mix-blend-mode:screen;opacity:.85}
 :is(.chat-msg,.mp-pb-av,.mpd-me).pw-sphere .chat-avatar-wrap::after{content:none}
 .chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease;filter:var(--sph-lift);mix-blend-mode:screen}
