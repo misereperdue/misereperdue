@@ -24,16 +24,41 @@
     video.addEventListener("error", function () { failed = true; });
     return video;
   }
-  /* (Sphere is a clear orb with no colour options, per dc) */
+  /* (Sphere is a clear orb with no colour options, per dc)
+     Glass: each video frame is turned into white light whose opacity is the frame's brightness (dark glass
+     becomes see-through), once, into a shared buffer; every orb canvas then draws that buffer. So the orb
+     can be larger than the avatar with no dark band around it, on any background. */
+  var BUF = 256, buf = null, bctx = null, LUT = null;
+  function glassFrame() {
+    if (!buf) {
+      buf = document.createElement("canvas"); buf.width = buf.height = BUF;
+      bctx = buf.getContext("2d", { willReadFrequently: true });
+      // brightness -> opacity, the same curve the CSS lift used (grayscale, contrast 2.4, brightness .6, 85%)
+      LUT = new Uint8ClampedArray(256);
+      for (var i = 0; i < 256; i++) LUT[i] = Math.max(0, Math.min(1, ((i / 255 - 0.5) * 2.4 + 0.5) * 0.6)) * 0.85 * 255;
+    }
+    if (!bctx) return false;
+    // the filmed orb fills 286 of its 290 px frame: draw a hair larger so its glass edge meets the circle
+    bctx.clearRect(0, 0, BUF, BUF);
+    bctx.drawImage(video, -BUF * 0.007, -BUF * 0.007, BUF * 1.014, BUF * 1.014);
+    var im = bctx.getImageData(0, 0, BUF, BUF), d = im.data;
+    for (var k = 0; k < d.length; k += 4) {
+      var a = LUT[(d[k] * 54 + d[k + 1] * 183 + d[k + 2] * 19) >> 8];
+      d[k] = d[k + 1] = d[k + 2] = 255; d[k + 3] = a * (d[k + 3] / 255);
+    }
+    bctx.putImageData(im, 0, 0);
+    return true;
+  }
   function draw() {
     frameCb = 0; raf = 0;
     if (!video || video.readyState < 2) return schedule();
+    if (!glassFrame()) return schedule();
     visible.forEach(function (c) {
       if (!c.isConnected) { visible.delete(c); return; }
       var s = c.width, x = c._ctx || (c._ctx = c.getContext("2d"));
       if (!x) return;
-      // the filmed orb fills 286 of its 290 px frame: draw a hair larger so its glass edge meets the circle
-      x.drawImage(video, -s * 0.007, -s * 0.007, s * 1.014, s * 1.014);
+      x.clearRect(0, 0, s, s);
+      x.drawImage(buf, 0, 0, s, s);
       if (!c._live) { c._live = true; c.classList.add("is-live"); }
     });
     schedule();
