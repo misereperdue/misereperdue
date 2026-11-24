@@ -12199,6 +12199,8 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 @media (prefers-reduced-motion:reduce){.mp-am-np .mp-am-dots,.mp-am-np .mp-am-ring,.mp-am-np>svg{animation:none!important}.mp-am-np .mp-am-ring{opacity:.9;transform:none}}
 /* Sphere: badges inside the avatar sit above the glass */
 :is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:not(img):not(.chat-avatar){z-index:4!important}
+/* the live orb stays under the badges and the hat (they share that rule's layer otherwise and the canvas came last) */
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>canvas.mp-sph-cv{z-index:3!important}
 /* Listening card: Safari ignores overflow+radius clipping for the masked album art behind the
    card (white corners); clip-path clips it everywhere. */
 .mp-profile-details .mp-profile-song{clip-path:inset(0 round 15px)}
