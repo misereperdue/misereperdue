@@ -12168,25 +12168,21 @@ html .msg-popup.is-embedded,html .msg-popup.is-embedded .dashboard-sheet-wrap{ba
 .vip-row-cancel{color:#ff5a5f}
 .vip-row-note{flex-basis:100%;margin:0;font-size:12.5px;line-height:1.45;opacity:.7}
 
-/* ===== Sphere v3 (per dc): the avatar sealed in a glass marble =====
-   Avatar magnified inside (lens), dark edge falloff, sharp window highlight, pearly thin-film rim
-   that slowly drifts, a coloured caustic pooling at the bottom (custom colour or pearl), and a
-   contact shadow so the orb floats. Colour: --pw-sphere (power setting) else pearl blue. */
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{--sph:var(--pw-sphere,#9fd3ff);border-radius:50%;isolation:isolate;overflow:visible;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 0 0 2px color-mix(in srgb,var(--sph) 45%,transparent),0 7px 14px -6px rgba(0,0,0,.55),0 0 16px -2px color-mix(in srgb,var(--sph) 60%,transparent);animation:mpSphFloat 5s ease-in-out infinite}
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){border-radius:50%;transform:scale(1.08);filter:saturate(1.12) contrast(1.04)}
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:-1px;border-radius:50%;pointer-events:none;z-index:2;padding:2px;background:conic-gradient(#ffd6f5,#bfe9ff,#d8ffe9,#fff4c4,#e4d2ff,#ffd6f5);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);opacity:.85;mix-blend-mode:screen;will-change:transform;animation:mpSphSpin 7s linear infinite}
-:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:3;background:
-  radial-gradient(ellipse 34% 22% at 34% 22%,rgba(255,255,255,.98),rgba(255,255,255,.55) 45%,transparent 72%),
-  radial-gradient(circle at 70% 30%,rgba(255,255,255,.35),transparent 9%),
-  radial-gradient(ellipse 70% 40% at 50% 96%,color-mix(in srgb,var(--sph) 75%,transparent),transparent 70%),
-  radial-gradient(circle at 50% 45%,transparent 52%,rgba(8,14,36,.18) 68%,rgba(8,14,36,.55) 100%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),inset 0 -6px 10px -4px color-mix(in srgb,var(--sph) 70%,transparent),inset 0 4px 8px -4px rgba(255,255,255,.6)}
+/* ===== Sphere v4 (per dc): the avatar becomes the glowing glass orb from dc's Holo.mp4 =====
+   ::before  a still frame of the orb (shows at once; stays with Reduce motion or when autoplay is refused)
+   canvas    js/sphere-orb.js paints the live orb (one shared video) over it once frames arrive
+   --sph-filter turns the orb's hue to a custom Sphere colour (set by sphere-orb.js). */
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap{border-radius:50%;isolation:isolate;overflow:visible;background:#0b1424;box-shadow:0 0 8px 1px rgba(90,160,255,.45),0 0 18px 3px rgba(70,140,255,.22),0 6px 12px -6px rgba(0,0,0,.55);animation:mpSphFloat 5s ease-in-out infinite}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap>:is(img,.chat-avatar){opacity:0!important;border-color:transparent!important;box-shadow:none!important}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:2;padding:0;background:url(../img/powers/sphere-orb-still.webp) center/100% 100% no-repeat;filter:var(--sph-filter,none)}
+:is(.chat-msg,.mp-pb-av).pw-sphere .chat-avatar-wrap::after{content:none}
+.chat-avatar-wrap>canvas.mp-sph-cv{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s ease;filter:var(--sph-filter,none)}
+.chat-avatar-wrap>canvas.mp-sph-cv.is-live{opacity:1}
+:is(.chat-msg,.mp-pb-av):not(.pw-sphere) .chat-avatar-wrap>canvas.mp-sph-cv{display:none}
 .mp-pb-av.pw-sphere .chat-avatar-wrap{position:absolute!important;animation:none!important}
 .mp-pb-av.pw-sphere{animation:mpSphFloat 5s ease-in-out infinite}
-.mp-pb-av.pw-sphere .chat-avatar-wrap::before{inset:-2px;padding:3px}
-@keyframes mpSphSpin{to{transform:rotate(360deg)}}
 @keyframes mpSphFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
-@media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.mp-pb-av.pw-sphere{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.pw-sphere .chat-avatar-wrap,.pw-sphere .chat-avatar-wrap::before,.pw-sphere .chat-avatar-wrap::after,.mp-pb-av.pw-sphere{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.pw-melt .chat-msg-head strong::after,.pw-melt .mp-pb-name-t::after{animation:none!important}}
 
 /* Now playing (per dc): Apple Account-style dot rings around the Apple Music note. The rings turn
