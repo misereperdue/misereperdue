@@ -6,7 +6,7 @@
    It is a clear orb: no colour options (per dc). */
 (function () {
   "use strict";
-  var SEL = ".chat-msg.pw-sphere .chat-avatar-wrap, .mp-pb-av.pw-sphere .chat-avatar-wrap";
+  var SEL = ".chat-msg.pw-sphere .chat-avatar-wrap, .mp-pb-av.pw-sphere .chat-avatar-wrap, .mpd-me.pw-sphere .chat-avatar-wrap";
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   var video = null, playing = false, failed = false, visible = new Set(), io = null, frameCb = 0, raf = 0;
 

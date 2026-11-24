@@ -146,6 +146,7 @@
         [].forEach.call(c.querySelectorAll("[id]"), function (n) { n.removeAttribute("id"); });
         meAv.replaceChildren(c);
       }
+      window.MPPwDock && MPPwDock(); // hat, Sphere and other avatar powers on the pill's avatar
     } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; }
     unread.hidden = !(unreadN > 0 && signedIn);
     if (was !== signedIn) sync();
