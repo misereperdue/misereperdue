@@ -1400,7 +1400,7 @@
       el.querySelector(".chat-msg-head") ? put() : setTimeout(put, 0);
     }
   }
-  var PW_NOCOLOR = { echo: 1 };
+  var PW_NOCOLOR = { echo: 1, sphere: 1 }; /* Sphere is a clear orb, no colour (per dc) */
   function mpMeltText(n) { n && n.setAttribute("data-text", n.textContent || ""); }
   /* Melt: an SVG noise filter wobbles the letters while a stretched, masked copy drips below them. */
   function mpMeltFilter() {
@@ -8337,6 +8337,7 @@
     function setPanel(p) {
       var cur = (st.settings && st.settings[p.id]) || {};
       return '<div class="pow-set">' + p.settings.filter(function (f) {
+        if (PW_NOCOLOR[p.id] && f.type === "color") return false;
         /* Chanel colours only while Chanel is the chosen hat (per dc) */
         return !(p.id === "hat" && f.key === "chanel" && (cur.style || "beanie") !== "chanel");
       }).map(function (f) {
@@ -8860,7 +8861,7 @@
       var cat = powCat && powMap ? Object.keys(powMap).map(function (k) { return powMap[k]; }) : [];
       var owned = u().powers || [], on = u().powersOn || [], st = u().powerSettings || {};
       list.innerHTML = cat.map(function (p) {
-        var has = owned.indexOf(p.id) >= 0, act = on.indexOf(p.id) >= 0, col = p.settings && p.settings[0] && p.settings[0].type === "color";
+        var has = owned.indexOf(p.id) >= 0, act = on.indexOf(p.id) >= 0, col = !PW_NOCOLOR[p.id] && p.settings && p.settings[0] && p.settings[0].type === "color";
         var cur = (st[p.id] && st[p.id].color) || (col ? p.settings[0].def : ""), hex = PW_COLORS[cur] || (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#ffffff");
         return '<div class="mp-own-row" data-id="' + x(p.id) + '">' + powIco(p) + '<b>' + x(p.name) + "</b>" +
           (has && col ? '<input type="color" class="mp-own-col" value="' + x(hex) + '" aria-label="' + x(p.name) + ' colour">' : "") +
