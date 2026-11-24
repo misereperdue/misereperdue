@@ -3,10 +3,9 @@
    every visible Sphere avatar gets a small <canvas> that paints the current video frame. 20 orbs in chat
    cost one decode. The video only plays while an orb is on screen. Until a frame is ready, with Reduce
    motion, or if the browser refuses autoplay (Low Power Mode), the CSS still frame shows instead.
-   A custom Sphere colour turns the orb's hue (the orb is ~216deg blue); greys make it silver. */
+   It is a clear orb: no colour options (per dc). */
 (function () {
   "use strict";
-  var ORB_HUE = 216;
   var SEL = ".chat-msg.pw-sphere .chat-avatar-wrap, .mp-pb-av.pw-sphere .chat-avatar-wrap";
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   var video = null, playing = false, failed = false, visible = new Set(), io = null, frameCb = 0, raf = 0;
@@ -25,25 +24,7 @@
     video.addEventListener("error", function () { failed = true; });
     return video;
   }
-  function hexHue(hex) {
-    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim()); if (!m) return null;
-    var n = parseInt(m[1], 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
-    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
-    if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
-    return { h: (h * 60 + 360) % 360, s: mx ? d / mx : 0, v: mx };
-  }
-  /* colour: rotate the real orb's hue toward the chosen colour (ice/blues stay as filmed) */
-  function tint(wrap) {
-    var host = wrap.closest(".pw-sphere"), c = host && host.style.getPropertyValue("--pw-sphere");
-    if (host) host._sphC = c || "";
-    var hv = hexHue(c), f = "";
-    if (hv) {
-      if (hv.s < 0.14) f = "saturate(.12) brightness(" + (0.85 + hv.v * 0.3).toFixed(2) + ")";
-      else { var d = ((hv.h - ORB_HUE + 540) % 360) - 180; if (Math.abs(d) > 14) f = "hue-rotate(" + Math.round(d) + "deg)"; }
-    }
-    if (wrap._sphF !== f) { wrap._sphF = f; wrap.style.setProperty("--sph-filter", f || "hue-rotate(0deg)"); }
-  }
-
+  /* (Sphere is a clear orb with no colour options, per dc) */
   function draw() {
     frameCb = 0; raf = 0;
     if (!video || video.readyState < 2) return schedule();
@@ -75,7 +56,6 @@
 
   function attach(wrap) {
     var c = wrap.querySelector(":scope > canvas.mp-sph-cv");
-    tint(wrap);
     if (RM.matches) { if (c) c.remove(); return; }
     if (!c) {
       c = document.createElement("canvas"); c.className = "mp-sph-cv"; c.setAttribute("aria-hidden", "true");
@@ -108,7 +88,7 @@
       var m = ms[i];
       if (m.type === "attributes") {
         // only the power class flipping, or a Sphere host's colour changing (chat restyles messages constantly)
-        if (m.attributeName === "class" ? /pw-sphere/.test(String(m.target.className) + " " + (m.oldValue || "")) : m.target.classList && m.target.classList.contains("pw-sphere") && m.target.style.getPropertyValue("--pw-sphere") !== (m.target._sphC || "")) return soon();
+        if (m.attributeName === "class" ? /pw-sphere/.test(String(m.target.className) + " " + (m.oldValue || "")) : false) return soon();
       } else if (m.addedNodes.length) return soon();
     }
   }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style"], attributeOldValue: true });
