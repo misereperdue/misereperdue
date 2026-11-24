@@ -1393,6 +1393,7 @@
     var ch = (pw && pw.charms) || [];
     var hatKey = pw && pw.couture ? "couture:" + pw.couture : pw && pw.louis ? "louis:1" : pw && pw.hat ? "hat:" + pw.hat : "";
     if (el.classList.contains("mp-pb-av")) mpHatInto(el, hatKey);
+    else if (el.classList.contains("mpd-me")) mpHatInto(el.querySelector(".chat-avatar-wrap"), hatKey);
     pw && pw.melt && mpMeltFilter();
     if (el.classList.contains("mp-pb-name")) { mpCharmsInto(el, el.querySelector(".mp-pb-name-t"), ch); mpMeltText(el.querySelector(".mp-pb-name-t")); }
     else if (el.classList.contains("chat-msg")) {
@@ -1463,7 +1464,16 @@
       var u = m.getAttribute("data-user");
       (!user || pwKey(u) === pwKey(user)) && mpPwApply(m, u);
     });
+    mpPwDock();
   }
+  /* Bottom dock (per dc): your avatar in the nav pill wears the same avatar powers (hat, Sphere, ...) */
+  function mpPwDock() {
+    var d = document.querySelector("#mp-dock .mpd-me");
+    if (!d) return;
+    if (s && s.username && d.querySelector(".chat-avatar-wrap")) mpPwApply(d, s.username);
+    else PW_KEYS.forEach(function (k) { d.classList.remove("pw-" + k); });
+  }
+  window.MPPwDock = mpPwDock;
   function mpPwMerge(map, reset) {
     reset && (PW = Object.create(null));
     for (var k in map) PW[pwKey(k)] = map[k];
@@ -4101,12 +4111,12 @@
     window.addEventListener("resize", mpGpResize);
     window.visualViewport && window.visualViewport.addEventListener("resize", mpGpResize);
   }
-  function mpGpShowPreview(t, fromRect, keyboardSettled) {
+  function mpGpShowPreview(t, fromRect, keyboardSettled, opts) {
     if (!t || !t.id) return;
     if (mpGpDraft && mpGpDraft.id === t.id && document.querySelector("#chat .chat-gp-prev")) return;
     var pickEpoch=++mpGpPickEpoch,active=document.activeElement;
     if(!keyboardSettled && window.visualViewport && matchMedia('(pointer:coarse)').matches && (performance.now()<mpGpKeyboardPickUntil || (active && /^(INPUT|TEXTAREA)$/.test(active.tagName)) || visualViewport.height<innerHeight-90)){
-      if(active&&active.blur)active.blur();setTimeout(function(){if(pickEpoch===mpGpPickEpoch && document.querySelector('#journal.on'))mpGpShowPreview(t,fromRect,true);},300);return;
+      if(active&&active.blur)active.blur();setTimeout(function(){if(pickEpoch===mpGpPickEpoch && document.querySelector('#journal.on'))mpGpShowPreview(t,fromRect,true,opts);},300);return;
     }
     /* Detach handlers before kill so cancel doesn't clobber the new draft. */
     if (mpGpAnim) {
@@ -4166,11 +4176,25 @@
     mpGpApplyBarMetrics(flyerCard,m);flyerCard.style.height='100%';
     var ghostSend=document.createElement('span');ghostSend.className='chat-send chat-gp-prev-send';ghostSend.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.5V19"/><path d="M18 11C18 11 13.5811 5.00001 12 5C10.4188 4.99999 6 11 6 11"/></svg>';flyerCard.appendChild(ghostSend);
 
+    /* From a pill (Globe "Discuss", per dc): the pill itself lifts off, stretches into the card's shape and
+       crossfades into it, so the button visibly becomes the embed. */
+    var face = opts && opts.face, dur = face ? 560 : 360;
+    if (face) {
+      face.removeAttribute("id"); face.setAttribute("aria-hidden", "true"); face.tabIndex = -1;
+      face.style.cssText = "position:absolute;inset:0;width:100%;height:100%;margin:0;box-sizing:border-box;border-radius:inherit;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;transform:none;white-space:nowrap";
+      flyer.appendChild(face);
+      face.animate([{ opacity: 1 }, { opacity: 1, offset: .18 }, { opacity: 0, offset: .55 }, { opacity: 0 }], { duration: dur, fill: "forwards" });
+      flyerCard.animate([{ opacity: 0 }, { opacity: 0, offset: .25 }, { opacity: 1, offset: .7 }, { opacity: 1 }], { duration: dur, fill: "forwards" });
+    }
     // Animate the container geometry; never stretch text or cover artwork.
-    var anim = flyer.animate([
+    var anim = flyer.animate(face ? [
+      {left:x0+'px',top:y0+'px',width:w0+'px',height:h0+'px',borderRadius:(h0/2)+'px',boxShadow:'0 0 0 rgba(0,0,0,0)'},
+      {left:(x0-4)+'px',top:(y0-6)+'px',width:(w0+8)+'px',height:(h0+4)+'px',borderRadius:((h0+4)/2)+'px',boxShadow:'0 14px 30px rgba(0,0,0,.35)',offset:.16},
+      {left:x1+'px',top:y1+'px',width:w1+'px',height:h1+'px',borderRadius:r1+'px',boxShadow:'0 6px 18px rgba(0,0,0,.18)'}
+    ] : [
       {left:x0+'px',top:y0+'px',width:w0+'px',height:h0+'px',borderRadius:'14px',opacity:.9},
       {left:x1+'px',top:y1+'px',width:w1+'px',height:h1+'px',borderRadius:r1+'px',opacity:1}
-    ],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+    ],{duration:dur,easing:face?'cubic-bezier(.3,.7,.1,1)':'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
     mpGpAnim = anim;
     m.row.classList.add("is-gp-prev-pending");
     function finish(ok) {
@@ -4202,6 +4226,12 @@
         else location.hash = "#chat";
         return;
       }
+      /* the Discuss pill flies into the composer and becomes the embed (per dc) */
+      var pill = document.querySelector("#forum.on #forum-discuss"), from = null, face = null;
+      if (pill && pill.getClientRects().length && !mpGpReduced()) {
+        var pr = pill.getBoundingClientRect();
+        if (pr.bottom > 0 && pr.top < innerHeight) { from = { left: pr.left, top: pr.top, width: pr.width, height: pr.height }; face = pill.cloneNode(true); }
+      }
       if (!document.querySelector("#journal.on")) {
         if (window.MPNav && MPNav.show) MPNav.show("journal");
         else location.hash = "#chat";
@@ -4209,7 +4239,7 @@
       var n = 0;
       (function tryIt() {
         var m = document.querySelector("#journal.on") && mpGpMeasure();
-        if (m && m.barR.width && !mpGpBusy) return mpGpShowPreview(t, null);
+        if (m && m.barR.width && !mpGpBusy) return mpGpShowPreview(t, from, false, face ? { face: face } : null);
         if (++n < 40) setTimeout(tryIt, 100);
       })();
     };
