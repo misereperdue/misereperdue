@@ -1101,6 +1101,13 @@
     avw.innerHTML = '<i class="mp-pb-ring" aria-hidden="true"></i>';
     mpPwApply(avw, n.username, mpPwFromProfile(n));
     avw.appendChild(av);
+    /* status (per dc): the person's status on their profile avatar (invisible people show none) */
+    var pst = window.MPStatus ? MPStatus.of(n.username) : null;
+    if (pst === null && n.status) pst = n.status;
+    if (pst && pst !== "invisible" && (n.status || isOwn || pwKey(n.username) === pwKey((s && s.username) || ""))) {
+      var sb = document.createElement("i"); sb.className = "nv-sico nv-s-" + pst + " mp-pb-st"; sb.setAttribute("role", "img");
+      sb.setAttribute("aria-label", { online: "Online", idle: "Idle", dnd: "Do Not Disturb" }[pst] || pst); avw.appendChild(sb);
+    }
     hd.appendChild(avw);
     var avImg = av.querySelector("img");
     if (avImg && avImg.src && !/default-avatar/.test(avImg.src)) {
@@ -6144,8 +6151,9 @@
                     (n.style.cssText =
                       "display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border:none;background:transparent;color:var(--ink);font-size:13px;font-weight:500;border-radius:9px;cursor:pointer;"));
                   var a = document.createElement("span");
-                  ((a.style.cssText =
-                    "width:8px;height:8px;border-radius:50%;background:#4ade80;flex:none;box-shadow:0 0 8px rgba(74,222,128,0.6);animation:onlineDotPulse 1.6s ease-in-out infinite;"),
+                  window.MPStatus && e.username && MPStatus.note(e.username, e.status || "online");
+                  /* status (per dc): the online list shows each person's status */
+                  ((a.className = "nv-sico nv-s-" + (e.status || "online")), (a.style.cssText = "width:10px;height:10px;flex:none;"),
                     n.appendChild(a));
                   var r = document.createElement("span");
                   ((r.className = "chat-avatar-wrap"),
@@ -6308,7 +6316,12 @@
                 t.caps && t.caps.private && mpPMEnable(), t.caps && t.caps.poll && (window.mpPollOn = !0),
                 mpIngestFull(t.messages),
                 followHello && Ne(!0),
-                window.MPFM && MPFM.setMe(s));
+                window.MPFM && MPFM.setMe(s), mpStatusEmit());
+            } else if ("status" === t.t && t.user) {
+              /* status (per dc): yours from another device, or anyone's for open profiles / online list */
+              if (s && s.username && pwKey(t.user) === pwKey(s.username) && t.status) s.status = t.status;
+              mpStatusMap[pwKey(t.user)] = t.status || null;
+              mpStatusEmit(t.user);
             } else if ("badge" === t.t && t.user) {
               t.badge ? (T[t.user] = t.badge) : delete T[t.user];
               var i = '.chat-msg[data-user="' + CSS.escape(t.user) + '"]';
@@ -8959,6 +8972,7 @@
     return { title: t, sub: n.preview && k !== "milestone" ? mpMediaText(n.preview) : "", chip: chip, site: !who };
   }
   function mpNotifPop(n) {
+    if (s && s.status === "dnd") return; /* Do Not Disturb (per dc): no live notification pops */
     try { window.MPForum && MPForum.refreshNotifs && MPForum.refreshNotifs(); } catch (_) {}
     ntfQ.push(n);
     ntfBusy || mpNotifNext();
@@ -9004,6 +9018,22 @@
     }
   }
   window.MPNotifInfo = mpNotifInfo;
+  /* ---------- Status (per dc): Online / Idle / Do Not Disturb / Invisible ---------- */
+  var mpStatusMap = Object.create(null);
+  function mpStatusEmit(user) { try { document.dispatchEvent(new CustomEvent("mp-status", { detail: { user: user || (s && s.username) || null } })); } catch (e) {} }
+  window.MPStatus = {
+    mine: function () { return (s && s.status) || "online"; },
+    of: function (u) { var k = pwKey(u); if (s && s.username && k === pwKey(s.username)) return (s.status === "invisible" ? "invisible" : s.status) || "online"; return k in mpStatusMap ? mpStatusMap[k] : null; },
+    note: function (u, st) { if (u) mpStatusMap[pwKey(u)] = st || null; },
+    set: function (st) {
+      if (!s || ["online", "idle", "dnd", "invisible"].indexOf(st) < 0) return Promise.resolve(!1);
+      var prev = s.status; s.status = st; mpStatusEmit();
+      return E("/api/status", { method: "POST", body: { status: st } }).then(function (r) {
+        if (!r || !r.ok) { s.status = prev; mpStatusEmit(); return !1; }
+        return !0;
+      }).catch(function () { s.status = prev; mpStatusEmit(); return !1; });
+    }
+  };
   window.MPOnlineList = function () { et(); };
   window.MPNotifPop = mpNotifPop;
   document.addEventListener("click", function (e) {
