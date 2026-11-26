@@ -15,7 +15,7 @@
   var q = function (s) { return dock.querySelector(s); };
   var el = { back: q(".nv-back"), tabs: q(".nv-tabs"), bag: q(".nv-tab-bag"), rg: q(".nv-rg"), home: q(".nv-home"), fm: q(".nv-fm"), me: q(".nv-me") };
   var lens = q(".nv-lens"), tabBtns = [].slice.call(dock.querySelectorAll(".nv-tab"));
-  var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live");
+  var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live"), fmArt = q(".nv-fm-art"), fmIc = q(".nv-fm-ic"), fmLogo = q(".nv-fm-logo"), fmName = q(".nv-fm-name");
   var meAv = q(".mpd-av"), meName = q(".nv-name"), meSt = q(".nv-st"), sBadge = q(".nv-sbadge"), sBtn = q(".nv-sbtn"), bell = q(".nv-bell"), unread = q(".mpd-unread");
   var menu = q(".nv-smenu"), rows = [].slice.call(dock.querySelectorAll(".nv-srow"));
   var onlineB = q(".nv-online"), bagCount = q(".nv-count");
@@ -338,17 +338,40 @@
 
   /* ---------- misery fm bubble ---------- */
   function fmPaint() {
-    var F = window.MPFM, st = F && F.menuStatus ? F.menuStatus() : null, live = !!(st && st.live), sub = "Off air";
-    if (live) {
-      var c = F._calc && F._calc(), S2 = F.state && F.state(), n = (S2 && S2.listeners) || 0;
-      sub = c && c.tr ? (c.tr.title || "Live") + (c.tr.artist ? " · " + c.tr.artist : "") : "Live";
-      if (n && state !== "fm") sub = n + " listening";
-      if (n && state === "fm" && !(c && c.tr)) sub = n + " listening";
-    } else if (st && st.scheduled && st.text) sub = "Live in " + st.text;
+    var F = window.MPFM, st = F && F.menuStatus ? F.menuStatus() : null, live = !!(st && st.live);
+    var c = live && F._calc ? F._calc() : null, tr = c && c.tr, n = (F && F.state && F.state() && F.state().listeners) || 0;
+    var src = (tr && tr.art && F.artUrl) ? F.artUrl(tr) : "";
+    var name = "misery fm", sub = "is off air";
+    if (live && tr) {
+      name = tr.title || "Live";
+      sub = tr.artist || (n ? n + " listening" : "Live");
+    } else if (live) {
+      name = "misery fm";
+      sub = n ? n + " listening" : "Live";
+    } else {
+      name = "is off air";
+      sub = (st && st.scheduled && st.text) ? "Live in " + st.text : "";
+    }
+    if (fmName && fmName.textContent !== name) fmName.textContent = name;
     if (fmSub.textContent !== sub) fmSub.textContent = sub;
-    fmTag.hidden = !live; fmLive.hidden = !live;
+    if (fmLogo) fmLogo.hidden = !!live;
+    fmTag.hidden = true;
+    fmLive.hidden = !live;
+    if (fmArt) {
+      if (src) {
+        if (fmArt.getAttribute("src") !== src) fmArt.src = src;
+        fmArt.hidden = false;
+      } else {
+        if (fmArt.getAttribute("src")) fmArt.removeAttribute("src");
+        fmArt.hidden = true;
+      }
+    }
+    if (fmIc) fmIc.hidden = !!src;
     el.fm.classList.toggle("is-live", live);
-    el.fm.setAttribute("aria-label", "misery fm. " + sub);
+    el.fm.classList.toggle("is-off", !live);
+    el.fm.classList.toggle("has-art", !!src);
+    var aria = live ? ("misery fm. " + name + (sub ? ". " + sub : "")) : (sub ? "misery fm is off air. " + sub : "misery fm is off air");
+    el.fm.setAttribute("aria-label", aria);
   }
   setInterval(fmPaint, 1500);
 
@@ -476,6 +499,7 @@
 
   /* ---------- where it sits: above the message box in Chat, else the bottom edge ---------- */
   function place() {
+    if (html.classList.contains("fm-lock")) return;
     var b = null, v = panelView();
     if (kbLift) b = kbLift;
     else if (v === "journal") {
@@ -566,6 +590,7 @@
     collapse: function () { setState("tabs"); },
     state: function (s) { if (s) setState(s); return state; },
     online: function (n) { onlineN = Math.max(0, Number(n) || 0); soon(); },
+    fm: fmPaint,
     topInset: function () { var p = document.getElementById("mpd-probe"); return p ? p.getBoundingClientRect().height : 0; }
   };
   avatar();
