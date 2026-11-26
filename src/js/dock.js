@@ -22,7 +22,7 @@
   var scrim = document.getElementById("mpd-scrim");
   var STATUS = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", invisible: "Invisible" };
   var state = "tabs", view = "", signedIn = false, onlineN = 0, unreadN = 0, kbLift = 0, away = false, lastBox = "";
-  var H = 62, S = 56, G = 8, P = 6, C = 50;
+  var H = 48, S = 44, G = 6, P = 4, C = 40;
 
   function panelView() { var p = document.querySelector("main.page > .panel.on"); return p ? p.id : "shop"; }
   function tabOf(v) { return v === "product" ? "shop" : v; }
@@ -47,9 +47,11 @@
     e.inert = !show;
   }
   function layout() {
-    if (menuOpen()) return;
     var W = Math.min(window.innerWidth - 20, 430), y = (H - S) / 2;
-    dock.style.width = W + "px"; dock.style.height = H + "px";
+    dock.style.width = W + "px";
+    /* Keep width in sync while a sheet is open so the reverse morph does not jump after a resize. */
+    if (menuOpen()) return;
+    dock.style.height = H + "px";
     var hasBack = !el.back.hidden, rgW = P + C + P + C + P;
     dock.setAttribute("data-state", state);
     if (state === "tabs") {
@@ -220,6 +222,8 @@
   el.tabs.addEventListener("pointerup", function (e) { endPress(e, false); });
   el.tabs.addEventListener("pointercancel", function (e) { endPress(e, true); });
   el.tabs.addEventListener("lostpointercapture", function (e) { if (L.drag && L.drag.id === e.pointerId) endPress(e, true); });
+  window.addEventListener("pointerup", function (e) { if (L.drag) endPress(e, false); }, true);
+  window.addEventListener("pointercancel", function (e) { if (L.drag) endPress(e, true); }, true);
   var swallowClick = 0;
 
   /* ---------- page state ---------- */
@@ -239,11 +243,14 @@
     el.home.setAttribute("aria-label", (cur.getAttribute("aria-label") || "Pages") + ". Show pages");
     var n = cartCount();
     el.bag.hidden = !(n > 0);
-    bagCount.textContent = n > 99 ? "99+" : String(n);
+    var label = n > 99 ? "99+" : String(n);
+    if (bagCount.textContent !== label) {
+      bagCount.textContent = label;
+      if (n && bagCount.animate && !RM.matches) bagCount.animate([{ transform: "scale(.82)", opacity: .6 }, { transform: "none", opacity: 1 }], { duration: 240, easing: "cubic-bezier(.32,.72,0,1)" });
+    }
     el.bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
     el.back.hidden = !contentBack();
-    onlineB.hidden = !(signedIn && onlineN > 0);
-    onlineB.textContent = onlineN > 99 ? "99+" : String(onlineN);
+    onlineB.hidden = true;
     // Chat and Globe open with your profile bubble out front; every other page shows the regular tabs (per dc)
     var morphed = false;
     if (changed && !menuOpen()) {
@@ -314,10 +321,15 @@
         c.removeAttribute("id");
         [].forEach.call(c.querySelectorAll("[id]"), function (n) { n.removeAttribute("id"); });
         meAv.replaceChildren(c);
+        var marks = q(".nv-marks");
+        if (marks) {
+          marks.querySelectorAll(".chat-badge,.chat-badge-kitty,.chat-badge-mask,.chat-verified").forEach(function (n) { n.remove(); });
+          meAv.querySelectorAll(".chat-badge,.chat-badge-kitty,.chat-badge-mask,.chat-verified").forEach(function (n) { marks.appendChild(n); });
+        }
       }
       window.MPPwDock && MPPwDock(); // hat, Sphere and other avatar powers on the nav avatar
     } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; if (state === "me") state = "tabs"; }
-    unread.hidden = !(unreadN > 0 && signedIn);
+    unread.hidden = true;
     paintStatus();
     if (was !== signedIn) { if (!menuOpen()) state = autoState(view); sync(); fmPaint(); }
   }
@@ -536,7 +548,7 @@
   document.addEventListener("mp-status", function () { paintStatus(); });
   document.addEventListener("mp-unread", function (e) {
     unreadN = Math.max(0, Number(e.detail && e.detail.count) || 0);
-    unread.hidden = !(unreadN > 0 && signedIn);
+    unread.hidden = true;
   });
   window.addEventListener("resize", function () { layout(); });
   window.addEventListener("orientationchange", function () { layout(); });
