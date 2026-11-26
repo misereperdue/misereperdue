@@ -10793,7 +10793,8 @@ html:not([data-theme="light"]) body.home:has(#cart.on) .hero {
 
 /* ===== Misery FM v2 (dc, 2026-11-09): top-bar live state + morph, chat live bar, listener sheet, owner studio ===== */
 :root{--fm-fill:rgba(127,127,127,.16);--fm-line:rgba(127,127,127,.26)}
-html.fm-lock body{position:fixed;left:0;right:0;overflow:hidden}
+/* overflow only — position:fixed + top:-scrollY on body lifts the chat composer on iOS */
+html.fm-lock,html.fm-lock body{overflow:hidden;overscroll-behavior:none}
 .fm-audio{display:none}
 @keyframes fmPulse{50%{opacity:.3}}
 @keyframes fmDash{to{stroke-dashoffset:-15}}
@@ -12773,9 +12774,15 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-wide>.nv-in{width:calc(var(--h,56px) - 8px);height:calc(100% - 8px)}
 .nv-fm-in{background:var(--nv-in)}
 .nv-glass.nv-fm:not(.nv-wide)>.nv-fm-in{background:none}
-.nv-live{position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#ff375f;box-shadow:0 0 0 2px var(--nv-glass);animation:nvLive 1.6s ease-in-out infinite}
+.nv-live{position:absolute;top:1px;right:1px;z-index:2;width:8px;height:8px;border-radius:50%;background:var(--nv-ice);box-shadow:0 0 0 2px var(--bg),inset 0 1px 0 rgba(255,255,255,.5)}
 .nv-live[hidden]{display:none}
-@keyframes nvLive{50%{transform:scale(1.25);opacity:.7}}
+.nv-fm-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none}
+.nv-fm-art[hidden],.nv-fm-ic[hidden]{display:none}
+.nv-fm-line{display:flex;align-items:center;gap:6px;min-width:0}
+.nv-fm-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nv-fm-logo{display:block;width:54px;height:12px;flex:none;background:currentColor;-webkit-mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat;mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat}
+.nv-fm-logo[hidden]{display:none}
+.nv-fm-sub:empty{display:none}
 .nv-tx{position:absolute;left:52px;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:0;min-width:0;opacity:0;filter:blur(8px);pointer-events:none;transition:opacity .28s ease,filter .3s ease}
 .nv-wide>.nv-tx{opacity:1;filter:none;transition-delay:.12s}
 .nv-tx b{font-size:14px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -12791,13 +12798,14 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-me .mp-hat{z-index:6!important}
 .nv-me.nv-wide .nv-tx{right:50px}
 .is-signed-in .nv-me.nv-wide .nv-tx{right:88px}
-.nv-marks{position:absolute;left:50%;bottom:-1px;z-index:7;display:flex;align-items:center;justify-content:center;gap:2px;transform:translateX(-50%);pointer-events:none}
-.nv-marks>.nv-sbadge,.nv-marks>.chat-badge,.nv-marks>.chat-badge-kitty,.nv-marks>.chat-badge-mask,.nv-marks>.chat-verified{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;top:auto!important;width:13px!important;height:13px!important;min-width:13px;flex:none;margin:0;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1.5px var(--nv-glass);font-size:9px;line-height:13px;overflow:hidden;filter:none}
-.nv-marks>.chat-badge-mask{width:13px!important;height:13px!important}
-.nv-marks>.chat-badge-kitty img,.nv-marks>.chat-badge-mask img,.nv-marks>.chat-verified svg,.nv-marks>.chat-verified img{width:100%!important;height:100%!important;display:block;object-fit:contain}
+.nv-marks{position:absolute;left:0;bottom:-2px;z-index:7;display:flex;align-items:center;justify-content:center;gap:2px;width:var(--h,40px);height:13px;pointer-events:none}
+.nv-me.nv-glass .nv-marks{left:4px;bottom:2px;width:calc(var(--h,44px) - 8px)}
+#mp-dock .nv-marks>.nv-sbadge,#mp-dock .nv-marks>.chat-badge,#mp-dock .nv-marks>.chat-badge-kitty,#mp-dock .nv-marks>.chat-badge-mask,#mp-dock .nv-marks>.chat-verified{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;top:auto!important;width:13px!important;height:13px!important;min-width:13px!important;max-width:13px;flex:none;margin:0!important;padding:0;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1.5px var(--bg)!important;font-size:9px;line-height:13px;overflow:hidden;filter:none!important;display:block;align-self:center}
+#mp-dock .nv-marks>.chat-badge-mask{width:auto!important;max-width:20px;height:13px!important;border-radius:6px}
+#mp-dock .nv-marks>.chat-badge-kitty img,#mp-dock .nv-marks>.chat-badge-mask img,#mp-dock .nv-marks>.chat-verified svg,#mp-dock .nv-marks>.chat-verified img{width:100%!important;height:100%!important;display:block;object-fit:contain}
 .nv-sbadge{transition:opacity .25s ease,transform .45s var(--nv-spring)}
-.nv-sbadge[hidden],.nv-wide .nv-sbadge{opacity:0;transform:scale(.4);width:0!important;min-width:0;margin:0;box-shadow:none}
-.nv-wide .nv-marks{left:auto;right:auto;bottom:3px;transform:none;width:calc(var(--h,44px) - 8px);justify-content:center}
+.nv-sbadge[hidden]{display:none}
+.nv-me.nv-wide .nv-marks>.nv-sbadge{display:none!important}
 .mpd-unread{display:none!important}
 .nv-mini{position:absolute!important;top:50%;width:34px;height:34px;margin-top:-17px!important;border-radius:50%;display:grid!important;place-items:center;opacity:0;filter:blur(6px);transform:scale(.6);pointer-events:none;transition:opacity .28s ease,filter .3s ease,transform .45s var(--nv-spring)}
 .nv-wide>.nv-mini:not([hidden]){opacity:1;filter:none;transform:none;pointer-events:auto;transition-delay:.1s}
@@ -12837,7 +12845,7 @@ html.mp-bnav.nv-menu-open #mpd-scrim{opacity:.35}
 html.mp-bnav #mp-dock.is-profile-bar{box-sizing:border-box;display:block!important;padding:0!important;overflow:hidden!important;isolation:isolate;z-index:60;border-radius:30px;background:var(--nv-glass);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim)}
 html.mp-bnav #mp-dock.is-profile-expanded{border-radius:28px}
 html.mp-bnav #mp-dock.is-profile-bar>.nv-el,html.mp-bnav #mp-dock.is-profile-bar>.nv-smenu{opacity:0!important;filter:blur(8px)!important}
-@media (prefers-reduced-motion:reduce){.nv-el,.nv-in,.nv-tx,.nv-mini,.nv-sbadge{transition-duration:.01s!important}.nv-live{animation:none}}
+@media (prefers-reduced-motion:reduce){.nv-el,.nv-in,.nv-tx,.nv-mini,.nv-sbadge{transition-duration:.01s!important}}
 
 /* ---- the page around it: a slim sky band at the top, room at the bottom ---- */
 /* The sky is a backdrop, not a header (per dc): it sits behind the page (positioned z 0, painted before
@@ -13112,6 +13120,7 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 
 /* The Sphere orb is clipped to the avatar (per dc): same circle as the picture. */
 .nv-sbadge.nv-sico{position:absolute;width:14px;height:14px}
+#mp-dock .nv-marks>.nv-sbadge.nv-sico{position:static!important;width:13px!important;height:13px!important}
 /* status on a profile avatar */
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}

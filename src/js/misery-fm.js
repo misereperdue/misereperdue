@@ -746,9 +746,10 @@
     vizStart();
   }
   function lockScroll(v) {
-    var b = document.body, de = document.documentElement;
-    if (v) { lockScroll.y = window.scrollY; b.style.top = -lockScroll.y + "px"; de.classList.add("fm-lock"); }
-    else { de.classList.remove("fm-lock"); b.style.top = ""; window.scrollTo(0, lockScroll.y || 0); }
+    var de = document.documentElement;
+    /* Do not use position:fixed + top:-scrollY on body: on iOS that jumps the fixed chat composer up. */
+    if (v) { lockScroll.y = window.scrollY; de.classList.add("fm-lock"); }
+    else { de.classList.remove("fm-lock"); window.scrollTo(0, lockScroll.y || 0); }
   }
   function lcText() {
     var c = calc();
@@ -1324,6 +1325,7 @@
   function menuPill() {
     var status=menuStatus();
     document.querySelectorAll('.chat-pmenu-row.chat-misery-fm em').forEach(function(em){em.textContent=status.text;em.className=status.text?'chat-fm-pill'+(status.scheduled?' is-scheduled':''):'';});
+    if (window.MPDock && MPDock.fm) MPDock.fm();
     document.querySelectorAll('.fm-countdown').forEach(function(b){b.textContent=countdown();b.hidden=!b.textContent;});
   }
   function render() {
@@ -1387,6 +1389,7 @@
     /* song previews pause the station while they play */
     listening: function () { return !!on; },
     listen: function (v) { listen(v); },
+    artUrl: artUrl,
     _calc: calc
   };
   function init() { connect(); refresh(); }
