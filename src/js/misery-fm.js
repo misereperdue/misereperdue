@@ -308,8 +308,8 @@
   /* ---------- top bar: dotted ring + "misery fm IS LIVE" crossfade, tap to morph ---------- */
   function topBar() {
     // bottom dock (dock.js) is the bar when it is on
-    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
-    if (d && d.getClientRects().length) return d;
+    // nav v3 shows misery fm in its own bubble (dock.js); no ring / "is live" crossfade on any bar
+    if (document.documentElement.classList.contains("mp-bnav")) return null;
     var p = q(".panel.on"), h = p && p.querySelector(".chat-head");
     if (h && h.getClientRects().length) return h;
     var n = q(".nav");

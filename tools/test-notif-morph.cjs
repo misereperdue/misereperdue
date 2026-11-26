@@ -52,7 +52,7 @@ const notices=[
   unread=4;socket.send(JSON.stringify({t:'notif',n:{id:'live',type:'gift',from:'eden',n:1,ts:Date.now()}}));await p.waitForFunction(()=>document.querySelector('#chat-bell-badge')?.textContent==='4');
   await p.waitForFunction(()=>!document.querySelector('#mp-dock.is-ntf'));assert.equal(readCalls,0);
   assert.equal(await p.locator('#mp-dock-bell-badge').textContent(),'4','dock bell mirrors the unread count');
-  await p.locator('#mp-dock .mpd-open').click();await p.locator('#mp-dock[data-state=tabs]').waitFor();await p.waitForTimeout(450);
+  await p.locator('#mp-dock .nv-me').click();await p.locator('#mp-dock[data-state=me]').waitFor();await p.waitForTimeout(600);
   await p.locator('#mp-dock-bell').click();
   const menu=p.locator('#mp-dock.is-ntf-bar .mp-ntf-morph');
   await menu.waitFor({timeout:8000});

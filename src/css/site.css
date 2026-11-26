@@ -12702,79 +12702,119 @@ html.mp-bnav{--mpd-h:52px;--mpd-clear:calc(env(safe-area-inset-bottom,0px) + 84p
 html.mp-bnav #mpd-probe{display:block;position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
-html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 14px));width:248px;height:var(--mpd-h);box-sizing:border-box;margin:0;padding:0;border-radius:26px;transform:translateX(-50%);isolation:isolate;color:var(--ink);transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .45s var(--mpd-e),opacity .3s ease,border-radius .42s var(--mpd-e)}
-html.mp-bnav #mp-dock:not(.is-ready){transition:none}
-html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none;transition:width .52s var(--mpd-e),bottom .45s var(--mpd-e),transform .3s var(--mpd-e),opacity .14s ease}
-.mpd-in{position:absolute;inset:0;/* inside the 1px glass border: 52px shape = 1 + 5 + 40 + 5 + 1, the same 6px all round */border-radius:inherit;overflow:hidden}
-/* reset only the dock's own controls (low specificity): menus that grow inside the dock keep their button styles */
-:where(#mp-dock .mpd-in) button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-:where(#mp-dock .mpd-in) button:focus-visible{outline:2px solid var(--accent,#9cc7ff);outline-offset:2px}
-/* the pill owns its drags (swipe up opens, sideways changes page) instead of the page scrolling */
-#mp-dock .mpd-pillrow,#mp-dock .mpd-open{touch-action:none}
-#mp-dock .mpd-ic{width:20px;height:20px;flex:none;display:block}
-/* layers: pill row / tabs / bell fade + settle; the avatar stays put at the right end and rides the edge */
-.mpd-pillrow,.mpd-tabs,.mpd-bell{transition:opacity .26s ease .08s,transform .5s var(--mpd-e),visibility 0s linear 0s}
-#mp-dock[data-state="pill"] .mpd-tabs,#mp-dock[data-state="pill"] .mpd-bell,#mp-dock[data-state="tabs"] .mpd-pillrow{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .5s var(--mpd-e),visibility 0s linear .5s}
-#mp-dock[data-state="pill"] .mpd-tabs{transform:scale(.94)}
-#mp-dock[data-state="pill"] .mpd-bell{transform:scale(.6)}
-#mp-dock[data-state="tabs"] .mpd-pillrow{transform:scale(.96)}
-.mpd-pillrow{position:absolute;inset:0;display:flex;align-items:center;gap:4px;padding:0 50px 0 5px;box-sizing:border-box}
-.mpd-back{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important}
-.mpd-back[hidden],.mpd-live[hidden],.mpd-bag[hidden],.mpd-bell[hidden],.mpd-unread[hidden],.mpd-tabs button[hidden]{display:none!important}
-.mpd-open{flex:1 1 auto;min-width:0;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.mpd-open-in{display:inline-flex;align-items:center;gap:13px;width:max-content;padding:0 10px 0 12px}
-.mpd-title{display:block;overflow:hidden}
-.mpd-t{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
-.mpd-dots{display:inline-flex;align-items:center;gap:5px}
-.mpd-dots i{display:block;width:6px;height:6px;border-radius:3px;background:currentColor;opacity:.3;transition:width .45s var(--mpd-e),opacity .3s ease}
-.mpd-dots i.on{width:16px;opacity:.95}
-.mpd-live{flex:none;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px!important;border-radius:14px;background:rgba(74,222,128,.14)!important;color:#7be8a4!important;font-size:13px!important;font-weight:700!important}
-[data-theme="light"] .mpd-live{background:rgba(22,163,74,.12)!important;color:#15803d!important}
-.mpd-bag{flex:none;position:relative;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 8px!important;border-radius:16px;background:var(--orb-fill)!important;box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))!important;font-size:13px!important;font-weight:700!important}
-#mp-dock .mpd-bag .mpd-ic{width:17px;height:17px}
-.mpd-live b{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
-.mpd-live i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.7);animation:onlineDotPulse 1.6s ease-in-out infinite}
-.mpd-me{position:absolute!important;right:5px;top:5px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;z-index:2}
-/* per dc: overflow stays visible so the avatar badge sits whole on the corner (the circle clipped it) */
-.mpd-av{width:36px;height:36px;border-radius:50%;overflow:visible;display:grid;place-items:center;background:var(--orb-fill);box-shadow:var(--orb-shadow);color:var(--orb-ink,var(--ink))}
-.mpd-av>svg{width:20px;height:20px}
-.mpd-av .chat-avatar-wrap{transform:none;transform-origin:center}
-.mpd-av .chat-avatar-img,.mpd-av img.chat-avatar-img,.mpd-av .chat-avatar{width:36px!important;height:36px!important;border-radius:50%}
-.mpd-av>.chat-avatar-wrap{width:36px;height:36px;transform:none!important}
-.mpd-unread{position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#f43f5e;border:2px solid var(--bg);box-sizing:border-box}
-#mp-dock[data-state="tabs"] .mpd-unread{transform:scale(0);transition:transform .2s ease}
-.mpd-tabs{position:absolute;left:5px;top:5px;height:40px;width:var(--mpd-tw,300px);display:flex;gap:4px;transform-origin:left center}
-.mpd-tabs button{position:relative;z-index:1;flex:1 1 0;min-width:0;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px!important;font-weight:650!important;color:var(--lg-icon)!important;transition:color .3s ease}
-.mpd-tabs button.on{color:var(--lg-icon-on)!important}
-.mpd-tabs button>span:not(.mpd-icw){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mpd-tabs button .mpd-ic{width:19px;height:19px}
-.mpd-ind{position:absolute;left:0;top:0;height:40px;width:80px;border-radius:20px;background:var(--orb-fill);box-shadow:var(--orb-shadow);transition:transform .55s cubic-bezier(.34,1.36,.5,1),width .45s var(--mpd-e),opacity .2s;pointer-events:none}
-.mpd-icw{position:relative;display:block;flex:none}
-.mpd-badge{position:absolute;top:-6px;left:12px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#f43f5e;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;font-style:normal}
-#mp-dock .mpd-bell{position:absolute;right:50px;top:5px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;z-index:2;background:none;border:0}
-#mp-dock .mpd-bell .forum-bell-badge{top:-2px;right:-2px}
-#mp-dock .mpd-bell .mp-stack-face svg,#mp-dock .mpd-bell .mp-stack-peek svg{width:18px;height:18px}
-@media (max-width:360px){.mpd-tabs button:not(.on)>span:not(.mpd-icw){display:none}}
-.mpd-tabs.is-crowded button{transition:color .3s ease,flex-grow .45s var(--mpd-e)}
-.mpd-tabs.is-crowded button:not(.on)>span:not(.mpd-icw){display:none}
-.mpd-tabs.is-crowded button.on{flex-grow:2.1}
-
-/* menus grow out of the shape (same chrome as the old top-bar menus) */
-html.mp-bnav #mp-dock.is-profile-bar{box-sizing:border-box;display:block!important;padding:0!important;overflow:hidden!important;isolation:isolate;z-index:60;border-radius:32px;background:rgba(13,22,45,.52);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
-html.mp-bnav[data-theme="light"] #mp-dock.is-profile-bar,[data-theme="light"] html.mp-bnav #mp-dock.is-profile-bar{background:rgba(245,248,255,.58)}
-html.mp-bnav #mp-dock.is-profile-expanded{border-radius:28px}
 /* scrim behind an open dock */
 html.mp-bnav #mpd-scrim{display:block;position:fixed;inset:0;z-index:44;background:rgba(3,7,20,.42);opacity:0;pointer-events:none;transition:opacity .35s ease}
 [data-theme="light"] html.mp-bnav #mpd-scrim,html.mp-bnav[data-theme="light"] #mpd-scrim{background:rgba(30,40,70,.2)}
-html.mp-bnav.mpd-is-tabs #mpd-scrim{opacity:.5;pointer-events:auto}
 html.mp-bnav.mpd-is-menu #mpd-scrim{opacity:1}
-/* misery fm on the shape: "is live" crossfade only while it rests as the pill; full width for now playing */
-html.mp-bnav #mp-dock[data-state="tabs"].is-fm>.mpd-in{opacity:1!important;transform:none!important;pointer-events:auto!important}
-html.mp-bnav #mp-dock[data-state="tabs"] .fm-hb-in{opacity:0!important}
-html.mp-bnav #mp-dock[data-state="tabs"].is-fm .fm-hb{pointer-events:none!important}
 /* live notices drop in across the whole shape */
 html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
-@media (prefers-reduced-motion:reduce){html.mp-bnav #mp-dock,.mpd-pillrow,.mpd-tabs,.mpd-bell,.mpd-ind,.mpd-dots i{transition:none!important}.mpd-live i{animation:none}}
+/* ===== Bottom nav v3 (per dc, "nav.mp4"): liquid glass shapes that morph between tabs / misery fm / you =====
+   js/dock.js places every shape (left/top/width/height) for the current state; CSS animates the morph with a
+   small spring overshoot and blur-crossfades the labels. Light glass in light mode, smoked glass in dark. */
+html.mp-bnav{--nv-glass:rgba(30,36,60,.52);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,1.2,.42,1)}
+html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.66);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6)}
+html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:62px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .45s cubic-bezier(.32,.72,0,1),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
+html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
+#mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
+:where(#mp-dock) button{border:0;background:none;padding:0;margin:0}
+#mp-dock :focus-visible{outline:2px solid var(--nv-blue);outline-offset:2px}
+/* every shape */
+.nv-el{position:absolute;box-sizing:border-box;display:block;overflow:visible;transition:left .52s var(--nv-spring),top .52s var(--nv-spring),width .52s var(--nv-spring),height .52s var(--nv-spring),border-radius .52s var(--nv-spring),opacity .3s ease,filter .34s ease,transform .52s var(--nv-spring),background-color .3s ease,box-shadow .3s ease}
+#mp-dock:not(.is-ready) .nv-el,#mp-dock:not(.is-ready) .nv-lens{transition:none!important}
+.nv-el.nv-off{opacity:0;filter:blur(10px);transform:scale(.8);pointer-events:none}
+.nv-el[hidden]{display:block!important}
+/* liquid glass: frosted fill, bright specular rim (brightest top-left), soft lift */
+.nv-glass{background:var(--nv-glass);-webkit-backdrop-filter:blur(22px) saturate(185%);backdrop-filter:blur(22px) saturate(185%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim),inset 0 -1px 0 var(--nv-rim2),inset 0 0 0 .5px var(--nv-rim2)}
+.nv-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(140deg,var(--nv-rim),transparent 38%,transparent 62%,var(--nv-rim2));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+/* Chromium can bend the backdrop (SVG displacement); WebKit keeps the frosted glass */
+@supports (-webkit-app-region:drag){.nv-glass{backdrop-filter:url(#nv-refract) blur(20px) saturate(185%)}}
+.nv-ic{width:22px;height:22px;display:block;flex:none}
+/* tabs */
+.nv-tabs{display:flex;padding:4px;gap:0}
+.nv-tab{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--nv-ink)!important;transition:color .3s ease}
+.nv-tab span{font-size:10.5px;font-weight:600;letter-spacing:.01em;line-height:1.1;white-space:nowrap}
+.nv-tab .nv-ic{width:23px;height:23px;transition:transform .45s var(--nv-spring)}
+.nv-tab.on{color:var(--nv-blue)!important}
+.nv-tab:active .nv-ic{transform:scale(.9)}
+.nv-online{position:absolute;top:5px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#30d158;color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;font-style:normal}
+.nv-online[hidden]{display:none}
+.nv-lens{position:absolute;left:0;top:4px;bottom:4px;width:80px;border-radius:999px;background:var(--nv-lens);transition:transform .5s var(--nv-spring),width .4s var(--nv-spring),background-color .25s ease,box-shadow .25s ease;pointer-events:none;transform-origin:50% 50%}
+/* moving: the lens lifts into clear magnifying glass with a bright rim and chromatic edge (reference) */
+.nv-lens.is-lens{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 2px rgba(255,255,255,.7),inset 0 -2px 6px rgba(120,170,255,.18),inset 2px 0 4px rgba(255,120,180,.12),0 6px 18px rgba(0,0,0,.18);-webkit-backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);z-index:2}
+@supports (-webkit-app-region:drag){.nv-lens.is-lens{backdrop-filter:url(#nv-lens-f) saturate(1.8) brightness(1.06)}}
+/* bag / back / home circles */
+.nv-bag,.nv-back,.nv-home{display:grid!important;place-items:center}
+.nv-bag.on{color:var(--nv-blue)}
+.nv-count{position:absolute;top:8px;right:8px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#ff3b30;color:#fff;font-size:10px;font-weight:800;line-height:17px;text-align:center;font-style:normal}
+.nv-home-ic{display:grid;place-items:center;color:var(--nv-blue)}
+/* fm + you: an inner circle (icon / avatar) and labels that appear when the shape widens */
+.nv-in{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;display:grid;place-items:center;overflow:visible;transition:left .52s var(--nv-spring),top .52s var(--nv-spring),width .52s var(--nv-spring),height .52s var(--nv-spring),background-color .3s ease}
+.nv-glass>.nv-in{left:4px;top:4px;width:calc(100% - 8px);height:calc(100% - 8px)}
+.nv-wide>.nv-in{width:calc(var(--h,56px) - 8px);height:calc(100% - 8px)}
+.nv-fm-in{background:var(--nv-in)}
+.nv-glass.nv-fm:not(.nv-wide)>.nv-fm-in{background:none}
+.nv-live{position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#ff375f;box-shadow:0 0 0 2px var(--nv-glass);animation:nvLive 1.6s ease-in-out infinite}
+.nv-live[hidden]{display:none}
+@keyframes nvLive{50%{transform:scale(1.25);opacity:.7}}
+.nv-tx{position:absolute;left:62px;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:1px;min-width:0;opacity:0;filter:blur(8px);pointer-events:none;transition:opacity .28s ease,filter .34s ease}
+.nv-wide>.nv-tx{opacity:1;filter:none;transition-delay:.12s}
+.nv-tx b{font-size:15.5px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-tx small{font-size:12.5px;color:var(--nv-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-fm-tag{display:inline-flex;align-items:center;height:16px;padding:0 6px;border-radius:8px;background:#ff375f;color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.08em}
+.nv-fm-tag[hidden]{display:none}
+/* you */
+.mpd-av{overflow:visible}
+.mpd-av>svg{width:22px;height:22px}
+.nv-me .mpd-av{background:var(--nv-in)}
+.mpd-av>.chat-avatar-wrap{width:100%!important;height:100%!important;transform:none!important}
+.mpd-av .chat-avatar-img,.mpd-av .chat-avatar{width:100%!important;height:100%!important;border-radius:50%}
+.nv-me .mp-hat{z-index:6!important}
+.nv-me.nv-wide .nv-tx{right:58px}
+.is-signed-in .nv-me.nv-wide .nv-tx{right:100px}
+.nv-sbadge{position:absolute;right:-1px;bottom:-1px;z-index:7;width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 2.5px var(--bg);transition:opacity .25s ease,transform .45s var(--nv-spring)}
+.nv-sbadge[hidden],.nv-wide>.nv-sbadge{opacity:0;transform:scale(.4)}
+.mpd-unread{position:absolute;top:-1px;right:-1px;z-index:7;width:12px;height:12px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px var(--bg)}
+.mpd-unread[hidden],.nv-wide>.mpd-unread{display:none}
+.nv-mini{position:absolute!important;top:50%;width:38px;height:38px;margin-top:-19px!important;border-radius:50%;display:grid!important;place-items:center;opacity:0;filter:blur(6px);transform:scale(.6);pointer-events:none;transition:opacity .28s ease,filter .3s ease,transform .45s var(--nv-spring)}
+.nv-wide>.nv-mini:not([hidden]){opacity:1;filter:none;transform:none;pointer-events:auto;transition-delay:.1s}
+.nv-mini[hidden]{display:none!important}
+.nv-sbtn{right:9px}
+.nv-bell{right:53px;background:var(--nv-in)!important;border:0!important;color:var(--nv-ink)}
+.nv-bell svg,.nv-bell .mp-stack-face svg,.nv-bell .mp-stack-peek svg{width:18px;height:18px}
+.nv-bell .forum-bell-badge{top:-3px;right:-3px}
+/* status colours + icons */
+.nv-sico{display:block;width:18px;height:18px;border-radius:50%;position:relative;flex:none}
+.nv-s-online{background:#30d158}
+.nv-s-idle{background:transparent}
+.nv-s-idle::before{content:"";position:absolute;inset:0;border-radius:50%;background:#ffb020;-webkit-mask:radial-gradient(circle at 30% 32%,transparent 42%,#000 43%);mask:radial-gradient(circle at 30% 32%,transparent 42%,#000 43%)}
+.nv-s-dnd{background:#ff3b30}
+.nv-s-dnd::before{content:"";position:absolute;left:24%;right:24%;top:50%;height:2.6px;margin-top:-1.3px;border-radius:2px;background:#fff}
+.nv-s-invisible{background:transparent;box-shadow:inset 0 0 0 3px #8e8e93}
+.nv-sbadge.nv-s-invisible{background:var(--bg)}
+.nv-sbtn.nv-sb-online{background:rgba(48,209,88,.16)!important}
+.nv-sbtn.nv-sb-idle{background:rgba(255,176,32,.18)!important}
+.nv-sbtn.nv-sb-dnd{background:rgba(255,59,48,.15)!important}
+.nv-sbtn.nv-sb-invisible{background:rgba(142,142,147,.16)!important}
+.nv-sbtn .nv-sico{width:20px;height:20px}
+/* status menu: grows out of the status button */
+.nv-smenu{position:absolute;z-index:8;box-sizing:border-box;overflow:hidden;background:var(--nv-glass);-webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim),inset 0 0 0 .5px var(--nv-rim2)}
+.nv-smenu[hidden]{display:none}
+.nv-smenu-in{display:flex;flex-direction:column;padding:6px;gap:0}
+.nv-srow{position:relative;display:flex!important;align-items:center;gap:8px;height:44px;padding:0 12px 0 30px!important;border-radius:14px;font-size:15px!important;font-weight:500;text-align:left;color:var(--nv-ink)!important;transition:background-color .18s ease}
+.nv-srow span{flex:1}
+.nv-srow:hover,.nv-srow:focus-visible,.nv-srow:active{background:var(--nv-in)!important;outline:0}
+.nv-chk{position:absolute;left:9px;top:50%;width:15px;height:15px;margin-top:-7.5px;opacity:0;transform:scale(.5);transition:opacity .2s ease,transform .3s var(--nv-spring)}
+.nv-srow.is-on .nv-chk{opacity:1;transform:none}
+.nv-srow .nv-sico{width:16px;height:16px}
+html.mp-bnav.nv-menu-open #mpd-scrim{opacity:.35}
+/* morphing: a quick blur on the whole bar while shapes swap (reference) */
+#mp-dock.nv-morphing .nv-in{filter:blur(.6px)}
+/* menus that grow out of the bar (profile, notifications, online): the bar becomes one glass card */
+html.mp-bnav #mp-dock.is-profile-bar{box-sizing:border-box;display:block!important;padding:0!important;overflow:hidden!important;isolation:isolate;z-index:60;border-radius:30px;background:var(--nv-glass);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim)}
+html.mp-bnav #mp-dock.is-profile-expanded{border-radius:28px}
+html.mp-bnav #mp-dock.is-profile-bar>.nv-el,html.mp-bnav #mp-dock.is-profile-bar>.nv-smenu{opacity:0!important;filter:blur(8px)!important}
+@media (prefers-reduced-motion:reduce){.nv-el,.nv-in,.nv-lens,.nv-tx,.nv-mini,.nv-sbadge{transition-duration:.01s!important}.nv-live{animation:none}}
+@media (max-width:360px){.nv-tab span{font-size:9.5px}}
 
 /* ---- the page around it: a slim sky band at the top, room at the bottom ---- */
 /* The sky is a backdrop, not a header (per dc): it sits behind the page (positioned z 0, painted before
@@ -13046,9 +13086,9 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 .chat-avatar,.chat-avatar-img{border-color:transparent!important;box-shadow:none!important}
 .mp-pb-av.pw-sphere .mp-pb-ring{display:none!important}
 /* The pill's avatar wears avatar powers (hat, Sphere, Halo): the hat may rise above the pill */
-.mpd-av{overflow:visible!important}
-.mpd-av>.chat-avatar-wrap,.mpd-av .chat-avatar-img,.mpd-av .chat-avatar{border-radius:50%}
-.mpd-me .mp-hat{z-index:6!important}
-#mp-dock.is-signed-in .mpd-av{box-shadow:none;background:none}
 
 /* The Sphere orb is clipped to the avatar (per dc): same circle as the picture. */
+.nv-sbadge.nv-sico{position:absolute}
+/* status on a profile avatar */
+.mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
+.mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}

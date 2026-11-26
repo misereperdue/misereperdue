@@ -1,143 +1,223 @@
-/* Bottom dock (per dc, design "D2 · Stretch Pill"): the navigation and the old top bars live in one
-   glass shape at the bottom of the screen, in thumb reach.
-     pill  : page title (+ online count in Chat, Back on product/thread pages) · page dots · your avatar
-     tabs  : tap the pill and it stretches into Shop / Globe / Chat / Bag + notifications + avatar
-     menus : profile, notifications, online list, Powers, Stars, misery fm all grow UP out of the same
-             shape (profile-cards.js MPProfiles.topBar()/chatHead() return the dock)
-   The old #nav buttons stay in the DOM (hidden) and remain the single navigation path: the dock clicks
-   them, so app.js show(), swipe-tabs and the orb logic keep working unchanged. */
+/* Bottom nav v3 (per dc, from his "nav.mp4" reference): liquid glass shapes that morph between three states.
+     tabs : [ Shop · Globe · Chat ] (glass lens on the current page)   [ (bag) ]   [ fm · you ]
+     fm   : [ page ]  [ misery fm · live / now playing ]  [ you ]
+     me   : [ page ]  [ fm ]  [ you · name · status  (bell) (status) ]
+   Every shape is one absolutely positioned element; a state change moves/resizes them (CSS transitions with a
+   small spring overshoot) while their labels blur-crossfade, like the reference. The status button grows into
+   the status menu. Profile, notifications and other menus still grow out of #mp-dock (profile-cards.js).
+   The old #nav buttons stay hidden and remain the navigation path (app.js show(), swipe-tabs). */
 (function () {
   "use strict";
   var dock = document.getElementById("mp-dock");
   if (!dock || !document.documentElement.classList.contains("mp-bnav")) return;
   var html = document.documentElement, nav = document.getElementById("nav");
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
-  var EASE = "cubic-bezier(.32,.72,0,1)";
-  var q = function (s, r) { return (r || dock).querySelector(s); };
-  var inner = q(".mpd-in"), row = q(".mpd-pillrow"), open = q(".mpd-open"), openIn = q(".mpd-open-in"), title = q(".mpd-t");
-  var back = q(".mpd-back"), bag = q(".mpd-bag"), bagNum = q(".mpd-bag b"), live = q(".mpd-live"), liveNum = q(".mpd-live b"), dots = [].slice.call(dock.querySelectorAll(".mpd-dots i"));
-  var tabs = q(".mpd-tabs"), ind = q(".mpd-ind"), tabBtns = [].slice.call(tabs.querySelectorAll("button[data-view]"));
-  var bagTab = q('.mpd-tabs [data-view="cart"]'), bagBadge = q(".mpd-badge"), bell = q(".mpd-bell"), me = q(".mpd-me"), meAv = q(".mpd-av"), unread = q(".mpd-unread");
+  var q = function (s) { return dock.querySelector(s); };
+  var el = { back: q(".nv-back"), tabs: q(".nv-tabs"), bag: q(".nv-bag"), rg: q(".nv-rg"), home: q(".nv-home"), fm: q(".nv-fm"), me: q(".nv-me") };
+  var lens = q(".nv-lens"), tabBtns = [].slice.call(dock.querySelectorAll(".nv-tab"));
+  var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live");
+  var meAv = q(".mpd-av"), meName = q(".nv-name"), meSt = q(".nv-st"), sBadge = q(".nv-sbadge"), sBtn = q(".nv-sbtn"), bell = q(".nv-bell"), unread = q(".mpd-unread");
+  var menu = q(".nv-smenu"), rows = [].slice.call(dock.querySelectorAll(".nv-srow"));
+  var onlineB = q(".nv-online"), bagCount = q(".nv-count");
   var scrim = document.getElementById("mpd-scrim");
-  var NAMES = { shop: "Shop", product: "Shop", cart: "Bag", forum: "Globe", journal: "Chat" };
-  var ORDER = ["shop", "forum", "journal"];
-  var state = "pill", view = "", signedIn = false, onlineN = 0, unreadN = 0, kbLift = 0, away = false, lastW = 0;
+  var STATUS = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", invisible: "Invisible" };
+  var state = "tabs", view = "", signedIn = false, onlineN = 0, unreadN = 0, kbLift = 0, away = false, lastBox = "";
+  var H = 62, S = 56, G = 8, P = 6, C = 50;
 
   function panelView() { var p = document.querySelector("main.page > .panel.on"); return p ? p.id : "shop"; }
-  function dotView(v) { return v === "product" || v === "cart" ? "shop" : v; }
-  function menuOpen() { return dock.classList.contains("is-profile-bar") || dock.classList.contains("is-np") || dock.classList.contains("is-ntf"); }
-  function fullW() { return Math.min(window.innerWidth - 24, 460); }
+  function tabOf(v) { return v === "product" || v === "cart" ? "shop" : v; }
+  function menuOpen() { return dock.classList.contains("is-profile-bar"); }
+  function cartCount() { try { return window.MP && MP.cartCount ? MP.cartCount() : 0; } catch (e) { return 0; } }
   function contentBack() {
     var p = document.querySelector("main.page > .panel.on");
     if (!p) return null;
     var list = p.querySelectorAll(".forum-head > .forum-back");
     for (var i = list.length - 1; i >= 0; i--) {
-      // (the in-page Back pills are hidden by the dock's CSS, so judge by the view they belong to)
-      // a Back pill the page shows itself (New thread) stays the only Back
-      if (getComputedStyle(list[i]).display !== "none") continue;
       var head = list[i].parentNode, host = head.parentElement;
       if (host && host.getClientRects().length && !head.closest("[hidden],[aria-hidden=true]")) return list[i];
     }
     return null;
   }
-  function cartCount() { try { return window.MP && MP.cartCount ? MP.cartCount() : 0; } catch (e) { return 0; } }
 
-  /* ---------- size: the shape's width is explicit so every change animates (CSS transition) ---------- */
-  function pillW() {
-    var w = 2 + 5 + openIn.offsetWidth + 50; // 1px border each side + insets
-    if (!back.hidden) w += 44;
-    if (!live.hidden) w += live.offsetWidth + 4;
-    if (!bag.hidden) w += bag.offsetWidth + 4;
-    return Math.min(fullW(), Math.max(176, Math.ceil(w)));
+  /* ---------- layout: every shape's box for the current state ---------- */
+  function box(e, x, y, w, h, r, show) {
+    var s = e.style;
+    s.left = x + "px"; s.top = y + "px"; s.width = w + "px"; s.height = h + "px"; s.setProperty("--h", h + "px"); s.borderRadius = (r == null ? h / 2 : r) + "px";
+    e.classList.toggle("nv-off", !show);
+    e.inert = !show;
   }
-  function size() {
-    var full = fullW(), w = menuOpen() || state === "tabs" ? full : pillW();
-    html.style.setProperty("--mpd-full", full + "px");
-    html.style.setProperty("--mpd-tw", Math.max(160, full - 2 - 10 - 45 - (signedIn ? 45 : 0)) + "px");
-    if (w !== lastW || dock.style.width !== w + "px") { dock.style.width = w + "px"; lastW = w; }
-    seat();
-  }
-  function seat(instant) {
-    var on = tabs.querySelector("button.on:not([hidden])");
-    if (!on) { ind.style.opacity = "0"; return; }
-    ind.style.opacity = "";
-    if (instant) ind.style.transition = "none";
-    ind.style.width = on.offsetWidth + "px";
-    ind.style.transform = "translateX(" + on.offsetLeft + "px)";
-    if (instant) { void ind.offsetWidth; ind.style.transition = ""; }
-  }
-
-  /* ---------- where the dock sits: above the message box in Chat, else at the bottom edge ---------- */
-  function place() {
-    var b = null, v = panelView();
-    if (kbLift) b = kbLift;
-    else if (v === "journal") {
-      // from the box's resting layout (its stylesheet bottom + height), never its live rect: chat lifts it over the
-      // keyboard with an inline bottom and animates it in; following those made the pill jump/slide back down
-      var ir = document.querySelector("#journal .chat-inputrow");
-      if (ir && ir.style.bottom) return; // keyboard up (dock is away): keep the resting spot
-      if (ir && ir.offsetHeight) b = Math.round((parseFloat(getComputedStyle(ir).bottom) || 0) + ir.offsetHeight + 10);
+  function layout() {
+    if (menuOpen()) return;
+    var W = Math.min(window.innerWidth - 20, 430), y = (H - S) / 2;
+    dock.style.width = W + "px"; dock.style.height = H + "px";
+    var hasBack = !el.back.hidden, hasBag = !el.bag.hidden, rgW = P + C + P + C + P;
+    dock.setAttribute("data-state", state);
+    if (state === "tabs") {
+      var x = 0;
+      box(el.back, 0, 0, H, H, null, hasBack); if (hasBack) x = H + G;
+      var right = W - rgW - G;
+      if (hasBag) { box(el.bag, right - H, 0, H, H, null, true); right -= H + G; } else box(el.bag, right - H, 0, H, H, null, false);
+      box(el.tabs, x, 0, right - x, H, null, true);
+      box(el.rg, W - rgW, 0, rgW, H, null, true);
+      box(el.fm, W - rgW + P, P, C, C, null, true);
+      box(el.me, W - rgW + P + C + P, P, C, C, null, true);
+      box(el.home, x, y, S, S, null, false);
+    } else {
+      box(el.back, 0, y, S, S, null, false); box(el.bag, W / 2 - S / 2, y, S, S, null, false);
+      box(el.home, 0, y, S, S, null, true);
+      box(el.tabs, 0, y, S, S, null, false);
+      if (state === "fm") {
+        box(el.fm, S + G, y, W - 2 * S - 2 * G, S, null, true);
+        box(el.me, W - S, y, S, S, null, true);
+        box(el.rg, W - S, y, S, S, null, false);
+      } else {
+        box(el.fm, S + G, y, S, S, null, true);
+        box(el.me, 2 * S + 2 * G, y, W - 2 * S - 2 * G, S, null, true);
+        box(el.rg, W - S, y, S, S, null, false);
+      }
     }
-    var cur = parseFloat(html.style.getPropertyValue("--mpd-b")) || 0;
-    if (b) { if (Math.abs(b - cur) > 1) html.style.setProperty("--mpd-b", b + "px"); }
-    else if (cur) html.style.removeProperty("--mpd-b");
-    var dr = dock.getBoundingClientRect();
-    // room the page keeps clear under its content (toasts, last cards, banners); stable while menus are open
-    if (!menuOpen() && !away && dr.height) html.style.setProperty("--mpd-clear", Math.round(window.innerHeight - dr.top + 8) + "px");
+    // fm/you sit inside the right group in tabs (no glass of their own), and are glass shapes otherwise
+    [el.fm, el.me].forEach(function (e) { e.classList.toggle("nv-glass", state !== "tabs"); e.classList.toggle("nv-wide", e === (state === "fm" ? el.fm : state === "me" ? el.me : null)); });
+    seat(!lastBox);
+    lastBox = state + W;
+    place();
   }
 
-  /* ---------- page state: title, dots, back, bag, online ---------- */
-  function setTitle(t) {
-    if (title.textContent === t) return;
-    if (!title.textContent || RM.matches || !title.animate) { title.textContent = t; return; }
-    title.textContent = t;
-    title.animate([{ opacity: 0, transform: "translateY(7px)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: EASE });
+  /* ---------- the tab lens ---------- */
+  function seatX(t) { return t.offsetLeft; }
+  function seat(instant) {
+    var on = tabBtns.filter(function (b) { return b.classList.contains("on"); })[0];
+    if (!on) { lens.style.opacity = "0"; return; }
+    lens.style.opacity = "";
+    if (instant) lens.style.transition = "none";
+    lens.style.width = on.offsetWidth + "px";
+    lens.style.transform = "translateX(" + seatX(on) + "px)";
+    if (instant) { void lens.offsetWidth; lens.style.transition = ""; }
   }
+  /* moving between tabs the lens lifts into clear glass, stretches with the motion, then settles (reference) */
+  function glide(from, to) {
+    if (RM.matches || !lens.animate || from == null || Math.abs(from - to) < 2) return seat();
+    var w = lens.offsetWidth, dir = to > from ? 1 : -1;
+    lens.classList.add("is-lens");
+    lens.style.transition = "none";
+    lens.style.transform = "translateX(" + to + "px)";
+    var a = lens.animate([
+      { transform: "translateX(" + from + "px) scale(1,1)" },
+      { transform: "translateX(" + (from + (to - from) * 0.55) + "px) scale(" + (1.22 + 0.06 * dir * 0) + ",1.28)", offset: 0.45 },
+      { transform: "translateX(" + (to + dir * 3) + "px) scale(1.06,1.08)", offset: 0.78 },
+      { transform: "translateX(" + to + "px) scale(1,1)" }
+    ], { duration: 560, easing: "cubic-bezier(.3,.7,.2,1)" });
+    a.onfinish = a.oncancel = function () { lens.classList.remove("is-lens"); lens.style.transition = ""; };
+    void w;
+  }
+  var drag = null;
+  el.tabs.addEventListener("pointerdown", function (e) {
+    if (state !== "tabs" || e.button > 0) return;
+    drag = { id: e.pointerId, x: e.clientX, x0: parseFloat((lens.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0, moved: false };
+  });
+  el.tabs.addEventListener("pointermove", function (e) {
+    if (!drag || drag.id !== e.pointerId) return;
+    var dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) < 8) return;
+    if (!drag.moved) { drag.moved = true; lens.classList.add("is-lens", "is-drag"); try { el.tabs.setPointerCapture(e.pointerId); } catch (_) {} }
+    var max = el.tabs.clientWidth - lens.offsetWidth - 4, x = Math.max(4, Math.min(max, drag.x0 + dx));
+    lens.style.transition = "none"; lens.style.transform = "translateX(" + x + "px) scale(1.18,1.22)";
+    drag.cur = x;
+  });
+  function endDrag(e) {
+    if (!drag || drag.id !== e.pointerId) return;
+    var d = drag; drag = null;
+    if (!d.moved) return;
+    d.swallow = true; swallowClick = Date.now() + 350;
+    lens.classList.remove("is-drag");
+    var mid = d.cur + lens.offsetWidth / 2, best = tabBtns[0], bd = 1e9;
+    tabBtns.forEach(function (b) { var c = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(c - mid); if (dd < bd) { bd = dd; best = b; } });
+    var x = seatX(best);
+    if (lens.animate && !RM.matches) {
+      var a = lens.animate([{ transform: "translateX(" + d.cur + "px) scale(1.18,1.22)" }, { transform: "translateX(" + x + "px) scale(1,1)" }], { duration: 380, easing: "cubic-bezier(.3,1.35,.4,1)" });
+      a.onfinish = a.oncancel = function () { lens.classList.remove("is-lens"); lens.style.transition = ""; };
+    } else lens.classList.remove("is-lens");
+    lens.style.transform = "translateX(" + x + "px)";
+    if (!best.classList.contains("on")) { pendingFrom = null; go(best.getAttribute("data-view")); }
+  }
+  el.tabs.addEventListener("pointerup", endDrag);
+  el.tabs.addEventListener("pointercancel", endDrag);
+  var swallowClick = 0, pendingFrom = null;
+
+  /* ---------- page state ---------- */
   function sync() {
-    var v = panelView(), changed = v !== view;
+    var v = panelView(), changed = v !== view, tv = tabOf(v), prev = null;
+    tabBtns.forEach(function (b) { if (b.classList.contains("on")) prev = b; });
+    var fromX = prev ? seatX(prev) : null;
     view = v;
     html.setAttribute("data-mpd-view", v);
-    setTitle(NAMES[v] || "Shop");
-    var dv = dotView(v);
-    dots.forEach(function (d) { d.classList.toggle("on", d.getAttribute("data-v") === dv); });
-    var n = cartCount();
-    bagTab.hidden = !(n > 0);
-    // four pages + bell + you don't fit with labels: only the current page keeps its name
-    tabs.classList.toggle("is-crowded", n > 0 && signedIn || n > 0 && fullW() < 380);
-    bagBadge.textContent = n > 99 ? "99+" : String(n);
     tabBtns.forEach(function (b) {
-      var on = b.getAttribute("data-view") === (v === "product" ? "shop" : v);
-      b.classList.toggle("on", on);
+      var on = b.getAttribute("data-view") === tv && v !== "cart";
+      b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
       if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
-    var hasBack = !!contentBack();
-    back.hidden = !hasBack;
-    live.hidden = !(v === "journal" && onlineN > 0 && signedIn);
-    // shopping with something in the bag: one tap to it, right on the pill
-    bag.hidden = !(n > 0 && (v === "shop" || v === "product"));
-    bagNum.textContent = n > 99 ? "99+" : String(n);
-    bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
-    open.setAttribute("aria-label", (NAMES[v] || "Shop") + ". Open navigation");
-    if (changed && state === "tabs") collapse();
-    size();
-    place();
+    var cur = tabBtns.filter(function (b) { return b.classList.contains("on"); })[0] || tabBtns[0];
+    var ic = cur.querySelector("svg");
+    if (ic && homeIc._v !== tv) { homeIc._v = tv; homeIc.innerHTML = ic.outerHTML; }
+    el.home.setAttribute("aria-label", (cur.textContent || "").trim() + ". Show pages");
+    var n = cartCount();
+    el.bag.hidden = !(n > 0);
+    el.bag.classList.toggle("on", v === "cart");
+    bagCount.textContent = n > 99 ? "99+" : String(n);
+    el.bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
+    el.back.hidden = !contentBack();
+    onlineB.hidden = !(signedIn && onlineN > 0);
+    onlineB.textContent = onlineN > 99 ? "99+" : String(onlineN);
+    if (changed && state !== "tabs") state = "tabs";
+    layout();
+    if (changed && cur !== prev && fromX != null && state === "tabs") glide(fromX, seatX(cur));
   }
   var syncFrame = 0;
   function soon() { if (!syncFrame) syncFrame = requestAnimationFrame(function () { syncFrame = 0; sync(); }); }
 
-  /* ---------- you: avatar mirrors the chat header's (the source of truth chat.js keeps up to date) ---------- */
-  var PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.3-5.5 7.5-5.5s6.1 1.9 7.5 5.5"/></svg>';
+  function go(v) {
+    var b = nav && nav.querySelector('button[data-view="' + v + '"]');
+    if (v === panelView() && v !== "product") {
+      if (v === "journal" && signedIn && window.MPOnlineList) return void MPOnlineList();
+      return void window.scrollTo({ top: v === "journal" ? document.documentElement.scrollHeight : 0, behavior: RM.matches ? "auto" : "smooth" });
+    }
+    if (b) b.click(); else if (window.MPNav) MPNav.show(v);
+  }
+
+  /* ---------- states ---------- */
+  function setState(s) {
+    if (state === s || menuOpen()) return;
+    closeMenu(true);
+    state = s;
+    dock.classList.add("nv-morphing");
+    clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 420);
+    window.haptic && haptic(6);
+    layout();
+    fmPaint();
+  }
+
+  /* ---------- you: avatar mirrors the chat header's, plus status ---------- */
+  var PERSON = meAv.innerHTML;
   function srcMe() { return document.querySelector("#journal .chat-head .chat-me") || document.querySelector("#forum .chat-head .chat-me"); }
+  function myStatus() { return window.MPStatus ? MPStatus.mine() : "online"; }
+  function paintStatus() {
+    var st = myStatus();
+    [sBadge, sBtn.querySelector(".nv-sico")].forEach(function (i) { i.className = i.className.replace(/nv-s-\w+/g, "").trim() + " nv-s-" + st; });
+    meSt.textContent = STATUS[st] || "Online";
+    sBtn.setAttribute("aria-label", "Status: " + (STATUS[st] || "Online"));
+    sBtn.className = sBtn.className.replace(/nv-sb-\w+/g, "").trim() + " nv-sb-" + st;
+    rows.forEach(function (r) { var on = r.getAttribute("data-s") === st; r.classList.toggle("is-on", on); r.setAttribute("aria-checked", on ? "true" : "false"); });
+  }
   function avatar() {
     var src = srcMe(), user = window.MPAuthUser || (window.MPChat && MPChat.getMe && MPChat.getMe());
     var was = signedIn;
     signedIn = !!(user && src);
     dock.classList.toggle("is-signed-in", signedIn);
-    bell.hidden = !signedIn;
-    me.setAttribute("aria-label", signedIn ? "Your profile" : "Sign in");
+    bell.hidden = !signedIn; sBtn.hidden = !signedIn; sBadge.hidden = !signedIn;
+    el.me.setAttribute("aria-label", signedIn ? "You" : "Sign in");
+    meName.textContent = signedIn && user ? String(user.username || "").toLowerCase() : "Sign in";
     if (signedIn) {
       var face = src.querySelector(".chat-avatar-wrap") || src.firstElementChild;
-      // stable key (image + letters + decorations), so re-renders of the header don't re-clone (and re-load) it
       var key = face ? [].map.call(face.querySelectorAll("img"), function (i) { return i.getAttribute("src"); }).join("|") + "#" + face.textContent + "#" + face.className + "#" + face.querySelectorAll("*").length : "";
       if (key && meAv._key !== key) {
         meAv._key = key;
@@ -146,108 +226,173 @@
         [].forEach.call(c.querySelectorAll("[id]"), function (n) { n.removeAttribute("id"); });
         meAv.replaceChildren(c);
       }
-      window.MPPwDock && MPPwDock(); // hat, Sphere and other avatar powers on the pill's avatar
-    } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; }
+      window.MPPwDock && MPPwDock(); // hat, Sphere and other avatar powers on the nav avatar
+    } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; if (state === "me") state = "tabs"; }
     unread.hidden = !(unreadN > 0 && signedIn);
+    paintStatus();
     if (was !== signedIn) sync();
   }
   var avFrame = 0;
   function avSoon() { if (!avFrame) avFrame = requestAnimationFrame(function () { avFrame = 0; avatar(); }); }
 
-  /* ---------- states ---------- */
-  function setState(s, focus, quiet) {
-    if (state === s) return;
-    state = s;
-    dock.setAttribute("data-state", s);
-    open.setAttribute("aria-expanded", s === "tabs" ? "true" : "false");
-    html.classList.toggle("mpd-is-tabs", s === "tabs");
-    tabs.inert = s !== "tabs"; row.inert = s === "tabs"; bell.inert = s !== "tabs";
-    if (quiet) return; // a menu is taking the shape over; it sizes it
-    size();
-    if (s === "tabs") { sy = window.scrollY; requestAnimationFrame(function () { seat(true); }); }
-    if (focus) {
-      var t = s === "tabs" ? tabs.querySelector("button.on:not([hidden])") || tabBtns[0] : open;
-      t && t.focus({ preventScroll: true });
+  /* ---------- misery fm bubble ---------- */
+  function fmPaint() {
+    var F = window.MPFM, st = F && F.menuStatus ? F.menuStatus() : null, live = !!(st && st.live), sub = "Off air";
+    if (live) {
+      var c = F._calc && F._calc(), S2 = F.state && F.state(), n = (S2 && S2.listeners) || 0;
+      sub = c && c.tr ? (c.tr.title || "Live") + (c.tr.artist ? " · " + c.tr.artist : "") : "Live";
+      if (n && state !== "fm") sub = n + " listening";
+      if (n && state === "fm" && !(c && c.tr)) sub = n + " listening";
+    } else if (st && st.scheduled && st.text) sub = "Live in " + st.text;
+    if (fmSub.textContent !== sub) fmSub.textContent = sub;
+    fmTag.hidden = !live; fmLive.hidden = !live;
+    el.fm.classList.toggle("is-live", live);
+    el.fm.setAttribute("aria-label", "misery fm. " + sub);
+  }
+  setInterval(fmPaint, 1500);
+
+  /* the misery fm player grows out of the fm bubble (FLIP from the bubble's box into the sheet) */
+  function openFm() {
+    if (!window.MPFM || !MPFM.open) return;
+    var from = el.fm.getBoundingClientRect();
+    MPFM.open();
+    if (RM.matches) return;
+    var n = 0;
+    (function grow() {
+      var sh = document.querySelector(".fm-sheet");
+      if (!sh || !sh.animate) { if (++n < 20) requestAnimationFrame(grow); return; }
+      var to = sh.getBoundingClientRect();
+      if (!to.width) { if (++n < 20) requestAnimationFrame(grow); return; }
+      var sx = from.width / to.width, sy = from.height / to.height;
+      sh.getAnimations().forEach(function (a) { a.cancel(); });
+      sh.animate([
+        { transformOrigin: "0 0", transform: "translate(" + (from.left - to.left) + "px," + (from.top - to.top) + "px) scale(" + sx + "," + sy + ")", borderRadius: (from.height / 2 / sy) + "px", opacity: 0.6 },
+        { transformOrigin: "0 0", transform: "none", borderRadius: "30px 30px 0 0", opacity: 1 }
+      ], { duration: 520, easing: "cubic-bezier(.3,1.1,.4,1)" });
+      [].forEach.call(sh.children, function (c) { c.animate && c.animate([{ opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 360, delay: 140, easing: "ease-out", fill: "backwards" }); });
+    })();
+  }
+
+  /* ---------- status menu: grows out of the status button ---------- */
+  var menuIsOpen = false;
+  function openMenu() {
+    if (menuIsOpen || !signedIn) return;
+    menuIsOpen = true;
+    paintStatus();
+    var dr = dock.getBoundingClientRect(), br = sBtn.getBoundingClientRect();
+    var mw = 214, mh = rows.length * 44 + 12, right = dr.right - br.right - 2;
+    var x = dr.width - right - mw, y = -mh - 10;
+    menu.hidden = false;
+    Object.assign(menu.style, { left: x + "px", top: y + "px", width: mw + "px", height: mh + "px", borderRadius: "24px" });
+    menu.classList.add("is-open");
+    sBtn.setAttribute("aria-expanded", "true");
+    html.classList.add("nv-menu-open");
+    if (!RM.matches && menu.animate) {
+      var bx = br.left - dr.left, by = br.top - dr.top;
+      menu.animate([
+        { left: bx + "px", top: by + "px", width: br.width + "px", height: br.height + "px", borderRadius: br.height / 2 + "px" },
+        { left: x + "px", top: y + "px", width: mw + "px", height: mh + "px", borderRadius: "24px" }
+      ], { duration: 520, easing: "cubic-bezier(.3,1.2,.4,1)" });
+      menu.firstElementChild.animate([{ opacity: 0, filter: "blur(8px)", transform: "scale(.92)" }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 360, delay: 90, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" });
     }
+    (rows.filter(function (r) { return r.classList.contains("is-on"); })[0] || rows[0]).focus({ preventScroll: true });
   }
-  function expand(focus) { if (!menuOpen()) setState("tabs", focus); }
-  function collapse(focus) { setState("pill", focus); }
-
-  function go(v) {
-    var b = nav && nav.querySelector('button[data-view="' + v + '"]');
-    collapse();
-    if (!b) return void (window.MPNav && MPNav.show(v));
-    if (v === panelView() && v !== "product") { window.scrollTo({ top: v === "journal" ? document.documentElement.scrollHeight : 0, behavior: RM.matches ? "auto" : "smooth" }); return; }
-    b.click();
+  function closeMenu(fast, chosen) {
+    if (!menuIsOpen) return;
+    menuIsOpen = false;
+    sBtn.setAttribute("aria-expanded", "false");
+    html.classList.remove("nv-menu-open");
+    var done = function () { menu.hidden = true; menu.classList.remove("is-open"); if (chosen) pop(); };
+    if (fast || RM.matches || !menu.animate) return done();
+    var dr = dock.getBoundingClientRect(), br = sBtn.getBoundingClientRect();
+    menu.firstElementChild.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0, filter: "blur(6px)" }], { duration: 180, fill: "forwards" }).onfinish = function () { menu.firstElementChild.getAnimations().forEach(function (a) { a.cancel(); }); };
+    var a = menu.animate([
+      { left: menu.style.left, top: menu.style.top, width: menu.style.width, height: menu.style.height, borderRadius: "24px", opacity: 1 },
+      { left: br.left - dr.left + "px", top: br.top - dr.top + "px", width: br.width + "px", height: br.height + "px", borderRadius: br.height / 2 + "px", opacity: 0.4 }
+    ], { duration: 360, easing: "cubic-bezier(.4,0,.2,1)" });
+    a.onfinish = a.oncancel = done;
   }
+  function pop() {
+    var i = sBtn.querySelector(".nv-sico");
+    if (i.animate && !RM.matches) i.animate([{ transform: "scale(.4) rotate(-40deg)", opacity: 0 }, { transform: "scale(1.18)", opacity: 1, offset: 0.6 }, { transform: "none" }], { duration: 420, easing: "cubic-bezier(.3,1.3,.4,1)" });
+  }
+  rows.forEach(function (r) {
+    r.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var st = r.getAttribute("data-s");
+      window.haptic && haptic(10);
+      rows.forEach(function (x) { x.classList.toggle("is-on", x === r); });
+      setTimeout(function () { closeMenu(false, true); if (window.MPStatus) MPStatus.set(st); }, 120);
+    });
+  });
+  sBtn.addEventListener("click", function (e) { e.stopPropagation(); menuIsOpen ? closeMenu() : openMenu(); });
+  menu.addEventListener("keydown", function (e) {
+    var i = rows.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); rows[(i + (e.key === "ArrowDown" ? 1 : rows.length - 1)) % rows.length].focus(); }
+  });
 
-  /* ---------- input ---------- */
-  var swipe = null;
-  open.addEventListener("pointerdown", function (e) { swipe = { x: e.clientX, y: e.clientY, id: e.pointerId, t: Date.now() }; });
-  // swipe up morphs the pill open as the finger moves (not on release), like pulling a sheet
-  open.addEventListener("pointermove", function (e) {
-    if (!swipe || swipe.id !== e.pointerId || swipe.done) return;
-    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-    if (dy < -14 && Math.abs(dy) > Math.abs(dx) * 1.2) { swipe.done = true; window.haptic && haptic(8); expand(); }
+  /* ---------- taps ---------- */
+  tabBtns.forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      if (Date.now() < swallowClick) return;
+      go(b.getAttribute("data-view"));
+    });
   });
-  open.addEventListener("pointercancel", function () { swipe = null; });
-  open.addEventListener("pointerup", function (e) {
-    if (!swipe || swipe.id !== e.pointerId) return;
-    if (swipe.done) return; // already opened by the upward drag; the click that follows is swallowed
-    var dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-    if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy) * 1.4 && Date.now() - swipe.t < 700) {
-      // swipe the pill sideways to step between pages
-      var i = ORDER.indexOf(dotView(panelView())), j = i + (dx < 0 ? 1 : -1);
-      swipe.done = true;
-      if (j >= 0 && j < ORDER.length) { window.haptic && haptic(8); go(ORDER[j]); }
-      else if (open.animate && !RM.matches) dock.animate([{ transform: "translateX(-50%)" }, { transform: "translateX(calc(-50% + " + (dx < 0 ? -6 : 6) + "px))" }, { transform: "translateX(-50%)" }], { duration: 260, easing: EASE });
-    } else if (dy < -28 && Math.abs(dy) > Math.abs(dx)) { swipe.done = true; expand(); }
+  el.bag.addEventListener("click", function () { go("cart"); });
+  el.back.addEventListener("click", function () { var b = contentBack(); b && b.click(); });
+  el.home.addEventListener("click", function () { setState("tabs"); });
+  el.fm.addEventListener("click", function () {
+    if (state === "fm") { openFm(); return; }
+    setState("fm");
   });
-  open.addEventListener("click", function (e) {
-    if (swipe && swipe.done) { swipe = null; e.preventDefault(); return; }
-    swipe = null;
-    expand(e.detail === 0);
-  });
-  tabBtns.forEach(function (b) { b.addEventListener("click", function () { go(b.getAttribute("data-view")); }); });
-  back.addEventListener("click", function (e) { e.stopPropagation(); var b = contentBack(); collapse(); b && b.click(); });
-  bag.addEventListener("click", function (e) { e.stopPropagation(); go("cart"); });
-  live.addEventListener("click", function (e) {
-    e.stopPropagation();
-    collapse();
-    window.MPOnlineList && MPOnlineList();
-  });
-  me.addEventListener("click", function (e) {
-    e.stopPropagation();
-    if (!signedIn) { collapse(); return void go("journal"); }
+  el.me.addEventListener("click", function (e) {
+    if (e.target.closest(".nv-mini")) return;
+    if (!signedIn) return void go("journal");
+    if (state !== "me") return void setState("me");
     var src = srcMe();
-    setState("pill", false, true);
     if (src) src.click(); else if (window.MPOpenProfile) MPOpenProfile();
   });
-  // outside tap or Escape folds the tabs back into the pill; scrolling the page does too
-  document.addEventListener("pointerdown", function (e) { if (state === "tabs" && !dock.contains(e.target)) collapse(); }, true);
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && state === "tabs") { e.preventDefault(); collapse(true); } });
-  // only a scroll the person makes (finger / wheel), never the page settling or Chat pinning to the latest message
-  var sy = 0, gestureAt = 0;
-  ["touchmove", "wheel"].forEach(function (t) { window.addEventListener(t, function (e) { if (!dock.contains(e.target)) gestureAt = Date.now(); }, { passive: true }); });
-  window.addEventListener("scroll", function () { if (state === "tabs" && Date.now() - gestureAt < 400 && Math.abs(window.scrollY - sy) > 24) collapse(); }, { passive: true });
+  [el.fm, el.me].forEach(function (x) { x.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target === x) { e.preventDefault(); x.click(); } }); });
+  document.addEventListener("pointerdown", function (e) {
+    if (menuIsOpen && !menu.contains(e.target) && !sBtn.contains(e.target)) closeMenu();
+  }, true);
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (menuIsOpen) { e.preventDefault(); closeMenu(); sBtn.focus({ preventScroll: true }); }
+    else if (state !== "tabs" && !menuOpen()) setState("tabs");
+  });
+  scrim && scrim.addEventListener("click", function () { closeMenu(); });
 
-  /* ---------- typing: the dock steps aside so the keyboard and the message box get the room ---------- */
+  /* ---------- where it sits: above the message box in Chat, else the bottom edge ---------- */
+  function place() {
+    var b = null, v = panelView();
+    if (kbLift) b = kbLift;
+    else if (v === "journal") {
+      var ir = document.querySelector("#journal .chat-inputrow");
+      if (ir && ir.style.bottom) return;
+      if (ir && ir.offsetHeight) b = Math.round((parseFloat(getComputedStyle(ir).bottom) || 0) + ir.offsetHeight + 10);
+    }
+    var cur = parseFloat(html.style.getPropertyValue("--mpd-b")) || 0;
+    if (b) { if (Math.abs(b - cur) > 1) html.style.setProperty("--mpd-b", b + "px"); }
+    else if (cur) html.style.removeProperty("--mpd-b");
+    var dr = dock.getBoundingClientRect();
+    if (!menuOpen() && !away && dr.height) html.style.setProperty("--mpd-clear", Math.round(window.innerHeight - dr.top + 8) + "px");
+  }
+
+  /* ---------- typing: the bar steps aside ---------- */
   function isField(t) { return t && t.closest && t.closest('input:not([type=button]):not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select,[contenteditable]:not([contenteditable=false])'); }
   var awayT = 0;
   function setAway(on) {
     clearTimeout(awayT);
     if (on === away) return;
-    if (!on) place(); // settle the spot before it fades back in, so it never slides on return
+    if (!on) place();
     away = on;
-    // Chat: drop the dock's room under the messages in the same frame (before the keyboard resizes the view);
-    // when typing ends and you were at the latest message, stay pinned to it as the room comes back
     var inChat = panelView() === "journal", pinned = inChat && document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 140;
     html.classList.toggle("mpd-typing", on && inChat);
-    // (a plain scroll: MPChat.scrollToLatest would re-open chat's 5 s "pin on image load" window and yank later reads)
     if (!on && pinned) [40, 300].forEach(function (d) { setTimeout(function () { if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 220) window.scrollTo(0, document.documentElement.scrollHeight); }, d); });
     dock.classList.toggle("mpd-away", on);
     dock.inert = on && !menuOpen();
-    if (on) collapse();
+    if (on) closeMenu(true);
   }
   document.addEventListener("focusin", function (e) {
     if (!isField(e.target) || dock.contains(e.target) || e.target.closest(".mp-whop-sheet")) return;
@@ -260,8 +405,6 @@
     if (!isField(e.target)) return;
     awayT = setTimeout(function () { if (!isField(document.activeElement) || dock.contains(document.activeElement)) setAway(false); place(); }, 120);
   });
-
-  /* ---------- keyboard while a menu with a field is open: lift the shape above it ---------- */
   function vv() {
     var v = window.visualViewport;
     if (!v) return;
@@ -271,12 +414,11 @@
   }
   if (window.visualViewport) { visualViewport.addEventListener("resize", vv); visualViewport.addEventListener("scroll", vv); }
 
-  /* ---------- watch: page switches (#nav .on / panels), bag count, content Back, menus on the shape ---------- */
+  /* ---------- watch ---------- */
   if (nav && window.MutationObserver) new MutationObserver(soon).observe(nav, { subtree: true, attributes: true, childList: true, characterData: true, attributeFilter: ["class", "style", "hidden"] });
   var page = document.querySelector("main.page");
   if (page && window.MutationObserver) new MutationObserver(soon).observe(page, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
-  var chatRoot = document.getElementById("journal"), forumRoot = document.getElementById("forum");
-  [chatRoot, forumRoot].forEach(function (r) {
+  [document.getElementById("journal"), document.getElementById("forum")].forEach(function (r) {
     if (r && window.MutationObserver) new MutationObserver(function (ms) {
       for (var i = 0; i < ms.length; i++) { var t = ms[i].target; if (t === r || (t.closest && t.closest(".chat-head"))) return avSoon(); }
     }).observe(r, { subtree: true, childList: true, attributes: true, attributeFilter: ["src", "class", "style"] });
@@ -287,41 +429,37 @@
     if (m === wasMenu) return;
     wasMenu = m;
     html.classList.toggle("mpd-is-menu", m);
-    if (m) { setState("pill", false, true); if (away) { dock.classList.remove("mpd-away"); dock.inert = false; } }
-    else if (away) { dock.classList.add("mpd-away"); }
-    size();
+    if (m) { closeMenu(true); if (away) { dock.classList.remove("mpd-away"); dock.inert = false; } }
+    else { if (away) dock.classList.add("mpd-away"); layout(); }
     vv();
   }).observe(dock, { attributes: true, attributeFilter: ["class"] });
   document.addEventListener("mp-auth", function () { avSoon(); setTimeout(avSoon, 300); });
+  document.addEventListener("mp-status", function () { paintStatus(); });
   document.addEventListener("mp-unread", function (e) {
     unreadN = Math.max(0, Number(e.detail && e.detail.count) || 0);
     unread.hidden = !(unreadN > 0 && signedIn);
-    dock.classList.toggle("has-unread", unreadN > 0);
   });
-  window.addEventListener("resize", function () { size(); place(); });
-  window.addEventListener("orientationchange", function () { size(); place(); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { size(); });
-  if (window.ResizeObserver) {
-    new ResizeObserver(function () { if (state === "pill" && !menuOpen()) size(); }).observe(openIn);
-    var ir = null;
-    setInterval(function () { // the message box mounts/unmounts with sign-in; re-anchor when it changes size
-      var n = document.querySelector("#journal .chat-inputrow");
-      if (n !== ir) { ir = n; if (n) new ResizeObserver(function () { place(); }).observe(n); place(); }
-    }, 1000);
-  }
-  scrim && scrim.addEventListener("click", function () { collapse(); });
+  window.addEventListener("resize", function () { layout(); });
+  window.addEventListener("orientationchange", function () { layout(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { seat(true); });
+  var ir = null;
+  setInterval(function () {
+    var n = document.querySelector("#journal .chat-inputrow");
+    if (n !== ir) { ir = n; if (n && window.ResizeObserver) new ResizeObserver(function () { place(); }).observe(n); place(); }
+  }, 1000);
 
   window.MPDock = {
     el: dock,
     sync: sync,
-    expand: expand,
-    collapse: collapse,
-    online: function (n) { onlineN = Math.max(0, Number(n) || 0); liveNum.textContent = String(onlineN); live.setAttribute("aria-label", onlineN + " online. Show who"); soon(); },
+    expand: function () { setState("tabs"); },
+    collapse: function () { setState("tabs"); },
+    state: function (s) { if (s) setState(s); return state; },
+    online: function (n) { onlineN = Math.max(0, Number(n) || 0); soon(); },
     topInset: function () { var p = document.getElementById("mpd-probe"); return p ? p.getBoundingClientRect().height : 0; }
   };
-  tabs.inert = true; bell.inert = true;
   avatar();
   sync();
+  fmPaint();
   seat(true);
   requestAnimationFrame(function () { dock.classList.add("is-ready"); });
 })();
