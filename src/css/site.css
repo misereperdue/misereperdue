@@ -12714,7 +12714,7 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
    small spring overshoot and blur-crossfades the labels. Light glass in light mode, smoked glass in dark. */
 html.mp-bnav{--nv-glass:rgba(24,30,54,.36);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,.86,.28,1);--nv-ice:#a9d7f5}
 html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.42);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6);--nv-ice:#7eb8d9}
-html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .45s cubic-bezier(.32,.72,0,1),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
+html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .56s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
 #mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 :where(#mp-dock) button{border:0;background:none;padding:0;margin:0}
@@ -12798,14 +12798,13 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-me .mp-hat{z-index:6!important}
 .nv-me.nv-wide .nv-tx{right:50px}
 .is-signed-in .nv-me.nv-wide .nv-tx{right:88px}
-.nv-marks{position:absolute;left:0;bottom:-2px;z-index:7;display:flex;align-items:center;justify-content:center;gap:2px;width:var(--h,40px);height:13px;pointer-events:none}
-.nv-me.nv-glass .nv-marks{left:4px;bottom:2px;width:calc(var(--h,44px) - 8px)}
-#mp-dock .nv-marks>.nv-sbadge,#mp-dock .nv-marks>.chat-badge,#mp-dock .nv-marks>.chat-badge-kitty,#mp-dock .nv-marks>.chat-badge-mask,#mp-dock .nv-marks>.chat-verified{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;top:auto!important;width:13px!important;height:13px!important;min-width:13px!important;max-width:13px;flex:none;margin:0!important;padding:0;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 1.5px var(--bg)!important;font-size:9px;line-height:13px;overflow:hidden;filter:none!important;display:block;align-self:center}
-#mp-dock .nv-marks>.chat-badge-mask{width:auto!important;max-width:20px;height:13px!important;border-radius:6px}
-#mp-dock .nv-marks>.chat-badge-kitty img,#mp-dock .nv-marks>.chat-badge-mask img,#mp-dock .nv-marks>.chat-verified svg,#mp-dock .nv-marks>.chat-verified img{width:100%!important;height:100%!important;display:block;object-fit:contain}
-.nv-sbadge{transition:opacity .25s ease,transform .45s var(--nv-spring)}
+/* status dot (no badge on the pill, per dc): sits on the avatar circle's lower-right edge, centred on the 45 degree point */
+.nv-marks{position:absolute;left:0;top:0;z-index:7;width:var(--h,40px);height:var(--h,40px);pointer-events:none;transition:left .56s var(--nv-spring),top .56s var(--nv-spring),width .56s var(--nv-spring),height .56s var(--nv-spring)}
+.nv-me.nv-glass .nv-marks{left:4px;top:4px;width:calc(var(--h,44px) - 8px);height:calc(var(--h,44px) - 8px)}
+#mp-dock .nv-marks>.nv-sbadge{position:absolute!important;right:-1px;bottom:-1px;left:auto;top:auto;width:12px!important;height:12px!important;min-width:0;margin:0;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 2px var(--bg),0 1px 3px rgba(0,0,0,.25);transition:opacity .25s ease,transform .45s var(--nv-spring)}
+#mp-dock .nv-marks>.nv-sbadge.nv-s-invisible{background:var(--bg);box-shadow:0 0 0 2px var(--bg),inset 0 0 0 2.5px #8e8e93}
 .nv-sbadge[hidden]{display:none}
-.nv-me.nv-wide .nv-marks>.nv-sbadge{display:none!important}
+.nv-me.nv-wide .nv-marks>.nv-sbadge{opacity:0;transform:scale(.4)}
 .mpd-unread{display:none!important}
 .nv-mini{position:absolute!important;top:50%;width:34px;height:34px;margin-top:-17px!important;border-radius:50%;display:grid!important;place-items:center;opacity:0;filter:blur(6px);transform:scale(.6);pointer-events:none;transition:opacity .28s ease,filter .3s ease,transform .45s var(--nv-spring)}
 .nv-wide>.nv-mini:not([hidden]){opacity:1;filter:none;transform:none;pointer-events:auto;transition-delay:.1s}
@@ -13120,7 +13119,6 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 
 /* The Sphere orb is clipped to the avatar (per dc): same circle as the picture. */
 .nv-sbadge.nv-sico{position:absolute;width:14px;height:14px}
-#mp-dock .nv-marks>.nv-sbadge.nv-sico{position:static!important;width:13px!important;height:13px!important}
 /* status on a profile avatar */
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
@@ -13145,3 +13143,11 @@ html #mp-dock.nv-skin-old.nv-skin-old .nv-el.nv-glass{background-color:var(--lg-
 /* Chromium: while a shape morphs its lens map is stale, so plain glass shows until it is rebuilt */
 html.nv-lens-live #mp-dock.nv-morphing .nv-el{backdrop-filter:blur(4px) saturate(190%)!important}
 
+
+/* misery fm inside the dock sheet (MPProfiles.openSheet): its own header is the sheet's header now */
+.fm-dock{position:relative;display:flex;flex-direction:column;gap:10px;padding:2px 2px 6px;color:var(--ink)}
+.fm-dock>.fm-sh-hd{display:none!important}
+.fm-dock .fm-sh-body{flex:none;overflow:visible;padding:0}
+.fm-dock.fm-editing{min-height:430px}
+.mp-profile-bar-head .fm-hd-t{display:flex;align-items:center;justify-content:center;gap:8px}
+.mp-profile-bar-head .fm-hd-logo{margin-left:0}
