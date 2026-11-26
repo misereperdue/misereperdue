@@ -13114,6 +13114,17 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 
 /* Liquid Glass lens (js/nv-glass.js): labels keep a soft lift for legibility over bent content */
 .nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
+/* Old pill skin on the new nav (per dc): every bubble wears the old pill's moulded glass (the shared
+   .glassbar recipe: tint, top sheen, 20px blur, bright top rim, deep shadow) and the selected tab sits
+   in the old glass orb with its blue rim glow. Remove the nv-skin-old class to go back to Liquid Glass. */
+html #mp-dock.nv-skin-old.nv-skin-old .nv-el.nv-glass{background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur)!important;backdrop-filter:var(--lg-blur)!important;box-shadow:var(--lg-shadow)}
+#mp-dock.nv-skin-old .nv-glass::before{background:var(--lg-rim)}
+#mp-dock.nv-skin-old .nv-mirror{display:none}
+#mp-dock.nv-skin-old .nv-tab:not(.on){color:var(--lg-icon)!important}
+#mp-dock.nv-skin-old .nv-lens::before{background:var(--orb-fill);box-shadow:var(--orb-shadow)}
+#mp-dock.nv-skin-old .nv-in{background:var(--orb-chip);box-shadow:var(--orb-chip-shadow)}
+#mp-dock.nv-skin-old .nv-me .mpd-av{background:var(--orb-chip)}
+#mp-dock.nv-skin-old .nv-mini:not(.nv-sbtn){background:var(--orb-chip);box-shadow:var(--orb-chip-shadow)}
 /* Safari/iPhone: the bent copy of what's under the bar, clipped to the glass shapes, beneath them */
 .nv-mirror{position:absolute;left:0;top:0;z-index:0;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .2s ease}
 .nv-mirror-room{display:grid;overflow:hidden}
