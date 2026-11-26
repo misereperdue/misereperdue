@@ -31,12 +31,12 @@ const CAT=[{id:'bubble',name:'Bubble',price:120,icon:'○',desc:'Tint your chat 
   assert.deepEqual(typo,copy,'INFO matches footer copyright type');
   await info.evaluate(e=>e.click());
   await p.waitForURL('**/info');
-  assert.equal(await p.title(),'Misère Perdue · Info');
+  assert.equal(await p.title(),'Info & Terms | Misère Perdue (Misery)');
   assert.equal(await p.locator('main img, main picture, main svg, main video, main canvas').count(),0,'text-only page');
   assert.match(await p.locator('h1').innerText(),/^Info$/);
-  assert.match(await p.locator('.updated').innerText(),/Last updated Nov 12, 2026/);
+  assert.match(await p.locator('.updated').innerText(),/Last updated [A-Z][a-z]{2} \d{1,2}, 20\d\d/);
   const body=(await p.locator('main').innerText()).toLowerCase();
-  for(const needle of ['all sales are final','no control','dc@misereperdue.com','ontario','stars','powers','vip','misery fm','13','privacy policy','refund policy']){
+  for(const needle of ['all sales are final','no control','dc@misereperdue.com','ontario','stars','powers','vip','misery fm','13','privacy policy','we do not offer refunds']){
     assert(body.includes(needle), 'missing '+needle);
   }
   assert(!body.includes('not legal advice'));

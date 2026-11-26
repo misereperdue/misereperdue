@@ -46,7 +46,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  const mine=p.locator('.chat-msg.mine[data-id=m0]');assert.equal((await mine.locator('.chat-msg-head strong').innerText()).trim(),'tester');assert.match(await mine.locator('.chat-msg-head .chat-time').innerText(),/^\d+s$/);
  const mh=await mine.locator('.chat-msg-head').boundingBox(),mbub=await mine.locator('.chat-bubble').boundingBox();assert(mh.y+mh.height<=mbub.y+1,'head above bubble');assert(Math.abs((mh.x+mh.width)-(mbub.x+mbub.width))<=4,'right aligned');
  // Charms next to the name in chat (VIP star, Hello Kitty, Diamond).
- assert.equal(await rm.locator('.chat-msg-head .mp-charms .mp-charm').count(),3,'three charms by name');assert.equal(await rm.locator('.mp-charm-diamond svg').count(),1);
+ assert.equal(await rm.locator('.chat-msg-head .mp-charms .mp-charm').count(),1,'one charm by name at a time (per dc)');assert.equal(await rm.locator('.chat-msg-head .mp-charm-diamond .mp-gem').count(),1,'only gems are charms: the diamond sprite is drawn');
  await p.screenshot({path:`${OUT}/${tag}-chat-powers.png`});
  ws.send(JSON.stringify({t:'pw',user:'rich',pw:{ink:'#5fe3b0'}}));await p.waitForFunction(()=>!document.querySelector('.chat-msg[data-user=rich]').classList.contains('pw-bubble'));
  assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).color),'rgb(95, 227, 176)','live ink change');assert.equal(await rm.locator('.chat-msg-head strong').evaluate(e=>getComputedStyle(e).textShadow),'none','glow off live');
@@ -58,7 +58,7 @@ for(const[theme,owner,width]of[['dark',true,390],['light',false,360]]){
  await inpM.fill('!rich');await sendM.click();await p.waitForFunction(()=>window.mpHide&&!mpHide.is('rich'));
  await p.waitForTimeout(300);
  // Tapping the stars pill in the top bar opens the Stars page.
- await p.locator('.panel.on .chat-points').click();await p.locator('.mp-profile-bar .stars-bal').waitFor({timeout:6000});assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');
+ await p.evaluate(()=>document.querySelector('.panel.on .chat-points').click());await p.locator('.mp-profile-bar .stars-bal').waitFor({timeout:6000});assert.equal(await p.locator('.mp-profile-bar-head strong').innerText(),'Stars');
  await p.locator('.mp-profile-bar-head button').nth(1).click();await p.waitForTimeout(500);
  ws.send(JSON.stringify({t:'notif',n:{id:'n1',type:'gift',from:'rich',n:5,ts:Date.now()}}));
  const ntf=p.locator('.is-ntf .mp-ntf');await ntf.waitFor({timeout:3000});

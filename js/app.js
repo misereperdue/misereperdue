@@ -515,7 +515,6 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
 
 (function(){
   var badges = {
-    shopify: "images/pay-shopify.png?v=1",
     paypal: "images/pay-paypal.png?v=1",
     visa: "images/pay-visa.png?v=1"
   };

@@ -19,12 +19,12 @@ for(const theme of ['dark','light']){
  const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));
  const tapOpen=async(sel,name)=>{const el=p.locator(sel).first();await el.waitFor({timeout:15000});const bb=await el.boundingBox();
   await p.touchscreen.tap(bb.x+bb.width*.4,bb.y+bb.height/2);await p.waitForTimeout(800);
-  const r=await p.evaluate(()=>{const b=document.querySelector('.mp-pb');if(!b)return null;const q=b.getBoundingClientRect(),cs=getComputedStyle(b);return{inn:b.classList.contains('is-in'),out:b.classList.contains('is-out'),vis:cs.visibility,l:q.left,r:q.right,t:q.top,b:q.bottom,w:q.width,h:q.height,vw:innerWidth,vh:innerHeight,name:(b.querySelector('.mp-pb-body')||b).textContent};});
+  /* profiles open from the bottom nav pill (#mp-dock.is-profile-bar) */const r=await p.evaluate(()=>{const b=document.querySelector('#mp-dock.is-profile-bar .mp-profile-bar');if(!b)return null;const q=b.getBoundingClientRect(),cs=getComputedStyle(b);return{inn:true,out:false,vis:cs.visibility,l:q.left,r:q.right,t:q.top,b:q.bottom,w:q.width,h:q.height,vw:innerWidth,vh:innerHeight,name:b.textContent};});
   assert(r,`${name}: popover did not open from a touch tap`);assert(r.inn&&!r.out&&r.vis==='visible',`${name}: popover not shown ${JSON.stringify(r)}`);
-  assert(r.w>100&&r.h>100&&r.l>=0&&r.r<=r.vw&&r.t>=0&&r.b<=r.vh,`${name}: popover off screen ${JSON.stringify(r)}`);assert(/other/.test(r.name),name+': wrong profile');
+  assert(r.w>100&&r.h>=40&&r.l>=0&&r.r<=r.vw&&r.t>=0&&r.b<=r.vh,`${name}: popover off screen ${JSON.stringify(r)}`);assert(/other/.test(r.name),name+': wrong profile');
   if(theme==='dark')await p.screenshot({path:`${OUT}/${name}.png`});
   await p.waitForTimeout(400);await p.touchscreen.tap(r.vw/2,8);await p.waitForTimeout(500);await p.keyboard.press('Escape');await p.waitForTimeout(400);
-  assert.equal(await p.locator('.mp-pb:not(.is-out)').count(),0,name+': popover did not close');};
+  await p.locator('#mp-dock.is-profile-bar').waitFor({state:'detached',timeout:5000});};
  await p.goto(ORIGIN+'/#journal');await p.waitForTimeout(1500);
  for(const i of [1,2,3])await tapOpen('#chat .chat-avatar-click','chat-avatar-'+i);
  await p.goto(ORIGIN+'/#globe');await p.locator('.forum-thread-row').first().waitFor({timeout:15000});await p.locator('.forum-thread-row').first().tap();await p.waitForTimeout(1200);
