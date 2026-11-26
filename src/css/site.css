@@ -12732,11 +12732,20 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-tabs{display:flex;padding:4px;gap:0;touch-action:none}
 .nv-tabs .nv-tab{touch-action:none}
 .nv-tab{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;border-radius:999px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--nv-ink)!important;transition:color .3s ease}
-.nv-tab span{font-size:10.5px;font-weight:600;letter-spacing:.01em;line-height:1.1;white-space:nowrap}
-.nv-tab .nv-ic{width:23px;height:23px;transition:transform .45s var(--nv-spring)}
-.nv-tab.on{color:var(--nv-blue)!important}
+.nv-tab .nv-ic{width:26px;height:26px;transition:transform .45s var(--nv-spring)}
+/* selected: a soft ice-to-sky gradient (dark) / ink-to-indigo gradient (light) instead of system blue */
+.nv-tab.on{color:#bfe0f8!important}
+.nv-tab.on .nv-ic,.nv-tab.on .nv-ic *{stroke:url(#nv-sel-d)}
+.nv-tab.on .nv-ic{filter:drop-shadow(0 0 6px rgba(169,215,245,.35))}
+html[data-theme="light"] .nv-tab.on,[data-theme="light"] .nv-tab.on{color:#1a2558!important}
+html[data-theme="light"] .nv-tab.on .nv-ic,html[data-theme="light"] .nv-tab.on .nv-ic *,[data-theme="light"] .nv-tab.on .nv-ic,[data-theme="light"] .nv-tab.on .nv-ic *{stroke:url(#nv-sel-l)}
+html[data-theme="light"] .nv-tab.on .nv-ic,[data-theme="light"] .nv-tab.on .nv-ic{filter:none}
+.nv-home-ic{color:#bfe0f8}
+.nv-home-ic svg,.nv-home-ic svg *{stroke:url(#nv-sel-d)}
+html[data-theme="light"] .nv-home-ic,[data-theme="light"] .nv-home-ic{color:#1a2558}
+html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic svg *,[data-theme="light"] .nv-home-ic svg,[data-theme="light"] .nv-home-ic svg *{stroke:url(#nv-sel-l)}
 .nv-tab:active .nv-ic{transform:scale(.9)}
-.nv-online{position:absolute;top:5px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#30d158;color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;font-style:normal}
+.nv-online{position:absolute;top:7px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#30d158;color:#fff;font-size:9.5px;font-weight:800;line-height:15px;text-align:center;font-style:normal}
 .nv-online[hidden]{display:none}
 .nv-lens{position:absolute;left:0;top:0;width:80px;height:54px;border-radius:999px;pointer-events:none;z-index:0;--l:0;will-change:transform,width,height}
 /* at rest: the tinted capsule; lifted (--l 0..1, set every frame): clear glass with a bright rim and chromatic edge */
@@ -12752,7 +12761,7 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-back,.nv-home{display:grid!important;place-items:center}
 /* the bag is the fourth tab of the main bubble while it has items */
 .nv-tab[hidden]{display:none!important}
-.nv-tab-bag .nv-count{top:3px;right:auto;left:calc(50% + 4px)}
+.nv-tab-bag .nv-count{top:7px;right:auto;left:calc(50% + 5px)}
 /* while the glass travels the new tab keeps its old colour, then takes the accent as the lens sinks in (reference) */
 .nv-tabs.is-gliding .nv-tab{transition:color .25s ease .12s}
 .nv-tabs.is-gliding .nv-tab:not(.on){transition:color .2s ease}
@@ -12782,9 +12791,9 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-me .mp-hat{z-index:6!important}
 .nv-me.nv-wide .nv-tx{right:58px}
 .is-signed-in .nv-me.nv-wide .nv-tx{right:100px}
-.nv-sbadge{position:absolute;right:-1px;bottom:-1px;z-index:7;width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 2.5px var(--bg);transition:opacity .25s ease,transform .45s var(--nv-spring)}
+.nv-sbadge{position:absolute;right:0;bottom:0;z-index:7;width:14px;height:14px;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 2px var(--bg);transition:opacity .25s ease,transform .45s var(--nv-spring)}
 .nv-sbadge[hidden],.nv-wide>.nv-sbadge{opacity:0;transform:scale(.4)}
-.mpd-unread{position:absolute;top:-1px;right:-1px;z-index:7;width:12px;height:12px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px var(--bg)}
+.mpd-unread{position:absolute;top:0;right:0;z-index:7;width:14px;height:14px;box-sizing:border-box;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px var(--bg)}
 .mpd-unread[hidden],.nv-wide>.mpd-unread{display:none}
 .nv-mini{position:absolute!important;top:50%;width:38px;height:38px;margin-top:-19px!important;border-radius:50%;display:grid!important;place-items:center;opacity:0;filter:blur(6px);transform:scale(.6);pointer-events:none;transition:opacity .28s ease,filter .3s ease,transform .45s var(--nv-spring)}
 .nv-wide>.nv-mini:not([hidden]){opacity:1;filter:none;transform:none;pointer-events:auto;transition-delay:.1s}
@@ -12825,7 +12834,6 @@ html.mp-bnav #mp-dock.is-profile-bar{box-sizing:border-box;display:block!importa
 html.mp-bnav #mp-dock.is-profile-expanded{border-radius:28px}
 html.mp-bnav #mp-dock.is-profile-bar>.nv-el,html.mp-bnav #mp-dock.is-profile-bar>.nv-smenu{opacity:0!important;filter:blur(8px)!important}
 @media (prefers-reduced-motion:reduce){.nv-el,.nv-in,.nv-tx,.nv-mini,.nv-sbadge{transition-duration:.01s!important}.nv-live{animation:none}}
-@media (max-width:360px){.nv-tab span{font-size:9.5px}}
 
 /* ---- the page around it: a slim sky band at the top, room at the bottom ---- */
 /* The sky is a backdrop, not a header (per dc): it sits behind the page (positioned z 0, painted before
@@ -13099,13 +13107,13 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 /* The pill's avatar wears avatar powers (hat, Sphere, Halo): the hat may rise above the pill */
 
 /* The Sphere orb is clipped to the avatar (per dc): same circle as the picture. */
-.nv-sbadge.nv-sico{position:absolute}
+.nv-sbadge.nv-sico{position:absolute;width:14px;height:14px}
 /* status on a profile avatar */
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
 
 /* Liquid Glass lens (js/nv-glass.js): labels keep a soft lift for legibility over bent content */
-.nv-tab span,.nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
+.nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
 /* Safari/iPhone: the bent copy of what's under the bar, clipped to the glass shapes, beneath them */
 .nv-mirror{position:absolute;left:0;top:0;z-index:0;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .2s ease}
 .nv-mirror-room{display:grid;overflow:hidden}
