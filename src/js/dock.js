@@ -13,7 +13,7 @@
   var html = document.documentElement, nav = document.getElementById("nav");
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   var q = function (s) { return dock.querySelector(s); };
-  var el = { back: q(".nv-back"), tabs: q(".nv-tabs"), bag: q(".nv-bag"), rg: q(".nv-rg"), home: q(".nv-home"), fm: q(".nv-fm"), me: q(".nv-me") };
+  var el = { back: q(".nv-back"), tabs: q(".nv-tabs"), bag: q(".nv-tab-bag"), rg: q(".nv-rg"), home: q(".nv-home"), fm: q(".nv-fm"), me: q(".nv-me") };
   var lens = q(".nv-lens"), tabBtns = [].slice.call(dock.querySelectorAll(".nv-tab"));
   var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live");
   var meAv = q(".mpd-av"), meName = q(".nv-name"), meSt = q(".nv-st"), sBadge = q(".nv-sbadge"), sBtn = q(".nv-sbtn"), bell = q(".nv-bell"), unread = q(".mpd-unread");
@@ -25,7 +25,7 @@
   var H = 62, S = 56, G = 8, P = 6, C = 50;
 
   function panelView() { var p = document.querySelector("main.page > .panel.on"); return p ? p.id : "shop"; }
-  function tabOf(v) { return v === "product" || v === "cart" ? "shop" : v; }
+  function tabOf(v) { return v === "product" ? "shop" : v; }
   function menuOpen() { return dock.classList.contains("is-profile-bar"); }
   function cartCount() { try { return window.MP && MP.cartCount ? MP.cartCount() : 0; } catch (e) { return 0; } }
   function contentBack() {
@@ -50,20 +50,19 @@
     if (menuOpen()) return;
     var W = Math.min(window.innerWidth - 20, 430), y = (H - S) / 2;
     dock.style.width = W + "px"; dock.style.height = H + "px";
-    var hasBack = !el.back.hidden, hasBag = !el.bag.hidden, rgW = P + C + P + C + P;
+    var hasBack = !el.back.hidden, rgW = P + C + P + C + P;
     dock.setAttribute("data-state", state);
     if (state === "tabs") {
       var x = 0;
       box(el.back, 0, 0, H, H, null, hasBack); if (hasBack) x = H + G;
       var right = W - rgW - G;
-      if (hasBag) { box(el.bag, right - H, 0, H, H, null, true); right -= H + G; } else box(el.bag, right - H, 0, H, H, null, false);
       box(el.tabs, x, 0, right - x, H, null, true);
       box(el.rg, W - rgW, 0, rgW, H, null, true);
       box(el.fm, W - rgW + P, P, C, C, null, true);
       box(el.me, W - rgW + P + C + P, P, C, C, null, true);
       box(el.home, x, y, S, S, null, false);
     } else {
-      box(el.back, 0, y, S, S, null, false); box(el.bag, W / 2 - S / 2, y, S, S, null, false);
+      box(el.back, 0, y, S, S, null, false);
       box(el.home, 0, y, S, S, null, true);
       box(el.tabs, 0, y, S, S, null, false);
       if (state === "fm") {
@@ -94,26 +93,47 @@
     lens.style.transform = "translateX(" + seatX(on) + "px)";
     if (instant) { void lens.offsetWidth; lens.style.transition = ""; }
   }
-  /* moving between tabs the lens lifts into clear glass, stretches with the motion, then settles (reference) */
+  /* Liquid Glass tab switch (reference frames): the selected capsule lifts off the bar as clear magnifying
+     glass, taller than the bar, swells and stretches as it travels, overshoots a hair, then sinks back into the
+     tinted capsule, and only then does the new tab take the accent colour. Interrupting restarts from where it is. */
+  var glideAnim = null;
+  function lensX() {
+    var m = getComputedStyle(lens).transform;
+    if (m && m !== "none") { var v = m.match(/-?[\d.e]+/g); if (v && v.length >= 6) return parseFloat(v[4]); }
+    return null;
+  }
   function glide(from, to) {
     if (RM.matches || !lens.animate || from == null || Math.abs(from - to) < 2) return seat();
-    var w = lens.offsetWidth, dir = to > from ? 1 : -1;
+    if (glideAnim) { var cx = lensX(); glideAnim.cancel(); if (cx != null) from = cx; }
+    var d = to - from, dir = d > 0 ? 1 : -1, far = Math.min(1, Math.abs(d) / 160);
+    var sx = 1.42 + 0.1 * far, sy = 1.24;
     lens.classList.add("is-lens");
+    el.tabs.classList.add("is-gliding");
     lens.style.transition = "none";
     lens.style.transform = "translateX(" + to + "px)";
-    var a = lens.animate([
-      { transform: "translateX(" + from + "px) scale(1,1)" },
-      { transform: "translateX(" + (from + (to - from) * 0.55) + "px) scale(" + (1.22 + 0.06 * dir * 0) + ",1.28)", offset: 0.45 },
-      { transform: "translateX(" + (to + dir * 3) + "px) scale(1.06,1.08)", offset: 0.78 },
+    var a = glideAnim = lens.animate([
+      { transform: "translateX(" + from + "px) scale(1,1)", easing: "cubic-bezier(.3,0,.2,1)" },
+      { transform: "translateX(" + (from + d * 0.06) + "px) scale(1.3,1.2)", offset: 0.16, easing: "cubic-bezier(.45,0,.25,1)" },
+      { transform: "translateX(" + (from + d * 0.55) + "px) scale(" + sx + "," + sy + ")", offset: 0.46, easing: "cubic-bezier(.2,.6,.3,1)" },
+      { transform: "translateX(" + (to + dir * 4) + "px) scale(1.34,1.2)", offset: 0.7, easing: "cubic-bezier(.4,0,.3,1)" },
+      { transform: "translateX(" + to + "px) scale(1.2,1.12)", offset: 0.8, easing: "cubic-bezier(.3,0,.2,1)" },
+      { transform: "translateX(" + (to - dir * 0.5) + "px) scale(.97,.96)", offset: 0.92 },
       { transform: "translateX(" + to + "px) scale(1,1)" }
-    ], { duration: 560, easing: "cubic-bezier(.3,.7,.2,1)" });
-    a.onfinish = a.oncancel = function () { lens.classList.remove("is-lens"); lens.style.transition = ""; };
-    void w;
+    ], { duration: 760 });
+    // the clear glass goes back to the tinted capsule as it sinks in
+    var t = setTimeout(function () { lens.classList.remove("is-lens"); }, 600);
+    a.onfinish = a.oncancel = function () {
+      clearTimeout(t);
+      if (glideAnim !== a) return;
+      glideAnim = null; lens.classList.remove("is-lens"); el.tabs.classList.remove("is-gliding"); lens.style.transition = "";
+    };
   }
   var drag = null;
   el.tabs.addEventListener("pointerdown", function (e) {
     if (state !== "tabs" || e.button > 0) return;
-    drag = { id: e.pointerId, x: e.clientX, x0: parseFloat((lens.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0, moved: false };
+    var x0 = glideAnim ? lensX() : null;
+    if (glideAnim) { glideAnim.cancel(); }
+    drag = { id: e.pointerId, x: e.clientX, x0: x0 != null ? x0 : (parseFloat((lens.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0), moved: false };
   });
   el.tabs.addEventListener("pointermove", function (e) {
     if (!drag || drag.id !== e.pointerId) return;
@@ -121,7 +141,7 @@
     if (!drag.moved && Math.abs(dx) < 8) return;
     if (!drag.moved) { drag.moved = true; lens.classList.add("is-lens", "is-drag"); try { el.tabs.setPointerCapture(e.pointerId); } catch (_) {} }
     var max = el.tabs.clientWidth - lens.offsetWidth - 4, x = Math.max(4, Math.min(max, drag.x0 + dx));
-    lens.style.transition = "none"; lens.style.transform = "translateX(" + x + "px) scale(1.18,1.22)";
+    lens.style.transition = "none"; lens.style.transform = "translateX(" + x + "px) scale(1.42,1.22)";
     drag.cur = x;
   });
   function endDrag(e) {
@@ -131,18 +151,18 @@
     d.swallow = true; swallowClick = Date.now() + 350;
     lens.classList.remove("is-drag");
     var mid = d.cur + lens.offsetWidth / 2, best = tabBtns[0], bd = 1e9;
-    tabBtns.forEach(function (b) { var c = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(c - mid); if (dd < bd) { bd = dd; best = b; } });
+    tabBtns.forEach(function (b) { if (b.hidden) return; var c = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(c - mid); if (dd < bd) { bd = dd; best = b; } });
     var x = seatX(best);
     if (lens.animate && !RM.matches) {
-      var a = lens.animate([{ transform: "translateX(" + d.cur + "px) scale(1.18,1.22)" }, { transform: "translateX(" + x + "px) scale(1,1)" }], { duration: 380, easing: "cubic-bezier(.3,1.35,.4,1)" });
+      var a = lens.animate([{ transform: "translateX(" + d.cur + "px) scale(1.42,1.22)" }, { transform: "translateX(" + x + "px) scale(1.2,1.12)", offset: 0.45 }, { transform: "translateX(" + x + "px) scale(.97,.96)", offset: 0.78 }, { transform: "translateX(" + x + "px) scale(1,1)" }], { duration: 460, easing: "cubic-bezier(.3,0,.2,1)" });
       a.onfinish = a.oncancel = function () { lens.classList.remove("is-lens"); lens.style.transition = ""; };
     } else lens.classList.remove("is-lens");
     lens.style.transform = "translateX(" + x + "px)";
-    if (!best.classList.contains("on")) { pendingFrom = null; go(best.getAttribute("data-view")); }
+    if (!best.classList.contains("on")) { noGlide = Date.now() + 600; go(best.getAttribute("data-view")); }
   }
   el.tabs.addEventListener("pointerup", endDrag);
   el.tabs.addEventListener("pointercancel", endDrag);
-  var swallowClick = 0, pendingFrom = null;
+  var swallowClick = 0, noGlide = 0; // a drag already carried the lens there
 
   /* ---------- page state ---------- */
   function sync() {
@@ -152,7 +172,7 @@
     view = v;
     html.setAttribute("data-mpd-view", v);
     tabBtns.forEach(function (b) {
-      var on = b.getAttribute("data-view") === tv && v !== "cart";
+      var on = b.getAttribute("data-view") === tv;
       b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
       if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
@@ -162,7 +182,6 @@
     el.home.setAttribute("aria-label", (cur.textContent || "").trim() + ". Show pages");
     var n = cartCount();
     el.bag.hidden = !(n > 0);
-    el.bag.classList.toggle("on", v === "cart");
     bagCount.textContent = n > 99 ? "99+" : String(n);
     el.bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
     el.back.hidden = !contentBack();
@@ -170,7 +189,7 @@
     onlineB.textContent = onlineN > 99 ? "99+" : String(onlineN);
     if (changed && state !== "tabs") state = "tabs";
     layout();
-    if (changed && cur !== prev && fromX != null && state === "tabs") glide(fromX, seatX(cur));
+    if (changed && cur !== prev && fromX != null && state === "tabs" && Date.now() > noGlide) glide(fromX, seatX(cur));
   }
   var syncFrame = 0;
   function soon() { if (!syncFrame) syncFrame = requestAnimationFrame(function () { syncFrame = 0; sync(); }); }
@@ -338,7 +357,6 @@
       go(b.getAttribute("data-view"));
     });
   });
-  el.bag.addEventListener("click", function () { go("cart"); });
   el.back.addEventListener("click", function () { var b = contentBack(); b && b.click(); });
   el.home.addEventListener("click", function () { setState("tabs"); });
   el.fm.addEventListener("click", function () {

@@ -15,7 +15,7 @@
   var ua = navigator.userAgent;
   var CHROMIUM = /Chrome\/\d|Chromium\/\d/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) && !/iP(hone|ad|od)/.test(ua) && !/[?&]glass=mirror/.test(location.search);
   var NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";
-  var SHAPES = [".nv-tabs", ".nv-rg", ".nv-home", ".nv-fm", ".nv-me", ".nv-bag", ".nv-back"];
+  var SHAPES = [".nv-tabs", ".nv-rg", ".nv-home", ".nv-fm", ".nv-me", ".nv-back"];
 
   /* ---------- lens displacement map for a rounded rect ---------- */
   function lensMap(w, h, r, bezel, zoom) {
@@ -89,7 +89,7 @@
     html.classList.add("nv-lens-live");
     var sized = new WeakMap();
     var refresh = function () {
-      var all = SHAPES.map(function (s) { return dock.querySelector(s); }).concat([dock.querySelector(".nv-lens")]);
+      var all = SHAPES.map(function (s) { return dock.querySelector(s); });
       all.forEach(function (el, n) {
         if (!el) return;
         var isLens = el.classList.contains("nv-lens");
