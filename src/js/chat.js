@@ -2835,9 +2835,9 @@
           e && e.caps && e.caps.poll && (window.mpPollOn = !0);
           e && e.badges && (T = Object.assign(Object.create(null), e.badges));
           e && e.pw && mpPwMerge(e.pw, !0);
-          var list = (e && e.messages) || [];
+          var ok = !!(e && Array.isArray(e.messages)), list = ok ? e.messages : [];
           mpIngestFull(list);
-          mpChatCacheSave(list, e && e.pw);
+          if (ok) mpChatCacheSave(list, e.pw); // a malformed reply must not wipe the offline copy
         })
         .catch(function () {
           mpChatSkeletonOff();
@@ -2939,7 +2939,8 @@
       for (var i = 0; i < list.length; i++) {
         var m = list[i];
         if (!(m && m.id) || u[m.id] || De[m.id]) continue;
-        if (m.ts && m.ts < oldest) { older.push(m); De[m.id] = m; continue; }
+        // older than everything on screen goes to the lazy history; with nothing on screen yet, draw it
+        if (m.ts && oldest !== Infinity && m.ts < oldest) { older.push(m); De[m.id] = m; continue; }
         Fe(m);
       }
       if (older.length) { var have = {}; Ue.forEach(function (q) { q && q.id && (have[q.id] = 1); }); Ue = Ue.concat(older.filter(function (q) { return !have[q.id]; })).sort(function (x, y) { return (x.ts || 0) - (y.ts || 0); }); }

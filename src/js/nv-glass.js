@@ -12,6 +12,9 @@
   var html = document.documentElement;
   var reduce = window.matchMedia && (matchMedia("(prefers-reduced-transparency: reduce)").matches);
   if (reduce) return;
+  // The old pill skin (nv-skin-old) is plain frosted glass: none of the lens work is shown, so do none of it
+  // (in Safari the mirror re-cloned page content on every scroll for nothing).
+  if (dock.classList.contains("nv-skin-old")) return;
   var ua = navigator.userAgent;
   var CHROMIUM = /Chrome\/\d|Chromium\/\d/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) && !/iP(hone|ad|od)/.test(ua) && !/[?&]glass=mirror/.test(location.search);
   var NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";

@@ -104,7 +104,6 @@
   lensClip.appendChild(lensRow); lens.appendChild(lensClip);
   var L = { followUntil: 0, target: null, x: 0, v: 0, tx: 0, w: 0, wv: 0, tw: 0, l: 0, lv: 0, tl: 0, y: 4, h: 54, hold: false, drag: null, raf: 0, t: 0, lifted: false, holed: false };
   function curTab() { return tabBtns.filter(function (b) { return b.classList.contains("on") && !b.hidden; })[0] || null; }
-  function seatX(t) { return t.offsetLeft; }
   function aim(t) { if (!t) return; L.target = t; L.tx = t.offsetLeft; L.tw = t.offsetWidth; L.y = t.offsetTop; L.h = t.offsetHeight; }
   function cloneRow() {
     var html = "";

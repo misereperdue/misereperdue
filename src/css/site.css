@@ -12723,6 +12723,10 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-el{position:absolute;box-sizing:border-box;display:block;overflow:visible;transition:left .56s var(--nv-spring),top .56s var(--nv-spring),width .56s var(--nv-spring),height .56s var(--nv-spring),border-radius .56s var(--nv-spring),opacity .28s ease,filter .3s ease,transform .56s var(--nv-spring),background-color .3s ease,box-shadow .3s ease}
 #mp-dock:not(.is-ready) .nv-el{transition:none!important}
 .nv-el.nv-off{opacity:0;filter:blur(10px);transform:scale(.8);pointer-events:none}
+/* WebKit crashes when an element animates filter while it also has backdrop-filter (opening a Globe thread
+   faded the glass back button in with blur and took the page down). Glass shapes fade and scale only. */
+.nv-el.nv-glass{transition-property:left,top,width,height,border-radius,opacity,transform,background-color,box-shadow}
+.nv-el.nv-glass.nv-off{filter:none}
 .nv-el[hidden]{display:block!important}
 /* liquid glass: frosted fill, bright specular rim (brightest top-left), soft lift */
 .nv-glass{background:var(--nv-glass);-webkit-backdrop-filter:blur(4px) saturate(190%) brightness(1.03);backdrop-filter:blur(4px) saturate(190%) brightness(1.03);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim),inset 0 -1px 0 var(--nv-rim2),inset 0 0 0 .5px var(--nv-rim2)}
@@ -12844,6 +12848,7 @@ html.mp-bnav.nv-menu-open #mpd-scrim{opacity:.35}
 html.mp-bnav #mp-dock.is-profile-bar{box-sizing:border-box;display:block!important;padding:0!important;overflow:hidden!important;isolation:isolate;z-index:60;border-radius:30px;background:var(--nv-glass);-webkit-backdrop-filter:blur(28px) saturate(160%);backdrop-filter:blur(28px) saturate(160%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim)}
 html.mp-bnav #mp-dock.is-profile-expanded{border-radius:28px}
 html.mp-bnav #mp-dock.is-profile-bar>.nv-el,html.mp-bnav #mp-dock.is-profile-bar>.nv-smenu{opacity:0!important;filter:blur(8px)!important}
+html.mp-bnav #mp-dock.is-profile-bar>.nv-el.nv-glass,html.mp-bnav #mp-dock.is-profile-bar>.nv-smenu{filter:none!important}
 @media (prefers-reduced-motion:reduce){.nv-el,.nv-in,.nv-tx,.nv-mini,.nv-sbadge{transition-duration:.01s!important}}
 
 /* ---- the page around it: a slim sky band at the top, room at the bottom ---- */
@@ -13127,10 +13132,9 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 .nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
 /* Old pill skin on the new nav (per dc): every bubble wears the old pill's moulded glass (the shared
    .glassbar recipe: tint, top sheen, 20px blur, bright top rim, deep shadow) and the selected tab sits
-   in the old glass orb with its blue rim glow. Remove the nv-skin-old class to go back to Liquid Glass. */
-html #mp-dock.nv-skin-old.nv-skin-old .nv-el.nv-glass{background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur)!important;backdrop-filter:var(--lg-blur)!important;box-shadow:var(--lg-shadow)}
+   in the old glass orb with its blue rim glow. Remove the nv-skin-old class to go back to Liquid Glass (js/nv-glass.js then runs the lens). */
+#mp-dock.nv-skin-old .nv-glass{background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow)}
 #mp-dock.nv-skin-old .nv-glass::before{background:var(--lg-rim)}
-#mp-dock.nv-skin-old .nv-mirror{display:none}
 #mp-dock.nv-skin-old .nv-tab:not(.on){color:var(--lg-icon)!important}
 #mp-dock.nv-skin-old .nv-lens::before{background:var(--orb-fill);box-shadow:var(--orb-shadow)}
 #mp-dock.nv-skin-old .nv-in{background:var(--orb-chip);box-shadow:var(--orb-chip-shadow)}
