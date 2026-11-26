@@ -82,93 +82,143 @@
     place();
   }
 
-  /* ---------- the tab lens ---------- */
+  /* ---------- the tab lens (Apple Liquid Glass) ----------
+     Driven by real springs every frame, not fixed keyframes, so it is smooth and can be grabbed or
+     retargeted mid-flight. Press: the selected capsule lifts into clear glass, bigger than the bar, and
+     the tabs under it are seen magnified through it. It travels to the new tab, stretching with its speed,
+     lands with a soft overshoot, then sinks back into the tinted capsule. Hold and drag: it follows the
+     finger; let go and it snaps to the nearest tab and opens it.
+     Magnification: the lens holds a copy of the tab row scaled about its centre, and the real tabs get a
+     lens-shaped hole (clip-path), so it works the same on iPhone Safari as in Chromium. */
+  var lensRow = document.createElement("div");
+  lensRow.className = "nv-lens-row"; lensRow.setAttribute("aria-hidden", "true");
+  var lensClip = document.createElement("div"); lensClip.className = "nv-lens-clip";
+  lensClip.appendChild(lensRow); lens.appendChild(lensClip);
+  var L = { x: 0, v: 0, tx: 0, w: 0, wv: 0, tw: 0, l: 0, lv: 0, tl: 0, y: 4, h: 54, hold: false, drag: null, raf: 0, t: 0, lifted: false, holed: false };
+  function curTab() { return tabBtns.filter(function (b) { return b.classList.contains("on") && !b.hidden; })[0] || null; }
   function seatX(t) { return t.offsetLeft; }
+  function aim(t) { if (!t) return; L.tx = t.offsetLeft; L.tw = t.offsetWidth; L.y = t.offsetTop; L.h = t.offsetHeight; }
+  function cloneRow() {
+    var html = "";
+    tabBtns.forEach(function (b) {
+      if (b.hidden) return;
+      html += '<div class="' + b.className + '" style="position:absolute;left:' + b.offsetLeft + "px;top:" + b.offsetTop + "px;width:" + b.offsetWidth + "px;height:" + b.offsetHeight + 'px">' + b.innerHTML.replace(/<svg /g, '<svg data-ph="skip" ') + "</div>";
+    });
+    lensRow.innerHTML = html;
+    lensRow.style.width = el.tabs.clientWidth + "px"; lensRow.style.height = el.tabs.clientHeight + "px";
+  }
+  function syncClone() {
+    if (!L.lifted) return;
+    var c = lensRow.children, i = 0;
+    tabBtns.forEach(function (b) { if (!b.hidden && c[i]) { c[i].classList.toggle("on", b.classList.contains("on")); i++; } });
+  }
+  function capsule(x, y, w, h) {
+    var r = Math.min(h, w) / 2;
+    return "M" + (x + r) + " " + y + "H" + (x + w - r) + "A" + r + " " + r + " 0 0 1 " + (x + w - r) + " " + (y + h) + "H" + (x + r) + "A" + r + " " + r + " 0 0 1 " + (x + r) + " " + y + "Z";
+  }
+  function holes(on, lx, ly, lw, lh) {
+    if (!on && !L.holed) return;
+    L.holed = on;
+    tabBtns.forEach(function (b) {
+      if (!on || b.hidden) { b.style.clipPath = b.style.webkitClipPath = ""; return; }
+      var bx = b.offsetLeft, by = b.offsetTop, bw = b.offsetWidth, bh = b.offsetHeight;
+      if (lx > bx + bw || lx + lw < bx) { b.style.clipPath = b.style.webkitClipPath = ""; return; }
+      var p = 'path(evenodd, "M-40 -40H' + (bw + 40) + "V" + (bh + 40) + 'H-40Z' + capsule(lx - bx, ly - by, lw, lh) + '")';
+      b.style.clipPath = p; b.style.webkitClipPath = p;
+    });
+  }
+  function render() {
+    var l = Math.max(0, L.l), lc = Math.min(1, l), sp = Math.min(1, Math.abs(L.v) / 1400);
+    var w = L.w + L.w * 0.34 * l + 22 * sp, h = L.h + 13 * l - 6 * sp;
+    var cx = L.x + L.w / 2, cy = L.y + L.h / 2, left = cx - w / 2, top = cy - h / 2;
+    var s = lens.style;
+    s.width = w.toFixed(2) + "px"; s.height = h.toFixed(2) + "px";
+    s.transform = "translate3d(" + left.toFixed(2) + "px," + top.toFixed(2) + "px,0)";
+    s.setProperty("--l", lc.toFixed(3));
+    var lift = l > 0.004 || L.hold;
+    if (lift && !L.lifted) { L.lifted = true; cloneRow(); lens.classList.add("is-lens"); el.tabs.classList.add("is-gliding"); }
+    else if (!lift && L.lifted) { L.lifted = false; lensRow.innerHTML = ""; lens.classList.remove("is-lens"); el.tabs.classList.remove("is-gliding"); }
+    if (L.lifted) {
+      lens.style.opacity = "";
+      var m = 1 + 0.16 * lc;
+      lensRow.style.transformOrigin = cx.toFixed(2) + "px " + cy.toFixed(2) + "px";
+      lensRow.style.transform = "translate3d(" + (-left).toFixed(2) + "px," + (-top).toFixed(2) + "px,0) scale(" + m.toFixed(4) + ")";
+    }
+    holes(L.lifted, left, top, w, h);
+  }
+  function spring(p, v, target, k, z, dt) { var a = -k * (p - target) - 2 * z * Math.sqrt(k) * v; v += a * dt; return [p + v * dt, v]; }
+  function tick(now) {
+    L.raf = 0;
+    var dt = Math.min(0.034, Math.max(0.001, (now - (L.t || now - 16)) / 1000)); L.t = now;
+    for (var n = Math.ceil(dt / 0.004), st = dt / n, i = 0; i < n; i++) {
+      var r = spring(L.x, L.v, L.tx, L.drag ? 900 : 260, L.drag ? 0.9 : 0.74, st); L.x = r[0]; L.v = r[1];
+      r = spring(L.w, L.wv, L.tw, 300, 0.85, st); L.w = r[0]; L.wv = r[1];
+      r = spring(L.l, L.lv, L.tl, L.tl ? 520 : 240, L.tl ? 0.62 : 0.7, st); L.l = r[0]; L.lv = r[1];
+    }
+    // once it has nearly landed (and nobody is holding it) the glass sinks back in
+    if (!L.hold && L.tl && Math.abs(L.x - L.tx) < 7 && Math.abs(L.v) < 160) L.tl = 0;
+    var rest = !L.hold && !L.tl && Math.abs(L.x - L.tx) < 0.15 && Math.abs(L.v) < 4 && Math.abs(L.w - L.tw) < 0.15 && Math.abs(L.l) < 0.002 && Math.abs(L.lv) < 0.02;
+    if (rest) { L.x = L.tx; L.v = 0; L.w = L.tw; L.wv = 0; L.l = 0; L.lv = 0; L.t = 0; render(); if (!curTab()) lens.style.opacity = "0"; return; }
+    render();
+    L.raf = requestAnimationFrame(tick);
+  }
+  function kick() { if (!L.raf) { L.t = 0; L.raf = requestAnimationFrame(tick); } }
   function seat(instant) {
-    var on = tabBtns.filter(function (b) { return b.classList.contains("on"); })[0];
-    if (!on) { lens.style.opacity = "0"; return; }
+    var on = curTab();
+    if (!on) { if (!L.lifted && !L.hold) lens.style.opacity = "0"; return; } // (mid page-swap: keep the glass)
     lens.style.opacity = "";
-    if (instant) lens.style.transition = "none";
-    lens.style.width = on.offsetWidth + "px";
-    lens.style.transform = "translateX(" + seatX(on) + "px)";
-    if (instant) { void lens.offsetWidth; lens.style.transition = ""; }
+    aim(on);
+    if (instant || RM.matches || state !== "tabs" || !L.w) {
+      if (L.raf) cancelAnimationFrame(L.raf); L.raf = 0;
+      L.x = L.tx; L.w = L.tw; L.v = L.wv = L.lv = 0; L.l = L.tl = 0; L.hold = false; L.drag = null;
+      render(); return;
+    }
+    kick();
   }
-  /* Liquid Glass tab switch (reference frames): the selected capsule lifts off the bar as clear magnifying
-     glass, taller than the bar, swells and stretches as it travels, overshoots a hair, then sinks back into the
-     tinted capsule, and only then does the new tab take the accent colour. Interrupting restarts from where it is. */
-  var glideAnim = null;
-  function lensX() {
-    var m = getComputedStyle(lens).transform;
-    if (m && m !== "none") { var v = m.match(/-?[\d.e]+/g); if (v && v.length >= 6) return parseFloat(v[4]); }
-    return null;
+  function glide(t) { // travel to a tab as lifted glass
+    if (!t) return;
+    aim(t);
+    if (RM.matches || state !== "tabs") return seat(true);
+    L.tl = 1; kick();
   }
-  function glide(from, to) {
-    if (RM.matches || !lens.animate || from == null || Math.abs(from - to) < 2) return seat();
-    if (glideAnim) { var cx = lensX(); glideAnim.cancel(); if (cx != null) from = cx; }
-    var d = to - from, dir = d > 0 ? 1 : -1, far = Math.min(1, Math.abs(d) / 160);
-    var sx = 1.42 + 0.1 * far, sy = 1.24;
-    lens.classList.add("is-lens");
-    el.tabs.classList.add("is-gliding");
-    lens.style.transition = "none";
-    lens.style.transform = "translateX(" + to + "px)";
-    var a = glideAnim = lens.animate([
-      { transform: "translateX(" + from + "px) scale(1,1)", easing: "cubic-bezier(.3,0,.2,1)" },
-      { transform: "translateX(" + (from + d * 0.06) + "px) scale(1.3,1.2)", offset: 0.16, easing: "cubic-bezier(.45,0,.25,1)" },
-      { transform: "translateX(" + (from + d * 0.55) + "px) scale(" + sx + "," + sy + ")", offset: 0.46, easing: "cubic-bezier(.2,.6,.3,1)" },
-      { transform: "translateX(" + (to + dir * 4) + "px) scale(1.34,1.2)", offset: 0.7, easing: "cubic-bezier(.4,0,.3,1)" },
-      { transform: "translateX(" + to + "px) scale(1.2,1.12)", offset: 0.8, easing: "cubic-bezier(.3,0,.2,1)" },
-      { transform: "translateX(" + (to - dir * 0.5) + "px) scale(.97,.96)", offset: 0.92 },
-      { transform: "translateX(" + to + "px) scale(1,1)" }
-    ], { duration: 760 });
-    // the clear glass goes back to the tinted capsule as it sinks in
-    var t = setTimeout(function () { lens.classList.remove("is-lens"); }, 600);
-    a.onfinish = a.oncancel = function () {
-      clearTimeout(t);
-      if (glideAnim !== a) return;
-      glideAnim = null; lens.classList.remove("is-lens"); el.tabs.classList.remove("is-gliding"); lens.style.transition = "";
-    };
+  function tabAt(clientX) {
+    var r = el.tabs.getBoundingClientRect(), x = clientX - r.left - el.tabs.clientLeft, best = null, bd = 1e9;
+    tabBtns.forEach(function (b) { if (b.hidden) return; var d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - x); if (d < bd) { bd = d; best = b; } });
+    return best;
   }
-  var drag = null;
   el.tabs.addEventListener("pointerdown", function (e) {
-    if (state !== "tabs" || e.button > 0) return;
-    var x0 = glideAnim ? lensX() : null;
-    if (glideAnim) { glideAnim.cancel(); }
-    drag = { id: e.pointerId, x: e.clientX, x0: x0 != null ? x0 : (parseFloat((lens.style.transform.match(/-?[\d.]+/) || [0])[0]) || 0), moved: false };
+    if (state !== "tabs" || e.button > 0 || RM.matches) return;
+    var t = tabAt(e.clientX); if (!t) return;
+    L.drag = { id: e.pointerId, x0: e.clientX, moved: false, t: t };
+    L.hold = true; L.tl = 1; aim(t); kick();
+    try { el.tabs.setPointerCapture(e.pointerId); } catch (_) {}
   });
   el.tabs.addEventListener("pointermove", function (e) {
-    if (!drag || drag.id !== e.pointerId) return;
-    var dx = e.clientX - drag.x;
-    if (!drag.moved && Math.abs(dx) < 8) return;
-    if (!drag.moved) { drag.moved = true; lens.classList.add("is-lens", "is-drag"); try { el.tabs.setPointerCapture(e.pointerId); } catch (_) {} }
-    var max = el.tabs.clientWidth - lens.offsetWidth - 4, x = Math.max(4, Math.min(max, drag.x0 + dx));
-    lens.style.transition = "none"; lens.style.transform = "translateX(" + x + "px) scale(1.42,1.22)";
-    drag.cur = x;
+    var d = L.drag; if (!d || d.id !== e.pointerId) return;
+    if (!d.moved && Math.abs(e.clientX - d.x0) < 5) return;
+    d.moved = true;
+    var r = el.tabs.getBoundingClientRect(), pad = 4, w = L.tw;
+    var x = Math.max(pad, Math.min(el.tabs.clientWidth - pad - w, e.clientX - r.left - w / 2));
+    L.tx = x; kick();
   });
-  function endDrag(e) {
-    if (!drag || drag.id !== e.pointerId) return;
-    var d = drag; drag = null;
-    if (!d.moved) return;
-    d.swallow = true; swallowClick = Date.now() + 350;
-    lens.classList.remove("is-drag");
-    var mid = d.cur + lens.offsetWidth / 2, best = tabBtns[0], bd = 1e9;
-    tabBtns.forEach(function (b) { if (b.hidden) return; var c = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(c - mid); if (dd < bd) { bd = dd; best = b; } });
-    var x = seatX(best);
-    if (lens.animate && !RM.matches) {
-      var a = lens.animate([{ transform: "translateX(" + d.cur + "px) scale(1.42,1.22)" }, { transform: "translateX(" + x + "px) scale(1.2,1.12)", offset: 0.45 }, { transform: "translateX(" + x + "px) scale(.97,.96)", offset: 0.78 }, { transform: "translateX(" + x + "px) scale(1,1)" }], { duration: 460, easing: "cubic-bezier(.3,0,.2,1)" });
-      a.onfinish = a.oncancel = function () { lens.classList.remove("is-lens"); lens.style.transition = ""; };
-    } else lens.classList.remove("is-lens");
-    lens.style.transform = "translateX(" + x + "px)";
-    if (!best.classList.contains("on")) { noGlide = Date.now() + 600; go(best.getAttribute("data-view")); }
+  function endPress(e, cancel) {
+    var d = L.drag; if (!d || d.id !== e.pointerId) return;
+    L.drag = null; L.hold = false;
+    swallowClick = Date.now() + 450;
+    var t = cancel ? curTab() : (d.moved ? tabAt(e.clientX) : d.t);
+    if (!t) { L.tl = 0; kick(); return; }
+    aim(t); kick();
+    if (!cancel) go(t.getAttribute("data-view"));
   }
-  el.tabs.addEventListener("pointerup", endDrag);
-  el.tabs.addEventListener("pointercancel", endDrag);
-  var swallowClick = 0, noGlide = 0; // a drag already carried the lens there
+  el.tabs.addEventListener("pointerup", function (e) { endPress(e, false); });
+  el.tabs.addEventListener("pointercancel", function (e) { endPress(e, true); });
+  el.tabs.addEventListener("lostpointercapture", function (e) { if (L.drag && L.drag.id === e.pointerId) endPress(e, true); });
+  var swallowClick = 0;
 
   /* ---------- page state ---------- */
   function sync() {
     var v = panelView(), changed = v !== view, tv = tabOf(v), prev = null;
     tabBtns.forEach(function (b) { if (b.classList.contains("on")) prev = b; });
-    var fromX = prev ? seatX(prev) : null;
     view = v;
     html.setAttribute("data-mpd-view", v);
     tabBtns.forEach(function (b) {
@@ -188,8 +238,11 @@
     onlineB.hidden = !(signedIn && onlineN > 0);
     onlineB.textContent = onlineN > 99 ? "99+" : String(onlineN);
     if (changed && state !== "tabs") state = "tabs";
+    // Safari's mirrored backdrop would show the old page for a moment: let it rest while the page swaps
+    if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 700); }
     layout();
-    if (changed && cur !== prev && fromX != null && state === "tabs" && Date.now() > noGlide) glide(fromX, seatX(cur));
+    syncClone();
+    if (changed && cur !== prev && prev && state === "tabs") glide(cur);
   }
   var syncFrame = 0;
   function soon() { if (!syncFrame) syncFrame = requestAnimationFrame(function () { syncFrame = 0; sync(); }); }
