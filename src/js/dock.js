@@ -77,6 +77,7 @@
     }
     // fm/you sit inside the right group in tabs (no glass of their own), and are glass shapes otherwise
     [el.fm, el.me].forEach(function (e) { e.classList.toggle("nv-glass", state !== "tabs"); e.classList.toggle("nv-wide", e === (state === "fm" ? el.fm : state === "me" ? el.me : null)); });
+    if (lastBox && lastBox !== state + W) L.followUntil = performance.now() + 620;
     seat(!lastBox);
     lastBox = state + W;
     place();
@@ -94,10 +95,10 @@
   lensRow.className = "nv-lens-row"; lensRow.setAttribute("aria-hidden", "true");
   var lensClip = document.createElement("div"); lensClip.className = "nv-lens-clip";
   lensClip.appendChild(lensRow); lens.appendChild(lensClip);
-  var L = { x: 0, v: 0, tx: 0, w: 0, wv: 0, tw: 0, l: 0, lv: 0, tl: 0, y: 4, h: 54, hold: false, drag: null, raf: 0, t: 0, lifted: false, holed: false };
+  var L = { followUntil: 0, target: null, x: 0, v: 0, tx: 0, w: 0, wv: 0, tw: 0, l: 0, lv: 0, tl: 0, y: 4, h: 54, hold: false, drag: null, raf: 0, t: 0, lifted: false, holed: false };
   function curTab() { return tabBtns.filter(function (b) { return b.classList.contains("on") && !b.hidden; })[0] || null; }
   function seatX(t) { return t.offsetLeft; }
-  function aim(t) { if (!t) return; L.tx = t.offsetLeft; L.tw = t.offsetWidth; L.y = t.offsetTop; L.h = t.offsetHeight; }
+  function aim(t) { if (!t) return; L.target = t; L.tx = t.offsetLeft; L.tw = t.offsetWidth; L.y = t.offsetTop; L.h = t.offsetHeight; }
   function cloneRow() {
     var html = "";
     tabBtns.forEach(function (b) {
@@ -145,19 +146,25 @@
       lensRow.style.transform = "translate3d(" + (-left).toFixed(2) + "px," + (-top).toFixed(2) + "px,0) scale(" + m.toFixed(4) + ")";
     }
     holes(L.lifted, left, top, w, h);
+    // the bar itself swells a touch while the glass is up (Apple)
+    el.tabs.style.scale = L.lifted ? (1 + 0.035 * lc).toFixed(4) : "";
   }
   function spring(p, v, target, k, z, dt) { var a = -k * (p - target) - 2 * z * Math.sqrt(k) * v; v += a * dt; return [p + v * dt, v]; }
   function tick(now) {
     L.raf = 0;
+    // keep aiming at the tab itself: the bar can be resizing under it (a morph, the bag appearing)
+    if (!L.drag && L.target && L.target.isConnected && !L.target.hidden) aim(L.target);
+    var follow = now < L.followUntil && !L.lifted;
     var dt = Math.min(0.034, Math.max(0.001, (now - (L.t || now - 16)) / 1000)); L.t = now;
     for (var n = Math.ceil(dt / 0.004), st = dt / n, i = 0; i < n; i++) {
       var r = spring(L.x, L.v, L.tx, L.drag ? 900 : 260, L.drag ? 0.9 : 0.74, st); L.x = r[0]; L.v = r[1];
       r = spring(L.w, L.wv, L.tw, 300, 0.85, st); L.w = r[0]; L.wv = r[1];
       r = spring(L.l, L.lv, L.tl, L.tl ? 520 : 240, L.tl ? 0.62 : 0.7, st); L.l = r[0]; L.lv = r[1];
     }
+    if (follow) { L.x = L.tx; L.v = 0; L.w = L.tw; L.wv = 0; }
     // once it has nearly landed (and nobody is holding it) the glass sinks back in
     if (!L.hold && L.tl && Math.abs(L.x - L.tx) < 7 && Math.abs(L.v) < 160) L.tl = 0;
-    var rest = !L.hold && !L.tl && Math.abs(L.x - L.tx) < 0.15 && Math.abs(L.v) < 4 && Math.abs(L.w - L.tw) < 0.15 && Math.abs(L.l) < 0.002 && Math.abs(L.lv) < 0.02;
+    var rest = !follow && !L.hold && !L.tl && Math.abs(L.x - L.tx) < 0.15 && Math.abs(L.v) < 4 && Math.abs(L.w - L.tw) < 0.15 && Math.abs(L.l) < 0.002 && Math.abs(L.lv) < 0.02;
     if (rest) { L.x = L.tx; L.v = 0; L.w = L.tw; L.wv = 0; L.l = 0; L.lv = 0; L.t = 0; render(); if (!curTab()) lens.style.opacity = "0"; return; }
     render();
     L.raf = requestAnimationFrame(tick);
@@ -229,7 +236,7 @@
     var cur = tabBtns.filter(function (b) { return b.classList.contains("on"); })[0] || tabBtns[0];
     var ic = cur.querySelector("svg");
     if (ic && homeIc._v !== tv) { homeIc._v = tv; homeIc.innerHTML = ic.outerHTML; }
-    el.home.setAttribute("aria-label", (cur.textContent || "").trim() + ". Show pages");
+    el.home.setAttribute("aria-label", (cur.getAttribute("aria-label") || "Pages") + ". Show pages");
     var n = cartCount();
     el.bag.hidden = !(n > 0);
     bagCount.textContent = n > 99 ? "99+" : String(n);
@@ -237,10 +244,19 @@
     el.back.hidden = !contentBack();
     onlineB.hidden = !(signedIn && onlineN > 0);
     onlineB.textContent = onlineN > 99 ? "99+" : String(onlineN);
-    if (changed && state !== "tabs") state = "tabs";
+    // Chat and Globe open with your profile bubble out front; every other page shows the regular tabs (per dc)
+    var morphed = false;
+    if (changed && !menuOpen()) {
+      var want = autoState(v);
+      if (want !== state) {
+        closeMenu(true); state = want; morphed = true;
+        if (dock.classList.contains("is-ready")) { dock.classList.add("nv-morphing"); clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 420); }
+      }
+    }
     // Safari's mirrored backdrop would show the old page for a moment: let it rest while the page swaps
     if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 700); }
     layout();
+    if (morphed) fmPaint();
     syncClone();
     if (changed && cur !== prev && prev && state === "tabs") glide(cur);
   }
@@ -257,6 +273,7 @@
   }
 
   /* ---------- states ---------- */
+  function autoState(v) { return signedIn && (v === "journal" || v === "forum") ? "me" : "tabs"; }
   function setState(s) {
     if (state === s || menuOpen()) return;
     closeMenu(true);
@@ -302,7 +319,7 @@
     } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; if (state === "me") state = "tabs"; }
     unread.hidden = !(unreadN > 0 && signedIn);
     paintStatus();
-    if (was !== signedIn) sync();
+    if (was !== signedIn) { if (!menuOpen()) state = autoState(view); sync(); fmPaint(); }
   }
   var avFrame = 0;
   function avSoon() { if (!avFrame) avFrame = requestAnimationFrame(function () { avFrame = 0; avatar(); }); }
@@ -350,6 +367,7 @@
   function openMenu() {
     if (menuIsOpen || !signedIn) return;
     menuIsOpen = true;
+    menu.getAnimations().concat(menu.firstElementChild.getAnimations()).forEach(function (x) { x.cancel(); });
     paintStatus();
     var dr = dock.getBoundingClientRect(), br = sBtn.getBoundingClientRect();
     var mw = 214, mh = rows.length * 44 + 12, right = dr.right - br.right - 2;
@@ -377,12 +395,22 @@
     var done = function () { menu.hidden = true; menu.classList.remove("is-open"); if (chosen) pop(); };
     if (fast || RM.matches || !menu.animate) return done();
     var dr = dock.getBoundingClientRect(), br = sBtn.getBoundingClientRect();
-    menu.firstElementChild.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0, filter: "blur(6px)" }], { duration: 180, fill: "forwards" }).onfinish = function () { menu.firstElementChild.getAnimations().forEach(function (a) { a.cancel(); }); };
+    // the rows fade first and stay faded; the glass shrinks back into the button and fades out as it lands,
+    // then everything is hidden before any animation is released (releasing earlier flashed the rows back)
+    var inner = menu.firstElementChild;
+    menu.getAnimations().concat(inner.getAnimations()).forEach(function (x) { x.cancel(); });
+    inner.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: "blur(6px)", transform: "scale(.94)" }], { duration: 160, easing: "ease-out", fill: "forwards" });
     var a = menu.animate([
       { left: menu.style.left, top: menu.style.top, width: menu.style.width, height: menu.style.height, borderRadius: "24px", opacity: 1 },
-      { left: br.left - dr.left + "px", top: br.top - dr.top + "px", width: br.width + "px", height: br.height + "px", borderRadius: br.height / 2 + "px", opacity: 0.4 }
-    ], { duration: 360, easing: "cubic-bezier(.4,0,.2,1)" });
-    a.onfinish = a.oncancel = done;
+      { opacity: 1, offset: 0.7 },
+      { left: br.left - dr.left + "px", top: br.top - dr.top + "px", width: br.width + "px", height: br.height + "px", borderRadius: br.height / 2 + "px", opacity: 0 }
+    ], { duration: 380, easing: "cubic-bezier(.32,.72,0,1)", fill: "forwards" });
+    var fin = false;
+    a.onfinish = function () {
+      if (fin || menuIsOpen) return; fin = true;
+      done();
+      menu.getAnimations().concat(inner.getAnimations()).forEach(function (x) { x.cancel(); });
+    };
   }
   function pop() {
     var i = sBtn.querySelector(".nv-sico");

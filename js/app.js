@@ -332,6 +332,7 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       if (current.type && current.type !== "product") viewScroll[current.type] = window.scrollY;
       var prevType = current.type;
       current = { type: view, id: id || "" };
+      try { localStorage.setItem("mp-last-view", view === "product" ? "shop" : view); } catch (e) {}
       var reading = view === "product";
       refreshTitle();
       // Restore default site hero when not viewing a product with custom header
@@ -496,7 +497,14 @@ function MP_PIN(f) { return MP_PINS[f] || f; }
       // X return: chat.js already captured the payload at load; swap it for
       // "#chat" in place so the one-time code never stays in history.
       if (h.indexOf("#x_") === 0) { try { history.replaceState(null, "", "#chat"); } catch (e) {} show("journal"); return true; }
-      if (h === "#" || h === "") { show("shop"); return true; }
+      if (h === "#" || h === "") {
+        // The app reopens on the page you were last on (per dc); a first visit opens the shop.
+        var last = ""; try { last = localStorage.getItem("mp-last-view") || ""; } catch (e) {}
+        if (!/^(shop|cart|forum|journal)$/.test(last)) last = "shop";
+        show(last);
+        try { history.replaceState(null, "", { shop: "#shop", cart: "#cart", forum: "#globe", journal: "#chat" }[last]); } catch (e) {}
+        return true;
+      }
       return false;
     }
     routeFromHash();

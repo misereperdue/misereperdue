@@ -46,13 +46,13 @@ const notices=[
   const p=await c.newPage();
   await p.goto(ORIGIN+'/#journal');
   await p.waitForFunction(()=>window.MPForum&&MPForum.showNotifications&&document.querySelector('#journal #chat-bell')&&document.querySelector('#mp-dock.is-signed-in'),null,{timeout:20000});
-  await p.locator('#chat-bell-badge:not(.hidden)').waitFor({state:'attached'});await p.locator('#mp-dock .mpd-unread:not([hidden])').waitFor();assert.equal(await p.locator('#chat-bell-badge').textContent(),'3');assert.equal(readCalls,0,'loading Chat must not mark notifications read');
+  await p.locator('#chat-bell-badge:not(.hidden)').waitFor({state:'attached'});await p.locator('#mp-dock[data-state=me]').waitFor();await p.locator('#mp-dock-bell-badge:not([hidden])').waitFor();/* Chat opens with the profile bubble out front, whose bell carries the count */assert.equal(await p.locator('#chat-bell-badge').textContent(),'3');assert.equal(readCalls,0,'loading Chat must not mark notifications read');
   await p.evaluate(()=>MPNav.show('forum'));await p.locator('#forum-bell-badge:not(.hidden)').waitFor({state:'attached'});assert.equal(await p.locator('#forum-bell-badge').textContent(),'3');assert.equal(readCalls,0,'rendering Globe must not mark notifications read');
   await p.evaluate(()=>MPNav.show('journal'));
   unread=4;socket.send(JSON.stringify({t:'notif',n:{id:'live',type:'gift',from:'eden',n:1,ts:Date.now()}}));await p.waitForFunction(()=>document.querySelector('#chat-bell-badge')?.textContent==='4');
   await p.waitForFunction(()=>!document.querySelector('#mp-dock.is-ntf'));assert.equal(readCalls,0);
   assert.equal(await p.locator('#mp-dock-bell-badge').textContent(),'4','dock bell mirrors the unread count');
-  await p.locator('#mp-dock .nv-me').click();await p.locator('#mp-dock[data-state=me]').waitFor();await p.waitForTimeout(600);
+  await p.locator('#mp-dock[data-state=me]').waitFor();await p.waitForTimeout(600);
   await p.locator('#mp-dock-bell').click();
   const menu=p.locator('#mp-dock.is-ntf-bar .mp-ntf-morph');
   await menu.waitFor({timeout:8000});
