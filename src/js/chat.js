@@ -4294,7 +4294,10 @@
       e.preventDefault();
     }
     function sc() { if (!typing() && Math.abs(window.scrollY - L.y) > 1) window.scrollTo(0, L.y); }
+    // typing lets the page drift (iOS reveals the field); once focus leaves the field, put the page back
+    function fo() { setTimeout(function () { if (mpLock === L) sc(); }, 0); }
     document.addEventListener("touchstart", st, { passive: !0, capture: !0 });
+    document.addEventListener("focusout", fo, !0);
     document.addEventListener("touchmove", mv, { passive: !1, capture: !0 });
     document.addEventListener("wheel", wh, { passive: !1, capture: !0 });
     document.addEventListener("keydown", ky, !0);
@@ -4306,6 +4309,7 @@
       document.removeEventListener("wheel", wh, { passive: !1, capture: !0 });
       document.removeEventListener("keydown", ky, !0);
       window.removeEventListener("scroll", sc, { passive: !0 });
+      document.removeEventListener("focusout", fo, !0);
       de.classList.remove("mp-noscroll");
     };
     mpLock = L;

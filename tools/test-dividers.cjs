@@ -8,7 +8,6 @@ const CSS=fs.readFileSync(path.join(ROOT,'css/site.css'),'utf8');
 const T=[
  ['Shop product actions','<div class="actions">Add to cart</div>','.actions','top'],
  ['Cart grand total','<div id="cart-total"><div class="trow grand">Total $40</div></div>','#cart-total .trow.grand','top'],
- ['Dashboard rows','<div class="dash-box"><div class="dash-urow">Row A</div><div class="dash-urow">Row B</div></div>','.dash-urow + .dash-urow','top'],
  ['Music branding','<div class="chat-music-branding">Deezer</div>','.chat-music-branding','top'],
  ['Music now-playing pin','<div style="position:relative;height:30px"><div class="chat-gp-pin" style="display:block">Pinned</div></div>','.chat-gp-pin','top'],
  ['Globe signature','<div class="forum-sig">— dc</div>','.forum-sig','top'],

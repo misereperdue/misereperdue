@@ -18,9 +18,9 @@ for(const theme of ['dark','light']){
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(ORIGIN+'/#journal');
  const card=page.locator('[data-id="incoming"] .chat-np:not(.is-loading)');await card.waitFor();await page.locator('[data-id="incoming"] .chat-np-am').waitFor({state:'attached'});
  const css=await card.evaluate(c=>{const g=s=>getComputedStyle(c.querySelector(s));const i=g('.chat-np-info'),a=g('.chat-np-am');return{prop:i.transitionProperty,dur:i.transitionDuration,ease:i.transitionTimingFunction,aprop:a.transitionProperty,aease:a.transitionTimingFunction,slide:a.transform,will:[i.willChange,a.willChange]};});
- assert.equal(css.prop,'opacity, transform');assert.equal(css.aprop,'opacity, transform');assert.equal(css.dur,'0.45s, 0.45s');
- assert.match(css.ease,/cubic-bezier\(0\.4, 0, 0\.2, 1\)/);assert.match(css.aease,/cubic-bezier\(0\.4, 0, 0\.2, 1\)/);
- assert.match(css.slide,/matrix\(1, 0, 0, 1, 0, 2\)/,'2px slide');assert.deepEqual(css.will,['auto','auto'],'will-change at rest');
+ assert.equal(css.prop,'opacity, transform, filter');assert.equal(css.aprop,'opacity, transform, filter');assert.equal(css.dur,'0.62s, 0.72s, 0.62s');
+ assert.match(css.ease,/cubic-bezier\(0\.32, 0\.72, 0, 1\)/);assert.match(css.aease,/cubic-bezier\(0\.32, 0\.72, 0, 1\)/);
+ assert.match(css.slide,/^matrix\(0\.94, 0, 0, 0\.94, 0, 5\)$/,'mark waits slightly lower and smaller');assert.deepEqual(css.will,['auto','auto'],'will-change at rest');
  // Real flip (timer is 5s + stagger): sample both opacities through the fade; their sum must not dip.
  await page.waitForFunction(()=>document.querySelector('[data-id="incoming"] .chat-np.is-xf'),null,{timeout:12000});
  const t0=Date.now(),samples=[];let shot=0;
