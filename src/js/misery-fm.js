@@ -742,8 +742,9 @@
     body.innerHTML = tab === "queue" ? queueHTML() : tab === "station" ? stationHTML() : nowHTML();
     body.scrollTop = st;
     sheet.setAttribute("data-tab", tab);
-    if (swap && !RM.matches && sheet.animate) { var h1 = sheet.offsetHeight; h1 !== h0 && sheet.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 260, easing: "cubic-bezier(.22,.8,.25,1)" }); }
+    if (swap && !RM.matches && sheet.animate && !sheet.classList.contains("fm-dock")) { var h1 = sheet.offsetHeight; h1 !== h0 && sheet.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 260, easing: "cubic-bezier(.22,.8,.25,1)" }); }
     vizStart();
+    if (sheet._mnt && sheet._mnt.fit) sheet._mnt.fit();
   }
   function lockScroll(v) {
     var de = document.documentElement;
@@ -751,6 +752,7 @@
     if (v) { lockScroll.y = window.scrollY; de.classList.add("fm-lock"); }
     else { de.classList.remove("fm-lock"); window.scrollTo(0, lockScroll.y || 0); }
   }
+  function lcEl() { return sheet && (q(".fm-lc", sheet) || (sheet._lc && sheet._lc.isConnected ? sheet._lc : null)); }
   function lcText() {
     var c = calc();
     if (!live()) return "Offline";
@@ -773,10 +775,25 @@
     var room = vh - (bottom || 12) - top - 10 - (bottom ? 0 : (parseFloat(getComputedStyle(sheet).getPropertyValue("--fm-sab")) || 0));
     sheet.style.setProperty("--fm-mh", Math.max(260, Math.min(560, room)) + "px");
   }
+  /* From the nav pill the menu is a real dock sheet: MPProfiles.openSheet grows it out of the pill (the shared morph). */
+  function openDock() {
+    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    if (!d || !d.getClientRects().length || !window.MPProfiles || !MPProfiles.openSheet) return false;
+    var ps = MPProfiles.openSheet({ title: "misery fm", owner: "fm", bodyClass: "fm-dock", maxHeight: 580, onClose: function () { if (sheet === ps.body) unmount(ps.body); } });
+    if (!ps) return false;
+    var last = 0;
+    mount(ps.body, { close: function () { ps.close(); }, fit: function () { var h = ps.body.offsetHeight; if (Math.abs(h - last) > 2) { last = h; ps.resize(); } } });
+    var hd = q(".fm-hd-t", ps.body), t = q(".mp-profile-bar-head strong", ps.root);
+    if (hd && t) { t.textContent = ""; t.appendChild(hd); ps.body._lc = q(".fm-lc", hd); }
+    last = ps.body.offsetHeight; ps.resize();
+    return true;
+  }
   function openSheet(t) {
     if (t) tab = t;
     if (morph) closeMorph(!0);
+    if (sheet && sheet._mnt && !sheet.isConnected) unmount(sheet);
     if (sheet) { renderSheet(); return; }
+    if (openDock()) return;
     getMe().then(function () {
       if (sheet) return;
       if (!S) refresh();
@@ -1055,6 +1072,7 @@
     if (!sheet || !sheet._mnt) return;
     var h0 = sheet.offsetHeight;
     sheet.classList.toggle("fm-editing", !!on);
+    if (sheet._mnt && sheet._mnt.fit) { sheet._mnt.fit(); return; }
     var h1 = sheet.offsetHeight;
     if (!instant && !RM.matches && Math.abs(h1 - h0) > 2 && sheet.animate) sheet.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
   }
@@ -1336,7 +1354,7 @@
     menuPill();
     if (morph) { var inn = q(".fm-m-in", morph); if (inn) inn.outerHTML = morphHTML(); }
     renderSheet();
-    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
+    if (sheet) { var lc = lcEl(); lc && (lc.innerHTML = lcText()); }
     if ((live() || (S && S.sched)) && !tickT) tickT = setInterval(tick, 1e3);
     if (!live() && !(S && S.sched) && tickT && !sheet) { clearInterval(tickT); tickT = 0; }
   }
@@ -1354,7 +1372,7 @@
         pb._v = pv; pb.style.transform = "scaleX(" + pv.toFixed(4) + ")";
       }
     });
-    if (sheet) { var lc = q(".fm-lc", sheet); lc && (lc.innerHTML = lcText()); }
+    if (sheet) { var lc = lcEl(); lc && (lc.innerHTML = lcText()); }
     if (morph) { var ml = q(".fm-lc", morph); ml && (ml.innerHTML = ico("ear") + ((S && S.listeners) || 0)); }
     chatBar();
   }

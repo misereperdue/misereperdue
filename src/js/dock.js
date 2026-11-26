@@ -21,7 +21,12 @@
   var onlineB = q(".nv-online"), bagCount = q(".nv-count");
   var scrim = document.getElementById("mpd-scrim");
   var STATUS = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", invisible: "Invisible" };
-  var state = "tabs", view = "", signedIn = false, onlineN = 0, unreadN = 0, kbLift = 0, away = false, lastBox = "";
+  /* The pill keeps the shape the user last left it in (tabs / fm / you), across pages and reloads. No per-page rules. */
+  var PREF_KEY = "mp-dock-state", pref = "tabs";
+  try { pref = localStorage.getItem(PREF_KEY) || "tabs"; } catch (e) {}
+  if (pref !== "fm" && pref !== "me") pref = "tabs";
+  function hasToken() { try { return !!localStorage.getItem("chat_token"); } catch (e) { return false; } }
+  var state = pref === "me" && !hasToken() ? "tabs" : pref, view = "", signedIn = false, onlineN = 0, unreadN = 0, kbLift = 0, away = false, lastBox = "";
   var H = 48, S = 44, G = 6, P = 4, C = 40;
 
   function panelView() { var p = document.querySelector("main.page > .panel.on"); return p ? p.id : "shop"; }
@@ -251,15 +256,7 @@
     el.bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
     el.back.hidden = !contentBack();
     onlineB.hidden = true;
-    // Chat and Globe open with your profile bubble out front; every other page shows the regular tabs (per dc)
     var morphed = false;
-    if (changed && !menuOpen()) {
-      var want = autoState(v);
-      if (want !== state) {
-        closeMenu(true); state = want; morphed = true;
-        if (dock.classList.contains("is-ready")) { dock.classList.add("nv-morphing"); clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 420); }
-      }
-    }
     // Safari's mirrored backdrop would show the old page for a moment: let it rest while the page swaps
     if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 700); }
     layout();
@@ -280,11 +277,11 @@
   }
 
   /* ---------- states ---------- */
-  function autoState(v) { return signedIn && (v === "journal" || v === "forum") ? "me" : "tabs"; }
   function setState(s) {
     if (state === s || menuOpen()) return;
     closeMenu(true);
-    state = s;
+    state = s; pref = s;
+    try { localStorage.setItem(PREF_KEY, s); } catch (e) {}
     dock.classList.add("nv-morphing");
     clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 420);
     window.haptic && haptic(6);
@@ -320,18 +317,15 @@
         var c = face.cloneNode(true);
         c.removeAttribute("id");
         [].forEach.call(c.querySelectorAll("[id]"), function (n) { n.removeAttribute("id"); });
+        /* no badge on the nav pill (per dc): the avatar shows only the status dot */
+        c.querySelectorAll(".chat-badge,.chat-badge-kitty,.chat-badge-mask,.chat-verified").forEach(function (n) { n.remove(); });
         meAv.replaceChildren(c);
-        var marks = q(".nv-marks");
-        if (marks) {
-          marks.querySelectorAll(".chat-badge,.chat-badge-kitty,.chat-badge-mask,.chat-verified").forEach(function (n) { n.remove(); });
-          meAv.querySelectorAll(".chat-badge,.chat-badge-kitty,.chat-badge-mask,.chat-verified").forEach(function (n) { marks.appendChild(n); });
-        }
       }
       window.MPPwDock && MPPwDock(); // hat, Sphere and other avatar powers on the nav avatar
     } else if (meAv._key !== "") { meAv._key = ""; meAv.innerHTML = PERSON; if (state === "me") state = "tabs"; }
     unread.hidden = true;
     paintStatus();
-    if (was !== signedIn) { if (!menuOpen()) state = autoState(view); sync(); fmPaint(); }
+    if (was !== signedIn) { if (!menuOpen() && signedIn && pref === "me" && state !== "me") state = "me"; sync(); fmPaint(); }
   }
   var avFrame = 0;
   function avSoon() { if (!avFrame) avFrame = requestAnimationFrame(function () { avFrame = 0; avatar(); }); }
@@ -375,27 +369,8 @@
   }
   setInterval(fmPaint, 1500);
 
-  /* the misery fm player grows out of the fm bubble (FLIP from the bubble's box into the sheet) */
-  function openFm() {
-    if (!window.MPFM || !MPFM.open) return;
-    var from = el.fm.getBoundingClientRect();
-    MPFM.open();
-    if (RM.matches) return;
-    var n = 0;
-    (function grow() {
-      var sh = document.querySelector(".fm-sheet");
-      if (!sh || !sh.animate) { if (++n < 20) requestAnimationFrame(grow); return; }
-      var to = sh.getBoundingClientRect();
-      if (!to.width) { if (++n < 20) requestAnimationFrame(grow); return; }
-      var sx = from.width / to.width, sy = from.height / to.height;
-      sh.getAnimations().forEach(function (a) { a.cancel(); });
-      sh.animate([
-        { transformOrigin: "0 0", transform: "translate(" + (from.left - to.left) + "px," + (from.top - to.top) + "px) scale(" + sx + "," + sy + ")", borderRadius: (from.height / 2 / sy) + "px", opacity: 0.6 },
-        { transformOrigin: "0 0", transform: "none", borderRadius: "30px 30px 0 0", opacity: 1 }
-      ], { duration: 520, easing: "cubic-bezier(.3,1.1,.4,1)" });
-      [].forEach.call(sh.children, function (c) { c.animate && c.animate([{ opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 360, delay: 140, easing: "ease-out", fill: "backwards" }); });
-    })();
-  }
+  /* the misery fm player opens through MPProfiles.openSheet (misery-fm.js), the same morph as the profile sheet */
+  function openFm() { if (window.MPFM && MPFM.open) MPFM.open(); }
 
   /* ---------- status menu: grows out of the status button ---------- */
   var menuIsOpen = false;
@@ -510,8 +485,8 @@
     var cur = parseFloat(html.style.getPropertyValue("--mpd-b")) || 0;
     if (b) { if (Math.abs(b - cur) > 1) html.style.setProperty("--mpd-b", b + "px"); }
     else if (cur) html.style.removeProperty("--mpd-b");
-    var dr = dock.getBoundingClientRect();
-    if (!menuOpen() && !away && dr.height) html.style.setProperty("--mpd-clear", Math.round(window.innerHeight - dr.top + 8) + "px");
+    /* Page room is worked out from where the pill is going, not where its slide currently is (no stale gap after a page change). */
+    if (!menuOpen() && !away) { if (b) html.style.setProperty("--mpd-clear", Math.round(b + H + 8) + "px"); else html.style.removeProperty("--mpd-clear"); }
   }
 
   /* ---------- typing: the bar steps aside ---------- */
