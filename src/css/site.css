@@ -12711,8 +12711,8 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
 /* ===== Bottom nav v3 (per dc, "nav.mp4"): liquid glass shapes that morph between tabs / misery fm / you =====
    js/dock.js places every shape (left/top/width/height) for the current state; CSS animates the morph with a
    small spring overshoot and blur-crossfades the labels. Light glass in light mode, smoked glass in dark. */
-html.mp-bnav{--nv-glass:rgba(30,36,60,.52);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,1.2,.42,1)}
-html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.66);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6)}
+html.mp-bnav{--nv-glass:rgba(24,30,54,.36);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,1.2,.42,1)}
+html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.42);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6)}
 html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:62px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .45s cubic-bezier(.32,.72,0,1),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
 #mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
@@ -12724,10 +12724,9 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-el.nv-off{opacity:0;filter:blur(10px);transform:scale(.8);pointer-events:none}
 .nv-el[hidden]{display:block!important}
 /* liquid glass: frosted fill, bright specular rim (brightest top-left), soft lift */
-.nv-glass{background:var(--nv-glass);-webkit-backdrop-filter:blur(22px) saturate(185%);backdrop-filter:blur(22px) saturate(185%);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim),inset 0 -1px 0 var(--nv-rim2),inset 0 0 0 .5px var(--nv-rim2)}
+.nv-glass{background:var(--nv-glass);-webkit-backdrop-filter:blur(4px) saturate(190%) brightness(1.03);backdrop-filter:blur(4px) saturate(190%) brightness(1.03);box-shadow:var(--nv-shadow),inset 0 1px 0 var(--nv-rim),inset 0 -1px 0 var(--nv-rim2),inset 0 0 0 .5px var(--nv-rim2)}
 .nv-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;background:linear-gradient(140deg,var(--nv-rim),transparent 38%,transparent 62%,var(--nv-rim2));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
 /* Chromium can bend the backdrop (SVG displacement); WebKit keeps the frosted glass */
-@supports (-webkit-app-region:drag){.nv-glass{backdrop-filter:url(#nv-refract) blur(20px) saturate(185%)}}
 .nv-ic{width:22px;height:22px;display:block;flex:none}
 /* tabs */
 .nv-tabs{display:flex;padding:4px;gap:0}
@@ -12740,8 +12739,7 @@ html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity
 .nv-online[hidden]{display:none}
 .nv-lens{position:absolute;left:0;top:4px;bottom:4px;width:80px;border-radius:999px;background:var(--nv-lens);transition:transform .5s var(--nv-spring),width .4s var(--nv-spring),background-color .25s ease,box-shadow .25s ease;pointer-events:none;transform-origin:50% 50%}
 /* moving: the lens lifts into clear magnifying glass with a bright rim and chromatic edge (reference) */
-.nv-lens.is-lens{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 2px rgba(255,255,255,.7),inset 0 -2px 6px rgba(120,170,255,.18),inset 2px 0 4px rgba(255,120,180,.12),0 6px 18px rgba(0,0,0,.18);-webkit-backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);z-index:2}
-@supports (-webkit-app-region:drag){.nv-lens.is-lens{backdrop-filter:url(#nv-lens-f) saturate(1.8) brightness(1.06)}}
+.nv-lens.is-lens{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1px 2px rgba(255,255,255,.7),inset 0 -2px 6px rgba(120,170,255,.18),inset 2px 0 4px rgba(255,120,180,.12),0 6px 18px rgba(0,0,0,.18);-webkit-backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);backdrop-filter:blur(1.5px) saturate(1.8) brightness(1.08);z-index:2}
 /* bag / back / home circles */
 .nv-bag,.nv-back,.nv-home{display:grid!important;place-items:center}
 .nv-bag.on{color:var(--nv-blue)}
@@ -13092,3 +13090,17 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 /* status on a profile avatar */
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
+
+/* Liquid Glass lens (js/nv-glass.js): labels keep a soft lift for legibility over bent content */
+.nv-tab span,.nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
+/* Safari/iPhone: the bent copy of what's under the bar, clipped to the glass shapes, beneath them */
+.nv-mirror{position:absolute;left:0;top:0;z-index:0;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .2s ease}
+.nv-mirror-room{display:grid;overflow:hidden}
+#mp-dock.nv-morphing .nv-mirror,#mp-dock.is-profile-bar .nv-mirror,#mp-dock.mpd-away .nv-mirror{opacity:0}
+/* Chromium: while a shape morphs its lens map is stale, so plain glass shows until it is rebuilt */
+html.nv-lens-live #mp-dock.nv-morphing .nv-el{backdrop-filter:blur(4px) saturate(190%)!important}
+/* the tab highlight is a plain capsule at rest; it only becomes a refracting lens while it moves */
+html.nv-lens-live .nv-lens:not(.is-lens){backdrop-filter:none!important}
+/* while the lens moves, the tab bar's own glass steps back so the lens refracts the real page (nested
+   backdrop filters only see their parent's layer) */
+html.nv-lens-live .nv-tabs:has(.nv-lens.is-lens){backdrop-filter:none!important}
