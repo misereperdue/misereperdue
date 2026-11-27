@@ -9449,8 +9449,8 @@
           return !!document.querySelector("#journal.on, #forum.on");
         }
         function onShopOrProduct() {
-          // Shop and product use the shared MPPullRefresh module instead.
-          return !!document.querySelector("#shop.on, #product.on");
+          // Shop, product and Bag use the shared MPPullRefresh module instead.
+          return !!document.querySelector("#shop.on, #product.on, #cart.on");
         }
         function clearStuckClaim() {
           if (!onLivePage() && window.__mpPullToPost) {
