@@ -61,7 +61,9 @@ var row=button('',function(){sheet.close(true);location.hash='globe/'+encodeURIC
   /* Follower count beside the name in the nav pill profile view (per dc, t636u): filled from the same /api/social load as the orbit */
   var folCache={};function folKey(u){return String(u||'').replace(/^@+/,'').toLowerCase();}
   function folText(n){return new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(Number(n)||0).toLowerCase();}
-  function paintFol(chip){var n=folCache[folKey(chip.dataset.user)];if(n==null)return;chip.querySelector('.mp-fol-n').textContent=folText(n);chip.setAttribute('aria-label',n+(n===1?' follower':' followers'));chip.title=chip.getAttribute('aria-label');chip.hidden=false;}
+  /* the compact view is often opened before the full profile has loaded the count: fetch it once per user (per dc) */
+  var folPending={};function fetchFol(u){var k=folKey(u);if(!k||folPending[k])return;folPending[k]=1;api('/api/social?user='+encodeURIComponent(k)).then(function(r){setFollowers(k,r.followers);},function(){}).then(function(){setTimeout(function(){delete folPending[k];},30000);});}
+  function paintFol(chip){var n=folCache[folKey(chip.dataset.user)];if(n==null){fetchFol(chip.dataset.user);return;}chip.querySelector('.mp-fol-n').textContent=folText(n);chip.setAttribute('aria-label',n+(n===1?' follower':' followers'));chip.title=chip.getAttribute('aria-label');chip.hidden=false;}
   function setFollowers(u,n){if(typeof n!=='number')return;folCache[folKey(u)]=n;document.querySelectorAll('.mp-profile-summary-fol').forEach(function(c){if(folKey(c.dataset.user)===folKey(u))paintFol(c);});}
   function mountProfile(options){var avatar=options.avatar,root=options.root,username=options.username,own=options.own,orbit=el('div','mp-social-orbit');avatar.before(orbit);orbit.appendChild(avatar);
     /* Followers / following (per dc): one line of text curving along the bottom of the avatar ring, outside it with a
