@@ -8170,7 +8170,7 @@
       row.querySelector(".rc-row-title").textContent = v.vip ? (sub ? (v.cancelled ? "VIP \u00b7 Cancelled" : "VIP \u00b7 Monthly") : "VIP") : "Not subscribed";
       row.querySelector(".rc-row-status").textContent = v.vip
         ? since ? vipSince(since) : "Active"
-        : "CA$10 today, then CA$3/month";
+        : "CA$4.99 every 30 days";
       var facts = row.querySelector(".vip-row-facts");
       if (facts) {
         var f = [];
@@ -8183,14 +8183,25 @@
           el.lastChild.textContent = f[k][1];
         });
       }
-      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl) ? v.manageUrl : null;
+      var btns = row.querySelector(".vip-row-btns"), url = v.manageUrl && /^https:\/\/([\w.-]+\.)?(polar\.sh|shop\.misereperdue\.com)\//.test(v.manageUrl) ? v.manageUrl : null;
       if (v.vip && sub && v.cancelled) {
         btns.innerHTML = '<p class="vip-row-note">Cancelled. You won\u2019t be charged again, and VIP stays on until ' + (v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for") + '.</p>';
       } else if (v.vip && sub) {
         var until = v.paidThrough ? fmt(v.paidThrough) : "the end of the month you paid for";
         btns.innerHTML = '<a class="btn chat-xlink vip-row-manage" target="_blank" rel="noopener">Manage</a><button type="button" class="btn chat-xlink vip-row-cancel">Cancel VIP</button><p class="vip-row-note" hidden>Cancel your VIP? You won\u2019t be charged again and VIP stays on until ' + until + '.</p>';
         if (url) btns.querySelector(".vip-row-manage").href = url;
-        else btns.querySelector(".vip-row-manage").remove();
+        else if (v.provider === "polar") {
+          var mb = btns.querySelector(".vip-row-manage");
+          mb.removeAttribute("target");
+          mb.removeAttribute("href");
+          mb.setAttribute("role", "button");
+          mb.addEventListener("click", function (e) {
+            e.preventDefault();
+            fetch("https://api.misereperdue.com/api/polar/portal", { method: "POST", headers: { Authorization: "Bearer " + tok }, signal: AbortSignal.timeout(10000) })
+              .then(function (r) { return r.json().catch(function () { return {}; }); })
+              .then(function (j) { if (j && j.url) location.assign(j.url); });
+          });
+        } else btns.querySelector(".vip-row-manage").remove();
         var cb = btns.querySelector(".vip-row-cancel"), note = btns.querySelector(".vip-row-note"), portal = !1;
         cb.addEventListener("click", function () {
           if (portal) return void window.open(url, "_blank", "noopener");
@@ -8206,7 +8217,7 @@
             .then(function (x) {
               if (x.r.ok && x.j.ok) return void paint(x.j);
               /* Not set up in the Worker yet (503) or not found in Seal: finish in the Seal portal. */
-              if (url && v.provider !== "whop" && (503 === x.r.status || 404 === x.r.status)) {
+              if (url && v.provider !== "polar" && (503 === x.r.status || 404 === x.r.status)) {
                 note.textContent = "Finish in the subscription portal: enter your checkout email to get a sign-in link, then choose Cancel.";
                 cb.disabled = !1;
                 cb.textContent = "Open subscription portal";
@@ -9510,11 +9521,11 @@
           if (!t || !t.closest) return false;
           // Narrow: real chrome only. Do NOT skip product-card / role=button content.
           return !!t.closest(
-            "#nav, .nav-wrap, #mp-dock, #mpd-scrim, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .mp-whop-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
+            "#nav, .nav-wrap, #mp-dock, #mpd-scrim, .chat-head, .forum-topbar, .chat-inputrow, .chat-inputbar, .chat-plus-menu, .mp-sheet, .mp-pay-sheet, .chat-sheet, .chat-sheet-blur, .mp-pull-indicator, input, textarea, select",
           );
         }
         function sheetOpen() {
-          return document.documentElement.classList.contains("mp-whop-open") || !!document.querySelector(".mp-whop-sheet");
+          return document.documentElement.classList.contains("mp-pay-open") || !!document.querySelector(".mp-pay-sheet");
         }
         function onStart(ev) {
           if (busy) return;
@@ -9523,7 +9534,7 @@
           dist = 0;
           armed = 0;
           activeScroller = null;
-          if (sheetOpen() || (ev.target && ev.target.closest && ev.target.closest(".mp-whop-sheet")) || onLivePage() || window.__mpPullToPost) {
+          if (sheetOpen() || (ev.target && ev.target.closest && ev.target.closest(".mp-pay-sheet")) || onLivePage() || window.__mpPullToPost) {
             startY = null;
             return;
           }

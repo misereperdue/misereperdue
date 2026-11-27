@@ -1,5 +1,5 @@
 {
- "_note": "Product catalog (per dc: Shopify retired 2026-11-15, payments on Whop). Edit here; the shop page, product pages, share cards and sitemap read this file.",
+ "_note": "Product catalog (per dc: Shopify retired; Globe & Chat payments on Polar; clothing checkout is offline until Stripe). Edit here; the shop page, product pages, share cards and sitemap read this file.",
  "currency": "CAD",
  "products": [
   {
@@ -63,9 +63,6 @@
     ]
    },
    "comingSoon": true,
-   "whop": {
-    "plan": "plan_8upzEnr4v3Mz9"
-   },
    "launchAt": "2027-09-11T00:00:00-04:00",
    "preorder": true,
    "shipsAt": "2027-09-11"
@@ -94,11 +91,11 @@
    },
    "priceRange": {
     "minVariantPrice": {
-     "amount": "13.98",
+     "amount": "4.99",
      "currencyCode": "CAD"
     },
     "maxVariantPrice": {
-     "amount": "13.98",
+     "amount": "4.99",
      "currencyCode": "CAD"
     }
    },
@@ -110,7 +107,7 @@
       "sku": null,
       "availableForSale": true,
       "price": {
-       "amount": "13.98",
+       "amount": "4.99",
        "currencyCode": "CAD"
       },
       "image": {
@@ -125,13 +122,7 @@
      }
     ]
    },
-   "whop": {
-    "plan": "plan_D40DCsIL1su7P",
-    "initial": 13.98,
-    "renewal": 3.99,
-    "periodDays": 30
-   },
-   "planRecurring": 3.99
+   "planRecurring": 4.99
   },
   {
    "id": "gid://shopify/Product/15505333813350",
@@ -204,8 +195,7 @@
         "name": "Star Packs",
         "value": "500"
        }
-      ],
-      "whopPlan": "plan_Evfu3J8OOkLY6"
+      ]
      },
      {
       "id": "gid://shopify/ProductVariant/68043008540774",
@@ -224,8 +214,7 @@
         "name": "Star Packs",
         "value": "1,100"
        }
-      ],
-      "whopPlan": "plan_U7QcGsHTA8LSQ"
+      ]
      },
      {
       "id": "gid://shopify/ProductVariant/68043008573542",
@@ -244,8 +233,7 @@
         "name": "Star Packs",
         "value": "2,400"
        }
-      ],
-      "whopPlan": "plan_Wea8nIti0V5sX"
+      ]
      },
      {
       "id": "gid://shopify/ProductVariant/68043008606310",
@@ -264,13 +252,9 @@
         "name": "Star Packs",
         "value": "6,500"
        }
-      ],
-      "whopPlan": "plan_93LDS0qitNgvM"
+      ]
      }
     ]
-   },
-   "whop": {
-    "product": "prod_gHyFZ4nPT6EWy"
    }
   },
   {
@@ -329,9 +313,6 @@
     ]
    },
    "comingSoon": true,
-   "whop": {
-    "plan": "plan_kwaTGJuXskbbv"
-   },
    "launchAt": "2027-09-11T00:00:00-04:00",
    "preorder": true,
    "shipsAt": "2027-09-11"

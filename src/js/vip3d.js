@@ -7,7 +7,7 @@ var MPVip3D = (function () {
         n = null,
         r = null,
         loop = null;
-      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function sheetOpen() { return document.documentElement.classList.contains("mp-pay-open"); }
       var painted = false;
       function noteReady() {
         if (painted) return;
@@ -17,7 +17,7 @@ var MPVip3D = (function () {
       function kickLoop() {
         if (!t && !a && loop && !sheetOpen()) a = requestAnimationFrame(loop);
       }
-      window.addEventListener("mp-whop-open", kickLoop);
+      window.addEventListener("mp-pay-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
       function o() {
         t || (e.innerHTML = '<img src="/img/vip-card-front.png" alt="VIP card">');
@@ -463,7 +463,7 @@ var MPVip3D = (function () {
           .catch(o),
         function () {
           t = !0;
-          window.removeEventListener("mp-whop-open", kickLoop);
+          window.removeEventListener("mp-pay-open", kickLoop);
           document.removeEventListener("visibilitychange", kickLoop);
           if (a) cancelAnimationFrame(a);
           if (n && n.disconnect(), r)

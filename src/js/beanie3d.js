@@ -12,7 +12,7 @@ var MPBeanie3D = (function () {
   return {
     mount: function (el) {
       var dead = false, raf = 0, renderer = null, ro = null, loop = null;
-      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function sheetOpen() { return document.documentElement.classList.contains("mp-pay-open"); }
       var painted = false;
       function noteReady() {
         if (painted) return;
@@ -22,7 +22,7 @@ var MPBeanie3D = (function () {
       function kickLoop() {
         if (!dead && !raf && loop && !sheetOpen()) raf = requestAnimationFrame(loop);
       }
-      window.addEventListener("mp-whop-open", kickLoop);
+      window.addEventListener("mp-pay-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
       function fallback() {
         if (dead) return;
@@ -164,7 +164,7 @@ var MPBeanie3D = (function () {
       }).catch(fallback);
       return function () {
         dead = true;
-        window.removeEventListener("mp-whop-open", kickLoop);
+        window.removeEventListener("mp-pay-open", kickLoop);
         document.removeEventListener("visibilitychange", kickLoop);
         cancelAnimationFrame(raf);
         ro && ro.disconnect();

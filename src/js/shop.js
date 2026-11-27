@@ -258,12 +258,12 @@ var MPShop = (function () {
               });
             if (e.length > 1) return "Starting from $" + e[0];
           }
-          if (n(t) && polarOn) return cad(4.99) + " every 30 days";
+          if (n(t)) return cad(4.99) + " every 30 days";
           return t.priceLabel || (null != t.price ? MP.money(t.price) : "Coming soon");
         })(t),
       ) +
       "</span></div>" +
-      (t.preorder ? '<span class="tag tag-pre">Preorder</span>' : !1 === t.available ? '<span class="tag">' + gridSoonLabel() + "</span>" : "") +
+      (!t.preorder && !1 === t.available ? '<span class="tag">' + gridSoonLabel() + "</span>" : "") +
       "</div>"
     );
   }
@@ -325,12 +325,11 @@ var MPShop = (function () {
       "</span></p>"
     );
   }
-  /* Checkout gate (per dc): until the drop (CD_END) the bag's Checkout
-   * button is disabled and reads "In N days", N using the same day math as
-   * the countdown ticker (floor of whole days left). On the final day (N = 0,
-   * still before CD_END) it reads "At midnight". From CD_END on it is enabled
-   * and reads "Checkout". Refreshed when the bag renders, on tab return, and
-   * by one setTimeout armed for the next day rollover (no per-second timer). */
+  /* Checkout gate (dc t695u): clothing can go in the bag, but payment stays
+   * off until CD_END (2027-09-11 00:00 America/Toronto — same instant as the
+   * shop drop ticker and catalog launchAt/shipsAt). The pay button is replaced
+   * by a live countdown that collapses units as the date gets closer. VIP and
+   * Stars are bought on their own pages. */
   var coTimer = null, cartCatalogLoading = null;
   function vipOnlyCart() {
     var cart = MP.readCart();
@@ -339,12 +338,19 @@ var MPShop = (function () {
       return product && (n(product) || starsPack(product)) && Number(line.qty) > 0;
     });
   }
-  function preorderCart() {
-    var cart = MP.readCart();
-    return cart.length > 0 && cart.every(function (line) { var pr = MP.PRODUCTS[line.id]; return pr && pr.preorder && Number(line.qty) > 0; });
-  }
   function checkoutLocked() {
-    return Date.now() < CD_END && !vipOnlyCart() && !preorderCart();
+    return Date.now() < CD_END && !vipOnlyCart();
+  }
+  function checkoutCountdownLabel(ms) {
+    var t = Math.max(0, Math.floor(ms / 1e3));
+    var d = Math.floor(t / 86400);
+    var h = Math.floor((t % 86400) / 3600);
+    var m = Math.floor((t % 3600) / 60);
+    function unit(n, one, many) { return n + " " + (1 === n ? one : many); }
+    if (d >= 7) return unit(d, "day", "days");
+    if (d >= 1) return unit(d, "day", "days") + " " + unit(h, "hour", "hours");
+    if (h >= 1) return unit(h, "hour", "hours") + " " + unit(m, "minute", "minutes");
+    return unit(Math.max(1, m), "minute", "minutes");
   }
   function checkoutGate() {
     if (coTimer) (clearTimeout(coTimer), (coTimer = null));
@@ -360,13 +366,12 @@ var MPShop = (function () {
       }
       return;
     }
-    var d = Math.floor(ms / 864e5);
     b.classList.add("is-soon");
     b.disabled = !0;
     b.setAttribute("aria-disabled", "true");
-    b.textContent = d >= 1 ? "In " + d + (1 === d ? " day" : " days") : "At midnight";
-    var next = ms - d * 864e5 + 50;
-    coTimer = setTimeout(checkoutGate, Math.min(next, 864e5));
+    b.textContent = checkoutCountdownLabel(ms);
+    var step = ms > 7 * 864e5 ? 6e4 : ms > 36e5 ? 1e3 : 1e3;
+    coTimer = setTimeout(checkoutGate, step);
   }
   document.addEventListener("visibilitychange", function () {
     document.hidden || checkoutGate();
@@ -905,15 +910,10 @@ var MPShop = (function () {
       txt.textContent = open ? "Tap Share, then \u201cAdd to Home Screen\u201d" : "Get the App";
     };
   }
-  /* Preorders (per dc): beanie and mask are bought now on Whop's checkout (it asks for the shipping address) and
-     ship at launch. They stay out of the bag. */
+  /* Clothing (per dc t695u): add to bag as usual; payment waits on the CD_END countdown. */
   function shipsLabel(t) {
     var d = t.shipsAt ? new Date(t.shipsAt + "T12:00:00") : null;
     return d && !isNaN(d) ? d.toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "at launch";
-  }
-  // Preorder chip (per dc): sits above the product title
-  function preorderChip(t) {
-    return '<p class="preorder-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Preorder <span>\u00b7 Ships ' + shipsLabel(t) + "</span></p>";
   }
   function M(t, e) {
     var note = "";
@@ -1089,7 +1089,6 @@ var MPShop = (function () {
         '<div class="forum-head shop-product-head"><button type="button" class="forum-back forum-glass-pill" id="shop-back"><svg class="mp-gl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></svg>Back</button></div>' +
         '<article class="article-card">' +
         g +
-        (i.preorder ? preorderChip(i) : "") +
         "<h1>" +
         l(i.name) +
         "</h1>" +
@@ -1206,7 +1205,7 @@ var MPShop = (function () {
       ) {
         var M = p.querySelector(".vip-3d-stage"),
           S = p.querySelector(".vip-3d-hint");
-        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=10", M)), S)) {
+        if (M && ((t = lazy3d("MPVip3D", "js/vip3d.js?v=11", M)), S)) {
           var C = 0,
             E = function () {
               (C && clearTimeout(C),
@@ -1224,7 +1223,7 @@ var MPShop = (function () {
       if (a(i)) {
         var x = p.querySelector(".vip-3d-stage"),
           L = p.querySelector(".vip-3d-hint");
-        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=6", x)), L)) {
+        if (x && ((e = lazy3d("MPMask3D", "js/mask3d.js?v=7", x)), L)) {
           var T = 0,
             z = function () {
               (T && clearTimeout(T),
@@ -1243,7 +1242,7 @@ var MPShop = (function () {
         /* Enraged Beanie 3D (per dc) */
         var bx = p.querySelector(".beanie-3d .vip-3d-stage"),
           bh = p.querySelector(".beanie-3d .vip-3d-hint");
-        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=5", bx)), bh)) {
+        if (bx && ((e = lazy3d("MPBeanie3D", "js/beanie3d.js?v=6", bx)), bh)) {
           var bT = 0,
             bz = function () { bT && clearTimeout(bT); bT = setTimeout(function () { bh.classList.remove("gone"); }, 800); };
           bx.addEventListener("pointerdown", function () { bT && (clearTimeout(bT), (bT = 0)); bh.classList.add("gone"); });
@@ -1254,7 +1253,7 @@ var MPShop = (function () {
       if (sk) {
         var sx = p.querySelector(".stars-3d .vip-3d-stage"),
           sh = p.querySelector(".stars-3d .vip-3d-hint");
-        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=15", sx)), sh)) {
+        if (sx && ((t = lazy3d("MPStars3D", "js/stars3d.js?v=16", sx)), sh)) {
           var sT = 0,
             sz = function () {
               (sT && clearTimeout(sT),
@@ -1300,26 +1299,8 @@ var MPShop = (function () {
       });
     }
   }
-  /* Stars on Whop (per dc): "Purchase Stars" opens the payment sheet for the selected pack. Until the server
-     turns Whop Stars on, the existing add-to-bag flow stays. */
-  var starsWhop = null;
-  /* Native checkout (Whop Payment Elements, per dc t658u): when the Worker turns it on, the checkout sheet grows out of
-     the bottom nav pill and the page inside renders our own payment step. Until then nothing changes. */
-  var elementsCfg = null, elementsOn = false;
-  function elementsStatus() {
-    return elementsCfg || (elementsCfg = fetch("https://api.misereperdue.com/api/whop/elements/config", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
-      .then(function (d) { elementsOn = !!(d && d.enabled === true); return elementsOn; })
-      .catch(function () { elementsCfg = null; return false; }));
-  }
-  function starsWhopStatus() {
-    elementsStatus();
-    return starsWhop || (starsWhop = fetch("https://api.misereperdue.com/api/whop/stars/status", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
-      .catch(function () { starsWhop = null; return { enabled: false }; }));
-  }
-  /* Polar checkout (per dc t690u): VIP and Stars go through Polar when the Worker flag is on.
-     Clothing stays on Whop until a later removal. The sheet still morphs out of the nav pill. */
+  /* Polar checkout (dc t694u/t695u): VIP and Stars are bought on their product pages.
+     Clothing payment waits on the CD_END countdown. The sheet morphs out of the nav pill. */
   var polarCfg = null, polarOn = false;
   function polarStatus() {
     return polarCfg || (polarCfg = fetch("https://api.misereperdue.com/api/polar/config", { cache: "no-store" })
@@ -1367,15 +1348,15 @@ var MPShop = (function () {
       return;
     }
     var frame = null, done = false, finished = false;
-    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-whop-dock", maxHeight: 4000, onClose: function () { done = true; } });
+    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-pay-dock", maxHeight: 4000, onClose: function () { done = true; } });
     if (!sheet) {
       startPolarCheckout(product, pack).then(function (s) { if (s && s.ok && s.url) location.assign(s.url); });
       return;
     }
     var skel = document.createElement("div");
-    skel.className = "mp-whop-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
+    skel.className = "mp-pay-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
     frame = document.createElement("iframe");
-    frame.className = "mp-whop-dock-frame";
+    frame.className = "mp-pay-dock-frame";
     frame.title = label || "Checkout";
     frame.setAttribute("allow", "payment *");
     frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
@@ -1430,24 +1411,10 @@ var MPShop = (function () {
     if (!box) return;
     polarStatus().then(function (polar) {
       if (!box.isConnected) return;
-      if (polar && polar.enabled) {
-        if (!mpTok()) {
-          box.innerHTML = '<button class="btn accent vip-buy" type="button">Sign in to buy Stars</button>';
-          box.querySelector("button").onclick = function () { y("journal"); };
-          return;
-        }
-        box.innerHTML = '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button>';
-        box.querySelector("#stars-buy").onclick = function () {
-          var n = parseInt(String(pack()).replace(/,/g, ""), 10);
-          if (!n) return;
-          window.haptic && window.haptic(12);
-          openPolarSheet(null, "stars", n, "Stars checkout");
-        };
+      if (!polar || !polar.enabled) {
+        box.innerHTML = '<p class="vip-err" role="alert">Stars checkout isn\'t available right now.</p>';
         return;
       }
-    starsWhopStatus().then(function (st) {
-      if (!box.isConnected) return;
-      if (!st || !st.enabled) return void P(i, pack);
       if (!mpTok()) {
         box.innerHTML = '<button class="btn accent vip-buy" type="button">Sign in to buy Stars</button>';
         box.querySelector("button").onclick = function () { y("journal"); };
@@ -1458,11 +1425,8 @@ var MPShop = (function () {
         var n = parseInt(String(pack()).replace(/,/g, ""), 10);
         if (!n) return;
         window.haptic && window.haptic(12);
-        openWhopSheet(null, "&product=stars&pack=" + n, "Stars checkout");
+        openPolarSheet(null, "stars", n, "Stars checkout");
       };
-      var n = parseInt(String(pack()).replace(/,/g, ""), 10);
-      if (n) scheduleWarm("&product=stars&pack=" + n, "Stars checkout");
-    });
     });
   }
   function starsSizes(i) {
@@ -1470,30 +1434,18 @@ var MPShop = (function () {
       return parseFloat(String(a).replace(/,/g, "")) - parseFloat(String(b).replace(/,/g, ""));
     });
   }
-  /* VIP terms: Polar is a flat CA$4.99 every 30 days. Whop keeps the catalog first-then-renewal copy until it is removed. */
+  /* VIP terms: Polar is a flat CA$4.99 every 30 days. */
   function vipTerms(i) {
-    var later = null != i.planRecurring ? i.planRecurring : 3;
     function ico(d) {
       return '<span class="vt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + "</svg></span>";
     }
     function row(d, h, t) {
       return '<li>' + ico(d) + '<span><b>' + h + "</b><small>" + t + "</small></span></li>";
     }
-    if (polarOn) {
-      return '<div class="vip-terms">' +
-        '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(4.99) + '</span><span class="vt-when">every 30 days</span></div></div>' +
-        "<ul>" +
-        row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews every 30 days", "CA$4.99, charged automatically until you cancel.") +
-        row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the period you paid for.") +
-        (mpTok() ? "" : row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.")) +
-        "</ul></div>";
-    }
     return '<div class="vip-terms">' +
-      '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(i.price) + '</span><span class="vt-when">today</span></div>' +
-      '<span class="vt-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"/><path d="M15 17s5-3.682 5-5-5-5-5-5"/></svg></span>' +
-      '<div class="vt-step"><span class="vt-amt">' + cad(later) + '</span><span class="vt-when">every 30 days after</span></div></div>' +
+      '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(4.99) + '</span><span class="vt-when">every 30 days</span></div></div>' +
       "<ul>" +
-      row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews every 30 days", "Charged automatically until you cancel.") +
+      row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews every 30 days", "CA$4.99, charged automatically until you cancel.") +
       row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the period you paid for.") +
       (mpTok() ? "" : row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.")) +
       "</ul></div>";
@@ -1529,344 +1481,17 @@ var MPShop = (function () {
             (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for your contribution!") + "</p>" +
             ("subscription" === v.source && !v.cancelled && v.provider === "polar"
               ? '<button class="btn vip-manage" type="button" id="vip-polar-manage">Manage VIP</button>'
-              : "subscription" === v.source && !v.cancelled && v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl)
-              ? '<a class="btn vip-manage" href="' + l(v.manageUrl) + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
           var manage = box.querySelector("#vip-polar-manage");
           if (manage) manage.onclick = function () { openPolarPortal(); };
           return;
         }
         var b = btn("Purchase VIP");
-        b.onclick = function () { vipCheckout(i, b, v.checkoutProvider); };
-        if (v.checkoutProvider === "whop") scheduleWarm("", "VIP checkout");
+        b.onclick = function () { vipCheckout(i, b); };
       });
   }
-  /* Warm the checkout iframe after the product page is idle so it does not contend with the 3D viewer. */
-  var whopWarm = { query: "", frame: null, at: 0 };
-  var warmWait = { timer: 0, idle: 0, onScroll: null, onReady: null };
-  var viewerReady = false;
-  window.addEventListener("mp-3d-ready", function () { viewerReady = true; });
-  function clearWarmWait() {
-    if (warmWait.timer) clearTimeout(warmWait.timer);
-    if (warmWait.idle && typeof cancelIdleCallback === "function") try { cancelIdleCallback(warmWait.idle); } catch (_) {}
-    if (warmWait.onScroll) window.removeEventListener("scroll", warmWait.onScroll);
-    if (warmWait.onReady) window.removeEventListener("mp-3d-ready", warmWait.onReady);
-    warmWait = { timer: 0, idle: 0, onScroll: null, onReady: null };
-  }
-  function dropWhopWarm() {
-    if (whopWarm.frame && !whopWarm.frame.closest(".mp-whop-sheet")) {
-      try { whopWarm.frame.remove(); } catch (_) {}
-    }
-    whopWarm = { query: "", frame: null, at: 0 };
-  }
-  function scheduleWarm(query, label) {
-    clearWarmWait();
-    elementsStatus();
-    function go() {
-      clearWarmWait();
-      warmWhop(query, label);
-    }
-    /* Start the hidden checkout only after the 3D view has painted, so it does not steal the first frame. */
-    function afterViewer() {
-      if (warmWait.timer) { clearTimeout(warmWait.timer); warmWait.timer = 0; }
-      if (warmWait.onReady) { window.removeEventListener("mp-3d-ready", warmWait.onReady); warmWait.onReady = null; }
-      if (typeof requestIdleCallback === "function")
-        warmWait.idle = requestIdleCallback(function () { go(); }, { timeout: 1500 });
-      else warmWait.timer = setTimeout(go, 0);
-    }
-    if (viewerReady || !document.querySelector(".vip-3d-stage")) {
-      afterViewer();
-      return;
-    }
-    warmWait.onReady = function () { afterViewer(); };
-    window.addEventListener("mp-3d-ready", warmWait.onReady);
-    warmWait.timer = setTimeout(afterViewer, 8000);
-  }
-  function setWhopOpen(on) {
-    document.documentElement.classList.toggle("mp-whop-open", !!on);
-    try { window.dispatchEvent(new Event("mp-whop-open")); } catch (_) {}
-  }
-  function warmWhop(query, label) {
-    query = query || "";
-    if (whopDockOpen || document.querySelector(".mp-whop-sheet")) return;
-    if (whopWarm.frame && whopWarm.query === query && whopWarm.frame.isConnected && Date.now() - whopWarm.at < 8 * 60 * 1000) return;
-    dropWhopWarm();
-    if (!mpTok()) return;
-    var f = document.createElement("iframe");
-    f.className = "mp-whop-warm";
-    f.setAttribute("title", label || "VIP checkout");
-    f.setAttribute("allow", "payment *");
-    f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
-    f.setAttribute("aria-hidden", "true");
-    var dk = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
-    f.src = "/whop-vip-preview?sheet=1&warm=1" + (dk && dk.getClientRects().length ? "&dock=1" : "") + query;
-    document.body.appendChild(f);
-    whopWarm = { query: query, frame: f, at: Date.now() };
-  }
-  function takeWhopWarm(query) {
-    var f = whopWarm.frame, ok = f && whopWarm.query === (query || "") && f.isConnected && Date.now() - whopWarm.at < 8 * 60 * 1000;
-    whopWarm = { query: "", frame: null, at: 0 };
-    if (ok) return f;
-    if (f && !f.closest(".mp-whop-sheet")) try { f.remove(); } catch (_) {}
-    return null;
-  }
-  /* Whop VIP payment sheet (per dc: tapping checkout opens a payment sheet on the site). The checkout page,
-     with its own scoped payment CSP, runs inside the sheet and posts {mpWhop:'done'} when VIP is confirmed. */
-  /* Checkout in the nav pill (dc t661u): with the bottom dock on, the checkout is hosted in the same top-bar
-     sheet as the profile sheet and the other dock menus (MPProfiles.openSheet), so it is literally the same
-     morph, glass, sizing, header, close and dismiss. The page iframe hugs its content up to the room the sheet
-     has (status bar inset included) and scrolls inside past that. */
-  var whopDockOpen = false;
-  function openWhopInDock(onDone, query, label) {
-    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
-    if (!d || !d.getClientRects().length || !window.MPProfiles || !MPProfiles.openSheet) return false;
-    var frame = null, finished = false, done = false, startSent = false, raf = 0, lastH = 0, wantH = 0;
-    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-whop-dock", maxHeight: 4000, onClose: cleanup });
-    if (!sheet) return false;
-    whopDockOpen = true;
-    var adopted = takeWhopWarm(query), skel = document.createElement("div");
-    skel.className = "mp-whop-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
-    if (adopted) { frame = adopted; frame.removeAttribute("aria-hidden"); }
-    else {
-      frame = document.createElement("iframe");
-      frame.setAttribute("allow", "payment *");
-      frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
-    }
-    frame.className = "mp-whop-dock-frame";
-    frame.title = label || "Checkout";
-    sheet.body.appendChild(skel); sheet.body.appendChild(frame);
-    setWhopOpen(true);
-    function room() {
-      var root = sheet.root, head = root.querySelector(".mp-profile-bar-head"), scroll = root.querySelector(".mp-profile-bar-scroll");
-      var rs = getComputedStyle(root), ss = getComputedStyle(scroll), r = sheet.bar.getBoundingClientRect();
-      var top = (window.MPDock && MPDock.topInset ? MPDock.topInset() : 0) + 12;
-      var chrome = (parseFloat(rs.paddingTop) || 0) + (parseFloat(rs.paddingBottom) || 0) + (head ? head.offsetHeight : 0) +
-        Math.max(0, scroll.getBoundingClientRect().top - (head ? head.getBoundingClientRect().bottom : 0)) +
-        (parseFloat(ss.paddingTop) || 0) + (parseFloat(ss.paddingBottom) || 0) + 2;
-      return Math.max(200, Math.floor(r.bottom - top - chrome));
-    }
-    function fit() {
-      raf = 0;
-      if (done || !wantH) return;
-      var h = Math.min(wantH, room());
-      if (Math.abs(h - lastH) < 2) return;
-      lastH = h;
-      frame.style.height = h + "px";
-      sheet.body.classList.add("is-ready");
-      sheet.resize();
-    }
-    function startCheckout() {
-      if (startSent || done) return;
-      startSent = true;
-      try { frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "start" }, location.origin); } catch (_) {}
-    }
-    function onMsg(e) {
-      if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string" || e.source !== frame.contentWindow) return;
-      var k = e.data.mpWhop;
-      if (k === "done" && !finished) { finished = true; onDone && onDone(); }
-      else if (k === "close") sheet.close();
-      else if (k === "warm") { startSent = false; startCheckout(); }
-      else if (k === "height") {
-        var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000) { wantH = h; if (!raf) raf = requestAnimationFrame(fit); }
-      }
-    }
-    function onResize() { lastH = 0; if (!raf) raf = requestAnimationFrame(fit); }
-    function cleanup() {
-      if (done) return;
-      done = true; whopDockOpen = false;
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("message", onMsg); window.removeEventListener("resize", onResize);
-      setWhopOpen(false);
-      if (mpTok()) scheduleWarm(query, label);
-    }
-    window.addEventListener("message", onMsg); window.addEventListener("resize", onResize);
-    if (adopted) startCheckout();
-    else setTimeout(function () { if (!done && !frame.getAttribute("src")) frame.src = "/whop-vip-preview?sheet=1&dock=1" + (query || ""); }, 380);
-    return true;
-  }
-  function openWhopSheet(onDone, query, label) {
-    elementsStatus();
-    if (openWhopInDock(onDone, query, label)) return;
-    var old = document.querySelector(".mp-whop-sheet"); if (old) old.remove();
-    var w = document.createElement("div");
-    w.className = "mp-whop-sheet"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", label || "VIP checkout");
-    var adopted = takeWhopWarm(query);
-    w.innerHTML = '<div class="mp-whop-backdrop"></div><div class="mp-whop-panel"><div class="mp-whop-drag"></div><span class="mp-whop-grab" aria-hidden="true"></span>' +
-      '<button type="button" class="mp-whop-x" aria-label="Close checkout"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      '<div class="mp-whop-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>';
-    var panel = w.querySelector(".mp-whop-panel"), frame = adopted;
-    if (adopted) {
-      adopted.className = "mp-whop-frame";
-      adopted.removeAttribute("aria-hidden");
-      adopted.setAttribute("title", label || "VIP checkout");
-      panel.appendChild(adopted);
-      w.classList.add("is-ready");
-    } else {
-      frame = document.createElement("iframe");
-      frame.className = "mp-whop-frame";
-      frame.title = label || "VIP checkout";
-      frame.setAttribute("allow", "payment *");
-      frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
-      panel.appendChild(frame);
-    }
-    document.body.appendChild(w);
-    setWhopOpen(true);
-    var finished = false, closing = false, CLOSE_MS = 320, mode = "full", fullH = 0, startSent = false, heightRaf = 0, pendingH = 0, dragRaf = 0, dragY = 0;
-    function reduceMotion() {
-      try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
-    }
-    var animMs = reduceMotion() ? 0 : CLOSE_MS;
-    w.classList.add("is-animating");
-    requestAnimationFrame(function () { requestAnimationFrame(function () { w.classList.add("is-open"); }); });
-    setTimeout(function () { if (w.isConnected) w.classList.remove("is-animating"); }, animMs + 40);
-    var bd = w.querySelector(".mp-whop-backdrop");
-    function startCheckout() {
-      if (startSent || closing) return;
-      startSent = true;
-      try { frame && frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "start" }, location.origin); } catch (_) {}
-    }
-    if (adopted) startCheckout();
-    else setTimeout(function () {
-      if (closing || !frame || frame.getAttribute("src")) return;
-      frame.src = "/whop-vip-preview?sheet=1" + (query || "");
-    }, animMs);
-    function sheetH() { return panel.getBoundingClientRect().height || panel.offsetHeight || 440; }
-    function peekH() { return Math.round(Math.min(220, Math.max(176, (fullH || sheetH()) * 0.32))); }
-    function peekOff() { return Math.max(0, (fullH || sheetH()) - peekH()); }
-    function setPeek(on) {
-      mode = on ? "peek" : "full";
-      w.classList.toggle("is-peek", on);
-      try { frame && frame.contentWindow && frame.contentWindow.postMessage({ mpWhop: "peek", on: !!on }, location.origin); } catch (_) {}
-    }
-    function snap(to) {
-      panel.style.transition = "";
-      if (bd) { bd.style.transition = ""; bd.style.opacity = ""; }
-      setPeek(to === "peek");
-      panel.style.transform = to === "peek" ? "translateY(" + peekOff() + "px)" : "";
-    }
-    function close() {
-      if (closing) return;
-      closing = true;
-      window.removeEventListener("message", onMsg); document.removeEventListener("keydown", onKey);
-      /* Let CSS take over from a mid-swipe or peek position: clear inline drag styles after
-         is-open is removed so the panel animates to translateY(104%) and the backdrop fades. */
-      w.classList.add("is-animating");
-      w.classList.remove("is-open");
-      w.classList.remove("is-peek");
-      w.classList.remove("is-overlay");
-      setWhopOpen(false);
-      if (heightRaf) { cancelAnimationFrame(heightRaf); heightRaf = 0; }
-      if (dragRaf) { cancelAnimationFrame(dragRaf); dragRaf = 0; }
-      panel.style.transition = "";
-      if (bd) bd.style.transition = "";
-      void panel.offsetWidth;
-      panel.style.transform = "";
-      if (bd) bd.style.opacity = "";
-      setTimeout(function () {
-        if (!w.isConnected) return;
-        w.remove();
-        if (mpTok()) scheduleWarm(query, label);
-      }, reduceMotion() ? 0 : CLOSE_MS + 40);
-    }
-    var dragStart = 0, dragAt = 0, dragBase = 0, dragging = false, didMove = false;
-    function applyDrag() {
-      dragRaf = 0;
-      if (!dragging) return;
-      var raw = dragBase + (dragY - dragStart);
-      if (Math.abs(dragY - dragStart) > 6) didMove = true;
-      if (raw < 0) raw = raw / 3;
-      else if (mode === "peek" && raw > dragBase) {
-        var extra = raw - dragBase;
-        raw = dragBase + (extra < 72 ? extra : 72 + (extra - 72) / 2);
-      }
-      panel.style.transform = "translateY(" + raw + "px)";
-    }
-    function onDragStart(e) {
-      if (closing || !w.classList.contains("is-open") || (e.pointerType === "mouse" && e.button !== 0)) return;
-      dragging = true; didMove = false;
-      dragStart = e.clientY; dragY = e.clientY; dragAt = Date.now();
-      if (!fullH) fullH = sheetH();
-      dragBase = mode === "peek" ? peekOff() : 0;
-      panel.style.transition = "none";
-      if (bd) bd.style.transition = "none";
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
-    }
-    function onDragMove(e) {
-      if (!dragging) return;
-      dragY = e.clientY;
-      if (!dragRaf) dragRaf = requestAnimationFrame(applyDrag);
-    }
-    function onDragEnd(e) {
-      if (!dragging) return;
-      if (e && e.clientY != null) dragY = e.clientY;
-      if (dragRaf) { cancelAnimationFrame(dragRaf); applyDrag(); }
-      dragging = false;
-      panel.style.transition = "";
-      if (bd) bd.style.transition = "";
-      var move = dragY - dragStart;
-      var vel = move / Math.max(1, Date.now() - dragAt);
-      var off = peekOff();
-      if (!didMove || (Math.abs(move) < 8 && Date.now() - dragAt < 350)) {
-        snap(mode === "peek" ? "full" : "peek");
-        return;
-      }
-      if (mode === "peek") {
-        if (move < -36 || vel < -0.45) snap("full");
-        else if (move > 88 || (move > 32 && vel > 0.55)) close();
-        else snap("peek");
-      } else if (move > off + 88 || (move > off + 24 && vel > 0.85)) close();
-      else if (move > off * 0.4 || vel > 0.5) snap("peek");
-      else snap("full");
-    }
-    function onMsg(e) {
-      if (e.origin !== location.origin || !e.data || typeof e.data.mpWhop !== "string") return;
-      if (e.data.mpWhop === "done" && !finished) { finished = true; onDone && onDone(); }
-      else if (e.data.mpWhop === "close") close();
-      else if (e.data.mpWhop === "warm") { w.classList.add("is-ready"); startSent = false; startCheckout(); }
-      else if (e.data.mpWhop === "ready") w.classList.add("is-ready");
-      else if (e.data.mpWhop === "overlay") w.classList.toggle("is-overlay", !!e.data.open);
-      else if (e.data.mpWhop === "height" && e.source === frame.contentWindow) {
-        var h = Math.round(Number(e.data.h) || 0);
-        if (h > 80 && h < 4000 && mode !== "peek") {
-          pendingH = h;
-          if (!heightRaf) heightRaf = requestAnimationFrame(function () {
-            heightRaf = 0;
-            if (closing || mode === "peek") return;
-            panel.style.height = "calc(" + (pendingH + 30) + "px + env(safe-area-inset-bottom, 0px))";
-            fullH = sheetH();
-            w.classList.add("is-ready");
-          });
-        }
-      }
-    }
-    function onKey(e) { if (e.key === "Escape") close(); }
-    window.addEventListener("message", onMsg); document.addEventListener("keydown", onKey);
-    w.querySelector(".mp-whop-x").onclick = close;
-    bd.onclick = close;
-    var drag = w.querySelector(".mp-whop-drag");
-    if (drag) {
-      drag.addEventListener("pointerdown", onDragStart);
-      drag.addEventListener("pointermove", onDragMove, { passive: true });
-      drag.addEventListener("pointerup", onDragEnd, { passive: true });
-      drag.addEventListener("pointercancel", onDragEnd, { passive: true });
-    }
-    function swallowTouch(e) {
-      e.stopPropagation();
-      if (e.cancelable) e.preventDefault();
-    }
-    w.addEventListener("touchmove", swallowTouch, { passive: false, capture: true });
-    if (drag) {
-      drag.addEventListener("touchstart", swallowTouch, { passive: false });
-      drag.addEventListener("touchmove", swallowTouch, { passive: false });
-    }
-  }
-  window.MPWhopSheet = openWhopSheet;
-  function vipCheckout(i, b, provider) {
-    if (provider === "polar") { openPolarSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }, "vip", null, "VIP checkout"); return; }
-    if (provider === "whop") { openWhopSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }); return; }
-    var er = document.getElementById("vip-err");
-    er && (er.textContent = "VIP checkout isn't available right now. Please try again shortly.");
+  function vipCheckout(i, b) {
+    openPolarSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }, "vip", null, "VIP checkout");
   }
   async function S() {
     var t = document.getElementById("checkout-btn"),
@@ -1881,28 +1506,13 @@ var MPShop = (function () {
         if (!vipResponse.ok) throw new Error("Sign in and check your connection before buying VIP.");
         var vipState = await vipResponse.json();
         if (vipState.vip || vipState.status === "active") throw new Error("You already have VIP. Manage your subscription from your profile.");
-        if (vipState.checkoutProvider === "polar") {
-          if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
-          openPolarSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); }, "vip", null, "VIP checkout");
-          return;
-        }
-        if (vipState.checkoutProvider === "whop") {
-          if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
-          openWhopSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); });
-          return;
-        }
+        if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your bag.");
+        openPolarSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); }, "vip", null, "VIP checkout");
+        return;
       } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }
       finally { if(t) t.disabled = false; }
     }
-    // Clothing (per dc): the bag is checked out in the payment sheet, like VIP and Stars. The sheet asks for the
-    // shipping address; the server prices the bag and confirms the payment.
-    var lines = MP.readCart().map(function (l) { return { id: l.id, qty: parseInt(l.qty, 10) || 0 }; }).filter(function (l) { var pr = MP.PRODUCTS[l.id]; return l.qty > 0 && pr && pr.preorder; });
-    if (lines.length && lines.length === MP.readCart().length) {
-      e && (e.textContent = "");
-      openWhopSheet(function () { MP.writeCart([]); window.MPNav && MPNav.refreshPostBtn && MPNav.refreshPostBtn(); q(); }, "&product=cart&lines=" + encodeURIComponent(JSON.stringify(lines)), "Checkout");
-      return;
-    }
-    e && (e.textContent = lines.length ? "Check out VIP and Stars from their own pages. Your clothing will stay in your bag." : "Checkout for clothing opens at launch.");
+    e && (e.textContent = "Check out VIP and Stars from their own pages. Clothing stays in your bag until checkout opens.");
   }
   var C = null,
     E = !1,
@@ -1920,7 +1530,6 @@ var MPShop = (function () {
     );
   }
   function z(t) {
-    if (t) elementsStatus();
     var e = document.getElementById("cart-total");
     if (e)
       if (((L = t), t)) {

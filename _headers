@@ -7,23 +7,6 @@
   Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.klipy.com https://*.mzstatic.com https://itunes.apple.com https://musicbrainz.org https://api.misereperdue.com wss://api.misereperdue.com https://cloudflareinsights.com https://ipapi.co; frame-src 'self' https://challenges.cloudflare.com https://www.youtube.com https://www.youtube-nocookie.com https://open.spotify.com https://w.soundcloud.com https://player.vimeo.com https://embed.music.apple.com https://polar.sh https://www.polar.sh https://sandbox.polar.sh https://buy.polar.sh; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 
-# Whop SDK CSP, per the current Elements getting-started requirements.
-# Pages redirects .html URLs to the extensionless path; cover both.
-/whop-vip-preview
-  X-Robots-Tag: noindex, nofollow
-  Cache-Control: no-store
-  ! X-Frame-Options
-  X-Frame-Options: SAMEORIGIN
-  ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.whop.com https://t.whop.tw https://pay.google.com https://applepay.cdn-apple.com https://js.braintreegateway.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://c.paypal.com https://cdn.plaid.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.misereperdue.com https://whop-staging.misereperdue.com https://api.whop.com https://sandbox-api.whop.com https://t.whop.tw https://pay.google.com https://google.com https://account.google.com https://www.google.com https://api.basistheory.com https://payments.braintree-api.com https://payments.sandbox.braintree-api.com https://api.braintreegateway.com https://api.sandbox.braintreegateway.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.paypal.com https://www.sandbox.paypal.com https://production.plaid.com https://sandbox.plaid.com; frame-src https://cdn.whop.com https://checkout.paypal.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://cdn.plaid.com; media-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests
-
-/whop-vip-preview.html
-  X-Robots-Tag: noindex, nofollow
-  Cache-Control: no-store
-  ! X-Frame-Options
-  X-Frame-Options: SAMEORIGIN
-  ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.whop.com https://t.whop.tw https://pay.google.com https://applepay.cdn-apple.com https://js.braintreegateway.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://c.paypal.com https://cdn.plaid.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.misereperdue.com https://whop-staging.misereperdue.com https://api.whop.com https://sandbox-api.whop.com https://t.whop.tw https://pay.google.com https://google.com https://account.google.com https://www.google.com https://api.basistheory.com https://payments.braintree-api.com https://payments.sandbox.braintree-api.com https://api.braintreegateway.com https://api.sandbox.braintreegateway.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.paypal.com https://www.sandbox.paypal.com https://production.plaid.com https://sandbox.plaid.com; frame-src https://cdn.whop.com https://checkout.paypal.com https://assets.braintreegateway.com https://www.paypal.com https://www.sandbox.paypal.com https://cdn.plaid.com; media-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests
 
 # Versioned / immutable assets (?v= pins or versioned path). No "no-cache" here.
 /js/*

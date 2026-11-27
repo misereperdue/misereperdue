@@ -7,7 +7,7 @@ var MPMask3D = (function () {
         r = null,
         n = null,
         loop = null;
-      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function sheetOpen() { return document.documentElement.classList.contains("mp-pay-open"); }
       var painted = false;
       function noteReady() {
         if (painted) return;
@@ -17,7 +17,7 @@ var MPMask3D = (function () {
       function kickLoop() {
         if (!t && !a && loop && !sheetOpen()) a = requestAnimationFrame(loop);
       }
-      window.addEventListener("mp-whop-open", kickLoop);
+      window.addEventListener("mp-pay-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
       function o() {
         t || (e.innerHTML = '<img src="/img/mask-front-light.jpg" alt="V_V Mask">');
@@ -617,7 +617,7 @@ var MPMask3D = (function () {
           .catch(o),
         function () {
           t = !0;
-          window.removeEventListener("mp-whop-open", kickLoop);
+          window.removeEventListener("mp-pay-open", kickLoop);
           document.removeEventListener("visibilitychange", kickLoop);
           if (a) cancelAnimationFrame(a);
           if (r && r.disconnect(), n)
