@@ -199,6 +199,10 @@ def head(title, desc, url, image, og_type, ld, image_alt="MISERY closed eyes log
 <main>
 """
 
+
+def cta_html(p, shop_link):
+    return f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n"
+
 def main():
     prods = sorted(fetch(), key=lambda p: SHOP_ORDER.index(p["handle"]) if p["handle"] in SHOP_ORDER else len(SHOP_ORDER))
     e = html.escape
@@ -225,7 +229,7 @@ def main():
                 f"<p><img src=\"{e(img)}\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
-                + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
+                + cta_html(p, shop_link) + "</article>\n</main>\n</body>\n</html>\n")
         title = f"{(SEO.get(p['handle']) or (p['title'],))[0]} | {BRAND}"
         lo = p["priceRange"]["minVariantPrice"]
         extra = (f'<meta property="product:price:amount" content="{money(lo["amount"])}">\n'
@@ -233,6 +237,8 @@ def main():
                  f'<meta name="twitter:label1" content="Price">\n'
                  f'<meta name="twitter:data1" content="{e(price_label(p))}">\n')
         out = head(title, meta_desc(p), url, share, "product", jsonld(p, url), alt, share_desc(p), extra) + body
+        if p["handle"] in ("membership", "stars"):
+            out = out.replace("</head>", '<script src="/js/polar-return.js?v=1" defer></script>\n</head>', 1)
         save(os.path.join(ROOT, "p", p["handle"] + ".html"), out)
         items.append((p, url))
         print("wrote p/%s.html  %s  %s" % (p["handle"], price_label(p), stock))
