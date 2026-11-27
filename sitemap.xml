@@ -2,33 +2,33 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://misereperdue.com/</loc>
-    <lastmod>2026-11-26</lastmod>
+    <lastmod>2026-11-27</lastmod>
   </url>
   <url>
     <loc>https://misereperdue.com/shop</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
   </url>
   <url>
     <loc>https://misereperdue.com/info</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
   </url>
   <url>
     <loc>https://misereperdue.com/p/enraged-beanie</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <image:image><image:loc>https://misereperdue.com/img/og/enraged-beanie-p.jpg?v=0ed4c627</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/og/enraged-beanie-sq.jpg?v=730121aa</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/products/enraged-beanie.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://misereperdue.com/p/membership</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <image:image><image:loc>https://misereperdue.com/img/og/membership-p.jpg?v=6e159acf</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/og/membership-sq.jpg?v=64299c71</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/products/vip.png</image:loc></image:image>
   </url>
   <url>
     <loc>https://misereperdue.com/p/misery-v_v-sleeping-mask</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <image:image><image:loc>https://misereperdue.com/img/og/misery-v_v-sleeping-mask-p.jpg?v=1b51acc6</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/og/misery-v_v-sleeping-mask-sq.jpg?v=229277b6</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/products/vv-mask-front.png</image:loc></image:image>
@@ -36,7 +36,7 @@
   </url>
   <url>
     <loc>https://misereperdue.com/p/stars</loc>
-    <lastmod>2026-11-15</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <image:image><image:loc>https://misereperdue.com/img/og/stars-p.jpg?v=23c3f557</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/og/stars-sq.jpg?v=537ce5d9</image:loc></image:image>
     <image:image><image:loc>https://misereperdue.com/img/products/stars.jpg</image:loc></image:image>
@@ -47,22 +47,10 @@
   </url>
   <url>
     <loc>https://misereperdue.com/globe</loc>
-    <lastmod>2026-11-24</lastmod>
+    <lastmod>2026-11-27</lastmod>
   </url>
   <url>
     <loc>https://misereperdue.com/chat</loc>
     <lastmod>2026-11-14</lastmod>
-  </url>
-  <url>
-    <loc>https://misereperdue.com/t/t29</loc>
-    <lastmod>2026-10-14</lastmod>
-  </url>
-  <url>
-    <loc>https://misereperdue.com/t/t30</loc>
-    <lastmod>2026-10-15</lastmod>
-  </url>
-  <url>
-    <loc>https://misereperdue.com/t/t31</loc>
-    <lastmod>2026-11-05</lastmod>
   </url>
 </urlset>
