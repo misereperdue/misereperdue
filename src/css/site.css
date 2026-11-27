@@ -331,6 +331,27 @@ a,
 body {
   padding-top: calc(140px + env(safe-area-inset-top, 0px));
 }
+/* Safari 26 status bar (per dc): Safari paints the strip behind the clock in one solid colour, taken from the
+   first full-width fixed element at the top that has a background-color (else the page background, white in
+   light mode). It cannot show the sky picture there, so this strip, hidden behind the header, gives it the
+   exact colour at the top of the sky and the header runs straight into the status bar. The home-screen app
+   shows the real sky behind the clock instead. */
+#mp-tint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: max(12px, env(safe-area-inset-top, 0px));
+  z-index: 0; /* first in the page: the header (also z 0, later) paints over it */
+  pointer-events: none;
+  background-color: #050b21;
+}
+[data-theme="light"] #mp-tint {
+  background-color: #b7c2d3;
+}
+html.mp-standalone #mp-tint {
+  display: none;
+}
 .hero video.soft {
   filter: blur(6px) saturate(0.35) brightness(0.7);
   transform: scale(1.03);
@@ -10873,7 +10894,9 @@ html.mp-noscroll,html.mp-noscroll body{overscroll-behavior:none}
 .mp-profile-bar .chat-pw-title{margin:20px 0 10px;font-size:12px;font-weight:650;letter-spacing:.02em}
 .mp-profile-bar .mp-profile-editor{border:0;padding:0;margin-top:18px}
 .mp-profile-bar .mp-profile-editor h3{font-size:12px}
-.mp-profile-control:focus-visible,.mp-profile-summary-open:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* focus rings only after keyboard use (html.mp-kbd): opening a profile focuses its expand button for screen
+   readers, and the ring drew a stray line around the bar on touch */
+html.mp-kbd .mp-profile-control:focus-visible,html.mp-kbd .mp-profile-summary-open:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 @media(min-width:600px){.mp-profile-gallery{gap:10px}.mp-profile-bar .mp-pb-body{max-width:600px;margin:auto}}
 @media(prefers-reduced-motion:reduce){.chat-head.is-profile-bar,.nav.is-profile-bar{transition:none}}
 .mp-profile-bar .mp-pb-av>.chat-avatar-wrap{position:absolute;width:auto;height:auto}
@@ -11913,9 +11936,12 @@ html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:va
 html.mp-standalone.mp-bnav,html.mp-bnav.mp-standalone{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}
 @media (display-mode: standalone),(display-mode: fullscreen){html.mp-bnav{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
-#mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
+/* zero specificity: the profile, Powers, Stars, settings and fm sheets open inside #mp-dock, and an id rule here
+   overrode their own button fonts and colours (font changes across the site) */
+:where(#mp-dock button,#mp-dock [role=button]){font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 :where(#mp-dock) button{border:0;background:none;padding:0;margin:0}
-#mp-dock :focus-visible{outline:2px solid var(--nv-blue);outline-offset:2px}
+#mp-dock :focus-visible{outline:none}
+html.mp-kbd #mp-dock :focus-visible{outline:2px solid var(--nv-blue);outline-offset:2px}
 /* every shape */
 .nv-el{position:absolute;box-sizing:border-box;display:block;overflow:visible;transition:left .34s var(--nv-spring),top .34s var(--nv-spring),width .34s var(--nv-spring),height .34s var(--nv-spring),border-radius .34s var(--nv-spring),opacity .28s ease,transform .34s var(--nv-spring),background-color .3s ease,box-shadow .3s ease}
 #mp-dock:not(.is-ready) .nv-el{transition:none!important}
@@ -12331,7 +12357,7 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
 .mp-pb-name .mp-pb-st,
-.mp-profile-summary-title .mp-pb-st{position:static;inset:auto;flex:none;width:10px;height:10px;box-shadow:0 0 0 2px var(--sheet-bg,var(--bg))}
+.mp-profile-summary-title .mp-pb-st{position:relative;inset:auto;flex:none;width:10px;height:10px;box-shadow:0 0 0 2px var(--sheet-bg,var(--bg))}
 .mp-pb-name .mp-pb-st.nv-s-idle,
 .mp-profile-summary-title .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
 

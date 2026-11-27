@@ -490,8 +490,11 @@
   });
   [el.fm, el.me].forEach(function (x) { x.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target === x) { e.preventDefault(); x.click(); } }); });
   document.addEventListener("pointerdown", function (e) {
+    html.classList.remove("mp-kbd");
     if (menuIsOpen && !menu.contains(e.target) && !sBtn.contains(e.target)) closeMenu();
   }, true);
+  // keyboard users get focus rings in the nav and its sheets; touch and mouse do not (no stray outline on open)
+  document.addEventListener("keydown", function (e) { if (e.key === "Tab" || e.key.indexOf("Arrow") === 0) html.classList.add("mp-kbd"); }, true);
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
     if (menuIsOpen) { e.preventDefault(); closeMenu(); sBtn.focus({ preventScroll: true }); }
