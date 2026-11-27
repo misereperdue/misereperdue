@@ -112,7 +112,11 @@
       });
     };
     var t = 0;
-    var soon = function () { clearTimeout(t); t = setTimeout(refresh, 60); };
+    var morphing = function () { return dock.classList.contains("nv-morphing") || dock.classList.contains("nv-paging"); };
+    var soon = function () {
+      clearTimeout(t);
+      t = setTimeout(function () { if (morphing()) { soon(); return; } refresh(); }, 60);
+    };
     dock.addEventListener("transitionend", function (e) { if (/width|height/.test(e.propertyName)) soon(); });
     new MutationObserver(soon).observe(dock, { attributes: true, subtree: true, attributeFilter: ["data-state", "hidden", "class"] });
     window.addEventListener("resize", soon);
@@ -224,7 +228,14 @@
     follow();
   }
   function schedule() { if (!raf) raf = requestAnimationFrame(tick); }
-  function full() { clearTimeout(coll); coll = setTimeout(function () { paintBg(); rebuild(); collect(); follow(); }, 120); }
+  function morphing() { return dock.classList.contains("nv-morphing") || dock.classList.contains("nv-paging"); }
+  function full() {
+    clearTimeout(coll);
+    coll = setTimeout(function () {
+      if (morphing()) { full(); return; }
+      paintBg(); rebuild(); collect(); follow();
+    }, 80);
+  }
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", full);
   dock.addEventListener("transitionend", function (e) { if (/width|height|left|top/.test(e.propertyName)) full(); });
