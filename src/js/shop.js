@@ -1299,8 +1299,8 @@ var MPShop = (function () {
       });
     }
   }
-  /* Polar checkout (dc t694u/t695u): VIP and Stars are bought on their product pages.
-     Clothing payment waits on the CD_END countdown. The sheet morphs out of the nav pill. */
+  /* Polar checkout (dc t694u/t695u/t696u): VIP and Stars buy from their product pages,
+     then go to Polar's hosted checkout in the same tab. Clothing waits on the CD_END countdown. */
   var polarCfg = null, polarOn = false;
   function polarStatus() {
     return polarCfg || (polarCfg = fetch("https://api.misereperdue.com/api/polar/config", { cache: "no-store" })
@@ -1317,8 +1317,18 @@ var MPShop = (function () {
     }
     if (terms && vip) terms.outerHTML = vipTerms(vip);
   }
-  function polarDoneUrl(url) {
-    try { return new URL(url, location.href).searchParams.get("polar") === "done"; } catch (_) { return false; }
+  function polarDonePending() {
+    try {
+      var u = new URL(location.href);
+      if (u.searchParams.get("polar") !== "done") return false;
+      u.searchParams.delete("polar");
+      var q = u.searchParams.toString();
+      history.replaceState(null, "", u.pathname + (q ? "?" + q : "") + u.hash);
+      return true;
+    } catch (_) { return false; }
+  }
+  function polarHostedUrl(url) {
+    return /^https:\/\/((sandbox\.)?polar\.sh|buy\.polar\.sh)\//.test(String(url || ""));
   }
   function startPolarCheckout(product, pack) {
     if (!mpTok()) { window.MPNav && MPNav.show && MPNav.show("journal"); return Promise.resolve(null); }
@@ -1341,69 +1351,38 @@ var MPShop = (function () {
     }).then(function (r) { return r.json(); })
       .then(function (d) { if (d && d.url) window.open(d.url, "_blank", "noopener"); });
   }
-  function openPolarSheet(onDone, product, pack, label) {
-    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
-    if (!d || !d.getClientRects().length || !window.MPProfiles || !MPProfiles.openSheet) {
-      startPolarCheckout(product, pack).then(function (s) { if (s && s.ok && s.url) location.assign(s.url); });
-      return;
+  function goToPolarCheckout(btn, product, pack) {
+    var box = (btn && btn.closest && btn.closest("#bag-action")) || document.getElementById("bag-action");
+    var err = (box && box.querySelector(".vip-err")) || document.getElementById("checkout-err");
+    if (!err && box) {
+      err = document.createElement("p");
+      err.className = "vip-err";
+      err.setAttribute("role", "alert");
+      box.appendChild(err);
     }
-    var frame = null, done = false, finished = false;
-    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-pay-dock", maxHeight: 4000, onClose: function () { done = true; } });
-    if (!sheet) {
-      startPolarCheckout(product, pack).then(function (s) { if (s && s.ok && s.url) location.assign(s.url); });
-      return;
+    function restore() {
+      if (!btn) return;
+      btn.disabled = false;
+      btn.removeAttribute("aria-busy");
+      var label = btn.getAttribute("data-label");
+      if (label) btn.textContent = label;
     }
-    var skel = document.createElement("div");
-    skel.className = "mp-pay-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
-    frame = document.createElement("iframe");
-    frame.className = "mp-pay-dock-frame";
-    frame.title = label || "Checkout";
-    frame.setAttribute("allow", "payment *");
-    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
-    sheet.body.appendChild(skel); sheet.body.appendChild(frame);
-    function room() {
-      var root = sheet.root, head = root.querySelector(".mp-profile-bar-head"), scroll = root.querySelector(".mp-profile-bar-scroll");
-      var rs = getComputedStyle(root), ss = getComputedStyle(scroll), r = sheet.bar.getBoundingClientRect();
-      var top = (window.MPDock && MPDock.topInset ? MPDock.topInset() : 0) + 12;
-      var chrome = (parseFloat(rs.paddingTop) || 0) + (parseFloat(rs.paddingBottom) || 0) + (head ? head.offsetHeight : 0) +
-        Math.max(0, scroll.getBoundingClientRect().top - (head ? head.getBoundingClientRect().bottom : 0)) +
-        (parseFloat(ss.paddingTop) || 0) + (parseFloat(ss.paddingBottom) || 0) + 2;
-      return Math.max(200, Math.floor(r.bottom - top - chrome));
+    function showErr(msg) {
+      if (err) err.textContent = msg || "Couldn't start checkout. Please try again.";
+      restore();
     }
-    function fit() {
-      frame.style.height = room() + "px";
-      sheet.body.classList.add("is-ready");
-      sheet.resize();
+    if (!mpTok()) { window.MPNav && MPNav.show && MPNav.show("journal"); return; }
+    if (btn) {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.setAttribute("aria-busy", "true");
+      if (!btn.getAttribute("data-label")) btn.setAttribute("data-label", btn.textContent);
+      if (!btn.querySelector(".btn-spin")) btn.innerHTML = '<span class="btn-spin"></span>';
     }
-    function fail(msg) {
-      if (skel.parentNode) skel.remove();
-      var p = document.createElement("p");
-      p.className = "vip-status-s";
-      p.textContent = msg || "Checkout isn't available right now. Please try again shortly.";
-      sheet.body.appendChild(p);
-      sheet.body.classList.add("is-ready");
-      sheet.resize();
-    }
-    function succeed() {
-      if (finished || done) return;
-      finished = true;
-      onDone && onDone();
-      sheet.close();
-    }
-    frame.addEventListener("load", function () {
-      if (done) return;
-      try {
-        var href = frame.contentWindow && frame.contentWindow.location && frame.contentWindow.location.href;
-        if (href && polarDoneUrl(href)) return void succeed();
-      } catch (_) {}
-      fit();
-    });
+    if (err) err.textContent = "";
     startPolarCheckout(product, pack).then(function (s) {
-      if (done) return;
-      if (!s || !s.ok || !s.url) return fail(s && s.error);
-      if (s.embed === false) { location.assign(s.url); return; }
-      frame.src = s.url;
-      setTimeout(function () { if (!done && !sheet.body.classList.contains("is-ready")) fit(); }, 400);
+      if (s && s.ok && polarHostedUrl(s.url)) { location.assign(s.url); return; }
+      showErr(s && (s.error || (s._http === 401 ? "Sign in to continue." : "")));
     });
   }
   function starsAction(p, i, pack) {
@@ -1420,12 +1399,14 @@ var MPShop = (function () {
         box.querySelector("button").onclick = function () { y("journal"); };
         return;
       }
-      box.innerHTML = '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button>';
+      var done = polarDonePending();
+      box.innerHTML = (done ? '<div class="vip-status"><p class="vip-status-h">You\u2019re all set</p><p class="vip-status-s">Your Stars will appear on your account shortly.</p></div>' : "") +
+        '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button><p class="vip-err" role="alert"></p>';
       box.querySelector("#stars-buy").onclick = function () {
         var n = parseInt(String(pack()).replace(/,/g, ""), 10);
         if (!n) return;
         window.haptic && window.haptic(12);
-        openPolarSheet(null, "stars", n, "Stars checkout");
+        goToPolarCheckout(this, "stars", n);
       };
     });
   }
@@ -1475,6 +1456,7 @@ var MPShop = (function () {
         if (!box.isConnected) return;
         if (v.unavailable) { var retry = btn("Check VIP status again"); retry.onclick = function () { vipAction(p, i); }; return; }
         if (v.signedOut) return void (btn("Sign in to upgrade").onclick = function () { y("journal"); });
+        var returned = polarDonePending();
         if (v.vip) {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
           box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed</p><p class="vip-status-s">' +
@@ -1486,12 +1468,15 @@ var MPShop = (function () {
           if (manage) manage.onclick = function () { openPolarPortal(); };
           return;
         }
+        if (returned && !v.vip) {
+          box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re all set</p><p class="vip-status-s">Your VIP will appear on your account shortly.</p></div>' +
+            '<button class="btn accent vip-buy" id="vip-buy" type="button">Purchase VIP</button><p class="vip-err" id="vip-err" role="alert"></p>';
+          box.querySelector("#vip-buy").onclick = function () { goToPolarCheckout(this, "vip"); };
+          return;
+        }
         var b = btn("Purchase VIP");
-        b.onclick = function () { vipCheckout(i, b); };
+        b.onclick = function () { goToPolarCheckout(b, "vip"); };
       });
-  }
-  function vipCheckout(i, b) {
-    openPolarSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }, "vip", null, "VIP checkout");
   }
   async function S() {
     var t = document.getElementById("checkout-btn"),
@@ -1499,18 +1484,22 @@ var MPShop = (function () {
     if (checkoutLocked()) return void checkoutGate();
     var vipCart = MP.readCart().filter(function (entry) { return n(MP.PRODUCTS[entry.id]); });
     if (vipCart.length) {
-      if (t && t.disabled) return;
-      if (t) t.disabled = true;
+      if (t && (t.disabled || t.getAttribute("aria-busy"))) return;
+      if (t) { t.disabled = true; t.setAttribute("aria-busy", "true"); }
       try {
         var vipResponse = await fetch("https://api.misereperdue.com/api/vip", {headers:{Authorization:"Bearer "+mpTok()}, signal:AbortSignal.timeout(10000)});
         if (!vipResponse.ok) throw new Error("Sign in and check your connection before buying VIP.");
         var vipState = await vipResponse.json();
         if (vipState.vip || vipState.status === "active") throw new Error("You already have VIP. Manage your subscription from your profile.");
         if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your bag.");
-        openPolarSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); }, "vip", null, "VIP checkout");
+        if (t) { t.disabled = false; t.removeAttribute("aria-busy"); }
+        goToPolarCheckout(t, "vip");
         return;
-      } catch (error) { if(e) e.textContent = error.message || "VIP checkout is unavailable."; return; }
-      finally { if(t) t.disabled = false; }
+      } catch (error) {
+        if (e) e.textContent = error.message || "VIP checkout is unavailable.";
+        if (t) { t.disabled = false; t.removeAttribute("aria-busy"); }
+        return;
+      }
     }
     e && (e.textContent = "Check out VIP and Stars from their own pages. Clothing stays in your bag until checkout opens.");
   }
