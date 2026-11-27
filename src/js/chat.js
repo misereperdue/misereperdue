@@ -2432,19 +2432,21 @@
               }
               var i = Le(),
                 s = "" === t ? 0 : Math.max(0, t - 18),
-                l = Se();
+                l = Se(),
+                /* keyboard open/close (per dc): glide to the latest message with the bar instead of snapping */
+                toEnd = function () { try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); } catch (_) { window.scrollTo(0, document.documentElement.scrollHeight); } };
               i && i.style.setProperty("--kb-shift", s + "px");
               if ("" === t) {
                 var d = "" !== o && null !== o;
                 return (
                   d && ((e.style.bottom = ""), (o = "")),
-                  void (d && l && window.scrollTo(0, document.documentElement.scrollHeight))
+                  void (d && l && toEnd())
                 );
               }
               if ("" !== o && null !== o && Math.abs(t - o) < 8) return;
               ((e.style.bottom = t + "px"),
                 (o = t),
-                l && window.scrollTo(0, document.documentElement.scrollHeight));
+                l && toEnd());
             })());
         }));
     }

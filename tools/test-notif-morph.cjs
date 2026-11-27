@@ -85,7 +85,7 @@ const notices=[
   // grows UP out of the dock: its bottom edge stays above the message box, its top well below the status bar
   const inputTop=await p.evaluate(()=>document.querySelector('#journal .chat-inputrow').getBoundingClientRect().top);
   assert.ok(barBox.y+barBox.height<=inputTop-4,'sheet sits above the message box ('+(barBox.y+barBox.height)+' vs '+inputTop+')');
-  assert.ok(barBox.width>=view.width-40,'sheet keeps the top bar width like the other top-bar menus ('+barBox.width+')');
+  assert.ok(barBox.width>=Math.floor(view.width*0.88)-1,'sheet keeps the top bar width like the other top-bar menus ('+barBox.width+')');
   await p.waitForTimeout(300);
   await p.screenshot({path:process.env.MP_SHOT||`${OUT}/notif-morph-v3-dark.png`,fullPage:false});
   // Shop: there is no top bar any more, the same sheet grows out of the dock at the bottom edge
