@@ -1,6 +1,6 @@
 # Design & delivery playbook (read before any visual or Powers work)
 
-How Claude designs, verifies and ships on misereperdue.com, written so Codex and Grok Bot can work the same way. The goal is that dc never sees a guess: every visual change is rendered, inspected and compared before it ships.
+**Look and feel, tokens, components and never-dos live in [DESIGN_GUIDE.md](DESIGN_GUIDE.md).** This playbook is how to verify and ship so dc never sees a guess: every visual change is rendered, inspected and compared before it ships.
 
 ## 1. Core loop (every task)
 
@@ -24,9 +24,7 @@ How Claude designs, verifies and ships on misereperdue.com, written so Codex and
 
 ## 3. Visual language
 
-- **Colours:** navy `#0a1230` (light-mode accent/ink), ice `#a9d7f5` (dark-mode accent), dark background `#070f29`, VIP gold `#f5bf45` (reserved), 07 ring navy/ice. Use the CSS variables (`--bg`, `--ink`, `--muted`, `--accent`, `--fill`) rather than hard-coded greys.
-- **No rainbow, no gimmicks** unless asked. Prefer one material (black glass, silver, knit) with a single restrained accent. Animations are subtle, slow and off under `prefers-reduced-motion`.
-- **Glass:** surfaces use the `--glass-*` tokens; sheets use the top-bar profile chrome (`mp-profile-bar-head` with round Back/Close controls).
+Colours, glass, type, motion, components, icons and the never-do list are in [DESIGN_GUIDE.md](DESIGN_GUIDE.md). Do not fork those rules here. The implementation notes below (power icons, hats, badge construction) stay in this playbook because they are how the site draws those pieces.
 
 ### Power icons (`src/js/power-icons.js`)
 - 24×24 viewBox, 1.8 stroke, round caps and joins, `currentColor` only (they inherit navy or ice). A soft `fill-opacity:.14` body fill is allowed.
