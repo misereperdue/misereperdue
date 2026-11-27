@@ -52,7 +52,10 @@
     e.inert = !show;
   }
   function layout() {
-    var W = Math.min(window.innerWidth - 20, 430), y = (H - S) / 2;
+    /* 88% of the screen width (per dc), the same as the chat bar under it. Under 90% matters in Safari: Safari 26
+       treats a fixed element spanning 90%+ of the width at the bottom edge as a toolbar bar and fills the area
+       behind its URL bar with a flat colour. */
+    var W = Math.min(Math.floor(window.innerWidth * 0.88), 430), y = (H - S) / 2;
     dock.style.width = W + "px";
     /* Keep width in sync while a sheet is open so the reverse morph does not jump after a resize. */
     if (menuOpen()) return;

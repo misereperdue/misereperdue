@@ -85,7 +85,9 @@ html.mp-standalone body.home {
 html.mp-standalone body::before {
   content: "";
   position: fixed;
-  inset: 0;
+  /* reaches past the screen edges: around the keyboard iOS shows what lies beyond the viewport, and the
+     transparent canvas (kept for the status-bar sky) showed black there */
+  inset: -50vh 0 -100vh 0;
   z-index: -1;
   background: var(--bg);
   pointer-events: none;
@@ -11896,6 +11898,18 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .chat-inputrow .chat-send{width:42px;height:42px}
 .chat-inputrow .chat-plus{width:52px;height:52px}
 .chat-inputrow .chat-send,.chat-inputrow .chat-plus{transition:transform .2s cubic-bezier(.3,.7,.4,1.35)}
+/* Composer (per dc): slimmer and narrower, in the same glass as the nav pill. Kept under 90% of the screen
+   width: Safari 26 treats a fixed element spanning 90%+ of the width at the bottom as a toolbar-edge bar and
+   paints a flat strip behind its URL bar. The bar glides up with the keyboard. */
+html.mp-bnav .chat-inputrow{width:min(400px,88%);gap:7px;transition:bottom .3s cubic-bezier(.32,.72,0,1)}
+html.mp-bnav .chat-inputrow .chat-inputbar{min-height:44px;border-radius:22px;padding:4px 4px 4px 16px;gap:6px;border:0;background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow),inset 0 1px 0 var(--nv-rim,rgba(255,255,255,.16))}
+html.mp-bnav .chat-inputrow .chat-inputbar input{padding:6px 0}
+html.mp-bnav .chat-inputrow .chat-send{width:36px;height:36px}
+html.mp-bnav .chat-inputrow .chat-send svg{width:17px;height:17px}
+html.mp-bnav .chat-inputrow .chat-mic{width:32px;height:32px}
+html.mp-bnav .chat-inputrow .chat-mic-g{width:30px;height:30px}
+html.mp-bnav .chat-inputrow .chat-plus{width:44px;height:44px;background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow),inset 0 1px 0 var(--nv-rim,rgba(255,255,255,.16))}
+@media (prefers-reduced-motion:reduce){html.mp-bnav .chat-inputrow{transition:none}}
 .chat-inputrow .chat-send:active,.chat-inputrow .chat-plus:active{transform:scale(.9)}
 @media (prefers-reduced-motion:reduce){.chat-msg-in{animation:none!important}.chat-msgs .chat-bubble:active{transform:none}}
 /* Instant chat placeholders (per dc): shimmering bubbles while the first messages load */
@@ -12100,7 +12114,7 @@ html.mp-bnav main.page .forum-head.shop-product-head{display:none!important}
 html.mp-bnav body.home:has(#journal.on){padding-bottom:0!important}
 html.mp-bnav .chat-msgs{min-height:calc(100vh - 14px - env(safe-area-inset-top,0px) + var(--kb-shift,0px));padding-bottom:calc(100px + var(--mpd-chat,48px) + var(--kb-shift,0px) + var(--tray-h,0px) + var(--pm-h,0px) + var(--vr-h,0px))!important}
 /* typing: the dock steps aside and its room under the messages eases away with the keyboard (no jump, no gap above the box) */
-html.mp-bnav.mpd-typing{--mpd-chat:0px}
+/* (the chat keeps its bottom room while typing: dropping it shifted the messages as the keyboard opened) */
 html.mp-bnav .mp-toast{bottom:calc(var(--mpd-clear) + 6px)}
 html.mp-bnav .mp-offline-banner{bottom:calc(var(--mpd-clear) + 6px)}
 /* one start line on every page (the first card/row/text sits at --mpd-top) */
