@@ -258,6 +258,7 @@ var MPShop = (function () {
               });
             if (e.length > 1) return "Starting from $" + e[0];
           }
+          if (n(t) && polarOn) return cad(4.99) + " every 30 days";
           return t.priceLabel || (null != t.price ? MP.money(t.price) : "Coming soon");
         })(t),
       ) +
@@ -825,6 +826,7 @@ var MPShop = (function () {
             (f
               ? '<p class="meta" style="margin-top:10px;font-size:12px">Note: ' + l(f) + "</p>"
               : "")),
+          polarStatus(),
           t.querySelectorAll("[data-product]").forEach(function (t) {
             ((t.onclick = function () {
               __mpShopFromList = !0;
@@ -1193,7 +1195,7 @@ var MPShop = (function () {
           };
         });
       }
-      n(i) ? vipAction(p, i) : B();
+      n(i) ? (vipAction(p, i), polarStatus().then(function () { if (polarOn) applyPolarVipCopy(); })) : B();
       var k = p.querySelector(".share-btn");
       if (
         (k &&
@@ -1322,8 +1324,17 @@ var MPShop = (function () {
   function polarStatus() {
     return polarCfg || (polarCfg = fetch("https://api.misereperdue.com/api/polar/config", { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
-      .then(function (d) { polarOn = !!(d && d.enabled === true); return d || { enabled: false }; })
+      .then(function (d) { polarOn = !!(d && d.enabled === true); if (polarOn) applyPolarVipCopy(); return d || { enabled: false }; })
       .catch(function () { polarCfg = null; return { enabled: false }; }));
+  }
+  function applyPolarVipCopy() {
+    if (!polarOn) return;
+    document.querySelectorAll(".product-card.is-vip .meta").forEach(function (el) { el.textContent = cad(4.99) + " every 30 days"; });
+    var terms = document.querySelector(".vip-terms"), vip = null;
+    if (window.MP && MP.PRODUCTS) {
+      Object.keys(MP.PRODUCTS).some(function (id) { var p = MP.PRODUCTS[id]; if (n(p)) { vip = p; return true; } });
+    }
+    if (terms && vip) terms.outerHTML = vipTerms(vip);
   }
   function polarDoneUrl(url) {
     try { return new URL(url, location.href).searchParams.get("polar") === "done"; } catch (_) { return false; }
@@ -1459,7 +1470,7 @@ var MPShop = (function () {
       return parseFloat(String(a).replace(/,/g, "")) - parseFloat(String(b).replace(/,/g, ""));
     });
   }
-  /* VIP: a Whop subscription (catalog: first charge, then the renewal price every 30 days until cancelled). */
+  /* VIP terms: Polar is a flat CA$4.99 every 30 days. Whop keeps the catalog first-then-renewal copy until it is removed. */
   function vipTerms(i) {
     var later = null != i.planRecurring ? i.planRecurring : 3;
     function ico(d) {
@@ -1467,6 +1478,15 @@ var MPShop = (function () {
     }
     function row(d, h, t) {
       return '<li>' + ico(d) + '<span><b>' + h + "</b><small>" + t + "</small></span></li>";
+    }
+    if (polarOn) {
+      return '<div class="vip-terms">' +
+        '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(4.99) + '</span><span class="vt-when">every 30 days</span></div></div>' +
+        "<ul>" +
+        row('<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>', "Renews every 30 days", "CA$4.99, charged automatically until you cancel.") +
+        row('<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/>', "Cancel anytime", "From your profile settings. VIP stays on until the end of the period you paid for.") +
+        (mpTok() ? "" : row('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>', "Linked to your account", "Sign in first so VIP lands on your Mis\u00e8re profile.")) +
+        "</ul></div>";
     }
     return '<div class="vip-terms">' +
       '<div class="vt-price"><div class="vt-step"><span class="vt-amt">' + cad(i.price) + '</span><span class="vt-when">today</span></div>' +
