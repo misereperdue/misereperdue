@@ -1713,7 +1713,8 @@ var MPShop = (function () {
     var onShop = shop && shop.classList.contains("on");
     var onProduct = product && product.classList.contains("on");
     if ((!onShop && !onProduct) || !document.getElementById("shop-grid")) return null;
-    b = "";
+    /* Keep the current signature so n() only rebuilds the grid (and remounts
+       the Globe / 3D canvases) when the catalog actually changed. */
     return k();
   }
   return { mountDecorativeGlobe:function(cv,compact){return mountGlobe(cv,{decorative:true,compact:!!compact});}, renderShop: k, openProduct: w, renderCartPanel: B, updateCartBadge: q, refreshInPlace: refreshInPlace };

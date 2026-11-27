@@ -1196,6 +1196,11 @@ textarea {
 }
 #shop-grid .tile-wrap {
   aspect-ratio: 4/5;
+  background: var(--glass-regular-tint);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
 }
 #shop-grid .product-card img {
   aspect-ratio: 4/5;
@@ -5440,6 +5445,10 @@ html.mp-ptr-hold body {
 .mp-pr.is-busy .mp-pr-ring{animation:mp-pr-spin .55s linear infinite}
 @keyframes mp-pr-spin{to{transform:rotate(360deg)}}
 html.mp-pr-hold,html.mp-pr-hold body{overscroll-behavior-y:none}
+html.mp-pr-hold #shop.on,html.mp-pr-hold #product.on{will-change:transform}
+html.mp-pr-hold #shop-grid .tile-wrap{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.mp-page-title{margin:0 0 16px;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15;text-align:left;color:var(--ink)}
+#cart .mp-page-title{margin:0 0 14px}
 @media (prefers-reduced-motion: reduce){
   .mp-pr,.mp-pr-ring{transition:none!important;animation:none!important}
 }
@@ -11925,8 +11934,8 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-live{position:absolute;top:1px;right:1px;z-index:2;width:8px;height:8px;border-radius:50%;background:var(--nv-ice);box-shadow:0 0 0 2px var(--bg),inset 0 1px 0 rgba(255,255,255,.5)}
 .nv-live[hidden]{display:none}
 .nv-fm-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none}
-.nv-fm-eyes{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#fff;pointer-events:none;display:block}
-.nv-fm-eyes svg{display:block;width:100%;height:100%}
+.nv-fm-eyes{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#fff;pointer-events:none;display:grid;place-items:center}
+.nv-fm-eyes svg{display:block;width:60%;height:60%;overflow:visible}
 .nv-fm:not(.is-live) .nv-fm-ic{display:none}
 .nv-fm.is-live .nv-fm-eyes{display:none}
 .nv-fm-art[hidden],.nv-fm-ic[hidden],.nv-fm-eyes[hidden]{display:none}

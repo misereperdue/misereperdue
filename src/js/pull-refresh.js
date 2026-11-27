@@ -1,6 +1,6 @@
-/* Shared pull-to-refresh for shop and product (dc t704u).
-   Tracks the finger (1:1, then resistance), transform-only, in-place refresh,
-   no full reload or splash. Other pages can reuse MPPullRefresh.attach(). */
+/* Shared pull-to-refresh for the shop and product pages in the home-screen app only (dc t704u, t705u, t706u).
+   rAF-throttled transform only while pulling, no layout work, refetch after the settle,
+   and the grid is not rebuilt unless the catalog actually changed. */
 (function () {
   "use strict";
   var hosts = [];
@@ -21,11 +21,18 @@
     };
   }
 
-  var bound = false, startY = null, startX = 0, dist = 0, locked = 0, armed = 0, busy = 0, raf = 0, gen = 0;
-  var active = null, THRESH = 64, REST = 44;
+  var bound = false, startY = null, startX = 0, dist = 0, locked = 0, armed = 0, busy = 0, raf = 0;
+  var active = null, pullEl = null, THRESH = 64, REST = 44;
   var RM = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
-  if (RM.addEventListener) RM.addEventListener("change", function () { RM = window.matchMedia("(prefers-reduced-motion: reduce)"); });
+  if (RM.addEventListener) RM.addEventListener("change", function (e) { RM = e.target; });
   var tip = null, ring = null, html = document.documentElement;
+  var pendingY = 0, pendingP = 0;
+
+  function isStandalone() {
+    return html.classList.contains("mp-standalone") ||
+      !!(navigator.standalone) ||
+      !!(window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches));
+  }
 
   function mountTip() {
     if (tip) return;
@@ -38,6 +45,7 @@
   }
 
   function current() {
+    if (!isStandalone()) return null;
     for (var i = 0; i < hosts.length; i++) {
       try { if (hosts[i].isActive()) return hosts[i]; } catch (e) {}
     }
@@ -82,7 +90,7 @@
   }
 
   function sheetOpen() {
-    return !!(document.querySelector("#mp-dock.is-profile-bar, .is-profile-bar, .mp-pay-sheet, .chat-plus-menu.open, .chat-plus-menu.is-open"));
+    return !!(html.classList.contains("mp-pay-open") || document.querySelector("#mp-dock.is-profile-bar"));
   }
 
   function isChrome(t) {
@@ -109,32 +117,31 @@
     }
   }
 
-  function paint(p, y, dragging) {
+  function paintTip(p, y, dragging) {
     if (!tip) return;
-    tip.classList.toggle("is-dragging", !!dragging);
-    tip.classList.toggle("is-on", p > 0.02 || busy);
     tip.style.transform = "translate3d(0," + Math.max(0, y * 0.35).toFixed(2) + "px,0) scale(" + (0.86 + 0.14 * p).toFixed(3) + ")";
     tip.style.opacity = String(Math.max(0, Math.min(1, p * 1.15)));
-    if (ring && !busy) ring.style.setProperty("--mp-pr-rot", Math.round(p * 180) + "deg");
+    if (ring && !busy) ring.style.transform = "rotate(" + Math.round(p * 180) + "deg)";
   }
 
   function hide() {
-    gen++;
     if (!busy && tip) {
       tip.classList.remove("is-on", "is-dragging", "is-busy");
       tip.style.transform = "";
       tip.style.opacity = "";
-      if (ring) ring.style.removeProperty("--mp-pr-rot");
+      if (ring) ring.style.transform = "";
     }
   }
+
+  function settleMs() { return RM.matches ? 0 : 380; }
 
   function finish(el) {
     busy = 0;
     html.classList.remove("mp-pr-hold");
     if (tip) tip.classList.remove("is-busy", "is-dragging");
     setY(el, 0, false);
-    paint(0, 0, false);
-    setTimeout(hide, RM.matches ? 0 : 380);
+    paintTip(0, 0, false);
+    setTimeout(hide, settleMs());
   }
 
   function onStart(ev) {
@@ -148,6 +155,7 @@
     var sc = scrollerFrom(ev.target, host);
     if (scrollTopOf(sc) > 1) { startY = null; return; }
     active = host;
+    pullEl = contentEl(host);
     startY = ev.touches[0].clientY;
     startX = ev.touches[0].clientX;
     locked = 0;
@@ -157,49 +165,45 @@
 
   function onMove(ev) {
     if (busy || startY === null || !active) return;
-    if (sheetOpen() || !active.isActive()) {
-      startY = null; locked = 0; html.classList.remove("mp-pr-hold"); hide(); setY(contentEl(active), 0, false); active = null;
-      return;
-    }
     if (!ev.touches || !ev.touches.length) return;
     var y = ev.touches[0].clientY, x = ev.touches[0].clientX;
     var dy = y - startY, dx = x - startX;
     if (!locked) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       if (!(dy > 0 && dy > Math.abs(dx) * 1.25)) { locked = -1; startY = null; return; }
-      if (scrollTopOf(scrollerFrom(ev.target, active)) > 1) { startY = null; return; }
       locked = 1;
       mountTip();
+      if (tip) { tip.classList.add("is-on", "is-dragging"); tip.classList.remove("is-busy"); }
+      html.classList.add("mp-pr-hold");
+      if (pullEl) { pullEl.style.transition = "none"; pullEl.style.willChange = "transform"; }
     }
     if (locked !== 1) return;
     if (ev.cancelable) ev.preventDefault();
     dist = Math.max(0, dy);
-    var yOff = RM.matches ? Math.min(36, dist * 0.4) : resisted(dist);
-    var p = Math.max(0, Math.min(1, yOff / THRESH));
-    var g = ++gen;
-    html.classList.add("mp-pr-hold");
+    pendingY = RM.matches ? Math.min(36, dist * 0.4) : resisted(dist);
+    pendingP = Math.max(0, Math.min(1, pendingY / THRESH));
     if (!raf) {
       raf = requestAnimationFrame(function () {
         raf = 0;
-        if (g !== gen || busy || !active) return;
-        paint(p, yOff, true);
-        setY(contentEl(active), yOff, true);
+        if (busy || !active || locked !== 1) return;
+        paintTip(pendingP, pendingY, true);
+        if (pullEl) pullEl.style.transform = "translate3d(0," + pendingY.toFixed(2) + "px,0)";
       });
     }
-    if (p >= 1 && !armed) {
+    if (pendingP >= 1 && !armed) {
       armed = 1;
       try { navigator.vibrate && navigator.vibrate(10); } catch (e) {}
     }
-    if (p < 1) armed = 0;
+    if (pendingP < 1) armed = 0;
   }
 
   function onEnd() {
     if (busy) return;
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
     if (tip) tip.classList.remove("is-dragging");
-    var host = active, el = contentEl(host);
+    var host = active, el = pullEl;
     if (startY === null || locked !== 1 || !host) {
-      startY = null; locked = 0; active = null;
+      startY = null; locked = 0; active = null; pullEl = null;
       html.classList.remove("mp-pr-hold");
       hide();
       return;
@@ -209,22 +213,33 @@
     startY = null; locked = 0; active = null; dist = 0;
     if (!go) {
       html.classList.remove("mp-pr-hold");
+      if (el) el.style.willChange = "";
       setY(el, 0, false);
-      paint(0, 0, false);
-      setTimeout(hide, RM.matches ? 0 : 380);
+      paintTip(0, 0, false);
+      pullEl = null;
+      setTimeout(hide, settleMs());
       return;
     }
     busy = 1;
     mountTip();
-    if (tip) tip.classList.add("is-busy", "is-on");
+    if (tip) { tip.classList.add("is-busy", "is-on"); tip.classList.remove("is-dragging"); }
     setY(el, REST, false);
-    paint(1, REST, false);
-    var done = false;
-    function once() { if (done) return; done = true; finish(el); }
-    var p = null;
-    try { p = host.refresh(); } catch (e) { once(); return; }
-    if (p && typeof p.then === "function") p.then(once, once);
-    else once();
+    paintTip(1, REST, false);
+    /* Settle first, then refetch, so the spring is never blocked by a shop re-render. */
+    setTimeout(function () {
+      var done = false;
+      function once() {
+        if (done) return;
+        done = true;
+        if (el) el.style.willChange = "";
+        finish(el);
+        pullEl = null;
+      }
+      var p = null;
+      try { p = host.refresh(); } catch (e) { once(); return; }
+      if (p && typeof p.then === "function") p.then(once, once);
+      else once();
+    }, settleMs());
   }
 
   function bind() {
@@ -238,10 +253,10 @@
     document.addEventListener("touchcancel", onEnd, opts);
   }
 
-  window.MPPullRefresh = { attach: attach };
+  window.MPPullRefresh = { attach: attach, isStandalone: isStandalone };
 })();
 
-/* Default hook: shop + product pages. */
+/* Default hook: shop + product pages, home-screen app only. */
 (function () {
   function whenReady(fn) {
     if (document.readyState === "complete" || document.readyState === "interactive") fn();
@@ -250,7 +265,10 @@
   whenReady(function () {
     if (!window.MPPullRefresh) return;
     MPPullRefresh.attach({
-      isActive: function () { return !!document.querySelector("#shop.on, #product.on"); },
+      isActive: function () {
+        return !!(window.MPPullRefresh.isStandalone && MPPullRefresh.isStandalone()) &&
+          !!document.querySelector("#shop.on, #product.on");
+      },
       content: function () { return document.querySelector("#product.on, #shop.on"); },
       refresh: function () {
         if (window.MPShop && typeof MPShop.refreshInPlace === "function") {
