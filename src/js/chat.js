@@ -1106,8 +1106,11 @@
     if (pst === null && n.status) pst = n.status;
     var sb = null;
     if (pst && pst !== "invisible" && (n.status || isOwn || pwKey(n.username) === pwKey((s && s.username) || ""))) {
-      sb = document.createElement("i"); sb.className = "nv-sico nv-s-" + pst + " mp-pb-st"; sb.setAttribute("role", "img");
-      sb.setAttribute("aria-label", { online: "Online", idle: "Idle", dnd: "Do Not Disturb" }[pst] || pst);
+      /* status as a pill on the username line (per dc): dot + label */
+      var stLabel = { online: "Online", idle: "Idle", dnd: "Do Not Disturb" }[pst] || pst;
+      sb = document.createElement("span"); sb.className = "mp-pb-stpill is-" + pst;
+      sb.innerHTML = '<i class="nv-sico nv-s-' + pst + '" aria-hidden="true"></i>';
+      sb.appendChild(document.createTextNode(stLabel));
     }
     hd.appendChild(avw);
     var avImg = av.querySelector("img");
@@ -1173,6 +1176,8 @@
     if (n.bio) bio.textContent = n.bio;
     else bio.setAttribute("hidden", "");
     nm.appendChild(bio);
+    /* dotted divider between the bio and the rest of the profile (per dc) */
+    if (n.bio) { var bioDiv = document.createElement("div"); bioDiv.className = "mp-pb-dotdiv"; bioDiv.setAttribute("aria-hidden", "true"); nm.appendChild(bioDiv); }
     var ac = document.createElement("div");
     ac.className = "mp-pb-acts";
     /* Share/Edit sit above the name; Whisper/Hide remain secondary actions. */
@@ -1205,6 +1210,8 @@
     tool("Share profile", '<path d="M9.39584 4.5H8.35417C5.40789 4.5 3.93475 4.5 3.01946 5.37868C2.10417 6.25736 2.10417 7.67157 2.10417 10.5V14.5C2.10417 17.3284 2.10417 18.7426 3.01946 19.6213C3.93475 20.5 5.40789 20.5 8.35417 20.5H12.5608C15.5071 20.5 16.9802 20.5 17.8955 19.6213C18.4885 19.052 18.6973 18.2579 18.7708 17"/><path d="M16.1667 7V3.85355C16.1667 3.65829 16.3316 3.5 16.535 3.5C16.6326 3.5 16.7263 3.53725 16.7954 3.60355L21.5275 8.14645C21.7634 8.37282 21.8958 8.67986 21.8958 9C21.8958 9.32014 21.7634 9.62718 21.5275 9.85355L16.7954 14.3964C16.7263 14.4628 16.6326 14.5 16.535 14.5C16.3316 14.5 16.1667 14.3417 16.1667 14.1464V11H13.1157C8.875 11 7.3125 14.5 7.3125 14.5V12C7.3125 9.23858 9.64435 7 12.5208 7H16.1667Z"/>', function (k) {
       k.disabled || ((k.disabled = !0), D(n).then(function () { k.disabled = !1; }, function () { k.disabled = !1; }));
     });
+    /* your own Edit and Share sit on the username line, where Hide is on other people's profiles (per dc) */
+    if (me) [].slice.call(tools.children).forEach(function (k) { k.classList.add("mp-pb-namebtn"); n1.appendChild(k); });
     !me && s && d && btn("Gift", STAR_ICON, function () { giftOpen(b._profile || n, b); });
     if (!me && s && window.mpHide) {
       mpHide.seen(n.username, n.numId);
