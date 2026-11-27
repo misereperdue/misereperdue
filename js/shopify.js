@@ -1,7 +1,7 @@
-/* MISERY product catalog. Per dc (2026-11-15) Shopify is retired and payments run on Whop: the shop reads the
+/* MISERY product catalog. Per dc, Shopify is retired. Globe & Chat payments run on Polar; clothing checkout is offline until Stripe. The shop reads the
  * site's own data/catalog.json (same shape the Storefront API returned, so the shop code is unchanged).
  * The global keeps its old name (MPShopify) for the existing callers; MPCatalog is the new alias.
- * There is no cart checkout here: VIP and Stars open the Whop payment sheet from their product pages. */
+ * There is no cart checkout here: VIP and Stars open Polar checkout from their product pages. Clothing checkout opens soon. */
 var MPShopify = (function () {
   "use strict";
 
@@ -116,7 +116,6 @@ var MPShopify = (function () {
           p.comingSoon = !!n.comingSoon;
           p.preorder = !!n.preorder;
           p.shipsAt = n.shipsAt || null;
-          p.whop = n.whop || null;
           return p;
         });
       });

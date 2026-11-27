@@ -173,7 +173,7 @@
       var stack = document.elementsFromPoint(x, y);
       for (var k = 0; k < stack.length; k++) {
         var e = stack[k];
-        if (dock.contains(e) || e === document.body || e === html || e.id === "mpd-scrim" || e.closest(".nv-mirror,#mp-dock,.mp-whop-sheet,.fm-sheet,.fm-scrim")) continue;
+        if (dock.contains(e) || e === document.body || e === html || e.id === "mpd-scrim" || e.closest(".nv-mirror,#mp-dock,.mp-pay-sheet,.fm-sheet,.fm-scrim")) continue;
         if (getComputedStyle(e).position === "fixed") continue;
         var b = e;
         while (b.parentElement && !/^(MAIN|BODY|SECTION)$/.test(b.parentElement.tagName) && !b.parentElement.classList.contains("panel")) {

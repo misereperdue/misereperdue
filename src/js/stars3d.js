@@ -40,7 +40,7 @@ var MPStars3D = (function () {
         stopIO = null,
         renderer = null,
         loop = null;
-      function sheetOpen() { return document.documentElement.classList.contains("mp-whop-open"); }
+      function sheetOpen() { return document.documentElement.classList.contains("mp-pay-open"); }
       var painted = false;
       function noteReady() {
         if (painted) return;
@@ -50,7 +50,7 @@ var MPStars3D = (function () {
       function kickLoop() {
         if (!dead && !raf && loop && !sheetOpen()) raf = requestAnimationFrame(loop);
       }
-      window.addEventListener("mp-whop-open", kickLoop);
+      window.addEventListener("mp-pay-open", kickLoop);
       document.addEventListener("visibilitychange", kickLoop);
       function fallback() {
         if (!dead) el.innerHTML = '<img src="' + fallbackSrc(el) + '" alt="Stars">';
@@ -434,7 +434,7 @@ var MPStars3D = (function () {
 
       return function () {
         dead = true;
-        window.removeEventListener("mp-whop-open", kickLoop);
+        window.removeEventListener("mp-pay-open", kickLoop);
         document.removeEventListener("visibilitychange", kickLoop);
         if (raf) cancelAnimationFrame(raf);
         if (ro) ro.disconnect();

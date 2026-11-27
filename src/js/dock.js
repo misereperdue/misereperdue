@@ -504,7 +504,7 @@
     if (on) closeMenu(true);
   }
   document.addEventListener("focusin", function (e) {
-    if (!isField(e.target) || dock.contains(e.target) || e.target.closest(".mp-whop-sheet")) return;
+    if (!isField(e.target) || dock.contains(e.target) || e.target.closest(".mp-pay-sheet")) return;
     clearTimeout(awayT);
     if (away) return;
     var t = e.target;

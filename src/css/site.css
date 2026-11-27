@@ -11485,7 +11485,7 @@ html.mp-morphing :is(.pw-melt .chat-msg-head strong,.pw-melt .mp-pb-name-t,.pw-g
 /* Louis: checker dome on a black disc (per dc: option B in black) */
 [data-pw="louis"]:is(.pow-ico,.pw-ico,i){background:radial-gradient(circle at 40% 30%,#45454c,#1a1a1e 60%,#060607)!important;color:#f2f2f4!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)!important}
 
-/* Preorders (per dc): Preorder button opens Whop checkout; short ship note under it */
+/* Clothing: add to bag as usual; payment waits on the drop countdown. */
 #preorder-btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
 .preorder-chip{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:6px 11px 6px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink,#1c1c1e) 7%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink,#1c1c1e) 10%,transparent);font-size:12.5px;font-weight:600;line-height:1;color:var(--ink,#1c1c1e);letter-spacing:-.005em}.preorder-chip svg{width:14px;height:14px;flex:none;opacity:.75}.preorder-chip span{opacity:.6;font-weight:500}
 /* Notification avatars open that person's profile */
@@ -11776,48 +11776,48 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{left:calc(50% + 1.03px + var(--cart-nudge));top:calc(50% + .64px);line-height:1}
 @supports (text-box:trim-both cap alphabetic){.nav #cart-btn .badge,.nav #post-btn.bag-mode .badge{top:calc(50% - .48px);text-box:trim-both cap alphabetic}}
 
-/* Whop VIP payment sheet (per dc): slides up over the site; the checkout page runs inside it */
-.mp-whop-sheet{position:fixed;inset:0;z-index:2147483200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-.mp-whop-backdrop{position:absolute;inset:0;background:rgba(4,8,22,.36);opacity:0;transition:opacity .32s cubic-bezier(.32,.72,0,1);pointer-events:auto}
+/* Payment sheet: slides up over the site; Polar checkout runs inside it */
+.mp-pay-sheet{position:fixed;inset:0;z-index:2147483200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.mp-pay-backdrop{position:absolute;inset:0;background:rgba(4,8,22,.36);opacity:0;transition:opacity .32s cubic-bezier(.32,.72,0,1);pointer-events:auto}
 /* minimal receipt sheet: sized to its checkout (the page inside reports its height), capped below the status bar */
-.mp-whop-panel{position:relative;width:min(480px,100%);height:440px;max-height:calc(100vh - max(48px,env(safe-area-inset-top,0px) + 28px));max-height:calc(100dvh - max(48px,env(safe-area-inset-top,0px) + 28px));background:var(--bg);border-radius:28px 28px 0 0;overscroll-behavior:contain;
+.mp-pay-panel{position:relative;width:min(480px,100%);height:440px;max-height:calc(100vh - max(48px,env(safe-area-inset-top,0px) + 28px));max-height:calc(100dvh - max(48px,env(safe-area-inset-top,0px) + 28px));background:var(--bg);border-radius:28px 28px 0 0;overscroll-behavior:contain;
   box-shadow:0 -1px 0 var(--stroke),0 -18px 50px rgba(0,0,0,.22);overflow:hidden;transform:translateY(104%);
   transition:transform .32s cubic-bezier(.32,.72,0,1);pointer-events:auto}
-.mp-whop-sheet.is-animating .mp-whop-panel{will-change:transform}
-.mp-whop-sheet.is-animating .mp-whop-backdrop{will-change:opacity}
-.mp-whop-sheet.is-open .mp-whop-backdrop{opacity:1}
-.mp-whop-sheet.is-open .mp-whop-panel{transform:none}
-.mp-whop-drag{position:absolute;top:0;left:0;right:48px;height:36px;z-index:3;touch-action:none;overscroll-behavior:contain;pointer-events:auto}
-.mp-whop-grab{position:absolute;top:8px;left:50%;width:36px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent);z-index:2;pointer-events:none;transform:translateX(-50%)}
+.mp-pay-sheet.is-animating .mp-pay-panel{will-change:transform}
+.mp-pay-sheet.is-animating .mp-pay-backdrop{will-change:opacity}
+.mp-pay-sheet.is-open .mp-pay-backdrop{opacity:1}
+.mp-pay-sheet.is-open .mp-pay-panel{transform:none}
+.mp-pay-drag{position:absolute;top:0;left:0;right:48px;height:36px;z-index:3;touch-action:none;overscroll-behavior:contain;pointer-events:auto}
+.mp-pay-grab{position:absolute;top:8px;left:50%;width:36px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--ink) 18%,transparent);z-index:2;pointer-events:none;transform:translateX(-50%)}
 /* Promo/order-details dim: one layer over the whole panel, including the parent grabber strip the iframe cannot cover. */
-.mp-whop-panel::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(4,8,20,.55);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:4}
-html[data-theme="light"] .mp-whop-panel::after{background:rgba(16,18,24,.4)}
-.mp-whop-sheet.is-overlay .mp-whop-panel::after{opacity:1}
-.mp-whop-x{position:absolute;top:9px;right:14px;z-index:4;width:28px;height:28px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
-.mp-whop-x svg{width:14px;height:14px}
-.mp-whop-x:active{transform:scale(.92)}
-.mp-whop-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.mp-whop-skel{position:absolute;inset:0;padding:70px 22px 24px;display:grid;align-content:start;gap:12px;pointer-events:none;z-index:0}
-.mp-whop-skel i{display:block;height:46px;border-radius:12px;background:var(--fill);position:relative;overflow:hidden}
-.mp-whop-skel i:first-child{height:40px;width:42%;margin:6px auto 10px}
-.mp-whop-skel i:nth-child(3){height:150px}
-.mp-whop-skel i:last-child{height:52px;border-radius:14px}
-.mp-whop-skel i::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 7%,transparent),transparent);animation:mp-whop-skel 1.3s ease-in-out infinite}
-@keyframes mp-whop-skel{to{transform:translateX(100%)}}
-.mp-whop-sheet.is-ready .mp-whop-skel{opacity:0}
-.mp-whop-frame{display:block;position:relative;z-index:1;width:100%;height:100%;border:0;padding-top:40px;box-sizing:border-box;background:transparent;color-scheme:normal}
-.mp-whop-warm{position:fixed;left:-9999px;top:0;width:min(480px,100vw);height:640px;opacity:0;pointer-events:none;border:0}
-html.mp-whop-open,html.mp-whop-open body{overflow:hidden;overscroll-behavior:none}
-@media (min-width:700px){.mp-whop-sheet{align-items:center}.mp-whop-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
-@media (prefers-reduced-motion:reduce){.mp-whop-panel,.mp-whop-backdrop,.mp-whop-panel::after{transition:none}.mp-whop-skel i::after{animation:none}}
+.mp-pay-panel::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(4,8,20,.55);opacity:0;transition:opacity .2s ease;pointer-events:none;z-index:4}
+html[data-theme="light"] .mp-pay-panel::after{background:rgba(16,18,24,.4)}
+.mp-pay-sheet.is-overlay .mp-pay-panel::after{opacity:1}
+.mp-pay-x{position:absolute;top:9px;right:14px;z-index:4;width:28px;height:28px;border-radius:50%;border:0;background:var(--fill);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:transform .15s ease}
+.mp-pay-x svg{width:14px;height:14px}
+.mp-pay-x:active{transform:scale(.92)}
+.mp-pay-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mp-pay-skel{position:absolute;inset:0;padding:70px 22px 24px;display:grid;align-content:start;gap:12px;pointer-events:none;z-index:0}
+.mp-pay-skel i{display:block;height:46px;border-radius:12px;background:var(--fill);position:relative;overflow:hidden}
+.mp-pay-skel i:first-child{height:40px;width:42%;margin:6px auto 10px}
+.mp-pay-skel i:nth-child(3){height:150px}
+.mp-pay-skel i:last-child{height:52px;border-radius:14px}
+.mp-pay-skel i::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 7%,transparent),transparent);animation:mp-pay-skel 1.3s ease-in-out infinite}
+@keyframes mp-pay-skel{to{transform:translateX(100%)}}
+.mp-pay-sheet.is-ready .mp-pay-skel{opacity:0}
+.mp-pay-frame{display:block;position:relative;z-index:1;width:100%;height:100%;border:0;padding-top:40px;box-sizing:border-box;background:transparent;color-scheme:normal}
+.mp-pay-warm{position:fixed;left:-9999px;top:0;width:min(480px,100vw);height:640px;opacity:0;pointer-events:none;border:0}
+html.mp-pay-open,html.mp-pay-open body{overflow:hidden;overscroll-behavior:none}
+@media (min-width:700px){.mp-pay-sheet{align-items:center}.mp-pay-panel{border-radius:28px;max-height:min(86vh,820px);box-shadow:0 0 0 1px var(--stroke),0 24px 70px rgba(0,0,0,.28)}}
+@media (prefers-reduced-motion:reduce){.mp-pay-panel,.mp-pay-backdrop,.mp-pay-panel::after{transition:none}.mp-pay-skel i::after{animation:none}}
 /* Checkout in the nav pill (dc t661u): hosted in the profile sheet's own top-bar morph (MPProfiles.openSheet).
    The page iframe hugs its content up to the sheet's room and scrolls inside past that; nothing scrolls sideways. */
-.mp-whop-dock{position:relative;min-width:0;max-width:100%;overflow:hidden}
-.mp-whop-dock-frame{display:block;width:100%;max-width:100%;height:0;border:0;background:transparent;color-scheme:normal;opacity:0;transition:opacity .26s ease}
-.mp-whop-dock.is-ready .mp-whop-dock-frame{opacity:1}
-.mp-whop-dock-skel{display:grid;gap:10px;padding:6px 10px 12px}
-.mp-whop-dock-skel i{display:block;height:46px;border-radius:14px;background:var(--fill)}
-.mp-whop-dock.is-ready .mp-whop-dock-skel{display:none}
+.mp-pay-dock{position:relative;min-width:0;max-width:100%;overflow:hidden}
+.mp-pay-dock-frame{display:block;width:100%;max-width:100%;height:0;border:0;background:transparent;color-scheme:normal;opacity:0;transition:opacity .26s ease}
+.mp-pay-dock.is-ready .mp-pay-dock-frame{opacity:1}
+.mp-pay-dock-skel{display:grid;gap:10px;padding:6px 10px 12px}
+.mp-pay-dock-skel i{display:block;height:46px;border-radius:14px;background:var(--fill)}
+.mp-pay-dock.is-ready .mp-pay-dock-skel{display:none}
 
 /* Spinning 3D charms (per dc, 2026-11-15): one 120-frame strip per gem (24 fps), stepped across by transform. The three gems
    start at different points in the turn so they don't move in lockstep. Reduced motion shows the first frame. */

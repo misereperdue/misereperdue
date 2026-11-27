@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Regenerate the static product pages (p/<handle>.html) and shop.html from the site's own catalog
-(data/catalog.json; per dc, Shopify retired 2026-11-15, payments on Whop), with schema.org Product
+(data/catalog.json; Globe & Chat payments on Polar, clothing checkout offline until Stripe), with schema.org Product
 JSON-LD (Google rich results: price, currency, availability, image, brand). Run: python3 tools/build-products.py
 Products no longer in the catalog are reported (their page is not touched)."""
 import hashlib, json, html, os, re, subprocess, sys, urllib.request
@@ -47,8 +47,7 @@ def ships_label(p):
     except (KeyError, ValueError): return "at launch"
 
 def preorder_url(p):
-    plan = (p.get("whop") or {}).get("plan")
-    return f"https://whop.com/checkout/{plan}" if p.get("preorder") and plan else None
+    return None
 
 def merchant_feed(prods):
     """Google Merchant Center product feed (per dc): physical products people can buy now (in stock or preorder).
@@ -56,7 +55,7 @@ def merchant_feed(prods):
     from xml.sax.saxutils import escape as x
     items = []
     for p in prods:
-        if p.get("whop", {}).get("plan") is None or not (p.get("preorder") or p["availableForSale"]): continue
+        if not (p.get("preorder") or p["availableForSale"]): continue
         if p["handle"] in ("membership", "stars"): continue
         lo = p["priceRange"]["minVariantPrice"]
         imgs = [i["url"] for i in p["images"]["nodes"]] or ([p["featuredImage"]["url"]] if p.get("featuredImage") else [])
@@ -213,7 +212,7 @@ def main():
         share = [(f"{SITE}/img/og/{p['handle']}-p.jpg?v={ver(card)}", 1200, 630)] if os.path.exists(card) else [(img, None, None)]
         if os.path.exists(sq): share.append((f"{SITE}/img/og/{p['handle']}-sq.jpg?v={ver(sq)}", 1200, 1200))
         p["_share"] = [u for u, _, _ in share]
-        stock = ("Preorder · ships " + ships_label(p)) if p.get("preorder") else "In stock" if p["availableForSale"] else (soon(p) if p.get("comingSoon") else "Sold out")
+        stock = ("Ships " + ships_label(p)) if p.get("preorder") else "In stock" if p["availableForSale"] else (soon(p) if p.get("comingSoon") else "Sold out")
         variants = [v["title"] for v in p["variants"]["nodes"] if v["title"] != "Default Title"]
         shop_link = f"{SITE}/#product/" + urllib.request.quote(p["id"], safe="")
         alt = f"{p['title']} by Misère Perdue"
@@ -226,7 +225,6 @@ def main():
                 f"<p><img src=\"{e(img)}\" alt=\"{e(alt)}\" width=\"720\"{hattr} fetchpriority=\"high\" decoding=\"async\"></p>\n"
                 f"<div class=\"post\"><p>{e(p['description'])}</p></div>\n"
                 + (f"<p class=\"meta\">Options: {e(', '.join(variants))}</p>\n" if variants else "")
-                + (f"<div class=\"cta\"><a href=\"{preorder_url(p)}\" rel=\"noopener\">Preorder for {price_label(p)} &rarr;</a><br><span class=\"meta\">Secure checkout by Whop. Ships {ships_label(p)}.</span></div>\n" if preorder_url(p) else "")
                 + f"<div class=\"cta\"><a href=\"{shop_link}\">View in the shop on misereperdue.com &rarr;</a></div>\n</article>\n</main>\n</body>\n</html>\n")
         title = f"{(SEO.get(p['handle']) or (p['title'],))[0]} | {BRAND}"
         lo = p["priceRange"]["minVariantPrice"]
@@ -244,7 +242,7 @@ def main():
           crumbs([("Home", SITE + "/"), ("Shop", SITE + "/shop")])], ensure_ascii=False)
     names = [(SEO.get(p["handle"]) or (None, p["title"]))[1] for p, _ in items]
     listed = ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "".join(names)
-    desc = f"Shop Misère Perdue (Misery): {listed}. Prices in CAD with secure checkout by Whop."
+    desc = f"Shop Misère Perdue (Misery): {listed}. VIP and Stars in CAD, paid through Polar. Clothing checkout opens soon."
     def thumb(p):
         fi = p.get("featuredImage") or {}
         return f"<a href=\"/p/{p['handle']}\"><img src=\"{e(fi['url'])}\" alt=\"{e(p['title'])} by Misère Perdue\" width=\"120\" height=\"120\" loading=\"lazy\" decoding=\"async\" style=\"object-fit:cover\"></a>" if fi.get("url") else ""
