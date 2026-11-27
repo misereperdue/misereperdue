@@ -11916,7 +11916,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
    menu (profile, notifications, online, Powers, Stars, misery fm, live notices) grows UP out of it.
    Scoped to html.mp-bnav so the old bars come back by dropping that one class. */
 #mp-dock,#mpd-scrim,#mpd-probe{display:none}
-html.mp-bnav{--mpd-h:48px;--mpd-edge:6px;--mpd-clear:calc(var(--mpd-edge) + 56px);--mpd-e:cubic-bezier(.32,.72,0,1)}
+/* Safari: just clear of the URL bar (per dc) */
+html.mp-bnav{--mpd-h:48px;--mpd-edge:2px;--mpd-clear:calc(var(--mpd-edge) + 56px);--mpd-e:cubic-bezier(.32,.72,0,1)}
 html.mp-bnav #mpd-probe{display:block;position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
@@ -11933,8 +11934,10 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
 html.mp-bnav{--nv-glass:rgba(24,30,54,.36);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,.86,.28,1);--nv-ice:#a9d7f5}
 html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.42);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6);--nv-ice:#7eb8d9}
 html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,var(--mpd-edge));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .34s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
-html.mp-standalone.mp-bnav,html.mp-bnav.mp-standalone{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}
-@media (display-mode: standalone),(display-mode: fullscreen){html.mp-bnav{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}}
+/* home-screen app (per dc): as low as it goes, down into the home-indicator area (about 18px from the bottom
+   on a notched iPhone) while staying clear of the indicator itself */
+html.mp-standalone.mp-bnav,html.mp-bnav.mp-standalone{--mpd-edge:max(6px,calc(env(safe-area-inset-bottom,0px) - 16px));--mpd-clear:calc(var(--mpd-edge) + 56px)}
+@media (display-mode: standalone),(display-mode: fullscreen){html.mp-bnav{--mpd-edge:max(6px,calc(env(safe-area-inset-bottom,0px) - 16px));--mpd-clear:calc(var(--mpd-edge) + 56px)}}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
 /* zero specificity: the profile, Powers, Stars, settings and fm sheets open inside #mp-dock, and an id rule here
    overrode their own button fonts and colours (font changes across the site) */
