@@ -1316,9 +1316,124 @@ var MPShop = (function () {
       .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
       .catch(function () { starsWhop = null; return { enabled: false }; }));
   }
+  /* Polar checkout (per dc t690u): VIP and Stars go through Polar when the Worker flag is on.
+     Clothing stays on Whop until a later removal. The sheet still morphs out of the nav pill. */
+  var polarCfg = null, polarOn = false;
+  function polarStatus() {
+    return polarCfg || (polarCfg = fetch("https://api.misereperdue.com/api/polar/config", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
+      .then(function (d) { polarOn = !!(d && d.enabled === true); return d || { enabled: false }; })
+      .catch(function () { polarCfg = null; return { enabled: false }; }));
+  }
+  function polarDoneUrl(url) {
+    try { return new URL(url, location.href).searchParams.get("polar") === "done"; } catch (_) { return false; }
+  }
+  function startPolarCheckout(product, pack) {
+    if (!mpTok()) { window.MPNav && MPNav.show && MPNav.show("journal"); return Promise.resolve(null); }
+    var body = { product: product };
+    if (pack) body.pack = pack;
+    return fetch("https://api.misereperdue.com/api/polar/checkout", {
+      method: "POST",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + mpTok() },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json().then(function (d) { d = d || {}; d._http = r.status; return d; }); })
+      .catch(function () { return { ok: false, error: "Checkout isn't available right now. Please try again shortly." }; });
+  }
+  function openPolarPortal() {
+    if (!mpTok()) { window.MPNav && MPNav.show && MPNav.show("journal"); return; }
+    fetch("https://api.misereperdue.com/api/polar/portal", {
+      method: "POST",
+      cache: "no-store",
+      headers: { Authorization: "Bearer " + mpTok() }
+    }).then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.url) window.open(d.url, "_blank", "noopener"); });
+  }
+  function openPolarSheet(onDone, product, pack, label) {
+    var d = document.documentElement.classList.contains("mp-bnav") && document.getElementById("mp-dock");
+    if (!d || !d.getClientRects().length || !window.MPProfiles || !MPProfiles.openSheet) {
+      startPolarCheckout(product, pack).then(function (s) { if (s && s.ok && s.url) location.assign(s.url); });
+      return;
+    }
+    var frame = null, done = false, finished = false;
+    var sheet = MPProfiles.openSheet({ title: label || "Checkout", owner: "checkout", bodyClass: "mp-whop-dock", maxHeight: 4000, onClose: function () { done = true; } });
+    if (!sheet) {
+      startPolarCheckout(product, pack).then(function (s) { if (s && s.ok && s.url) location.assign(s.url); });
+      return;
+    }
+    var skel = document.createElement("div");
+    skel.className = "mp-whop-dock-skel"; skel.setAttribute("aria-hidden", "true"); skel.innerHTML = "<i></i><i></i><i></i><i></i>";
+    frame = document.createElement("iframe");
+    frame.className = "mp-whop-dock-frame";
+    frame.title = label || "Checkout";
+    frame.setAttribute("allow", "payment *");
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals");
+    sheet.body.appendChild(skel); sheet.body.appendChild(frame);
+    function room() {
+      var root = sheet.root, head = root.querySelector(".mp-profile-bar-head"), scroll = root.querySelector(".mp-profile-bar-scroll");
+      var rs = getComputedStyle(root), ss = getComputedStyle(scroll), r = sheet.bar.getBoundingClientRect();
+      var top = (window.MPDock && MPDock.topInset ? MPDock.topInset() : 0) + 12;
+      var chrome = (parseFloat(rs.paddingTop) || 0) + (parseFloat(rs.paddingBottom) || 0) + (head ? head.offsetHeight : 0) +
+        Math.max(0, scroll.getBoundingClientRect().top - (head ? head.getBoundingClientRect().bottom : 0)) +
+        (parseFloat(ss.paddingTop) || 0) + (parseFloat(ss.paddingBottom) || 0) + 2;
+      return Math.max(200, Math.floor(r.bottom - top - chrome));
+    }
+    function fit() {
+      frame.style.height = room() + "px";
+      sheet.body.classList.add("is-ready");
+      sheet.resize();
+    }
+    function fail(msg) {
+      if (skel.parentNode) skel.remove();
+      var p = document.createElement("p");
+      p.className = "vip-status-s";
+      p.textContent = msg || "Checkout isn't available right now. Please try again shortly.";
+      sheet.body.appendChild(p);
+      sheet.body.classList.add("is-ready");
+      sheet.resize();
+    }
+    function succeed() {
+      if (finished || done) return;
+      finished = true;
+      onDone && onDone();
+      sheet.close();
+    }
+    frame.addEventListener("load", function () {
+      if (done) return;
+      try {
+        var href = frame.contentWindow && frame.contentWindow.location && frame.contentWindow.location.href;
+        if (href && polarDoneUrl(href)) return void succeed();
+      } catch (_) {}
+      fit();
+    });
+    startPolarCheckout(product, pack).then(function (s) {
+      if (done) return;
+      if (!s || !s.ok || !s.url) return fail(s && s.error);
+      if (s.embed === false) { location.assign(s.url); return; }
+      frame.src = s.url;
+      setTimeout(function () { if (!done && !sheet.body.classList.contains("is-ready")) fit(); }, 400);
+    });
+  }
   function starsAction(p, i, pack) {
     var box = p.querySelector("#bag-action");
     if (!box) return;
+    polarStatus().then(function (polar) {
+      if (!box.isConnected) return;
+      if (polar && polar.enabled) {
+        if (!mpTok()) {
+          box.innerHTML = '<button class="btn accent vip-buy" type="button">Sign in to buy Stars</button>';
+          box.querySelector("button").onclick = function () { y("journal"); };
+          return;
+        }
+        box.innerHTML = '<button class="btn accent vip-buy" id="stars-buy" type="button">Purchase Stars</button>';
+        box.querySelector("#stars-buy").onclick = function () {
+          var n = parseInt(String(pack()).replace(/,/g, ""), 10);
+          if (!n) return;
+          window.haptic && window.haptic(12);
+          openPolarSheet(null, "stars", n, "Stars checkout");
+        };
+        return;
+      }
     starsWhopStatus().then(function (st) {
       if (!box.isConnected) return;
       if (!st || !st.enabled) return void P(i, pack);
@@ -1336,6 +1451,7 @@ var MPShop = (function () {
       };
       var n = parseInt(String(pack()).replace(/,/g, ""), 10);
       if (n) scheduleWarm("&product=stars&pack=" + n, "Stars checkout");
+    });
     });
   }
   function starsSizes(i) {
@@ -1391,9 +1507,13 @@ var MPShop = (function () {
           var when = v.paidThrough ? new Date(v.paidThrough).toLocaleDateString(void 0, { month: "short", day: "numeric", year: "numeric" }) : "";
           box.innerHTML = '<div class="vip-status"><p class="vip-status-h">You\u2019re already subscribed</p><p class="vip-status-s">' +
             (v.cancelled && when ? "Cancelled \u00b7 VIP ends " + l(when) : "Thank you for your contribution!") + "</p>" +
-            ("subscription" === v.source && !v.cancelled && v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl)
+            ("subscription" === v.source && !v.cancelled && v.provider === "polar"
+              ? '<button class="btn vip-manage" type="button" id="vip-polar-manage">Manage VIP</button>'
+              : "subscription" === v.source && !v.cancelled && v.manageUrl && /^https:\/\/whop\.com\//.test(v.manageUrl)
               ? '<a class="btn vip-manage" href="' + l(v.manageUrl) + '" target="_blank" rel="noopener">Manage VIP</a>'
               : "") + "</div>";
+          var manage = box.querySelector("#vip-polar-manage");
+          if (manage) manage.onclick = function () { openPolarPortal(); };
           return;
         }
         var b = btn("Purchase VIP");
@@ -1723,6 +1843,7 @@ var MPShop = (function () {
   }
   window.MPWhopSheet = openWhopSheet;
   function vipCheckout(i, b, provider) {
+    if (provider === "polar") { openPolarSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }, "vip", null, "VIP checkout"); return; }
     if (provider === "whop") { openWhopSheet(function () { if (document.getElementById("bag-action")) vipAction(document, i); }); return; }
     var er = document.getElementById("vip-err");
     er && (er.textContent = "VIP checkout isn't available right now. Please try again shortly.");
@@ -1740,6 +1861,11 @@ var MPShop = (function () {
         if (!vipResponse.ok) throw new Error("Sign in and check your connection before buying VIP.");
         var vipState = await vipResponse.json();
         if (vipState.vip || vipState.status === "active") throw new Error("You already have VIP. Manage your subscription from your profile.");
+        if (vipState.checkoutProvider === "polar") {
+          if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
+          openPolarSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); }, "vip", null, "VIP checkout");
+          return;
+        }
         if (vipState.checkoutProvider === "whop") {
           if (MP.readCart().length !== 1) throw new Error("Please check out with VIP separately. Your other items will stay in your cart.");
           openWhopSheet(function () { MP.writeCart([]); if (window.MPNav && MPNav.refreshPostBtn) MPNav.refreshPostBtn(); if (window.MPNav && MPNav.show) MPNav.show("shop"); });
