@@ -1709,7 +1709,10 @@ var MPShop = (function () {
   })();
   function refreshInPlace() {
     var shop = document.getElementById("shop");
-    if (!shop || !shop.classList.contains("on") || !document.getElementById("shop-grid")) return null;
+    var product = document.getElementById("product");
+    var onShop = shop && shop.classList.contains("on");
+    var onProduct = product && product.classList.contains("on");
+    if ((!onShop && !onProduct) || !document.getElementById("shop-grid")) return null;
     b = "";
     return k();
   }

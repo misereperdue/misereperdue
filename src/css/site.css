@@ -1288,7 +1288,6 @@ textarea {
   flex: none;
   border-radius: 6px;
   overflow: hidden;
-  /* bob → pulse: see mp-icon-pulse-loop */
 }
 .a2hs-ico img {
   display: block;
@@ -5431,6 +5430,19 @@ html.mp-ptr-hold body {
   }
   .mp-pull-indicator-arrow { transform: none; }
 }
+
+/* Shop / product pull-to-refresh (js/pull-refresh.js) */
+.mp-pr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:40;width:28px;height:28px;margin:0 0 0 -14px;border-radius:50%;display:grid;place-items:center;background:var(--glass-clear-tint);border:var(--glass-hairline);box-shadow:var(--glass-spec);-webkit-backdrop-filter:var(--glass-clear);backdrop-filter:var(--glass-clear);opacity:0;pointer-events:none;transform:translate3d(0,-10px,0) scale(.86);will-change:transform,opacity}
+.mp-pr.is-on{opacity:1}
+.mp-pr.is-dragging{transition:none}
+.mp-pr:not(.is-dragging){transition:transform .38s var(--nv-spring,cubic-bezier(.32,.86,.28,1)),opacity .28s cubic-bezier(.32,.72,0,1)}
+.mp-pr-ring{width:14px;height:14px;border-radius:50%;border:1.8px solid color-mix(in srgb,var(--accent) 28%,transparent);border-top-color:var(--accent);transform:rotate(var(--mp-pr-rot,0deg))}
+.mp-pr.is-busy .mp-pr-ring{animation:mp-pr-spin .55s linear infinite}
+@keyframes mp-pr-spin{to{transform:rotate(360deg)}}
+html.mp-pr-hold,html.mp-pr-hold body{overscroll-behavior-y:none}
+@media (prefers-reduced-motion: reduce){
+  .mp-pr,.mp-pr-ring{transition:none!important;animation:none!important}
+}
 .chat-bell,
 .forum-bell {
   position: relative;
@@ -7102,16 +7114,12 @@ svg[data-hi].hi-play {
   70% { opacity: 0.85; scale: 1.02; }
 }
 /* Keep old names as aliases so existing data-hi values still pulse */
-.a2hs-ico {
-  animation: mp-icon-pulse-loop 2.4s ease-in-out infinite;
-}
 @keyframes mp-icon-pulse-loop {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.94); }
 }
 @media (prefers-reduced-motion: reduce) {
-  svg[data-hi].hi-play,
-  .a2hs-ico { animation: none !important; }
+  svg[data-hi].hi-play { animation: none !important; }
 }
 /* Globe post editor: floating format card (per dc's reference) */
 
@@ -11833,7 +11841,7 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
    menu (profile, notifications, online, Powers, Stars, misery fm, live notices) grows UP out of it.
    Scoped to html.mp-bnav so the old bars come back by dropping that one class. */
 #mp-dock,#mpd-scrim,#mpd-probe{display:none}
-html.mp-bnav{--mpd-h:48px;--mpd-clear:calc(env(safe-area-inset-bottom,0px) + 70px);--mpd-e:cubic-bezier(.32,.72,0,1)}
+html.mp-bnav{--mpd-h:48px;--mpd-edge:6px;--mpd-clear:calc(var(--mpd-edge) + 56px);--mpd-e:cubic-bezier(.32,.72,0,1)}
 html.mp-bnav #mpd-probe{display:block;position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
@@ -11848,7 +11856,9 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
    small spring overshoot and blur-crossfades the labels. Light glass in light mode, smoked glass in dark. */
 html.mp-bnav{--nv-glass:rgba(24,30,54,.36);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,.86,.28,1);--nv-ice:#a9d7f5}
 html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.42);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6);--nv-ice:#7eb8d9}
-html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .38s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
+html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,var(--mpd-edge));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .38s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
+html.mp-standalone.mp-bnav,html.mp-bnav.mp-standalone{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}
+@media (display-mode: standalone),(display-mode: fullscreen){html.mp-bnav{--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 8px);--mpd-clear:calc(var(--mpd-edge) + 56px)}}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
 #mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 :where(#mp-dock) button{border:0;background:none;padding:0;margin:0}
@@ -11915,7 +11925,11 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-live{position:absolute;top:1px;right:1px;z-index:2;width:8px;height:8px;border-radius:50%;background:var(--nv-ice);box-shadow:0 0 0 2px var(--bg),inset 0 1px 0 rgba(255,255,255,.5)}
 .nv-live[hidden]{display:none}
 .nv-fm-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none}
-.nv-fm-art[hidden],.nv-fm-ic[hidden]{display:none}
+.nv-fm-eyes{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#fff;pointer-events:none;display:block}
+.nv-fm-eyes svg{display:block;width:100%;height:100%}
+.nv-fm:not(.is-live) .nv-fm-ic{display:none}
+.nv-fm.is-live .nv-fm-eyes{display:none}
+.nv-fm-art[hidden],.nv-fm-ic[hidden],.nv-fm-eyes[hidden]{display:none}
 .nv-fm-line{display:flex;align-items:center;gap:6px;min-width:0}
 .nv-fm-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nv-fm-logo{display:block;width:54px;height:12px;flex:none;background:currentColor;-webkit-mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat;mask:url("../assets/misery-fm-logo.svg?v=1") center/contain no-repeat}

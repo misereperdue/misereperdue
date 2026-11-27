@@ -9448,6 +9448,10 @@
           // Globe owns pull-to-post; Chat and thread detail update themselves.
           return !!document.querySelector("#journal.on, #forum.on");
         }
+        function onShopOrProduct() {
+          // Shop and product use the shared MPPullRefresh module instead.
+          return !!document.querySelector("#shop.on, #product.on");
+        }
         function clearStuckClaim() {
           if (!onLivePage() && window.__mpPullToPost) {
             try { window.__mpPullToPost = !1; } catch (e) {}
@@ -9565,7 +9569,7 @@
           dist = 0;
           armed = 0;
           activeScroller = null;
-          if (sheetOpen() || (ev.target && ev.target.closest && ev.target.closest(".mp-pay-sheet")) || onLivePage() || window.__mpPullToPost) {
+          if (sheetOpen() || (ev.target && ev.target.closest && ev.target.closest(".mp-pay-sheet")) || onLivePage() || onShopOrProduct() || window.__mpPullToPost) {
             startY = null;
             return;
           }
@@ -9589,7 +9593,7 @@
         }
         function onMove(ev) {
           if (busy || null === startY) return;
-          if (sheetOpen() || onLivePage() || window.__mpPullToPost) {
+          if (sheetOpen() || onLivePage() || onShopOrProduct() || window.__mpPullToPost) {
             startY = null;
             locked = 0;
             dist = 0;
@@ -9628,7 +9632,7 @@
           if (!raf) {
             raf = requestAnimationFrame(function () {
               raf = 0;
-              if (g !== gen || busy || onLivePage()) return;
+              if (g !== gen || busy || onLivePage() || onShopOrProduct()) return;
               paint(p, true);
               shiftContent(resisted, true);
             });
@@ -9653,7 +9657,7 @@
             hide();
             return;
           }
-          var go = dist >= THRESH && !sheetOpen() && !onLivePage() && !window.__mpPullToPost;
+          var go = dist >= THRESH && !sheetOpen() && !onLivePage() && !onShopOrProduct() && !window.__mpPullToPost;
           startY = null;
           locked = 0;
           activeScroller = null;

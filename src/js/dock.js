@@ -15,7 +15,7 @@
   var q = function (s) { return dock.querySelector(s); };
   var el = { back: q(".nv-back"), tabs: q(".nv-tabs"), bag: q(".nv-tab-bag"), rg: q(".nv-rg"), home: q(".nv-home"), fm: q(".nv-fm"), me: q(".nv-me") };
   var lens = q(".nv-lens"), tabBtns = [].slice.call(dock.querySelectorAll(".nv-tab"));
-  var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live"), fmArt = q(".nv-fm-art"), fmIc = q(".nv-fm-ic"), fmLogo = q(".nv-fm-logo"), fmName = q(".nv-fm-name");
+  var homeIc = q(".nv-home-ic"), fmIn = q(".nv-fm-in"), fmSub = q(".nv-fm-sub"), fmTag = q(".nv-fm-tag"), fmLive = q(".nv-live"), fmArt = q(".nv-fm-art"), fmIc = q(".nv-fm-ic"), fmEyes = q(".nv-fm-eyes"), fmLogo = q(".nv-fm-logo"), fmName = q(".nv-fm-name");
   var meAv = q(".mpd-av"), meName = q(".nv-name"), meSt = q(".nv-st"), sBadge = q(".nv-sbadge"), sBtn = q(".nv-sbtn"), bell = q(".nv-bell"), unread = q(".mpd-unread");
   var menu = q(".nv-smenu"), rows = [].slice.call(dock.querySelectorAll(".nv-srow"));
   var onlineB = q(".nv-online"), bagCount = q(".nv-count");
@@ -57,8 +57,9 @@
     /* Keep width in sync while a sheet is open so the reverse morph does not jump after a resize. */
     if (menuOpen()) return;
     dock.style.height = H + "px";
-    var hasBack = !el.back.hidden, rgW = P + C + P + C + P;
+    var hasBack = !el.back.hidden, showMe = signedIn, rgW = showMe ? P + C + P + C + P : P + C + P;
     dock.setAttribute("data-state", state);
+    if (state === "me" && !showMe) state = "tabs";
     if (state === "tabs") {
       var x = 0;
       box(el.back, 0, 0, H, H, null, hasBack); if (hasBack) x = H + G;
@@ -66,15 +67,15 @@
       box(el.tabs, x, 0, right - x, H, null, true);
       box(el.rg, W - rgW, 0, rgW, H, null, true);
       box(el.fm, W - rgW + P, P, C, C, null, true);
-      box(el.me, W - rgW + P + C + P, P, C, C, null, true);
+      box(el.me, showMe ? W - rgW + P + C + P : W - rgW + P, P, C, C, null, showMe);
       box(el.home, x, y, S, S, null, false);
     } else {
       box(el.back, 0, y, S, S, null, false);
       box(el.home, 0, y, S, S, null, true);
       box(el.tabs, 0, y, S, S, null, false);
       if (state === "fm") {
-        box(el.fm, S + G, y, W - 2 * S - 2 * G, S, null, true);
-        box(el.me, W - S, y, S, S, null, true);
+        box(el.fm, S + G, y, showMe ? W - 2 * S - 2 * G : W - S - 2 * G, S, null, true);
+        box(el.me, W - S, y, S, S, null, showMe);
         box(el.rg, W - S, y, S, S, null, false);
       } else {
         box(el.fm, S + G, y, S, S, null, true);
@@ -82,11 +83,13 @@
         box(el.rg, W - S, y, S, S, null, false);
       }
     }
+    el.me.setAttribute("aria-hidden", showMe ? "false" : "true");
+    if (showMe) el.me.removeAttribute("tabindex"); else el.me.setAttribute("tabindex", "-1");
     // fm/you sit inside the right group in tabs (no glass of their own), and are glass shapes otherwise
     [el.fm, el.me].forEach(function (e) { e.classList.toggle("nv-glass", state !== "tabs"); e.classList.toggle("nv-wide", e === (state === "fm" ? el.fm : state === "me" ? el.me : null)); });
     if (lastBox && lastBox !== state + W) L.followUntil = performance.now() + 620;
     seat(!lastBox);
-    lastBox = state + W;
+    lastBox = state + W + (signedIn ? "i" : "o");
     place();
   }
 
@@ -335,12 +338,9 @@
     var c = live && F._calc ? F._calc() : null, tr = c && c.tr, n = (F && F.state && F.state() && F.state().listeners) || 0;
     var src = (tr && tr.art && F.artUrl) ? F.artUrl(tr) : "";
     var name = "misery fm", sub = "is off air";
-    if (live && tr) {
-      name = tr.title || "Live";
-      sub = tr.artist || (n ? n + " listening" : "Live");
-    } else if (live) {
+    if (live) {
       name = "misery fm";
-      sub = n ? n + " listening" : "Live";
+      sub = "is live";
     } else {
       name = "is off air";
       sub = (st && st.scheduled && st.text) ? "Live in " + st.text : "";
@@ -351,7 +351,7 @@
     fmTag.hidden = true;
     fmLive.hidden = !live;
     if (fmArt) {
-      if (src) {
+      if (live && src) {
         if (fmArt.getAttribute("src") !== src) fmArt.src = src;
         fmArt.hidden = false;
       } else {
@@ -359,11 +359,12 @@
         fmArt.hidden = true;
       }
     }
-    if (fmIc) fmIc.hidden = !!src;
+    if (fmEyes) fmEyes.hidden = !!live;
+    if (fmIc) fmIc.hidden = !live || !!src;
     el.fm.classList.toggle("is-live", live);
     el.fm.classList.toggle("is-off", !live);
-    el.fm.classList.toggle("has-art", !!src);
-    var aria = live ? ("misery fm. " + name + (sub ? ". " + sub : "")) : (sub ? "misery fm is off air. " + sub : "misery fm is off air");
+    el.fm.classList.toggle("has-art", !!(live && src));
+    var aria = live ? "misery fm is live" : (sub ? "misery fm is off air. " + sub : "misery fm is off air");
     el.fm.setAttribute("aria-label", aria);
   }
   setInterval(fmPaint, 1500);
