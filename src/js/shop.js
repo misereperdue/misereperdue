@@ -1604,6 +1604,7 @@ var MPShop = (function () {
       } else e.innerHTML = "";
   }
   function B() {
+    cartTitle();
     var t = document.getElementById("cart-lines"),
       e = document.getElementById("cart-total");
     if (t) {
@@ -1678,7 +1679,13 @@ var MPShop = (function () {
       }
     }
   }
+  /* Bag title (per dc): "x items in your cart", kept current wherever the bag renders or changes */
+  function cartTitle() {
+    var ttl = document.querySelector("#cart .mp-page-title");
+    if (ttl) { var cn = MP.cartCount(); ttl.textContent = cn + (cn === 1 ? " item" : " items") + " in your cart"; }
+  }
   function q() {
+    cartTitle();
     var t = MP.cartCount(),
       e = document.getElementById("cart-btn"),
       n = document.getElementById("cart-badge");

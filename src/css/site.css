@@ -11736,7 +11736,19 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .mp-pb-nm>.mp-pb-stats{order:2;margin:8px 0 0;justify-content:center}
 .mp-pb-nm>.mp-pb-tools{order:3}
 .mp-pb-nm>.mp-pb-bio{order:4}
-.mp-pb-nm>.mp-pb-dotdiv{order:4} /* right after the bio (same order, later in the DOM), before the tools (5) */
+.mp-pb-nm>.mp-pb-dotdiv{order:4}
+/* status picker as a nav-pill morph sheet (per dc) */
+.mp-st-list{display:flex;flex-direction:column;padding:2px 0 6px}
+.mp-st-row{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:0 14px;border:0;border-radius:16px;background:none;color:var(--ink);font:inherit;font-size:16px;font-weight:500;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease}
+.mp-st-row:active{background:var(--fill)}
+.mp-st-row .nv-sico{position:relative;flex:none;width:16px;height:16px;box-shadow:none}
+.mp-st-row .nv-sico.nv-s-idle{background:transparent}
+.mp-st-row .nv-sico.nv-s-invisible{background:transparent;box-shadow:inset 0 0 0 2.5px #8e8e93}
+.mp-st-row span{flex:1;min-width:0}
+.mp-st-row .mp-st-chk{flex:none;width:18px;height:18px;color:var(--accent);opacity:0;transform:scale(.6);transition:opacity .2s ease,transform .3s var(--nv-spring,ease)}
+.mp-st-row.is-on .mp-st-chk{opacity:1;transform:none}
+.mp-st-row+.mp-st-row{position:relative}
+.mp-st-row+.mp-st-row::before{content:"";position:absolute;left:42px;right:14px;top:0;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ink) 12%,transparent) 15%,color-mix(in srgb,var(--ink) 12%,transparent) 85%,transparent)} /* right after the bio (same order, later in the DOM), before the tools (5) */
 /* Social profiles and a shared Notifications / Activity hold stack. */
 .mp-pb-nm>.mp-pb-tools{order:5;flex-wrap:wrap;margin-top:10px}
 .mp-pb-nm>.mp-social-status{order:6}
@@ -11917,8 +11929,8 @@ html.mp-app,html.mp-app *{scrollbar-width:none!important}html.mp-app::-webkit-sc
 .chat-inputrow .chat-send,.chat-inputrow .chat-plus{transition:transform .2s cubic-bezier(.3,.7,.4,1.35)}
 /* Composer (per dc): slimmer and narrower, in the same glass as the nav pill. Kept under 90% of the screen
    width: Safari 26 treats a fixed element spanning 90%+ of the width at the bottom as a toolbar-edge bar and
-   paints a flat strip behind its URL bar. The bar glides up with the keyboard. */
-html.mp-bnav .chat-inputrow{width:min(400px,88%);gap:7px;transition:bottom .3s cubic-bezier(.32,.72,0,1)}
+   paints a flat strip behind its URL bar. */
+html.mp-bnav .chat-inputrow{width:min(400px,88%);gap:7px}
 html.mp-bnav .chat-inputrow .chat-inputbar{min-height:44px;border-radius:22px;padding:4px 4px 4px 16px;gap:6px;border:0;background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow),inset 0 1px 0 var(--nv-rim,rgba(255,255,255,.16))}
 html.mp-bnav .chat-inputrow .chat-inputbar input{padding:6px 0}
 html.mp-bnav .chat-inputrow .chat-send{width:36px;height:36px}
@@ -11926,7 +11938,6 @@ html.mp-bnav .chat-inputrow .chat-send svg{width:17px;height:17px}
 html.mp-bnav .chat-inputrow .chat-mic{width:32px;height:32px}
 html.mp-bnav .chat-inputrow .chat-mic-g{width:30px;height:30px}
 html.mp-bnav .chat-inputrow .chat-plus{width:44px;height:44px;background-color:var(--lg-tint);background-image:var(--lg-sheen);-webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);box-shadow:var(--lg-shadow),inset 0 1px 0 var(--nv-rim,rgba(255,255,255,.16))}
-@media (prefers-reduced-motion:reduce){html.mp-bnav .chat-inputrow{transition:none}}
 .chat-inputrow .chat-send:active,.chat-inputrow .chat-plus:active{transform:scale(.9)}
 @media (prefers-reduced-motion:reduce){.chat-msg-in{animation:none!important}.chat-msgs .chat-bubble:active{transform:none}}
 /* Instant chat placeholders (per dc): shimmering bubbles while the first messages load */
@@ -11947,8 +11958,9 @@ html.mp-bnav .chat-inputrow .chat-plus{width:44px;height:44px;background-color:v
    menu (profile, notifications, online, Powers, Stars, misery fm, live notices) grows UP out of it.
    Scoped to html.mp-bnav so the old bars come back by dropping that one class. */
 #mp-dock,#mpd-scrim,#mpd-probe{display:none}
-/* Safari: just clear of the URL bar (per dc) */
-html.mp-bnav{--mpd-h:48px;--mpd-edge:2px;--mpd-clear:calc(var(--mpd-edge) + 56px);--mpd-e:cubic-bezier(.32,.72,0,1)}
+/* Safari: close above the URL bar, but 12px up: Safari 26 claims a fixed element sitting within a few px of the
+   bottom edge as a toolbar bar and paints a flat band under it (it appeared when the nav went to 6px, then 2px) */
+html.mp-bnav{--mpd-h:48px;--mpd-edge:calc(env(safe-area-inset-bottom,0px) + 12px);--mpd-clear:calc(var(--mpd-edge) + 56px);--mpd-e:cubic-bezier(.32,.72,0,1)}
 html.mp-bnav #mpd-probe{display:block;position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden}
 html.mp-bnav .nav-wrap{display:none!important}
 html.mp-bnav main.page .chat-head{display:none!important}
