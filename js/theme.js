@@ -11,6 +11,8 @@
   /* Standalone / PWA: dock sits just above the home indicator. Set early so the first paint is already low. */
   if (navigator.standalone || (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches))) {
     document.documentElement.classList.add("mp-standalone");
+    /* Don't let the document canvas color become iOS's status-bar fill. */
+    document.documentElement.style.background = "transparent";
   }
   apply();
   if (mq.addEventListener) mq.addEventListener("change", apply);

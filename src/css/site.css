@@ -53,6 +53,43 @@ html {
 html {
   background: var(--bg);
 }
+/* In the home-screen app, a opaque html/body canvas color is what iOS uses
+   for the status-bar strip, hiding the rain. Keep the page fill on a
+   ::before so the document canvas can stay transparent. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html {
+    background: transparent !important;
+  }
+  body,
+  body.home {
+    background-color: transparent;
+    background-image: none;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--bg);
+    pointer-events: none;
+  }
+}
+html.mp-standalone {
+  background: transparent !important;
+}
+html.mp-standalone body,
+html.mp-standalone body.home {
+  background-color: transparent;
+  background-image: none;
+}
+html.mp-standalone body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg);
+  pointer-events: none;
+}
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
@@ -317,9 +354,6 @@ body {
   height: 100%;
   display: block;
   background: linear-gradient(#040a1f, #0a1636 55%, #0d1b40);
-  contain: strict;
-  will-change: transform;
-  transform: translateZ(0);
   -webkit-mask-image: none;
   mask-image: none;
 }
@@ -584,22 +618,29 @@ textarea {
   gap: 10px;
   align-items: center;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--glass-regular-tint);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
   border-radius: 16px;
-}
-[data-theme="light"] .line {
-  background: #ececf0;
 }
 #cart-lines {
   display: grid;
   gap: 8px;
   margin-top: 4px;
 }
-.line img {
+.line img,
+.line .img-ph {
   width: 64px;
   height: 80px;
   object-fit: cover;
   border-radius: 10px;
+  background: var(--glass-regular-tint);
+  border: var(--glass-hairline);
+  box-shadow: var(--glass-spec);
+  -webkit-backdrop-filter: var(--glass-regular);
+  backdrop-filter: var(--glass-regular);
 }
 .line-mid {
   display: grid;
@@ -11934,8 +11975,8 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-live{position:absolute;top:1px;right:1px;z-index:2;width:8px;height:8px;border-radius:50%;background:var(--nv-ice);box-shadow:0 0 0 2px var(--bg),inset 0 1px 0 rgba(255,255,255,.5)}
 .nv-live[hidden]{display:none}
 .nv-fm-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none}
-.nv-fm-eyes{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#fff;pointer-events:none;display:grid;place-items:center}
-.nv-fm-eyes svg{display:block;width:60%;height:60%;overflow:visible}
+.nv-fm-eyes{position:absolute;inset:0;box-sizing:border-box;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#fff;pointer-events:none;display:flex;align-items:center;justify-content:center;padding:22%}
+.nv-fm-eyes svg{display:block;width:100%;height:100%;max-width:100%;max-height:100%;flex:none;aspect-ratio:1;overflow:visible}
 .nv-fm:not(.is-live) .nv-fm-ic{display:none}
 .nv-fm.is-live .nv-fm-eyes{display:none}
 .nv-fm-art[hidden],.nv-fm-ic[hidden],.nv-fm-eyes[hidden]{display:none}
