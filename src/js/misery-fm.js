@@ -325,7 +325,7 @@
       if (getComputedStyle(bar).position === "static") { bar.style.position = "relative"; bar._fmPos = 1; }
       var o = document.createElement("span");
       o.className = "fm-hb";
-      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-logo"></span><span class="fm-hb-is">is live</span></span><span class="fm-hb-np"></span>';
+      o.innerHTML = '<svg class="fm-ring" aria-hidden="true" focusable="false"><rect/></svg><span class="fm-hb-in" aria-hidden="true"><span class="fm-hb-is">misery fm is live</span></span><span class="fm-hb-np"></span>';
       bar.appendChild(o);
       bar.classList.add("fm-on");
       bar.setAttribute("aria-description", "misery fm is live. Tap the bar for now playing.");

@@ -105,8 +105,8 @@ Honour `prefers-reduced-motion: reduce`: drop travel to ~`0.01s`, skip entrance 
 
 - Test target: iPhone home-screen app (standalone), light and dark, narrow width (~390px).
 - Top of content: `--mpd-top: calc(env(safe-area-inset-top, 0px) + 14px)`.
-- Dock sits at `bottom: var(--mpd-b, calc(env(safe-area-inset-bottom, 0px) + 12px))`. On Chat it is placed above the composer (`--mpd-b`).
-- Page room under the dock: `--mpd-clear` (default `safe-area-bottom + 70px`). Compute it from where the pill is going, not mid-slide.
+- Dock sits at `bottom: var(--mpd-b, var(--mpd-edge))`. In Safari `--mpd-edge` is `6px` (tight to the URL bar). In the standalone PWA it is `safe-area-inset-bottom + 8px` (just above the home indicator). On Chat it is placed above the composer (`--mpd-b`).
+- Page room under the dock: `--mpd-clear` (default `--mpd-edge + 56px`). Compute it from where the pill is going, not mid-slide.
 - Dock: `--mpd-h: 48px`. JS layout: `H=48`, inner shapes `S=44`, gap `G=6`, pad `P=4`, You/fm circles `C=40`. CSS default width 370px; JS caps at `min(innerWidth - 20, 430)`.
 - The close (X) of a sheet must sit below the status bar. Cap sheet height so it never goes under the status bar.
 - Content never scrolls horizontally. Do not lock `body` with `position: fixed` (it lifts the chat composer on iOS).
@@ -121,7 +121,7 @@ Honour `prefers-reduced-motion: reduce`: drop travel to ~`0.01s`, skip entrance 
 - No badge on the pill. No unread or online count on the chat tab.
 - Status is a **12px** dot on the lower-right of the avatar circle, with a `2px` `--bg` ring. It follows the circle as the bubble resizes, and hides when You is expanded (the status button is there).
 - Bag count is the ice-glass chip: `--nv-ice` fill, navy `#0a1230` type, 15px tall, inset highlight, eases when the number changes.
-- When misery fm is live, the fm circle shows the album cover and the label shows title and artist. Off air: the fm icon in the circle, the misery fm logo beside "is off air". Live dot: 8px `--nv-ice` chip, `--bg` ring, no pulse.
+- When misery fm is live, the fm circle shows the album cover (or the fm icon if there is no art) and the label reads "misery fm is live" with no wordmark. Off air: the eyes logo on a white circular background, and the misery fm logo beside "is off air". Live dot: 8px `--nv-ice` chip, `--bg` ring, no pulse.
 - Open sheet chrome is the pill itself (`z-index: 60`, radius 30px). Scrim is `#mpd-scrim` (`z-index: 44`, dark `rgba(3,7,20,.42)`, light `rgba(30,40,70,.2)`). Dock at rest is `z-index: 45`.
 
 ### Sheets and morphs
