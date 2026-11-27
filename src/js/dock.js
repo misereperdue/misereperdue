@@ -537,6 +537,10 @@
     dock.inert = on && !menuOpen();
     if (on) closeMenu(true);
   }
+  /* keyboard background (per dc): the page is navy, not transparent, from the moment a field is focused */
+  document.addEventListener("focusin", function (e) { if (isField(e.target)) { clearTimeout(kbT); html.classList.add("mp-kb"); } }, true);
+  var kbT = 0;
+  document.addEventListener("focusout", function (e) { if (!isField(e.target)) return; clearTimeout(kbT); kbT = setTimeout(function () { if (!isField(document.activeElement)) html.classList.remove("mp-kb"); }, 450); }, true);
   document.addEventListener("focusin", function (e) {
     if (!isField(e.target) || dock.contains(e.target) || e.target.closest(".mp-pay-sheet")) return;
     clearTimeout(awayT);
