@@ -3,11 +3,11 @@
   function apply() {
     var dark = mq.matches;
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    // index.html ships one theme-color per prefers-color-scheme (correct before JS
-    // runs); keep any un-media'd one in sync for pages that use a single tag.
-    var metas = document.querySelectorAll('meta[name="theme-color"]:not([media])');
-    for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", "transparent");
   }
+  /* A theme-color meta (even "transparent") makes iOS paint a flat status-bar band
+     over the sky. Remove any that slipped in so black-translucent can show the rain. */
+  var metas = document.querySelectorAll('meta[name="theme-color"]');
+  for (var i = 0; i < metas.length; i++) metas[i].parentNode.removeChild(metas[i]);
   /* Standalone / PWA: dock sits just above the home indicator. Set early so the first paint is already low. */
   if (navigator.standalone || (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches))) {
     document.documentElement.classList.add("mp-standalone");

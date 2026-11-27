@@ -337,17 +337,11 @@
     var F = window.MPFM, st = F && F.menuStatus ? F.menuStatus() : null, live = !!(st && st.live);
     var c = live && F._calc ? F._calc() : null, tr = c && c.tr, n = (F && F.state && F.state() && F.state().listeners) || 0;
     var src = (tr && tr.art && F.artUrl) ? F.artUrl(tr) : "";
-    var name = "misery fm", sub = "is off air";
-    if (live) {
-      name = "misery fm";
-      sub = "is live";
-    } else {
-      name = "is off air";
-      sub = (st && st.scheduled && st.text) ? "Live in " + st.text : "";
-    }
+    var name = "misery fm", sub = live ? "is live" : "is off air";
+    if (!live && st && st.scheduled && st.text) sub = "Live in " + st.text;
     if (fmName && fmName.textContent !== name) fmName.textContent = name;
     if (fmSub.textContent !== sub) fmSub.textContent = sub;
-    if (fmLogo) fmLogo.hidden = !!live;
+    if (fmLogo) fmLogo.hidden = true;
     fmTag.hidden = true;
     fmLive.hidden = !live;
     if (fmArt) {
@@ -364,7 +358,7 @@
     el.fm.classList.toggle("is-live", live);
     el.fm.classList.toggle("is-off", !live);
     el.fm.classList.toggle("has-art", !!(live && src));
-    var aria = live ? "misery fm is live" : (sub ? "misery fm is off air. " + sub : "misery fm is off air");
+    var aria = live ? "misery fm is live" : (sub && sub !== "is off air" ? "misery fm is off air. " + sub : "misery fm is off air");
     el.fm.setAttribute("aria-label", aria);
   }
   setInterval(fmPaint, 1500);

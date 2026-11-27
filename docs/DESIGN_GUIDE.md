@@ -121,7 +121,7 @@ Honour `prefers-reduced-motion: reduce`: drop travel to ~`0.01s`, skip entrance 
 - No badge on the pill. No unread or online count on the chat tab.
 - Status is a **12px** dot on the lower-right of the avatar circle, with a `2px` `--bg` ring. It follows the circle as the bubble resizes, and hides when You is expanded (the status button is there).
 - Bag count is the ice-glass chip: `--nv-ice` fill, navy `#0a1230` type, 15px tall, inset highlight, eases when the number changes.
-- When misery fm is live, the fm circle shows the album cover (or the fm icon if there is no art) and the label reads "misery fm is live" with no wordmark. Off air: the eyes logo on a white circular background, and the misery fm logo beside "is off air". Live dot: 8px `--nv-ice` chip, `--bg` ring, no pulse.
+- When misery fm is live, the fm circle shows the album cover (or the fm icon if there is no art) and the label reads "misery fm is live" with no wordmark. Off air: the eyes logo on a white circular background, contained and centred at about 60% of the circle, and the label reads "misery fm is off air" with no wordmark. Live dot: 8px `--nv-ice` chip, `--bg` ring, no pulse.
 - Open sheet chrome is the pill itself (`z-index: 60`, radius 30px). Scrim is `#mpd-scrim` (`z-index: 44`, dark `rgba(3,7,20,.42)`, light `rgba(30,40,70,.2)`). Dock at rest is `z-index: 45`.
 
 ### Sheets and morphs
