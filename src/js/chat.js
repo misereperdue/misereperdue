@@ -1101,12 +1101,13 @@
     avw.innerHTML = '<i class="mp-pb-ring" aria-hidden="true"></i>';
     mpPwApply(avw, n.username, mpPwFromProfile(n));
     avw.appendChild(av);
-    /* status (per dc): the person's status on their profile avatar (invisible people show none) */
+    /* status (per dc t700u): sits beside the username on the same line (invisible people show none) */
     var pst = window.MPStatus ? MPStatus.of(n.username) : null;
     if (pst === null && n.status) pst = n.status;
+    var sb = null;
     if (pst && pst !== "invisible" && (n.status || isOwn || pwKey(n.username) === pwKey((s && s.username) || ""))) {
-      var sb = document.createElement("i"); sb.className = "nv-sico nv-s-" + pst + " mp-pb-st"; sb.setAttribute("role", "img");
-      sb.setAttribute("aria-label", { online: "Online", idle: "Idle", dnd: "Do Not Disturb" }[pst] || pst); avw.appendChild(sb);
+      sb = document.createElement("i"); sb.className = "nv-sico nv-s-" + pst + " mp-pb-st"; sb.setAttribute("role", "img");
+      sb.setAttribute("aria-label", { online: "Online", idle: "Idle", dnd: "Do Not Disturb" }[pst] || pst);
     }
     hd.appendChild(avw);
     var avImg = av.querySelector("img");
@@ -1128,6 +1129,7 @@
     n1t.className = "mp-pb-name-t";
     n1t.textContent = mpName(n.username);
     n1.appendChild(n1t);
+    if (sb) n1.appendChild(sb);
     mpPwApply(n1, n.username, mpPwFromProfile(n));
     /* badges sit on the avatar, not next to the name (per dc) */
     bd && avw.insertAdjacentHTML("beforeend", '<span class="mp-pb-ib mp-pb-av-badge">' + bd + "</span>");
@@ -9482,7 +9484,8 @@
         function edgeAllowsPull(scroller) {
           return scrollTopOf(scroller) <= 1;
         }
-        function paint(p) {
+        function paint(p, dragging) {
+          tip.classList.toggle("is-dragging", !!dragging);
           tip.style.setProperty("--ptr", String(p));
           tip.classList.toggle("is-on", p > 0.02);
           tip.classList.toggle("is-armed", p >= 1);
@@ -9490,13 +9493,13 @@
         }
         function hide() {
           gen++;
-          tip.classList.remove("is-on", "is-armed");
+          tip.classList.remove("is-on", "is-armed", "is-dragging");
           if (!busy) {
             tip.style.setProperty("--ptr", "0");
             label.textContent = "Pull to refresh";
           }
         }
-        function shiftContent(px) {
+        function shiftContent(px, dragging) {
           var msgs = document.querySelector("#journal.on #chat .chat-msgs");
           var panel = document.querySelector(".panel.on");
           var el =
@@ -9506,16 +9509,44 @@
               : null);
           if (!el) return null;
           if (px) {
-            el.style.transition = "none";
+            el.style.transition = dragging || RM ? "none" : "transform .32s cubic-bezier(.32,.72,0,1)";
             el.style.transform = "translate3d(0," + px.toFixed(2) + "px,0)";
           } else {
-            el.style.transition = RM ? "none" : "transform .3s cubic-bezier(.2,.85,.25,1.15)";
+            el.style.transition = RM ? "none" : "transform .32s cubic-bezier(.32,.72,0,1)";
             el.style.transform = "";
             setTimeout(function () {
-              el.style.transition = "";
-            }, 320);
+              if (el) el.style.transition = "";
+            }, 340);
           }
           return el;
+        }
+        function softRefresh() {
+          try {
+            if (document.querySelector("#shop.on") && window.MPShop && typeof MPShop.refreshInPlace === "function") {
+              var shop = MPShop.refreshInPlace();
+              if (shop && typeof shop.then === "function") return shop;
+            }
+          } catch (e) {}
+          try {
+            if (window.MPForum && typeof MPForum.refreshInPlace === "function") {
+              var forum = MPForum.refreshInPlace();
+              if (forum && typeof forum.then === "function") return forum;
+            }
+          } catch (e) {}
+          return null;
+        }
+        function finishPull(reloaded) {
+          busy = 0;
+          document.documentElement.classList.remove("mp-ptr-hold");
+          tip.classList.remove("is-busy", "is-armed");
+          tip.classList.add("is-on");
+          tip.style.setProperty("--ptr", "0");
+          label.textContent = "Pull to refresh";
+          shiftContent(0, false);
+          setTimeout(function () {
+            tip.classList.remove("is-on");
+            hide();
+          }, RM ? 0 : 320);
         }
         function isChrome(t) {
           if (!t || !t.closest) return false;
@@ -9563,7 +9594,8 @@
             locked = 0;
             dist = 0;
             hide();
-            shiftContent(0);
+            document.documentElement.classList.remove("mp-ptr-hold");
+            shiftContent(0, false);
             return;
           }
           if (!ev.touches || !ev.touches.length) return;
@@ -9592,12 +9624,13 @@
           if (RM) resisted = Math.min(48, dist * 0.3);
           var p = Math.max(0, Math.min(1, dist / THRESH));
           var g = ++gen;
+          document.documentElement.classList.add("mp-ptr-hold");
           if (!raf) {
             raf = requestAnimationFrame(function () {
               raf = 0;
               if (g !== gen || busy || onLivePage()) return;
-              paint(p);
-              shiftContent(resisted);
+              paint(p, true);
+              shiftContent(resisted, true);
             });
           }
           if (p >= 1 && !armed) {
@@ -9610,10 +9643,13 @@
         }
         function onEnd() {
           if (busy) return;
+          tip.classList.remove("is-dragging");
+          if (raf) { cancelAnimationFrame(raf); raf = 0; }
           if (null === startY || locked !== 1) {
             startY = null;
             locked = 0;
             activeScroller = null;
+            document.documentElement.classList.remove("mp-ptr-hold");
             hide();
             return;
           }
@@ -9624,40 +9660,29 @@
           if (go) {
             busy = 1;
             tip.classList.add("is-busy", "is-on", "is-armed");
+            tip.classList.remove("is-dragging");
             tip.style.setProperty("--ptr", "1");
             label.textContent = "Refreshing";
-            shiftContent(0);
-            var soft = null;
-            try {
-              if (window.MPForum && typeof MPForum.refreshInPlace === "function")
-                soft = MPForum.refreshInPlace();
-            } catch (e) { soft = null; }
+            /* Settle the page at a rest offset while we refresh — don't snap to 0 then reload. */
+            shiftContent(Math.min(56, Math.max(36, dist * 0.35)), false);
+            var soft = softRefresh();
             if (soft && typeof soft.then === "function") {
-              soft.then(function () {
-                busy = 0;
-                tip.classList.remove("is-busy", "is-armed");
-                label.textContent = "Pull to refresh";
-                hide();
-                shiftContent(0);
-              }).catch(function () {
-                try { sessionStorage.setItem("mp-refreshing", "1"); } catch (e) {}
+              soft.then(function () { finishPull(); }).catch(function () { finishPull(); });
+            } else {
+              /* Other pages: still a full reload, but only after the spinner has settled. */
+              try { sessionStorage.setItem("mp-refreshing", "1"); } catch (e) {}
+              setTimeout(function () {
                 document.documentElement.classList.add("mp-show-splash");
                 window.scrollTo(0, 0);
-                setTimeout(function () { location.reload(); }, 120);
-              });
-            } else {
-              try {
-                sessionStorage.setItem("mp-refreshing", "1");
-              } catch (e) {}
-              document.documentElement.classList.add("mp-show-splash");
-              window.scrollTo(0, 0);
-              setTimeout(function () {
                 location.reload();
-              }, 120);
+              }, RM ? 0 : 180);
             }
           } else {
-            shiftContent(0);
-            hide();
+            document.documentElement.classList.remove("mp-ptr-hold");
+            shiftContent(0, false);
+            setTimeout(hide, RM ? 0 : 320);
+            tip.style.setProperty("--ptr", "0");
+            tip.classList.remove("is-armed");
           }
         }
         document.addEventListener("touchstart", onStart, { passive: true, capture: true });

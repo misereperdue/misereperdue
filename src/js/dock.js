@@ -257,7 +257,7 @@
     onlineB.hidden = true;
     var morphed = false;
     // Safari's mirrored backdrop would show the old page for a moment: let it rest while the page swaps
-    if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 700); }
+    if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 400); }
     layout();
     if (morphed) fmPaint();
     syncClone();
@@ -282,7 +282,7 @@
     state = s; pref = s;
     try { localStorage.setItem(PREF_KEY, s); } catch (e) {}
     dock.classList.add("nv-morphing");
-    clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 420);
+    clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 400);
     window.haptic && haptic(6);
     layout();
     fmPaint();

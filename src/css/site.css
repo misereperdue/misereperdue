@@ -5364,6 +5364,14 @@ body.home:has(#product.on) {
   pointer-events: none;
   white-space: nowrap;
   will-change: transform, opacity;
+  transition: transform .32s cubic-bezier(.32,.72,0,1), opacity .28s cubic-bezier(.32,.72,0,1);
+}
+.mp-pull-indicator.is-dragging {
+  transition: none;
+}
+html.mp-ptr-hold,
+html.mp-ptr-hold body {
+  overscroll-behavior-y: none;
 }
 .mp-pull-indicator.is-on {
   opacity: calc(0.35 + 0.65 * var(--ptr));
@@ -11840,13 +11848,13 @@ html.mp-bnav #mp-dock .mp-ntf{border-radius:inherit}
    small spring overshoot and blur-crossfades the labels. Light glass in light mode, smoked glass in dark. */
 html.mp-bnav{--nv-glass:rgba(24,30,54,.36);--nv-rim:rgba(255,255,255,.16);--nv-rim2:rgba(255,255,255,.05);--nv-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18);--nv-in:rgba(255,255,255,.09);--nv-lens:rgba(255,255,255,.13);--nv-blue:#3d9bff;--nv-ink:#f4f6fb;--nv-sub:rgba(235,240,255,.55);--nv-spring:cubic-bezier(.32,.86,.28,1);--nv-ice:#a9d7f5}
 html.mp-bnav[data-theme="light"],[data-theme="light"] html.mp-bnav{--nv-glass:rgba(255,255,255,.42);--nv-rim:rgba(255,255,255,.95);--nv-rim2:rgba(0,0,0,.05);--nv-shadow:0 10px 30px rgba(20,30,60,.10),0 1px 4px rgba(20,30,60,.08);--nv-in:rgba(118,118,128,.12);--nv-lens:rgba(118,118,128,.14);--nv-blue:#0a84ff;--nv-ink:#111318;--nv-sub:rgba(60,60,67,.6);--nv-ice:#7eb8d9}
-html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .56s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
+html.mp-bnav #mp-dock{display:block;position:fixed;z-index:45;left:50%;bottom:var(--mpd-b,calc(env(safe-area-inset-bottom,0px) + 12px));width:370px;height:48px;margin:0;padding:0;transform:translateX(-50%);color:var(--nv-ink);background:none;border:0;box-shadow:none;transition:bottom .38s var(--nv-spring),transform .3s cubic-bezier(.32,.72,0,1),opacity .14s ease}
 html.mp-bnav #mp-dock.mpd-away{transform:translate(-50%,14px) scale(.94);opacity:0;pointer-events:none}
 #mp-dock button,#mp-dock [role=button]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 :where(#mp-dock) button{border:0;background:none;padding:0;margin:0}
 #mp-dock :focus-visible{outline:2px solid var(--nv-blue);outline-offset:2px}
 /* every shape */
-.nv-el{position:absolute;box-sizing:border-box;display:block;overflow:visible;transition:left .56s var(--nv-spring),top .56s var(--nv-spring),width .56s var(--nv-spring),height .56s var(--nv-spring),border-radius .56s var(--nv-spring),opacity .28s ease,filter .3s ease,transform .56s var(--nv-spring),background-color .3s ease,box-shadow .3s ease}
+.nv-el{position:absolute;box-sizing:border-box;display:block;overflow:visible;transition:left .38s var(--nv-spring),top .38s var(--nv-spring),width .38s var(--nv-spring),height .38s var(--nv-spring),border-radius .38s var(--nv-spring),opacity .28s ease,filter .3s ease,transform .38s var(--nv-spring),background-color .3s ease,box-shadow .3s ease}
 #mp-dock:not(.is-ready) .nv-el{transition:none!important}
 .nv-el.nv-off{opacity:0;filter:blur(10px);transform:scale(.8);pointer-events:none}
 /* WebKit crashes when an element animates filter while it also has backdrop-filter (opening a Globe thread
@@ -11899,7 +11907,7 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-count{position:absolute;top:4px;right:6px;min-width:15px;height:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--nv-ice);color:#0a1230;font-size:9px;font-weight:700;line-height:15px;text-align:center;font-style:normal;letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 0 .5px color-mix(in srgb,var(--nv-ice) 70%,#0a1230);transform-origin:center center}
 .nv-home-ic{display:grid;place-items:center;color:var(--nv-blue)}
 /* fm + you: an inner circle (icon / avatar) and labels that appear when the shape widens */
-.nv-in{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;display:grid;place-items:center;overflow:visible;transition:left .56s var(--nv-spring),top .56s var(--nv-spring),width .56s var(--nv-spring),height .56s var(--nv-spring),background-color .3s ease}
+.nv-in{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;display:grid;place-items:center;overflow:visible;transition:left .38s var(--nv-spring),top .38s var(--nv-spring),width .38s var(--nv-spring),height .38s var(--nv-spring),background-color .3s ease}
 .nv-glass>.nv-in{left:4px;top:4px;width:calc(100% - 8px);height:calc(100% - 8px)}
 .nv-wide>.nv-in{width:calc(var(--h,56px) - 8px);height:calc(100% - 8px)}
 .nv-fm-in{background:var(--nv-in)}
@@ -11929,7 +11937,7 @@ html[data-theme="light"] .nv-home-ic svg,html[data-theme="light"] .nv-home-ic sv
 .nv-me.nv-wide .nv-tx{right:50px}
 .is-signed-in .nv-me.nv-wide .nv-tx{right:88px}
 /* status dot (no badge on the pill, per dc): sits on the avatar circle's lower-right edge, centred on the 45 degree point */
-.nv-marks{position:absolute;left:0;top:0;z-index:7;width:var(--h,40px);height:var(--h,40px);pointer-events:none;transition:left .56s var(--nv-spring),top .56s var(--nv-spring),width .56s var(--nv-spring),height .56s var(--nv-spring)}
+.nv-marks{position:absolute;left:0;top:0;z-index:7;width:var(--h,40px);height:var(--h,40px);pointer-events:none;transition:left .38s var(--nv-spring),top .38s var(--nv-spring),width .38s var(--nv-spring),height .38s var(--nv-spring)}
 .nv-me.nv-glass .nv-marks{left:4px;top:4px;width:calc(var(--h,44px) - 8px);height:calc(var(--h,44px) - 8px)}
 #mp-dock .nv-marks>.nv-sbadge{position:absolute!important;right:-1px;bottom:-1px;left:auto;top:auto;width:12px!important;height:12px!important;min-width:0;margin:0;box-sizing:border-box;border-radius:50%;box-shadow:0 0 0 2px var(--bg),0 1px 3px rgba(0,0,0,.25);transition:opacity .25s ease,transform .45s var(--nv-spring)}
 #mp-dock .nv-marks>.nv-sbadge.nv-s-invisible{background:var(--bg);box-shadow:0 0 0 2px var(--bg),inset 0 0 0 2.5px #8e8e93}
@@ -12253,6 +12261,10 @@ html.mp-bnav[data-theme="light"] body.home .hero-fade,[data-theme="light"] html.
 /* status on a profile avatar */
 .mp-pb-av .mp-pb-st{position:absolute;right:2px;bottom:2px;z-index:8;width:16px;height:16px;box-shadow:0 0 0 3px var(--sheet-bg,var(--bg))}
 .mp-pb-av .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
+.mp-pb-name .mp-pb-st,
+.mp-profile-summary-title .mp-pb-st{position:static;inset:auto;flex:none;width:10px;height:10px;box-shadow:0 0 0 2px var(--sheet-bg,var(--bg))}
+.mp-pb-name .mp-pb-st.nv-s-idle,
+.mp-profile-summary-title .mp-pb-st.nv-s-idle{background:var(--sheet-bg,var(--bg))}
 
 /* Liquid Glass lens (js/nv-glass.js): labels keep a soft lift for legibility over bent content */
 .nv-tx b{text-shadow:0 0 6px var(--nv-glass)}
