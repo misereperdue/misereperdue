@@ -2421,8 +2421,7 @@
     a.addEventListener("input", rt);
     mpMention(a);
     var r = 0,
-      o = null,
-      kbPre = 0;
+      o = null;
     function i() {
       r ||
         (r = requestAnimationFrame(function () {
@@ -2441,11 +2440,8 @@
               var i = Le(),
                 s = "" === t ? 0 : Math.max(0, t - 18),
                 l = Se(),
-                /* keyboard open/close (per dc): glide to the latest message with the bar instead of snapping */
-                toEnd = function () { try { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); } catch (_) { window.scrollTo(0, document.documentElement.scrollHeight); } };
+                toEnd = function () { window.scrollTo(0, document.documentElement.scrollHeight); };
               i && i.style.setProperty("--kb-shift", s + "px");
-              /* just lifted for the keyboard that is still on its way: do not drop the bar back down meanwhile */
-              if ("" === t && document.activeElement === a && Date.now() - kbPre < 1200) return;
               if ("" === t) {
                 var d = "" !== o && null !== o;
                 return (
@@ -2453,8 +2449,6 @@
                   void (d && l && toEnd())
                 );
               }
-              /* remember where the keyboard reached (unpanned), so the next tap can lift the bar before iOS reacts */
-              if (n && (n.offsetTop || 0) < 4 && t > 120) { try { localStorage.setItem("mp-kbh", String(Math.round(t))); } catch (_) {} }
               if ("" !== o && null !== o && Math.abs(t - o) < 8) return;
               ((e.style.bottom = t + "px"),
                 (o = t),
@@ -2529,21 +2523,6 @@
         }
       }
     }
-    /* Keyboard in chat (per dc: glitchy): iOS slid the whole page up to keep the bottom-pinned field above the
-       keyboard, then the bar moved and the chat re-scrolled: two motions fighting. On touch-down, before iOS
-       reacts, the bar rises to where the keyboard reached last time, so the field is already clear, iOS has no
-       reason to slide the page, and the bar travels with the keyboard. A touch that does not focus (a scroll)
-       puts it back. */
-    a.addEventListener("touchstart", function () {
-      if (document.activeElement === a) return;
-      var kh = 0; try { kh = +localStorage.getItem("mp-kbh") || 0; } catch (_) {}
-      var row = c.querySelector(".chat-inputrow");
-      if (!row || kh < 120 || kh > window.innerHeight * 0.7) return;
-      row.style.bottom = kh + "px"; o = kh; kbPre = Date.now();
-      setTimeout(i, 1300); // then follow the real keyboard (none, e.g. a hardware keyboard: the bar comes back down)
-      var box = Le(); box && box.style.setProperty("--kb-shift", Math.max(0, kh - 18) + "px");
-      setTimeout(function () { if (document.activeElement !== a && o === kh) { row.style.bottom = ""; o = ""; box && box.style.setProperty("--kb-shift", "0px"); } }, 700);
-    }, { passive: !0 });
     (a.addEventListener("focus", i),
       a.addEventListener("blur", function () {
         var e = c.querySelector(".chat-inputrow");

@@ -465,7 +465,34 @@
       setTimeout(function () { closeMenu(false, true); if (window.MPStatus) MPStatus.set(st); }, 120);
     });
   });
-  sBtn.addEventListener("click", function (e) { e.stopPropagation(); menuIsOpen ? closeMenu() : openMenu(); });
+  /* status picker (per dc): a sheet that morphs out of the nav pill, like notifications and misery fm */
+  var CHK = '<svg class="mp-st-chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function openStatusSheet() {
+    if (!signedIn || !window.MPProfiles || !MPProfiles.openSheet) return false;
+    var sheet = MPProfiles.openSheet({ title: "Status", owner: "status", bodyClass: "mp-st-sheet" });
+    if (!sheet) return false;
+    var cur = myStatus(), list = document.createElement("div"), done = false;
+    list.className = "mp-st-list"; list.setAttribute("role", "radiogroup"); list.setAttribute("aria-label", "Status");
+    ["online", "idle", "dnd", "invisible"].forEach(function (st) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "mp-st-row" + (st === cur ? " is-on" : "");
+      b.setAttribute("role", "radio"); b.setAttribute("aria-checked", st === cur ? "true" : "false");
+      b.innerHTML = '<i class="nv-sico nv-s-' + st + '" aria-hidden="true"></i><span></span>' + CHK;
+      b.querySelector("span").textContent = STATUS[st];
+      b.addEventListener("click", function () {
+        if (done) return; done = true;
+        window.haptic && haptic(10);
+        [].forEach.call(list.children, function (x) { var on = x === b; x.classList.toggle("is-on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+        if (window.MPStatus && st !== cur) MPStatus.set(st);
+        setTimeout(function () { sheet.close(); setTimeout(pop, 380); }, 180);
+      });
+      list.appendChild(b);
+    });
+    sheet.body.appendChild(list);
+    sheet.resize && sheet.resize();
+    return true;
+  }
+  sBtn.addEventListener("click", function (e) { e.stopPropagation(); if (menuIsOpen) return closeMenu(); if (!openStatusSheet()) openMenu(); });
   menu.addEventListener("keydown", function (e) {
     var i = rows.indexOf(document.activeElement);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); rows[(i + (e.key === "ArrowDown" ? 1 : rows.length - 1)) % rows.length].focus(); }
