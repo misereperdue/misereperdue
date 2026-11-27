@@ -1,4 +1,4 @@
-/* Shared pull-to-refresh for the shop and product pages in the home-screen app only (dc t704u, t705u, t706u).
+/* Shared pull-to-refresh for the shop, product and Bag pages in the home-screen app only (dc t704u, t705u, t706u; Bag per dc).
    rAF-throttled transform only while pulling, no layout work, refetch after the settle,
    and the grid is not rebuilt unless the catalog actually changed. */
 (function () {
@@ -86,7 +86,7 @@
     if (host && typeof host.content === "function") {
       try { return host.content() || null; } catch (e) { return null; }
     }
-    return document.querySelector("#product.on, #shop.on");
+    return document.querySelector("#product.on, #shop.on, #cart.on");
   }
 
   function sheetOpen() {
@@ -256,7 +256,7 @@
   window.MPPullRefresh = { attach: attach, isStandalone: isStandalone };
 })();
 
-/* Default hook: shop + product pages, home-screen app only. */
+/* Default hook: shop, product and Bag pages, home-screen app only. */
 (function () {
   function whenReady(fn) {
     if (document.readyState === "complete" || document.readyState === "interactive") fn();
@@ -267,9 +267,9 @@
     MPPullRefresh.attach({
       isActive: function () {
         return !!(window.MPPullRefresh.isStandalone && MPPullRefresh.isStandalone()) &&
-          !!document.querySelector("#shop.on, #product.on");
+          !!document.querySelector("#shop.on, #product.on, #cart.on");
       },
-      content: function () { return document.querySelector("#product.on, #shop.on"); },
+      content: function () { return document.querySelector("#product.on, #shop.on, #cart.on"); },
       refresh: function () {
         if (window.MPShop && typeof MPShop.refreshInPlace === "function") {
           var p = MPShop.refreshInPlace();

@@ -87,7 +87,7 @@
     if (showMe) el.me.removeAttribute("tabindex"); else el.me.setAttribute("tabindex", "-1");
     // fm/you sit inside the right group in tabs (no glass of their own), and are glass shapes otherwise
     [el.fm, el.me].forEach(function (e) { e.classList.toggle("nv-glass", state !== "tabs"); e.classList.toggle("nv-wide", e === (state === "fm" ? el.fm : state === "me" ? el.me : null)); });
-    if (lastBox && lastBox !== state + W) L.followUntil = performance.now() + 620;
+    if (lastBox && lastBox !== state + W) L.followUntil = performance.now() + 560;
     seat(!lastBox);
     lastBox = state + W + (signedIn ? "i" : "o");
     place();
@@ -137,6 +137,27 @@
       b.style.clipPath = p; b.style.webkitClipPath = p;
     });
   }
+  /* Resting lens: while it is neither lifted nor moving, its box is pure CSS (calc from the tab's index), so it
+     rides along when the bar resizes (morphs, the bag or back button appearing) with no per-frame script or
+     layout reads. Lifting or moving hands it back to the springs from where it actually is. */
+  function restMode(on) {
+    var s = lens.style;
+    if (on) {
+      var vis = tabBtns.filter(function (b) { return !b.hidden; }), t = curTab(), i = vis.indexOf(t), n = vis.length;
+      if (!t || i < 0 || !n) return;
+      var pad = parseFloat(getComputedStyle(el.tabs).paddingLeft) || 0;
+      s.transform = "none";
+      s.left = "calc(" + pad + "px + (100% - " + 2 * pad + "px) * " + i + " / " + n + ")";
+      s.width = "calc((100% - " + 2 * pad + "px) / " + n + ")";
+      s.top = pad + "px"; s.height = "calc(100% - " + 2 * pad + "px)";
+      s.setProperty("--l", "0");
+      L.rest = true;
+    } else if (L.rest) {
+      L.rest = false;
+      L.x = lens.offsetLeft; L.w = lens.offsetWidth; L.v = L.wv = 0;
+      s.left = ""; s.top = "";
+    }
+  }
   function render() {
     var l = Math.max(0, L.l), lc = Math.min(1, l), sp = Math.min(1, Math.abs(L.v) / 1400);
     var w = L.w + L.w * 0.34 * l + 22 * sp, h = L.h + 13 * l - 6 * sp;
@@ -161,6 +182,7 @@
   function spring(p, v, target, k, z, dt) { var a = -k * (p - target) - 2 * z * Math.sqrt(k) * v; v += a * dt; return [p + v * dt, v]; }
   function tick(now) {
     L.raf = 0;
+    restMode(false);
     // keep aiming at the tab itself: the bar can be resizing under it (a morph, the bag appearing)
     if (!L.drag && L.target && L.target.isConnected && !L.target.hidden) aim(L.target);
     var follow = now < L.followUntil && !L.lifted;
@@ -174,7 +196,7 @@
     // once it has nearly landed (and nobody is holding it) the glass sinks back in
     if (!L.hold && L.tl && Math.abs(L.x - L.tx) < 7 && Math.abs(L.v) < 160) L.tl = 0;
     var rest = !follow && !L.hold && !L.tl && Math.abs(L.x - L.tx) < 0.15 && Math.abs(L.v) < 4 && Math.abs(L.w - L.tw) < 0.15 && Math.abs(L.l) < 0.002 && Math.abs(L.lv) < 0.02;
-    if (rest) { L.x = L.tx; L.v = 0; L.w = L.tw; L.wv = 0; L.l = 0; L.lv = 0; L.t = 0; render(); if (!curTab()) lens.style.opacity = "0"; return; }
+    if (rest) { L.x = L.tx; L.v = 0; L.w = L.tw; L.wv = 0; L.l = 0; L.lv = 0; L.t = 0; render(); if (!curTab()) lens.style.opacity = "0"; else restMode(true); return; }
     render();
     L.raf = requestAnimationFrame(tick);
   }
@@ -187,12 +209,15 @@
     if (instant || RM.matches || state !== "tabs" || !L.w) {
       if (L.raf) cancelAnimationFrame(L.raf); L.raf = 0;
       L.x = L.tx; L.w = L.tw; L.v = L.wv = L.lv = 0; L.l = L.tl = 0; L.hold = false; L.drag = null;
-      render(); return;
+      render(); restMode(true); return;
     }
+    // at rest the CSS box already follows the bar; only the tab it marks may have changed
+    if (L.rest && !L.raf && !L.hold && !L.tl && !L.lifted) { restMode(true); return; }
     kick();
   }
   function glide(t) { // travel to a tab as lifted glass
     if (!t) return;
+    restMode(false); // start from where the glass actually is (the previous tab)
     aim(t);
     if (RM.matches || state !== "tabs") return seat(true);
     L.tl = 1; kick();
@@ -234,16 +259,23 @@
   var swallowClick = 0;
 
   /* ---------- page state ---------- */
+  /* sync runs for page, back-button, bag and sign-in changes. It does no work when nothing it shows has
+     changed: it used to run (and force a layout) on every DOM change in the page, dozens of times per page
+     switch, mid-animation. */
+  var lastSig = "", needBack = true;
   function sync() {
     var v = panelView(), changed = v !== view, tv = tabOf(v), prev = null;
     tabBtns.forEach(function (b) { if (b.classList.contains("on")) prev = b; });
     view = v;
-    html.setAttribute("data-mpd-view", v);
-    tabBtns.forEach(function (b) {
-      var on = b.getAttribute("data-view") === tv;
-      b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
-      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
-    });
+    if (changed) {
+      html.setAttribute("data-mpd-view", v);
+      needBack = true;
+      tabBtns.forEach(function (b) {
+        var on = b.getAttribute("data-view") === tv;
+        b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false");
+        if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+      });
+    }
     var cur = tabBtns.filter(function (b) { return b.classList.contains("on"); })[0] || tabBtns[0];
     var ic = cur.querySelector("svg");
     if (ic && homeIc._v !== tv) { homeIc._v = tv; homeIc.innerHTML = ic.outerHTML; }
@@ -256,13 +288,14 @@
       if (n && bagCount.animate && !RM.matches) bagCount.animate([{ transform: "scale(.82)", opacity: .6 }, { transform: "none", opacity: 1 }], { duration: 240, easing: "cubic-bezier(.32,.72,0,1)" });
     }
     el.bag.setAttribute("aria-label", "Bag, " + n + (n === 1 ? " item" : " items"));
-    el.back.hidden = !contentBack();
+    if (needBack) { needBack = false; el.back.hidden = !contentBack(); }
     onlineB.hidden = true;
-    var morphed = false;
     // Safari's mirrored backdrop would show the old page for a moment: let it rest while the page swaps
     if (changed) { dock.classList.add("nv-paging"); clearTimeout(sync._pg); sync._pg = setTimeout(function () { dock.classList.remove("nv-paging"); }, 400); }
-    layout();
-    if (morphed) fmPaint();
+    // a tab change glides from the old tab: take the lens out of its resting CSS box before the re-layout moves it
+    if (changed && prev && cur !== prev && state === "tabs") restMode(false);
+    var sig = [state, el.back.hidden, el.bag.hidden, signedIn, window.innerWidth].join("|");
+    if (changed || sig !== lastSig) { lastSig = sig; layout(); }
     syncClone();
     if (changed && cur !== prev && prev && state === "tabs") glide(cur);
   }
@@ -285,7 +318,7 @@
     state = s; pref = s;
     try { localStorage.setItem(PREF_KEY, s); } catch (e) {}
     dock.classList.add("nv-morphing");
-    clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 400);
+    clearTimeout(setState._t); setState._t = setTimeout(function () { dock.classList.remove("nv-morphing"); }, 360);
     window.haptic && haptic(6);
     layout();
     fmPaint();
@@ -521,7 +554,18 @@
   /* ---------- watch ---------- */
   if (nav && window.MutationObserver) new MutationObserver(soon).observe(nav, { subtree: true, attributes: true, childList: true, characterData: true, attributeFilter: ["class", "style", "hidden"] });
   var page = document.querySelector("main.page");
-  if (page && window.MutationObserver) new MutationObserver(soon).observe(page, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
+  function backNode(n) { return n && n.nodeType === 1 && (n.matches(".forum-head, .forum-back") || !!n.querySelector(".forum-back")); }
+  function pageMatters(ms) {
+    for (var i = 0; i < ms.length; i++) {
+      var m = ms[i], t = m.target;
+      if (t === page || t.parentElement === page) { needBack = true; return true; } // a panel switched (.on)
+      if (t.closest && t.closest(".forum-head, #forum")) { needBack = true; return true; } // Globe: its back button may have come or gone
+      for (var j = 0; j < m.addedNodes.length; j++) if (backNode(m.addedNodes[j])) { needBack = true; return true; }
+      for (j = 0; j < m.removedNodes.length; j++) if (backNode(m.removedNodes[j])) { needBack = true; return true; }
+    }
+    return false; // chat messages, effects and other page activity do not concern the pill
+  }
+  if (page && window.MutationObserver) new MutationObserver(function (ms) { if (pageMatters(ms)) soon(); }).observe(page, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
   [document.getElementById("journal"), document.getElementById("forum")].forEach(function (r) {
     if (r && window.MutationObserver) new MutationObserver(function (ms) {
       for (var i = 0; i < ms.length; i++) { var t = ms[i].target; if (t === r || (t.closest && t.closest(".chat-head"))) return avSoon(); }

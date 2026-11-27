@@ -550,7 +550,13 @@ var MPShop = (function () {
     }
     for(var mi=0;mi<12;mi++)makeCurve(72,0,mi/12*Math.PI*2,true,false);
     [-60,-30,0,30,60].forEach(function(lat){makeCurve(120,lat*Math.PI/180,0,false,lat===0);});
+    /* Size is measured only when the canvas resizes (ResizeObserver), not every frame: reading layout each
+       frame forced a synchronous layout per frame while the nav pill animated (jank on every morph). */
+    var sizeDirty = true;
+    if (window.ResizeObserver) { try { new ResizeObserver(function () { sizeDirty = true; if (!raf && running && visible && cv.isConnected) raf = requestAnimationFrame(draw); }).observe(cv); } catch (e) {} }
     function size() {
+      if (!sizeDirty && window.ResizeObserver) return;
+      sizeDirty = false;
       var r = cv.getBoundingClientRect();
       dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       W = Math.max(1, Math.round(r.width));
@@ -1712,6 +1718,9 @@ var MPShop = (function () {
     var product = document.getElementById("product");
     var onShop = shop && shop.classList.contains("on");
     var onProduct = product && product.classList.contains("on");
+    var cart = document.getElementById("cart"), onCart = cart && cart.classList.contains("on");
+    /* Bag (per dc): refetch the catalog the same way (prices, stock), then redraw the bag lines from it */
+    if (onCart) { var pc = k(); return Promise.resolve(pc).then(function () { B(); }, function () { B(); }); }
     if ((!onShop && !onProduct) || !document.getElementById("shop-grid")) return null;
     /* Keep the current signature so n() only rebuilds the grid (and remounts
        the Globe / 3D canvases) when the catalog actually changed. */
