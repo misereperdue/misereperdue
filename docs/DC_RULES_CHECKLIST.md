@@ -1,6 +1,6 @@
 # dc's rules checklist
 
-Read this before any UI change on misereperdue.com. For visual language, Powers, icons, hats, the render loop, pin bumps and Worker deploys, follow [DESIGN_PLAYBOOK.md](DESIGN_PLAYBOOK.md) — do not copy it here.
+Short pre-merge checklist for UI work. The design source of truth is [DESIGN_GUIDE.md](DESIGN_GUIDE.md). Delivery loop, Powers, hats and pin bumps: [DESIGN_PLAYBOOK.md](DESIGN_PLAYBOOK.md).
 
 dc tests in the iPhone home-screen app, in light and dark. His latest instruction wins.
 
@@ -21,7 +21,7 @@ dc tests in the iPhone home-screen app, in light and dark. His latest instructio
 
 ## Style
 
-Visual tokens, colours, Powers, hats and icon drawing rules live in the [playbook](DESIGN_PLAYBOOK.md). In short:
+Visual tokens, colours and icon drawing rules live in the [guide](DESIGN_GUIDE.md). Powers and hats details are in the [playbook](DESIGN_PLAYBOOK.md). In short:
 
 - Surfaces use the `--glass-*` tokens. Accents are navy `#0a1230` and ice `#a9d7f5`. No rainbow, no gimmicks, no pulsing rings or sheen unless asked. Honour `prefers-reduced-motion`.
 - Icons are Hugeicons-style: 24×24, 1.8 stroke, round caps and joins, `currentColor`.
